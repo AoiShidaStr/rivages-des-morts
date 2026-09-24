@@ -27,6 +27,13 @@ const config: GameConfig = {
 /** `?vague=7` commence directement à la septième vague (le boss), pour tester sans refaire tout le donjon. */
 const startWave = Math.max(0, Number(new URLSearchParams(location.search).get('vague') ?? 1) - 1) || 0;
 
+/** `?pixel=0` revient aux images peintes, pour comparer avec les planches en pixel art. */
+function spriteManifest(): SpriteManifest {
+  const manifest = sprites as SpriteManifest;
+  if (new URLSearchParams(location.search).get('pixel') !== '0') return manifest;
+  return Object.fromEntries(Object.entries(manifest).map(([name, def]) => [name, { ...def, sheet: undefined }]));
+}
+
 function element<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
   if (!el) throw new Error(`Élément #${id} introuvable dans index.html`);
@@ -35,7 +42,7 @@ function element<T extends HTMLElement>(id: string): T {
 
 async function start(): Promise<void> {
   const canvas = element<HTMLCanvasElement>('game');
-  const renderer = new Renderer(canvas, element('overlay'), sprites as SpriteManifest, config.arenaHalfSize);
+  const renderer = new Renderer(canvas, element('overlay'), spriteManifest(), config.arenaHalfSize);
   await renderer.load();
   const input = new Input(canvas);
   const hud = new Hud(element('hud'));

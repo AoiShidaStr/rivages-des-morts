@@ -1,0 +1,186 @@
+{
+  "frames": [
+    {
+      "filename": "oublie 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 250
+    },
+    {
+      "filename": "oublie 1",
+      "frame": {
+        "x": 44,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 250
+    },
+    {
+      "filename": "oublie 2",
+      "frame": {
+        "x": 88,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 250
+    },
+    {
+      "filename": "oublie 3",
+      "frame": {
+        "x": 132,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 250
+    },
+    {
+      "filename": "oublie 4",
+      "frame": {
+        "x": 176,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 140
+    },
+    {
+      "filename": "oublie 5",
+      "frame": {
+        "x": 220,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 140
+    },
+    {
+      "filename": "oublie 6",
+      "frame": {
+        "x": 264,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 140
+    },
+    {
+      "filename": "oublie 7",
+      "frame": {
+        "x": 308,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 140
+    },
+    {
+      "filename": "oublie 8",
+      "frame": {
+        "x": 352,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 250
+    },
+    {
+      "filename": "oublie 9",
+      "frame": {
+        "x": 396,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 250
+    },
+    {
+      "filename": "oublie 10",
+      "frame": {
+        "x": 440,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 80
+    },
+    {
+      "filename": "oublie 11",
+      "frame": {
+        "x": 484,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 300
+    },
+    {
+      "filename": "oublie 12",
+      "frame": {
+        "x": 528,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 300
+    },
+    {
+      "filename": "oublie 13",
+      "frame": {
+        "x": 572,
+        "y": 0,
+        "w": 44,
+        "h": 46
+      },
+      "duration": 300
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "oublie.png",
+    "size": {
+      "w": 616,
+      "h": 46
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 4,
+        "to": 7,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 8,
+        "to": 9,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "strike",
+        "from": 10,
+        "to": 11,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "stunned",
+        "from": 12,
+        "to": 13,
+        "direction": "forward"
+      }
+    ]
+  }
+}
