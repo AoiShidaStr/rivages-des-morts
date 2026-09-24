@@ -9,6 +9,7 @@ import {
   Matrix,
   Mesh,
   MeshBuilder,
+  Quaternion,
   Scene,
   ShaderMaterial,
   StandardMaterial,
@@ -17,18 +18,33 @@ import {
   Vector3,
   type BaseTexture,
 } from '@babylonjs/core';
+import { Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, Pose } from '../game/types';
-import type { World } from '../game/world';
+import type { Stump, World } from '../game/world';
 import {
   drawCrescent,
   drawGround,
   drawHeroPlaceholder,
+  drawJorogumo,
+  drawJorogumoSpider,
   drawMissing,
   drawRadial,
   drawRing,
+  drawSpider,
+  drawStump,
   drawTelegraph,
+  drawWeb,
 } from './textures';
+
+/** Dessins provisoires, utilisés tant que l'image détourée n'est pas dans public/sprites. */
+const PLACEHOLDERS: Record<string, () => HTMLCanvasElement> = {
+  heros: drawHeroPlaceholder,
+  jorogumo: drawJorogumo,
+  jorogumoAraignee: drawJorogumoSpider,
+  araignee: drawSpider,
+  souche: drawStump,
+};
 
 export interface SpriteDef {
   /** Image dans public/sprites, ou null pour un dessin provisoire. */
@@ -65,6 +81,7 @@ interface SpriteEntry {
 }
 
 interface EntityView {
+  spriteName: string;
   node: TransformNode;
   sprite: Mesh;
   material: ShaderMaterial;
@@ -118,6 +135,10 @@ const SLASH = new Color3(1, 0.97, 0.9);
 const HEAL = new Color3(0.45, 1, 0.5);
 const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
 const DUST = new Color3(0.86, 0.78, 0.6);
+const SILK = new Color3(0.93, 0.95, 0.98);
+const FIRE = new Color3(1, 0.55, 0.2);
+/** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
+const THREAD_WIDTH = 0.05;
 
 function registerShaders(): void {
   if (Effect.ShadersStore.spriteVertexShader) return;
@@ -204,7 +225,7 @@ export class Renderer {
   private shake = 0;
   private time = 0;
   private readonly sprites = new Map<string, SpriteEntry>();
-  private readonly fxTextures: Record<'shadow' | 'crescent' | 'ring' | 'telegraph', BaseTexture>;
+  private readonly fxTextures: Record<'shadow' | 'crescent' | 'ring' | 'telegraph' | 'web', BaseTexture>;
   private readonly views = new Map<number, EntityView>();
   private dying: EntityView[] = [];
   private effects: Fx[] = [];
@@ -213,6 +234,9 @@ export class Renderer {
   private readonly channels = new Map<number, Fx>();
   private readonly landings = new Map<number, Fx>();
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
+  private readonly webs = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  private stumpViews: { stumps: readonly Stump[]; meshes: { dispose(): void }[] } = { stumps: [], meshes: [] };
+  private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
   private texts: FloatingText[] = [];
 
@@ -250,7 +274,9 @@ export class Renderer {
       crescent: this.canvasTexture('crescent', drawCrescent()),
       ring: this.canvasTexture('ring', drawRing()),
       telegraph: this.canvasTexture('telegraph', drawTelegraph()),
+      web: this.canvasTexture('web', drawWeb()),
     };
+    this.threads = this.createThreads();
   }
 
   async load(): Promise<void> {
@@ -294,7 +320,7 @@ export class Renderer {
     }, dt);
     for (const enemy of world.enemies) {
       seen.add(enemy.id);
-      this.syncEntity(enemy.id, enemy.kind, {
+      this.syncEntity(enemy.id, enemy.sprite, {
         pos: enemy.pos,
         facing: enemy.facing,
         radius: enemy.radius,
@@ -312,6 +338,9 @@ export class Renderer {
     }
 
     this.updateGuard(player.pos, player.facing, player.pose, dt);
+    this.syncStumps(world.stumps);
+    this.syncWebs(world);
+    this.syncThreads(world);
     for (const event of events) this.handle(event);
     this.updateDying(dt);
     this.updateEffects(dt);
@@ -335,6 +364,9 @@ export class Renderer {
     this.landings.clear();
     for (const text of this.texts) text.el.remove();
     this.texts = [];
+    for (const web of this.webs.values()) this.disposeFx(web);
+    this.webs.clear();
+    this.syncStumps([]);
     this.shake = 0;
     this.cameraTarget.setAll(0);
   }
@@ -343,6 +375,11 @@ export class Renderer {
 
   private syncEntity(id: number, spriteName: string, s: Snapshot, dt: number): void {
     let view = this.views.get(id);
+    if (view && view.spriteName !== spriteName) {
+      // Changement de forme (la Jorōgumo révèle son corps d'araignée) : on refait la vue.
+      this.disposeView(view);
+      view = undefined;
+    }
     if (!view) {
       view = this.createView(id, spriteName, s.radius);
       this.views.set(id, view);
@@ -439,6 +476,7 @@ export class Renderer {
     const shadow = this.createDecal(`shadow-${id}`, this.fxTextures.shadow, shadowSize, shadowSize, Color3.Black(), 0.4, 0.01);
     shadow.mesh.parent = node;
     return {
+      spriteName,
       node,
       sprite,
       material,
@@ -484,6 +522,124 @@ export class Renderer {
     view.node.dispose();
     view.material.dispose();
     view.shadowMaterial.dispose();
+  }
+
+  // --- Arène du boss : souches, toiles et fils -------------------------------
+
+  /** Les souches changent seulement au début d'une vague : on refait tout quand la liste change. */
+  private syncStumps(stumps: readonly Stump[]): void {
+    if (stumps === this.stumpViews.stumps) return;
+    for (const mesh of this.stumpViews.meshes) mesh.dispose();
+    const meshes: { dispose(): void }[] = [];
+    const def = this.manifest.souche;
+    const entry = this.sprites.get('souche');
+    stumps.forEach((stump, i) => {
+      if (!def || !entry) return;
+      const { sprite, material } = this.createSprite(`stump-${i}`, entry, def);
+      sprite.position.set(stump.pos.x, 0, stump.pos.z);
+      sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(stump.pos, this.forward) * 100);
+      const size = stump.radius * 2.8;
+      const shadow = this.createDecal(`stump-shadow-${i}`, this.fxTextures.shadow, size, size, Color3.Black(), 0.45, 0.01);
+      shadow.mesh.position.x = stump.pos.x;
+      shadow.mesh.position.z = stump.pos.z;
+      meshes.push(sprite, material, shadow.mesh, shadow.material);
+    });
+    this.stumpViews = { stumps, meshes };
+  }
+
+  private syncWebs(world: World): void {
+    const burnTime = world.cfg.webs.burnTime;
+    const seen = new Set<number>();
+    for (const web of world.webs) {
+      seen.add(web.id);
+      let view = this.webs.get(web.id);
+      if (!view) {
+        const size = web.radius * 2;
+        view = this.createDecal(`web-${web.id}`, this.fxTextures.web, size, size, SILK, 0.8, 0.02);
+        view.mesh.position.x = web.pos.x;
+        view.mesh.position.z = web.pos.z;
+        view.mesh.rotation.y = Math.random() * Math.PI * 2;
+        view.mesh.alphaIndex = DECAL_ORDER + 1;
+        this.webs.set(web.id, view);
+      }
+      const grow = Math.min(1, web.age / 0.3);
+      if (web.burning === null) {
+        view.mesh.scaling.setAll(0.4 + 0.6 * grow);
+        view.material.setFloat('alpha', 0.75 * grow);
+      } else {
+        const k = Math.min(1, web.burning / burnTime);
+        view.material.setColor3('tint', FIRE);
+        view.material.setFloat('alpha', 0.95 * (1 - k));
+        view.material.setFloat('flash', 0.3 * Math.abs(Math.sin(this.time * 30)));
+        view.mesh.scaling.setAll(1 + 0.15 * k);
+      }
+    }
+    for (const [id, view] of this.webs) {
+      if (seen.has(id)) continue;
+      this.disposeFx(view);
+      this.webs.delete(id);
+    }
+  }
+
+  /** Deux fils : celui qui la suspend au plafond, et celui qu'elle tend vers le joueur. */
+  private createThreads(): { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh } {
+    const material = (name: string, color: Color3): StandardMaterial => {
+      const m = new StandardMaterial(name, this.scene);
+      m.disableLighting = true;
+      m.emissiveColor = color;
+      m.alpha = 0.9;
+      return m;
+    };
+    const cylinder = (name: string, m: StandardMaterial): Mesh => {
+      const mesh = MeshBuilder.CreateCylinder(name, { height: 1, diameter: THREAD_WIDTH, tessellation: 6 }, this.scene);
+      mesh.material = m;
+      mesh.isPickable = false;
+      mesh.isVisible = false;
+      mesh.rotationQuaternion = Quaternion.Identity();
+      mesh.alphaIndex = SPRITE_ORDER * 2;
+      return mesh;
+    };
+    const pullMaterial = material('threadPull', SILK);
+    return { pull: cylinder('threadPull', pullMaterial), pullMaterial, drag: cylinder('threadDrag', material('threadDrag', SILK)) };
+  }
+
+  private syncThreads(world: World): void {
+    const { pull, pullMaterial, drag } = this.threads;
+    const boss = world.enemies.find((e): e is Jorogumo => e instanceof Jorogumo && !e.dead);
+    pull.isVisible = false;
+    drag.isVisible = false;
+    if (!boss) return;
+    // Le sprite fait face à la caméra : le milieu de son corps se trouve le long de l'axe « haut » de la caméra.
+    const view = this.views.get(boss.id);
+    const bodyHeight = view ? view.def.height * 0.45 : 1;
+    const anchor = new Vector3(boss.pos.x, boss.altitude, boss.pos.z).addInPlace(this.camera.getDirection(Vector3.Up()).scale(bodyHeight));
+    if (boss.altitude > 0.3) {
+      drag.isVisible = true;
+      this.stretch(drag, anchor, new Vector3(boss.pos.x, boss.altitude + 20, boss.pos.z));
+    }
+    const thread = boss.thread;
+    if (thread) {
+      const player = world.player;
+      pull.isVisible = true;
+      // Visé, le fil est rouge et clignote ; tendu, il est blanc et épais.
+      pullMaterial.emissiveColor = thread.taut ? SILK : Math.sin(this.time * 25) > 0 ? DANGER : SILK;
+      pull.scaling.x = pull.scaling.z = thread.taut ? 2 : 1;
+      this.stretch(pull, anchor, new Vector3(player.pos.x, 0.9, player.pos.z));
+    }
+  }
+
+  /** Place un cylindre de hauteur 1 entre deux points. */
+  private stretch(mesh: Mesh, from: Vector3, to: Vector3): void {
+    const delta = to.subtract(from);
+    const len = delta.length();
+    mesh.position.copyFrom(from.add(to).scale(0.5));
+    mesh.scaling.y = len;
+    const axis = delta.scale(1 / Math.max(1e-6, len));
+    const up = Vector3.Up();
+    const cross = Vector3.Cross(up, axis);
+    const angle = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(up, axis))));
+    if (cross.lengthSquared() < 1e-8) mesh.rotationQuaternion = Quaternion.Identity();
+    else mesh.rotationQuaternion = Quaternion.RotationAxis(cross.normalize(), angle);
   }
 
   // --- Effets --------------------------------------------------------------
@@ -532,6 +688,21 @@ export class Renderer {
       case 'stun':
         if (event.reason === 'wall') this.text(event.pos, 2, 'Sonné !', 'stun');
         else if (event.reason === 'smash') this.text(event.pos, 2, 'Étourdi', 'stun');
+        else if (event.reason === 'snag') {
+          this.text(event.pos, 2.6, 'Le fil s’accroche !', 'parry', 1.6);
+          this.addFx(this.ringFx(event.pos, 4, SILK, 0.5));
+          this.addShake(0.8);
+        }
+        break;
+      case 'bossPhase':
+        this.addShake(0.5);
+        break;
+      case 'webBurn':
+        this.addFx(this.ringFx(event.pos, event.radius * 2.2, FIRE, 0.5));
+        break;
+      case 'bite':
+        this.text(event.pos, 2.4, 'Morsure', 'hurt');
+        this.addShake(0.4);
         break;
       case 'telegraph': {
         this.endTracked(this.telegraphs, event.id);
@@ -683,7 +854,7 @@ export class Renderer {
     });
   }
 
-  private disposeFx(fx: Fx): void {
+  private disposeFx(fx: { mesh: Mesh; material: ShaderMaterial }): void {
     fx.mesh.dispose();
     fx.material.dispose();
   }
@@ -757,7 +928,7 @@ export class Renderer {
         console.warn(`Sprite introuvable : ${def.file}. Un dessin provisoire le remplace.`);
       }
     }
-    const canvas = name === 'heros' ? drawHeroPlaceholder() : drawMissing(name);
+    const canvas = PLACEHOLDERS[name]?.() ?? drawMissing(name);
     return { texture: this.canvasTexture(name, canvas), aspect: canvas.width / canvas.height };
   }
 

@@ -22,6 +22,11 @@ export class Player {
   blocking = false;
   dodgeCooldown = 0;
   invulnerable = 0;
+  /**
+   * Fil de la Jorōgumo : vitesse de traction et frein sur la marche, posés par le boss à chaque pas.
+   * Le joueur les applique au pas suivant, puis les oublie si le boss ne les renouvelle pas.
+   */
+  tether: { pull: Vec2; moveFactor: number } | null = null;
   readonly mass = 1;
   private moving = false;
   private action: Action = { kind: 'free' };
@@ -73,17 +78,22 @@ export class Player {
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     if (input.dodgePressed && this.dodgeCooldown <= 0 && this.canCancel()) this.startDodge(input, world);
 
+    const tether = this.tether;
+    this.tether = null;
+    const slow = world.slowAt(this.pos) * (tether?.moveFactor ?? 1);
+
     const a = this.action;
     switch (a.kind) {
       case 'free':
-        this.updateFree(dt, input, aimDir);
+        this.updateFree(dt, input, aimDir, slow);
         break;
       case 'attack':
         this.updateAttack(dt, a, aimDir, input, world);
         break;
       case 'dodge': {
         a.t += dt;
-        this.pos = add(this.pos, scale(a.dir, (c.dodge.distance / c.dodge.duration) * dt));
+        // Seules les toiles freinent l'esquive : c'est elle qui permet de contourner une souche malgré le fil.
+        this.pos = add(this.pos, scale(a.dir, (c.dodge.distance / c.dodge.duration) * world.slowAt(this.pos) * dt));
         if (a.t >= c.dodge.duration) this.action = { kind: 'free' };
         break;
       }
@@ -98,6 +108,7 @@ export class Player {
       }
     }
 
+    if (tether) this.pos = add(this.pos, scale(tether.pull, dt));
     this.pos = add(this.pos, scale(this.knockback, dt));
     this.knockback = scale(this.knockback, Math.exp(-10 * dt));
     world.clampToArena(this.pos, this.radius);
@@ -132,7 +143,7 @@ export class Player {
     this.rage = Math.min(this.cfg.rageMax, this.rage + amount);
   }
 
-  private updateFree(dt: number, input: InputFrame, aimDir: Vec2): void {
+  private updateFree(dt: number, input: InputFrame, aimDir: Vec2, slow: number): void {
     const c = this.cfg;
     this.facing = aimDir;
     this.blocking = input.blockHeld;
@@ -147,7 +158,7 @@ export class Player {
       return;
     }
     if (length(input.move) > 0.05) {
-      const speed = c.moveSpeed * (this.blocking ? c.blockMoveFactor : 1);
+      const speed = c.moveSpeed * slow * (this.blocking ? c.blockMoveFactor : 1);
       this.pos = add(this.pos, scale(input.move, speed * dt));
       this.moving = true;
     }

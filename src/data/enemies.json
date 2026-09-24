@@ -100,5 +100,104 @@
     "damage": 12,
     "knockback": 4,
     "cooldown": 1.1
+  },
+  "araignee": {
+    "maxHp": 12,
+    "radius": 0.3,
+    "mass": 0.4,
+    "knockbackFactor": 1.5,
+    "speed": 3.8,
+    "attackRange": 0.9,
+    "arcDeg": 90,
+    "windup": 0.35,
+    "recover": 0.45,
+    "damage": 6,
+    "knockback": 2,
+    "cooldown": 0.9
+  },
+  "jorogumo": {
+    "maxHp": 750,
+    "radius": 0.55,
+    "mass": 8,
+    "knockbackFactor": 0.1,
+    "spiderAt": 0.65,
+    "ceilingAt": 0.3,
+    "transformTime": 1.4,
+    "human": {
+      "speed": 2.1,
+      "keepDistance": 3,
+      "fan": {
+        "range": 2.3,
+        "arcDeg": 120,
+        "windup": 0.5,
+        "recover": 0.6,
+        "damage": 12,
+        "knockback": 5,
+        "cooldown": 1.2
+      },
+      "summonInterval": 9,
+      "summonChannel": 1,
+      "summonCount": 3,
+      "maxSpiders": 5,
+      "webTossInterval": 5,
+      "webToss": {
+        "warning": 1,
+        "radius": 1.2,
+        "damage": 8,
+        "knockback": 3
+      }
+    },
+    "spider": {
+      "radius": 1.1,
+      "speed": 2.5,
+      "turnRateDeg": 120,
+      "bite": {
+        "range": 2,
+        "arcDeg": 110,
+        "windup": 0.45,
+        "recover": 0.55,
+        "damage": 14,
+        "knockback": 5,
+        "cooldown": 1.1
+      },
+      "chargeRange": 9,
+      "chargeCooldown": 3,
+      "telegraph": 0.8,
+      "chargeSpeed": 11,
+      "chargeDistance": 9,
+      "chargeDamage": 22,
+      "chargeKnockback": 9,
+      "recover": 0.9,
+      "stumpStun": 2.5,
+      "webLayInterval": 4
+    },
+    "ceiling": {
+      "height": 3.2,
+      "climbTime": 0.7,
+      "driftSpeed": 1.5,
+      "rainInterval": 2.4,
+      "rainCount": 3,
+      "rain": {
+        "warning": 1,
+        "radius": 1.1,
+        "damage": 12,
+        "knockback": 4
+      },
+      "rainWebChance": 0.4,
+      "pullInterval": 6,
+      "pullAim": 0.8,
+      "pullSpeed": 5,
+      "pullMaxTime": 3.5,
+      "tetheredMoveFactor": 0.35,
+      "biteRange": 1.3,
+      "biteDamage": 22,
+      "biteKnockback": 8,
+      "groundedAfterBite": 2,
+      "fallTime": 0.35,
+      "snagStun": 4.5,
+      "snagDamageFactor": 1.5
+    },
+    "hitodamaCount": 2,
+    "hitodamaInterval": 5
   }
 }

@@ -24,6 +24,14 @@ export function normalize(a: Vec2, fallback: Vec2 = { x: 1, z: 0 }): Vec2 {
 /** Vrai si la direction `dir` est dans le cône de demi-angle `halfArc` centré sur `facing` (vecteurs normalisés). */
 export const inCone = (facing: Vec2, dir: Vec2, halfArc: number): boolean => dot(facing, dir) >= Math.cos(halfArc);
 
+/** Distance entre le point `p` et le segment [a, b]. */
+export function distanceToSegment(p: Vec2, a: Vec2, b: Vec2): number {
+  const ab = sub(b, a);
+  const len2 = dot(ab, ab);
+  const t = len2 > 1e-9 ? Math.max(0, Math.min(1, dot(sub(p, a), ab) / len2)) : 0;
+  return distance(p, add(a, scale(ab, t)));
+}
+
 /** Tourne `from` vers `to` d'au plus `maxAngle` radians. */
 export function rotateTowards(from: Vec2, to: Vec2, maxAngle: number): Vec2 {
   const start = angleOf(from);

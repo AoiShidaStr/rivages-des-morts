@@ -16,6 +16,9 @@ export class Hud {
   private readonly hint: HTMLElement;
   private readonly end: HTMLElement;
   private readonly endTitle: HTMLElement;
+  private readonly boss: HTMLElement;
+  private readonly bossName: HTMLElement;
+  private readonly bossFill: HTMLElement;
   private bannerTimer = 0;
 
   constructor(root: HTMLElement) {
@@ -35,6 +38,9 @@ export class Hud {
     this.hint = find('#hint');
     this.end = find('#end');
     this.endTitle = find('#end h1');
+    this.boss = find('#boss');
+    this.bossName = find('#boss .name');
+    this.bossFill = find('#boss .fill');
   }
 
   update(world: World, events: readonly GameEvent[], dt: number): void {
@@ -46,14 +52,16 @@ export class Hud {
     this.smashSkill.classList.toggle('locked', !player.canSmash);
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
 
+    const boss = world.enemies.find((e) => e.boss);
+    this.boss.classList.toggle('visible', Boolean(boss));
+    if (boss) this.bossFill.style.width = `${(Math.max(0, boss.hp) / boss.maxHp) * 100}%`;
+
     for (const event of events) {
       if (event.type === 'wave') {
-        this.bannerStep.textContent = `Vague ${event.index + 1} / ${event.total}`;
-        this.bannerLabel.textContent = event.label;
-        this.banner.classList.add('visible');
-        this.bannerTimer = BANNER_TIME;
-        this.hint.textContent = event.hint ?? '';
-        this.hint.classList.toggle('visible', Boolean(event.hint));
+        this.announce(`Vague ${event.index + 1} / ${event.total}`, event.label, event.hint);
+      } else if (event.type === 'bossPhase') {
+        this.bossName.textContent = `Jorōgumo · ${event.label}`;
+        this.announce(`Phase ${event.phase} / 3`, event.label, event.hint);
       } else if (event.type === 'end') {
         this.endTitle.textContent = event.outcome === 'victory' ? 'Les rizières sont apaisées' : 'Ton âme vacille…';
         this.end.classList.add('visible');
@@ -65,10 +73,20 @@ export class Hud {
     if (this.bannerTimer <= 0) this.banner.classList.remove('visible');
   }
 
+  private announce(step: string, label: string, hint?: string): void {
+    this.bannerStep.textContent = step;
+    this.bannerLabel.textContent = label;
+    this.banner.classList.add('visible');
+    this.bannerTimer = BANNER_TIME;
+    this.hint.textContent = hint ?? '';
+    this.hint.classList.toggle('visible', Boolean(hint));
+  }
+
   reset(): void {
     this.end.classList.remove('visible');
     this.hint.classList.remove('visible');
     this.banner.classList.remove('visible');
     this.bannerTimer = 0;
+    this.bossName.textContent = 'Jorōgumo';
   }
 }
