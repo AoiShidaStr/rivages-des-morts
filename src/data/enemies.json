@@ -1,0 +1,32 @@
+{
+  "hitodama": {
+    "maxHp": 14,
+    "radius": 0.35,
+    "mass": 0.5,
+    "knockbackFactor": 1.4,
+    "speed": 3.2,
+    "weave": 0.7,
+    "contactDamage": 7,
+    "retreatTime": 0.7
+  },
+  "kappa": {
+    "maxHp": 90,
+    "radius": 0.65,
+    "mass": 4,
+    "knockbackFactor": 0.25,
+    "speed": 1.6,
+    "turnRateDeg": 100,
+    "shellArcDeg": 140,
+    "shellDamageFactor": 0.15,
+    "chargeRange": 7,
+    "telegraph": 0.7,
+    "chargeSpeed": 12,
+    "chargeDistance": 8,
+    "chargeDamage": 20,
+    "chargeKnockback": 9,
+    "recover": 0.8,
+    "cooldown": 1.6,
+    "parryStun": 2.2,
+    "wallStun": 1.3
+  }
+}

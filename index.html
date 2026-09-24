@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rivages des Morts, prototype</title>
+  </head>
+  <body>
+    <canvas id="game" tabindex="0"></canvas>
+    <div id="overlay"></div>
+    <div id="hud">
+      <div class="status">
+        <div class="bar hp"><div class="fill"></div><span class="label">PV</span></div>
+        <div class="bar rage"><div class="fill"></div><span class="label">Rage</span></div>
+        <div class="skills">
+          <div class="skill" id="skill-dodge"><div class="cooldown"></div><kbd>Espace</kbd>Esquive</div>
+          <div class="skill" id="skill-smash"><div class="cooldown"></div><kbd>A</kbd>Frappe fracassante</div>
+        </div>
+      </div>
+      <div id="banner"><small></small><span></span></div>
+      <div id="hint"></div>
+      <div id="end">
+        <h1></h1>
+        <p><kbd>Entrée</kbd> pour recommencer</p>
+      </div>
+      <div class="controls">
+        <kbd>ZQSD</kbd> se déplacer · <kbd>Souris</kbd> viser · <kbd>Clic gauche</kbd> frapper ·
+        <kbd>Clic droit</kbd> bloquer · <kbd>Espace</kbd> esquiver · <kbd>A</kbd> frappe fracassante
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

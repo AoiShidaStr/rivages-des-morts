@@ -1,0 +1,24 @@
+{
+  "name": "Rizières noyées : salle d'essai",
+  "arenaHalfSize": 9,
+  "waves": [
+    {
+      "label": "Des feux follets",
+      "hint": "Clic gauche pour frapper. Ils meurent en un ou deux coups.",
+      "spawns": [{ "kind": "hitodama", "count": 4 }]
+    },
+    {
+      "label": "Le kappa",
+      "hint": "Sa carapace arrête les coups de face. Contourne-le, ou bloque sa charge (clic droit) pour renverser sa coupelle.",
+      "spawns": [{ "kind": "kappa", "count": 1 }]
+    },
+    {
+      "label": "La mêlée",
+      "hint": "Bloquer remplit la rage. À moitié pleine, A déclenche une frappe fracassante qui ignore la carapace.",
+      "spawns": [
+        { "kind": "kappa", "count": 2 },
+        { "kind": "hitodama", "count": 5 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "sourceDir": "~/Pictures/game visual",
+  "outDir": "public/sprites",
+  "defaults": {
+    "tolerance": 30,
+    "localTolerance": 18,
+    "maxSaturation": 16,
+    "minPartRatio": 0.02,
+    "padding": 6,
+    "maxSize": 768
+  },
+  "sprites": [
+    { "name": "heros", "source": "heros_guerrier.jpg" },
+    { "name": "kappa", "source": "ennemi_kappa.jpg" },
+    { "name": "kappa-renforce", "source": "ennemi_kappa-renforce.jpg" },
+    { "name": "hitodama", "source": "ennemi_hitodama.jpg" },
+    { "name": "kodama", "source": "ennemi_kodama.jpg" },
+    { "name": "kasa-obake", "source": "ennemi_kasa-obake.jpg", "fillHoles": true, "minHole": 2000 },
+    { "name": "oublie", "source": "ennemi_oublie.jpg" },
+    { "name": "torii", "source": "decor_torii-du-ponton.jpg", "fillHoles": true, "minHole": 6000 }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "heros": { "file": "heros.png", "height": 1.75, "facesRight": true },
+  "hitodama": { "file": "hitodama.png", "height": 0.9, "facesRight": false, "lift": 0.45 },
+  "kappa": { "file": "kappa.png", "height": 1.45, "facesRight": true },
+  "torii": { "file": "torii.png", "height": 5.5, "facesRight": true, "decor": { "x": 12, "z": 12 } }
+}
