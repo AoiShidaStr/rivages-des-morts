@@ -1,7 +1,15 @@
 import type { Vec2 } from './math';
 
-export type EnemyKind = 'hitodama' | 'kodama' | 'kappa' | 'kappaRenforce' | 'kasaObake' | 'oublie';
-export type StunReason = 'parry' | 'wall' | 'smash';
+export type EnemyKind =
+  | 'hitodama'
+  | 'kodama'
+  | 'kappa'
+  | 'kappaRenforce'
+  | 'kasaObake'
+  | 'oublie'
+  | 'araignee'
+  | 'jorogumo';
+export type StunReason = 'parry' | 'wall' | 'smash' | 'snag';
 export type Outcome = 'victory' | 'defeat';
 
 /** Posture affichée : le rendu s'en sert pour animer les sprites (écrasement, tremblement, teinte). */
@@ -40,4 +48,7 @@ export type GameEvent =
   | { type: 'dodge'; pos: Vec2; dir: Vec2 }
   | { type: 'smash'; pos: Vec2; radius: number }
   | { type: 'death'; id: number; pos: Vec2; kind: EnemyKind }
+  | { type: 'bossPhase'; phase: number; label: string; hint?: string }
+  | { type: 'webBurn'; id: number; pos: Vec2; radius: number }
+  | { type: 'bite'; pos: Vec2 }
   | { type: 'end'; outcome: Outcome };

@@ -175,6 +175,35 @@ kbd {
   transform: scaleX(0);
 }
 
+/* Barre du boss */
+#boss {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 360px));
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+#boss.visible {
+  opacity: 1;
+}
+
+#boss .name {
+  display: block;
+  margin-bottom: 4px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  color: var(--paper);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+#boss .fill {
+  background: linear-gradient(#b13a52, #5e1426);
+}
+
 /* Annonces */
 #banner {
   position: absolute;

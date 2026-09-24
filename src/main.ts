@@ -17,10 +17,15 @@ const MAX_STEPS_PER_FRAME = 5;
 
 const config: GameConfig = {
   arenaHalfSize: dungeon.arenaHalfSize,
+  stumpRadius: dungeon.stumpRadius,
+  webs: dungeon.webs,
   player,
   enemies,
   waves: dungeon.waves as GameConfig['waves'],
 };
+
+/** `?vague=7` commence directement à la septième vague (le boss), pour tester sans refaire tout le donjon. */
+const startWave = Math.max(0, Number(new URLSearchParams(location.search).get('vague') ?? 1) - 1) || 0;
 
 function element<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -34,7 +39,7 @@ async function start(): Promise<void> {
   await renderer.load();
   const input = new Input(canvas);
   const hud = new Hud(element('hud'));
-  let world = new World(config);
+  let world = new World(config, startWave);
 
   const readInput = (): InputFrame => {
     const { forward, right } = renderer.groundBasis();
@@ -61,7 +66,7 @@ async function start(): Promise<void> {
     last = now;
 
     if (input.consumeKey('Enter') && world.state !== 'playing') {
-      world = new World(config);
+      world = new World(config, startWave);
       renderer.reset();
       hud.reset();
     }
