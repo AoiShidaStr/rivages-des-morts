@@ -1,11 +1,11 @@
 {
-  "heros": { "file": "heros.png", "height": 1.75, "facesRight": true },
+  "heros": { "file": "heros.png", "sheet": { "file": "pixel/heros.json", "height": 2.35 }, "height": 1.75, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "height": 0.9, "facesRight": false, "lift": 0.45 },
   "kodama": { "file": "kodama.png", "height": 1.15, "facesRight": true, "lift": 0.15 },
   "kappa": { "file": "kappa.png", "height": 1.45, "facesRight": true },
   "kappaRenforce": { "file": "kappa-renforce.png", "height": 1.85, "facesRight": true },
   "kasaObake": { "file": "kasa-obake.png", "height": 1.6, "facesRight": false },
-  "oublie": { "file": "oublie.png", "height": 2, "facesRight": false },
+  "oublie": { "file": "oublie.png", "sheet": { "file": "pixel/oublie.json", "height": 2.4 }, "height": 2, "facesRight": false },
   "araignee": { "file": "araignee.png", "height": 0.65, "facesRight": true },
   "jorogumo": { "file": "jorogumo.png", "height": 2.4, "facesRight": true },
   "jorogumoAraignee": { "file": "jorogumo-araignee.png", "height": 2.9, "facesRight": true },

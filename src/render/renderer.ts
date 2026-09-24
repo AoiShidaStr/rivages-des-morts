@@ -16,6 +16,7 @@ import {
   Texture,
   TransformNode,
   Vector3,
+  Vector4,
   type BaseTexture,
 } from '@babylonjs/core';
 import { Jorogumo } from '../game/enemies';
@@ -51,6 +52,12 @@ const PLACEHOLDERS: Record<string, () => HTMLCanvasElement> = {
 export interface SpriteDef {
   /** Image dans public/sprites, ou null pour un dessin provisoire. */
   file: string | null;
+  /**
+   * Planche animée en pixel art (JSON « Array » d'Aseprite dans public/sprites, l'image à côté).
+   * Prioritaire sur `file` ; chaque tag porte le nom d'une posture (idle, move, strike…).
+   * `height` est celle d'une image entière de la planche, marges comprises.
+   */
+  sheet?: { file: string; height: number };
   /** Hauteur à l'écran, en unités du monde. */
   height: number;
   /** Sens dans lequel regarde le sujet sur l'image. */
@@ -80,6 +87,23 @@ interface Snapshot {
 interface SpriteEntry {
   texture: BaseTexture;
   aspect: number;
+  /** Hauteur à l'écran, en unités du monde. */
+  height: number;
+  /** Sens du sujet sur l'image (les planches en pixel art regardent toujours vers la droite). */
+  facesRight: boolean;
+  anim?: SheetAnimation;
+}
+
+/** Planche découpée : rectangle de chaque image (en UV) et plages d'images par posture. */
+interface SheetAnimation {
+  frames: { rect: [number, number, number, number]; duration: number }[];
+  tags: Map<string, { from: number; to: number; once: boolean }>;
+}
+
+/** Ce que Babylon lit dans un export JSON d'Aseprite (format « Array »). */
+interface AsepriteSheet {
+  frames: { frame: { x: number; y: number; w: number; h: number }; duration: number }[];
+  meta: { image: string; size: { w: number; h: number }; frameTags?: { name: string; from: number; to: number; repeat?: string }[] };
 }
 
 interface EntityView {
@@ -91,12 +115,17 @@ interface EntityView {
   shadowMaterial: ShaderMaterial;
   def: SpriteDef;
   isPlayer: boolean;
+  /** Sens dans lequel l'entité regarde à l'écran, et celui du sujet sur son image. */
   faceRight: boolean;
+  imageFacesRight: boolean;
   flash: number;
   sx: number;
   sy: number;
   phase: number;
   dying: number;
+  /** Animation en cours sur une planche : posture jouée et temps écoulé depuis son début. */
+  animTag: string;
+  animTime: number;
 }
 
 interface Fx {
@@ -115,6 +144,14 @@ interface FloatingText {
 }
 
 const PLAYER_ID = 0;
+/** Posture de repli quand une planche n'a pas d'animation pour la posture demandée. */
+const FALLBACK_POSE: Partial<Record<Pose, Pose>> = {
+  dash: 'move',
+  airborne: 'move',
+  channel: 'windup',
+  guard: 'idle',
+  stunned: 'idle',
+};
 const PITCH = Math.atan(1 / Math.SQRT2); // 35,26° : isométrie vraie
 const YAW = Math.PI / 4;
 const CAMERA_DISTANCE = 40;
@@ -163,8 +200,9 @@ function registerShaders(): void {
     uniform float flash;
     uniform float alpha;
     uniform float flipX;
+    uniform vec4 frameRect;
     void main(void) {
-      vec2 uv = vec2(mix(vUV.x, 1.0 - vUV.x, flipX), vUV.y);
+      vec2 uv = frameRect.xy + vec2(mix(vUV.x, 1.0 - vUV.x, flipX), vUV.y) * frameRect.zw;
       vec4 color = texture2D(textureSampler, uv);
       float a = color.a * alpha;
       if (a < 0.02) discard;
@@ -179,7 +217,7 @@ function spriteMaterial(scene: Scene, name: string, texture: BaseTexture): Shade
     { vertex: 'sprite', fragment: 'sprite' },
     {
       attributes: ['position', 'uv'],
-      uniforms: ['worldViewProjection', 'tint', 'flash', 'alpha', 'flipX'],
+      uniforms: ['worldViewProjection', 'tint', 'flash', 'alpha', 'flipX', 'frameRect'],
       samplers: ['textureSampler'],
       needAlphaBlending: true,
     },
@@ -189,18 +227,20 @@ function spriteMaterial(scene: Scene, name: string, texture: BaseTexture): Shade
   material.setFloat('flash', 0);
   material.setFloat('alpha', 1);
   material.setFloat('flipX', 0);
+  material.setVector4('frameRect', new Vector4(0, 0, 1, 1));
   material.backFaceCulling = false;
   return material;
 }
 
-function loadTexture(scene: Scene, url: string): Promise<Texture> {
+function loadTexture(scene: Scene, url: string, pixelated = false): Promise<Texture> {
   return new Promise((resolve, reject) => {
+    // Le pixel art garde des pixels nets : pas de mipmaps ni de lissage.
     const texture: Texture = new Texture(
       url,
       scene,
-      false,
+      pixelated,
       true,
-      Texture.TRILINEAR_SAMPLINGMODE,
+      pixelated ? Texture.NEAREST_SAMPLINGMODE : Texture.TRILINEAR_SAMPLINGMODE,
       () => resolve(texture),
       (message) => reject(new Error(message ?? url)),
     );
@@ -391,9 +431,12 @@ export class Renderer {
     // Miroir selon que l'entité regarde vers la gauche ou la droite de l'écran (avec une marge pour éviter le va-et-vient).
     const side = dot(s.facing, this.right);
     if (Math.abs(side) > 0.2) view.faceRight = side > 0;
-    view.material.setFloat('flipX', view.faceRight === view.def.facesRight ? 0 : 1);
+    view.material.setFloat('flipX', view.faceRight === view.imageFacesRight ? 0 : 1);
 
-    // Une seule image par personnage : l'animation passe par l'écrasement, le tremblement et la teinte.
+    // Une planche animée joue l'animation de la posture ; sinon, une seule image que l'on anime
+    // par l'écrasement, le tremblement et la teinte.
+    const anim = this.sprites.get(spriteName)?.anim;
+    if (anim) this.playSheet(view, anim, s.pose, dt);
     const t = this.time + view.phase;
     let sx = 1;
     let sy = 1;
@@ -444,6 +487,11 @@ export class Renderer {
         sy = 1.15;
         break;
     }
+    if (anim) {
+      // Les poses dessinées remplacent l'écrasement ; seul l'étourdi garde un léger tangage.
+      sx = 1;
+      if (s.pose !== 'stunned') sy = 1;
+    }
     const k = Math.min(1, dt * 18);
     view.sx += (sx - view.sx) * k;
     view.sy += (sy - view.sy) * k;
@@ -472,7 +520,7 @@ export class Renderer {
     const entry = this.sprites.get(spriteName);
     if (!def || !entry) throw new Error(`Sprite inconnu : ${spriteName}`);
     const node = new TransformNode(`entity-${id}`, this.scene);
-    const { sprite, material } = this.createSprite(`entity-${id}`, entry, def);
+    const { sprite, material } = this.createSprite(`entity-${id}`, entry);
     sprite.parent = node;
     const shadowSize = radius * 2.6;
     const shadow = this.createDecal(`shadow-${id}`, this.fxTextures.shadow, shadowSize, shadowSize, Color3.Black(), 0.4, 0.01);
@@ -486,19 +534,47 @@ export class Renderer {
       shadowMaterial: shadow.material,
       def,
       isPlayer: id === PLAYER_ID,
-      faceRight: def.facesRight,
+      faceRight: entry.facesRight,
+      imageFacesRight: entry.facesRight,
       flash: 0,
       sx: 1,
       sy: 1,
       phase: Math.random() * 10,
       dying: -1,
+      animTag: '',
+      animTime: 0,
     };
   }
 
+  /** Choisit l'image de la planche pour la posture en cours. */
+  private playSheet(view: EntityView, anim: SheetAnimation, pose: Pose, dt: number): void {
+    // Une posture sans animation dessinée retombe sur la plus proche, puis sur l'attente.
+    const tagName = [pose, FALLBACK_POSE[pose], 'idle'].find((name) => name && anim.tags.has(name)) ?? '';
+    const tag = anim.tags.get(tagName);
+    if (tagName !== view.animTag) {
+      view.animTag = tagName;
+      view.animTime = 0;
+    } else {
+      view.animTime += dt;
+    }
+    let frame = 0;
+    if (tag) {
+      const total = anim.frames.slice(tag.from, tag.to + 1).reduce((sum, f) => sum + f.duration, 0);
+      let time = tag.once ? Math.min(view.animTime, total - 1e-6) : view.animTime % Math.max(1e-6, total);
+      frame = tag.from;
+      while (frame < tag.to && time >= anim.frames[frame].duration) {
+        time -= anim.frames[frame].duration;
+        frame++;
+      }
+    }
+    const [u, v, w, h] = anim.frames[frame].rect;
+    view.material.setVector4('frameRect', new Vector4(u, v, w, h));
+  }
+
   /** Plan vertical tourné vers la caméra, dont l'origine est aux pieds du personnage. */
-  private createSprite(name: string, entry: SpriteEntry, def: SpriteDef): { sprite: Mesh; material: ShaderMaterial } {
-    const sprite = MeshBuilder.CreatePlane(name, { width: def.height * entry.aspect, height: def.height }, this.scene);
-    sprite.bakeTransformIntoVertices(Matrix.Translation(0, def.height / 2, 0));
+  private createSprite(name: string, entry: SpriteEntry): { sprite: Mesh; material: ShaderMaterial } {
+    const sprite = MeshBuilder.CreatePlane(name, { width: entry.height * entry.aspect, height: entry.height }, this.scene);
+    sprite.bakeTransformIntoVertices(Matrix.Translation(0, entry.height / 2, 0));
     sprite.billboardMode = Mesh.BILLBOARDMODE_ALL;
     sprite.isPickable = false;
     const material = spriteMaterial(this.scene, name, entry.texture);
@@ -537,7 +613,7 @@ export class Renderer {
     const entry = this.sprites.get('souche');
     stumps.forEach((stump, i) => {
       if (!def || !entry) return;
-      const { sprite, material } = this.createSprite(`stump-${i}`, entry, def);
+      const { sprite, material } = this.createSprite(`stump-${i}`, entry);
       sprite.position.set(stump.pos.x, 0, stump.pos.z);
       sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(stump.pos, this.forward) * 100);
       const size = stump.radius * 2.8;
@@ -613,7 +689,7 @@ export class Renderer {
     if (!boss) return;
     // Le sprite fait face à la caméra : le milieu de son corps se trouve le long de l'axe « haut » de la caméra.
     const view = this.views.get(boss.id);
-    const bodyHeight = view ? view.def.height * 0.45 : 1;
+    const bodyHeight = view ? view.sprite.getBoundingInfo().boundingBox.extendSize.y * 0.9 : 1;
     const anchor = new Vector3(boss.pos.x, boss.altitude, boss.pos.z).addInPlace(this.camera.getDirection(Vector3.Up()).scale(bodyHeight));
     if (boss.altitude > 0.3) {
       drag.isVisible = true;
@@ -916,7 +992,7 @@ export class Renderer {
       if (!def.decor || !entry) continue;
       const spots = Array.isArray(def.decor) ? def.decor : [def.decor];
       spots.forEach((spot, i) => {
-        const { sprite } = this.createSprite(`decor-${name}-${i}`, entry, def);
+        const { sprite } = this.createSprite(`decor-${name}-${i}`, entry);
         sprite.position.set(spot.x, 0, spot.z);
         sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, this.forward) * 100);
       });
@@ -924,17 +1000,45 @@ export class Renderer {
   }
 
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {
+    if (def.sheet) {
+      try {
+        return await this.loadSheet(def.sheet.file, def.sheet.height);
+      } catch {
+        console.warn(`Planche introuvable : ${def.sheet.file}. L'image fixe la remplace.`);
+      }
+    }
     if (def.file) {
       try {
         const texture = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/${def.file}`);
         const { width, height } = texture.getSize();
-        return { texture, aspect: width / height };
+        return { texture, aspect: width / height, height: def.height, facesRight: def.facesRight };
       } catch {
         console.warn(`Sprite introuvable : ${def.file}. Un dessin provisoire le remplace.`);
       }
     }
     const canvas = PLACEHOLDERS[name]?.() ?? drawMissing(name);
-    return { texture: this.canvasTexture(name, canvas), aspect: canvas.width / canvas.height };
+    return { texture: this.canvasTexture(name, canvas), aspect: canvas.width / canvas.height, height: def.height, facesRight: def.facesRight };
+  }
+
+  /** Charge un export Aseprite : l'image de la planche et le découpage de ses images. */
+  private async loadSheet(jsonPath: string, height: number): Promise<SpriteEntry> {
+    const base = `${import.meta.env.BASE_URL}sprites/`;
+    const response = await fetch(`${base}${jsonPath}`);
+    if (!response.ok) throw new Error(jsonPath);
+    const sheet = (await response.json()) as AsepriteSheet;
+    const dir = jsonPath.includes('/') ? jsonPath.slice(0, jsonPath.lastIndexOf('/') + 1) : '';
+    const texture = await loadTexture(this.scene, `${base}${dir}${sheet.meta.image}`, true);
+    const { w: W, h: H } = sheet.meta.size;
+    // L'image est retournée à la lecture (v = 0 en bas) : la rangée du haut a le plus grand v.
+    const frames = sheet.frames.map(({ frame: f, duration }) => ({
+      rect: [f.x / W, 1 - (f.y + f.h) / H, f.w / W, f.h / H] as [number, number, number, number],
+      duration: duration / 1000,
+    }));
+    const tags = new Map(
+      (sheet.meta.frameTags ?? []).map((t) => [t.name, { from: t.from, to: t.to, once: t.repeat === '1' }]),
+    );
+    const first = sheet.frames[0].frame;
+    return { texture, aspect: first.w / first.h, height, facesRight: true, anim: { frames, tags } };
   }
 
   private canvasTexture(name: string, canvas: HTMLCanvasElement): DynamicTexture {
