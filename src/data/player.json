@@ -36,5 +36,23 @@
     "recovery": 0.32,
     "knockback": 7,
     "stun": 1.2
+  },
+  "bond": {
+    "rageCost": 25,
+    "range": 5,
+    "duration": 0.45,
+    "height": 1.4,
+    "damage": 18,
+    "radius": 2,
+    "knockback": 6,
+    "cooldown": 5,
+    "stun": 0
+  },
+  "frenzy": {
+    "rageCost": 30,
+    "duration": 6,
+    "cooldown": 14,
+    "attackTimeFactor": 0.65,
+    "damageTakenFactor": 1.25
   }
 }

@@ -82,6 +82,8 @@ interface Snapshot {
   spawn: number;
   /** Clignotement d'invulnérabilité. */
   blink: boolean;
+  /** Frénésie : le héros rougeoie. */
+  aura?: boolean;
 }
 
 interface SpriteEntry {
@@ -152,9 +154,9 @@ const FALLBACK_POSE: Partial<Record<Pose, Pose>> = {
   guard: 'idle',
   stunned: 'idle',
 };
-const PITCH = Math.atan(1 / Math.SQRT2); // 35,26° : isométrie vraie
-const YAW = Math.PI / 4;
-const CAMERA_DISTANCE = 40;
+export const PITCH = Math.atan(1 / Math.SQRT2); // 35,26° : isométrie vraie
+export const YAW = Math.PI / 4;
+export const CAMERA_DISTANCE = 40;
 const VIEW_HALF_HEIGHT = 6;
 const GROUND_SIZE = 44;
 const PADDY_SIZE = 3;
@@ -176,10 +178,12 @@ const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
 const DUST = new Color3(0.86, 0.78, 0.6);
 const SILK = new Color3(0.93, 0.95, 0.98);
 const FIRE = new Color3(1, 0.55, 0.2);
+const FRENZY_TINT = new Color3(1, 0.7, 0.6);
+const STORM = new Color3(0.8, 0.9, 1);
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
 
-function registerShaders(): void {
+export function registerShaders(): void {
   if (Effect.ShadersStore.spriteVertexShader) return;
   Effect.ShadersStore.spriteVertexShader = `
     precision highp float;
@@ -210,7 +214,7 @@ function registerShaders(): void {
     }`;
 }
 
-function spriteMaterial(scene: Scene, name: string, texture: BaseTexture): ShaderMaterial {
+export function spriteMaterial(scene: Scene, name: string, texture: BaseTexture): ShaderMaterial {
   const material = new ShaderMaterial(
     name,
     scene,
@@ -232,7 +236,7 @@ function spriteMaterial(scene: Scene, name: string, texture: BaseTexture): Shade
   return material;
 }
 
-function loadTexture(scene: Scene, url: string, pixelated = false): Promise<Texture> {
+export function loadTexture(scene: Scene, url: string, pixelated = false): Promise<Texture> {
   return new Promise((resolve, reject) => {
     // Le pixel art garde des pixels nets : pas de mipmaps ni de lissage.
     const texture: Texture = new Texture(
@@ -256,7 +260,6 @@ function loadTexture(scene: Scene, url: string, pixelated = false): Promise<Text
  * sans toucher à la logique du jeu.
  */
 export class Renderer {
-  readonly engine: Engine;
   private readonly scene: Scene;
   private readonly camera: FreeCamera;
   private readonly cameraOffset: Vector3;
@@ -275,6 +278,7 @@ export class Renderer {
   private readonly telegraphs = new Map<number, Fx>();
   private readonly channels = new Map<number, Fx>();
   private readonly landings = new Map<number, Fx>();
+  private readonly snares = new Map<number, Fx>();
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private readonly webs = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   private stumpViews: { stumps: readonly Stump[]; meshes: { dispose(): void }[] } = { stumps: [], meshes: [] };
@@ -283,13 +287,13 @@ export class Renderer {
   private texts: FloatingText[] = [];
 
   constructor(
+    readonly engine: Engine,
     private readonly canvas: HTMLCanvasElement,
     private readonly overlay: HTMLElement,
     private readonly manifest: SpriteManifest,
     private readonly arenaHalfSize: number,
   ) {
     registerShaders();
-    this.engine = new Engine(canvas, true, { stencil: false }, true);
     this.scene = new Scene(this.engine);
     this.scene.clearColor = Color4.FromHexString('#c3cbcfff');
 
@@ -356,9 +360,10 @@ export class Renderer {
       facing: player.facing,
       radius: player.radius,
       pose: player.pose,
-      altitude: 0,
+      altitude: player.altitude,
       spawn: 1,
       blink: player.invulnerable > 0 && player.pose !== 'dash',
+      aura: player.frenzy > 0,
     }, dt);
     for (const enemy of world.enemies) {
       seen.add(enemy.id);
@@ -404,6 +409,7 @@ export class Renderer {
     this.telegraphs.clear();
     this.channels.clear();
     this.landings.clear();
+    this.snares.clear();
     for (const text of this.texts) text.el.remove();
     this.texts = [];
     for (const web of this.webs.values()) this.disposeFx(web);
@@ -491,6 +497,10 @@ export class Renderer {
       // Les poses dessinées remplacent l'écrasement ; seul l'étourdi garde un léger tangage.
       sx = 1;
       if (s.pose !== 'stunned') sy = 1;
+    }
+    if (s.aura && tint === WHITE) {
+      tint = FRENZY_TINT;
+      sy *= 1 + 0.03 * Math.sin(t * 16);
     }
     const k = Math.min(1, dt * 18);
     view.sx += (sx - view.sx) * k;
@@ -765,7 +775,8 @@ export class Renderer {
         break;
       case 'stun':
         if (event.reason === 'wall') this.text(event.pos, 2, 'Sonné !', 'stun');
-        else if (event.reason === 'smash') this.text(event.pos, 2, 'Étourdi', 'stun');
+        else if (event.reason === 'smash' || event.reason === 'bond') this.text(event.pos, 2, 'Étourdi', 'stun');
+        else if (event.reason === 'snare') this.text(event.pos, 2, 'Pris dans le fil', 'parry');
         else if (event.reason === 'snag') {
           this.text(event.pos, 2.6, 'Le fil s’accroche !', 'parry', 1.6);
           this.addFx(this.ringFx(event.pos, 4, SILK, 0.5));
@@ -867,6 +878,42 @@ export class Renderer {
         break;
       case 'death':
         for (const tracked of [this.telegraphs, this.channels, this.landings]) this.endTracked(tracked, event.id);
+        break;
+      case 'bondLand':
+        this.addFx(this.ringFx(event.pos, event.radius * 2, RAGE, 0.35));
+        this.addFx(this.ringFx(event.pos, event.radius * 2.6, DUST, 0.45));
+        this.addShake(0.45);
+        break;
+      case 'frenzy':
+        this.text(event.pos, 2.3, 'Frénésie !', 'rage', 1.2);
+        this.addFx(this.ringFx(event.pos, 2.4, RAGE, 0.4));
+        break;
+      case 'lightning':
+        this.addFx(this.ringFx(event.pos, 1.8, STORM, 0.22));
+        this.addShake(0.2);
+        break;
+      case 'bearSkin':
+        this.text(event.pos, 2.4, 'Peau d’ours !', 'parry', 1.5);
+        this.addFx(this.ringFx(event.pos, 3.2, RAGE, 0.5));
+        this.addShake(0.6);
+        break;
+      case 'snareSet': {
+        const fx = this.addFx({
+          texture: this.fxTextures.web,
+          pos: event.pos,
+          dir: { x: 1, z: 0 },
+          width: event.radius * 2,
+          depth: event.radius * 2,
+          color: SILK,
+          life: 60,
+          y: 0.022,
+          update: (_k, f) => f.material.setFloat('alpha', Math.min(0.7, f.age * 4)),
+        });
+        this.snares.set(event.id, fx);
+        break;
+      }
+      case 'snareEnd':
+        this.endTracked(this.snares, event.id);
         break;
       case 'dodge':
       case 'wave':

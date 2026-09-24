@@ -9,6 +9,8 @@ export interface PlayerConfig {
   /** Multiplicateur de vitesse pendant le blocage. */
   blockMoveFactor: number;
   invulnerableAfterHit: number;
+  /** Part des dégâts réellement subis (1 par défaut ; l'équipement la réduit). */
+  damageTakenFactor?: number;
   rageMax: number;
   rageDecayPerSecond: number;
   attack: {
@@ -36,6 +38,60 @@ export interface PlayerConfig {
     knockback: number;
     stun: number;
   };
+  /** E : saut sur une zone, qui frappe à l'atterrissage. */
+  bond: {
+    rageCost: number;
+    range: number;
+    duration: number;
+    height: number;
+    damage: number;
+    radius: number;
+    knockback: number;
+    cooldown: number;
+    /** Étourdissement à l'atterrissage (0 sans le talent d'Héraclès). */
+    stun: number;
+  };
+  /** R : on frappe plus vite, mais on encaisse plus. */
+  frenzy: {
+    rageCost: number;
+    duration: number;
+    cooldown: number;
+    /** Multiplicateur des temps d'attaque (moins de 1 = plus rapide). */
+    attackTimeFactor: number;
+    damageTakenFactor: number;
+  };
+  /** Effets venus des talents, de la race, des reliques et des paliers de tags. */
+  perks?: Perks;
+}
+
+/** Effets spéciaux du Guerrier ; absents = inactifs. */
+export interface Perks {
+  /** Multiplie la rage gagnée en frappant. */
+  hitRageFactor?: number;
+  /** Multiplie toute la rage gagnée (paliers du tag Guerrier). */
+  rageGainFactor?: number;
+  /** Rage gagnée en bloquant, en plus (Katana de rōnin). */
+  guardRageFactor?: number;
+  /** Éclair ajouté à chaque coup quand la rage est pleine. */
+  storm?: number;
+  /** Réduction des dégâts subis au-dessus de la moitié de la rage. */
+  lionSkin?: number;
+  /** Secondes retirées aux temps de recharge à chaque ennemi tué. */
+  cooldownOnKill?: number;
+  /** PV rendus par ennemi tué pendant la Frénésie. */
+  frenzyHealOnKill?: number;
+  /** Dégâts en plus sous la moitié des PV. */
+  lowHpDamage?: number;
+  /** Une fois par descente, survit à un coup fatal. */
+  bearSkin?: boolean;
+  /** Einherjar : dégâts en plus selon les PV perdus (valeur à 0 PV). */
+  einherjarRage?: number;
+  /** Einherjar : PV rendus par ennemi tué. */
+  valhallaHeal?: number;
+  /** Coupelle du kappa : dégâts en plus tant qu'on n'est pas touché. */
+  coupelle?: { bonus: number; emptyTime: number };
+  /** Fil de Jōren : chaque esquive laisse un fil qui immobilise le premier ennemi. */
+  joren?: { stun: number; life: number; radius: number };
 }
 
 export interface EnemyBaseConfig {

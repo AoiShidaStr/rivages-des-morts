@@ -117,7 +117,9 @@ export abstract class Enemy {
       this.spawnTimer = Math.max(0, this.spawnTimer - dt);
       return;
     }
-    this.think(dt, world);
+    // Étourdissement par défaut (feux follets…) : l'ennemi reste figé, seul le recul le déplace.
+    if (this.frozen > 0) this.frozen = Math.max(0, this.frozen - dt);
+    else this.think(dt, world);
     this.pos = add(this.pos, scale(this.knockback, dt));
     this.knockback = scale(this.knockback, Math.exp(-8 * dt));
     world.clampToArena(this.pos, this.radius);
@@ -144,7 +146,14 @@ export abstract class Enemy {
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
   }
 
-  stun(_duration: number, _reason: StunReason, _world: World): void {}
+  /** Secondes d'immobilisation, pour les ennemis sans étourdissement propre. */
+  protected frozen = 0;
+
+  /** Par défaut, l'ennemi est figé. Kappa, Oublié, kodama… ont leur propre état étourdi. */
+  stun(duration: number, reason: StunReason, world: World): void {
+    this.frozen = Math.max(this.frozen, duration);
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
 
   protected abstract think(dt: number, world: World): void;
 
@@ -185,7 +194,7 @@ export class Hitodama extends Enemy {
   }
 
   get pose(): Pose {
-    return 'move';
+    return this.frozen > 0 ? 'stunned' : 'move';
   }
 
   get solid(): boolean {

@@ -146,7 +146,8 @@ kbd {
 
 .skills {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
 }
 
 .skill {
@@ -161,6 +162,11 @@ kbd {
   background: var(--panel);
   border-radius: 4px;
   transition: opacity 0.2s;
+}
+
+.skill.active {
+  background: rgba(200, 65, 47, 0.85);
+  box-shadow: 0 0 10px rgba(255, 174, 90, 0.7);
 }
 
 .skill.locked {
@@ -250,28 +256,6 @@ kbd {
 
 #hint.visible {
   opacity: 1;
-}
-
-#end {
-  position: absolute;
-  inset: 0;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(20, 24, 28, 0.55);
-  color: var(--paper);
-  font-family: Georgia, 'Times New Roman', serif;
-}
-
-#end.visible {
-  display: flex;
-}
-
-#end h1 {
-  margin: 0 0 12px;
-  font-size: 48px;
-  font-weight: 400;
 }
 
 .controls {

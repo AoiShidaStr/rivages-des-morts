@@ -40,6 +40,15 @@ interface Hazard {
   leavesWeb: boolean;
 }
 
+/** Fil de Jōren laissé par une esquive : le premier ennemi qui le touche est immobilisé. */
+interface Snare {
+  id: number;
+  pos: Vec2;
+  radius: number;
+  life: number;
+  stun: number;
+}
+
 /**
  * État complet d'une partie. Aucune dépendance au rendu : Babylon.js lit cet état
  * et les événements émis, ce qui permettra plus tard de faire tourner la logique sur un serveur.
@@ -57,6 +66,7 @@ export class World {
   /** Les effets sans corps (toiles, chutes) ont des identifiants négatifs, distincts de ceux des ennemis. */
   private nextFxId = -1;
   private hazards: Hazard[] = [];
+  private snares: Snare[] = [];
   private events: GameEvent[] = [];
 
   /** `startWave` permet de commencer directement à une vague (tests, `?vague=7`). */
@@ -86,6 +96,7 @@ export class World {
     for (const enemy of [...this.enemies]) enemy.update(dt, this);
     this.updateHazards(dt);
     this.updateWebs(dt);
+    this.updateSnares(dt);
     this.separate();
     this.clearBossMinions();
     this.enemies = this.enemies.filter((e) => !e.dead);
@@ -109,9 +120,20 @@ export class World {
       // Un ennemi collé au joueur est touché même s'il déborde de l'arc.
       if (dist > enemy.radius + 0.2 && !inCone(dir, normalize(toEnemy), halfArc)) continue;
       alreadyHit.add(enemy.id);
-      const shielded = enemy.receiveHit({ amount: attack.damage, from: origin, knockback: attack.knockback }, this);
-      this.player.gainRage(shielded ? attack.rageOnHit / 2 : attack.rageOnHit);
-      if (shielded) this.player.knockback = scale(dir, -4);
+      const player = this.player;
+      const perks = player.cfg.perks ?? {};
+      const amount = attack.damage * player.damageMultiplier();
+      const shielded = enemy.receiveHit({ amount, from: origin, knockback: attack.knockback }, this);
+      const rage = attack.rageOnHit * (perks.hitRageFactor ?? 1);
+      // Colère de la tempête : à rage pleine, chaque coup appelle la foudre de Susanoo.
+      const storm = perks.storm && player.rage >= player.cfg.rageMax - 0.5;
+      player.gainRage(shielded ? rage / 2 : rage);
+      if (shielded) player.knockback = scale(dir, -4);
+      if (storm && !enemy.dead) {
+        this.emit({ type: 'lightning', pos: { ...enemy.pos } });
+        enemy.receiveHit({ amount: perks.storm ?? 0, from: origin, knockback: 1, ignoreShell: true }, this);
+      }
+      if (enemy.dead) player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
   }
@@ -122,10 +144,44 @@ export class World {
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
-      enemy.receiveHit({ amount: smash.damage, from: center, knockback: smash.knockback, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback: smash.knockback, ignoreShell: true }, this);
       if (!enemy.dead) enemy.stun(smash.stun, 'smash', this);
+      else this.player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
+  }
+
+  /** Atterrissage du Bond : dégâts de zone autour du héros, étourdissement avec le talent d'Héraclès. */
+  bondLand(center: Vec2): void {
+    const bond = this.cfg.player.bond;
+    this.emit({ type: 'bondLand', pos: { ...center }, radius: bond.radius });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > bond.radius) continue;
+      enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback }, this);
+      if (enemy.dead) this.player.onKill();
+      else if (bond.stun > 0) enemy.stun(bond.stun, 'bond', this);
+      if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
+    }
+  }
+
+  /** Pose un fil de Jōren (relique) là où le héros commence son esquive. */
+  setSnare(pos: Vec2, cfg: { stun: number; life: number; radius: number }): void {
+    const snare = { id: this.nextFxId--, pos: { ...pos }, radius: cfg.radius, life: cfg.life, stun: cfg.stun };
+    this.snares.push(snare);
+    this.emit({ type: 'snareSet', id: snare.id, pos: snare.pos, radius: snare.radius });
+  }
+
+  private updateSnares(dt: number): void {
+    this.snares = this.snares.filter((snare) => {
+      snare.life -= dt;
+      const caught = this.enemies.find((e) => e.targetable && distance(e.pos, snare.pos) <= snare.radius + e.radius);
+      if (caught) caught.stun(snare.stun, 'snare', this);
+      if (caught || snare.life <= 0) {
+        this.emit({ type: 'snareEnd', id: snare.id });
+        return false;
+      }
+      return true;
+    });
   }
 
   /** Fait apparaître un ennemi en cours de vague (araignées invoquées, feux follets de l'arène du boss). */

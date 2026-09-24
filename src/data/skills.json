@@ -1,0 +1,167 @@
+{
+  "about": "Chaque effet modifie les réglages du Guerrier (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux).",
+  "levels": {
+    "max": 10,
+    "xpBase": 25,
+    "xpPerLevel": 25,
+    "hpPerLevel": 4,
+    "pointsFrom": 2
+  },
+  "race": {
+    "name": "Einherjar",
+    "origin": "Nordique · guerrier mort au combat",
+    "passives": [
+      {
+        "name": "Rage du guerrier mort",
+        "description": "Plus tu perds de PV, plus tu frappes fort : jusqu'à +30 % de dégâts près de la mort.",
+        "effects": [{ "op": "set", "path": "perks.einherjarRage", "value": 0.3 }]
+      },
+      {
+        "name": "Festin du Valhalla",
+        "description": "Chaque ennemi tué te rend 2 PV.",
+        "effects": [{ "op": "set", "path": "perks.valhallaHeal", "value": 2 }]
+      }
+    ]
+  },
+  "class": {
+    "name": "Guerrier",
+    "subtitle": "Berserker",
+    "actives": [
+      { "key": "Clic droit", "name": "Blocage", "description": "Bloque les coups de face et remplit la rage." },
+      { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit." },
+      { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
+      { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
+    ]
+  },
+  "tag": {
+    "name": "Guerrier",
+    "tiers": [
+      {
+        "count": 2,
+        "description": "La rage monte 25 % plus vite.",
+        "effects": [{ "op": "set", "path": "perks.rageGainFactor", "value": 1.25 }]
+      },
+      {
+        "count": 4,
+        "description": "La rage monte 50 % plus vite ; Frénésie dure 2 s de plus.",
+        "effects": [
+          { "op": "set", "path": "perks.rageGainFactor", "value": 1.5 },
+          { "op": "add", "path": "frenzy.duration", "value": 2 }
+        ]
+      },
+      {
+        "count": 6,
+        "description": "La rage monte 75 % plus vite ; Frénésie dure 4 s de plus ; la Frappe fracassante coûte 10 de rage en moins.",
+        "effects": [
+          { "op": "set", "path": "perks.rageGainFactor", "value": 1.75 },
+          { "op": "add", "path": "frenzy.duration", "value": 4 },
+          { "op": "add", "path": "smash.rageCost", "value": -10 }
+        ]
+      }
+    ]
+  },
+  "branches": [
+    {
+      "id": "susanoo",
+      "name": "Susanoo",
+      "subtitle": "Dieu de la tempête · attaque",
+      "lore": "Le dieu impétueux qui terrassa Yamata-no-Orochi. Sa colère gronde comme l'orage.",
+      "nodes": [
+        {
+          "id": "susanoo-1",
+          "name": "Vent de tempête",
+          "description": "Chaque coup donne deux fois plus de rage.",
+          "effects": [{ "op": "set", "path": "perks.hitRageFactor", "value": 2 }]
+        },
+        {
+          "id": "susanoo-2",
+          "name": "Onde de choc",
+          "description": "La Frappe fracassante couvre 40 % de terrain en plus et projette plus loin.",
+          "effects": [
+            { "op": "mul", "path": "smash.radius", "value": 1.4 },
+            { "op": "mul", "path": "smash.knockback", "value": 1.5 }
+          ]
+        },
+        {
+          "id": "susanoo-3",
+          "name": "Orage qui dure",
+          "description": "La Frénésie dure 3 s de plus.",
+          "effects": [{ "op": "add", "path": "frenzy.duration", "value": 3 }]
+        },
+        {
+          "id": "susanoo-4",
+          "name": "Colère de la tempête",
+          "ultimate": true,
+          "description": "À rage pleine, chaque coup déclenche un éclair (+12 dégâts).",
+          "effects": [{ "op": "set", "path": "perks.storm", "value": 12 }]
+        }
+      ]
+    },
+    {
+      "id": "heracles",
+      "name": "Héraclès",
+      "subtitle": "Le héros des douze travaux · défense",
+      "lore": "Le demi-dieu qui descendit aux Enfers et en ramena Cerbère. Rien ne le fait plier.",
+      "nodes": [
+        {
+          "id": "heracles-1",
+          "name": "Garde du héros",
+          "description": "Ta garde couvre un angle bien plus large (130° → 180°).",
+          "effects": [{ "op": "set", "path": "block.arcDeg", "value": 180 }]
+        },
+        {
+          "id": "heracles-2",
+          "name": "Peau du lion de Némée",
+          "description": "Au-dessus de la moitié de ta rage, tu subis 30 % de dégâts en moins.",
+          "effects": [{ "op": "set", "path": "perks.lionSkin", "value": 0.3 }]
+        },
+        {
+          "id": "heracles-3",
+          "name": "Chute du géant",
+          "description": "Le Bond étourdit les ennemis pendant 1,5 s à l'atterrissage.",
+          "effects": [{ "op": "set", "path": "bond.stun", "value": 1.5 }]
+        },
+        {
+          "id": "heracles-4",
+          "name": "Les Douze Travaux",
+          "ultimate": true,
+          "description": "Chaque ennemi tué réduit d'1 s les temps de recharge du Bond et de la Frénésie.",
+          "effects": [{ "op": "set", "path": "perks.cooldownOnKill", "value": 1 }]
+        }
+      ]
+    },
+    {
+      "id": "berserkir",
+      "name": "Berserkir",
+      "subtitle": "Les guerriers-ours d'Odin · risque",
+      "lore": "Vêtus de peaux d'ours, ils entraient en transe et ne sentaient plus les coups.",
+      "nodes": [
+        {
+          "id": "berserkir-1",
+          "name": "Soif de sang",
+          "description": "Chaque ennemi tué pendant la Frénésie te rend 5 PV.",
+          "effects": [{ "op": "set", "path": "perks.frenzyHealOnKill", "value": 5 }]
+        },
+        {
+          "id": "berserkir-2",
+          "name": "Dos au mur",
+          "description": "Sous la moitié de tes PV, tes dégâts augmentent de 30 %.",
+          "effects": [{ "op": "set", "path": "perks.lowHpDamage", "value": 0.3 }]
+        },
+        {
+          "id": "berserkir-3",
+          "name": "Élan sauvage",
+          "description": "Le Bond coûte 15 de rage en moins.",
+          "effects": [{ "op": "add", "path": "bond.rageCost", "value": -15 }]
+        },
+        {
+          "id": "berserkir-4",
+          "name": "Peau d'ours",
+          "ultimate": true,
+          "description": "Une fois par descente, tu survis à un coup fatal avec 1 PV et la rage pleine.",
+          "effects": [{ "op": "set", "path": "perks.bearSkin", "value": true }]
+        }
+      ]
+    }
+  ]
+}

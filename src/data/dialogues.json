@@ -1,0 +1,522 @@
+{
+  "about": "Chaque PNJ a une liste de variantes : la première dont les conditions (if) sont remplies est jouée. Une réplique est [locuteur, texte]. {self} est remplacé par l'identifiant de l'objet ; {oboles}, {coffres} et les compteurs ({offrandes}, {toro_allumes}…) par leur valeur.",
+  "speakers": {
+    "heros": { "name": "Toi", "sprite": "heros" },
+    "narrateur": { "name": "" },
+    "charon": { "name": "Charon", "sprite": "charon" },
+    "obaa": { "name": "Obaa Kiku", "sprite": "obaaKiku" },
+    "forgeron": { "name": "Le forgeron sans nom", "sprite": "tetsu" },
+    "tetsu": { "name": "Tetsu", "sprite": "tetsu" },
+    "yuki": { "name": "Yuki", "sprite": "yuki" },
+    "tanuki": { "name": "Le tanuki", "sprite": "tanuki" },
+    "moine": { "name": "Le moine du Rocher", "sprite": "moine" },
+    "voix": { "name": "Une voix, derrière la pierre" },
+    "kawataro": { "name": "Kawatarō", "sprite": "kappa" },
+    "nanashi": { "name": "L'âme sans visage", "sprite": "oublie" },
+    "isamu": { "name": "Isamu", "sprite": "oublie" },
+    "voyageur": { "name": "L'homme d'argile" }
+  },
+  "dialogues": {
+    "charon": [
+      {
+        "if": [{ "quest": "passeur", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["charon", "Encore une âme. Descends de ma barque, et vite : d'autres attendent sur toutes les rives du monde."],
+          ["heros", "Où suis-je ?"],
+          ["charon", "Au Yomi, l'au-delà des Japonais. Enfin, ce qu'il en reste. Depuis l'effondrement, je fais la navette entre tous les au-delà. Personne ne m'a demandé mon avis."],
+          ["charon", "Tu ne te souviens de rien, hein ? Ça arrive souvent, ces temps-ci. Les vivants oublient, et les morts s'égarent."],
+          ["charon", "Monte au village des âmes, en haut du chemin. Quelqu'un là-haut saura te remettre d'aplomb."]
+        ],
+        "then": [{ "startQuest": "passeur" }]
+      },
+      {
+        "if": [{ "quest": "passeur", "is": "active" }],
+        "lines": [["charon", "Le village est en haut du chemin, après les lanternes. Je ne vais pas te porter."]]
+      },
+      {
+        "if": [{ "quest": "dame", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["charon", "Te revoilà. Écoute : des âmes disparaissent dans les rizières noyées, au nord-ouest du village."],
+          ["charon", "On parle d'une dame en kimono noir et rouge. Une jorōgumo. Tant qu'elle tisse sa toile là-bas, ma barque ne quittera pas cette rive."],
+          ["heros", "Et si je m'en occupe ?"],
+          ["charon", "Alors on pourra enfin partir. L'entrée est derrière le torii noir. Prends de quoi te battre, et reviens ouvrir tes coffres sur ma barque."]
+        ],
+        "then": [{ "startQuest": "dame" }]
+      },
+      {
+        "if": [{ "quest": "voyageur", "is": "active" }, { "notFlag": "charon_gilgamesh" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "Un homme d'argile cherche « un roi qui avait peur d'être oublié ». Tu l'as vu passer ?"],
+          ["charon", "Un roi ? Hmph. J'en ai vu passer des milliers, des rois. Ils paient tous la même obole."],
+          ["charon", "… Sauf un. Il n'est jamais monté dans ma barque. Il est descendu par la terre des vivants, les bras chargés de tablettes d'argile, et il est reparti avec."],
+          ["charon", "Gilgamesh, roi d'Uruk. Depuis qu'il a pris les Tablettes du Destin, plus rien ne tient : les au-delà se sont effondrés les uns sur les autres."],
+          ["charon", "Si ton ami d'argile le cherche, dis-lui qu'il faudra traverser toutes les rives pour le trouver. Et que je n'irai pas plus vite pour autant."]
+        ],
+        "then": [{ "set": "charon_gilgamesh" }]
+      },
+      {
+        "if": [{ "quest": "dame", "is": "active" }],
+        "lines": [["charon", "Les rizières noyées, derrière le torii noir, au nord-ouest. Et les coffres que tu rapportes, c'est sur ma barque qu'on les ouvre."]]
+      },
+      {
+        "lines": [
+          ["charon", "Les rizières sont calmes. Pas mal, pour une âme sans nom."],
+          ["charon", "Les autres rives attendront encore un peu : la suite de ton voyage n'est pas encore tracée."]
+        ]
+      }
+    ],
+    "barque": [
+      {
+        "if": [{ "chests": 1 }],
+        "lines": [["narrateur", "La barque de Charon. Les coffres rapportés des rizières sont entassés à l'arrière : {coffres} en tout."]],
+        "choices": [
+          { "text": "Ouvrir les coffres", "then": [{ "openChests": true }] },
+          {
+            "text": "Réinitialiser l'arbre de compétences",
+            "then": [{ "resetTalents": true }],
+            "reply": [["narrateur", "Charon grommelle, mais laisse ton âme se délier sur sa barque. Tes points de compétence te sont rendus."]]
+          },
+          { "text": "Laisser" }
+        ]
+      },
+      {
+        "lines": [["narrateur", "La barque de Charon tangue doucement. Chaque combat gagné dans les rizières laisse un coffre : c'est ici qu'on les ouvre."]],
+        "choices": [
+          {
+            "text": "Réinitialiser l'arbre de compétences",
+            "then": [{ "resetTalents": true }],
+            "reply": [["narrateur", "Charon grommelle, mais laisse ton âme se délier sur sa barque. Tes points de compétence te sont rendus."]]
+          },
+          { "text": "Laisser" }
+        ]
+      }
+    ],
+    "obaa": [
+      {
+        "if": [{ "quest": "passeur", "is": "active" }],
+        "marker": "?",
+        "lines": [
+          ["obaa", "Oh ! Une nouvelle âme ! Entre, entre, ne reste pas dans la brume."],
+          ["obaa", "Je suis Obaa Kiku. De mon vivant, je tenais une maison de thé. Ici, je vends ce que les âmes laissent derrière elles, contre des oboles."],
+          ["obaa", "C'est Charon qui t'envoie ? Grognon, mais pas méchant. Va voir les autres : le forgeron, la petite Yuki près des Jizō, le moine sur le chemin du Rocher…"],
+          ["obaa", "Tiens, quelques oboles pour commencer. Les morts se doivent bien ça entre eux."]
+        ],
+        "then": [{ "completeQuest": "passeur" }, { "oboles": 30 }, { "xp": 20 }]
+      },
+      {
+        "if": [{ "has": "tasse-ebrechee" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui tends la tasse ébréchée.)"],
+          ["obaa", "Oh… Oh. C'est la tasse de Genzō. Mon mari. Il buvait toujours dedans, même ébréchée ; il disait que la fêlure laissait passer le goût."],
+          ["obaa", "Genzō… Je n'arrivais plus à me souvenir de son nom. Tu me l'as rendu."],
+          ["obaa", "Tiens. Ce sont les six pièces qu'on avait glissées dans son kimono pour traverser la rivière. Il n'en a plus besoin : lui, il a traversé."],
+          ["obaa", "Et pour toi, ce sera toujours un prix d'ami."]
+        ],
+        "then": [{ "take": "tasse-ebrechee" }, { "completeQuest": "tasse" }, { "set": "remise_obaa" }, { "give": "rokumonsen" }, { "xp": 50 }]
+      },
+      {
+        "lines": [["obaa", "Un thé ? Non, les morts n'ont pas soif. Mais ils ont toujours besoin de quelque chose."]],
+        "choices": [
+          { "text": "Voir tes marchandises", "then": [{ "open": "shop", "shop": "obaa" }] },
+          {
+            "text": "Tu as l'air soucieuse ?",
+            "if": [{ "quest": "tasse", "is": "none" }],
+            "reply": [
+              ["obaa", "Soucieuse ? Moi ? … Bon. Quand les rizières ont été noyées, j'y ai perdu la tasse de mon mari. Une tasse en grès, ébréchée au bord."],
+              ["obaa", "Les kappa ramassent tout ce qui brille, là-bas. Si tu en croises un… Et puis c'est idiot : je ne me souviens même plus de son nom."]
+            ],
+            "then": [{ "startQuest": "tasse" }]
+          },
+          {
+            "text": "Il paraît qu'un tanuki traîne par ici ?",
+            "if": [{ "quest": "tanuki", "is": "none" }],
+            "reply": [
+              ["obaa", "Le tanuki ? Il se cache parmi les statues Jizō, déguisé en pierre. Il sent le saké à dix pas."],
+              ["obaa", "Si tu le démasques, il te dira peut-être où il cache ses trésors."]
+            ],
+            "then": [{ "startQuest": "tanuki" }]
+          },
+          {
+            "text": "Pourquoi les âmes oublient-elles ?",
+            "reply": [
+              ["obaa", "Ici, on existe tant que quelqu'un se souvient de nous. Les vivants ont cessé de prier les anciens dieux, de nommer leurs morts…"],
+              ["obaa", "Alors on s'efface. D'abord le nom, puis le visage. Ceux qui ont tout perdu, on les appelle les Oubliés. Tu en verras, dans les rizières."]
+            ]
+          },
+          { "text": "Au revoir" }
+        ]
+      }
+    ],
+    "tetsu": [
+      {
+        "if": [{ "quest": "forgeron", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["forgeron", "Hm. Une âme. Tu cherches une lame ? Je ne forge plus."],
+          ["forgeron", "J'ai oublié mon nom. Sans nom, mes mains ne se souviennent plus du métier. Regarde mon visage : il s'efface déjà, comme celui des Oubliés."],
+          ["forgeron", "De mon vivant, j'avais écrit mon nom sur une ema, une plaque votive, et je l'avais laissée dans les rizières. Si tu la retrouves…"]
+        ],
+        "then": [{ "startQuest": "forgeron" }]
+      },
+      {
+        "if": [{ "has": "ema-tetsu" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui tends la plaque de bois.)"],
+          ["forgeron", "Tetsu. Tetsu… Oui. C'est mon nom."],
+          ["tetsu", "Mes mains s'en souviennent. Merci, âme sans nom. La forge est ouverte : apporte-moi des oboles et des écailles de kappa, et je rendrai tes lames dignes du Yomi."]
+        ],
+        "then": [{ "take": "ema-tetsu" }, { "set": "nom_tetsu" }, { "set": "forge_ouverte" }, { "completeQuest": "forgeron" }, { "xp": 40 }]
+      },
+      {
+        "if": [{ "quest": "forgeron", "is": "active" }],
+        "lines": [["forgeron", "L'ema… dans les rizières ouvertes, à l'est. Une petite plaque de bois sur un support."]]
+      },
+      {
+        "lines": [["tetsu", "Le feu est chaud. Qu'est-ce qu'on forge ?"]],
+        "choices": [
+          { "text": "Utiliser la forge", "then": [{ "open": "forge" }] },
+          {
+            "text": "Ton visage…",
+            "reply": [
+              ["tetsu", "Il s'efface moins vite depuis que tu m'as rendu mon nom. Tant que quelqu'un se souvient de toi, tu restes."],
+              ["tetsu", "Alors souviens-toi de moi, âme sans nom. Et je me souviendrai de toi."]
+            ]
+          },
+          {
+            "text": "Quelles armes peux-tu forger ?",
+            "reply": [
+              ["tetsu", "Avec assez d'écailles, un kanabō d'oni : lourd, lent, mais ce qui le reçoit ne se relève pas vite."],
+              ["tetsu", "Avec de la soie de jorōgumo, un katana de rōnin : léger, rapide. Le genre de lame qui aime parer."],
+              ["tetsu", "Et je peux affûter tout ce que tu portes. Une lame qu'on entretient se souvient de son porteur."]
+            ]
+          },
+          { "text": "Au revoir" }
+        ]
+      }
+    ],
+    "yuki": [
+      {
+        "if": [{ "quest": "lanterne", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["yuki", "… Tu vois une lanterne, toi ? J'avais une lanterne. Elle s'est éteinte, et depuis, je ne retrouve plus le chemin."],
+          ["yuki", "Les feux follets, dans les rizières noyées… Leurs braises brûlent longtemps. Si tu m'en rapportais une ?"]
+        ],
+        "then": [{ "startQuest": "lanterne" }]
+      },
+      {
+        "if": [{ "quest": "lanterne", "is": "active" }, { "material": ["braise", 1] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu déposes une braise de hitodama dans sa lanterne de papier.)"],
+          ["yuki", "Elle brille ! Merci…"],
+          ["yuki", "Ma grand-mère m'avait appris à en faire des amulettes. Montre ça au forgeron, il saura quoi faire."]
+        ],
+        "then": [{ "material": ["braise", -1] }, { "set": "recette_lanterne" }, { "completeQuest": "lanterne" }, { "xp": 40 }, { "toast": "Recette apprise : Lanterne-braise (à la forge)" }]
+      },
+      {
+        "if": [{ "quest": "lanterne", "is": "active" }],
+        "lines": [["yuki", "Une braise de feu follet… Dans les rizières noyées, il y en a plein. Ils brûlent, fais attention."]]
+      },
+      {
+        "if": [{ "quest": "obon", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["yuki", "Ma lanterne brille, mais le chemin est encore sombre."],
+          ["yuki", "Pour l'Obon, chez moi, on allumait des lanternes pour que les morts retrouvent la maison. Il y a quatre lanternes de pierre sur l'île. Si elles brillaient toutes…"],
+          ["yuki", "Il faudrait une braise de feu follet pour chacune."]
+        ],
+        "then": [{ "startQuest": "obon" }]
+      },
+      {
+        "if": [{ "quest": "obon", "is": "active" }, { "count": ["toro_allumes", 4] }],
+        "marker": "?",
+        "lines": [
+          ["narrateur", "Les quatre lanternes brillent dans la brume. Un chemin de lumière se dessine jusqu'au ponton."],
+          ["yuki", "Je le vois ! Le chemin ! Maman m'attend de l'autre côté, je le sais."],
+          ["yuki", "Merci, âme sans nom. Je ne t'oublierai pas. Comme ça, tu existeras toujours un peu."]
+        ],
+        "then": [{ "completeQuest": "obon" }, { "set": "yuki_partie" }, { "oboles": 40 }, { "xp": 80 }]
+      },
+      {
+        "if": [{ "quest": "obon", "is": "active" }],
+        "lines": [["yuki", "Quatre lanternes de pierre, une braise pour chacune… ({toro_allumes} / 4)"]]
+      },
+      {
+        "lines": [["yuki", "Ma lanterne éclaire le chemin. Je crois que je vais bientôt pouvoir partir."]]
+      }
+    ],
+    "toro": [
+      {
+        "if": [{ "flag": "allume_{self}" }],
+        "lines": [["narrateur", "La lanterne brûle doucement d'une flamme bleue."]]
+      },
+      {
+        "if": [{ "quest": "obon", "is": "active" }, { "material": ["braise", 1] }],
+        "lines": [["narrateur", "Une lanterne de pierre, éteinte depuis longtemps."]],
+        "choices": [
+          {
+            "text": "L'allumer avec une braise de hitodama",
+            "then": [{ "material": ["braise", -1] }, { "set": "allume_{self}" }, { "add": ["toro_allumes", 1] }],
+            "reply": [["narrateur", "La braise prend. Une flamme bleue s'élève dans la brume. ({toro_allumes} / 4)"]]
+          },
+          { "text": "Partir" }
+        ]
+      },
+      {
+        "if": [{ "quest": "obon", "is": "active" }],
+        "lines": [["narrateur", "Une lanterne de pierre, éteinte. Il faudrait une braise de hitodama pour l'allumer."]]
+      },
+      {
+        "lines": [["narrateur", "Une lanterne de pierre, éteinte depuis longtemps. Plus personne ne l'allume."]]
+      }
+    ],
+    "jizo": [
+      {
+        "if": [{ "notFlag": "offrande_{self}" }],
+        "lines": [["narrateur", "Un petit Jizō de pierre, coiffé d'un bonnet rouge. Il veille sur les enfants et les voyageurs perdus."]],
+        "choices": [
+          {
+            "text": "Offrir une obole",
+            "if": [{ "oboles": 1 }],
+            "then": [{ "oboles": -1 }, { "set": "offrande_{self}" }, { "add": ["offrandes", 1] }],
+            "reply": [["narrateur", "Tu déposes une obole à ses pieds. ({offrandes} / 6)"]]
+          },
+          { "text": "Partir" }
+        ]
+      },
+      {
+        "lines": [["narrateur", "Ton obole brille encore à ses pieds."]]
+      }
+    ],
+    "jizo-faux": [
+      {
+        "lines": [["narrateur", "Un Jizō de pierre… qui sent drôlement le saké. Et qui respire, peut-être ?"]],
+        "choices": [
+          {
+            "text": "Le secouer",
+            "then": [{ "set": "tanuki_trouve" }, { "completeQuest": "tanuki" }, { "xp": 30 }],
+            "reply": [
+              ["narrateur", "POUF ! Un nuage de fumée…"],
+              ["tanuki", "Hé, hé ! Doucement ! Bon, bon, tu m'as démasqué."],
+              ["tanuki", "Pour la peine, un tuyau gratuit : sous le pont des rizières, quelqu'un a caché un coffre. Pas moi. Enfin, peut-être moi."]
+            ]
+          },
+          { "text": "Offrir une obole", "if": [{ "oboles": 1 }], "then": [{ "oboles": -1 }], "reply": [["narrateur", "L'obole disparaît. Tu es presque sûr d'avoir entendu un petit rire."]] },
+          { "text": "Partir" }
+        ]
+      }
+    ],
+    "tanuki": [
+      {
+        "lines": [["tanuki", "Tu veux voir mes trésors ? Authentiques. Enfin, presque tous."]],
+        "choices": [
+          { "text": "Voir ses trésors", "then": [{ "open": "shop", "shop": "tanuki" }] },
+          {
+            "text": "Tu vends des concombres ?",
+            "if": [{ "quest": "concombre", "is": "active" }, { "notHas": "concombre" }],
+            "reply": [["tanuki", "Des concombres ? Évidemment ! Il en pousse partout au Yomi. … Bon, non. Mais j'en ai un. Regarde dans mes trésors."]]
+          },
+          {
+            "text": "Un indice ?",
+            "reply": [
+              ["tanuki", "Sous le pont des rizières. Et on raconte qu'il y a quelque chose derrière la cascade, mais l'eau, très peu pour moi."]
+            ]
+          },
+          { "text": "Partir" }
+        ]
+      }
+    ],
+    "kawataro": [
+      {
+        "if": [{ "quest": "concombre", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["kawataro", "Kyuu ! Un humain ! … Ah non, une âme. Pardon, l'habitude."],
+          ["kawataro", "Je suis Kawatarō. Je ne suis pas comme ceux des rizières noyées : eux ont oublié les bonnes manières. Moi, je salue."],
+          ["kawataro", "Dis… tu n'aurais pas un concombre ? Depuis que je suis mort, je n'en ai pas croqué un seul."]
+        ],
+        "then": [{ "startQuest": "concombre" }]
+      },
+      {
+        "if": [{ "has": "concombre" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui tends le concombre.)"],
+          ["kawataro", "KYUUU ! Croquant ! Frais ! Merci, merci !"],
+          ["kawataro", "Un secret contre un concombre : si tu salues un kappa, il te rend le salut… et l'eau de sa coupelle se renverse. Sans eau, un kappa n'a plus de force."],
+          ["kawataro", "Ceux des rizières ne saluent plus. Mais leur coupelle reste leur point faible : bloque leur charge, elle se renverse quand même."],
+          ["kawataro", "Et prends ça : ma vieille coupelle. L'eau n'en déborde jamais, tant qu'on garde son calme."]
+        ],
+        "then": [{ "take": "concombre" }, { "completeQuest": "concombre" }, { "give": "coupelle-kappa" }, { "xp": 40 }]
+      },
+      {
+        "if": [{ "quest": "concombre", "is": "active" }],
+        "lines": [["kawataro", "Un concombre… Le tanuki vend de tout, paraît-il. Même des choses vraies."]]
+      },
+      {
+        "lines": [["kawataro", "Tu as salué quelqu'un aujourd'hui ? Ça ne coûte rien, et ça renverse des coupelles."]]
+      }
+    ],
+    "nanashi": [
+      {
+        "if": [{ "quest": "nanashi", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["nanashi", "…"],
+          ["heros", "Tu ne parles pas ?"],
+          ["nanashi", "Je… ne sais plus. Mon nom, mon visage, ma voix. Tout s'efface. Bientôt, je serai comme ceux des rizières : un masque blanc qui erre."],
+          ["nanashi", "Ici, on existe tant que quelqu'un se souvient de nous. Personne ne se souvient de moi."],
+          ["nanashi", "Les Oubliés portent des éclats de visages. Si tu m'en rapportais trois… peut-être que le mien reviendrait."]
+        ],
+        "then": [{ "startQuest": "nanashi" }]
+      },
+      {
+        "if": [{ "quest": "nanashi", "is": "active" }, { "material": ["masque", 3] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu poses les trois éclats blancs dans ses mains.)"],
+          ["narrateur", "Les éclats se fondent dans son masque. Des traits apparaissent : des rides de soleil, une barbe de sel."],
+          ["isamu", "Isamu. Je m'appelais Isamu. J'étais pêcheur, à Sakaiminato. Ma fille m'attendait sur le quai, chaque soir."],
+          ["isamu", "Tu t'en souviendras, toi ? Alors j'existe encore un peu. Garde ce masque : je n'en ai plus besoin."]
+        ],
+        "then": [{ "material": ["masque", -3] }, { "completeQuest": "nanashi" }, { "set": "nom_isamu" }, { "give": "masque-oublie" }, { "xp": 60 }]
+      },
+      {
+        "if": [{ "quest": "nanashi", "is": "active" }],
+        "lines": [["nanashi", "Trois éclats de masque… Les Oubliés des rizières en portent. Je t'attendrai. Enfin, je crois."]]
+      },
+      {
+        "lines": [["isamu", "Isamu. Tu t'en souviens ? … Merci. La mer me manque, mais moins qu'avant."]]
+      }
+    ],
+    "voyageur": [
+      {
+        "if": [{ "quest": "voyageur", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Un homme massif, fait d'argile craquelée, contemple la mer. Des herbes poussent dans ses fissures."],
+          ["voyageur", "Tu as vaincu l'araignée ? Alors tu es de ceux qui avancent."],
+          ["voyageur", "Je cherche un roi. Un roi qui avait peur d'être oublié. Il a volé quelque chose, et toutes les rives se sont effondrées."],
+          ["voyageur", "Le passeur voit tout le monde passer. Demande-lui s'il l'a vu."]
+        ],
+        "then": [{ "startQuest": "voyageur" }]
+      },
+      {
+        "if": [{ "quest": "voyageur", "is": "active" }, { "flag": "charon_gilgamesh" }],
+        "marker": "?",
+        "lines": [
+          ["voyageur", "Gilgamesh… Oui. C'est lui."],
+          ["voyageur", "Nous étions amis, autrefois. Quand je suis mort, il a cherché l'immortalité jusqu'au bout du monde. Il ne l'a pas trouvée. Alors il a voulu autre chose : que personne ne l'oublie jamais."],
+          ["voyageur", "Prends ce fragment. Il vient des Tablettes du Destin ; c'est lui qui m'a mené jusqu'ici. Garde-le : il te mènera plus loin que moi."],
+          ["voyageur", "On se reverra, sur une autre rive. D'ici là, n'oublie pas ton nom. Quand tu l'auras retrouvé."]
+        ],
+        "then": [{ "completeQuest": "voyageur" }, { "give": "tablette-argile" }, { "xp": 100 }, { "toast": "Fin de la première île. La suite du voyage mène vers d'autres rives…" }]
+      },
+      {
+        "if": [{ "quest": "voyageur", "is": "active" }],
+        "lines": [["voyageur", "Le passeur… demande-lui. Il se souvient de tout, même quand il fait semblant du contraire."]]
+      },
+      {
+        "lines": [["voyageur", "Mon nom ? … Pas encore. Ici, un nom se mérite. Et le mien pèse lourd."]]
+      }
+    ],
+    "sutra": [
+      {
+        "lines": [["narrateur", "Une page de sutra, couverte de caractères à l'encre, coincée là par le vent."]],
+        "then": [{ "set": "page_{self}" }, { "add": ["sutra_pages", 1] }, { "toast": "Page du sutra trouvée ({sutra_pages} / 3)" }]
+      }
+    ],
+    "ema": [
+      {
+        "lines": [["narrateur", "Une petite plaque votive en bois, accrochée à un support. Un nom y est gravé : 鉄, Tetsu."]],
+        "then": [{ "give": "ema-tetsu" }, { "set": "ema_trouvee" }]
+      }
+    ],
+    "coffre-pont": [
+      {
+        "lines": [["narrateur", "Un coffre coincé sous les planches du pont. Il était bien caché."]],
+        "then": [{ "set": "coffre_pont" }, { "oboles": 25 }, { "material": ["ecaille", 2] }, { "material": ["seve", 1] }, { "xp": 15 }]
+      }
+    ],
+    "coffre-cascade": [
+      {
+        "lines": [
+          ["narrateur", "Derrière le rideau d'eau, un coffre couvert de mousse. Dedans, des oboles… et un fragment de mémoire."],
+          ["narrateur", "« Un homme se reposait au bord d'une cascade. Une femme lui enroula un fil autour de la jambe. Méfiant, il le détacha et l'accrocha à une souche. La souche fut arrachée et emportée dans l'eau. »"],
+          ["heros", "Un fil… et une souche."]
+        ],
+        "then": [{ "set": "coffre_cascade" }, { "set": "legende_joren" }, { "oboles": 40 }, { "xp": 25 }, { "toast": "Fragment de mémoire : le fil de Jōren" }]
+      }
+    ],
+    "moine": [
+      {
+        "if": [{ "quest": "sutra", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["moine", "Tu regardes le rocher ? Izanagi l'a roulé là, jadis, pour sceller l'entrée du Yomi."],
+          ["moine", "Il était venu chercher son épouse, Izanami. Elle lui avait demandé de ne pas la regarder. Il l'a regardée. Il a vu ce que la mort avait fait d'elle, et il s'est enfui."],
+          ["moine", "Depuis, elle attend derrière la pierre. Certains disent qu'on l'entend encore, si on y colle l'oreille."],
+          ["moine", "Pardonne-moi, j'ai une faveur à te demander. Le vent a arraché les pages de mon sutra du Cœur. Sans elles, je ne peux plus réciter pour les âmes égarées."],
+          ["moine", "Trois pages : l'une près de la cascade, une autre dans les rizières, la dernière… devant le torii noir. Les morts n'aiment pas y aller."]
+        ],
+        "then": [{ "startQuest": "sutra" }]
+      },
+      {
+        "if": [{ "quest": "sutra", "is": "active" }, { "count": ["sutra_pages", 3] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui rends les trois pages.)"],
+          ["moine", "Le sutra est complet. « La forme est vide, le vide est forme »… Merci."],
+          ["moine", "Prends cet omamori. Il a protégé bien des pèlerins avant toi, et il ne fait pas de différence entre les vivants et les morts."]
+        ],
+        "then": [{ "completeQuest": "sutra" }, { "give": "omamori-temple" }, { "xp": 50 }]
+      },
+      {
+        "if": [{ "quest": "sutra", "is": "active" }],
+        "lines": [["moine", "Trois pages : près de la cascade, dans les rizières, et devant le torii noir. ({sutra_pages} / 3)"]]
+      },
+      {
+        "if": [{ "notFlag": "fragment_izanami" }],
+        "lines": [["moine", "Certains disent qu'on entend encore Izanami, si on colle l'oreille contre la pierre. Moi, je n'ose pas."]]
+      },
+      {
+        "lines": [["moine", "Tu l'as entendue, n'est-ce pas ? Ne l'écoute pas trop longtemps. Les voix du Yomi retiennent ceux qui les écoutent."]]
+      }
+    ],
+    "rocher": [
+      {
+        "if": [{ "notFlag": "fragment_izanami" }],
+        "lines": [["narrateur", "Le Grand Rocher, ceint d'une épaisse corde sacrée. Ses fissures rougeoient faiblement."]],
+        "choices": [
+          {
+            "text": "Coller l'oreille contre la pierre",
+            "then": [{ "set": "fragment_izanami" }, { "xp": 20 }, { "toast": "Fragment de mémoire : la voix d'Izanami" }],
+            "reply": [
+              ["voix", "… Qui es-tu ? … Tu n'as pas de nom, toi non plus…"],
+              ["voix", "Ils m'ont oubliée. Tous. Même lui."]
+            ]
+          },
+          { "text": "Partir" }
+        ]
+      },
+      {
+        "lines": [["narrateur", "Le rocher est silencieux. Pour l'instant."]]
+      }
+    ],
+    "portail": [
+      {
+        "lines": [["narrateur", "Un torii noir se dresse devant les rizières noyées. Sous la brume, l'eau est rouge."]],
+        "choices": [
+          { "text": "Entrer dans les Rizières noyées", "then": [{ "startQuest": "dame" }, { "enterDungeon": true }] },
+          { "text": "Pas encore" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "about": "Objectifs : le premier dont les conditions (if) sont remplies s'affiche. {nom} affiche un compteur posé par les dialogues.",
+  "quests": {
+    "passeur": {
+      "name": "Le passeur",
+      "type": "Principale",
+      "objectives": [{ "text": "Monter au village des âmes et parler à Obaa Kiku." }]
+    },
+    "dame": {
+      "name": "La dame des rizières",
+      "type": "Principale",
+      "objectives": [{ "text": "Passer le torii noir, au nord-ouest, et vaincre la Jorōgumo dans les Rizières noyées." }]
+    },
+    "forgeron": {
+      "name": "Le nom du forgeron",
+      "type": "Principale",
+      "objectives": [
+        { "if": [{ "has": "ema-tetsu" }], "text": "Rapporter la plaque votive au forgeron." },
+        { "text": "Retrouver l'ema du forgeron dans les rizières ouvertes, à l'est." }
+      ]
+    },
+    "voyageur": {
+      "name": "Le voyageur d'argile",
+      "type": "Principale",
+      "objectives": [
+        { "if": [{ "flag": "charon_gilgamesh" }], "text": "Rapporter à l'homme d'argile ce que sait Charon." },
+        { "text": "Demander à Charon s'il a vu passer « un roi qui avait peur d'être oublié »." }
+      ]
+    },
+    "lanterne": {
+      "name": "La lanterne de Yuki",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "material": ["braise", 1] }], "text": "Rapporter une braise de hitodama à Yuki." },
+        { "text": "Récupérer une braise de hitodama dans les Rizières noyées." }
+      ]
+    },
+    "obon": {
+      "name": "Les lanternes d'Obon",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "count": ["toro_allumes", 4] }], "text": "Retourner voir Yuki." },
+        { "text": "Allumer les quatre lanternes de pierre de l'île avec des braises de hitodama ({toro_allumes} / 4)." }
+      ]
+    },
+    "tanuki": {
+      "name": "Le tanuki parmi les statues",
+      "type": "Secondaire",
+      "objectives": [{ "text": "Trouver lequel des Jizō est le tanuki déguisé." }]
+    },
+    "sutra": {
+      "name": "Les pages du sutra",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "count": ["sutra_pages", 3] }], "text": "Rapporter les trois pages au moine du Rocher." },
+        { "text": "Retrouver les pages du sutra ({sutra_pages} / 3) : près de la cascade, dans les rizières, devant le torii noir." }
+      ]
+    },
+    "concombre": {
+      "name": "Un concombre pour Kawatarō",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "has": "concombre" }], "text": "Donner le concombre à Kawatarō, près du pont des rizières." },
+        { "text": "Trouver un concombre. Le tanuki vend de tout, paraît-il." }
+      ]
+    },
+    "nanashi": {
+      "name": "L'âme sans visage",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "material": ["masque", 3] }], "text": "Rapporter trois éclats de masque blanc à l'âme sans visage, sur le chemin du Grand Rocher." },
+        { "text": "Récupérer trois éclats de masque blanc sur les Oubliés des Rizières noyées." }
+      ]
+    },
+    "tasse": {
+      "name": "La tasse ébréchée",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "has": "tasse-ebrechee" }], "text": "Rapporter la tasse à Obaa Kiku." },
+        { "text": "Retrouver la tasse du mari d'Obaa. Les kappa des Rizières noyées ramassent tout ce qui brille." }
+      ]
+    }
+  },
+  "triggers": [
+    {
+      "if": [{ "count": ["offrandes", 6] }, { "notFlag": "benediction_jizo" }],
+      "then": [{ "set": "benediction_jizo" }, { "xp": 30 }, { "toast": "Les six Jizō te bénissent : +10 PV max." }]
+    }
+  ]
+}

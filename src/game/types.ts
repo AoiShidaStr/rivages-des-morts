@@ -9,7 +9,7 @@ export type EnemyKind =
   | 'oublie'
   | 'araignee'
   | 'jorogumo';
-export type StunReason = 'parry' | 'wall' | 'smash' | 'snag';
+export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare';
 export type Outcome = 'victory' | 'defeat';
 
 /** Posture affichée : le rendu s'en sert pour animer les sprites (écrasement, tremblement, teinte). */
@@ -26,6 +26,10 @@ export interface InputFrame {
   blockHeld: boolean;
   dodgePressed: boolean;
   smashPressed: boolean;
+  /** E : Bond. */
+  bondPressed: boolean;
+  /** R : Frénésie. */
+  frenzyPressed: boolean;
 }
 
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
@@ -51,4 +55,10 @@ export type GameEvent =
   | { type: 'bossPhase'; phase: number; label: string; hint?: string }
   | { type: 'webBurn'; id: number; pos: Vec2; radius: number }
   | { type: 'bite'; pos: Vec2 }
+  | { type: 'bondLand'; pos: Vec2; radius: number }
+  | { type: 'frenzy'; pos: Vec2 }
+  | { type: 'lightning'; pos: Vec2 }
+  | { type: 'bearSkin'; pos: Vec2 }
+  | { type: 'snareSet'; id: number; pos: Vec2; radius: number }
+  | { type: 'snareEnd'; id: number }
   | { type: 'end'; outcome: Outcome };

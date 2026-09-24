@@ -1,0 +1,14 @@
+{
+  "heros": { "file": "heros.png", "height": 1.75, "facesRight": true },
+  "torii": { "file": "torii.png", "height": 4.2, "facesRight": true },
+  "charon": { "file": "charon.png", "height": 2.1, "facesRight": true },
+  "obaaKiku": { "file": "obaa-kiku.png", "height": 1.45, "facesRight": false },
+  "tetsu": { "file": "tetsu.png", "height": 1.95, "facesRight": true },
+  "yuki": { "file": "yuki.png", "height": 1.25, "facesRight": true },
+  "tanuki": { "file": "tanuki.png", "height": 1.5, "facesRight": false },
+  "moine": { "file": "moine.png", "height": 1.85, "facesRight": false },
+  "barque": { "file": "barque.png", "height": 1.9, "facesRight": false },
+  "rocher": { "file": "rocher.png", "height": 4.4, "facesRight": true },
+  "kappa": { "file": "kappa.png", "height": 1.3, "facesRight": true },
+  "oublie": { "file": "oublie.png", "height": 1.9, "facesRight": false }
+}

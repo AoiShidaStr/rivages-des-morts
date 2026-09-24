@@ -3,19 +3,21 @@ import type { World } from '../game/world';
 
 const BANNER_TIME = 2.6;
 
-/** Interface en HTML par-dessus le canvas : barres, compétences, annonces de vague et écran de fin. */
+/** Interface de combat en HTML par-dessus le canvas : barres, compétences, annonces de vague et du boss. */
 export class Hud {
   private readonly hpFill: HTMLElement;
   private readonly rageBar: HTMLElement;
   private readonly rageFill: HTMLElement;
   private readonly dodgeCooldown: HTMLElement;
   private readonly smashSkill: HTMLElement;
+  private readonly bondSkill: HTMLElement;
+  private readonly bondCooldown: HTMLElement;
+  private readonly frenzySkill: HTMLElement;
+  private readonly frenzyCooldown: HTMLElement;
   private readonly banner: HTMLElement;
   private readonly bannerStep: HTMLElement;
   private readonly bannerLabel: HTMLElement;
   private readonly hint: HTMLElement;
-  private readonly end: HTMLElement;
-  private readonly endTitle: HTMLElement;
   private readonly boss: HTMLElement;
   private readonly bossName: HTMLElement;
   private readonly bossFill: HTMLElement;
@@ -32,12 +34,14 @@ export class Hud {
     this.rageFill = find('.bar.rage .fill');
     this.dodgeCooldown = find('#skill-dodge .cooldown');
     this.smashSkill = find('#skill-smash');
+    this.bondSkill = find('#skill-bond');
+    this.bondCooldown = find('#skill-bond .cooldown');
+    this.frenzySkill = find('#skill-frenzy');
+    this.frenzyCooldown = find('#skill-frenzy .cooldown');
     this.banner = find('#banner');
     this.bannerStep = find('#banner small');
     this.bannerLabel = find('#banner span');
     this.hint = find('#hint');
-    this.end = find('#end');
-    this.endTitle = find('#end h1');
     this.boss = find('#boss');
     this.bossName = find('#boss .name');
     this.bossFill = find('#boss .fill');
@@ -51,6 +55,11 @@ export class Hud {
     this.rageBar.classList.toggle('ready', player.canSmash);
     this.smashSkill.classList.toggle('locked', !player.canSmash);
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
+    this.bondSkill.classList.toggle('locked', player.rage < cfg.bond.rageCost);
+    this.bondCooldown.style.transform = `scaleX(${player.bondCooldown / cfg.bond.cooldown})`;
+    this.frenzySkill.classList.toggle('locked', player.frenzy <= 0 && player.rage < cfg.frenzy.rageCost);
+    this.frenzySkill.classList.toggle('active', player.frenzy > 0);
+    this.frenzyCooldown.style.transform = `scaleX(${player.frenzy > 0 ? 0 : player.frenzyCooldown / cfg.frenzy.cooldown})`;
 
     const boss = world.enemies.find((e) => e.boss);
     this.boss.classList.toggle('visible', Boolean(boss));
@@ -63,8 +72,6 @@ export class Hud {
         this.bossName.textContent = `Jorōgumo · ${event.label}`;
         this.announce(`Phase ${event.phase} / 3`, event.label, event.hint);
       } else if (event.type === 'end') {
-        this.endTitle.textContent = event.outcome === 'victory' ? 'Les rizières sont apaisées' : 'Ton âme vacille…';
-        this.end.classList.add('visible');
         this.hint.classList.remove('visible');
       }
     }
@@ -83,7 +90,6 @@ export class Hud {
   }
 
   reset(): void {
-    this.end.classList.remove('visible');
     this.hint.classList.remove('visible');
     this.banner.classList.remove('visible');
     this.bannerTimer = 0;
