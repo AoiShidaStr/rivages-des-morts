@@ -50,7 +50,17 @@ Stylized low-poly 3D game asset, hand-painted texture, soft cel-shading, clean r
 
 **Noms de fichiers** : enregistrer l'image dans `~/Pictures/game visual` sous le nom indiqué dans `tools/sprites.json` (par exemple `decor_jizo.jpg`), puis lancer `npm run sprites -- jizo`. Une image absente est simplement ignorée : le jeu garde son dessin provisoire.
 
-## Ennemis et boss
+## Héros
+
+Le premier héros (Einherjar guerrier) était trop réaliste par rapport aux yokai : proportions adultes, poils de fourrure et sangles détaillés, contour noir, halo. Le prompt ci-dessous vise les proportions et les formes simples du kappa.
+
+**Astuce Nano Banana** : joindre l'image du kappa (`public/sprites/kappa.png`) avec la phrase `Match exactly the art style, proportions and rendering of the attached image.` C'est le moyen le plus sûr d'obtenir un style identique d'un personnage à l'autre.
+
+| Asset | Prompt (après la bible de style) |
+| --- | --- |
+| Einherjar guerrier | `Einherjar warrior, the ghost of a viking who died in battle, stylized chunky proportions about 3.5 heads tall, big head, broad shoulders, oversized hands and boots, pale cyan spirit skin, large simple determined eyes, short thick braided white beard, simple round iron helmet with a nose guard, short grey fur mantle made of a few big clumps, plain brown leather jerkin with one belt, holding a long Japanese nodachi in both hands, blade pointing forward, dynamic ready stance, simple shapes and big readable color blocks, painted faceted planes, few details` (fichier `heros_guerrier.jpg`) |
+
+
 
 | Asset | Prompt (après la bible de style) |
 | --- | --- |
