@@ -6,7 +6,7 @@
 //
 // Limite : un sujet gris peu saturé (l'Oublié, par exemple) se confond avec le fond.
 // Pour ceux-là, détourer à la main (Paint : « Supprimer l'arrière-plan ») et déposer le PNG dans public/sprites.
-import { mkdir, readFile } from 'node:fs/promises';
+import { access, mkdir, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,11 @@ for (const sprite of config.sprites) {
   if (only.length > 0 && !only.includes(sprite.name)) continue;
   const input = path.join(sourceDir, sprite.source);
   const output = path.join(outDir, `${sprite.name}.png`);
+  // Une image pas encore générée ne bloque pas les autres : le jeu garde son dessin provisoire.
+  if (!(await access(input).then(() => true, () => false))) {
+    console.warn(`${sprite.name.padEnd(10)} ${sprite.source} introuvable, ignoré`);
+    continue;
+  }
   const { width, height } = await cutOut(input, output, { ...config.defaults, ...sprite });
   console.log(`${sprite.name.padEnd(10)} ${sprite.source} → ${path.relative(projectDir, output)} (${width}×${height})`);
 }

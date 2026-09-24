@@ -44,6 +44,11 @@ Stylized low-poly 3D game asset, hand-painted texture, soft cel-shading, clean r
 - Planche de vues (pour Tripo) : `character turnaround sheet, same character shown front view, side view and back view, consistent design, white background`
 - Icône d'inventaire : `2D game inventory icon, item centered, painted style, subtle dark vignette, square format`
 - Portrait de dialogue : `2D character bust portrait for a dialogue box, painted style, expressive face, transparent-looking plain background`
+- Sprite du prototype 2D (à détourer avec `npm run sprites`) : `flat uniform light grey background, no ground shadow, no glow, no particles, no mist, no outline, whole subject visible with margin around it`
+
+**Pour le prototype 2D**, finir chaque prompt par le suffixe « Sprite » : un fond gris uni et aucun effet peint autour du sujet (étincelles, aura, brume, ombre au sol). Le détourage garde tout ce qui n'est pas du fond gris, donc un effet peint reste collé au sprite ; les effets sont ajoutés par le jeu.
+
+**Noms de fichiers** : enregistrer l'image dans `~/Pictures/game visual` sous le nom indiqué dans `tools/sprites.json` (par exemple `decor_jizo.jpg`), puis lancer `npm run sprites -- jizo`. Une image absente est simplement ignorée : le jeu garde son dessin provisoire.
 
 ## Ennemis et boss
 
@@ -64,14 +69,14 @@ Stylized low-poly 3D game asset, hand-painted texture, soft cel-shading, clean r
 | Asset | Prompt (après la bible de style) |
 | --- | --- |
 | Charon | `Charon the ferryman of the dead, tall gaunt old figure in a hooded dark cloak, long grey beard, holding a long wooden pole, a small lantern at his belt, tired grumpy expression` |
-| Tetsu, le forgeron | `Tetsu the blacksmith, a burly Japanese smith spirit in a leather apron, half of his face fading into a blank white mask, holding a hammer, sparks, semi-transparent ghostly edges` |
+| Tetsu, le forgeron | `Tetsu the blacksmith, a burly middle-aged Japanese smith spirit, bare muscular arms, dark leather apron over a faded indigo work kimono, a heavy forging hammer in his right hand, the left half of his face is a smooth blank white mask like the Forgotten, the right half is weathered and kind, short grey topknot, standing, full body, matte colors` (fichier `pnj_tetsu.jpg`) |
 | Obaa Kiku | `Obaa Kiku, a small kind old woman ghost in a simple indigo kimono, carrying a wooden tray with tea cups, warm smile, faint glow` |
 | Yuki | `Yuki, a little girl ghost in a pale kimono, bare feet, holding an empty paper lantern, sad but hopeful face, soft blue glow` |
 | Tanuki marchand | `Tanuki merchant, chubby raccoon dog yokai with a straw hat and a big sake flask, oversized backpack full of odd trinkets, sly grin` |
 | Moine du Rocher | `Old Buddhist monk spirit, shaved head, orange and grey robes, prayer beads, wooden staff, calm wise expression` |
 | Barque de Charon | `Charon's boat, long narrow wooden ferry, dark weathered wood, a lantern on a pole at the bow, mystical mist around the hull` |
 | Torii du ponton | `Weathered vermilion torii gate standing in shallow misty water, wooden pier planks, modular environment piece` |
-| Statue Jizō | `Small stone Jizo statue wearing a red cloth bib and a knitted red cap, mossy stone, modular environment piece` |
+| Statue Jizō | `Small weathered stone Jizo statue, round bald head with closed eyes and a peaceful smile, hands joined in prayer, wearing a vermilion cloth bib and a knitted vermilion cap, patches of green moss, standing on a small square stone base, modular environment piece, flat base` (fichier `decor_jizo.jpg`) |
 | Rizière inondée | `Flooded rice paddy tile, still reflective water, young green rice shoots, low earthen borders, modular environment piece, flat base` |
 | Grand Rocher | `Massive ancient sealing boulder bound with a thick shimenawa rope and white paper streamers, cracks glowing faintly red` |
 | Souche (arène du boss) | `Old tree stump with thick roots, dark wet wood, silk threads wrapped around it, modular environment piece` |
@@ -85,9 +90,9 @@ Stylized low-poly 3D game asset, hand-painted texture, soft cel-shading, clean r
 | Katana de rōnin | `Ronin katana, worn black scabbard, frayed red cord, chipped tsuba, elegant curved blade` |
 | Grelots d'onmyōji | `Onmyoji ritual bells staff, short wooden handle with a cluster of golden bells and white paper ofuda talismans, faint blue spirit glow` |
 | Éventail de la Jorōgumo | `Black and crimson folding war fan with spider-web pattern, silk threads dangling from its ribs, sinister and elegant` |
-| Chapeau de paille | `Conical straw rice farmer hat, woven texture, simple cord` |
+| Chapeau de paille | `Conical straw rice farmer hat (sugegasa), tightly woven golden straw, a simple faded red chin cord, slightly frayed rim, isolated item, front three-quarter view` (fichier `equipement_chapeau-de-paille.jpg`) |
 | Masque d'Oublié | `Smooth blank white mask without any features, cracked edge, ghostly mist` |
-| Carapace de kappa | `Chest armor made from a green-brown kappa turtle shell, leather straps, rugged` |
+| Carapace de kappa | `Chest armor made from a green-brown kappa turtle shell, hexagonal shell plates with mossy cracks, dark leather straps and bronze buckles, worn by nobody, isolated item, front three-quarter view` (fichier `equipement_carapace-de-kappa.jpg`) |
 | Hakama de soie | `Pleated black silk hakama trousers with subtle silver spider-thread embroidery` |
 | Geta du kasa-obake | `Pair of tall wooden geta sandals, old oiled paper scraps tied around them, playful spirit aura` |
 | Lanterne-braise | `Small paper lantern amulet on a cord, glowing with a trapped blue hitodama flame` |
