@@ -1,0 +1,164 @@
+{
+  "frames": [
+    {
+      "filename": "kappaRenforce 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 300
+    },
+    {
+      "filename": "kappaRenforce 1",
+      "frame": {
+        "x": 58,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 300
+    },
+    {
+      "filename": "kappaRenforce 2",
+      "frame": {
+        "x": 116,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappaRenforce 3",
+      "frame": {
+        "x": 174,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappaRenforce 4",
+      "frame": {
+        "x": 232,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappaRenforce 5",
+      "frame": {
+        "x": 290,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappaRenforce 6",
+      "frame": {
+        "x": 348,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 120
+    },
+    {
+      "filename": "kappaRenforce 7",
+      "frame": {
+        "x": 406,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 120
+    },
+    {
+      "filename": "kappaRenforce 8",
+      "frame": {
+        "x": 464,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 70
+    },
+    {
+      "filename": "kappaRenforce 9",
+      "frame": {
+        "x": 522,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 70
+    },
+    {
+      "filename": "kappaRenforce 10",
+      "frame": {
+        "x": 580,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 200
+    },
+    {
+      "filename": "kappaRenforce 11",
+      "frame": {
+        "x": 638,
+        "y": 0,
+        "w": 58,
+        "h": 50
+      },
+      "duration": 200
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "kappaRenforce.png",
+    "size": {
+      "w": 696,
+      "h": 50
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 1,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 2,
+        "to": 5,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 6,
+        "to": 7,
+        "direction": "forward"
+      },
+      {
+        "name": "dash",
+        "from": 8,
+        "to": 9,
+        "direction": "forward"
+      },
+      {
+        "name": "stunned",
+        "from": 10,
+        "to": 11,
+        "direction": "forward"
+      }
+    ]
+  }
+}

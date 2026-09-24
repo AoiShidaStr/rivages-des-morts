@@ -1,0 +1,218 @@
+{
+  "frames": [
+    {
+      "filename": "jorogumoAraignee 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 300
+    },
+    {
+      "filename": "jorogumoAraignee 1",
+      "frame": {
+        "x": 76,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 300
+    },
+    {
+      "filename": "jorogumoAraignee 2",
+      "frame": {
+        "x": 152,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 90
+    },
+    {
+      "filename": "jorogumoAraignee 3",
+      "frame": {
+        "x": 228,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 90
+    },
+    {
+      "filename": "jorogumoAraignee 4",
+      "frame": {
+        "x": 304,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 90
+    },
+    {
+      "filename": "jorogumoAraignee 5",
+      "frame": {
+        "x": 380,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 90
+    },
+    {
+      "filename": "jorogumoAraignee 6",
+      "frame": {
+        "x": 456,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 200
+    },
+    {
+      "filename": "jorogumoAraignee 7",
+      "frame": {
+        "x": 532,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 200
+    },
+    {
+      "filename": "jorogumoAraignee 8",
+      "frame": {
+        "x": 608,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 80
+    },
+    {
+      "filename": "jorogumoAraignee 9",
+      "frame": {
+        "x": 684,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 450
+    },
+    {
+      "filename": "jorogumoAraignee 10",
+      "frame": {
+        "x": 760,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 60
+    },
+    {
+      "filename": "jorogumoAraignee 11",
+      "frame": {
+        "x": 836,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 60
+    },
+    {
+      "filename": "jorogumoAraignee 12",
+      "frame": {
+        "x": 912,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 300
+    },
+    {
+      "filename": "jorogumoAraignee 13",
+      "frame": {
+        "x": 988,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 300
+    },
+    {
+      "filename": "jorogumoAraignee 14",
+      "frame": {
+        "x": 1064,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 200
+    },
+    {
+      "filename": "jorogumoAraignee 15",
+      "frame": {
+        "x": 1140,
+        "y": 0,
+        "w": 76,
+        "h": 56
+      },
+      "duration": 200
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "jorogumoAraignee.png",
+    "size": {
+      "w": 1216,
+      "h": 56
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 1,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 2,
+        "to": 5,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 6,
+        "to": 7,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "strike",
+        "from": 8,
+        "to": 9,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "dash",
+        "from": 10,
+        "to": 11,
+        "direction": "forward"
+      },
+      {
+        "name": "stunned",
+        "from": 12,
+        "to": 13,
+        "direction": "forward"
+      },
+      {
+        "name": "airborne",
+        "from": 14,
+        "to": 15,
+        "direction": "forward"
+      }
+    ]
+  }
+}

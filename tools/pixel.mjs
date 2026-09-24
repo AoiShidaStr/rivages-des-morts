@@ -16,10 +16,28 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { Canvas } from './pixel/canvas.mjs';
+import araignee from './pixel/araignee.mjs';
 import heros from './pixel/heros.mjs';
+import hitodama from './pixel/hitodama.mjs';
+import { human as jorogumo, spider as jorogumoAraignee } from './pixel/jorogumo.mjs';
+import kappa from './pixel/kappa.mjs';
+import kasaObake from './pixel/kasa-obake.mjs';
+import kodama from './pixel/kodama.mjs';
 import oublie from './pixel/oublie.mjs';
 
-const characters = { heros, oublie };
+// Les clés sont les noms des sprites du jeu (src/data/sprites.json).
+const characters = {
+  heros,
+  oublie,
+  hitodama,
+  kodama,
+  kappa: kappa(),
+  kappaRenforce: kappa(true),
+  kasaObake,
+  araignee,
+  jorogumo,
+  jorogumoAraignee,
+};
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(projectDir, 'public', 'sprites', 'pixel');
 const only = process.argv.slice(2);
