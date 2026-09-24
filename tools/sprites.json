@@ -21,6 +21,13 @@
     { "name": "jizo", "source": "decor_jizo.jpg" },
     { "name": "tetsu", "source": "pnj_tetsu.jpg" },
     { "name": "chapeau-de-paille", "source": "equipement_chapeau-de-paille.jpg" },
-    { "name": "carapace-de-kappa", "source": "equipement_carapace-de-kappa.jpg" }
+    { "name": "carapace-de-kappa", "source": "equipement_carapace-de-kappa.jpg" },
+    { "name": "charon", "source": "pnj_charon.jpg" },
+    { "name": "obaa-kiku", "source": "pnj_obaa-kiku.jpg" },
+    { "name": "yuki", "source": "pnj_yuki.jpg" },
+    { "name": "tanuki", "source": "pnj_tanuki-marchand.jpg" },
+    { "name": "moine", "source": "pnj_moine-du-rocher.jpg" },
+    { "name": "barque", "source": "decor_barque-de-charon.jpg" },
+    { "name": "rocher", "source": "decor_grand-rocher.jpg" }
   ]
 }

@@ -1,0 +1,320 @@
+{
+  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du Guerrier (mêmes règles que skills.json). tags : classes (« Tous » compte pour toutes).",
+  "slots": {
+    "arme": "Arme",
+    "casque": "Casque",
+    "plastron": "Plastron",
+    "jambieres": "Jambières",
+    "bottes": "Bottes",
+    "amulette": "Amulette",
+    "relique": "Relique"
+  },
+  "bonuses": {
+    "maxHp": "PV max",
+    "damage": "Dégâts",
+    "speed": "Vitesse",
+    "dodge": "Portée d'esquive",
+    "armor": "Dégâts subis",
+    "oboles": "Oboles gagnées"
+  },
+  "items": {
+    "nodachi": {
+      "name": "Nodachi des rizières",
+      "slot": "arme",
+      "rarity": "commune",
+      "tags": ["Guerrier"],
+      "summary": "Longue portée, coups équilibrés.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 10 },
+        { "op": "set", "path": "attack.range", "value": 1.9 },
+        { "op": "set", "path": "attack.arcDeg", "value": 120 },
+        { "op": "set", "path": "attack.windup", "value": 0.08 },
+        { "op": "set", "path": "attack.recovery", "value": 0.24 },
+        { "op": "set", "path": "attack.knockback", "value": 3 }
+      ],
+      "description": "Une longue lame de paysan, au manche entouré de tissu délavé. Elle a coupé plus de riz que d'ennemis."
+    },
+    "kanabo": {
+      "name": "Kanabō d'oni",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Guerrier"],
+      "summary": "Coups lents et lourds (17 dégâts) ; la Frappe fracassante étourdit 0,8 s de plus.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 17 },
+        { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.arcDeg", "value": 110 },
+        { "op": "set", "path": "attack.windup", "value": 0.17 },
+        { "op": "set", "path": "attack.recovery", "value": 0.36 },
+        { "op": "set", "path": "attack.knockback", "value": 6 },
+        { "op": "add", "path": "smash.stun", "value": 0.8 }
+      ],
+      "description": "Une massue de fer cloutée, arrachée à un kappa qui l'avait volée à un oni. Personne n'a osé la réclamer."
+    },
+    "katana-ronin": {
+      "name": "Katana de rōnin",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Guerrier"],
+      "summary": "Rapide mais léger (8 dégâts) ; bloquer rapporte 50 % de rage en plus.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 8 },
+        { "op": "set", "path": "attack.range", "value": 1.65 },
+        { "op": "set", "path": "attack.arcDeg", "value": 100 },
+        { "op": "set", "path": "attack.windup", "value": 0.05 },
+        { "op": "set", "path": "attack.recovery", "value": 0.15 },
+        { "op": "set", "path": "attack.knockback", "value": 2 },
+        { "op": "set", "path": "perks.guardRageFactor", "value": 0.5 }
+      ],
+      "description": "La lame d'un samouraï sans maître, pris dans les toiles de la Jorōgumo. Son cordon rouge est effiloché."
+    },
+    "chapeau-paille": {
+      "name": "Chapeau de paille",
+      "slot": "casque",
+      "rarity": "commune",
+      "bonus": { "maxHp": 10 },
+      "description": "Un chapeau conique en paille tressée. Il ne protège pas grand-chose, mais il rassure."
+    },
+    "kabuto-fendu": {
+      "name": "Kabuto fendu",
+      "slot": "casque",
+      "rarity": "peu commune",
+      "tags": ["Guerrier"],
+      "bonus": { "maxHp": 6, "damage": 1 },
+      "description": "Le casque fendu d'un guerrier dont plus personne ne se souvient. Il tient encore."
+    },
+    "masque-oublie": {
+      "name": "Masque d'Oublié",
+      "slot": "casque",
+      "rarity": "rare",
+      "tags": ["Invocateur"],
+      "bonus": { "damage": 2 },
+      "description": "Un masque blanc sans visage. Le porter fait un peu oublier la peur."
+    },
+    "shiroshozoku": {
+      "name": "Shiroshōzoku",
+      "slot": "plastron",
+      "rarity": "commune",
+      "bonus": { "maxHp": 15 },
+      "description": "Le kimono blanc dont on vêt les morts, croisé droite sur gauche, à l'envers des vivants."
+    },
+    "carapace-kappa": {
+      "name": "Carapace de kappa",
+      "slot": "plastron",
+      "rarity": "rare",
+      "tags": ["Guerrier"],
+      "bonus": { "armor": 0.15 },
+      "description": "Une carapace taillée en plastron. Les coups glissent dessus."
+    },
+    "hakama-soie": {
+      "name": "Hakama de soie",
+      "slot": "jambieres",
+      "rarity": "peu commune",
+      "bonus": { "speed": 0.08 },
+      "description": "Un hakama noir brodé de fils d'araignée argentés. Léger comme la brume."
+    },
+    "suneate-ecailles": {
+      "name": "Suneate d'écailles",
+      "slot": "jambieres",
+      "rarity": "peu commune",
+      "tags": ["Guerrier"],
+      "bonus": { "armor": 0.08 },
+      "description": "Des jambières d'écailles de kappa, cousues au papier huilé par Tetsu."
+    },
+    "geta-kasa": {
+      "name": "Geta du kasa-obake",
+      "slot": "bottes",
+      "rarity": "peu commune",
+      "bonus": { "dodge": 0.25 },
+      "description": "De hautes sandales de bois, enveloppées de papier huilé. On bondit plus loin avec."
+    },
+    "waraji-pelerin": {
+      "name": "Waraji de pèlerin",
+      "slot": "bottes",
+      "rarity": "commune",
+      "tags": ["Guerrier"],
+      "bonus": { "speed": 0.05, "maxHp": 5 },
+      "description": "Des sandales de paille de pèlerin. Pour une fois, le tanuki n'a pas menti."
+    },
+    "lanterne-braise": {
+      "name": "Lanterne-braise",
+      "slot": "amulette",
+      "rarity": "commune",
+      "tags": ["Guerrier"],
+      "bonus": { "damage": 3 },
+      "description": "Une petite lanterne où brûle la braise d'un feu follet. Tes coups brûlent un peu."
+    },
+    "magatama-fele": {
+      "name": "Magatama fêlé",
+      "slot": "amulette",
+      "rarity": "rare",
+      "tags": ["Invocateur"],
+      "bonus": { "maxHp": 20 },
+      "description": "Un magatama de jade fêlé, qui luit encore faiblement."
+    },
+    "omamori-temple": {
+      "name": "Omamori du temple",
+      "slot": "amulette",
+      "rarity": "peu commune",
+      "bonus": { "maxHp": 15, "armor": 0.05 },
+      "description": "Un petit sachet de protection, béni par le moine du Rocher. Il sent l'encens."
+    },
+    "rokumonsen": {
+      "name": "Rokumonsen",
+      "slot": "amulette",
+      "rarity": "rare",
+      "bonus": { "oboles": 0.2 },
+      "description": "Les six pièces qu'on glissait aux morts pour traverser la rivière Sanzu. Le péage de Charon, version japonaise."
+    },
+    "talisman-douteux": {
+      "name": "Talisman douteux",
+      "slot": "amulette",
+      "rarity": "commune",
+      "bonus": {},
+      "description": "Le tanuki jure qu'il porte chance. Aucun effet mesurable."
+    },
+    "dent-kappa": {
+      "name": "Dent de kappa (probablement)",
+      "slot": "amulette",
+      "rarity": "peu commune",
+      "bonus": { "damage": 1 },
+      "description": "Les kappa n'ont pas de dents. Le tanuki assure que si."
+    },
+    "coupelle-kappa": {
+      "name": "Coupelle du kappa",
+      "slot": "relique",
+      "rarity": "rare",
+      "tags": ["Guerrier"],
+      "summary": "Tant que tu n'es pas touché, +25 % de dégâts. Un coup reçu vide la coupelle 5 s.",
+      "effects": [{ "op": "set", "path": "perks.coupelle", "value": { "bonus": 0.25, "emptyTime": 5 } }],
+      "description": "La coupelle d'eau d'un vieux kappa. L'eau n'en déborde jamais, tant qu'on garde son calme."
+    },
+    "fil-joren": {
+      "name": "Fil de Jōren",
+      "slot": "relique",
+      "rarity": "épique",
+      "tags": ["Tous"],
+      "summary": "Chaque esquive laisse un fil : le premier ennemi qui le touche est immobilisé 2 s.",
+      "effects": [{ "op": "set", "path": "perks.joren", "value": { "stun": 2, "life": 8, "radius": 1 } }],
+      "description": "Une bobine de soie argentée qui ne s'use jamais. Un fil flotte toujours dans l'air, prêt à s'accrocher."
+    },
+    "magatama-yasakani": {
+      "name": "Magatama de Yasakani",
+      "slot": "relique",
+      "rarity": "légendaire",
+      "tags": ["Invocateur"],
+      "bonus": { "maxHp": 20 },
+      "summary": "+1 invocation active (Invocateur, pas encore jouable). Sa lueur apaise : +20 PV max.",
+      "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?"
+    },
+    "ema-tetsu": {
+      "name": "Ema de Tetsu",
+      "rarity": "quête",
+      "description": "Une plaque votive en bois où un forgeron avait gravé son nom."
+    },
+    "tasse-ebrechee": {
+      "name": "Tasse ébréchée",
+      "rarity": "quête",
+      "description": "Une tasse à thé en grès, ébréchée au bord. Un kappa la gardait comme un trésor."
+    },
+    "concombre": {
+      "name": "Concombre (authentique)",
+      "rarity": "quête",
+      "description": "Un concombre bien vert. Le tanuki affirme qu'il pousse au Yomi. Il ment, mais le concombre est vrai."
+    },
+    "tablette-argile": {
+      "name": "Tablette d'argile fêlée",
+      "rarity": "quête",
+      "description": "Un fragment de tablette couvert d'écriture cunéiforme. Il est tiède, comme s'il battait encore."
+    }
+  },
+  "materials": {
+    "braise": "Braise de hitodama",
+    "seve": "Sève de kodama",
+    "ecaille": "Écaille de kappa",
+    "papier": "Papier huilé",
+    "masque": "Éclat de masque blanc",
+    "soie": "Soie de jorōgumo"
+  },
+  "drops": {
+    "hitodama": { "oboles": 1, "xp": 3, "material": "braise", "chance": 0.5 },
+    "kodama": { "oboles": 3, "xp": 6, "material": "seve", "chance": 0.6 },
+    "kappa": {
+      "oboles": 5,
+      "xp": 10,
+      "material": "ecaille",
+      "chance": 0.7,
+      "items": [{ "item": "tasse-ebrechee", "chance": 0.6, "if": [{ "quest": "tasse", "is": "active" }, { "notHas": "tasse-ebrechee" }] }]
+    },
+    "kappaRenforce": {
+      "oboles": 12,
+      "xp": 25,
+      "material": "ecaille",
+      "chance": 1,
+      "count": 2,
+      "items": [
+        { "item": "kanabo", "chance": 0.35 },
+        { "item": "coupelle-kappa", "chance": 0.15 },
+        { "item": "tasse-ebrechee", "chance": 0.6, "if": [{ "quest": "tasse", "is": "active" }, { "notHas": "tasse-ebrechee" }] }
+      ]
+    },
+    "kasaObake": { "oboles": 4, "xp": 8, "material": "papier", "chance": 0.6 },
+    "oublie": { "oboles": 4, "xp": 8, "material": "masque", "chance": 0.5, "items": [{ "item": "kabuto-fendu", "chance": 0.06 }] },
+    "araignee": { "oboles": 1, "xp": 1 },
+    "jorogumo": {
+      "oboles": 60,
+      "xp": 100,
+      "material": "soie",
+      "chance": 1,
+      "count": 3,
+      "items": [
+        { "item": "katana-ronin", "chance": 0.4 },
+        { "item": "fil-joren", "chance": 0.4 },
+        { "item": "magatama-yasakani", "chance": 0.03 }
+      ]
+    }
+  },
+  "chest": { "oboles": [8, 20], "materials": ["braise", "seve", "ecaille", "papier"], "count": [1, 2] },
+  "shops": {
+    "obaa": {
+      "name": "Maison de thé d'Obaa Kiku",
+      "discountIf": { "if": [{ "flag": "remise_obaa" }], "discount": 0.1, "note": "Obaa te fait un prix d'ami : −10 %." },
+      "stock": [
+        { "item": "chapeau-paille", "price": 40 },
+        { "item": "shiroshozoku", "price": 45 },
+        { "item": "kabuto-fendu", "price": 55 },
+        { "item": "geta-kasa", "price": 70 }
+      ]
+    },
+    "tanuki": {
+      "name": "Trésors (authentiques) du tanuki",
+      "stock": [
+        { "item": "concombre", "price": 10, "if": [{ "quest": "concombre", "is": "active" }, { "notHas": "concombre" }] },
+        { "item": "talisman-douteux", "price": 15 },
+        { "item": "waraji-pelerin", "price": 30 },
+        { "item": "dent-kappa", "price": 35 }
+      ]
+    },
+    "fin": {
+      "name": "Boutique de fin de donjon",
+      "discount": 0.25,
+      "stock": [
+        { "item": "magatama-fele", "price": 120 },
+        { "item": "masque-oublie", "price": 90 },
+        { "item": "geta-kasa", "price": 70 },
+        { "item": "kabuto-fendu", "price": 55 }
+      ]
+    }
+  },
+  "forge": {
+    "weapon": { "maxLevel": 5, "damagePerLevel": 2, "obolesPerLevel": 20, "material": "ecaille" },
+    "recipes": [
+      { "item": "carapace-kappa", "oboles": 30, "materials": { "ecaille": 3 } },
+      { "item": "suneate-ecailles", "oboles": 20, "materials": { "ecaille": 2, "papier": 1 } },
+      { "item": "hakama-soie", "oboles": 20, "materials": { "soie": 2 } },
+      { "item": "lanterne-braise", "oboles": 15, "materials": { "braise": 2 }, "if": [{ "flag": "recette_lanterne" }] },
+      { "item": "kanabo", "oboles": 60, "materials": { "ecaille": 5, "masque": 1 } },
+      { "item": "katana-ronin", "oboles": 80, "materials": { "soie": 3, "masque": 2 } }
+    ]
+  }
+}
