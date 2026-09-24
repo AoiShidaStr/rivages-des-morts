@@ -1,0 +1,164 @@
+{
+  "frames": [
+    {
+      "filename": "kappa 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 300
+    },
+    {
+      "filename": "kappa 1",
+      "frame": {
+        "x": 46,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 300
+    },
+    {
+      "filename": "kappa 2",
+      "frame": {
+        "x": 92,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappa 3",
+      "frame": {
+        "x": 138,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappa 4",
+      "frame": {
+        "x": 184,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappa 5",
+      "frame": {
+        "x": 230,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 140
+    },
+    {
+      "filename": "kappa 6",
+      "frame": {
+        "x": 276,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 120
+    },
+    {
+      "filename": "kappa 7",
+      "frame": {
+        "x": 322,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 120
+    },
+    {
+      "filename": "kappa 8",
+      "frame": {
+        "x": 368,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 70
+    },
+    {
+      "filename": "kappa 9",
+      "frame": {
+        "x": 414,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 70
+    },
+    {
+      "filename": "kappa 10",
+      "frame": {
+        "x": 460,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 200
+    },
+    {
+      "filename": "kappa 11",
+      "frame": {
+        "x": 506,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 200
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "kappa.png",
+    "size": {
+      "w": 552,
+      "h": 40
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 1,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 2,
+        "to": 5,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 6,
+        "to": 7,
+        "direction": "forward"
+      },
+      {
+        "name": "dash",
+        "from": 8,
+        "to": 9,
+        "direction": "forward"
+      },
+      {
+        "name": "stunned",
+        "from": 10,
+        "to": 11,
+        "direction": "forward"
+      }
+    ]
+  }
+}

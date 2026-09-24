@@ -1,6 +1,19 @@
 # Pixel art et animations
 
-Les personnages peuvent être affichés en pixel art animé : une planche d'images (PNG) et sa description (JSON), une animation par posture du jeu. Le héros et l'Oublié en ont une ; les autres gardent leur image peinte tant qu'ils n'ont pas la leur.
+Les personnages sont affichés en pixel art animé : une planche d'images (PNG) et sa description (JSON), une animation par posture du jeu. Tout le bestiaire du Yomi en a une :
+
+| Sprite | Fichier du générateur | Animations |
+| --- | --- | --- |
+| `heros` | `tools/pixel/heros.mjs` | idle, move, windup, strike, guard, dash |
+| `oublie` | `tools/pixel/oublie.mjs` | idle, move, windup, strike, stunned |
+| `hitodama` | `tools/pixel/hitodama.mjs` | move |
+| `kodama` | `tools/pixel/kodama.mjs` | idle, move, channel, stunned |
+| `kappa`, `kappaRenforce` | `tools/pixel/kappa.mjs` (`kappa(true)` pour l'élite) | idle, move, windup, dash, stunned |
+| `kasaObake` | `tools/pixel/kasa-obake.mjs` | idle, move, airborne, stunned |
+| `araignee` | `tools/pixel/araignee.mjs` | idle, move, windup, strike, stunned |
+| `jorogumo`, `jorogumoAraignee` | `tools/pixel/jorogumo.mjs` | idle, move, windup, strike, channel, stunned (+ dash, airborne pour l'araignée) |
+
+Les souches, les Jizō et le torii restent des images fixes.
 
 `?pixel=0` dans l'adresse du jeu revient aux images peintes, pour comparer.
 
@@ -29,6 +42,8 @@ Chaque personnage est un pantin décrit dans `tools/pixel/<nom>.mjs` :
 - des **pièces** dessinées en texte, un caractère par pixel (tête, torse) ;
 - des **membres** tracés entre des articulations (hanche → genou → pied, épaule → coude → main), le coude et le genou se plaçant tout seuls ;
 - des **animations** : pour chaque image, une pose.
+
+Les créatures qui ne sont pas humanoïdes (kappa, kasa-obake, araignées…) sont dessinées avec des formes simples (ellipses ombrées, traits, rectangles) et leurs poses ont des champs propres à chacune : voir le haut de leur fichier.
 
 Une pose du héros ressemble à ceci :
 

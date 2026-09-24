@@ -1,0 +1,158 @@
+{
+  "frames": [
+    {
+      "filename": "kasaObake 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 200
+    },
+    {
+      "filename": "kasaObake 1",
+      "frame": {
+        "x": 36,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 200
+    },
+    {
+      "filename": "kasaObake 2",
+      "frame": {
+        "x": 72,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 200
+    },
+    {
+      "filename": "kasaObake 3",
+      "frame": {
+        "x": 108,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 200
+    },
+    {
+      "filename": "kasaObake 4",
+      "frame": {
+        "x": 144,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 80
+    },
+    {
+      "filename": "kasaObake 5",
+      "frame": {
+        "x": 180,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 80
+    },
+    {
+      "filename": "kasaObake 6",
+      "frame": {
+        "x": 216,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 80
+    },
+    {
+      "filename": "kasaObake 7",
+      "frame": {
+        "x": 252,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 80
+    },
+    {
+      "filename": "kasaObake 8",
+      "frame": {
+        "x": 288,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 100
+    },
+    {
+      "filename": "kasaObake 9",
+      "frame": {
+        "x": 324,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 100
+    },
+    {
+      "filename": "kasaObake 10",
+      "frame": {
+        "x": 360,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 250
+    },
+    {
+      "filename": "kasaObake 11",
+      "frame": {
+        "x": 396,
+        "y": 0,
+        "w": 36,
+        "h": 42
+      },
+      "duration": 250
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "kasaObake.png",
+    "size": {
+      "w": 432,
+      "h": 42
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 4,
+        "to": 7,
+        "direction": "forward"
+      },
+      {
+        "name": "airborne",
+        "from": 8,
+        "to": 9,
+        "direction": "forward"
+      },
+      {
+        "name": "stunned",
+        "from": 10,
+        "to": 11,
+        "direction": "forward"
+      }
+    ]
+  }
+}

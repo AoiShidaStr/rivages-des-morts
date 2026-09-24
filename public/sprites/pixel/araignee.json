@@ -1,0 +1,136 @@
+{
+  "frames": [
+    {
+      "filename": "araignee 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 300
+    },
+    {
+      "filename": "araignee 1",
+      "frame": {
+        "x": 34,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 300
+    },
+    {
+      "filename": "araignee 2",
+      "frame": {
+        "x": 68,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 60
+    },
+    {
+      "filename": "araignee 3",
+      "frame": {
+        "x": 102,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 60
+    },
+    {
+      "filename": "araignee 4",
+      "frame": {
+        "x": 136,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 350
+    },
+    {
+      "filename": "araignee 5",
+      "frame": {
+        "x": 170,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 100
+    },
+    {
+      "filename": "araignee 6",
+      "frame": {
+        "x": 204,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 350
+    },
+    {
+      "filename": "araignee 7",
+      "frame": {
+        "x": 238,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 250
+    },
+    {
+      "filename": "araignee 8",
+      "frame": {
+        "x": 272,
+        "y": 0,
+        "w": 34,
+        "h": 20
+      },
+      "duration": 250
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "araignee.png",
+    "size": {
+      "w": 306,
+      "h": 20
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 1,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 2,
+        "to": 3,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 4,
+        "to": 4,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "strike",
+        "from": 5,
+        "to": 6,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "stunned",
+        "from": 7,
+        "to": 8,
+        "direction": "forward"
+      }
+    ]
+  }
+}

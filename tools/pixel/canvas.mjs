@@ -41,6 +41,29 @@ export class Canvas {
     }
   }
 
+  /**
+   * Ellipse pleine. Avec `[ombre, base, lumière]`, elle est éclairée par le haut à gauche :
+   * une calotte claire en haut, une bande sombre en bas et à droite.
+   */
+  ellipse(cx, cy, rx, ry, colors) {
+    const [dark, base, light] = Array.isArray(colors) ? colors : [colors, colors, colors];
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        const nx = (x - cx) / (rx + 0.5);
+        const ny = (y - cy) / (ry + 0.5);
+        const d = nx * nx + ny * ny;
+        if (d > 1) continue;
+        const lit = -nx * 0.45 - ny * 0.9;
+        this.set(x, y, lit > 0.45 && d < 0.75 ? light : lit < -0.5 || d > 0.82 && lit < 0 ? dark : base);
+      }
+    }
+  }
+
+  /** Rectangle plein de `w` × `h` pixels, coin haut gauche en (x, y) : yeux, pupilles, reflets. */
+  rect(x, y, w, h, color) {
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) this.set(x + i, y + j, color);
+  }
+
   /** Trait épais entre deux points, tracé pixel par pixel. */
   line([x0, y0], [x1, y1], r, color) {
     const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
