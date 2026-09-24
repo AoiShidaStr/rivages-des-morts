@@ -1,6 +1,10 @@
 {
   "heros": { "file": "heros.png", "height": 1.75, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "height": 0.9, "facesRight": false, "lift": 0.45 },
+  "kodama": { "file": "kodama.png", "height": 1.15, "facesRight": true, "lift": 0.15 },
   "kappa": { "file": "kappa.png", "height": 1.45, "facesRight": true },
+  "kappaRenforce": { "file": "kappa-renforce.png", "height": 1.85, "facesRight": true },
+  "kasaObake": { "file": "kasa-obake.png", "height": 1.6, "facesRight": false },
+  "oublie": { "file": "oublie.png", "height": 2, "facesRight": false },
   "torii": { "file": "torii.png", "height": 5.5, "facesRight": true, "decor": { "x": 12, "z": 12 } }
 }

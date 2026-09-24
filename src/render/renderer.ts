@@ -51,6 +51,8 @@ interface Snapshot {
   facing: Vec2;
   radius: number;
   pose: Pose;
+  /** Hauteur au-dessus du sol (sauts). */
+  altitude: number;
   /** De 0 (vient d'apparaître) à 1. */
   spawn: number;
   /** Clignotement d'invulnérabilité. */
@@ -66,6 +68,7 @@ interface EntityView {
   node: TransformNode;
   sprite: Mesh;
   material: ShaderMaterial;
+  shadow: Mesh;
   shadowMaterial: ShaderMaterial;
   def: SpriteDef;
   isPlayer: boolean;
@@ -107,10 +110,14 @@ const SPRITE_ORDER = 10_000;
 const WHITE = Color3.White();
 const WINDUP_TINT = new Color3(1, 0.72, 0.66);
 const STUN_TINT = new Color3(0.7, 0.82, 1);
+const CHANNEL_TINT = new Color3(0.78, 1, 0.78);
 const SPIRIT = new Color3(0.45, 0.95, 1);
 const RAGE = new Color3(1, 0.6, 0.3);
 const DANGER = new Color3(1, 0.22, 0.16);
 const SLASH = new Color3(1, 0.97, 0.9);
+const HEAL = new Color3(0.45, 1, 0.5);
+const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
+const DUST = new Color3(0.86, 0.78, 0.6);
 
 function registerShaders(): void {
   if (Effect.ShadersStore.spriteVertexShader) return;
@@ -201,7 +208,10 @@ export class Renderer {
   private readonly views = new Map<number, EntityView>();
   private dying: EntityView[] = [];
   private effects: Fx[] = [];
+  /** Effets qui durent tant qu'un ennemi n'a pas fini son action : charge, soin, chute. */
   private readonly telegraphs = new Map<number, Fx>();
+  private readonly channels = new Map<number, Fx>();
+  private readonly landings = new Map<number, Fx>();
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private guardPulse = 0;
   private texts: FloatingText[] = [];
@@ -278,6 +288,7 @@ export class Renderer {
       facing: player.facing,
       radius: player.radius,
       pose: player.pose,
+      altitude: 0,
       spawn: 1,
       blink: player.invulnerable > 0 && player.pose !== 'dash',
     }, dt);
@@ -288,6 +299,7 @@ export class Renderer {
         facing: enemy.facing,
         radius: enemy.radius,
         pose: enemy.pose,
+        altitude: enemy.altitude,
         spawn: enemy.spawnProgress,
         blink: false,
       }, dt);
@@ -319,6 +331,8 @@ export class Renderer {
     for (const fx of this.effects) this.disposeFx(fx);
     this.effects = [];
     this.telegraphs.clear();
+    this.channels.clear();
+    this.landings.clear();
     for (const text of this.texts) text.el.remove();
     this.texts = [];
     this.shake = 0;
@@ -382,6 +396,14 @@ export class Renderer {
         sy = 1 + 0.05 * Math.sin(t * 12);
         tint = STUN_TINT;
         break;
+      case 'channel':
+        sx = sy = 1 + 0.06 * Math.sin(t * 14);
+        tint = CHANNEL_TINT;
+        break;
+      case 'airborne':
+        sx = 0.88;
+        sy = 1.15;
+        break;
     }
     const k = Math.min(1, dt * 18);
     view.sx += (sx - view.sx) * k;
@@ -391,14 +413,18 @@ export class Renderer {
 
     const lift = view.def.lift ?? 0;
     const hover = lift > 0 ? Math.sin(t * 4) * 0.12 : 0;
-    view.sprite.position.set(this.right.x * jitter, lift + hover, this.right.z * jitter);
+    view.sprite.position.set(this.right.x * jitter, lift + hover + s.altitude, this.right.z * jitter);
 
     if (s.blink) alpha *= Math.sin(this.time * 40) > 0 ? 1 : 0.45;
     view.flash = Math.max(0, view.flash - dt * 7);
     view.material.setFloat('flash', view.flash);
     view.material.setFloat('alpha', alpha * s.spawn);
     view.material.setColor3('tint', tint);
-    view.shadowMaterial.setFloat('alpha', 0.4 * s.spawn);
+
+    // En l'air, l'ombre rétrécit et pâlit : c'est elle qui annonce où l'ennemi va retomber.
+    const shadowScale = 1 / (1 + s.altitude * 0.2);
+    view.shadow.scaling.set(shadowScale, 1, shadowScale);
+    view.shadowMaterial.setFloat('alpha', 0.4 * s.spawn * Math.max(0.35, shadowScale));
     view.sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(s.pos, this.forward) * 100);
   }
 
@@ -416,6 +442,7 @@ export class Renderer {
       node,
       sprite,
       material,
+      shadow: shadow.mesh,
       shadowMaterial: shadow.material,
       def,
       isPlayer: id === PLAYER_ID,
@@ -507,8 +534,7 @@ export class Renderer {
         else if (event.reason === 'smash') this.text(event.pos, 2, 'Étourdi', 'stun');
         break;
       case 'telegraph': {
-        const previous = this.telegraphs.get(event.id);
-        if (previous) previous.life = previous.age;
+        this.endTracked(this.telegraphs, event.id);
         const center = {
           x: event.from.x + (event.dir.x * event.length) / 2,
           z: event.from.z + (event.dir.z * event.length) / 2,
@@ -528,22 +554,83 @@ export class Renderer {
         this.telegraphs.set(event.id, fx);
         break;
       }
-      case 'chargeEnd': {
-        const fx = this.telegraphs.get(event.id);
-        if (fx) fx.life = fx.age;
-        this.telegraphs.delete(event.id);
+      case 'chargeEnd':
+        this.endTracked(this.telegraphs, event.id);
+        break;
+      case 'channel': {
+        this.endTracked(this.channels, event.id);
+        const duration = event.duration;
+        const fx = this.addFx({
+          ...this.ringFx(event.pos, event.radius * 2, HEAL, duration + 1),
+          update: (_k, f) => {
+            const ramp = Math.min(1, f.age / duration);
+            f.mesh.scaling.setAll(0.3 + 0.7 * ramp);
+            f.material.setFloat('alpha', 0.25 + 0.35 * ramp);
+          },
+        });
+        this.channels.set(event.id, fx);
         break;
       }
+      case 'channelEnd':
+        this.endTracked(this.channels, event.id);
+        if (event.healed) this.addFx(this.ringFx(event.pos, event.radius * 2, HEAL, 0.45));
+        else this.text(event.pos, 1.6, 'Soin interrompu', 'stun');
+        break;
+      case 'heal':
+        this.text(event.pos, 1.8, `+${Math.round(event.amount)}`, 'heal');
+        break;
+      case 'enemySwing':
+        this.addFx({
+          texture: this.fxTextures.crescent,
+          pos: event.pos,
+          dir: event.dir,
+          width: event.range * 2,
+          depth: event.range * 2,
+          color: SHADOW_STRIKE,
+          life: 0.2,
+          update: (k, fx) => fx.material.setFloat('alpha', 0.85 * (1 - k)),
+        });
+        break;
+      case 'jump': {
+        this.endTracked(this.landings, event.id);
+        const duration = event.duration;
+        const fx = this.addFx({
+          ...this.ringFx(event.target, event.radius * 2, DANGER, duration + 1),
+          y: 0.025,
+          update: (_k, f) => {
+            // Le cercle se resserre jusqu'à la taille de la zone d'impact au moment de la chute.
+            const ramp = Math.min(1, f.age / duration);
+            f.mesh.scaling.setAll(1.6 - 0.6 * ramp);
+            f.material.setFloat('alpha', 0.45 + 0.55 * ramp);
+          },
+        });
+        this.landings.set(event.id, fx);
+        break;
+      }
+      case 'land':
+        this.endTracked(this.landings, event.id);
+        this.addFx(this.ringFx(event.pos, event.radius * 2.4, DUST, 0.35));
+        this.addShake(0.35);
+        break;
       case 'smash':
         this.addFx(this.ringFx(event.pos, event.radius * 2, RAGE, 0.35));
         this.addShake(0.6);
         break;
-      case 'dodge':
       case 'death':
+        for (const tracked of [this.telegraphs, this.channels, this.landings]) this.endTracked(tracked, event.id);
+        break;
+      case 'dodge':
       case 'wave':
       case 'end':
         break;
     }
+  }
+
+  /** Termine un effet suivi (annonce de charge, soin, zone de chute) dès que l'action est finie. */
+  private endTracked(tracked: Map<number, Fx>, id: number): void {
+    const fx = tracked.get(id);
+    if (fx) fx.life = fx.age;
+    tracked.delete(id);
   }
 
   private ringFx(pos: Vec2, size: number, color: Color3, life: number): Parameters<Renderer['addFx']>[0] {

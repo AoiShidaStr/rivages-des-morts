@@ -1,5 +1,5 @@
 import type { GameConfig } from './config';
-import { Hitodama, Kappa, type Enemy } from './enemies';
+import { Hitodama, Kappa, KasaObake, Kodama, Oublie, type Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import { Player } from './player';
 import type { EnemyKind, GameEvent, InputFrame, Outcome } from './types';
@@ -60,9 +60,10 @@ export class World {
   /** Coup d'arme : touche une seule fois chaque ennemi présent dans l'arc devant le joueur. */
   strike(origin: Vec2, dir: Vec2, alreadyHit: Set<number>): void {
     const attack = this.cfg.player.attack;
+    // `enemies` peut contenir des morts du pas en cours : `targetable` les écarte.
     const halfArc = degToRad(attack.arcDeg / 2);
     for (const enemy of this.enemies) {
-      if (!enemy.active || alreadyHit.has(enemy.id)) continue;
+      if (!enemy.targetable || alreadyHit.has(enemy.id)) continue;
       const toEnemy = sub(enemy.pos, origin);
       const dist = length(toEnemy);
       if (dist - enemy.radius > attack.range) continue;
@@ -80,7 +81,7 @@ export class World {
     const smash = this.cfg.player.smash;
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     for (const enemy of this.enemies) {
-      if (!enemy.active || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
       enemy.receiveHit({ amount: smash.damage, from: center, knockback: smash.knockback, ignoreShell: true }, this);
       if (!enemy.dead) enemy.stun(smash.stun, 'smash', this);
     }
@@ -101,15 +102,15 @@ export class World {
     return clamped;
   }
 
-  /** Empêche les corps de se chevaucher. Le joueur traverse tout pendant une esquive, et les feux follets le traversent. */
+  /** Empêche les corps au sol de se chevaucher. Pendant une esquive, le joueur traverse tout. */
   private separate(): void {
-    const bodies = this.enemies.filter((e) => e.active);
+    const bodies = this.enemies.filter((e) => e.active && e.grounded);
     for (let i = 0; i < bodies.length; i++) {
       for (let j = i + 1; j < bodies.length; j++) pushApart(bodies[i], bodies[j]);
     }
     if (this.player.dodging) return;
     for (const enemy of bodies) {
-      if (enemy.kind === 'kappa' && enemy.pose !== 'dash') pushApart(this.player, enemy);
+      if (enemy.solid) pushApart(this.player, enemy);
     }
   }
 
@@ -133,10 +134,27 @@ export class World {
   }
 
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
-    const id = this.nextId++;
-    const enemy = kind === 'kappa' ? new Kappa(id, pos, this.cfg.kappa) : new Hitodama(id, pos, this.cfg.hitodama);
+    const enemy = this.instantiate(kind, this.nextId++, pos);
     enemy.facing = normalize(sub(this.player.pos, pos));
     return enemy;
+  }
+
+  private instantiate(kind: EnemyKind, id: number, pos: Vec2): Enemy {
+    const cfg = this.cfg.enemies;
+    switch (kind) {
+      case 'hitodama':
+        return new Hitodama(id, pos, cfg.hitodama);
+      case 'kodama':
+        return new Kodama(id, pos, cfg.kodama);
+      case 'kappa':
+        return new Kappa(id, pos, cfg.kappa, 'kappa');
+      case 'kappaRenforce':
+        return new Kappa(id, pos, cfg.kappaRenforce, 'kappaRenforce');
+      case 'kasaObake':
+        return new KasaObake(id, pos, cfg.kasaObake);
+      case 'oublie':
+        return new Oublie(id, pos, cfg.oublie);
+    }
   }
 
   private spawnPoint(): Vec2 {

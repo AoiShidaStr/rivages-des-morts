@@ -88,6 +88,11 @@ kbd {
   font-size: 16px;
 }
 
+.float.heal {
+  color: #8ff08a;
+  font-size: 16px;
+}
+
 /* Barres et compétences */
 .status {
   position: absolute;

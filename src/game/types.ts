@@ -1,11 +1,11 @@
 import type { Vec2 } from './math';
 
-export type EnemyKind = 'hitodama' | 'kappa';
+export type EnemyKind = 'hitodama' | 'kodama' | 'kappa' | 'kappaRenforce' | 'kasaObake' | 'oublie';
 export type StunReason = 'parry' | 'wall' | 'smash';
 export type Outcome = 'victory' | 'defeat';
 
 /** Posture affichée : le rendu s'en sert pour animer les sprites (écrasement, tremblement, teinte). */
-export type Pose = 'idle' | 'move' | 'windup' | 'strike' | 'guard' | 'dash' | 'stunned';
+export type Pose = 'idle' | 'move' | 'windup' | 'channel' | 'strike' | 'guard' | 'dash' | 'airborne' | 'stunned';
 
 /** Commandes du joueur pour un pas de simulation, déjà converties dans le repère du monde. */
 export interface InputFrame {
@@ -31,6 +31,12 @@ export type GameEvent =
   | { type: 'stun'; id: number; pos: Vec2; reason: StunReason }
   | { type: 'telegraph'; id: number; from: Vec2; dir: Vec2; length: number; width: number; duration: number }
   | { type: 'chargeEnd'; id: number }
+  | { type: 'channel'; id: number; pos: Vec2; radius: number; duration: number }
+  | { type: 'channelEnd'; id: number; pos: Vec2; radius: number; healed: boolean }
+  | { type: 'heal'; id: number; pos: Vec2; amount: number }
+  | { type: 'enemySwing'; pos: Vec2; dir: Vec2; range: number }
+  | { type: 'jump'; id: number; target: Vec2; radius: number; duration: number }
+  | { type: 'land'; id: number; pos: Vec2; radius: number }
   | { type: 'dodge'; pos: Vec2; dir: Vec2 }
   | { type: 'smash'; pos: Vec2; radius: number }
   | { type: 'death'; id: number; pos: Vec2; kind: EnemyKind }

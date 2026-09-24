@@ -1,5 +1,5 @@
 {
-  "name": "Rizières noyées : salle d'essai",
+  "name": "Rizières noyées : salles de combat",
   "arenaHalfSize": 9,
   "waves": [
     {
@@ -8,16 +8,37 @@
       "spawns": [{ "kind": "hitodama", "count": 4 }]
     },
     {
+      "label": "Le kodama",
+      "hint": "Le kodama soigne les autres yokai. Frappe-le en premier : un coup interrompt son soin.",
+      "spawns": [
+        { "kind": "hitodama", "count": 4 },
+        { "kind": "kodama", "count": 1 }
+      ]
+    },
+    {
       "label": "Le kappa",
       "hint": "Sa carapace arrête les coups de face. Contourne-le, ou bloque sa charge (clic droit) pour renverser sa coupelle.",
       "spawns": [{ "kind": "kappa", "count": 1 }]
     },
     {
+      "label": "Le kappa renforcé",
+      "hint": "Il enchaîne trois charges. Bloque-les, ou esquive sur le côté et frappe-le dans le dos.",
+      "spawns": [{ "kind": "kappaRenforce", "count": 1 }]
+    },
+    {
+      "label": "Les kasa-obake",
+      "hint": "Quand un cercle rouge apparaît sous tes pieds, esquive : il va retomber dessus.",
+      "spawns": [{ "kind": "kasaObake", "count": 3 }]
+    },
+    {
       "label": "La mêlée",
-      "hint": "Bloquer remplit la rage. À moitié pleine, A déclenche une frappe fracassante qui ignore la carapace.",
+      "hint": "Les Oubliés marquent une pause avant de frapper. Bloquer remplit la rage, et A déclenche une frappe fracassante qui ignore la carapace.",
       "spawns": [
-        { "kind": "kappa", "count": 2 },
-        { "kind": "hitodama", "count": 5 }
+        { "kind": "oublie", "count": 3 },
+        { "kind": "kappa", "count": 1 },
+        { "kind": "kodama", "count": 1 },
+        { "kind": "kasaObake", "count": 1 },
+        { "kind": "hitodama", "count": 3 }
       ]
     }
   ]

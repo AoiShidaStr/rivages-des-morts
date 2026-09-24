@@ -14,6 +14,7 @@ export const distance = (a: Vec2, b: Vec2): number => Math.hypot(a.x - b.x, a.z 
 export const angleOf = (a: Vec2): number => Math.atan2(a.z, a.x);
 export const fromAngle = (angle: number): Vec2 => ({ x: Math.cos(angle), z: Math.sin(angle) });
 export const degToRad = (deg: number): number => (deg * Math.PI) / 180;
+export const lerp = (a: Vec2, b: Vec2, t: number): Vec2 => ({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
 
 export function normalize(a: Vec2, fallback: Vec2 = { x: 1, z: 0 }): Vec2 {
   const l = length(a);

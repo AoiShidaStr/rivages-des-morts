@@ -18,8 +18,7 @@ const MAX_STEPS_PER_FRAME = 5;
 const config: GameConfig = {
   arenaHalfSize: dungeon.arenaHalfSize,
   player,
-  hitodama: enemies.hitodama,
-  kappa: enemies.kappa,
+  enemies,
   waves: dungeon.waves as GameConfig['waves'],
 };
 

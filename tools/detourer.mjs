@@ -74,12 +74,16 @@ function floodBackground(data, w, h, options) {
     const gap = Math.abs(r - ref[0]) + Math.abs(g - ref[1]) + Math.abs(b - ref[2]);
     return saturation <= maxSat && gap <= maxGap * 3;
   };
+
+  // Aura peinte (ex. le halo vert du kodama) : ses pixels sont un mélange du fond et d'une couleur
+  // `keyColor`. On les reconnaît à leur faible distance au segment fond → keyColor.
+  const blendsWithKey = keyBlend(data, ref, options.keyColor, options.keyResidual ?? 18);
   const close = (i, j) =>
     Math.abs(data[i * 3] - data[j * 3]) +
       Math.abs(data[i * 3 + 1] - data[j * 3 + 1]) +
       Math.abs(data[i * 3 + 2] - data[j * 3 + 2]) <=
     localTolerance;
-  let accepts = (i) => greyWithin(i, tolerance, maxSaturation);
+  let accepts = (i) => greyWithin(i, tolerance, maxSaturation) || blendsWithKey(i);
 
   const seed = (i) => {
     if (!background[i] && accepts(i)) {
@@ -117,7 +121,7 @@ function floodBackground(data, w, h, options) {
   // Fond enfermé par le sujet (entre les poutres d'un torii, par exemple). On n'accepte ici que le gris
   // presque exact du fond, et seulement en grandes poches, pour ne pas percer les parties grises du sujet.
   if (fillHoles) {
-    accepts = (i) => greyWithin(i, holeTolerance, maxSaturation / 2);
+    accepts = (i) => greyWithin(i, holeTolerance, maxSaturation / 2) || blendsWithKey(i);
     for (let start = 0; start < w * h; start++) {
       if (background[start] || !accepts(start)) continue;
       const first = tail;
@@ -129,6 +133,19 @@ function floodBackground(data, w, h, options) {
     for (let i = 0; i < w * h; i++) if (background[i] === 2) background[i] = 0;
   }
   return background;
+}
+
+/** Renvoie un test « ce pixel est-il un mélange du fond et de `keyColor` ? », ou un test toujours faux. */
+function keyBlend(data, ref, keyColor, maxResidual) {
+  if (!keyColor) return () => false;
+  const d = keyColor.map((c, k) => c - ref[k]);
+  const lengthSq = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+  return (i) => {
+    const p = [data[i * 3] - ref[0], data[i * 3 + 1] - ref[1], data[i * 3 + 2] - ref[2]];
+    const t = Math.min(1.1, Math.max(0, (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]) / lengthSq));
+    const residual = Math.hypot(p[0] - d[0] * t, p[1] - d[1] * t, p[2] - d[2] * t);
+    return residual <= maxResidual;
+  };
 }
 
 function borderMedian(data, w, h) {

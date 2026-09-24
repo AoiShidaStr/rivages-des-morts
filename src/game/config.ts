@@ -54,6 +54,18 @@ export interface HitodamaConfig extends EnemyBaseConfig {
   retreatTime: number;
 }
 
+export interface KodamaConfig extends EnemyBaseConfig {
+  speed: number;
+  /** Distance gardée avec le joueur quand il n'a personne à soigner. */
+  keepDistance: number;
+  fleeDistance: number;
+  healAmount: number;
+  healRadius: number;
+  healInterval: number;
+  /** Durée pendant laquelle il se concentre avant de soigner ; un coup l'interrompt. */
+  healChannel: number;
+}
+
 export interface KappaConfig extends EnemyBaseConfig {
   speed: number;
   turnRateDeg: number;
@@ -66,10 +78,55 @@ export interface KappaConfig extends EnemyBaseConfig {
   chargeDistance: number;
   chargeDamage: number;
   chargeKnockback: number;
+  /** Nombre de charges enchaînées (1 pour le kappa, plus pour l'élite). */
+  comboCharges: number;
+  /** Annonce raccourcie des charges suivantes du combo. */
+  comboTelegraph: number;
   recover: number;
   cooldown: number;
   parryStun: number;
   wallStun: number;
+}
+
+export interface KasaObakeConfig extends EnemyBaseConfig {
+  hopDistance: number;
+  hopTime: number;
+  hopHeight: number;
+  pauseMin: number;
+  pauseMax: number;
+  jumpRange: number;
+  /** Probabilité, après chaque pause, de tenter le grand saut plutôt qu'un petit bond. */
+  jumpChance: number;
+  /** Délai minimum entre deux grands sauts. */
+  jumpCooldown: number;
+  riseTime: number;
+  /** Temps passé en l'air pendant que la zone d'atterrissage est affichée. */
+  hangTime: number;
+  fallTime: number;
+  landRadius: number;
+  landDamage: number;
+  landKnockback: number;
+  landRecover: number;
+}
+
+export interface OublieConfig extends EnemyBaseConfig {
+  speed: number;
+  attackRange: number;
+  arcDeg: number;
+  windup: number;
+  recover: number;
+  damage: number;
+  knockback: number;
+  cooldown: number;
+}
+
+export interface EnemyConfigs {
+  hitodama: HitodamaConfig;
+  kodama: KodamaConfig;
+  kappa: KappaConfig;
+  kappaRenforce: KappaConfig;
+  kasaObake: KasaObakeConfig;
+  oublie: OublieConfig;
 }
 
 export interface WaveConfig {
@@ -81,7 +138,6 @@ export interface WaveConfig {
 export interface GameConfig {
   arenaHalfSize: number;
   player: PlayerConfig;
-  hitodama: HitodamaConfig;
-  kappa: KappaConfig;
+  enemies: EnemyConfigs;
   waves: WaveConfig[];
 }

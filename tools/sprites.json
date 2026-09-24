@@ -14,7 +14,7 @@
     { "name": "kappa", "source": "ennemi_kappa.jpg" },
     { "name": "kappa-renforce", "source": "ennemi_kappa-renforce.jpg" },
     { "name": "hitodama", "source": "ennemi_hitodama.jpg" },
-    { "name": "kodama", "source": "ennemi_kodama.jpg" },
+    { "name": "kodama", "source": "ennemi_kodama.jpg", "keyColor": [142, 190, 143], "fillHoles": true, "minHole": 150 },
     { "name": "kasa-obake", "source": "ennemi_kasa-obake.jpg", "fillHoles": true, "minHole": 2000 },
     { "name": "oublie", "source": "ennemi_oublie.jpg" },
     { "name": "torii", "source": "decor_torii-du-ponton.jpg", "fillHoles": true, "minHole": 6000 }
