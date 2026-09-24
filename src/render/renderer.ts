@@ -27,6 +27,7 @@ import {
   drawGround,
   drawHeroPlaceholder,
   drawJorogumo,
+  drawJizo,
   drawJorogumoSpider,
   drawMissing,
   drawRadial,
@@ -40,6 +41,7 @@ import {
 /** Dessins provisoires, utilisés tant que l'image détourée n'est pas dans public/sprites. */
 const PLACEHOLDERS: Record<string, () => HTMLCanvasElement> = {
   heros: drawHeroPlaceholder,
+  jizo: drawJizo,
   jorogumo: drawJorogumo,
   jorogumoAraignee: drawJorogumoSpider,
   araignee: drawSpider,
@@ -55,8 +57,8 @@ export interface SpriteDef {
   facesRight: boolean;
   /** Hauteur de vol (feux follets). */
   lift?: number;
-  /** Position fixe, pour les éléments de décor. */
-  decor?: Vec2;
+  /** Position fixe, pour les éléments de décor (une liste pour en poser plusieurs). */
+  decor?: Vec2 | Vec2[];
 }
 
 export type SpriteManifest = Record<string, SpriteDef>;
@@ -912,9 +914,12 @@ export class Renderer {
     for (const [name, def] of Object.entries(this.manifest)) {
       const entry = this.sprites.get(name);
       if (!def.decor || !entry) continue;
-      const { sprite } = this.createSprite(`decor-${name}`, entry, def);
-      sprite.position.set(def.decor.x, 0, def.decor.z);
-      sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(def.decor, this.forward) * 100);
+      const spots = Array.isArray(def.decor) ? def.decor : [def.decor];
+      spots.forEach((spot, i) => {
+        const { sprite } = this.createSprite(`decor-${name}-${i}`, entry, def);
+        sprite.position.set(spot.x, 0, spot.z);
+        sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, this.forward) * 100);
+      });
     }
   }
 

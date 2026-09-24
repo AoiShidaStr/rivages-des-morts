@@ -620,3 +620,69 @@ export function drawStump(): HTMLCanvasElement {
   }
   return canvas;
 }
+
+/** Statue Jizō provisoire : petite pierre moussue, bonnet et bavoir rouges. */
+export function drawJizo(): HTMLCanvasElement {
+  const w = 160;
+  const h = 224;
+  const [canvas, ctx] = makeCanvas(w, h);
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 5;
+  const stone = ctx.createLinearGradient(w * 0.2, 0, w * 0.8, 0);
+  stone.addColorStop(0, '#8d918c');
+  stone.addColorStop(0.5, '#b3b6ae');
+  stone.addColorStop(1, '#7a7e79');
+
+  // Socle
+  ctx.fillStyle = '#6f736e';
+  ctx.fillRect(w * 0.14, h * 0.86, w * 0.72, h * 0.11);
+  ctx.strokeRect(w * 0.14, h * 0.86, w * 0.72, h * 0.11);
+  // Corps
+  ctx.fillStyle = stone;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.22, h * 0.86);
+  ctx.bezierCurveTo(w * 0.2, h * 0.55, w * 0.26, h * 0.42, w * 0.5, h * 0.42);
+  ctx.bezierCurveTo(w * 0.74, h * 0.42, w * 0.8, h * 0.55, w * 0.78, h * 0.86);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Tête
+  ctx.beginPath();
+  ctx.arc(w * 0.5, h * 0.33, w * 0.19, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Yeux clos et sourire paisible
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(w * 0.43, h * 0.33, 5, 0.2, Math.PI - 0.2);
+  ctx.moveTo(w * 0.62, h * 0.33);
+  ctx.arc(w * 0.57, h * 0.33, 5, 0.2, Math.PI - 0.2);
+  ctx.moveTo(w * 0.55, h * 0.39);
+  ctx.arc(w * 0.5, h * 0.38, 5, 0.3, Math.PI - 0.3);
+  ctx.stroke();
+  ctx.lineWidth = 5;
+  // Bonnet tricoté rouge
+  ctx.fillStyle = PALETTE.vermilion;
+  ctx.beginPath();
+  ctx.arc(w * 0.5, h * 0.3, w * 0.2, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Bavoir rouge
+  ctx.beginPath();
+  ctx.moveTo(w * 0.3, h * 0.47);
+  ctx.lineTo(w * 0.7, h * 0.47);
+  ctx.lineTo(w * 0.5, h * 0.66);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Mousse
+  ctx.fillStyle = 'rgba(111, 125, 74, 0.8)';
+  for (const [x, y, r] of [[0.28, 0.8, 8], [0.7, 0.74, 6], [0.62, 0.84, 7]]) {
+    ctx.beginPath();
+    ctx.arc(w * x, h * y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  return canvas;
+}

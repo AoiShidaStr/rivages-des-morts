@@ -17,6 +17,10 @@
     { "name": "kodama", "source": "ennemi_kodama.jpg", "keyColor": [142, 190, 143], "fillHoles": true, "minHole": 150 },
     { "name": "kasa-obake", "source": "ennemi_kasa-obake.jpg", "fillHoles": true, "minHole": 2000 },
     { "name": "oublie", "source": "ennemi_oublie.jpg" },
-    { "name": "torii", "source": "decor_torii-du-ponton.jpg", "fillHoles": true, "minHole": 6000 }
+    { "name": "torii", "source": "decor_torii-du-ponton.jpg", "fillHoles": true, "minHole": 6000 },
+    { "name": "jizo", "source": "decor_jizo.jpg" },
+    { "name": "tetsu", "source": "pnj_tetsu.jpg" },
+    { "name": "chapeau-de-paille", "source": "equipement_chapeau-de-paille.jpg" },
+    { "name": "carapace-de-kappa", "source": "equipement_carapace-de-kappa.jpg" }
   ]
 }
