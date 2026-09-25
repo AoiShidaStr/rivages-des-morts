@@ -98,7 +98,8 @@ export class Screens {
     return this.pause.classList.contains('visible');
   }
 
-  showPause(options: MenuOption[]): void {
+  /** `skills` : les compétences de la classe du héros, [touche, ce qu'elle fait]. */
+  showPause(options: MenuOption[], skills: [string, string][]): void {
     this.pause.replaceChildren(
       h(
         'div',
@@ -120,16 +121,9 @@ export class Screens {
             h('dd', {}, 'viser (au combat)'),
             h('dt', {}, 'Clic gauche'),
             h('dd', {}, 'frapper'),
-            h('dt', {}, 'Clic droit'),
-            h('dd', {}, 'bloquer, remplit la rage'),
             h('dt', {}, 'Espace'),
             h('dd', {}, 'esquiver'),
-            h('dt', {}, 'A'),
-            h('dd', {}, 'frappe fracassante (demi-rage)'),
-            h('dt', {}, 'E'),
-            h('dd', {}, 'bond (au combat, 25 de rage)'),
-            h('dt', {}, 'R'),
-            h('dd', {}, 'frénésie (au combat, 30 de rage)'),
+            ...skills.flatMap(([key, label]) => [h('dt', {}, key), h('dd', {}, label)]),
             h('dt', {}, 'I / J / K'),
             h('dd', {}, 'équipement / quêtes / compétences'),
           ),

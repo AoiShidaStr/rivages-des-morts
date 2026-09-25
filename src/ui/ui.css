@@ -713,6 +713,16 @@ body:not([data-mode='dungeon']) #hud {
   background: var(--gold);
 }
 
+.r-épique {
+  background: #6b4a8f;
+  color: var(--paper);
+}
+
+.r-légendaire {
+  background: linear-gradient(90deg, var(--gold), #f1d98a);
+  color: var(--ink);
+}
+
 .item-meta {
   margin-top: 2px;
   font-size: 13px;
@@ -1647,5 +1657,148 @@ body:not([data-mode='dungeon']) #hud {
 
   .pick-list {
     max-height: 240px;
+  }
+}
+
+/* --- Création du héros : race, parent divin, classe ------------------------------ */
+
+.creation-screen {
+  overflow-y: auto;
+  align-items: flex-start;
+  background:
+    linear-gradient(rgba(241, 236, 226, 0.95), rgba(228, 217, 193, 0.95)),
+    radial-gradient(ellipse at 20% 100%, rgba(200, 65, 47, 0.18), transparent 60%);
+}
+
+.creation-card {
+  width: min(980px, calc(100vw - 32px));
+  margin: 32px auto;
+}
+
+.creation-card h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 400;
+}
+
+.creation-card h2 {
+  margin: 20px 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vermilion);
+}
+
+.creation-card .tagline {
+  margin-bottom: 8px;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.choice-card {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  padding: 12px 14px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(29, 34, 38, 0.2);
+  border-radius: 4px;
+  color: var(--ink);
+  pointer-events: auto;
+}
+
+.choice-card:hover:not([disabled]) {
+  border-color: var(--vermilion);
+}
+
+.choice-card.selected {
+  border-color: var(--ink);
+  background: #fff;
+  box-shadow: inset 0 3px 0 var(--vermilion);
+}
+
+.choice-card.soon {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.choice-card strong {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.choice-origin {
+  color: var(--ink-2);
+}
+
+.choice-style {
+  justify-self: start;
+  margin: 4px 0 2px;
+  padding: 1px 7px;
+  border-radius: 2px;
+  background: rgba(29, 34, 38, 0.08);
+  font-size: 12px;
+}
+
+.choice-line {
+  color: var(--ink-2);
+}
+
+.parents {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.creation-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(29, 34, 38, 0.18);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.creation-detail h3 {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.creation-detail p {
+  margin: 4px 0;
+}
+
+.creation-detail kbd {
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+}
+
+.creation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .creation-detail {
+    grid-template-columns: 1fr;
   }
 }

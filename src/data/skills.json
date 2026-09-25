@@ -1,5 +1,5 @@
 {
-  "about": "Chaque effet modifie les réglages du Guerrier (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux).",
+  "about": "Races et classes du héros. Chaque effet modifie les réglages du personnage (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux, summon.* pour les invocations).",
   "levels": {
     "about": "Un point de talent par niveau, de pointsFrom à pointsUntil : 9 points pour 12 nœuds, il faut choisir (GDD). Au-delà, chaque niveau donne des PV et relève le plafond de la forge.",
     "max": 50,
@@ -9,161 +9,406 @@
     "pointsFrom": 2,
     "pointsUntil": 10
   },
-  "race": {
-    "name": "Einherjar",
-    "origin": "Nordique · guerrier mort au combat",
-    "passives": [
-      {
-        "name": "Rage du guerrier mort",
-        "description": "Plus tu perds de PV, plus tu frappes fort : jusqu'à +30 % de dégâts près de la mort.",
-        "effects": [{ "op": "set", "path": "perks.einherjarRage", "value": 0.3 }]
-      },
-      {
-        "name": "Festin du Valhalla",
-        "description": "Chaque ennemi tué te rend 2 PV.",
-        "effects": [{ "op": "set", "path": "perks.valhallaHeal", "value": 2 }]
-      }
-    ]
-  },
-  "class": {
-    "name": "Guerrier",
-    "subtitle": "Berserker",
-    "actives": [
-      { "key": "Clic droit", "name": "Blocage", "description": "Bloque les coups de face et remplit la rage." },
-      { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit." },
-      { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
-      { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
-    ]
-  },
-  "tag": {
-    "name": "Guerrier",
-    "tiers": [
-      {
-        "count": 2,
-        "description": "La rage monte 25 % plus vite.",
-        "effects": [{ "op": "set", "path": "perks.rageGainFactor", "value": 1.25 }]
-      },
-      {
-        "count": 4,
-        "description": "La rage monte 50 % plus vite ; Frénésie dure 2 s de plus.",
-        "effects": [
-          { "op": "set", "path": "perks.rageGainFactor", "value": 1.5 },
-          { "op": "add", "path": "frenzy.duration", "value": 2 }
-        ]
-      },
-      {
-        "count": 6,
-        "description": "La rage monte 75 % plus vite ; Frénésie dure 4 s de plus ; la Frappe fracassante coûte 10 de rage en moins.",
-        "effects": [
-          { "op": "set", "path": "perks.rageGainFactor", "value": 1.75 },
-          { "op": "add", "path": "frenzy.duration", "value": 4 },
-          { "op": "add", "path": "smash.rageCost", "value": -10 }
-        ]
-      }
-    ]
-  },
-  "branches": [
-    {
-      "id": "susanoo",
-      "name": "Susanoo",
-      "subtitle": "Dieu de la tempête · attaque",
-      "lore": "Le dieu impétueux qui terrassa Yamata-no-Orochi. Sa colère gronde comme l'orage.",
-      "nodes": [
+  "races": {
+    "einherjar": {
+      "name": "Einherjar",
+      "origin": "Nordique · guerrier mort au combat",
+      "style": "Agressif",
+      "passives": [
         {
-          "id": "susanoo-1",
-          "name": "Vent de tempête",
-          "description": "Chaque coup donne deux fois plus de rage.",
-          "effects": [{ "op": "set", "path": "perks.hitRageFactor", "value": 2 }]
+          "name": "Rage du guerrier mort",
+          "description": "Plus tu perds de PV, plus tu frappes fort : jusqu'à +30 % de dégâts près de la mort.",
+          "effects": [{ "op": "set", "path": "perks.einherjarRage", "value": 0.3 }]
         },
         {
-          "id": "susanoo-2",
-          "name": "Onde de choc",
-          "description": "La Frappe fracassante couvre 40 % de terrain en plus et projette plus loin.",
+          "name": "Festin du Valhalla",
+          "description": "Chaque ennemi tué te rend 2 PV.",
+          "effects": [{ "op": "set", "path": "perks.valhallaHeal", "value": 2 }]
+        }
+      ]
+    },
+    "oushebti": {
+      "name": "Oushebti",
+      "origin": "Égyptienne · statuette funéraire animée",
+      "style": "Invocateur, résistant",
+      "passives": [
+        {
+          "name": "Serviteur funéraire",
+          "description": "+1 invocation active et des invocations 50 % plus durables (Invocateur).",
           "effects": [
-            { "op": "mul", "path": "smash.radius", "value": 1.4 },
-            { "op": "mul", "path": "smash.knockback", "value": 1.5 }
+            { "op": "add", "path": "summon.max", "value": 1 },
+            { "op": "mul", "path": "summon.life", "value": 1.5 }
           ]
         },
         {
-          "id": "susanoo-3",
-          "name": "Orage qui dure",
-          "description": "La Frénésie dure 3 s de plus.",
-          "effects": [{ "op": "add", "path": "frenzy.duration", "value": 3 }]
-        },
-        {
-          "id": "susanoo-4",
-          "name": "Colère de la tempête",
-          "ultimate": true,
-          "description": "À rage pleine, chaque coup déclenche un éclair (+12 dégâts).",
-          "effects": [{ "op": "set", "path": "perks.storm", "value": 12 }]
+          "name": "Corps d'argile",
+          "description": "Une carapace d'argile absorbe entièrement un coup toutes les 8 s.",
+          "effects": [{ "op": "set", "path": "perks.clayShell", "value": 8 }]
         }
       ]
     },
-    {
-      "id": "heracles",
-      "name": "Héraclès",
-      "subtitle": "Le héros des douze travaux · défense",
-      "lore": "Le demi-dieu qui descendit aux Enfers et en ramena Cerbère. Rien ne le fait plier.",
-      "nodes": [
+    "demi-dieu": {
+      "name": "Demi-dieu",
+      "origin": "Grecque · enfant d’un dieu et d’un mortel",
+      "style": "Polyvalent",
+      "passives": [
         {
-          "id": "heracles-1",
-          "name": "Garde du héros",
-          "description": "Ta garde couvre un angle bien plus large (130° → 180°).",
-          "effects": [{ "op": "set", "path": "block.arcDeg", "value": 180 }]
-        },
-        {
-          "id": "heracles-2",
-          "name": "Peau du lion de Némée",
-          "description": "Au-dessus de la moitié de ta rage, tu subis 30 % de dégâts en moins.",
-          "effects": [{ "op": "set", "path": "perks.lionSkin", "value": 0.3 }]
-        },
-        {
-          "id": "heracles-3",
-          "name": "Chute du géant",
-          "description": "Le Bond étourdit les ennemis pendant 1,5 s à l'atterrissage.",
-          "effects": [{ "op": "set", "path": "bond.stun", "value": 1.5 }]
-        },
-        {
-          "id": "heracles-4",
-          "name": "Les Douze Travaux",
-          "ultimate": true,
-          "description": "Chaque ennemi tué réduit d'1 s les temps de recharge du Bond et de la Frénésie.",
-          "effects": [{ "op": "set", "path": "perks.cooldownOnKill", "value": 1 }]
+          "name": "Sang divin",
+          "description": "Une fois par descente, tu te relèves avec la moitié de tes PV au lieu de tomber.",
+          "effects": [{ "op": "set", "path": "perks.divineBlood", "value": 0.5 }]
         }
-      ]
+      ],
+      "parents": {
+        "zeus": {
+          "name": "Zeus",
+          "description": "Parent divin : un coup d’arme sur quatre appelle la foudre (12 dégâts).",
+          "effects": [{ "op": "set", "path": "perks.zeusBolt", "value": { "every": 4, "damage": 12 } }]
+        },
+        "ares": {
+          "name": "Arès",
+          "description": "Parent divin : +12 % de dégâts, avec toutes les attaques.",
+          "effects": [{ "op": "set", "path": "perks.divineMight", "value": 0.12 }]
+        },
+        "hermes": {
+          "name": "Hermès",
+          "description": "Parent divin : +12 % de vitesse, et l’esquive revient 25 % plus vite.",
+          "effects": [
+            { "op": "mul", "path": "moveSpeed", "value": 1.12 },
+            { "op": "mul", "path": "dodge.cooldown", "value": 0.75 }
+          ]
+        },
+        "athena": {
+          "name": "Athéna",
+          "description": "Parent divin : 12 % de dégâts subis en moins.",
+          "effects": [{ "op": "mul", "path": "damageTakenFactor", "value": 0.88 }]
+        }
+      }
     },
-    {
-      "id": "berserkir",
-      "name": "Berserkir",
-      "subtitle": "Les guerriers-ours d'Odin · risque",
-      "lore": "Vêtus de peaux d'ours, ils entraient en transe et ne sentaient plus les coups.",
-      "nodes": [
+    "hanyo": {
+      "name": "Hanyō",
+      "origin": "Japonaise · mi-humain, mi-yokai",
+      "style": "Burst, prise de risque",
+      "passives": [
         {
-          "id": "berserkir-1",
-          "name": "Soif de sang",
-          "description": "Chaque ennemi tué pendant la Frénésie te rend 5 PV.",
-          "effects": [{ "op": "set", "path": "perks.frenzyHealOnKill", "value": 5 }]
+          "name": "Sang yokai",
+          "description": "Chaque coup porté remplit une jauge. Pleine, elle te transforme 8 s : +35 % de dégâts et +15 % de vitesse, mais 15 % de dégâts subis en plus.",
+          "effects": [{ "op": "set", "path": "perks.yokaiBlood", "value": { "hits": 25, "duration": 8, "damage": 0.35, "speed": 0.15, "taken": 0.15 } }]
         },
         {
-          "id": "berserkir-2",
-          "name": "Dos au mur",
-          "description": "Sous la moitié de tes PV, tes dégâts augmentent de 30 %.",
-          "effects": [{ "op": "set", "path": "perks.lowHpDamage", "value": 0.3 }]
-        },
-        {
-          "id": "berserkir-3",
-          "name": "Élan sauvage",
-          "description": "Le Bond coûte 15 de rage en moins.",
-          "effects": [{ "op": "add", "path": "bond.rageCost", "value": -15 }]
-        },
-        {
-          "id": "berserkir-4",
-          "name": "Peau d'ours",
-          "ultimate": true,
-          "description": "Une fois par descente, tu survis à un coup fatal avec 1 PV et la rage pleine.",
-          "effects": [{ "op": "set", "path": "perks.bearSkin", "value": true }]
+          "name": "Instinct yokai",
+          "description": "Sous 30 % de PV, tu cours 25 % plus vite et tu régénères 3 PV par seconde.",
+          "effects": [{ "op": "set", "path": "perks.yokaiInstinct", "value": { "threshold": 0.3, "speed": 0.25, "regen": 3 } }]
         }
       ]
     }
+  },
+  "classes": {
+    "guerrier": {
+      "name": "Guerrier",
+      "subtitle": "Berserker",
+      "role": "Mêlée, rage",
+      "kit": "guerrier",
+      "weapon": "nodachi",
+      "actives": [
+        { "key": "Clic droit", "name": "Blocage", "description": "Bloque les coups de face et remplit la rage." },
+        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit." },
+        { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
+        { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
+      ],
+      "tag": {
+        "name": "Guerrier",
+        "tiers": [
+          {
+            "count": 2,
+            "description": "La rage monte 25 % plus vite.",
+            "effects": [{ "op": "set", "path": "perks.rageGainFactor", "value": 1.25 }]
+          },
+          {
+            "count": 4,
+            "description": "La rage monte 50 % plus vite ; Frénésie dure 2 s de plus.",
+            "effects": [
+              { "op": "set", "path": "perks.rageGainFactor", "value": 1.5 },
+              { "op": "add", "path": "frenzy.duration", "value": 2 }
+            ]
+          },
+          {
+            "count": 6,
+            "description": "La rage monte 75 % plus vite ; Frénésie dure 4 s de plus ; la Frappe fracassante coûte 10 de rage en moins.",
+            "effects": [
+              { "op": "set", "path": "perks.rageGainFactor", "value": 1.75 },
+              { "op": "add", "path": "frenzy.duration", "value": 4 },
+              { "op": "add", "path": "smash.rageCost", "value": -10 }
+            ]
+          }
+        ]
+      },
+      "branches": [
+        {
+          "id": "susanoo",
+          "name": "Susanoo",
+          "subtitle": "Dieu de la tempête · attaque",
+          "lore": "Le dieu impétueux qui terrassa Yamata-no-Orochi. Sa colère gronde comme l'orage.",
+          "nodes": [
+            {
+              "id": "susanoo-1",
+              "name": "Vent de tempête",
+              "description": "Chaque coup donne deux fois plus de rage.",
+              "effects": [{ "op": "set", "path": "perks.hitRageFactor", "value": 2 }]
+            },
+            {
+              "id": "susanoo-2",
+              "name": "Onde de choc",
+              "description": "La Frappe fracassante couvre 40 % de terrain en plus et projette plus loin.",
+              "effects": [
+                { "op": "mul", "path": "smash.radius", "value": 1.4 },
+                { "op": "mul", "path": "smash.knockback", "value": 1.5 }
+              ]
+            },
+            {
+              "id": "susanoo-3",
+              "name": "Orage qui dure",
+              "description": "La Frénésie dure 3 s de plus.",
+              "effects": [{ "op": "add", "path": "frenzy.duration", "value": 3 }]
+            },
+            {
+              "id": "susanoo-4",
+              "name": "Colère de la tempête",
+              "ultimate": true,
+              "description": "À rage pleine, chaque coup déclenche un éclair (+12 dégâts).",
+              "effects": [{ "op": "set", "path": "perks.storm", "value": 12 }]
+            }
+          ]
+        },
+        {
+          "id": "heracles",
+          "name": "Héraclès",
+          "subtitle": "Le héros des douze travaux · défense",
+          "lore": "Le demi-dieu qui descendit aux Enfers et en ramena Cerbère. Rien ne le fait plier.",
+          "nodes": [
+            {
+              "id": "heracles-1",
+              "name": "Garde du héros",
+              "description": "Ta garde couvre un angle bien plus large (130° → 180°).",
+              "effects": [{ "op": "set", "path": "block.arcDeg", "value": 180 }]
+            },
+            {
+              "id": "heracles-2",
+              "name": "Peau du lion de Némée",
+              "description": "Au-dessus de la moitié de ta rage, tu subis 30 % de dégâts en moins.",
+              "effects": [{ "op": "set", "path": "perks.lionSkin", "value": 0.3 }]
+            },
+            {
+              "id": "heracles-3",
+              "name": "Chute du géant",
+              "description": "Le Bond étourdit les ennemis pendant 1,5 s à l'atterrissage.",
+              "effects": [{ "op": "set", "path": "bond.stun", "value": 1.5 }]
+            },
+            {
+              "id": "heracles-4",
+              "name": "Les Douze Travaux",
+              "ultimate": true,
+              "description": "Chaque ennemi tué réduit d'1 s les temps de recharge du Bond et de la Frénésie.",
+              "effects": [{ "op": "set", "path": "perks.cooldownOnKill", "value": 1 }]
+            }
+          ]
+        },
+        {
+          "id": "berserkir",
+          "name": "Berserkir",
+          "subtitle": "Les guerriers-ours d'Odin · risque",
+          "lore": "Vêtus de peaux d'ours, ils entraient en transe et ne sentaient plus les coups.",
+          "nodes": [
+            {
+              "id": "berserkir-1",
+              "name": "Soif de sang",
+              "description": "Chaque ennemi tué pendant la Frénésie te rend 5 PV.",
+              "effects": [{ "op": "set", "path": "perks.frenzyHealOnKill", "value": 5 }]
+            },
+            {
+              "id": "berserkir-2",
+              "name": "Dos au mur",
+              "description": "Sous la moitié de tes PV, tes dégâts augmentent de 30 %.",
+              "effects": [{ "op": "set", "path": "perks.lowHpDamage", "value": 0.3 }]
+            },
+            {
+              "id": "berserkir-3",
+              "name": "Élan sauvage",
+              "description": "Le Bond coûte 15 de rage en moins.",
+              "effects": [{ "op": "add", "path": "bond.rageCost", "value": -15 }]
+            },
+            {
+              "id": "berserkir-4",
+              "name": "Peau d'ours",
+              "ultimate": true,
+              "description": "Une fois par descente, tu survis à un coup fatal avec 1 PV et la rage pleine.",
+              "effects": [{ "op": "set", "path": "perks.bearSkin", "value": true }]
+            }
+          ]
+        }
+      ]
+    },
+    "invocateur": {
+      "name": "Invocateur",
+      "subtitle": "Lieur d’âmes",
+      "role": "Contrôle par les âmes",
+      "kit": "invocateur",
+      "weapon": "grelots-onmyoji",
+      "about": "Réglages de base de la classe, appliqués avant l’équipement : l’Invocateur frappe moins fort et a moins de PV que le Guerrier, ses âmes font le travail.",
+      "effects": [
+        { "op": "set", "path": "kit", "value": "invocateur" },
+        { "op": "mul", "path": "maxHp", "value": 0.85 },
+        { "op": "set", "path": "attack.damage", "value": 6 },
+        { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.knockback", "value": 2 }
+      ],
+      "actives": [
+        {
+          "key": "Clic droit",
+          "name": "Lier",
+          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 30 s. Chaque âme active réduit tes propres dégâts de 8 %."
+        },
+        { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent deux fois plus fort." },
+        { "key": "E", "name": "Sacrifice", "description": "Ta plus vieille âme explose : gros dégâts autour d’elle." },
+        { "key": "R", "name": "Chœur spectral", "description": "Pendant 6 s, tes âmes frappent 60 % plus fort et vont 30 % plus vite." }
+      ],
+      "tag": {
+        "name": "Invocateur",
+        "tiers": [
+          {
+            "count": 2,
+            "description": "Tes âmes font 20 % de dégâts en plus.",
+            "effects": [{ "op": "set", "path": "perks.summonDamageFactor", "value": 1.2 }]
+          },
+          {
+            "count": 4,
+            "description": "Tes âmes font 40 % de dégâts en plus ; +1 âme active.",
+            "effects": [
+              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.4 },
+              { "op": "add", "path": "summon.max", "value": 1 }
+            ]
+          },
+          {
+            "count": 6,
+            "description": "Tes âmes font 60 % de dégâts en plus ; +2 âmes actives.",
+            "effects": [
+              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.6 },
+              { "op": "add", "path": "summon.max", "value": 2 }
+            ]
+          }
+        ]
+      },
+      "branches": [
+        {
+          "id": "seimei",
+          "name": "Abe no Seimei",
+          "subtitle": "Le grand onmyōji · armée",
+          "lore": "Le plus célèbre des onmyōji commandait douze shikigami, des esprits liés à son service.",
+          "nodes": [
+            {
+              "id": "seimei-1",
+              "name": "Shikigami tenaces",
+              "description": "Tes âmes restent 40 % plus longtemps.",
+              "effects": [{ "op": "mul", "path": "summon.life", "value": 1.4 }]
+            },
+            {
+              "id": "seimei-2",
+              "name": "Douzième esprit",
+              "description": "+1 âme active (le malus par âme s’applique).",
+              "effects": [{ "op": "add", "path": "summon.max", "value": 1 }]
+            },
+            {
+              "id": "seimei-3",
+              "name": "Ordre pressant",
+              "description": "Rappel : les âmes foncent 30 % plus vite et le Rappel revient 2 s plus tôt.",
+              "effects": [
+                { "op": "mul", "path": "summon.recall.speed", "value": 1.3 },
+                { "op": "add", "path": "summon.recall.cooldown", "value": -2 }
+              ]
+            },
+            {
+              "id": "seimei-4",
+              "name": "Les Douze Shikigami",
+              "ultimate": true,
+              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa dure deux fois plus, l’Oublié étourdit.",
+              "effects": [{ "op": "set", "path": "perks.shikigami", "value": true }]
+            }
+          ]
+        },
+        {
+          "id": "orphee",
+          "name": "Orphée",
+          "subtitle": "Le chanteur des Enfers · soutien",
+          "lore": "Son chant charma Hadès lui-même et ouvrit les portes des Enfers.",
+          "nodes": [
+            {
+              "id": "orphee-1",
+              "name": "Chant apaisant",
+              "description": "Le Chœur spectral te rend 15 PV.",
+              "effects": [{ "op": "set", "path": "perks.choirHeal", "value": 15 }]
+            },
+            {
+              "id": "orphee-2",
+              "name": "Voix des morts",
+              "description": "Le Chœur spectral étourdit 1 s les ennemis proches.",
+              "effects": [{ "op": "set", "path": "perks.choirStun", "value": 1 }]
+            },
+            {
+              "id": "orphee-3",
+              "name": "Main tendue",
+              "description": "Lier porte 2 m plus loin et une âme reste liable 4 s de plus.",
+              "effects": [
+                { "op": "add", "path": "summon.bindRange", "value": 2 },
+                { "op": "add", "path": "summon.soulLife", "value": 4 }
+              ]
+            },
+            {
+              "id": "orphee-4",
+              "name": "Chant des Enfers",
+              "ultimate": true,
+              "description": "Un ennemi sous 20 % de PV (hors boss) peut être lié sans être tué.",
+              "effects": [{ "op": "set", "path": "perks.underworldSong", "value": 0.2 }]
+            }
+          ]
+        },
+        {
+          "id": "anubis",
+          "name": "Anubis",
+          "subtitle": "Le gardien de la pesée · sacrifice",
+          "lore": "Le dieu chacal pèse le cœur des morts contre la plume de Maât.",
+          "nodes": [
+            {
+              "id": "anubis-1",
+              "name": "Offrande",
+              "description": "Le Sacrifice fait 50 % de dégâts en plus.",
+              "effects": [{ "op": "mul", "path": "summon.sacrifice.damage", "value": 1.5 }]
+            },
+            {
+              "id": "anubis-2",
+              "name": "Cœur pesé",
+              "description": "Le Sacrifice te rend 12 PV.",
+              "effects": [{ "op": "set", "path": "perks.sacrificeHeal", "value": 12 }]
+            },
+            {
+              "id": "anubis-3",
+              "name": "Retour du ka",
+              "description": "Une âme sacrifiée laisse son âme au sol : tu peux la lier à nouveau.",
+              "effects": [{ "op": "set", "path": "perks.sacrificeSoul", "value": true }]
+            },
+            {
+              "id": "anubis-4",
+              "name": "Le Jugement",
+              "ultimate": true,
+              "description": "Le Sacrifice inflige en plus 15 % des PV max de chaque ennemi touché (5 % pour un boss).",
+              "effects": [{ "op": "set", "path": "perks.judgement", "value": 0.15 }]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "upcomingClasses": [
+    { "name": "Lame", "subtitle": "Assassin des ombres", "role": "DPS mêlée, peu de PV" },
+    { "name": "Paladin", "subtitle": "Rempart solaire", "role": "Tank, soutien" },
+    { "name": "Rôdeur", "subtitle": "Chasseur", "role": "DPS à distance" }
   ]
 }

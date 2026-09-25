@@ -23,13 +23,16 @@ export interface InputFrame {
   aim: Vec2;
   attackPressed: boolean;
   attackHeld: boolean;
-  blockHeld: boolean;
+  /** Clic droit : blocage du Guerrier, Lier de l'Invocateur. */
+  signatureHeld: boolean;
+  signaturePressed: boolean;
   dodgePressed: boolean;
-  smashPressed: boolean;
-  /** E : Bond. */
-  bondPressed: boolean;
-  /** R : Frénésie. */
-  frenzyPressed: boolean;
+  /** A : Frappe fracassante ou Rappel, selon la classe. */
+  skillAPressed: boolean;
+  /** E : Bond ou Sacrifice. */
+  skillEPressed: boolean;
+  /** R : Frénésie ou Chœur spectral. */
+  skillRPressed: boolean;
 }
 
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
@@ -61,4 +64,17 @@ export type GameEvent =
   | { type: 'bearSkin'; pos: Vec2 }
   | { type: 'snareSet'; id: number; pos: Vec2; radius: number }
   | { type: 'snareEnd'; id: number }
+  // Races
+  | { type: 'clayShell'; pos: Vec2 }
+  | { type: 'divineBlood'; pos: Vec2 }
+  | { type: 'transform'; pos: Vec2 }
+  // Invocateur : âmes au sol, âmes liées et leurs compétences
+  | { type: 'soulSet'; id: number; pos: Vec2 }
+  | { type: 'soulEnd'; id: number }
+  | { type: 'bind'; id: number; pos: Vec2; kind: EnemyKind }
+  | { type: 'bindFail'; pos: Vec2 }
+  | { type: 'summonFade'; id: number; pos: Vec2 }
+  | { type: 'recall'; pos: Vec2 }
+  | { type: 'sacrifice'; pos: Vec2; radius: number }
+  | { type: 'choir'; pos: Vec2; radius: number }
   | { type: 'end'; outcome: Outcome };

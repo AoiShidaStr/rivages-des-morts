@@ -4,8 +4,16 @@
 export type Slot = 'arme' | 'casque' | 'plastron' | 'jambieres' | 'bottes' | 'amulette' | 'relique';
 export type QuestStatus = 'none' | 'active' | 'done';
 
+/** Le héros choisi à la création : sa race (et son parent divin pour un Demi-dieu), sa classe. */
+export interface Hero {
+  race: string;
+  parent?: string;
+  class: string;
+}
+
 export interface ProgressState {
   version: 1;
+  hero: Hero;
   oboles: number;
   xp: number;
   /** Nœuds appris dans l'arbre de compétences. */
@@ -75,6 +83,8 @@ export interface Catalog {
   levelFor(xp: number): number;
   /** Points de talent gagnés en tout à ce niveau. */
   talentPoints(level: number): number;
+  /** Arme de départ d'une classe. */
+  startingWeapon(heroClass: string): string;
   triggers: { if: Condition[]; then: Effect[] }[];
 }
 
@@ -82,10 +92,13 @@ const SAVE_KEY = 'rivages-des-morts:sauvegarde';
 
 /** L'arme de départ du Guerrier. */
 export const STARTING_WEAPON = 'nodachi';
+/** Le héros des parties commencées avant le choix de la race et de la classe. */
+export const DEFAULT_HERO: Hero = { race: 'einherjar', class: 'guerrier' };
 
 function fresh(): ProgressState {
   return {
     version: 1,
+    hero: { ...DEFAULT_HERO },
     oboles: 0,
     xp: 0,
     talents: [],
@@ -111,7 +124,7 @@ export class Progress {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       const parsed = raw ? (JSON.parse(raw) as SavedState) : null;
-      if (parsed?.version === 1) return new Progress(migrate(parsed), catalog);
+      if (parsed?.version === 1) return new Progress(migrate(parsed, catalog), catalog);
     } catch {
       // Sauvegarde illisible ou stockage indisponible : on repart de zéro.
     }
@@ -134,13 +147,11 @@ export class Progress {
     }
   }
 
-  reset(): void {
-    this.state = fresh();
-    try {
-      localStorage.removeItem(SAVE_KEY);
-    } catch {
-      // Rien à effacer.
-    }
+  /** Nouvelle partie : le héros choisi à la création, avec l'arme de départ de sa classe. */
+  start(hero: Hero): void {
+    const weapon = this.catalog.startingWeapon(hero.class);
+    this.state = { ...fresh(), hero, items: [weapon], equipped: { arme: weapon }, itemLevels: { [weapon]: 1 } };
+    this.save();
   }
 
   quest(id: string): QuestStatus {
@@ -301,18 +312,24 @@ function levelUpToast(level: number, point: boolean): Action {
   return { kind: 'toast', text, tone: 'quest' };
 }
 
-/** Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon. */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeon'> &
-  Partial<Pick<ProgressState, 'itemLevels' | 'dungeon'>> & { weaponLevel?: number; weaponLevels?: Record<string, number> };
+/**
+ * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
+ * pas de héros (c'était toujours un Guerrier Einherjar).
+ */
+type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeon' | 'hero'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'dungeon' | 'hero'>> & { weaponLevel?: number; weaponLevels?: Record<string, number> };
 
-function migrate(saved: SavedState): ProgressState {
+function migrate(saved: SavedState, catalog: Catalog): ProgressState {
   const { weaponLevel, weaponLevels, ...rest } = saved;
   const state: ProgressState = { ...fresh(), ...rest };
+  state.hero = saved.hero ?? { ...DEFAULT_HERO };
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
   // Une Jorōgumo déjà vaincue compte comme une victoire au niveau 1.
   state.dungeon = saved.dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });
-  if (!state.items.includes(STARTING_WEAPON)) state.items.unshift(STARTING_WEAPON);
-  state.equipped.arme ??= STARTING_WEAPON;
+  const weapon = catalog.startingWeapon(state.hero.class);
+  if (!state.items.includes(weapon)) state.items.unshift(weapon);
+  state.itemLevels[weapon] ??= 1;
+  state.equipped.arme ??= weapon;
   return state;
 }
 

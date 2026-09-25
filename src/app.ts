@@ -3,7 +3,7 @@ import { content, portraitUrl, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
-import { buildLoadout, levelProgress, type Loadout } from './game/loadout';
+import { buildLoadout, heroClass, levelProgress, type Loadout } from './game/loadout';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
 import { Progress, bindSelf, type Action } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
@@ -12,6 +12,7 @@ import type { Input } from './input';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import type { Renderer } from './render/renderer';
+import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
 import {
   PanelHost,
@@ -84,10 +85,12 @@ export class App {
   private readonly dialogue: DialogueBox;
   private readonly panels: PanelHost;
   private readonly screens: Screens;
+  private readonly creation: CreationScreen;
   private readonly ui: UiContext;
 
   constructor(private readonly d: AppDeps) {
     this.screens = new Screens(d.uiRoot);
+    this.creation = new CreationScreen(d.uiRoot);
     this.dialogue = new DialogueBox(d.uiRoot);
     this.panels = new PanelHost(d.uiRoot);
     this.ui = {
@@ -202,12 +205,23 @@ export class App {
     options.push({
       label: hasSave ? 'Nouvelle partie (efface la sauvegarde)' : 'Nouvelle partie',
       primary: !hasSave,
-      action: () => {
-        this.d.progress.reset();
-        void this.beginIsland(true);
-      },
+      action: () => this.createHero(),
     });
     this.screens.showTitle(options);
+  }
+
+  /** Nouvelle partie : on choisit d'abord sa race et sa classe. */
+  private createHero(): void {
+    this.screens.hideTitle();
+    this.creation.show(
+      content.skills,
+      content.items,
+      (hero) => {
+        this.d.progress.start(hero);
+        void this.beginIsland(true);
+      },
+      () => this.showTitle(),
+    );
   }
 
   private updateTitle(dt: number): void {
@@ -376,6 +390,7 @@ export class App {
       this.world = new World({ ...config, player, difficulty }, startWave);
       dungeonRenderer.reset();
       hud.reset(this.dungeonLevel);
+      hud.configure(heroClass(content.skills, this.d.progress.state.hero));
       this.run = emptyLoot();
       this.outcome = null;
       this.accumulator = 0;
@@ -420,15 +435,16 @@ export class App {
       aim,
       attackPressed: input.consumeClick(0),
       attackHeld: input.isButtonDown(0),
-      blockHeld: input.isButtonDown(2),
+      signatureHeld: input.isButtonDown(2),
+      signaturePressed: input.consumeClick(2),
       dodgePressed: input.consumeKey('Space'),
-      smashPressed: input.consumeKey('KeyQ'), // touche A en AZERTY
-      bondPressed: input.consumeKey('KeyE'),
-      frenzyPressed: input.consumeKey('KeyR'),
+      skillAPressed: input.consumeKey('KeyQ'), // touche A en AZERTY
+      skillEPressed: input.consumeKey('KeyE'),
+      skillRPressed: input.consumeKey('KeyR'),
     };
   }
 
-  /** Réglages du Guerrier avec l'équipement, le niveau et les talents actuels. */
+  /** Réglages du héros avec sa race, sa classe, l'équipement, le niveau et les talents actuels. */
   private loadout(): Loadout {
     const { config, progress } = this.d;
     return buildLoadout(config.player, progress.state, content, progress.level);
@@ -551,7 +567,10 @@ export class App {
         void this.backToTitle();
       },
     });
-    this.screens.showPause(options);
+    // Les compétences de la classe du héros ; E sert aussi à parler sur l'île.
+    const cls = heroClass(content.skills, this.d.progress.state.hero);
+    const skills = cls.actives.map((a): [string, string] => [a.key, `${a.name.toLowerCase()}${a.key === 'E' ? ' (au combat)' : ''}`]);
+    this.screens.showPause(options, skills);
   }
 
   private async backToTitle(): Promise<void> {

@@ -3,7 +3,11 @@ import type { EnemyKind } from './types';
 
 // Forme des fichiers de src/data : les valeurs s'équilibrent là-bas, sans toucher au code du combat.
 
+/** Jeu de compétences de la classe : clic droit et A / E / R n'ont pas le même rôle. */
+export type Kit = 'guerrier' | 'invocateur';
+
 export interface PlayerConfig {
+  kit: Kit;
   maxHp: number;
   radius: number;
   moveSpeed: number;
@@ -61,8 +65,40 @@ export interface PlayerConfig {
     attackTimeFactor: number;
     damageTakenFactor: number;
   };
+  /** Âmes liées de l'Invocateur (ignoré par le Guerrier). */
+  summon: SummonConfig;
   /** Effets venus des talents, de la race, des reliques et des paliers de tags. */
   perks?: Perks;
+}
+
+/** Invocateur : les âmes des ennemis vaincus se relèvent et combattent à ses côtés. */
+export interface SummonConfig {
+  /** Âmes actives en même temps. */
+  max: number;
+  /** Distance maximale entre le héros et l'âme qu'il lie. */
+  bindRange: number;
+  /** Secondes pendant lesquelles l'âme d'un ennemi vaincu reste au sol, prête à être liée. */
+  soulLife: number;
+  /** Secondes de combat d'une âme liée avant qu'elle ne s'efface. */
+  life: number;
+  radius: number;
+  speed: number;
+  damage: number;
+  attackRange: number;
+  attackCooldown: number;
+  knockback: number;
+  /** Au-delà de cette distance du héros, une âme revient vers lui. */
+  leash: number;
+  /** Dégâts du héros en moins pour chaque âme active (GDD : chaque invocation affaiblit le joueur). */
+  malus: number;
+  /** A : les âmes foncent sur l'ennemi visé et frappent plus fort. */
+  recall: { cooldown: number; speed: number; damageFactor: number; duration: number };
+  /** E : la plus vieille âme explose. */
+  sacrifice: { cooldown: number; damage: number; radius: number };
+  /** R : les âmes sont renforcées un moment. */
+  choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
+  /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort qu'un feu follet. */
+  kinds: Partial<Record<EnemyKind, { damage: number; speed: number }>>;
 }
 
 /** Effets spéciaux du Guerrier ; absents = inactifs. */
@@ -93,6 +129,40 @@ export interface Perks {
   coupelle?: { bonus: number; emptyTime: number };
   /** Fil de Jōren : chaque esquive laisse un fil qui immobilise le premier ennemi. */
   joren?: { stun: number; life: number; radius: number };
+
+  // --- Races ---
+  /** Oushebti : une carapace d'argile absorbe un coup, puis se reforme après ce nombre de secondes. */
+  clayShell?: number;
+  /** Demi-dieu : une fois par descente, se relève avec cette part de ses PV. */
+  divineBlood?: number;
+  /** Demi-dieu, fils de Zeus : un coup d'arme sur `every` appelle la foudre. */
+  zeusBolt?: { every: number; damage: number };
+  /** Demi-dieu, fils d'Arès : dégâts en plus, pour toutes les attaques. */
+  divineMight?: number;
+  /** Hanyō : les coups remplissent une jauge ; pleine, elle transforme le héros un moment. */
+  yokaiBlood?: { hits: number; duration: number; damage: number; speed: number; taken: number };
+  /** Hanyō : sous `threshold` des PV, vitesse en plus et régénération. */
+  yokaiInstinct?: { threshold: number; speed: number; regen: number };
+
+  // --- Invocateur ---
+  /** Dégâts des âmes multipliés (paliers du tag Invocateur). */
+  summonDamageFactor?: number;
+  /** Les coups des âmes étourdissent (Éventail de la Jorōgumo). */
+  summonStun?: number;
+  /** Les Douze Shikigami : chaque âme garde un trait de son yokai. */
+  shikigami?: boolean;
+  /** PV rendus en lançant le Chœur spectral. */
+  choirHeal?: number;
+  /** Le Chœur spectral étourdit les ennemis proches. */
+  choirStun?: number;
+  /** Chant des Enfers : un ennemi sous cette part de ses PV (hors boss) peut être lié vivant. */
+  underworldSong?: number;
+  /** PV rendus par un Sacrifice. */
+  sacrificeHeal?: number;
+  /** Une âme sacrifiée laisse son âme au sol. */
+  sacrificeSoul?: boolean;
+  /** Le Jugement : le Sacrifice inflige en plus cette part des PV max des ennemis touchés. */
+  judgement?: number;
 }
 
 export interface EnemyBaseConfig {
@@ -286,6 +356,8 @@ export interface EnemyConfigs {
 export interface WaveConfig {
   label: string;
   hint?: string;
+  /** Conseil propre à une classe, à la place de `hint` (le Guerrier bloque, l'Invocateur lie des âmes). */
+  hints?: Partial<Record<Kit, string>>;
   spawns: { kind: EnemyKind; count: number }[];
   /** Souches placées dans l'arène pour cette vague (arène du boss). */
   stumps?: { x: number; z: number }[];

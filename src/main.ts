@@ -19,7 +19,7 @@ const config: GameConfig = {
   arenaHalfSize: dungeon.arenaHalfSize,
   stumpRadius: dungeon.stumpRadius,
   webs: dungeon.webs,
-  player,
+  player: player as GameConfig['player'],
   enemies,
   waves: dungeon.waves as GameConfig['waves'],
 };

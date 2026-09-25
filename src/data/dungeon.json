@@ -14,6 +14,7 @@
     {
       "label": "Des feux follets",
       "hint": "Clic gauche pour frapper. Ils meurent en un ou deux coups.",
+      "hints": { "invocateur": "Clic gauche pour frapper. Un yokai vaincu laisse son âme au sol : clic droit dessus pour la lier." },
       "spawns": [{ "kind": "hitodama", "count": 4 }]
     },
     {
@@ -27,11 +28,13 @@
     {
       "label": "Le kappa",
       "hint": "Sa carapace arrête les coups de face. Contourne-le, ou bloque sa charge (clic droit) pour renverser sa coupelle.",
+      "hints": { "invocateur": "Sa carapace arrête les coups de face. Tourne autour de lui pendant que tes âmes le frappent de dos." },
       "spawns": [{ "kind": "kappa", "count": 1 }]
     },
     {
       "label": "Le kappa renforcé",
       "hint": "Il enchaîne trois charges. Bloque-les, ou esquive sur le côté et frappe-le dans le dos.",
+      "hints": { "invocateur": "Il enchaîne trois charges. Esquive sur le côté, puis A : tes âmes foncent sur lui." },
       "spawns": [{ "kind": "kappaRenforce", "count": 1 }]
     },
     {
@@ -42,6 +45,7 @@
     {
       "label": "La mêlée",
       "hint": "Les Oubliés marquent une pause avant de frapper. Bloquer remplit la rage, et A déclenche une frappe fracassante qui ignore la carapace.",
+      "hints": { "invocateur": "Les Oubliés marquent une pause avant de frapper. Lie leurs âmes : ce sont les plus fortes. E fait exploser la plus vieille." },
       "spawns": [
         { "kind": "oublie", "count": 3 },
         { "kind": "kappa", "count": 1 },

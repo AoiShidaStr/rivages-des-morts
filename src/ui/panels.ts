@@ -2,7 +2,7 @@ import { content } from '../content';
 import type { PlayerConfig } from '../game/config';
 import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
-import { buildLoadout, canLearn, itemLevel, levelProgress, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
+import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { Progress, Slot } from '../game/progress';
 import { h, obole } from './dom';
 
@@ -12,7 +12,7 @@ const fr = (value: number, digits = 2): string => value.toLocaleString('fr-FR', 
 export interface UiContext {
   progress: Progress;
   basePlayer: PlayerConfig;
-  /** Réglages du Guerrier avec l'équipement, le niveau et les talents actuels. */
+  /** Réglages du héros avec sa race, sa classe, l'équipement, le niveau et les talents actuels. */
   loadout(): Loadout;
   toast(text: string, tone?: 'quest' | 'loot'): void;
 }
@@ -602,7 +602,13 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
   add(Math.round(((b.dodge.distance - a.dodge.distance) / base.dodge.distance) * 100), ' %', 'esquive');
   add(Math.round(((b.damageTakenFactor ?? 1) - (a.damageTakenFactor ?? 1)) * 100), ' %', 'dégâts subis', true);
   add(Math.round((after.bonus.oboles - before.bonus.oboles) * 100), ' %', 'oboles');
-  add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${content.skills.tag.name}`);
+  const tag = heroClass(content.skills, ctx.progress.state.hero).tag.name;
+  add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${tag}`);
+  if (a.kit === 'invocateur') {
+    add(b.summon.max - a.summon.max, '', `âme${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''} active${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''}`);
+    add(Math.round(b.summon.damage) - Math.round(a.summon.damage), '', 'dégâts des âmes');
+    add(Math.round(b.summon.life - a.summon.life), ' s', 'de vie des âmes');
+  }
   return out;
 }
 
@@ -642,9 +648,20 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       );
     });
 
+    const cls = heroClass(content.skills, state.hero);
     const choices = ofSlot(current).map((id) => {
       const def = content.items[id];
       const equipped = state.equipped[current] === id;
+      // Une arme d'une autre classe se garde (multiclassage à venir) mais ne se manie pas.
+      if (!canWield(def, cls)) {
+        return h(
+          'button',
+          { class: 'owned', disabled: true, title: def.description },
+          h('strong', {}, def.name + levelTag(progress, id)),
+          h('small', {}, effectText(def, itemLevel(state, id))),
+          h('small', { class: 'tags' }, `Arme de ${def.tags?.join(' · ')} : un ${cls.name} ne sait pas la manier.`),
+        );
+      }
       const delta = equipped ? [] : equipDelta(ctx, loadout, id, current);
       return h(
         'button',
@@ -665,7 +682,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       );
     });
 
-    const tiers = content.skills.tag.tiers;
+    const tiers = cls.tag.tiers;
     const tagLine = h(
       'div',
       { class: 'tag-tiers' },
@@ -689,6 +706,16 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       h('dd', {}, `${Math.round((cfg.damageTakenFactor ?? 1) * 100)} %`),
       loadout.bonus.oboles ? h('dt', {}, 'Oboles gagnées') : null,
       loadout.bonus.oboles ? h('dd', {}, `+${Math.round(loadout.bonus.oboles * 100)} %`) : null,
+      ...(cfg.kit === 'invocateur'
+        ? [
+            h('dt', {}, 'Âmes actives'),
+            h('dd', {}, String(cfg.summon.max)),
+            h('dt', {}, 'Dégâts d’une âme'),
+            h('dd', {}, String(Math.round(cfg.summon.damage * (cfg.perks?.summonDamageFactor ?? 1)))),
+            h('dt', {}, 'Vie d’une âme'),
+            h('dd', {}, `${Math.round(cfg.summon.life)} s`),
+          ]
+        : []),
     );
 
     const materials = Object.entries(content.materials).filter(([id]) => progress.material(id) > 0);
@@ -707,7 +734,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           h('h3', {}, 'Porté'),
           h('div', { class: 'slots' }, ...slotButtons),
           fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${cfg.attack.damage} dégâts`, stats),
-          fold('inv-tags', false, 'Tags de classe', `${content.skills.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
+          fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
           fold(
             'inv-materials',
             false,
@@ -754,8 +781,11 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
     const { state } = progress;
     const points = progress.skillPoints;
     const xp = levelProgress(skills, state.xp);
+    const cls = heroClass(skills, state.hero);
+    const race = heroRace(skills, state.hero);
+    const parent = state.hero.parent ? race.parents?.[state.hero.parent] : undefined;
 
-    const branches = skills.branches.map((branch) =>
+    const branches = cls.branches.map((branch) =>
       h(
         'div',
         { class: 'branch' },
@@ -791,8 +821,8 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       h(
         'div',
         {},
-        h('strong', {}, `${skills.class.name} · ${skills.class.subtitle}`),
-        h('div', { class: 'note' }, `${skills.race.name} (${skills.race.origin})`),
+        h('strong', {}, `${cls.name} · ${cls.subtitle}`),
+        h('div', { class: 'note' }, `${race.name}${parent ? `, enfant de ${parent.name}` : ''} (${race.origin})`),
       ),
       h(
         'div',
@@ -806,8 +836,8 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
     const passives = h(
       'div',
       { class: 'passives' },
-      ...skills.race.passives.map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
-      ...skills.class.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, a.key), ` ${a.name}`), h('small', {}, a.description))),
+      ...racePassives(skills, state.hero).map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
+      ...cls.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, a.key), ` ${a.name}`), h('small', {}, a.description))),
     );
 
     host.show(

@@ -10,7 +10,7 @@ import type { DifficultyData } from './game/difficulty';
 import type { UpgradeRules } from './game/forge';
 import type { IslandData } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
-import type { Catalog, Condition, Effect, Slot } from './game/progress';
+import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
 import type { SpriteManifest } from './render/renderer';
 
 /** Une réplique : [locuteur, texte]. */
@@ -97,6 +97,7 @@ export const catalog: Catalog = {
   itemSlot: (id) => content.items[id]?.slot,
   levelFor: (xp) => levelFor(content.skills, xp),
   talentPoints: (level) => talentPointsAt(content.skills, level),
+  startingWeapon: (heroClass) => content.skills.classes[heroClass]?.weapon ?? STARTING_WEAPON,
   triggers: content.triggers,
 };
 

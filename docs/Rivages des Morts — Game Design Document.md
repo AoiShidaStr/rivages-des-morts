@@ -67,6 +67,8 @@ La race est l'héritage mythologique du personnage : elle donne un passif et une
 
 **Races envisagées plus tard** : Nahual (aztèque, métamorphe), Sidhe (celtique, illusions).
 
+**En place** : les quatre races se choisissent à la création du héros, avec la classe (`src/data/skills.json`, bloc `races`). Le Demi-dieu choisit son parent : Zeus (un coup sur quatre appelle la foudre), Arès (+12 % de dégâts), Hermès (vitesse, esquive plus fréquente) ou Athéna (−12 % de dégâts subis). La transformation du Hanyō se déclenche seule quand la jauge est pleine (25 coups portés), en attendant une touche dédiée. Toutes les races ont encore la même apparence.
+
 ## Classes & multiclassage
 
 Cinq classes au lancement, neutres culturellement : la race les habille. Un Guerrier Hanyō a l'allure d'un samouraï, un Guerrier Einherjar celle d'un viking.
@@ -116,6 +118,8 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 | Anubis, gardien de la pesée (sacrifice) | Sacrifice fait plus de dégâts | Sacrifice rend des PV au joueur | Une invocation sacrifiée réduit le temps de recharge de Lier | **Le Jugement** : le Sacrifice d'une âme d'élite inflige des dégâts selon les PV de la cible |
 
 Les arbres de la Lame, du Paladin et du Rôdeur suivront le même modèle, plus tard.
+
+**En place** : le Guerrier et l'Invocateur se choisissent à la création ; la Lame, le Paladin et le Rôdeur y sont annoncés. Un yokai vaincu par un Invocateur laisse son âme au sol quelques secondes (un halo bleu) ; liée, elle combat un temps limité, deux âmes à la fois de base, et chacune réduit un peu les dégâts du héros. Rappel, Sacrifice, Chœur spectral et les trois branches suivent le tableau ci-dessus. Les réglages sont dans `src/data/player.json` (bloc `summon`). Pour l'instant, les yokai ne visent pas les âmes : elles s'effacent avec le temps plutôt que sous les coups. Prochaine étape : que les ennemis les prennent pour cible, ce qui donnera son sens au Masque d'Oublié.
 
 **Système de tags** : chaque compétence, arme ou passif porte un ou deux tags de classe. Réunir 2, 4 ou 6 éléments d'une même classe débloque un bonus de plus en plus fort, comme les traits de TFT.
 
@@ -494,8 +498,8 @@ La V1 est une tranche jouable complète mais petite : une île, un donjon, deux 
 | --- | --- | --- |
 | Monde | Île du Yomi : petite zone, 2 ou 3 quêtes courtes, barque réduite (marchand, forge, ouverture des coffres) | Autres îles, Mésopotamie, agrandissement de la barque |
 | Donjons | Les Rizières noyées, boss Jorōgumo, boutique de fin, coffres, drops | Difficulté à l'entrée, rotation, autres donjons |
-| Classes | Guerrier, Invocateur | Lame, Paladin, Rôdeur, classe secondaire |
-| Races | Einherjar et Oushebti (passifs simples) | Demi-dieu (choix du parent), Hanyō (jauge de transformation), Nahual, Sidhe, affinité d'île |
+| Classes | Guerrier, Invocateur (en place) | Lame, Paladin, Rôdeur, classe secondaire |
+| Races | Les quatre races, passifs simples (en place) | Transformation du Hanyō à la demande, apparence par race, Nahual, Sidhe, affinité d'île |
 | Équipement | 7 emplacements, niveaux d'arme, tags et paliers, 2 ou 3 reliques | Sceaux, armes hybrides, éveil, fusion, panoplies |
 | Progression | XP, niveau max 10, arbre de compétences réduit pour les 2 classes | Niveau 20 puis 50, arbre de mémoire, niveaux d'invocation |
 | Ressources | Oboles, matériaux du Yomi | Éclats de mémoire, Éclats des Tablettes |

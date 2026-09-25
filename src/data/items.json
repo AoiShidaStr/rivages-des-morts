@@ -1,5 +1,5 @@
 {
-  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du Guerrier (mêmes règles que skills.json). tags : classes (« Tous » compte pour toutes).",
+  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du héros (mêmes règles que skills.json, summon.* pour les âmes de l'Invocateur). tags : classes (« Tous » compte pour toutes).",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -83,6 +83,50 @@
       ],
       "description": "La lame d'un samouraï sans maître, pris dans les toiles de la Jorōgumo. Son cordon rouge est effiloché."
     },
+    "grelots-onmyoji": {
+      "name": "Grelots d'onmyōji",
+      "slot": "arme",
+      "rarity": "commune",
+      "tags": ["Invocateur"],
+      "summary": "Arme de départ de l'Invocateur : coups légers, tes âmes frappent 20 % plus vite.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 6 },
+        { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.07 },
+        { "op": "set", "path": "attack.recovery", "value": 0.22 },
+        { "op": "set", "path": "attack.knockback", "value": 2 },
+        { "op": "mul", "path": "summon.attackCooldown", "value": 0.8 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Tintement", "summary": "Tes âmes courent 15 % plus vite", "effects": [{ "op": "mul", "path": "summon.speed", "value": 1.15 }] },
+        { "level": 25, "name": "Carillon", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
+        { "level": 50, "name": "Clochette sacrée", "summary": "Tes âmes restent 50 % plus longtemps", "effects": [{ "op": "mul", "path": "summon.life", "value": 1.5 }] }
+      ],
+      "description": "Un bâton à grelots d'onmyōji. Leur tintement appelle les âmes égarées, qui viennent se ranger derrière toi."
+    },
+    "eventail-jorogumo": {
+      "name": "Éventail de la Jorōgumo",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Invocateur"],
+      "summary": "Les coups de tes âmes collent l'ennemi dans la soie : étourdi 0,5 s.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 7 },
+        { "op": "set", "path": "attack.range", "value": 2 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.08 },
+        { "op": "set", "path": "attack.recovery", "value": 0.26 },
+        { "op": "set", "path": "attack.knockback", "value": 3 },
+        { "op": "set", "path": "perks.summonStun", "value": 0.5 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Fil tendu", "summary": "Étourdissement des âmes +0,3 s", "effects": [{ "op": "add", "path": "perks.summonStun", "value": 0.3 }] },
+        { "level": 25, "name": "Toile des âmes", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
+        { "level": 50, "name": "Dame des rizières", "summary": "Tes âmes font 25 % de dégâts en plus", "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.25 }] }
+      ],
+      "description": "L'éventail de soie de la Jorōgumo. Quand on l'agite, on entend encore des fils se tendre."
+    },
     "chapeau-paille": {
       "name": "Chapeau de paille",
       "slot": "casque",
@@ -165,6 +209,8 @@
       "rarity": "rare",
       "tags": ["Invocateur"],
       "bonus": { "maxHp": 20 },
+      "effects": [{ "op": "mul", "path": "summon.life", "value": 1.25 }],
+      "summary": "Tes âmes restent 25 % plus longtemps.",
       "description": "Un magatama de jade fêlé, qui luit encore faiblement."
     },
     "omamori-temple": {
@@ -219,7 +265,8 @@
       "rarity": "légendaire",
       "tags": ["Invocateur"],
       "bonus": { "maxHp": 20 },
-      "summary": "+1 invocation active (Invocateur, pas encore jouable). Sa lueur apaise : +20 PV max.",
+      "effects": [{ "op": "add", "path": "summon.max", "value": 1 }],
+      "summary": "+1 âme active. Sa lueur apaise : +20 PV max.",
       "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?"
     },
     "ema-tetsu": {
@@ -285,6 +332,7 @@
       "items": [
         { "item": "katana-ronin", "chance": 0.4 },
         { "item": "fil-joren", "chance": 0.4 },
+        { "item": "eventail-jorogumo", "chance": 0.3 },
         { "item": "magatama-yasakani", "chance": 0.03 }
       ]
     }
