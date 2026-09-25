@@ -1,5 +1,5 @@
 {
-  "heros": { "file": "heros.png", "sheet": { "file": "pixel/heros.json", "height": 2.35 }, "height": 1.75, "facesRight": true },
+  "heros": { "file": "heros.png", "sheet": { "file": "anim/heros.json" }, "height": 1.75, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "sheet": { "file": "pixel/hitodama.json", "height": 1.2 }, "height": 0.9, "facesRight": false, "lift": 0.45 },
   "kodama": { "file": "kodama.png", "sheet": { "file": "pixel/kodama.json", "height": 1.23 }, "height": 1.15, "facesRight": true, "lift": 0.15 },
   "kappa": { "file": "kappa.png", "sheet": { "file": "pixel/kappa.json", "height": 1.93 }, "height": 1.45, "facesRight": true },
@@ -9,7 +9,7 @@
   "araignee": { "file": "araignee.png", "sheet": { "file": "pixel/araignee.json", "height": 0.87 }, "height": 0.65, "facesRight": true },
   "jorogumo": { "file": "jorogumo.png", "sheet": { "file": "pixel/jorogumo.json", "height": 3.24 }, "height": 2.4, "facesRight": true },
   "jorogumoAraignee": { "file": "jorogumo-araignee.png", "sheet": { "file": "pixel/jorogumoAraignee.json", "height": 3.69 }, "height": 2.9, "facesRight": true },
-  "souche": { "file": "souche.png", "height": 1.3, "facesRight": true },
+  "souche": { "file": "souche.png", "height": 1.6, "facesRight": true },
   "torii": { "file": "torii.png", "height": 5.5, "facesRight": true, "decor": { "x": 12, "z": 12 } },
   "jizo": {
     "file": "jizo.png",

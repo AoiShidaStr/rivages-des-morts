@@ -18,7 +18,8 @@ import {
 import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawIslandGround, drawProp } from './pixelArt';
-import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteManifest } from './renderer';
+import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
+import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 
 /** Assez grand pour que la caméra ne voie jamais le bord du sol, même au bout du ponton. */
@@ -31,8 +32,14 @@ const MARKER_HEIGHT_MARGIN = 0.45;
 interface SpriteEntry {
   texture: BaseTexture;
   aspect: number;
+  /** Hauteur de l'image dans le monde (une case entière pour une planche). */
   height: number;
+  /** Taille du sujet dans le monde : c'est elle que règle la hauteur donnée dans island.json. */
+  body: number;
+  /** Hauteur de l'image sous les pieds : le sprite descend d'autant. */
+  below: number;
   facesRight: boolean;
+  anim?: SheetAnimation;
 }
 
 interface Billboard {
@@ -43,6 +50,8 @@ interface Billboard {
   entry: SpriteEntry;
   phase: number;
   faceRight: boolean;
+  animTag: string;
+  animTime: number;
 }
 
 /** Marqueur « ! » ou « ? » au-dessus d'un PNJ qui a quelque chose de nouveau à dire. */
@@ -64,6 +73,8 @@ export class IslandRenderer {
   readonly right: Vec2;
   private readonly sprites = new Map<string, SpriteEntry>();
   private readonly npcs = new Map<string, Billboard>();
+  /** Décors animés (cascade, portail…), qui bouclent sur leur animation d'attente. */
+  private readonly animatedProps: Billboard[] = [];
   private player: Billboard | null = null;
   private highlight: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private shadowTexture!: BaseTexture;
@@ -96,18 +107,18 @@ export class IslandRenderer {
 
   async load(island: Island): Promise<void> {
     this.shadowTexture = this.canvasTexture('islandShadow', drawRadial(), false);
-    this.buildGround(island);
+    await this.buildGround(island);
     await Promise.all(
       Object.entries(this.manifest).map(async ([name, def]) => {
-        if (!def.file) return;
-        const texture = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/${def.file}`);
-        const { width, height } = texture.getSize();
-        this.sprites.set(name, { texture, aspect: width / height, height: def.height, facesRight: def.facesRight });
+        const entry = await this.loadEntry(name, def);
+        if (entry) this.sprites.set(name, entry);
       }),
     );
     for (const prop of island.data.props) {
       const entry = this.entryFor(prop.sprite, prop.height);
-      if (entry) this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
+      if (!entry) continue;
+      const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
+      if (entry.anim) this.animatedProps.push(view);
     }
     this.player = this.billboard('player', this.required('heros'), island.player.pos, 0.4, 'heros');
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
@@ -146,9 +157,11 @@ export class IslandRenderer {
       // Les PNJ se tournent vers le héros quand il approche.
       const toPlayer = { x: island.player.pos.x - it.pos.x, z: island.player.pos.z - it.pos.z };
       if (Math.hypot(toPlayer.x, toPlayer.z) < 4) this.face(view, toPlayer);
-      const breathe = 1 + 0.012 * Math.sin((this.time + view.phase) * 2.5);
-      view.mesh.scaling.set(1, breathe, 1);
+      // Une planche animée respire d'elle-même ; une image fixe s'étire un peu.
+      if (view.entry.anim) this.play(view, 'idle', dt);
+      else view.mesh.scaling.set(1, 1 + 0.012 * Math.sin((this.time + view.phase) * 2.5), 1);
     }
+    for (const view of this.animatedProps) this.play(view, 'idle', dt);
     for (const [id, view] of this.npcs) {
       if (seen.has(id)) continue;
       this.disposeBillboard(view);
@@ -162,8 +175,12 @@ export class IslandRenderer {
       this.player.mesh.isVisible = showPlayer;
       this.player.shadow.isVisible = showPlayer;
       this.face(this.player, p.facing);
-      const hop = p.moving ? Math.abs(Math.sin(this.time * 9)) : 0;
-      this.player.mesh.scaling.set(1 - 0.03 * hop, 1 + 0.05 * hop + 0.012 * Math.sin(this.time * 3), 1);
+      if (this.player.entry.anim) {
+        this.play(this.player, p.moving ? 'move' : 'idle', dt);
+      } else {
+        const hop = p.moving ? Math.abs(Math.sin(this.time * 9)) : 0;
+        this.player.mesh.scaling.set(1 - 0.03 * hop, 1 + 0.05 * hop + 0.012 * Math.sin(this.time * 3), 1);
+      }
       this.player.mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(p.pos, this.forward) * 100);
     }
 
@@ -184,9 +201,11 @@ export class IslandRenderer {
 
   // --- Construction ----------------------------------------------------------
 
-  private buildGround(island: Island): void {
+  /** Sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art. */
+  private async buildGround(island: Island): Promise<void> {
     const ground = MeshBuilder.CreateGround('islandGround', { width: WORLD_SIZE, height: WORLD_SIZE }, this.scene);
-    const texture = this.canvasTexture('islandGroundTexture', drawIslandGround(island.data, WORLD_SIZE, PIXELS_PER_UNIT), true);
+    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/ile.jpg`).catch(() => null);
+    const texture = painted ?? this.canvasTexture('islandGroundTexture', drawIslandGround(island.data, WORLD_SIZE, PIXELS_PER_UNIT), true);
     texture.hasAlpha = false;
     const material = new StandardMaterial('islandGroundMaterial', this.scene);
     material.diffuseTexture = texture;
@@ -197,25 +216,56 @@ export class IslandRenderer {
     ground.isPickable = false;
   }
 
+  /** Planche animée, image peinte, ou à défaut le dessin provisoire désigné par `placeholder`. */
+  private async loadEntry(name: string, def: SpriteDef): Promise<SpriteEntry | null> {
+    const base = `${import.meta.env.BASE_URL}sprites/`;
+    if (def.sheet) {
+      try {
+        const sheet = await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height);
+        return { ...sheet, body: def.height, facesRight: true };
+      } catch {
+        console.warn(`Planche introuvable : ${def.sheet.file}. L'image fixe la remplace.`);
+      }
+    }
+    if (def.file) {
+      try {
+        const texture = await loadTexture(this.scene, `${base}${def.file}`);
+        const { width, height } = texture.getSize();
+        return { texture, aspect: width / height, height: def.height, body: def.height, below: 0, facesRight: def.facesRight };
+      } catch {
+        console.warn(`Sprite de l'île introuvable : ${def.file}.${def.placeholder ? ' Le dessin provisoire le remplace.' : ''}`);
+      }
+    }
+    return def.placeholder ? this.pixelEntry(name, def.placeholder, def.height) : null;
+  }
+
+  private pixelEntry(key: string, drawingName: string, height: number): SpriteEntry | null {
+    const drawing = drawProp(drawingName);
+    if (!drawing) return null;
+    return {
+      texture: this.canvasTexture(key, drawing, true),
+      aspect: drawing.width / drawing.height,
+      height,
+      body: height,
+      below: 0,
+      facesRight: true,
+    };
+  }
+
+  /** `height` (island.json) règle la taille du sujet ; une planche garde ses proportions de case. */
   private entryFor(sprite: string, height?: number): SpriteEntry | null {
     if (sprite.startsWith('px:')) {
-      const drawing = drawProp(sprite.slice(3));
-      if (!drawing) return null;
       const key = `${sprite}@${height ?? 1}`;
       const cached = this.sprites.get(key);
       if (cached) return cached;
-      const entry = {
-        texture: this.canvasTexture(key, drawing, true),
-        aspect: drawing.width / drawing.height,
-        height: height ?? 1,
-        facesRight: true,
-      };
-      this.sprites.set(key, entry);
+      const entry = this.pixelEntry(key, sprite.slice(3), height ?? 1);
+      if (entry) this.sprites.set(key, entry);
       return entry;
     }
     const entry = this.sprites.get(sprite);
-    if (!entry) return null;
-    return height ? { ...entry, height } : entry;
+    if (!entry || !height) return entry ?? null;
+    const k = height / entry.body;
+    return { ...entry, height: entry.height * k, body: height, below: entry.below * k };
   }
 
   private required(name: string): SpriteEntry {
@@ -226,7 +276,7 @@ export class IslandRenderer {
 
   private billboard(name: string, entry: SpriteEntry, pos: Vec2, radius: number, sprite: string): Billboard {
     const mesh = MeshBuilder.CreatePlane(name, { width: entry.height * entry.aspect, height: entry.height }, this.scene);
-    mesh.bakeTransformIntoVertices(Matrix.Translation(0, entry.height / 2, 0));
+    mesh.bakeTransformIntoVertices(Matrix.Translation(0, entry.height / 2 - entry.below, 0));
     mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
     mesh.isPickable = false;
     mesh.position.set(pos.x, 0, pos.z);
@@ -236,7 +286,23 @@ export class IslandRenderer {
     const size = Math.max(0.8, radius * 2.8);
     const shadow = this.createGroundDecal(`${name}-shadow`, this.shadowTexture, size, Color3.Black(), 0.35).mesh;
     shadow.position.set(pos.x, 0.01, pos.z);
-    return { sprite, mesh, material, shadow, entry, phase: Math.random() * 10, faceRight: entry.facesRight };
+    const phase = Math.random() * 10;
+    const view = { sprite, mesh, material, shadow, entry, phase, faceRight: entry.facesRight, animTag: '', animTime: 0 };
+    // Les décors animés identiques (lanternes) ne battent pas tous en même temps.
+    if (entry.anim) this.play(view, 'idle', phase);
+    return view;
+  }
+
+  private play(view: Billboard, tag: string, dt: number): void {
+    const anim = view.entry.anim;
+    if (!anim) return;
+    const name = anim.tags.has(tag) ? tag : 'idle';
+    if (name !== view.animTag) {
+      view.animTag = name;
+      view.animTime = 0;
+    }
+    view.animTime += dt;
+    showFrame(view.material, anim, frameAt(anim, name, view.animTime));
   }
 
   private disposeBillboard(view: Billboard): void {

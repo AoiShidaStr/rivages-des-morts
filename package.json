@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc",
     "sprites": "node tools/detourer.mjs",
+    "planches": "node tools/planches.mjs",
+    "sols": "node tools/sols.mjs",
     "pixel": "node tools/pixel.mjs"
   },
   "dependencies": {

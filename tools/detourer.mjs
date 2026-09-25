@@ -11,6 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { alphaMask, boundingBox } from './decoupe.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(projectDir, 'tools', 'sprites.json'), 'utf8'));
@@ -28,6 +29,7 @@ for (const sprite of config.sprites) {
     console.warn(`${sprite.name.padEnd(10)} ${sprite.source} introuvable, ignoré`);
     continue;
   }
+  await mkdir(path.dirname(output), { recursive: true });
   const { width, height } = await cutOut(input, output, { ...config.defaults, ...sprite });
   console.log(`${sprite.name.padEnd(10)} ${sprite.source} → ${path.relative(projectDir, output)} (${width}×${height})`);
 }
@@ -35,12 +37,16 @@ for (const sprite of config.sprites) {
 async function cutOut(input, output, options) {
   const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width: w, height: h } = info;
-  const background = floodBackground(data, w, h, options);
-
-  const alpha = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) alpha[i] = background[i] ? 0 : 255;
-  removeSmallParts(alpha, w, h, options.minPartRatio);
-  softenEdges(alpha, w, h);
+  const alpha = alphaMask(data, w, h, options);
+  // `lumaKey: [sombre, clair]` : seuls les traits clairs restent opaques (fils d'une toile peints sur un voile sombre).
+  if (options.lumaKey) {
+    const [dark, light] = options.lumaKey;
+    for (let i = 0; i < w * h; i++) {
+      const luma = 0.299 * data[i * 3] + 0.587 * data[i * 3 + 1] + 0.114 * data[i * 3 + 2];
+      const keep = Math.min(1, Math.max(0, (luma - dark) / (light - dark)));
+      alpha[i] = Math.round(alpha[i] * keep);
+    }
+  }
 
   const box = boundingBox(alpha, w, h, options.padding);
   if (!box) throw new Error(`${input} : aucun sujet trouvé, le fond n'a pas été reconnu`);
@@ -52,187 +58,20 @@ async function cutOut(input, output, options) {
     rgba[i * 4 + 2] = data[i * 3 + 2];
     rgba[i * 4 + 3] = alpha[i];
   }
-  return sharp(rgba, { raw: { width: w, height: h, channels: 4 } })
-    .extract(box)
+  // `square` : image posée à plat sur un carré (la toile au sol), on complète le cadre en carré transparent.
+  const side = Math.max(box.width, box.height);
+  const extend = options.square
+    ? {
+        left: Math.floor((side - box.width) / 2),
+        right: Math.ceil((side - box.width) / 2),
+        top: Math.floor((side - box.height) / 2),
+        bottom: Math.ceil((side - box.height) / 2),
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      }
+    : { left: 0, right: 0, top: 0, bottom: 0 };
+  const cropped = await sharp(rgba, { raw: { width: w, height: h, channels: 4 } }).extract(box).extend(extend).png().toBuffer();
+  return sharp(cropped)
     .resize({ width: options.maxSize, height: options.maxSize, fit: 'inside', withoutEnlargement: true })
     .png()
     .toFile(output);
-}
-
-/**
- * Remplit le fond depuis les bords de l'image. Un pixel est du fond s'il est gris,
- * proche de la couleur des bords, et proche du pixel voisin déjà reconnu (le fond a un léger dégradé).
- */
-function floodBackground(data, w, h, options) {
-  const { tolerance, localTolerance, maxSaturation, fillHoles, holeTolerance = 8, minHole = 300 } = options;
-  const background = new Uint8Array(w * h);
-  const ref = borderMedian(data, w, h);
-  const queue = new Int32Array(w * h);
-  let head = 0;
-  let tail = 0;
-
-  const greyWithin = (i, maxGap, maxSat) => {
-    const r = data[i * 3];
-    const g = data[i * 3 + 1];
-    const b = data[i * 3 + 2];
-    const saturation = Math.max(r, g, b) - Math.min(r, g, b);
-    const gap = Math.abs(r - ref[0]) + Math.abs(g - ref[1]) + Math.abs(b - ref[2]);
-    return saturation <= maxSat && gap <= maxGap * 3;
-  };
-
-  // Aura peinte (ex. le halo vert du kodama) : ses pixels sont un mélange du fond et d'une couleur
-  // `keyColor`. On les reconnaît à leur faible distance au segment fond → keyColor.
-  const blendsWithKey = keyBlend(data, ref, options.keyColor, options.keyResidual ?? 18);
-  const close = (i, j) =>
-    Math.abs(data[i * 3] - data[j * 3]) +
-      Math.abs(data[i * 3 + 1] - data[j * 3 + 1]) +
-      Math.abs(data[i * 3 + 2] - data[j * 3 + 2]) <=
-    localTolerance;
-  let accepts = (i) => greyWithin(i, tolerance, maxSaturation) || blendsWithKey(i);
-
-  const seed = (i) => {
-    if (!background[i] && accepts(i)) {
-      background[i] = 1;
-      queue[tail++] = i;
-    }
-  };
-  const visit = (from, to) => {
-    if (!background[to] && accepts(to) && close(from, to)) {
-      background[to] = 1;
-      queue[tail++] = to;
-    }
-  };
-  const spread = () => {
-    while (head < tail) {
-      const i = queue[head++];
-      const x = i % w;
-      if (x > 0) visit(i, i - 1);
-      if (x < w - 1) visit(i, i + 1);
-      if (i >= w) visit(i, i - w);
-      if (i < (h - 1) * w) visit(i, i + w);
-    }
-  };
-
-  for (let x = 0; x < w; x++) {
-    seed(x);
-    seed((h - 1) * w + x);
-  }
-  for (let y = 0; y < h; y++) {
-    seed(y * w);
-    seed(y * w + w - 1);
-  }
-  spread();
-
-  // Fond enfermé par le sujet (entre les poutres d'un torii, par exemple). On n'accepte ici que le gris
-  // presque exact du fond, et seulement en grandes poches, pour ne pas percer les parties grises du sujet.
-  if (fillHoles) {
-    accepts = (i) => greyWithin(i, holeTolerance, maxSaturation / 2) || blendsWithKey(i);
-    for (let start = 0; start < w * h; start++) {
-      if (background[start] || !accepts(start)) continue;
-      const first = tail;
-      seed(start);
-      spread();
-      // Poche trop petite : c'est un détail du sujet. Marquée 2 pour ne pas être revisitée, puis rendue.
-      if (tail - first < minHole) for (let k = first; k < tail; k++) background[queue[k]] = 2;
-    }
-    for (let i = 0; i < w * h; i++) if (background[i] === 2) background[i] = 0;
-  }
-  return background;
-}
-
-/** Renvoie un test « ce pixel est-il un mélange du fond et de `keyColor` ? », ou un test toujours faux. */
-function keyBlend(data, ref, keyColor, maxResidual) {
-  if (!keyColor) return () => false;
-  const d = keyColor.map((c, k) => c - ref[k]);
-  const lengthSq = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
-  return (i) => {
-    const p = [data[i * 3] - ref[0], data[i * 3 + 1] - ref[1], data[i * 3 + 2] - ref[2]];
-    const t = Math.min(1.1, Math.max(0, (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]) / lengthSq));
-    const residual = Math.hypot(p[0] - d[0] * t, p[1] - d[1] * t, p[2] - d[2] * t);
-    return residual <= maxResidual;
-  };
-}
-
-function borderMedian(data, w, h) {
-  const channels = [[], [], []];
-  const take = (i) => channels.forEach((values, c) => values.push(data[i * 3 + c]));
-  for (let x = 0; x < w; x += 4) {
-    take(x);
-    take((h - 1) * w + x);
-  }
-  for (let y = 0; y < h; y += 4) {
-    take(y * w);
-    take(y * w + w - 1);
-  }
-  return channels.map((values) => values.sort((a, b) => a - b)[values.length >> 1]);
-}
-
-/** Supprime les petits îlots détachés du sujet (gouttes d'eau, étincelles, poussière). */
-function removeSmallParts(alpha, w, h, minRatio) {
-  const labels = new Int32Array(w * h).fill(-1);
-  const sizes = [];
-  const stack = new Int32Array(w * h);
-  for (let start = 0; start < w * h; start++) {
-    if (!alpha[start] || labels[start] !== -1) continue;
-    const label = sizes.length;
-    let top = 0;
-    let size = 0;
-    stack[top++] = start;
-    labels[start] = label;
-    while (top > 0) {
-      const i = stack[--top];
-      size++;
-      const x = i % w;
-      const neighbours = [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i >= w ? i - w : -1, i < (h - 1) * w ? i + w : -1];
-      for (const j of neighbours) {
-        if (j >= 0 && alpha[j] && labels[j] === -1) {
-          labels[j] = label;
-          stack[top++] = j;
-        }
-      }
-    }
-    sizes.push(size);
-  }
-  const largest = sizes.reduce((max, size) => Math.max(max, size), 0);
-  for (let i = 0; i < w * h; i++) {
-    if (labels[i] >= 0 && sizes[labels[i]] < largest * minRatio) alpha[i] = 0;
-  }
-}
-
-/** Adoucit le contour d'un pixel pour éviter l'effet d'escalier. */
-function softenEdges(alpha, w, h) {
-  const edges = [];
-  for (let i = 0; i < w * h; i++) {
-    if (!alpha[i]) continue;
-    const x = i % w;
-    const touchesBackground =
-      (x > 0 && !alpha[i - 1]) || (x < w - 1 && !alpha[i + 1]) || (i >= w && !alpha[i - w]) || (i < (h - 1) * w && !alpha[i + w]);
-    if (touchesBackground) edges.push(i);
-  }
-  for (const i of edges) alpha[i] = 150;
-}
-
-function boundingBox(alpha, w, h, padding) {
-  let minX = w;
-  let minY = h;
-  let maxX = -1;
-  let maxY = -1;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (!alpha[y * w + x]) continue;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-  }
-  if (maxX < 0) return null;
-  const left = Math.max(0, minX - padding);
-  const top = Math.max(0, minY - padding);
-  return {
-    left,
-    top,
-    width: Math.min(w, maxX + padding + 1) - left,
-    height: Math.min(h, maxY + padding + 1) - top,
-  };
 }

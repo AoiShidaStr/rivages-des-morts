@@ -1,0 +1,36 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 350,
+    "h": 401
+   },
+   "duration": 1000
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "forge.webp",
+  "size": {
+   "w": 350,
+   "h": 401
+  },
+  "smooth": true,
+  "bodyHeight": 384,
+  "anchor": {
+   "x": 175,
+   "y": 393
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 0,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,86 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 200,
+    "h": 273
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 200,
+    "y": 0,
+    "w": 200,
+    "h": 273
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 400,
+    "y": 0,
+    "w": 200,
+    "h": 273
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 600,
+    "y": 0,
+    "w": 200,
+    "h": 273
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 200,
+    "h": 273
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 1000,
+    "y": 0,
+    "w": 200,
+    "h": 273
+   },
+   "duration": 120
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "lanterne-allumee.webp",
+  "size": {
+   "w": 1200,
+   "h": 273
+  },
+  "smooth": true,
+  "bodyHeight": 256,
+  "anchor": {
+   "x": 100,
+   "y": 264
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,49 @@
+{
+  "sourceDir": "~/Pictures/game visual",
+  "outDir": "public/sprites/anim",
+  "defaults": {
+    "tolerance": 30,
+    "localTolerance": 18,
+    "maxSaturation": 16,
+    "minPartRatio": 0.01
+  },
+  "planches": [
+    {
+      "name": "heros",
+      "bodyHeight": 256,
+      "animations": [
+        { "tag": "idle", "source": "sprites/heros_idle.jpg", "count": 6, "duration": 150 },
+        { "tag": "move", "source": "sprites/heros_move.jpg", "count": 8, "duration": 70 },
+        { "tag": "windup", "source": "sprites/heros_windup.jpg", "layout": [3, 4], "frames": [3, 4, 5, 6], "ref": 0, "duration": 70, "once": true },
+        { "tag": "strike", "source": "sprites/heros_strike.jpg", "count": 6, "ref": 5, "durations": [40, 45, 45, 60, 70, 100], "once": true },
+        { "tag": "guard", "source": "sprites/heros_guard.jpg", "count": 4, "duration": 120 },
+        { "tag": "dash", "source": "sprites/heros_dash.jpg", "count": 6, "ref": 0, "duration": 30, "once": true },
+        { "tag": "airborne", "source": "sprites/heros_dash.jpg", "count": 6, "frames": [2, 3], "ref": 0, "duration": 90 }
+      ]
+    },
+    {
+      "name": "forge",
+      "anchor": "box",
+      "bodyHeight": 384,
+      "animations": [{ "tag": "idle", "source": "decor_ile_forge.jpg", "count": 6, "frames": [0], "duration": 1000 }]
+    },
+    {
+      "name": "portail",
+      "anchor": "box",
+      "bodyHeight": 384,
+      "animations": [{ "tag": "idle", "source": "decor_ile_portail.jpg", "count": 8, "duration": 90 }]
+    },
+    {
+      "name": "cascade",
+      "anchor": "box",
+      "bodyHeight": 384,
+      "animations": [{ "tag": "idle", "source": "decor_ile_cascade.jpg", "count": 6, "frames": [2], "duration": 1000 }]
+    },
+    {
+      "name": "lanterne-allumee",
+      "anchor": "box",
+      "bodyHeight": 256,
+      "animations": [{ "tag": "idle", "source": "decor_ile_lanterne-allumee.jpg", "count": 6, "duration": 120 }]
+    }
+  ]
+}

@@ -27,7 +27,7 @@
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 10 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
-        { "op": "set", "path": "attack.arcDeg", "value": 120 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.08 },
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 3 }
@@ -43,7 +43,7 @@
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 17 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.arcDeg", "value": 110 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.17 },
         { "op": "set", "path": "attack.recovery", "value": 0.36 },
         { "op": "set", "path": "attack.knockback", "value": 6 },
@@ -60,7 +60,7 @@
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 8 },
         { "op": "set", "path": "attack.range", "value": 1.65 },
-        { "op": "set", "path": "attack.arcDeg", "value": 100 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.05 },
         { "op": "set", "path": "attack.recovery", "value": 0.15 },
         { "op": "set", "path": "attack.knockback", "value": 2 },

@@ -9,7 +9,7 @@
   "attack": {
     "damage": 10,
     "range": 1.9,
-    "arcDeg": 120,
+    "arcDeg": 360,
     "windup": 0.08,
     "active": 0.1,
     "recovery": 0.24,

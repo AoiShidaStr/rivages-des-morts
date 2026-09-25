@@ -277,7 +277,7 @@ export class Player {
     a.t += dt;
     if (!a.swung && a.t >= time.windup) {
       a.swung = true;
-      world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range });
+      world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range, arcDeg: c.arcDeg });
     }
     const recoveryStart = time.windup + time.active;
     if (a.t >= time.windup && a.t < recoveryStart) {

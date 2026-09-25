@@ -23,6 +23,7 @@ import { Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, Pose } from '../game/types';
 import type { Stump, World } from '../game/world';
+import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
   drawCrescent,
   drawGround,
@@ -53,11 +54,12 @@ export interface SpriteDef {
   /** Image dans public/sprites, ou null pour un dessin provisoire. */
   file: string | null;
   /**
-   * Planche animée en pixel art (JSON « Array » d'Aseprite dans public/sprites, l'image à côté).
-   * Prioritaire sur `file` ; chaque tag porte le nom d'une posture (idle, move, strike…).
-   * `height` est celle d'une image entière de la planche, marges comprises.
+   * Planche animée (JSON « Array » d'Aseprite dans public/sprites, l'image à côté), prioritaire sur `file` ;
+   * chaque tag porte le nom d'une posture (idle, move, strike…). Les planches peintes montées par
+   * `npm run planches` se dimensionnent d'après `height` ; pour une planche en pixel art, `sheet.height`
+   * est la hauteur d'une image entière de la planche, marges comprises.
    */
-  sheet?: { file: string; height: number };
+  sheet?: { file: string; height?: number };
   /** Hauteur à l'écran, en unités du monde. */
   height: number;
   /** Sens dans lequel regarde le sujet sur l'image. */
@@ -66,6 +68,8 @@ export interface SpriteDef {
   lift?: number;
   /** Position fixe, pour les éléments de décor (une liste pour en poser plusieurs). */
   decor?: Vec2 | Vec2[];
+  /** Décor de l'île : dessin provisoire (src/render/pixelArt.ts) affiché si l'image manque. */
+  placeholder?: string;
 }
 
 export type SpriteManifest = Record<string, SpriteDef>;
@@ -91,21 +95,11 @@ interface SpriteEntry {
   aspect: number;
   /** Hauteur à l'écran, en unités du monde. */
   height: number;
-  /** Sens du sujet sur l'image (les planches en pixel art regardent toujours vers la droite). */
+  /** Sens du sujet sur l'image (les planches regardent toujours vers la droite). */
   facesRight: boolean;
+  /** Hauteur de l'image sous les pieds (marge d'une case de planche) : le sprite descend d'autant. */
+  below?: number;
   anim?: SheetAnimation;
-}
-
-/** Planche découpée : rectangle de chaque image (en UV) et plages d'images par posture. */
-interface SheetAnimation {
-  frames: { rect: [number, number, number, number]; duration: number }[];
-  tags: Map<string, { from: number; to: number; once: boolean }>;
-}
-
-/** Ce que Babylon lit dans un export JSON d'Aseprite (format « Array »). */
-interface AsepriteSheet {
-  frames: { frame: { x: number; y: number; w: number; h: number }; duration: number }[];
-  meta: { image: string; size: { w: number; h: number }; frameTags?: { name: string; from: number; to: number; repeat?: string }[] };
 }
 
 interface EntityView {
@@ -270,7 +264,7 @@ export class Renderer {
   private shake = 0;
   private time = 0;
   private readonly sprites = new Map<string, SpriteEntry>();
-  private readonly fxTextures: Record<'shadow' | 'crescent' | 'ring' | 'telegraph' | 'web', BaseTexture>;
+  private readonly fxTextures: Record<'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web', BaseTexture>;
   private readonly views = new Map<number, EntityView>();
   private dying: EntityView[] = [];
   private effects: Fx[] = [];
@@ -318,6 +312,7 @@ export class Renderer {
     this.fxTextures = {
       shadow: this.canvasTexture('shadow', drawRadial()),
       crescent: this.canvasTexture('crescent', drawCrescent()),
+      sweep: this.canvasTexture('sweep', drawCrescent(256, 300)),
       ring: this.canvasTexture('ring', drawRing()),
       telegraph: this.canvasTexture('telegraph', drawTelegraph()),
       web: this.canvasTexture('web', drawWeb()),
@@ -326,7 +321,10 @@ export class Renderer {
   }
 
   async load(): Promise<void> {
-    this.buildGround();
+    await this.buildGround();
+    // Toile peinte si elle existe, sinon le dessin provisoire du constructeur.
+    const web = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/toile.png`).catch(() => null);
+    if (web) this.fxTextures.web = web;
     await Promise.all(
       Object.entries(this.manifest).map(async ([name, def]) => {
         this.sprites.set(name, await this.loadSprite(name, def));
@@ -560,31 +558,19 @@ export class Renderer {
   private playSheet(view: EntityView, anim: SheetAnimation, pose: Pose, dt: number): void {
     // Une posture sans animation dessinée retombe sur la plus proche, puis sur l'attente.
     const tagName = [pose, FALLBACK_POSE[pose], 'idle'].find((name) => name && anim.tags.has(name)) ?? '';
-    const tag = anim.tags.get(tagName);
     if (tagName !== view.animTag) {
       view.animTag = tagName;
       view.animTime = 0;
     } else {
       view.animTime += dt;
     }
-    let frame = 0;
-    if (tag) {
-      const total = anim.frames.slice(tag.from, tag.to + 1).reduce((sum, f) => sum + f.duration, 0);
-      let time = tag.once ? Math.min(view.animTime, total - 1e-6) : view.animTime % Math.max(1e-6, total);
-      frame = tag.from;
-      while (frame < tag.to && time >= anim.frames[frame].duration) {
-        time -= anim.frames[frame].duration;
-        frame++;
-      }
-    }
-    const [u, v, w, h] = anim.frames[frame].rect;
-    view.material.setVector4('frameRect', new Vector4(u, v, w, h));
+    showFrame(view.material, anim, frameAt(anim, tagName, view.animTime));
   }
 
   /** Plan vertical tourné vers la caméra, dont l'origine est aux pieds du personnage. */
   private createSprite(name: string, entry: SpriteEntry): { sprite: Mesh; material: ShaderMaterial } {
     const sprite = MeshBuilder.CreatePlane(name, { width: entry.height * entry.aspect, height: entry.height }, this.scene);
-    sprite.bakeTransformIntoVertices(Matrix.Translation(0, entry.height / 2, 0));
+    sprite.bakeTransformIntoVertices(Matrix.Translation(0, entry.height / 2 - (entry.below ?? 0), 0));
     sprite.billboardMode = Mesh.BILLBOARDMODE_ALL;
     sprite.isPickable = false;
     const material = spriteMaterial(this.scene, name, entry.texture);
@@ -734,21 +720,26 @@ export class Renderer {
 
   private handle(event: GameEvent): void {
     switch (event.type) {
-      case 'swing':
+      case 'swing': {
+        // Coup circulaire : un croissant presque fermé tourne autour du héros. Sinon, le croissant de l'arc visé.
+        const full = event.arcDeg >= 360;
+        const start = -angleOf(event.dir);
         this.addFx({
-          texture: this.fxTextures.crescent,
+          texture: full ? this.fxTextures.sweep : this.fxTextures.crescent,
           pos: event.pos,
           dir: event.dir,
           width: event.range * 2,
           depth: event.range * 2,
           color: SLASH,
-          life: 0.14,
+          life: full ? 0.18 : 0.14,
           update: (k, fx) => {
             fx.material.setFloat('alpha', 0.9 * (1 - k));
             fx.mesh.scaling.setAll(0.85 + 0.2 * k);
+            if (full) fx.mesh.rotation.y = start - k * Math.PI;
           },
         });
         break;
+      }
       case 'enemyHit': {
         const view = this.views.get(event.id);
         if (view) view.flash = event.shielded ? 0.35 : 1;
@@ -1020,9 +1011,11 @@ export class Renderer {
 
   // --- Décor et chargement -------------------------------------------------
 
-  private buildGround(): void {
+  /** Sol peint (sols/rizieres.jpg, cadré comme le dessin provisoire) s'il existe, sinon le dessin. */
+  private async buildGround(): Promise<void> {
     const ground = MeshBuilder.CreateGround('ground', { width: GROUND_SIZE, height: GROUND_SIZE }, this.scene);
-    const texture = this.canvasTexture('groundTexture', drawGround(2048, GROUND_SIZE, this.arenaHalfSize, PADDY_SIZE));
+    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/rizieres.jpg`).catch(() => null);
+    const texture = painted ?? this.canvasTexture('groundTexture', drawGround(2048, GROUND_SIZE, this.arenaHalfSize, PADDY_SIZE));
     texture.hasAlpha = false;
     const material = new StandardMaterial('groundMaterial', this.scene);
     material.diffuseTexture = texture;
@@ -1049,7 +1042,7 @@ export class Renderer {
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {
     if (def.sheet) {
       try {
-        return await this.loadSheet(def.sheet.file, def.sheet.height);
+        return { ...(await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height)), facesRight: true };
       } catch {
         console.warn(`Planche introuvable : ${def.sheet.file}. L'image fixe la remplace.`);
       }
@@ -1065,27 +1058,6 @@ export class Renderer {
     }
     const canvas = PLACEHOLDERS[name]?.() ?? drawMissing(name);
     return { texture: this.canvasTexture(name, canvas), aspect: canvas.width / canvas.height, height: def.height, facesRight: def.facesRight };
-  }
-
-  /** Charge un export Aseprite : l'image de la planche et le découpage de ses images. */
-  private async loadSheet(jsonPath: string, height: number): Promise<SpriteEntry> {
-    const base = `${import.meta.env.BASE_URL}sprites/`;
-    const response = await fetch(`${base}${jsonPath}`);
-    if (!response.ok) throw new Error(jsonPath);
-    const sheet = (await response.json()) as AsepriteSheet;
-    const dir = jsonPath.includes('/') ? jsonPath.slice(0, jsonPath.lastIndexOf('/') + 1) : '';
-    const texture = await loadTexture(this.scene, `${base}${dir}${sheet.meta.image}`, true);
-    const { w: W, h: H } = sheet.meta.size;
-    // L'image est retournée à la lecture (v = 0 en bas) : la rangée du haut a le plus grand v.
-    const frames = sheet.frames.map(({ frame: f, duration }) => ({
-      rect: [f.x / W, 1 - (f.y + f.h) / H, f.w / W, f.h / H] as [number, number, number, number],
-      duration: duration / 1000,
-    }));
-    const tags = new Map(
-      (sheet.meta.frameTags ?? []).map((t) => [t.name, { from: t.from, to: t.to, once: t.repeat === '1' }]),
-    );
-    const first = sheet.frames[0].frame;
-    return { texture, aspect: first.w / first.h, height, facesRight: true, anim: { frames, tags } };
   }
 
   private canvasTexture(name: string, canvas: HTMLCanvasElement): DynamicTexture {

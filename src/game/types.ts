@@ -35,7 +35,7 @@ export interface InputFrame {
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
 export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string }
-  | { type: 'swing'; pos: Vec2; dir: Vec2; range: number }
+  | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number }
   | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean }
   | { type: 'playerHit'; pos: Vec2; amount: number }
   | { type: 'guard'; pos: Vec2; rage: number }

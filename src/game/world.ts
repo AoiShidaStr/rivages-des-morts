@@ -107,10 +107,15 @@ export class World {
     this.updateWaves(dt);
   }
 
-  /** Coup d'arme : touche une seule fois chaque ennemi présent dans l'arc devant le joueur. */
+  /**
+   * Coup d'arme : touche une seule fois chaque ennemi à portée, dans l'arc visé (`attack.arcDeg`).
+   * À 360°, le coup balaie tout autour du héros : le sprite ne se tourne que vers la gauche ou la droite,
+   * un arc étroit vers le haut ou le bas de l'écran ne correspondait pas à ce que l'on voit.
+   */
   strike(origin: Vec2, dir: Vec2, alreadyHit: Set<number>): void {
     const attack = this.cfg.player.attack;
     // `enemies` peut contenir des morts du pas en cours : `targetable` les écarte.
+    const fullCircle = attack.arcDeg >= 360;
     const halfArc = degToRad(attack.arcDeg / 2);
     for (const enemy of this.enemies) {
       if (!enemy.targetable || alreadyHit.has(enemy.id)) continue;
@@ -118,7 +123,7 @@ export class World {
       const dist = length(toEnemy);
       if (dist - enemy.radius > attack.range) continue;
       // Un ennemi collé au joueur est touché même s'il déborde de l'arc.
-      if (dist > enemy.radius + 0.2 && !inCone(dir, normalize(toEnemy), halfArc)) continue;
+      if (!fullCircle && dist > enemy.radius + 0.2 && !inCone(dir, normalize(toEnemy), halfArc)) continue;
       alreadyHit.add(enemy.id);
       const player = this.player;
       const perks = player.cfg.perks ?? {};
