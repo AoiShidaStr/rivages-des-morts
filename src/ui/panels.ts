@@ -1,8 +1,8 @@
 import { content } from '../content';
 import type { PlayerConfig } from '../game/config';
 import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '../game/difficulty';
-import { isUpgradable, nextPalier, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
-import { canLearn, itemLevel, levelProgress, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
+import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
+import { buildLoadout, canLearn, itemLevel, levelProgress, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { Progress, Slot } from '../game/progress';
 import { h, obole } from './dom';
 
@@ -49,10 +49,13 @@ export class PanelHost {
       ),
       body,
     );
-    // Garde la position de défilement quand on redessine la même fenêtre (achat, équipement…).
+    // Garde la position de défilement quand on redessine la même fenêtre (achat, équipement…),
+    // celle de la fenêtre comme celle des listes marquées data-scroll.
     const scroll = this.backdrop.querySelector('.panel')?.scrollTop ?? 0;
+    const inner = new Map([...this.backdrop.querySelectorAll<HTMLElement>('[data-scroll]')].map((el) => [el.dataset.scroll, el.scrollTop]));
     this.backdrop.replaceChildren(panel);
     panel.scrollTop = scroll;
+    for (const el of panel.querySelectorAll<HTMLElement>('[data-scroll]')) el.scrollTop = inner.get(el.dataset.scroll) ?? 0;
     this.backdrop.classList.add('visible');
     if (options.onClose) this.onClose = options.onClose;
   }
@@ -71,10 +74,8 @@ export class PanelHost {
 
 export function bonusText(bonus: Bonus | undefined): string {
   const parts = (Object.entries(bonus ?? {}) as [BonusKind, number][]).map(([key, value]) => {
-    const label = content.bonuses[key].toLowerCase();
-    if (key === 'armor') return `−${Math.round(value * 100)} % ${label}`;
-    if (key === 'speed' || key === 'dodge' || key === 'oboles') return `+${Math.round(value * 100)} % ${label}`;
-    return `+${value} ${content.bonuses[key]}`;
+    const label = key === 'maxHp' || key === 'damage' ? content.bonuses[key] : content.bonuses[key].toLowerCase();
+    return `${bonusValue(key, value)} ${label}`;
   });
   return parts.join(' · ');
 }
@@ -128,6 +129,51 @@ function purse(progress: Progress): HTMLElement {
 function acquire(ctx: UiContext, item: string): void {
   ctx.progress.acquire(item, content.items[item]?.slot);
   ctx.progress.save();
+}
+
+/** « +3 », « −18 % » : la valeur d'un bonus seule, pour les comparaisons. */
+function bonusValue(key: BonusKind, value: number): string {
+  if (key === 'armor') return `−${Math.round(value * 100)} %`;
+  if (key === 'speed' || key === 'dodge' || key === 'oboles') return `+${Math.round(value * 100)} %`;
+  return `+${value}`;
+}
+
+/** Ce que le joueur a choisi dans les fenêtres, gardé d'une ouverture à l'autre. */
+const memory = {
+  forgeTab: 'upgrade' as 'upgrade' | 'craft',
+  /** La forge montre d'abord les pièces portées, les autres sur demande. */
+  forgeScope: 'worn' as 'worn' | 'all',
+  forgeItem: null as string | null,
+  inventorySlot: 'arme' as Slot,
+  /** Sections repliables ouvertes ou fermées par le joueur. */
+  folds: new Map<string, boolean>(),
+};
+
+/** Section repliable : seul son titre se lit, le détail s'ouvre au clic. */
+function fold(key: string, openByDefault: boolean, title: string, meta: Node | string | null, ...children: (Node | null)[]): HTMLDetailsElement {
+  const details = h(
+    'details',
+    { class: 'fold', open: memory.folds.get(key) ?? openByDefault },
+    h('summary', {}, h('span', { class: 'fold-title' }, title), meta ? h('span', { class: 'fold-meta' }, meta) : null),
+    ...children,
+  );
+  details.addEventListener('toggle', () => memory.folds.set(key, details.open));
+  return details;
+}
+
+function tabs<T extends string>(options: { id: T; label: string; count?: number }[], current: T, pick: (id: T) => void): HTMLElement {
+  return h(
+    'div',
+    { class: 'tabs', role: 'tablist' },
+    ...options.map((o) =>
+      h(
+        'button',
+        { class: `tab${o.id === current ? ' active' : ''}`, role: 'tab', 'aria-selected': String(o.id === current), onclick: () => pick(o.id) },
+        o.label,
+        o.count ? h('span', { class: 'tab-count' }, String(o.count)) : null,
+      ),
+    ),
+  );
 }
 
 // --- Boutique ---------------------------------------------------------------
@@ -185,108 +231,301 @@ function weaponDamage(ctx: UiContext, def: ItemDef, level: number): number {
   return Math.round(base * weaponPower(content.upgrade, level));
 }
 
-/** Une pièce à améliorer : ce que donne le niveau suivant, le prochain palier, le prix. */
-function upgradeRow(ctx: UiContext, id: string, cap: number, rerender: () => void): HTMLElement {
+interface UpgradePlan {
+  to: number;
+  oboles: number;
+  materials: Record<string, number>;
+}
+
+/** Jusqu'où le joueur peut monter une pièce en `times` niveaux au plus, et pour quel prix. Rien n'est dépensé. */
+function planUpgrade(progress: Progress, def: ItemDef, from: number, cap: number, times: number): UpgradePlan {
+  const plan: UpgradePlan = { to: from, oboles: 0, materials: {} };
+  while (plan.to - from < times && plan.to < cap) {
+    const c = upgradeCost(content.upgrade, def, plan.to);
+    const affordable =
+      progress.state.oboles >= plan.oboles + c.oboles &&
+      Object.entries(c.materials).every(([m, n]) => progress.material(m) >= (plan.materials[m] ?? 0) + n);
+    if (!affordable) break;
+    plan.oboles += c.oboles;
+    for (const [m, n] of Object.entries(c.materials)) plan.materials[m] = (plan.materials[m] ?? 0) + n;
+    plan.to++;
+  }
+  return plan;
+}
+
+function applyUpgrade(ctx: UiContext, id: string, plan: UpgradePlan): void {
   const { progress } = ctx;
-  const { state } = progress;
   const rules = content.upgrade;
   const def = content.items[id];
-  const level = itemLevel(state, id);
-  const maxed = level >= rules.maxLevel;
-  const blocked = !maxed && level >= cap;
-  const growth =
-    def.slot === 'arme'
-      ? `Dégâts ${weaponDamage(ctx, def, level)} → ${weaponDamage(ctx, def, level + 1)} · Frappe fracassante, Bond et foudre suivent`
-      : `${bonusText(scaledBonus(rules, def.bonus, level)) || 'Aucun bonus'} → ${bonusText(scaledBonus(rules, def.bonus, level + 1)) || 'aucun bonus'}`;
-  const price = maxed || blocked ? null : upgradeCost(rules, def, level);
-  const priceNode = price ? cost(progress, price.oboles, price.materials) : null;
-  const next = nextPalier(rules, def, level);
+  const before = reachedPaliers(rules, def, itemLevel(progress.state, id)).length;
+  progress.gainOboles(-plan.oboles);
+  for (const [m, n] of Object.entries(plan.materials)) progress.gainMaterial(m, -n);
+  progress.state.itemLevels[id] = plan.to;
+  progress.save();
+  ctx.toast(`${def.name} : niveau ${plan.to}`, 'loot');
+  for (const p of reachedPaliers(rules, def, plan.to).slice(before)) ctx.toast(`Palier ${p.level} · ${p.name} : ${p.summary}`, 'quest');
+}
 
-  // Monte d'un niveau, ou autant que possible (« Au max ») sans dépasser le niveau du joueur.
-  const upgrade = (times: number) => {
-    const before = reachedPaliers(rules, def, level).length;
-    let done = 0;
-    while (done < times) {
-      const lvl = itemLevel(state, id);
-      if (lvl >= cap) break;
-      const c = upgradeCost(rules, def, lvl);
-      if (state.oboles < c.oboles || Object.entries(c.materials).some(([m, n]) => progress.material(m) < n)) break;
-      progress.gainOboles(-c.oboles);
-      for (const [m, n] of Object.entries(c.materials)) progress.gainMaterial(m, -n);
-      state.itemLevels[id] = lvl + 1;
-      done++;
-    }
-    if (!done) return;
-    progress.save();
-    const reached = itemLevel(state, id);
-    ctx.toast(`${def.name} : niveau ${reached}`, 'loot');
-    for (const p of reachedPaliers(rules, def, reached).slice(before)) ctx.toast(`Palier ${p.level} · ${p.name} : ${p.summary}`, 'quest');
-    rerender();
-  };
+/** Barre de niveau 1 → 50, avec les paliers et le plafond (le niveau du joueur). */
+function levelTrack(def: ItemDef, level: number, cap: number): HTMLElement {
+  const max = content.upgrade.maxLevel;
+  const at = (n: number) => `left:${((n - 1) / (max - 1)) * 100}%`;
+  return h(
+    'div',
+    { class: 'level-track' },
+    h('span', { class: 'track-fill', style: `width:${((level - 1) / (max - 1)) * 100}%` }),
+    cap < max ? h('span', { class: 'track-cap', style: at(cap), title: `Plafond : ton niveau (${cap})` }) : null,
+    ...paliersOf(content.upgrade, def).map((p) =>
+      h('span', { class: `track-mark${p.level <= level ? ' reached' : ''}`, style: at(p.level), title: `Palier ${p.level} · ${p.name}` }),
+    ),
+  );
+}
+
+/** Ce qui change au niveau suivant : une ligne par caractéristique. */
+function growthRows(ctx: UiContext, def: ItemDef, level: number): HTMLElement[] {
+  if (def.slot === 'arme') {
+    // Les dégâts sont arrondis : la puissance montre ce que chaque niveau apporte vraiment (+6 %).
+    const power = (n: number) => `+${Math.round((weaponPower(content.upgrade, n) - 1) * 100)} %`;
+    return [
+      h('dt', {}, 'Puissance de l’arme'),
+      h('dd', {}, `${power(level)} → `, h('b', {}, power(level + 1))),
+      h('dt', {}, 'Dégâts par coup'),
+      h('dd', {}, `${weaponDamage(ctx, def, level)} → `, h('b', {}, String(weaponDamage(ctx, def, level + 1)))),
+    ];
+  }
+  const now = scaledBonus(content.upgrade, def.bonus, level);
+  const next = scaledBonus(content.upgrade, def.bonus, level + 1);
+  return (Object.keys(now) as BonusKind[]).flatMap((key) => {
+    const changes = bonusValue(key, now[key] ?? 0) !== bonusValue(key, next[key] ?? 0);
+    return [
+      h('dt', {}, content.bonuses[key]),
+      h('dd', { class: changes ? '' : 'same' }, changes ? `${bonusValue(key, now[key] ?? 0)} → ` : bonusValue(key, now[key] ?? 0), changes ? h('b', {}, bonusValue(key, next[key] ?? 0)) : null),
+    ];
+  });
+}
+
+/** Fiche de la pièce choisie : où elle en est, ce que donne le niveau suivant, ses paliers et le prix. */
+function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => void): HTMLElement {
+  const { progress } = ctx;
+  const rules = content.upgrade;
+  const def = content.items[id];
+  const level = itemLevel(progress.state, id);
+  const worn = progress.state.equipped[def.slot as Slot] === id;
+  const maxed = level >= rules.maxLevel;
+  const capped = !maxed && level >= cap;
+  const one = planUpgrade(progress, def, level, cap, 1);
+  const all = planUpgrade(progress, def, level, cap, Infinity);
+  const price = maxed || capped ? null : upgradeCost(rules, def, level);
+  const priceNode = price ? cost(progress, price.oboles, price.materials) : null;
+  const growth = maxed || capped ? [] : growthRows(ctx, def, level);
+
+  const buttons = h(
+    'div',
+    { class: 'forge-buttons' },
+    h(
+      'button',
+      {
+        class: 'btn primary',
+        disabled: one.to === level,
+        onclick: () => {
+          applyUpgrade(ctx, id, one);
+          rerender();
+        },
+      },
+      maxed ? 'Niveau maximum' : capped ? 'Plafond atteint' : `Améliorer → niv. ${level + 1}`,
+    ),
+    all.to > level + 1
+      ? h(
+          'button',
+          {
+            class: 'btn',
+            title: 'Améliorer tant que tu peux payer, jusqu’à ton niveau',
+            onclick: () => {
+              applyUpgrade(ctx, id, all);
+              rerender();
+            },
+          },
+          `Au max → niv. ${all.to}`,
+        )
+      : null,
+  );
 
   return h(
     'div',
-    { class: 'row forge-row' },
+    { class: 'forge-detail' },
     h(
       'div',
-      { class: 'item' },
-      h(
-        'div',
-        { class: 'item-head' },
-        h('strong', {}, `${def.name} · niv. ${level}`),
-        h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, content.slots[def.slot as Slot]),
-        ...reachedPaliers(rules, def, level).map((p) => h('span', { class: 'tag palier', title: p.summary }, p.name)),
+      { class: 'item-head' },
+      h('strong', { title: def.description }, def.name),
+      h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
+      worn ? h('span', { class: 'badge inline' }, 'Porté') : null,
+    ),
+    h('div', { class: 'item-meta' }, [content.slots[def.slot as Slot], def.summary].filter(Boolean).join(' · ')),
+    h('div', { class: 'detail-level' }, h('span', {}, `Niveau ${level}`), h('small', {}, ` / ${rules.maxLevel}${cap < rules.maxLevel ? ` · plafond ${cap} (ton niveau)` : ''}`)),
+    levelTrack(def, level, cap),
+    maxed ? h('p', { class: 'note' }, 'Cette pièce est au niveau maximum.') : null,
+    capped ? h('p', { class: 'note danger' }, `Tetsu ne dépasse pas ton niveau (${cap}) : gagne de l’expérience au donjon pour continuer.`) : null,
+    growth.length ? h('h3', {}, 'Au niveau suivant') : null,
+    growth.length ? h('dl', { class: 'stats compare' }, ...growth) : null,
+    def.slot === 'arme' && growth.length ? h('p', { class: 'note' }, 'Frappe fracassante, Bond et foudre suivent les dégâts de l’arme.') : null,
+    !growth.length && !maxed && !capped ? h('p', { class: 'note' }, 'Pas de bonus qui monte : la forge lui apporte ses paliers.') : null,
+    h('h3', {}, 'Paliers'),
+    h(
+      'ul',
+      { class: 'paliers' },
+      ...paliersOf(rules, def).map((p) =>
+        h(
+          'li',
+          { class: p.level <= level ? 'reached' : '' },
+          h('b', {}, `Niv. ${p.level}`),
+          h('span', {}, h('strong', {}, p.name), ` · ${p.summary}`),
+        ),
       ),
-      h('div', { class: 'item-meta' }, maxed ? 'Niveau maximum atteint.' : blocked ? `Niveau ${level + 1} : il faut d’abord atteindre le niveau ${level + 1}.` : growth),
-      next ? h('div', { class: 'item-meta palier-next' }, `Palier ${next.level} · ${next.name} : ${next.summary}`) : null,
     ),
-    priceNode ? priceNode.node : h('div'),
-    h(
-      'div',
-      { class: 'forge-buttons' },
-      h('button', { class: 'btn', disabled: !priceNode?.ok, onclick: () => upgrade(1) }, maxed ? 'Maximum' : blocked ? 'Ton niveau' : 'Améliorer'),
-      priceNode
-        ? h('button', { class: 'btn small', disabled: !priceNode.ok, title: 'Améliorer tant que tu peux payer, jusqu’à ton niveau', onclick: () => upgrade(Infinity) }, 'Au max')
-        : null,
-    ),
+    priceNode ? h('h3', {}, 'Prix du niveau suivant') : null,
+    priceNode ? h('div', { class: 'detail-cost' }, priceNode.node) : null,
+    all.to > level + 1
+      ? h(
+          'p',
+          { class: 'note' },
+          `Au max : niv. ${level} → ${all.to} pour `,
+          obole(fr(all.oboles, 0)),
+          ...Object.entries(all.materials).map(([m, n]) => ` · ${n} × ${content.materials[m] ?? m}`),
+        )
+      : null,
+    buttons,
+  );
+}
+
+/** Une ligne de la liste de gauche : nom, niveau, et un repère si une amélioration est payable. */
+function forgePick(ctx: UiContext, id: string, cap: number, selected: boolean, showSlot: boolean, rerender: () => void): HTMLElement {
+  const { progress } = ctx;
+  const def = content.items[id];
+  const level = itemLevel(progress.state, id);
+  const maxed = level >= content.upgrade.maxLevel;
+  const ready = planUpgrade(progress, def, level, cap, 1).to > level;
+  const worn = progress.state.equipped[def.slot as Slot] === id;
+  return h(
+    'button',
+    {
+      class: `pick${selected ? ' selected' : ''}`,
+      title: ready ? 'Amélioration possible' : maxed ? 'Niveau maximum' : level >= cap ? 'Plafond : ton niveau' : 'Pas assez d’oboles ou de matériaux',
+      onclick: () => {
+        memory.forgeItem = id;
+        rerender();
+      },
+    },
+    showSlot ? h('span', { class: 'pick-slot' }, content.slots[def.slot as Slot]) : null,
+    h('span', { class: 'pick-name' }, def.name, worn && !showSlot ? h('i', { class: 'worn-dot', title: 'Porté' }) : null),
+    h('span', { class: 'pick-level' }, maxed ? 'max' : `niv. ${level}`),
+    h('span', { class: `pick-state${ready ? ' ready' : ''}` }, ready ? '▲' : ''),
   );
 }
 
 export function openForge(host: PanelHost, ctx: UiContext): void {
   const render = () => {
     const { progress } = ctx;
+    const { state } = progress;
     const rules = content.upgrade;
     const cap = upgradeCap(rules, progress.level);
-    const slotOrder = Object.keys(content.slots);
-    const upgradable = progress.state.items
+    const slotOrder = Object.keys(content.slots) as Slot[];
+    const upgradable = state.items
       .filter((id) => isUpgradable(rules, content.items[id]))
-      .sort((a, b) => slotOrder.indexOf(content.items[a].slot ?? '') - slotOrder.indexOf(content.items[b].slot ?? ''));
-    const rows: HTMLElement[] = [
-      h(
-        'p',
-        { class: 'note' },
-        `Tetsu améliore ton équipement jusqu’à ton niveau (${cap} / ${rules.maxLevel}). Aux paliers, une pièce gagne un passif : l’arme a les siens, les autres pièces comptent double pour les tags au niveau 25 et deviennent « Tous » au niveau 50.`,
-      ),
-      ...upgradable.map((id) => upgradeRow(ctx, id, cap, render)),
-    ];
+      .sort((a, b) => slotOrder.indexOf(content.items[a].slot as Slot) - slotOrder.indexOf(content.items[b].slot as Slot));
+    const worn = upgradable.filter((id) => state.equipped[content.items[id].slot as Slot] === id);
+    const readyCount = upgradable.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
 
-    rows.push(h('h3', {}, 'Fabriquer'));
-    for (const recipe of content.recipes) {
-      if (!progress.check(recipe.if)) continue;
-      const def = content.items[recipe.item];
-      const price = cost(progress, recipe.oboles, recipe.materials);
-      const owned = progress.has(recipe.item);
-      rows.push(
-        h(
+    const recipes = content.recipes.filter((r) => progress.check(r.if));
+    const toForge = recipes.filter((r) => !progress.has(r.item));
+    const canForge = (r: (typeof recipes)[number]) => cost(progress, r.oboles, r.materials).ok;
+    const craftable = toForge.filter(canForge).length;
+
+    const header = h(
+      'div',
+      { class: 'forge-top' },
+      tabs(
+        [
+          { id: 'upgrade', label: 'Améliorer', count: readyCount },
+          { id: 'craft', label: 'Fabriquer', count: craftable },
+        ],
+        memory.forgeTab,
+        (tab) => {
+          memory.forgeTab = tab;
+          render();
+        },
+      ),
+      h('span', { class: 'note' }, `Jusqu’à ton niveau : ${cap} / ${rules.maxLevel}`),
+    );
+
+    let body: HTMLElement;
+    if (memory.forgeTab === 'upgrade') {
+      const shown = memory.forgeScope === 'worn' ? worn : upgradable;
+      if (!memory.forgeItem || !shown.includes(memory.forgeItem)) memory.forgeItem = shown.find((id) => content.items[id].slot === 'arme') ?? shown[0] ?? null;
+      const selected = memory.forgeItem;
+      const scope = tabs(
+        [
+          { id: 'worn', label: `Portés (${worn.length})` },
+          { id: 'all', label: `Tout (${upgradable.length})` },
+        ],
+        memory.forgeScope,
+        (s) => {
+          memory.forgeScope = s;
+          render();
+        },
+      );
+      scope.classList.add('small');
+
+      let list: (HTMLElement | null)[];
+      if (memory.forgeScope === 'worn') {
+        list = worn.map((id) => forgePick(ctx, id, cap, id === selected, true, render));
+      } else {
+        // Un groupe repliable par emplacement ; celui de la pièce choisie est ouvert.
+        list = slotOrder.map((slot) => {
+          const ids = upgradable.filter((id) => content.items[id].slot === slot);
+          if (!ids.length) return null;
+          const ready = ids.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
+          const holdsSelection = selected !== null && ids.includes(selected);
+          return fold(
+            `forge-${slot}`,
+            holdsSelection,
+            content.slots[slot],
+            h('span', {}, `${ids.length} pièce${ids.length > 1 ? 's' : ''}`, ready ? h('span', { class: 'ready-count', title: 'Améliorations payables' }, `▲ ${ready}`) : null),
+            h('div', { class: 'pick-group' }, ...ids.map((id) => forgePick(ctx, id, cap, id === selected, false, render))),
+          );
+        });
+      }
+      body = h(
+        'div',
+        { class: 'forge' },
+        h('div', { class: 'forge-side' }, scope, h('div', { class: 'pick-list', 'data-scroll': 'forge-list' }, ...list)),
+        selected ? forgeDetail(ctx, selected, cap, render) : h('p', { class: 'note' }, 'Aucune pièce à améliorer pour le moment.'),
+      );
+    } else {
+      // Ce qui reste à forger, les recettes payables d'abord ; les pièces déjà possédées sont repliées.
+      const recipeRow = (recipe: (typeof recipes)[number]) => {
+        const def = content.items[recipe.item];
+        const price = cost(progress, recipe.oboles, recipe.materials);
+        return h(
           'div',
-          { class: 'row' },
-          itemCard(def),
+          { class: 'row recipe' },
+          h(
+            'div',
+            { class: 'item' },
+            h(
+              'div',
+              { class: 'item-head' },
+              h('strong', { title: def.description }, def.name),
+              h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
+              ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
+            ),
+            h('div', { class: 'item-meta' }, `${content.slots[def.slot as Slot]} · ${effectText(def)}`),
+          ),
           price.node,
           h(
             'button',
             {
               class: 'btn',
-              disabled: owned || !price.ok,
+              disabled: !price.ok,
               onclick: () => {
                 progress.gainOboles(-recipe.oboles);
                 for (const [id, amount] of Object.entries(recipe.materials)) progress.gainMaterial(id, -amount);
@@ -295,17 +534,48 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
                 render();
               },
             },
-            owned ? 'Possédé' : 'Forger',
+            'Forger',
           ),
-        ),
+        );
+      };
+      const owned = recipes.filter((r) => progress.has(r.item));
+      body = h(
+        'div',
+        { class: 'list' },
+        toForge.length ? null : h('p', { class: 'note' }, 'Tu as déjà tout ce que Tetsu sait forger.'),
+        ...[...toForge].sort((a, b) => Number(canForge(b)) - Number(canForge(a))).map(recipeRow),
+        owned.length
+          ? fold('forge-owned', false, 'Déjà possédés', String(owned.length), h('ul', { class: 'plain' }, ...owned.map((r) => h('li', {}, content.items[r.item].name))))
+          : null,
       );
     }
-    host.show('Forge de Tetsu', purse(progress), h('div', { class: 'list' }, ...rows), { wide: true });
+
+    host.show('Forge de Tetsu', purse(progress), h('div', { class: 'forge-panel' }, header, body), { wide: true });
   };
   render();
 }
 
 // --- Équipement ---------------------------------------------------------------
+
+/** Ce que change le fait d'équiper un objet : « +12 PV max », « −3 dégâts »… en vert ou en rouge. */
+function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: string; good: boolean }[] {
+  const out: { text: string; good: boolean }[] = [];
+  const add = (diff: number, unit: string, label: string, lowerIsBetter = false) => {
+    if (!diff) return;
+    out.push({ text: `${diff > 0 ? '+' : '−'}${Math.abs(diff)}${unit} ${label}`, good: diff > 0 !== lowerIsBetter });
+  };
+  const a = before.config;
+  const b = after.config;
+  const base = ctx.basePlayer;
+  add(Math.round(b.maxHp) - Math.round(a.maxHp), '', 'PV max');
+  add(Math.round(b.attack.damage) - Math.round(a.attack.damage), '', 'dégâts par coup');
+  add(Math.round(((b.moveSpeed - a.moveSpeed) / base.moveSpeed) * 100), ' %', 'vitesse');
+  add(Math.round(((b.dodge.distance - a.dodge.distance) / base.dodge.distance) * 100), ' %', 'esquive');
+  add(Math.round(((b.damageTakenFactor ?? 1) - (a.damageTakenFactor ?? 1)) * 100), ' %', 'dégâts subis', true);
+  add(Math.round((after.bonus.oboles - before.bonus.oboles) * 100), ' %', 'oboles');
+  add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${content.skills.tag.name}`);
+  return out;
+}
 
 export function openInventory(host: PanelHost, ctx: UiContext): void {
   const render = () => {
@@ -314,33 +584,49 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     const loadout = ctx.loadout();
     const cfg = loadout.config;
     const slots = Object.entries(content.slots) as [Slot, string][];
-    const slotRows = slots.map(([slot, label]) => {
+    const owned = state.items.filter((id) => content.items[id]?.slot);
+    const ofSlot = (slot: Slot) => owned.filter((id) => content.items[id].slot === slot);
+    const current = memory.inventorySlot;
+
+    // À gauche, ce qui est porté : un clic sur un emplacement n'affiche que ses objets à droite.
+    const slotButtons = slots.map(([slot, label]) => {
       const id = state.equipped[slot];
-      const def = id ? content.items[id] : undefined;
-      const name = id && def ? def.name + levelTag(progress, id) : null;
-      return h('div', { class: `slot${name ? '' : ' empty'}` }, h('span', { class: 'slot-label' }, label), h('span', {}, name ?? '—'));
+      const count = ofSlot(slot).length;
+      return h(
+        'button',
+        {
+          class: `slot${id ? '' : ' empty'}${slot === current ? ' selected' : ''}`,
+          onclick: () => {
+            memory.inventorySlot = slot;
+            render();
+          },
+        },
+        h('span', { class: 'slot-label' }, label),
+        h('span', { class: 'slot-item' }, id ? content.items[id].name + levelTag(progress, id) : '—'),
+        h('span', { class: 'slot-count', title: `${count} objet${count > 1 ? 's' : ''} pour cet emplacement` }, String(count)),
+      );
     });
 
-    const owned = state.items.filter((id) => content.items[id]?.slot);
-    const itemButtons = owned.map((id) => {
+    const choices = ofSlot(current).map((id) => {
       const def = content.items[id];
-      const slot = def.slot as Slot;
-      const equipped = state.equipped[slot] === id;
-      const level = levelTag(progress, id);
+      const equipped = state.equipped[current] === id;
+      const delta = equipped ? [] : statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [current]: id } }, content, progress.level));
       return h(
         'button',
         {
           class: `owned${equipped ? ' equipped' : ''}`,
           title: def.description,
           onclick: () => {
-            progress.equip(id, slot);
+            progress.equip(id, current);
             render();
           },
         },
-        h('strong', {}, def.name + level),
-        h('small', {}, `${content.slots[slot]} · ${effectText(def, itemLevel(state, id))}`),
+        h('strong', {}, def.name + levelTag(progress, id)),
+        h('small', {}, effectText(def, itemLevel(state, id))),
         def.tags?.length ? h('small', { class: 'tags' }, def.tags.join(' · ')) : null,
-        equipped ? h('span', { class: 'badge' }, 'Équipé') : null,
+        equipped
+          ? h('span', { class: 'badge' }, 'Équipé')
+          : h('span', { class: 'deltas' }, ...(delta.length ? delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text)) : [h('span', { class: 'delta' }, 'Mêmes caractéristiques')])),
       );
     });
 
@@ -348,7 +634,6 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     const tagLine = h(
       'div',
       { class: 'tag-tiers' },
-      h('strong', {}, `${content.skills.tag.name} ${loadout.tagCount} / ${tiers[tiers.length - 1].count}`),
       ...tiers.map((t, i) => h('div', { class: `tier${i <= loadout.tier ? ' active' : ''}` }, h('b', {}, `(${t.count})`), ` ${t.description}`)),
     );
 
@@ -371,10 +656,9 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       loadout.bonus.oboles ? h('dd', {}, `+${Math.round(loadout.bonus.oboles * 100)} %`) : null,
     );
 
-    const materials = Object.entries(content.materials)
-      .filter(([id]) => progress.material(id) > 0)
-      .map(([id, name]) => h('li', {}, `${name} × ${progress.material(id)}`));
-    const questItems = state.items.filter((id) => !content.items[id]?.slot).map((id) => h('li', { title: content.items[id]?.description ?? '' }, content.items[id]?.name ?? id));
+    const materials = Object.entries(content.materials).filter(([id]) => progress.material(id) > 0);
+    const questItems = state.items.filter((id) => !content.items[id]?.slot);
+    const top = tiers[tiers.length - 1].count;
 
     host.show(
       'Équipement',
@@ -382,17 +666,42 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       h(
         'div',
         { class: 'inventory' },
-        h('div', { class: 'col' }, h('h3', {}, 'Porté'), ...slotRows, h('h3', {}, 'Tags de classe'), tagLine, h('h3', {}, 'Caractéristiques'), stats),
         h(
           'div',
           { class: 'col' },
-          h('h3', {}, 'Objets'),
-          h('div', { class: 'owned-list' }, ...itemButtons),
-          h('p', { class: 'note' }, 'Clique sur un objet pour l’équiper ou le retirer.'),
-          h('h3', {}, 'Matériaux'),
-          materials.length ? h('ul', { class: 'plain' }, ...materials) : h('p', { class: 'note' }, 'Les ennemis des Rizières noyées en laissent tomber.'),
-          questItems.length ? h('h3', {}, 'Objets de quête') : null,
-          questItems.length ? h('ul', { class: 'plain' }, ...questItems) : null,
+          h('h3', {}, 'Porté'),
+          h('div', { class: 'slots' }, ...slotButtons),
+          fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${cfg.attack.damage} dégâts`, stats),
+          fold('inv-tags', false, 'Tags de classe', `${content.skills.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
+          fold(
+            'inv-materials',
+            false,
+            'Matériaux',
+            materials.length ? String(materials.reduce((sum, [id]) => sum + progress.material(id), 0)) : 'aucun',
+            materials.length
+              ? h('div', { class: 'chips' }, ...materials.map(([id, name]) => h('span', { class: 'chip' }, name, h('b', {}, `× ${progress.material(id)}`))))
+              : h('p', { class: 'note' }, 'Les ennemis des Rizières noyées en laissent tomber.'),
+          ),
+          questItems.length
+            ? fold(
+                'inv-quest',
+                false,
+                'Objets de quête',
+                String(questItems.length),
+                h('ul', { class: 'plain' }, ...questItems.map((id) => h('li', { title: content.items[id]?.description ?? '' }, content.items[id]?.name ?? id))),
+              )
+            : null,
+        ),
+        h(
+          'div',
+          { class: 'col' },
+          h('h3', {}, `${content.slots[current]} · ${choices.length} objet${choices.length > 1 ? 's' : ''}`),
+          choices.length
+            ? h('div', { class: 'owned-list', 'data-scroll': 'inventory-list' }, ...choices)
+            : h('p', { class: 'note' }, 'Aucun objet pour cet emplacement. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.'),
+          choices.length
+            ? h('p', { class: 'note' }, current === 'arme' ? 'Clique sur une arme pour la prendre en main.' : 'Clique sur un objet pour l’équiper ; clique sur l’objet porté pour le retirer.')
+            : null,
         ),
       ),
       { wide: true },
