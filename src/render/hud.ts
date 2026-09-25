@@ -67,9 +67,10 @@ export class Hud {
 
     for (const event of events) {
       if (event.type === 'wave') {
-        this.announce(`Vague ${event.index + 1} / ${event.total}`, event.label, event.hint);
+        const level = world.cfg.difficulty?.level ?? 1;
+        this.announce(`Niveau ${level} · Vague ${event.index + 1} / ${event.total}`, event.label, event.hint);
       } else if (event.type === 'bossPhase') {
-        this.bossName.textContent = `Jorōgumo · ${event.label}`;
+        this.bossName.textContent = `Jorōgumo · niv. ${world.cfg.difficulty?.level ?? 1} · ${event.label}`;
         this.announce(`Phase ${event.phase} / 3`, event.label, event.hint);
       } else if (event.type === 'end') {
         this.hint.classList.remove('visible');
@@ -89,10 +90,10 @@ export class Hud {
     this.hint.classList.toggle('visible', Boolean(hint));
   }
 
-  reset(): void {
+  reset(level = 1): void {
     this.hint.classList.remove('visible');
     this.banner.classList.remove('visible');
     this.bannerTimer = 0;
-    this.bossName.textContent = 'Jorōgumo';
+    this.bossName.textContent = `Jorōgumo · niv. ${level}`;
   }
 }

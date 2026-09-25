@@ -32,6 +32,11 @@
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 3 }
       ],
+      "paliers": [
+        { "level": 10, "name": "Allonge", "summary": "+0,3 de portée", "effects": [{ "op": "add", "path": "attack.range", "value": 0.3 }] },
+        { "level": 25, "name": "Moisson", "summary": "+2 rage par coup porté", "effects": [{ "op": "add", "path": "attack.rageOnHit", "value": 2 }] },
+        { "level": 50, "name": "Faux des rizières", "summary": "Frappe fracassante : zone +25 %", "effects": [{ "op": "mul", "path": "smash.radius", "value": 1.25 }] }
+      ],
       "description": "Une longue lame de paysan, au manche entouré de tissu délavé. Elle a coupé plus de riz que d'ennemis."
     },
     "kanabo": {
@@ -49,6 +54,11 @@
         { "op": "set", "path": "attack.knockback", "value": 6 },
         { "op": "add", "path": "smash.stun", "value": 0.8 }
       ],
+      "paliers": [
+        { "level": 10, "name": "Poids de l'oni", "summary": "Recul des coups +2", "effects": [{ "op": "add", "path": "attack.knockback", "value": 2 }] },
+        { "level": 25, "name": "Fracas", "summary": "Frappe fracassante : étourdit 0,5 s de plus", "effects": [{ "op": "add", "path": "smash.stun", "value": 0.5 }] },
+        { "level": 50, "name": "Colère de l'oni", "summary": "Frappe fracassante : +50 % de dégâts", "effects": [{ "op": "mul", "path": "smash.damage", "value": 1.5 }] }
+      ],
       "description": "Une massue de fer cloutée, arrachée à un kappa qui l'avait volée à un oni. Personne n'a osé la réclamer."
     },
     "katana-ronin": {
@@ -65,6 +75,11 @@
         { "op": "set", "path": "attack.recovery", "value": 0.15 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
         { "op": "set", "path": "perks.guardRageFactor", "value": 0.5 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Lame vive", "summary": "Récupération des coups −15 %", "effects": [{ "op": "mul", "path": "attack.recovery", "value": 0.85 }] },
+        { "level": 25, "name": "Iaijutsu", "summary": "Bloquer rapporte encore 50 % de rage en plus", "effects": [{ "op": "add", "path": "perks.guardRageFactor", "value": 0.5 }] },
+        { "level": 50, "name": "Dernier rōnin", "summary": "Esquive rechargée 30 % plus vite", "effects": [{ "op": "mul", "path": "dodge.cooldown", "value": 0.7 }] }
       ],
       "description": "La lame d'un samouraï sans maître, pris dans les toiles de la Jorōgumo. Son cordon rouge est effiloché."
     },
@@ -307,7 +322,24 @@
     }
   },
   "forge": {
-    "weapon": { "maxLevel": 5, "damagePerLevel": 2, "obolesPerLevel": 20, "material": "ecaille" },
+    "upgrade": {
+      "about": "Amélioration chez Tetsu, plafonnée au niveau du joueur (GDD). Coût du niveau n au niveau n+1 : base × n^exposant oboles, (1 + n ÷ materialEvery) matériaux de l'emplacement, et à partir de bossMaterial.from un matériau du boss. Le niveau de l'arme multiplie tous ses dégâts (coup, Frappe fracassante, Bond, foudre) ; celui d'une pièce multiplie ses PV, dégâts et armure. Vitesse, esquive et oboles ne montent pas : les paliers ouvrent des options plutôt que des stats brutes.",
+      "maxLevel": 50,
+      "slots": ["arme", "casque", "plastron", "jambieres", "bottes", "amulette"],
+      "weaponPerLevel": 0.06,
+      "hpPerLevel": 0.1,
+      "damagePerLevel": 0.06,
+      "armorPerLevel": 0.01,
+      "armorCap": 0.6,
+      "oboles": { "base": 8, "exponent": 1.2 },
+      "materials": { "arme": "ecaille", "casque": "masque", "plastron": "ecaille", "jambieres": "papier", "bottes": "papier", "amulette": "braise" },
+      "materialEvery": 10,
+      "bossMaterial": { "id": "soie", "from": 25 },
+      "paliers": [
+        { "level": 25, "id": "double", "name": "Forgé par Tetsu", "summary": "Compte double pour les paliers de classe" },
+        { "level": 50, "id": "tous", "name": "Âme liée", "summary": "Gagne le tag « Tous »" }
+      ]
+    },
     "recipes": [
       { "item": "carapace-kappa", "oboles": 30, "materials": { "ecaille": 3 } },
       { "item": "suneate-ecailles", "oboles": 20, "materials": { "ecaille": 2, "papier": 1 } },

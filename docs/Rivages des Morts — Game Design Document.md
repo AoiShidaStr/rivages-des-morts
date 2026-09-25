@@ -391,11 +391,11 @@ Le build se construit avec l'équipement choisi avant chaque donjon, et tout ce 
 | Entre les donjons | Armes de l'arsenal, reliques, niveaux d'équipement, classes débloquées, emplacement de classe secondaire, talents de race | Tout |
 | Monde | Quêtes, îles et donjons débloqués, agrandissement de la barque | Tout |
 
-**Niveau du personnage** : niveau max 20 pour l'instant, environ 5 niveaux par île (Yomi 1-5, Hadès 6-10, Duat 11-15, Helheim 16-20, Mésopotamie au niveau max). Objectif à terme : niveau 50, le plafond montant avec les nouvelles îles. Une fois au niveau max, la progression passe par l'équipement.
+**Niveau du personnage** : niveau max 50. Les points de talent s'arrêtent au niveau 10 (9 points pour 12 nœuds) ; au-delà, chaque niveau donne des PV et relève le plafond de la forge. Les niveaux de donjon permettent de progresser sur une seule île en attendant les suivantes (Hadès, Duat, Helheim, Mésopotamie). Une fois au niveau max, la progression passe par l'équipement.
 
-**Donjons dans la durée** (plus tard) : pour que les anciens donjons ne meurent pas, deux systèmes à détailler.
+**Donjons dans la durée** : pour que les anciens donjons ne meurent pas, deux systèmes.
 
-- **Difficulté à l'entrée** : paliers de stase ou niveau choisi en entrant, comme dans Waven, avec de meilleures récompenses aux paliers élevés.
+- **Difficulté à l'entrée** (en place) : niveau de donjon choisi en entrant, de 1 à 100, comme dans Waven. Chaque niveau ajoute des PV (+6 %) et des dégâts (+3,5 %) aux yokai, et tous les 10 niveaux environ une malédiction du Yomi s'ajoute : Hâte des morts, Âmes d'élite, Feux follets vengeurs, Sève du Yomi, Écorce des kodama, Rancune des noyés, jusqu'au Regard d'Izanami au niveau 100. Les récompenses montent aussi (oboles, XP, butin rare, matériaux). Vaincre la Jorōgumo ouvre le niveau suivant. Réglages dans `src/data/difficulty.json`.
 - **Rotation** : certains donjons sont mis en avant par période, avec des bonus (drops, matériaux). Une version plus poussée que celle de Waven.
 
 ### Ressources, monnaies & amélioration
@@ -430,7 +430,7 @@ Les compétences et passifs se débloquent en montant de niveau, dans un arbre d
 
 **Options d'amélioration (validées)**
 
-1. **Niveaux d'arme** (V1) : les matériaux montent le niveau d'une arme, plafonné au niveau du personnage. Certains paliers débloquent un passif.
+1. **Niveaux d'équipement** (en place) : oboles et matériaux montent le niveau de l'arme et des cinq pièces d'équipement jusqu'à 50, plafonné au niveau du personnage. L'arme multiplie tous ses dégâts et gagne ses propres passifs aux niveaux 10, 25 et 50 ; une pièce d'équipement compte double pour les paliers de tags au niveau 25 et gagne le tag « Tous » au niveau 50. Les reliques attendent l'éveil et la fusion.
 2. **Éveil de relique** (plus tard) : un Éclat des Tablettes éveille une relique et renforce son effet. Exemple : l'Égide éveillée pétrifie en zone.
 3. **Sceaux** (plus tard, à développer et équilibrer) : graver un sceau sur une arme lui ajoute un tag de classe.
 4. **Fusion** (plus tard) : fusionner des reliques identiques les fait monter de niveau.
@@ -517,4 +517,5 @@ Le niveau max de la V1 (10) est une proposition, à ajuster selon la durée de j
 - [x] Compétences et passifs : arbre de compétences par classe débloqué en montant de niveau
 - [x] Mort : on garde ressources et coffres, on perd la progression dans le donjon
 - [x] Niveau max du personnage : 20 pour l'instant (l'XP vient des ennemis tués, gardée même en cas d'échec)
-- [ ] Plus tard : niveau max 50, difficulté à l'entrée des donjons, système de rotation
+- [x] Niveau max 50 (points de talent toujours limités aux niveaux 2 à 10), équipement jusqu'au niveau 50, difficulté à l'entrée des donjons (niveaux 1 à 100)
+- [ ] Plus tard : système de rotation des donjons

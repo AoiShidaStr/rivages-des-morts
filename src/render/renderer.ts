@@ -88,6 +88,8 @@ interface Snapshot {
   blink: boolean;
   /** Frénésie : le héros rougeoie. */
   aura?: boolean;
+  /** Ennemi d'élite (niveau de donjon élevé). */
+  elite?: boolean;
 }
 
 interface SpriteEntry {
@@ -173,6 +175,8 @@ const DUST = new Color3(0.86, 0.78, 0.6);
 const SILK = new Color3(0.93, 0.95, 0.98);
 const FIRE = new Color3(1, 0.55, 0.2);
 const FRENZY_TINT = new Color3(1, 0.7, 0.6);
+const ELITE_TINT = new Color3(1, 0.62, 0.38);
+const ELITE_SCALE = 1.22;
 const STORM = new Color3(0.8, 0.9, 1);
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
@@ -373,6 +377,7 @@ export class Renderer {
         altitude: enemy.altitude,
         spawn: enemy.spawnProgress,
         blink: false,
+        elite: enemy.elite,
       }, dt);
     }
     for (const [id, view] of this.views) {
@@ -500,10 +505,12 @@ export class Renderer {
       tint = FRENZY_TINT;
       sy *= 1 + 0.03 * Math.sin(t * 16);
     }
+    // Élite : plus grande, et une lueur rouge doré qui pulse.
+    if (s.elite && tint === WHITE) tint = Color3.Lerp(WHITE, ELITE_TINT, 0.65 + 0.35 * Math.sin(t * 5));
     const k = Math.min(1, dt * 18);
     view.sx += (sx - view.sx) * k;
     view.sy += (sy - view.sy) * k;
-    const grow = 0.6 + 0.4 * s.spawn;
+    const grow = (0.6 + 0.4 * s.spawn) * (s.elite ? ELITE_SCALE : 1);
     view.sprite.scaling.set(view.sx * grow, view.sy * grow, 1);
 
     const lift = view.def.lift ?? 0;

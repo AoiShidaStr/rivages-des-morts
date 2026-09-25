@@ -1,3 +1,4 @@
+import type { Difficulty } from './difficulty';
 import type { EnemyKind } from './types';
 
 // Forme des fichiers de src/data : les valeurs s'équilibrent là-bas, sans toucher au code du combat.
@@ -297,4 +298,6 @@ export interface GameConfig {
   webs: WebConfig;
   stumpRadius: number;
   waves: WaveConfig[];
+  /** Niveau du donjon choisi à l'entrée ; absent = niveau 1, sans renfort. */
+  difficulty?: Difficulty;
 }

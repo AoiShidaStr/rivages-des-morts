@@ -12,8 +12,10 @@ export interface ProgressState {
   talents: string[];
   items: string[];
   equipped: Partial<Record<Slot, string>>;
-  /** Niveau de chaque arme possédée (forge de Tetsu). */
-  weaponLevels: Record<string, number>;
+  /** Niveau de forge de chaque pièce d'équipement possédée (forge de Tetsu). */
+  itemLevels: Record<string, number>;
+  /** Donjon des Rizières noyées : plus haut niveau ouvert, et plus haut niveau vaincu. */
+  dungeon: { unlocked: number; best: number };
   materials: Record<string, number>;
   /** Drapeaux et compteurs libres, posés par les dialogues. */
   flags: Record<string, number>;
@@ -71,6 +73,8 @@ export interface Catalog {
   itemSlot(id: string): Slot | undefined;
   /** Niveau atteint avec cette expérience. */
   levelFor(xp: number): number;
+  /** Points de talent gagnés en tout à ce niveau. */
+  talentPoints(level: number): number;
   triggers: { if: Condition[]; then: Effect[] }[];
 }
 
@@ -87,7 +91,8 @@ function fresh(): ProgressState {
     talents: [],
     items: [STARTING_WEAPON],
     equipped: { arme: STARTING_WEAPON },
-    weaponLevels: { [STARTING_WEAPON]: 1 },
+    itemLevels: { [STARTING_WEAPON]: 1 },
+    dungeon: { unlocked: 1, best: 0 },
     materials: {},
     flags: {},
     quests: {},
@@ -105,7 +110,7 @@ export class Progress {
   static load(catalog: Catalog): Progress {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as ProgressState & { weaponLevel?: number }) : null;
+      const parsed = raw ? (JSON.parse(raw) as SavedState) : null;
       if (parsed?.version === 1) return new Progress(migrate(parsed), catalog);
     } catch {
       // Sauvegarde illisible ou stockage indisponible : on repart de zéro.
@@ -160,23 +165,36 @@ export class Progress {
 
   /** Points de compétence encore à dépenser. */
   get skillPoints(): number {
-    return Math.max(0, this.level - 1 - this.state.talents.length);
+    return Math.max(0, this.catalog.talentPoints(this.level) - this.state.talents.length);
   }
 
-  /** Ajoute de l'expérience ; renvoie les niveaux atteints (souvent aucun). */
-  gainXp(amount: number): number[] {
+  /** Ajoute de l'expérience ; renvoie les annonces des niveaux atteints (souvent aucune). */
+  gainXp(amount: number): Action[] {
     const before = this.level;
     this.state.xp += Math.max(0, Math.round(amount));
-    const reached: number[] = [];
-    for (let level = before + 1; level <= this.level; level++) reached.push(level);
-    return reached;
+    const actions: Action[] = [];
+    for (let level = before + 1; level <= this.level; level++) {
+      const point = this.catalog.talentPoints(level) > this.catalog.talentPoints(level - 1);
+      actions.push(levelUpToast(level, point));
+    }
+    return actions;
   }
 
   /** Range un nouvel objet et l'équipe si son emplacement est libre. */
   acquire(item: string, slot?: Slot): void {
     if (!this.has(item)) this.state.items.push(item);
     if (slot && !this.state.equipped[slot]) this.state.equipped[slot] = item;
-    if (slot === 'arme') this.state.weaponLevels[item] ??= 1;
+    if (slot) this.state.itemLevels[item] ??= 1;
+  }
+
+  /** Une victoire au niveau `level` ouvre le niveau suivant ; renvoie vrai si c'est un nouveau niveau. */
+  winDungeon(level: number, maxLevel: number): boolean {
+    const dungeon = this.state.dungeon;
+    dungeon.best = Math.max(dungeon.best, level);
+    const next = Math.min(maxLevel, level + 1);
+    if (next <= dungeon.unlocked) return false;
+    dungeon.unlocked = next;
+    return true;
   }
 
   check(conditions: readonly Condition[] | undefined): boolean {
@@ -267,7 +285,7 @@ export class Progress {
     if (e.open === 'forge') actions.push({ kind: 'forge' });
     if (e.xp) {
       actions.push({ kind: 'toast', text: `+${e.xp} XP`, tone: 'loot' });
-      for (const level of this.gainXp(e.xp)) actions.push(levelUpToast(level));
+      actions.push(...this.gainXp(e.xp));
     }
     if (e.resetTalents && state.talents.length > 0) {
       state.talents = [];
@@ -278,15 +296,21 @@ export class Progress {
   }
 }
 
-export function levelUpToast(level: number): Action {
-  return { kind: 'toast', text: `Niveau ${level} ! +1 point de compétence (touche K)`, tone: 'quest' };
+function levelUpToast(level: number, point: boolean): Action {
+  const text = point ? `Niveau ${level} ! +1 point de compétence (touche K)` : `Niveau ${level} ! Tetsu peut forger ton équipement jusqu’au niveau ${level}.`;
+  return { kind: 'toast', text, tone: 'quest' };
 }
 
-/** Sauvegardes plus anciennes : un seul niveau d'arme, pas d'arme de départ dans l'inventaire. */
-function migrate(saved: ProgressState & { weaponLevel?: number }): ProgressState {
-  const { weaponLevel, ...rest } = saved;
-  const state = { ...fresh(), ...rest };
-  state.weaponLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...saved.weaponLevels };
+/** Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon. */
+type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeon'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'dungeon'>> & { weaponLevel?: number; weaponLevels?: Record<string, number> };
+
+function migrate(saved: SavedState): ProgressState {
+  const { weaponLevel, weaponLevels, ...rest } = saved;
+  const state: ProgressState = { ...fresh(), ...rest };
+  state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
+  // Une Jorōgumo déjà vaincue compte comme une victoire au niveau 1.
+  state.dungeon = saved.dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });
   if (!state.items.includes(STARTING_WEAPON)) state.items.unshift(STARTING_WEAPON);
   state.equipped.arme ??= STARTING_WEAPON;
   return state;

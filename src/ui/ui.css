@@ -937,6 +937,97 @@ body:not([data-mode='dungeon']) #hud {
   color: var(--vermilion-dark);
 }
 
+/* --- Forge sur 50 niveaux et entrée du donjon --------------------------------- */
+
+.btn.small {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+.forge-buttons {
+  display: grid;
+  gap: 5px;
+}
+
+.tag.palier {
+  border-color: var(--gold);
+  background: rgba(217, 180, 90, 0.25);
+  color: var(--ink);
+}
+
+.palier-next {
+  color: #8a6d2c;
+}
+
+.level-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.level-picker input[type='range'] {
+  flex: 1;
+  pointer-events: auto;
+  accent-color: var(--vermilion);
+}
+
+.level-value {
+  min-width: 96px;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  text-align: right;
+}
+
+.entry-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 24px;
+}
+
+.curses {
+  display: grid;
+  gap: 6px;
+}
+
+.curse {
+  display: grid;
+  gap: 2px;
+  padding: 7px 10px;
+  border-left: 3px solid var(--vermilion);
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+}
+
+.curse small {
+  color: var(--ink-2);
+}
+
+.note.danger {
+  color: var(--vermilion-dark);
+  font-weight: 600;
+}
+
+.entry-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result-level {
+  margin: -4px 0 6px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.result-unlock {
+  margin-bottom: 6px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
 .tag-tiers {
   display: grid;
   gap: 4px;

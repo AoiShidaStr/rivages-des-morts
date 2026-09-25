@@ -27,6 +27,8 @@ const config: GameConfig = {
 /** `?vague=7` lance directement le donjon à la septième vague (le boss), pour tester sans passer par l'île. */
 const params = new URLSearchParams(location.search);
 const devWave = params.has('vague') ? Math.max(0, Number(params.get('vague')) - 1) || 0 : null;
+/** `?vague=1&niveau=40` : même chose, au niveau de donjon 40. */
+const devLevel = params.has('niveau') ? Number(params.get('niveau')) || 1 : null;
 
 /** `?pixel=0` revient aux images peintes, pour comparer avec les planches en pixel art. */
 function spriteManifest(): SpriteManifest {
@@ -62,6 +64,7 @@ async function start(): Promise<void> {
     island,
     uiRoot: element('ui'),
     devWave,
+    devLevel,
   });
   app.start();
 

@@ -1,8 +1,13 @@
 import { content } from '../content';
 import type { PlayerConfig } from '../game/config';
-import { canLearn, levelProgress, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
+import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '../game/difficulty';
+import { isUpgradable, nextPalier, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
+import { canLearn, itemLevel, levelProgress, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { Progress, Slot } from '../game/progress';
 import { h, obole } from './dom';
+
+/** Nombre à la française : « 1,35 ». */
+const fr = (value: number, digits = 2): string => value.toLocaleString('fr-FR', { maximumFractionDigits: digits });
 
 export interface UiContext {
   progress: Progress;
@@ -74,9 +79,18 @@ export function bonusText(bonus: Bonus | undefined): string {
   return parts.join(' · ');
 }
 
-/** Ce que fait un objet, en une ligne. */
-function effectText(def: ItemDef): string {
-  return [def.summary, bonusText(def.bonus)].filter(Boolean).join(' · ') || 'Aucun effet';
+/** Ce que fait un objet à son niveau de forge, en une ligne (bonus renforcés, paliers atteints). */
+function effectText(def: ItemDef, level = 1): string {
+  const rules = content.upgrade;
+  const upgradable = isUpgradable(rules, def);
+  const bonus = upgradable ? scaledBonus(rules, def.bonus, level) : def.bonus;
+  const paliers = upgradable ? reachedPaliers(rules, def, level).map((p) => p.name) : [];
+  return [def.summary, bonusText(bonus), ...paliers].filter(Boolean).join(' · ') || 'Aucun effet';
+}
+
+/** « (niv. 12) » pour une pièce que la forge peut améliorer. */
+function levelTag(progress: Progress, id: string): string {
+  return isUpgradable(content.upgrade, content.items[id]) ? ` (niv. ${itemLevel(progress.state, id)})` : '';
 }
 
 function itemCard(def: ItemDef, extra?: string): HTMLElement {
@@ -164,48 +178,97 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
 
 // --- Forge ------------------------------------------------------------------
 
+/** Dégâts du coup d'une arme à ce niveau de forge. */
+function weaponDamage(ctx: UiContext, def: ItemDef, level: number): number {
+  const set = def.effects?.find((e) => e.op === 'set' && e.path === 'attack.damage');
+  const base = set ? Number(set.value) : ctx.basePlayer.attack.damage;
+  return Math.round(base * weaponPower(content.upgrade, level));
+}
+
+/** Une pièce à améliorer : ce que donne le niveau suivant, le prochain palier, le prix. */
+function upgradeRow(ctx: UiContext, id: string, cap: number, rerender: () => void): HTMLElement {
+  const { progress } = ctx;
+  const { state } = progress;
+  const rules = content.upgrade;
+  const def = content.items[id];
+  const level = itemLevel(state, id);
+  const maxed = level >= rules.maxLevel;
+  const blocked = !maxed && level >= cap;
+  const growth =
+    def.slot === 'arme'
+      ? `Dégâts ${weaponDamage(ctx, def, level)} → ${weaponDamage(ctx, def, level + 1)} · Frappe fracassante, Bond et foudre suivent`
+      : `${bonusText(scaledBonus(rules, def.bonus, level)) || 'Aucun bonus'} → ${bonusText(scaledBonus(rules, def.bonus, level + 1)) || 'aucun bonus'}`;
+  const price = maxed || blocked ? null : upgradeCost(rules, def, level);
+  const priceNode = price ? cost(progress, price.oboles, price.materials) : null;
+  const next = nextPalier(rules, def, level);
+
+  // Monte d'un niveau, ou autant que possible (« Au max ») sans dépasser le niveau du joueur.
+  const upgrade = (times: number) => {
+    const before = reachedPaliers(rules, def, level).length;
+    let done = 0;
+    while (done < times) {
+      const lvl = itemLevel(state, id);
+      if (lvl >= cap) break;
+      const c = upgradeCost(rules, def, lvl);
+      if (state.oboles < c.oboles || Object.entries(c.materials).some(([m, n]) => progress.material(m) < n)) break;
+      progress.gainOboles(-c.oboles);
+      for (const [m, n] of Object.entries(c.materials)) progress.gainMaterial(m, -n);
+      state.itemLevels[id] = lvl + 1;
+      done++;
+    }
+    if (!done) return;
+    progress.save();
+    const reached = itemLevel(state, id);
+    ctx.toast(`${def.name} : niveau ${reached}`, 'loot');
+    for (const p of reachedPaliers(rules, def, reached).slice(before)) ctx.toast(`Palier ${p.level} · ${p.name} : ${p.summary}`, 'quest');
+    rerender();
+  };
+
+  return h(
+    'div',
+    { class: 'row forge-row' },
+    h(
+      'div',
+      { class: 'item' },
+      h(
+        'div',
+        { class: 'item-head' },
+        h('strong', {}, `${def.name} · niv. ${level}`),
+        h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, content.slots[def.slot as Slot]),
+        ...reachedPaliers(rules, def, level).map((p) => h('span', { class: 'tag palier', title: p.summary }, p.name)),
+      ),
+      h('div', { class: 'item-meta' }, maxed ? 'Niveau maximum atteint.' : blocked ? `Niveau ${level + 1} : il faut d’abord atteindre le niveau ${level + 1}.` : growth),
+      next ? h('div', { class: 'item-meta palier-next' }, `Palier ${next.level} · ${next.name} : ${next.summary}`) : null,
+    ),
+    priceNode ? priceNode.node : h('div'),
+    h(
+      'div',
+      { class: 'forge-buttons' },
+      h('button', { class: 'btn', disabled: !priceNode?.ok, onclick: () => upgrade(1) }, maxed ? 'Maximum' : blocked ? 'Ton niveau' : 'Améliorer'),
+      priceNode
+        ? h('button', { class: 'btn small', disabled: !priceNode.ok, title: 'Améliorer tant que tu peux payer, jusqu’à ton niveau', onclick: () => upgrade(Infinity) }, 'Au max')
+        : null,
+    ),
+  );
+}
+
 export function openForge(host: PanelHost, ctx: UiContext): void {
   const render = () => {
     const { progress } = ctx;
-    const forge = content.weapon;
-    const rows: HTMLElement[] = [];
-
-    // Affûtage de chaque arme possédée.
-    for (const id of progress.state.items.filter((i) => content.items[i]?.slot === 'arme')) {
-      const def = content.items[id];
-      const level = progress.state.weaponLevels[id] ?? 1;
-      const price = cost(progress, forge.obolesPerLevel * level, { [forge.material]: level });
-      const maxed = level >= forge.maxLevel;
-      rows.push(
-        h(
-          'div',
-          { class: 'row' },
-          h(
-            'div',
-            { class: 'item' },
-            h('div', { class: 'item-head' }, h('strong', {}, `${def.name} · niveau ${level}`), h('span', { class: 'rarity r-arme' }, 'arme')),
-            h('div', { class: 'item-meta' }, maxed ? 'Niveau maximum atteint.' : `Affûter : niveau ${level + 1}, +${forge.damagePerLevel} dégâts`),
-          ),
-          maxed ? h('div') : price.node,
-          h(
-            'button',
-            {
-              class: 'btn',
-              disabled: maxed || !price.ok,
-              onclick: () => {
-                progress.gainOboles(-forge.obolesPerLevel * level);
-                progress.gainMaterial(forge.material, -level);
-                progress.state.weaponLevels[id] = level + 1;
-                progress.save();
-                ctx.toast(`${def.name} : niveau ${level + 1}`, 'loot');
-                render();
-              },
-            },
-            maxed ? 'Maximum' : 'Affûter',
-          ),
-        ),
-      );
-    }
+    const rules = content.upgrade;
+    const cap = upgradeCap(rules, progress.level);
+    const slotOrder = Object.keys(content.slots);
+    const upgradable = progress.state.items
+      .filter((id) => isUpgradable(rules, content.items[id]))
+      .sort((a, b) => slotOrder.indexOf(content.items[a].slot ?? '') - slotOrder.indexOf(content.items[b].slot ?? ''));
+    const rows: HTMLElement[] = [
+      h(
+        'p',
+        { class: 'note' },
+        `Tetsu améliore ton équipement jusqu’à ton niveau (${cap} / ${rules.maxLevel}). Aux paliers, une pièce gagne un passif : l’arme a les siens, les autres pièces comptent double pour les tags au niveau 25 et deviennent « Tous » au niveau 50.`,
+      ),
+      ...upgradable.map((id) => upgradeRow(ctx, id, cap, render)),
+    ];
 
     rows.push(h('h3', {}, 'Fabriquer'));
     for (const recipe of content.recipes) {
@@ -237,7 +300,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         ),
       );
     }
-    host.show('Forge de Tetsu', purse(progress), h('div', { class: 'list' }, ...rows));
+    host.show('Forge de Tetsu', purse(progress), h('div', { class: 'list' }, ...rows), { wide: true });
   };
   render();
 }
@@ -254,7 +317,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     const slotRows = slots.map(([slot, label]) => {
       const id = state.equipped[slot];
       const def = id ? content.items[id] : undefined;
-      const name = def ? (slot === 'arme' ? `${def.name} (niv. ${state.weaponLevels[id!] ?? 1})` : def.name) : null;
+      const name = id && def ? def.name + levelTag(progress, id) : null;
       return h('div', { class: `slot${name ? '' : ' empty'}` }, h('span', { class: 'slot-label' }, label), h('span', {}, name ?? '—'));
     });
 
@@ -263,7 +326,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       const def = content.items[id];
       const slot = def.slot as Slot;
       const equipped = state.equipped[slot] === id;
-      const level = slot === 'arme' ? ` (niv. ${state.weaponLevels[id] ?? 1})` : '';
+      const level = levelTag(progress, id);
       return h(
         'button',
         {
@@ -275,7 +338,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           },
         },
         h('strong', {}, def.name + level),
-        h('small', {}, `${content.slots[slot]} · ${effectText(def)}`),
+        h('small', {}, `${content.slots[slot]} · ${effectText(def, itemLevel(state, id))}`),
         def.tags?.length ? h('small', { class: 'tags' }, def.tags.join(' · ')) : null,
         equipped ? h('span', { class: 'badge' }, 'Équipé') : null,
       );
@@ -405,7 +468,7 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
 
     host.show(
       'Arbre de compétences',
-      '1 point par niveau · les nœuds d’une branche s’apprennent dans l’ordre · réinitialisation gratuite sur la barque de Charon',
+      `1 point par niveau jusqu’au niveau ${skills.levels.pointsUntil} · les nœuds d’une branche s’apprennent dans l’ordre · réinitialisation gratuite sur la barque de Charon`,
       h('div', { class: 'list' }, header, h('div', { class: 'tree' }, ...branches), h('h3', {}, 'Passifs et compétences'), passives),
       { wide: true },
     );
@@ -452,6 +515,113 @@ export function openQuests(host: PanelHost, ctx: UiContext): void {
       ...done.map((e) => card(e, true)),
     ),
   );
+}
+
+// --- Entrée du donjon -----------------------------------------------------------
+
+/**
+ * Choix du niveau des Rizières noyées (GDD : « Difficulté à l'entrée », comme dans Waven).
+ * Seuls les niveaux déjà ouverts sont proposés ; vaincre la Jorōgumo ouvre le suivant.
+ */
+export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (level: number) => void): void {
+  const data = content.difficulty;
+  const { progress } = ctx;
+  const unlocked = clampLevel(data, progress.state.dungeon.unlocked);
+  const playerLevel = progress.level;
+  let level = Math.min(unlocked, Math.max(1, playerLevel));
+
+  const slider = h('input', { type: 'range', min: '1', max: String(unlocked), value: String(level), 'aria-label': 'Niveau du donjon' });
+  const value = h('strong', { class: 'level-value' });
+  const details = h('div', { class: 'entry-details' });
+  const set = (n: number) => {
+    level = clampLevel(data, Math.min(unlocked, n));
+    slider.value = String(level);
+    update();
+  };
+  slider.addEventListener('input', () => set(Number(slider.value)));
+
+  const update = () => {
+    const d = difficultyFor(data, level);
+    const r = rewardsFor(data, level);
+    const curses = activeCurses(data, level);
+    const next = nextCurse(data, level);
+    value.textContent = `Niveau ${level}`;
+    const parts: (HTMLElement | null)[] = [
+      level > playerLevel + 5 ? h('p', { class: 'note danger' }, `Dangereux pour ton niveau (${playerLevel}) : améliore ton équipement chez Tetsu avant de descendre si bas.`) : null,
+      h(
+        'div',
+        { class: 'entry-cols' },
+        h(
+          'dl',
+          { class: 'stats' },
+          h('dt', {}, 'PV des yokai'),
+          h('dd', {}, `×${fr(d.hp)}`),
+          h('dt', {}, 'Dégâts des yokai'),
+          h('dd', {}, `×${fr(d.damage)}`),
+        ),
+        h(
+          'dl',
+          { class: 'stats' },
+          h('dt', {}, 'Oboles'),
+          h('dd', {}, `×${fr(r.oboles)}`),
+          h('dt', {}, 'Expérience'),
+          h('dd', {}, `×${fr(r.xp)}`),
+          h('dt', {}, 'Butin rare'),
+          h('dd', {}, `×${fr(r.rareChance)}`),
+          h('dt', {}, 'Matériaux par drop'),
+          h('dd', {}, `+${r.extraMaterials}`),
+        ),
+      ),
+      h('h3', {}, 'Malédictions du Yomi'),
+      curses.length
+        ? h('div', { class: 'curses' }, ...curses.map((c) => h('div', { class: 'curse' }, h('strong', {}, c.name), h('small', {}, c.description))))
+        : h('p', { class: 'note' }, 'Aucune malédiction à ce niveau.'),
+      next ? h('p', { class: 'note' }, `Au niveau ${next.from} : ${next.name}. ${next.description}`) : null,
+    ];
+    details.replaceChildren(...parts.filter((p): p is HTMLElement => p !== null));
+  };
+
+  const quick = [
+    { label: 'Niveau 1', level: 1 },
+    playerLevel > 1 && playerLevel < unlocked ? { label: `Ton niveau (${playerLevel})`, level: playerLevel } : null,
+    unlocked > 1 ? { label: `Le plus haut (${unlocked})`, level: unlocked } : null,
+  ].filter((q): q is { label: string; level: number } => q !== null);
+
+  const best = progress.state.dungeon.best;
+  host.show(
+    'Rizières noyées',
+    best ? `Record : niveau ${best} · niveaux ouverts : 1 à ${unlocked} sur ${data.maxLevel}` : `Vaincs la Jorōgumo pour ouvrir le niveau 2 (jusqu’à ${data.maxLevel}).`,
+    h(
+      'div',
+      { class: 'list' },
+      h(
+        'div',
+        { class: 'level-picker' },
+        h('button', { class: 'btn small', onclick: () => set(level - 1) }, '−'),
+        slider,
+        h('button', { class: 'btn small', onclick: () => set(level + 1) }, '+'),
+        value,
+      ),
+      h('div', { class: 'row-pills' }, ...quick.map((q) => h('button', { class: 'btn small', onclick: () => set(q.level) }, q.label))),
+      details,
+      h(
+        'div',
+        { class: 'entry-actions' },
+        h(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              host.close();
+              onEnter(level);
+            },
+          },
+          'Descendre',
+        ),
+      ),
+    ),
+  );
+  update();
 }
 
 // --- Butin ------------------------------------------------------------------

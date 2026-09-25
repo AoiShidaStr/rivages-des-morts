@@ -47,6 +47,13 @@ export abstract class Enemy {
   knockback: Vec2 = vec();
   hp: number;
   spawnTimer = SPAWN_TIME;
+  /** Multiplicateurs de PV et de dégâts : niveau du donjon, élite. */
+  private vigor = 1;
+  private might = 1;
+  /** Élite (malédiction « Âmes d'élite ») : plus grande et teintée à l'écran. */
+  elite = false;
+  /** Secondes depuis le dernier coup reçu (malédiction « Sève du Yomi »). */
+  sinceHurt = 0;
 
   constructor(
     readonly id: number,
@@ -65,7 +72,7 @@ export abstract class Enemy {
   }
 
   get maxHp(): number {
-    return this.base.maxHp;
+    return this.base.maxHp * this.vigor;
   }
 
   get dead(): boolean {
@@ -73,7 +80,19 @@ export abstract class Enemy {
   }
 
   get wounded(): boolean {
-    return this.hp < this.base.maxHp;
+    return this.hp < this.maxHp;
+  }
+
+  /** Renforce l'ennemi à son apparition (niveau du donjon, élite) ; il repart avec tous ses PV. */
+  empower(hp: number, damage: number): void {
+    this.vigor *= hp;
+    this.might *= damage;
+    this.hp = this.maxHp;
+  }
+
+  makeElite(bonus: { hp: number; damage: number }): void {
+    this.elite = true;
+    this.empower(bonus.hp, bonus.damage);
   }
 
   get active(): boolean {
@@ -117,6 +136,7 @@ export abstract class Enemy {
       this.spawnTimer = Math.max(0, this.spawnTimer - dt);
       return;
     }
+    this.sinceHurt += dt;
     // Étourdissement par défaut (feux follets…) : l'ennemi reste figé, seul le recul le déplace.
     if (this.frozen > 0) this.frozen = Math.max(0, this.frozen - dt);
     else this.think(dt, world);
@@ -130,6 +150,7 @@ export abstract class Enemy {
     const shielded = !hit.ignoreShell && this.shields(hit.from);
     const amount = Math.min(hit.amount * (shielded ? this.shieldFactor : 1) * this.damageFactor, this.hp - this.hpFloor);
     this.hp -= amount;
+    if (amount > 0) this.sinceHurt = 0;
     const away = normalize(sub(this.pos, hit.from), scale(this.facing, -1));
     const push = hit.knockback * this.base.knockbackFactor * (shielded ? 0.3 : 1);
     this.knockback = add(this.knockback, scale(away, push));
@@ -139,11 +160,19 @@ export abstract class Enemy {
     return shielded;
   }
 
+  /** Soin (kodama) : proportionnel aux PV renforcés, pour garder le même effet à tous les niveaux. */
   heal(amount: number, world: World): void {
-    const gained = Math.min(amount, this.base.maxHp - this.hp);
+    const gained = Math.min(amount * this.vigor, this.maxHp - this.hp);
     if (gained <= 0) return;
     this.hp += gained;
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
+  }
+
+  /** Tout coup porté au joueur passe par ici : niveau du donjon, élite, « Rancune des noyés ». */
+  protected hitPlayer(amount: number, dir: Vec2, knockback: number, world: World): boolean {
+    const rancune = world.curse('rancune');
+    const angry = rancune && this.hp < this.maxHp * 0.3 ? 1 + rancune : 1;
+    return world.player.takeHit(amount * this.might * angry, dir, knockback, world);
   }
 
   /** Secondes d'immobilisation, pour les ennemis sans étourdissement propre. */
@@ -222,7 +251,7 @@ export class Hitodama extends Enemy {
       player.guard(world);
       this.retreat = this.cfg.retreatTime;
       this.knockback = scale(toward, -7);
-    } else if (player.takeHit(this.cfg.contactDamage, toward, 3, world)) {
+    } else if (this.hitPlayer(this.cfg.contactDamage, toward, 3, world)) {
       this.retreat = this.cfg.retreatTime;
     }
   }
@@ -459,7 +488,7 @@ export class Kappa extends Enemy {
         this.stun(cfg.parryStun, 'parry', world);
         return;
       }
-      if (player.takeHit(cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
+      if (this.hitPlayer(cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
         this.endCharge(world);
         return;
       }
@@ -607,7 +636,7 @@ export class KasaObake extends Enemy {
     world.emit({ type: 'land', id: this.id, pos: { ...target }, radius: cfg.landRadius });
     const offset = sub(player.pos, target);
     if (length(offset) <= cfg.landRadius + player.radius) {
-      player.takeHit(cfg.landDamage, normalize(offset), cfg.landKnockback, world);
+      this.hitPlayer(cfg.landDamage, normalize(offset), cfg.landKnockback, world);
     }
     this.state = { kind: 'recover', t: cfg.landRecover };
   }
@@ -706,7 +735,7 @@ export class Oublie extends Enemy {
     if (length(toPlayer) > cfg.attackRange + player.radius) return;
     if (!inCone(dir, normalize(toPlayer, dir), degToRad(cfg.arcDeg / 2))) return;
     if (player.isGuarding(this.pos)) player.guard(world);
-    else player.takeHit(cfg.damage, dir, cfg.knockback, world);
+    else this.hitPlayer(cfg.damage, dir, cfg.knockback, world);
   }
 }
 
@@ -851,7 +880,7 @@ export class Jorogumo extends Enemy {
 
   protected get hpFloor(): number {
     // Chaque phase se joue : la forme humaine ne peut pas perdre plus que ses PV et ceux de la forme d'araignée.
-    if (this.phase === 1) return this.cfg.maxHp * this.cfg.ceilingAt + 1;
+    if (this.phase === 1) return this.maxHp * this.cfg.ceilingAt + 1;
     if (this.phase === 2) return 1;
     return 0;
   }
@@ -941,7 +970,7 @@ export class Jorogumo extends Enemy {
     const s = this.state.kind;
     if (s === 'transform' || s === 'climb' || s === 'drop' || this.phase >= 3) return false;
     const threshold = this.phase === 1 ? this.cfg.spiderAt : this.cfg.ceilingAt;
-    if (this.hp > this.cfg.maxHp * threshold) return false;
+    if (this.hp > this.maxHp * threshold) return false;
     if (s === 'telegraph' || s === 'charge') world.emit({ type: 'chargeEnd', id: this.id });
     this.phase++;
     this.state = { kind: 'transform', t: 0 };
@@ -1036,7 +1065,7 @@ export class Jorogumo extends Enemy {
     if (length(toPlayer) > cfg.range + player.radius) return;
     if (!inCone(dir, normalize(toPlayer, dir), degToRad(cfg.arcDeg / 2))) return;
     if (player.isGuarding(this.pos)) player.guard(world);
-    else player.takeHit(cfg.damage, dir, cfg.knockback, world);
+    else this.hitPlayer(cfg.damage, dir, cfg.knockback, world);
   }
 
   private summonSpiders(world: World): void {
@@ -1063,7 +1092,7 @@ export class Jorogumo extends Enemy {
         this.endCharge(world);
         return;
       }
-      if (player.takeHit(cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
+      if (this.hitPlayer(cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
         this.endCharge(world);
         return;
       }
@@ -1153,7 +1182,7 @@ export class Jorogumo extends Enemy {
     const offset = sub(player.pos, this.pos);
     world.emit({ type: 'bite', pos: { ...this.pos } });
     if (length(offset) <= cfg.biteRange + this.radius + player.radius) {
-      player.takeHit(cfg.biteDamage, normalize(offset), cfg.biteKnockback, world);
+      this.hitPlayer(cfg.biteDamage, normalize(offset), cfg.biteKnockback, world);
     }
     this.state = { kind: 'grounded', t: cfg.groundedAfterBite };
   }

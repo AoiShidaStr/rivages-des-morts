@@ -145,13 +145,19 @@ export class Screens {
 
   // --- Fin de donjon ------------------------------------------------------------
 
-  showResult(victory: boolean, loot: { oboles: number; xp: number; materials: string[]; chests: number }, options: MenuOption[]): void {
+  showResult(
+    victory: boolean,
+    loot: { level: number; oboles: number; xp: number; materials: string[]; chests: number; unlocked?: number },
+    options: MenuOption[],
+  ): void {
     this.result.replaceChildren(
       h(
         'div',
         { class: `result-card ${victory ? 'victory' : 'defeat'}` },
         h('div', { class: 'title-seal' }, victory ? '勝' : '魂'),
         h('h1', {}, victory ? 'Les rizières sont apaisées' : 'Ton âme vacille…'),
+        h('div', { class: 'result-level' }, `Rizières noyées · niveau ${loot.level}`),
+        loot.unlocked ? h('div', { class: 'result-unlock' }, `Niveau ${loot.unlocked} débloqué`) : null,
         h(
           'p',
           { class: 'tagline' },

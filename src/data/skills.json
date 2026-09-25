@@ -1,11 +1,13 @@
 {
   "about": "Chaque effet modifie les réglages du Guerrier (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux).",
   "levels": {
-    "max": 10,
+    "about": "Un point de talent par niveau, de pointsFrom à pointsUntil : 9 points pour 12 nœuds, il faut choisir (GDD). Au-delà, chaque niveau donne des PV et relève le plafond de la forge.",
+    "max": 50,
     "xpBase": 25,
     "xpPerLevel": 25,
     "hpPerLevel": 4,
-    "pointsFrom": 2
+    "pointsFrom": 2,
+    "pointsUntil": 10
   },
   "race": {
     "name": "Einherjar",

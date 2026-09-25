@@ -1,4 +1,5 @@
 import type { GameConfig, HazardConfig } from './config';
+import type { CurseId } from './difficulty';
 import { Hitodama, Jorogumo, Kappa, KasaObake, Kodama, Oublie, type Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import { Player } from './player';
@@ -8,6 +9,8 @@ import type { EnemyKind, GameEvent, InputFrame, Outcome } from './types';
 const WAVE_PAUSE = 1.5;
 /** Distance minimale entre le joueur et un ennemi qui apparaît. */
 const SPAWN_CLEARANCE = 5;
+/** Secondes sans être touché avant que la « Sève du Yomi » ne soigne un yokai. */
+const SAP_DELAY = 3;
 
 interface Body {
   pos: Vec2;
@@ -88,18 +91,28 @@ export class World {
     return events;
   }
 
+  /** Valeur d'une malédiction du niveau de donjon (0 si elle n'est pas active). */
+  curse(id: CurseId): number {
+    return this.cfg.difficulty?.curses[id] ?? 0;
+  }
+
   update(dt: number, input: InputFrame): void {
     if (this.state !== 'playing') return;
     this.time += dt;
     this.player.update(dt, input, this);
+    // « Hâte des morts » : le temps des yokai passe plus vite.
+    const haste = 1 + this.curse('hate');
     // Copie : un ennemi peut en faire apparaître d'autres pendant son tour (araignées, feux follets).
-    for (const enemy of [...this.enemies]) enemy.update(dt, this);
+    for (const enemy of [...this.enemies]) enemy.update(dt * haste, this);
+    this.regenerate(dt);
     this.updateHazards(dt);
     this.updateWebs(dt);
     this.updateSnares(dt);
     this.separate();
     this.clearBossMinions();
+    const fallen = this.enemies.filter((e) => e.dead);
     this.enemies = this.enemies.filter((e) => !e.dead);
+    this.releaseWisps(fallen);
     if (this.player.dead) {
       this.finish('defeat');
       return;
@@ -127,7 +140,8 @@ export class World {
       alreadyHit.add(enemy.id);
       const player = this.player;
       const perks = player.cfg.perks ?? {};
-      const amount = attack.damage * player.damageMultiplier();
+      // « Écorce des kodama » : seuls les coups d'arme sont amoindris.
+      const amount = attack.damage * player.damageMultiplier() * (1 - this.curse('ecorce'));
       const shielded = enemy.receiveHit({ amount, from: origin, knockback: attack.knockback }, this);
       const rage = attack.rageOnHit * (perks.hitRageFactor ?? 1);
       // Colère de la tempête : à rage pleine, chaque coup appelle la foudre de Susanoo.
@@ -290,7 +304,8 @@ export class World {
       this.emit({ type: 'land', id: h.id, pos: h.pos, radius: h.cfg.radius });
       const offset = sub(player.pos, h.pos);
       if (length(offset) <= h.cfg.radius + player.radius) {
-        player.takeHit(h.cfg.damage, normalize(offset), h.cfg.knockback, this);
+        // Les chutes viennent toutes de la Jorōgumo : elles suivent sa puissance.
+        player.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this);
       }
       if (h.leavesWeb) this.addWeb(h.pos);
       return false;
@@ -365,13 +380,48 @@ export class World {
     for (const spawn of wave.spawns) {
       for (let i = 0; i < spawn.count; i++) this.enemies.push(this.createEnemy(spawn.kind, this.spawnPoint()));
     }
+    // « Âmes d'élite » : les yokai les plus robustes de la vague (jamais le boss) deviennent des élites.
+    const elites = this.curse('elites');
+    const difficulty = this.cfg.difficulty;
+    if (elites && difficulty) {
+      const candidates = this.enemies.filter((e) => !e.boss).sort((a, b) => b.maxHp - a.maxHp);
+      for (const enemy of candidates.slice(0, elites)) enemy.makeElite(difficulty.elite);
+    }
     this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint: wave.hint });
   }
 
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
     const enemy = this.instantiate(kind, this.nextId++, pos);
     enemy.facing = normalize(sub(this.player.pos, pos));
+    // Niveau du donjon : tous les yokai sont renforcés, le boss encore plus sous le « Regard d'Izanami ».
+    const difficulty = this.cfg.difficulty;
+    if (difficulty) {
+      const izanami = enemy.boss ? 1 + this.curse('izanami') : 1;
+      enemy.empower(difficulty.hp * izanami, difficulty.damage * izanami);
+    }
     return enemy;
+  }
+
+  /** Puissance des attaques de zone de la Jorōgumo (niveau du donjon, « Regard d'Izanami »). */
+  private bossMight(): number {
+    return (this.cfg.difficulty?.damage ?? 1) * (1 + this.curse('izanami'));
+  }
+
+  /** « Sève du Yomi » : un yokai épargné quelques secondes se régénère. */
+  private regenerate(dt: number): void {
+    const rate = this.curse('seve');
+    if (!rate) return;
+    for (const enemy of this.enemies) {
+      if (enemy.active && enemy.wounded && enemy.sinceHurt > SAP_DELAY) enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.maxHp * rate * dt);
+    }
+  }
+
+  /** « Feux follets vengeurs » : chaque yokai vaincu libère un feu follet, sauf quand le boss tombe. */
+  private releaseWisps(fallen: Enemy[]): void {
+    if (!this.curse('feux') || fallen.some((e) => e.boss)) return;
+    for (const enemy of fallen) {
+      if (enemy.kind !== 'hitodama' && enemy.kind !== 'araignee') this.spawn('hitodama', enemy.pos);
+    }
   }
 
   private instantiate(kind: EnemyKind, id: number, pos: Vec2): Enemy {

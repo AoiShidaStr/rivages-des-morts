@@ -1,6 +1,7 @@
 // Du côté de l'île vers le combat : équipement, niveau, talents, race et tags de classe
 // deviennent les réglages du Guerrier pour une descente au donjon.
 import type { PlayerConfig } from './config';
+import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type Palier, type UpgradeRules } from './forge';
 import type { ProgressState, Slot } from './progress';
 
 export type BonusKind = 'maxHp' | 'damage' | 'speed' | 'dodge' | 'armor' | 'oboles';
@@ -22,14 +23,9 @@ export interface ItemDef {
   effects?: ConfigEffect[];
   /** Résumé lisible des effets (armes, reliques). */
   summary?: string;
+  /** Passifs débloqués à certains niveaux de forge (armes). */
+  paliers?: Palier[];
   description: string;
-}
-
-export interface WeaponForge {
-  maxLevel: number;
-  damagePerLevel: number;
-  obolesPerLevel: number;
-  material: string;
 }
 
 export interface SkillNode {
@@ -41,7 +37,7 @@ export interface SkillNode {
 }
 
 export interface SkillsDef {
-  levels: { max: number; xpBase: number; xpPerLevel: number; hpPerLevel: number; pointsFrom: number };
+  levels: { max: number; xpBase: number; xpPerLevel: number; hpPerLevel: number; pointsFrom: number; pointsUntil: number };
   race: { name: string; origin: string; passives: { name: string; description: string; effects: ConfigEffect[] }[] };
   class: { name: string; subtitle: string; actives: { key: string; name: string; description: string }[] };
   tag: { name: string; tiers: { count: number; description: string; effects: ConfigEffect[] }[] };
@@ -50,7 +46,7 @@ export interface SkillsDef {
 
 export interface LoadoutData {
   items: Record<string, ItemDef>;
-  weapon: WeaponForge;
+  upgrade: UpgradeRules;
   skills: SkillsDef;
 }
 
@@ -68,6 +64,15 @@ export interface Loadout {
 /** PV max offerts par la bénédiction des six Jizō. */
 const JIZO_BLESSING = 10;
 const ANY_CLASS = 'Tous';
+
+/** Niveau de forge d'un objet (1 tant qu'il n'a pas été amélioré). */
+export const itemLevel = (state: ProgressState, id: string): number => state.itemLevels[id] ?? 1;
+
+/** Points de talent gagnés à ce niveau : un par niveau, de `pointsFrom` à `pointsUntil`. */
+export function talentPointsAt(skills: SkillsDef, level: number): number {
+  const { pointsFrom, pointsUntil } = skills.levels;
+  return Math.max(0, Math.min(level, pointsUntil) - pointsFrom + 1);
+}
 
 /** Expérience à gagner pour passer du niveau `level` au suivant. */
 export function xpToNext(skills: SkillsDef, level: number): number {
@@ -108,19 +113,31 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   const bonus: Required<Bonus> = { maxHp: 0, damage: 0, speed: 0, dodge: 0, armor: 0, oboles: 0 };
   let tagCount = 0;
   const className = data.skills.tag.name;
+  const rules = data.upgrade;
+  const paliers: Palier[] = [];
 
   for (const id of Object.values(state.equipped)) {
     const item = id ? data.items[id] : undefined;
-    if (!item) continue;
-    for (const [key, value] of Object.entries(item.bonus ?? {}) as [BonusKind, number][]) bonus[key] += value;
+    if (!id || !item) continue;
+    const upgradable = isUpgradable(rules, item);
+    const lvl = itemLevel(state, id);
+    const itemBonus = upgradable ? scaledBonus(rules, item.bonus, lvl) : (item.bonus ?? {});
+    for (const [key, value] of Object.entries(itemBonus) as [BonusKind, number][]) bonus[key] += value;
     for (const effect of item.effects ?? []) applyEffect(config, effect);
-    if (item.tags?.some((t) => t === className || t === ANY_CLASS)) tagCount++;
+    // Paliers de forge : « Âme liée » donne le tag « Tous », « Forgé par Tetsu » fait compter l'objet double.
+    const reached = upgradable ? reachedPaliers(rules, item, lvl) : [];
+    paliers.push(...reached);
+    const tagged = item.tags?.some((t) => t === className || t === ANY_CLASS) || reached.some((p) => p.id === 'tous');
+    if (tagged) tagCount += reached.some((p) => p.id === 'double') ? 2 : 1;
   }
 
-  // Arme : ses effets fixent les dégâts de base, la forge les augmente.
+  // Arme : ses effets fixent les dégâts de base ; son niveau multiplie tous les dégâts du Guerrier.
   const weaponId = state.equipped.arme;
-  const weaponLevel = weaponId ? (state.weaponLevels[weaponId] ?? 1) : 1;
-  bonus.damage += (weaponLevel - 1) * data.weapon.damagePerLevel;
+  const power = weaponId ? weaponPower(rules, itemLevel(state, weaponId)) : 1;
+  config.attack.damage *= power;
+  config.smash.damage *= power;
+  config.bond.damage *= power;
+  for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 
   if (state.flags.benediction_jizo) bonus.maxHp += JIZO_BLESSING;
   bonus.maxHp += (level - 1) * data.skills.levels.hpPerLevel;
@@ -137,8 +154,10 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
 
   config.maxHp += bonus.maxHp;
   config.moveSpeed *= 1 + bonus.speed;
-  config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - bonus.armor);
-  config.attack.damage += bonus.damage;
+  config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
+  config.attack.damage = Math.round(config.attack.damage + bonus.damage);
+  // La foudre de Susanoo (talent) suit la puissance de l'arme, comme les autres dégâts.
+  if (config.perks?.storm) config.perks.storm *= power;
   config.dodge.distance *= 1 + bonus.dodge;
   return { config, level, bonus, tagCount, tier };
 }

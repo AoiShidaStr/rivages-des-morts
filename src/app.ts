@@ -1,10 +1,11 @@
 import type { Engine } from '@babylonjs/core';
 import { content, portraitUrl, type Line } from './content';
 import type { GameConfig } from './game/config';
+import { clampLevel, difficultyFor, rewardsFor } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
 import { buildLoadout, levelProgress, type Loadout } from './game/loadout';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
-import { Progress, bindSelf, levelUpToast, type Action } from './game/progress';
+import { Progress, bindSelf, type Action } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import { World } from './game/world';
 import type { Input } from './input';
@@ -14,6 +15,7 @@ import type { Renderer } from './render/renderer';
 import { DialogueBox } from './ui/dialogue';
 import {
   PanelHost,
+  openDungeonEntry,
   openForge,
   openInventory,
   openLoot,
@@ -57,6 +59,8 @@ export interface AppDeps {
   uiRoot: HTMLElement;
   /** `?vague=N` : commence directement le donjon à cette vague (tests). */
   devWave: number | null;
+  /** `?niveau=N` : niveau du donjon pour `?vague` (tests). */
+  devLevel: number | null;
 }
 
 const randInt = ([min, max]: [number, number]) => min + Math.floor(Math.random() * (max - min + 1));
@@ -74,6 +78,8 @@ export class App {
   private last = performance.now();
   private titleAngle = 0;
   private run: Loot = emptyLoot();
+  /** Niveau du donjon en cours (choisi à l'entrée). */
+  private dungeonLevel = 1;
   private outcome: Outcome | null = null;
   private readonly dialogue: DialogueBox;
   private readonly panels: PanelHost;
@@ -93,7 +99,7 @@ export class App {
   }
 
   start(): void {
-    if (this.d.devWave !== null) void this.enterDungeon(this.d.devWave, false);
+    if (this.d.devWave !== null) void this.enterDungeon(this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
     this.d.engine.runRenderLoop(() => this.frame());
   }
@@ -319,7 +325,8 @@ export class App {
           this.openChests();
           break;
         case 'dungeon':
-          await this.enterDungeon(0, true);
+          // Le joueur choisit le niveau du donjon avant d'y entrer.
+          openDungeonEntry(this.panels, this.ui, (level) => void this.descend(level));
           break;
       }
     }
@@ -350,22 +357,32 @@ export class App {
 
   // --- Donjon -----------------------------------------------------------------------
 
-  private async enterDungeon(startWave: number, withTransition: boolean): Promise<void> {
+  /** Descente depuis l'île, au niveau choisi à l'entrée. */
+  private async descend(level: number): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    await this.enterDungeon(0, true, level);
+    this.busy = false;
+  }
+
+  private async enterDungeon(startWave: number, withTransition: boolean, level: number): Promise<void> {
     const { config, dungeonRenderer, hud, islandRenderer } = this.d;
     const player = this.loadout().config;
+    this.dungeonLevel = clampLevel(content.difficulty, level);
+    const difficulty = difficultyFor(content.difficulty, this.dungeonLevel);
     const begin = () => {
       this.screens.hideResult();
       this.panels.close();
-      this.world = new World({ ...config, player }, startWave);
+      this.world = new World({ ...config, player, difficulty }, startWave);
       dungeonRenderer.reset();
-      hud.reset();
+      hud.reset(this.dungeonLevel);
       this.run = emptyLoot();
       this.outcome = null;
       this.accumulator = 0;
       islandRenderer.hideMarkers();
       this.setMode('dungeon');
     };
-    if (withTransition) await this.screens.transition('Rizières noyées', 'Donjon du Yomi', begin);
+    if (withTransition) await this.screens.transition('Rizières noyées', `Donjon du Yomi · niveau ${this.dungeonLevel}`, begin);
     else begin();
   }
 
@@ -417,22 +434,23 @@ export class App {
     return buildLoadout(config.player, progress.state, content, progress.level);
   }
 
-  /** Butin de la descente : tout est gardé, même en cas de défaite (GDD). */
+  /** Butin de la descente : tout est gardé, même en cas de défaite (GDD). Il grandit avec le niveau du donjon. */
   private track(event: GameEvent): void {
     if (event.type === 'wave') this.run.waves++;
     else if (event.type === 'end') this.outcome = event.outcome;
     else if (event.type === 'death') {
       const drop = content.drops[event.kind];
       if (!drop) return;
-      this.run.oboles += drop.oboles;
-      this.run.xp += drop.xp ?? 0;
+      const rewards = rewardsFor(content.difficulty, this.dungeonLevel);
+      this.run.oboles += drop.oboles * rewards.oboles;
+      this.run.xp += (drop.xp ?? 0) * rewards.xp;
       if (drop.material && Math.random() < (drop.chance ?? 1)) {
-        this.run.materials[drop.material] = (this.run.materials[drop.material] ?? 0) + (drop.count ?? 1);
+        this.run.materials[drop.material] = (this.run.materials[drop.material] ?? 0) + (drop.count ?? 1) + rewards.extraMaterials;
       }
       // Armes, reliques et objets de quête : chacun sa chance, jamais en double.
       for (const entry of drop.items ?? []) {
         const known = this.d.progress.has(entry.item) || this.run.items.includes(entry.item);
-        if (!known && this.d.progress.check(entry.if) && Math.random() < entry.chance) {
+        if (!known && this.d.progress.check(entry.if) && Math.random() < Math.min(1, entry.chance * rewards.rareChance)) {
           this.run.items.push(entry.item);
           this.screens.toast(`Butin rare : ${content.items[entry.item]?.name ?? entry.item}`, 'loot');
         }
@@ -448,14 +466,17 @@ export class App {
     // Chaque combat gagné laisse un coffre ; en cas de défaite, la dernière vague n'est pas gagnée.
     const chests = Math.max(0, this.run.waves - (victory ? 0 : 1));
     const oboles = Math.round(this.run.oboles * (1 + this.loadout().bonus.oboles));
+    const xp = Math.round(this.run.xp);
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(this.run.materials)) progress.gainMaterial(id, amount);
     for (const item of this.run.items) progress.acquire(item, content.items[item]?.slot);
     progress.state.chests += chests;
-    const actions: Action[] = progress.gainXp(this.run.xp).map(levelUpToast);
+    const actions: Action[] = progress.gainXp(xp);
+    let unlocked: number | undefined;
     if (victory) {
       const firstWin = progress.quest('dame') !== 'done';
       actions.push(...progress.apply([{ completeQuest: 'dame' }, { set: 'jorogumo_vaincue' }, ...(firstWin ? [{ xp: BOSS_QUEST_XP }] : [])]));
+      if (progress.winDungeon(this.dungeonLevel, content.difficulty.maxLevel)) unlocked = progress.state.dungeon.unlocked;
     }
     progress.save();
 
@@ -471,8 +492,10 @@ export class App {
     this.screens.showResult(
       victory,
       {
+        level: this.dungeonLevel,
+        unlocked,
         oboles,
-        xp: this.run.xp,
+        xp,
         chests,
         materials: [
           ...this.run.items.map((id) => `Objet : ${content.items[id]?.name ?? id}`),
@@ -487,7 +510,7 @@ export class App {
   private async retry(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
-    await this.enterDungeon(0, true);
+    await this.enterDungeon(0, true, this.dungeonLevel);
     this.busy = false;
   }
 

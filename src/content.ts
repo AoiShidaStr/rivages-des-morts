@@ -1,12 +1,15 @@
 // Contenu de l'île en données (src/data) : on l'ajoute ou le modifie sans toucher au code.
 import dialoguesJson from './data/dialogues.json';
+import difficultyJson from './data/difficulty.json';
 import islandJson from './data/island.json';
 import islandSpritesJson from './data/islandSprites.json';
 import itemsJson from './data/items.json';
 import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
+import type { DifficultyData } from './game/difficulty';
+import type { UpgradeRules } from './game/forge';
 import type { IslandData } from './game/island';
-import { levelFor, type BonusKind, type ItemDef, type SkillsDef, type WeaponForge } from './game/loadout';
+import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
 import type { Catalog, Condition, Effect, Slot } from './game/progress';
 import type { SpriteManifest } from './render/renderer';
 
@@ -77,7 +80,8 @@ export const content = {
   drops: itemsJson.drops as unknown as Record<string, DropDef>,
   chest: itemsJson.chest as { oboles: [number, number]; materials: string[]; count: [number, number] },
   shops: itemsJson.shops as unknown as Record<string, ShopDef>,
-  weapon: itemsJson.forge.weapon as WeaponForge,
+  upgrade: itemsJson.forge.upgrade as unknown as UpgradeRules,
+  difficulty: difficultyJson as unknown as DifficultyData,
   skills: skillsJson as unknown as SkillsDef,
   recipes: itemsJson.forge.recipes as unknown as RecipeDef[],
   quests: questsJson.quests as Record<string, QuestDef>,
@@ -92,6 +96,7 @@ export const catalog: Catalog = {
   questName: (id) => content.quests[id]?.name ?? id,
   itemSlot: (id) => content.items[id]?.slot,
   levelFor: (xp) => levelFor(content.skills, xp),
+  talentPoints: (level) => talentPointsAt(content.skills, level),
   triggers: content.triggers,
 };
 
