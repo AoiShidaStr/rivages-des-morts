@@ -148,6 +148,8 @@
       "rarity": "rare",
       "tags": ["Invocateur"],
       "bonus": { "damage": 2 },
+      "effects": [{ "op": "set", "path": "perks.summonTaunt", "value": true }],
+      "summary": "Les yokai s'en prennent d'abord à tes âmes.",
       "description": "Un masque blanc sans visage. Le porter fait un peu oublier la peur."
     },
     "shiroshozoku": {

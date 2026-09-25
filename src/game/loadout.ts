@@ -185,6 +185,7 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.smash.damage *= power;
   config.bond.damage *= power;
   config.summon.damage *= power;
+  config.summon.hp *= power;
   config.summon.sacrifice.damage *= power;
   for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 

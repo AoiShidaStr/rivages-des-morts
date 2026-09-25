@@ -12,6 +12,20 @@ const WAVE_PAUSE = 1.5;
 const SPAWN_CLEARANCE = 5;
 /** Secondes sans être touché avant que la « Sève du Yomi » ne soigne un yokai. */
 const SAP_DELAY = 3;
+/** Avec le Masque d'Oublié, une âme compte comme si elle était trois fois plus proche que le héros. */
+const TAUNT_PULL = 3;
+
+/** Ce qu'un yokai peut attaquer : le héros, ou une âme liée de l'Invocateur. */
+export interface Foe {
+  pos: Vec2;
+  readonly radius: number;
+  knockback: Vec2;
+  /** Seul le héros bloque (Guerrier), et seulement de face. */
+  isGuarding(from: Vec2): boolean;
+  guard(world: World): void;
+  /** Faux si le coup n'a pas porté (esquive, invulnérabilité). */
+  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean;
+}
 
 interface Body {
   pos: Vec2;
@@ -97,6 +111,32 @@ export class World {
     const events = this.events;
     this.events = [];
     return events;
+  }
+
+  /** Tout ce que les yokai peuvent frapper : le héros et les âmes liées relevées. */
+  foes(): Foe[] {
+    return [this.player, ...this.summons.filter((s) => s.targetable)];
+  }
+
+  /** Vrai tant que `foe` peut encore être attaqué (une âme effacée ou brisée ne l'est plus). */
+  isFoe(foe: Foe | null): foe is Foe {
+    return foe === this.player || (foe instanceof Summon && foe.targetable && this.summons.includes(foe));
+  }
+
+  /** La cible d'un yokai : la plus proche, entre le héros et les âmes. Avec le Masque d'Oublié, les âmes passent devant. */
+  pickFoe(from: Vec2): Foe {
+    const pull = this.player.cfg.perks?.summonTaunt ? TAUNT_PULL : 1;
+    let best: Foe = this.player;
+    let bestScore = distance(from, this.player.pos);
+    for (const summon of this.summons) {
+      if (!summon.targetable) continue;
+      const score = distance(from, summon.pos) / pull;
+      if (score < bestScore) {
+        best = summon;
+        bestScore = score;
+      }
+    }
+    return best;
   }
 
   /** Valeur d'une malédiction du niveau de donjon (0 si elle n'est pas active). */
@@ -312,6 +352,7 @@ export class World {
     const cfg = player.cfg.summon;
     // Au-delà du maximum, la plus vieille âme laisse sa place.
     while (this.summons.length >= Math.max(1, cfg.max)) this.dismiss(this.summons[0]);
+    // Les Douze Shikigami : un kappa lié garde sa carapace, deux fois plus de PV et de durée.
     const tough = player.cfg.perks?.shikigami && (kind === 'kappa' || kind === 'kappaRenforce');
     const summon = new Summon(this.nextId++, kind, { ...pos }, cfg, tough ? 2 : 1);
     this.summons.push(summon);
@@ -320,7 +361,7 @@ export class World {
 
   private dismiss(summon: Summon): void {
     this.summons = this.summons.filter((s) => s !== summon);
-    this.emit({ type: 'summonFade', id: summon.id, pos: { ...summon.pos } });
+    this.emit({ type: 'summonFade', id: summon.id, pos: { ...summon.pos }, broken: summon.broken });
   }
 
   private addSoul(kind: EnemyKind, pos: Vec2): void {
@@ -468,15 +509,14 @@ export class World {
   }
 
   private updateHazards(dt: number): void {
-    const player = this.player;
     this.hazards = this.hazards.filter((h) => {
       h.t += dt;
       if (h.t < h.cfg.warning) return true;
       this.emit({ type: 'land', id: h.id, pos: h.pos, radius: h.cfg.radius });
-      const offset = sub(player.pos, h.pos);
-      if (length(offset) <= h.cfg.radius + player.radius) {
-        // Les chutes viennent toutes de la Jorōgumo : elles suivent sa puissance.
-        player.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this);
+      // Les chutes viennent toutes de la Jorōgumo : elles suivent sa puissance, et frappent aussi les âmes.
+      for (const foe of this.foes()) {
+        const offset = sub(foe.pos, h.pos);
+        if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this);
       }
       if (h.leavesWeb) this.addWeb(h.pos);
       return false;

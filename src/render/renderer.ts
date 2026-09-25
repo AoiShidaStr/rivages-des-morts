@@ -989,7 +989,18 @@ export class Renderer {
         this.text(event.pos, 2.3, 'Chœur spectral', 'parry', 1.2);
         this.addFx(this.ringFx(event.pos, event.radius * 2, SPIRIT, 0.6));
         break;
+      case 'summonHit': {
+        const view = this.views.get(event.id);
+        if (view) view.flash = 1;
+        this.text(event.pos, 1.8, `−${Math.round(event.amount)}`, 'soul');
+        break;
+      }
       case 'summonFade':
+        if (event.broken) {
+          this.text(event.pos, 2, 'Âme brisée', 'soul', 1.1);
+          this.addFx(this.ringFx(event.pos, 1.8, SPIRIT, 0.35));
+        }
+        break;
       case 'dodge':
       case 'wave':
       case 'end':

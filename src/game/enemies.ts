@@ -26,12 +26,14 @@ import {
   type Vec2,
 } from './math';
 import type { EnemyKind, Pose, StunReason } from './types';
-import type { World } from './world';
+import type { Foe, World } from './world';
 
 /** Temps d'apparition pendant lequel un ennemi ne peut ni agir ni être touché. */
 export const SPAWN_TIME = 0.6;
 /** Au-dessus de cette hauteur, un ennemi est hors d'atteinte et ne bloque plus le passage. */
 const AIRBORNE_ALTITUDE = 0.5;
+/** Secondes entre deux choix de cible (héros ou âme liée) : un yokai ne change pas d'avis à chaque pas. */
+const RETARGET_TIME = 0.8;
 
 export interface Hit {
   amount: number;
@@ -54,6 +56,9 @@ export abstract class Enemy {
   elite = false;
   /** Secondes depuis le dernier coup reçu (malédiction « Sève du Yomi »). */
   sinceHurt = 0;
+  /** Le héros ou l'âme liée que ce yokai poursuit. */
+  private focus: Foe | null = null;
+  private focusTimer = 0;
 
   constructor(
     readonly id: number,
@@ -137,6 +142,11 @@ export abstract class Enemy {
       return;
     }
     this.sinceHurt += dt;
+    this.focusTimer -= dt;
+    if (this.focusTimer <= 0 || !world.isFoe(this.focus)) {
+      this.focus = world.pickFoe(this.pos);
+      this.focusTimer = RETARGET_TIME;
+    }
     // Étourdissement par défaut (feux follets…) : l'ennemi reste figé, seul le recul le déplace.
     if (this.frozen > 0) this.frozen = Math.max(0, this.frozen - dt);
     else this.think(dt, world);
@@ -168,11 +178,47 @@ export abstract class Enemy {
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
   }
 
-  /** Tout coup porté au joueur passe par ici : niveau du donjon, élite, « Rancune des noyés ». */
-  protected hitPlayer(amount: number, dir: Vec2, knockback: number, world: World): boolean {
+  /** Le héros ou l'âme liée que ce yokai poursuit (le héros tant qu'il n'a pas choisi). */
+  protected foe(world: World): Foe {
+    return world.isFoe(this.focus) ? this.focus : world.player;
+  }
+
+  /** Tout coup porté au héros ou à une âme passe par ici : niveau du donjon, élite, « Rancune des noyés ». */
+  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World): boolean {
     const rancune = world.curse('rancune');
     const angry = rancune && this.hp < this.maxHp * 0.3 ? 1 + rancune : 1;
-    return world.player.takeHit(amount * this.might * angry, dir, knockback, world);
+    return foe.takeHit(amount * this.might * angry, dir, knockback, world);
+  }
+
+  protected hitPlayer(amount: number, dir: Vec2, knockback: number, world: World): boolean {
+    return this.hitFoe(world.player, amount, dir, knockback, world);
+  }
+
+  /**
+   * Coup en arc devant le yokai : touche le héros et les âmes à portée. Le héros qui bloque de face
+   * pare le coup (et gagne de la rage).
+   */
+  protected strikeArc(dir: Vec2, range: number, arcDeg: number, damage: number, knockback: number, world: World): void {
+    for (const foe of world.foes()) {
+      const toFoe = sub(foe.pos, this.pos);
+      if (length(toFoe) > range + foe.radius) continue;
+      if (!inCone(dir, normalize(toFoe, dir), degToRad(arcDeg / 2))) continue;
+      if (foe.isGuarding(this.pos)) foe.guard(world);
+      else this.hitFoe(foe, damage, dir, knockback, world);
+    }
+  }
+
+  /** Coup en cercle (chute, morsure) : touche le héros et les âmes dans le rayon. */
+  protected strikeAround(center: Vec2, radius: number, damage: number, knockback: number, world: World): void {
+    for (const foe of world.foes()) {
+      const offset = sub(foe.pos, center);
+      if (length(offset) <= radius + foe.radius) this.hitFoe(foe, damage, normalize(offset), knockback, world);
+    }
+  }
+
+  /** Premier corps (héros ou âme) que touche un yokai lancé, ou null. */
+  protected bump(world: World): Foe | null {
+    return world.foes().find((foe) => distance(foe.pos, this.pos) < foe.radius + this.radius) ?? null;
   }
 
   /** Secondes d'immobilisation, pour les ennemis sans étourdissement propre. */
@@ -231,8 +277,8 @@ export class Hitodama extends Enemy {
   }
 
   protected think(dt: number, world: World): void {
-    const player = world.player;
-    const toward = normalize(sub(player.pos, this.pos), this.facing);
+    const foe = this.foe(world);
+    const toward = normalize(sub(foe.pos, this.pos), this.facing);
     this.facing = toward;
     this.retreat = Math.max(0, this.retreat - dt);
 
@@ -246,12 +292,12 @@ export class Hitodama extends Enemy {
     const speed = this.cfg.speed * (this.retreat > 0 ? 0.7 : 1);
     this.pos = add(this.pos, scale(normalize(move), speed * dt));
 
-    if (this.retreat > 0 || distance(player.pos, this.pos) > player.radius + this.radius) return;
-    if (player.isGuarding(this.pos)) {
-      player.guard(world);
+    if (this.retreat > 0 || distance(foe.pos, this.pos) > foe.radius + this.radius) return;
+    if (foe.isGuarding(this.pos)) {
+      foe.guard(world);
       this.retreat = this.cfg.retreatTime;
       this.knockback = scale(toward, -7);
-    } else if (this.hitPlayer(this.cfg.contactDamage, toward, 3, world)) {
+    } else if (this.hitFoe(foe, this.cfg.contactDamage, toward, 3, world)) {
       this.retreat = this.cfg.retreatTime;
     }
   }
@@ -419,19 +465,19 @@ export class Kappa extends Enemy {
 
   protected think(dt: number, world: World): void {
     const cfg = this.cfg;
-    const player = world.player;
-    const toPlayer = sub(player.pos, this.pos);
-    const toward = normalize(toPlayer, this.facing);
+    const foe = this.foe(world);
+    const toFoe = sub(foe.pos, this.pos);
+    const toward = normalize(toFoe, this.facing);
     this.cooldown = Math.max(0, this.cooldown - dt);
 
     const state = this.state;
     switch (state.kind) {
       case 'walk': {
         this.facing = rotateTowards(this.facing, toward, degToRad(cfg.turnRateDeg) * dt);
-        const gap = length(toPlayer) - this.radius - player.radius;
+        const gap = length(toFoe) - this.radius - foe.radius;
         if (gap > 0.1) this.pos = add(this.pos, scale(this.facing, cfg.speed * dt));
         const aligned = inCone(this.facing, toward, degToRad(20));
-        if (this.cooldown <= 0 && length(toPlayer) <= cfg.chargeRange && aligned) {
+        if (this.cooldown <= 0 && length(toFoe) <= cfg.chargeRange && aligned) {
           this.chargesLeft = cfg.comboCharges;
           this.startTelegraph(this.facing, cfg.telegraph, world);
         }
@@ -474,21 +520,21 @@ export class Kappa extends Enemy {
 
   private charge(state: Extract<KappaState, { kind: 'charge' }>, dt: number, world: World): void {
     const cfg = this.cfg;
-    const player = world.player;
     const step = cfg.chargeSpeed * dt;
     this.pos = add(this.pos, scale(state.dir, step));
     state.traveled += step;
 
-    if (distance(player.pos, this.pos) < player.radius + this.radius) {
-      if (player.isGuarding(this.pos)) {
+    const foe = this.bump(world);
+    if (foe) {
+      if (foe.isGuarding(this.pos)) {
         // La coupelle se renverse : le kappa est étourdi, le joueur recule et gagne de la rage.
-        player.guard(world);
-        player.knockback = scale(state.dir, 5);
+        foe.guard(world);
+        foe.knockback = scale(state.dir, 5);
         world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });
         this.stun(cfg.parryStun, 'parry', world);
         return;
       }
-      if (this.hitPlayer(cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
+      if (this.hitFoe(foe, cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
         this.endCharge(world);
         return;
       }
@@ -500,11 +546,11 @@ export class Kappa extends Enemy {
     if (state.traveled >= cfg.chargeDistance) this.endCharge(world);
   }
 
-  /** Fin d'une charge : l'élite repart aussitôt vers le joueur tant qu'il lui reste des charges. */
+  /** Fin d'une charge : l'élite repart aussitôt vers sa cible tant qu'il lui reste des charges. */
   private endCharge(world: World): void {
     world.emit({ type: 'chargeEnd', id: this.id });
     if (this.chargesLeft > 0) {
-      this.startTelegraph(normalize(sub(world.player.pos, this.pos), this.facing), this.cfg.comboTelegraph, world);
+      this.startTelegraph(normalize(sub(this.foe(world).pos, this.pos), this.facing), this.cfg.comboTelegraph, world);
     } else {
       this.state = { kind: 'recover', t: this.cfg.recover };
     }
@@ -571,8 +617,8 @@ export class KasaObake extends Enemy {
 
   protected think(dt: number, world: World): void {
     const cfg = this.cfg;
-    const player = world.player;
-    this.facing = normalize(sub(player.pos, this.pos), this.facing);
+    const foe = this.foe(world);
+    this.facing = normalize(sub(foe.pos, this.pos), this.facing);
     this.jumpTimer = Math.max(0, this.jumpTimer - dt);
 
     const state = this.state;
@@ -580,11 +626,11 @@ export class KasaObake extends Enemy {
       case 'pause':
         state.t -= dt;
         if (state.t > 0) break;
-        if (this.jumpTimer <= 0 && distance(player.pos, this.pos) <= cfg.jumpRange && Math.random() < cfg.jumpChance) {
+        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange && Math.random() < cfg.jumpChance) {
           this.jumpTimer = cfg.jumpCooldown;
           this.state = { kind: 'rise', t: 0 };
         } else {
-          this.state = { kind: 'hop', t: 0, from: { ...this.pos }, to: this.hopTarget(player.pos) };
+          this.state = { kind: 'hop', t: 0, from: { ...this.pos }, to: this.hopTarget(foe.pos) };
         }
         break;
       case 'hop': {
@@ -604,7 +650,7 @@ export class KasaObake extends Enemy {
         this.height = k * k * KASA_JUMP_HEIGHT;
         if (k < 1) break;
         // La cible est fixée maintenant : c'est là qu'il retombera, même si le joueur bouge.
-        const target = { ...player.pos };
+        const target = { ...foe.pos };
         this.state = { kind: 'hang', t: 0, target };
         world.emit({ type: 'jump', id: this.id, target, radius: cfg.landRadius, duration: cfg.hangTime + cfg.fallTime });
         break;
@@ -630,20 +676,16 @@ export class KasaObake extends Enemy {
 
   private land(target: Vec2, world: World): void {
     const cfg = this.cfg;
-    const player = world.player;
     this.height = 0;
     this.pos = { ...target };
     world.emit({ type: 'land', id: this.id, pos: { ...target }, radius: cfg.landRadius });
-    const offset = sub(player.pos, target);
-    if (length(offset) <= cfg.landRadius + player.radius) {
-      this.hitPlayer(cfg.landDamage, normalize(offset), cfg.landKnockback, world);
-    }
+    this.strikeAround(target, cfg.landRadius, cfg.landDamage, cfg.landKnockback, world);
     this.state = { kind: 'recover', t: cfg.landRecover };
   }
 
-  /** Petit bond imprévisible : vers le joueur, mais dévié au hasard, parfois même vers l'arrière. */
-  private hopTarget(playerPos: Vec2): Vec2 {
-    const angle = angleOf(sub(playerPos, this.pos)) + (Math.random() * 2 - 1) * degToRad(110);
+  /** Petit bond imprévisible : vers sa cible, mais dévié au hasard, parfois même vers l'arrière. */
+  private hopTarget(foePos: Vec2): Vec2 {
+    const angle = angleOf(sub(foePos, this.pos)) + (Math.random() * 2 - 1) * degToRad(110);
     const reach = this.cfg.hopDistance * (0.6 + Math.random() * 0.6);
     return add(this.pos, scale(fromAngle(angle), reach));
   }
@@ -697,18 +739,18 @@ export class Oublie extends Enemy {
 
   protected think(dt: number, world: World): void {
     const cfg = this.cfg;
-    const player = world.player;
-    const toPlayer = sub(player.pos, this.pos);
-    const dist = length(toPlayer);
-    const toward = normalize(toPlayer, this.facing);
+    const foe = this.foe(world);
+    const toFoe = sub(foe.pos, this.pos);
+    const dist = length(toFoe);
+    const toward = normalize(toFoe, this.facing);
     this.cooldown = Math.max(0, this.cooldown - dt);
 
     const state = this.state;
     switch (state.kind) {
       case 'chase':
         this.facing = toward;
-        if (dist > cfg.attackRange * 0.8 + player.radius) this.pos = add(this.pos, scale(toward, cfg.speed * dt));
-        if (this.cooldown <= 0 && dist <= cfg.attackRange + player.radius) {
+        if (dist > cfg.attackRange * 0.8 + foe.radius) this.pos = add(this.pos, scale(toward, cfg.speed * dt));
+        if (this.cooldown <= 0 && dist <= cfg.attackRange + foe.radius) {
           this.state = { kind: 'windup', t: 0, dir: toward };
         }
         break;
@@ -729,13 +771,8 @@ export class Oublie extends Enemy {
 
   private swing(dir: Vec2, world: World): void {
     const cfg = this.cfg;
-    const player = world.player;
     world.emit({ type: 'enemySwing', pos: { ...this.pos }, dir, range: cfg.attackRange });
-    const toPlayer = sub(player.pos, this.pos);
-    if (length(toPlayer) > cfg.attackRange + player.radius) return;
-    if (!inCone(dir, normalize(toPlayer, dir), degToRad(cfg.arcDeg / 2))) return;
-    if (player.isGuarding(this.pos)) player.guard(world);
-    else this.hitPlayer(cfg.damage, dir, cfg.knockback, world);
+    this.strikeArc(dir, cfg.attackRange, cfg.arcDeg, cfg.damage, cfg.knockback, world);
   }
 }
 
@@ -1059,13 +1096,8 @@ export class Jorogumo extends Enemy {
 
   private swing(dir: Vec2, world: World): void {
     const cfg = this.meleeCfg;
-    const player = world.player;
     world.emit({ type: 'enemySwing', pos: { ...this.pos }, dir, range: cfg.range });
-    const toPlayer = sub(player.pos, this.pos);
-    if (length(toPlayer) > cfg.range + player.radius) return;
-    if (!inCone(dir, normalize(toPlayer, dir), degToRad(cfg.arcDeg / 2))) return;
-    if (player.isGuarding(this.pos)) player.guard(world);
-    else this.hitPlayer(cfg.damage, dir, cfg.knockback, world);
+    this.strikeArc(dir, cfg.range, cfg.arcDeg, cfg.damage, cfg.knockback, world);
   }
 
   private summonSpiders(world: World): void {
@@ -1080,19 +1112,19 @@ export class Jorogumo extends Enemy {
 
   private charge(state: Extract<JorogumoState, { kind: 'charge' }>, dt: number, world: World): void {
     const cfg = this.cfg.spider;
-    const player = world.player;
     const step = cfg.chargeSpeed * dt;
     this.pos = add(this.pos, scale(state.dir, step));
     state.traveled += step;
 
-    if (distance(player.pos, this.pos) < player.radius + this.radius) {
-      if (player.isGuarding(this.pos)) {
-        player.guard(world);
-        player.knockback = scale(state.dir, 6);
+    const foe = this.bump(world);
+    if (foe) {
+      if (foe.isGuarding(this.pos)) {
+        foe.guard(world);
+        foe.knockback = scale(state.dir, 6);
         this.endCharge(world);
         return;
       }
-      if (this.hitPlayer(cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
+      if (this.hitFoe(foe, cfg.chargeDamage, state.dir, cfg.chargeKnockback, world)) {
         this.endCharge(world);
         return;
       }
@@ -1178,12 +1210,8 @@ export class Jorogumo extends Enemy {
       this.stun(cfg.snagStun, 'snag', world);
       return;
     }
-    const player = world.player;
-    const offset = sub(player.pos, this.pos);
     world.emit({ type: 'bite', pos: { ...this.pos } });
-    if (length(offset) <= cfg.biteRange + this.radius + player.radius) {
-      this.hitPlayer(cfg.biteDamage, normalize(offset), cfg.biteKnockback, world);
-    }
+    this.strikeAround(this.pos, cfg.biteRange + this.radius, cfg.biteDamage, cfg.biteKnockback, world);
     this.state = { kind: 'grounded', t: cfg.groundedAfterBite };
   }
 }

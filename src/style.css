@@ -93,6 +93,12 @@ kbd {
   font-size: 16px;
 }
 
+/* Coups reçus par une âme liée */
+.float.soul {
+  color: #9fc4ff;
+  font-size: 15px;
+}
+
 /* Barres et compétences */
 .status {
   position: absolute;

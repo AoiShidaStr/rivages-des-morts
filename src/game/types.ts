@@ -73,7 +73,9 @@ export type GameEvent =
   | { type: 'soulEnd'; id: number }
   | { type: 'bind'; id: number; pos: Vec2; kind: EnemyKind }
   | { type: 'bindFail'; pos: Vec2 }
-  | { type: 'summonFade'; id: number; pos: Vec2 }
+  | { type: 'summonHit'; id: number; pos: Vec2; amount: number }
+  /** `broken` : l'âme a été détruite par les yokai, plutôt que de s'effacer avec le temps. */
+  | { type: 'summonFade'; id: number; pos: Vec2; broken: boolean }
   | { type: 'recall'; pos: Vec2 }
   | { type: 'sacrifice'; pos: Vec2; radius: number }
   | { type: 'choir'; pos: Vec2; radius: number }

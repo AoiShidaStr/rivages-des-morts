@@ -307,8 +307,11 @@
             {
               "id": "seimei-1",
               "name": "Shikigami tenaces",
-              "description": "Tes âmes restent 40 % plus longtemps.",
-              "effects": [{ "op": "mul", "path": "summon.life", "value": 1.4 }]
+              "description": "Tes âmes ont 40 % de PV en plus et restent 40 % plus longtemps.",
+              "effects": [
+                { "op": "mul", "path": "summon.life", "value": 1.4 },
+                { "op": "mul", "path": "summon.hp", "value": 1.4 }
+              ]
             },
             {
               "id": "seimei-2",
@@ -329,7 +332,7 @@
               "id": "seimei-4",
               "name": "Les Douze Shikigami",
               "ultimate": true,
-              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa dure deux fois plus, l’Oublié étourdit.",
+              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa a deux fois plus de PV et de durée, l'Oublié étourdit.",
               "effects": [{ "op": "set", "path": "perks.shikigami", "value": true }]
             }
           ]

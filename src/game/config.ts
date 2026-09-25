@@ -81,6 +81,8 @@ export interface SummonConfig {
   soulLife: number;
   /** Secondes de combat d'une âme liée avant qu'elle ne s'efface. */
   life: number;
+  /** PV d'une âme liée : les yokai l'attaquent, et elle se brise à 0. */
+  hp: number;
   radius: number;
   speed: number;
   damage: number;
@@ -97,8 +99,8 @@ export interface SummonConfig {
   sacrifice: { cooldown: number; damage: number; radius: number };
   /** R : les âmes sont renforcées un moment. */
   choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
-  /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort qu'un feu follet. */
-  kinds: Partial<Record<EnemyKind, { damage: number; speed: number }>>;
+  /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort et encaisse mieux qu'un feu follet. */
+  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number }>>;
 }
 
 /** Effets spéciaux du Guerrier ; absents = inactifs. */
@@ -149,6 +151,8 @@ export interface Perks {
   summonDamageFactor?: number;
   /** Les coups des âmes étourdissent (Éventail de la Jorōgumo). */
   summonStun?: number;
+  /** Masque d'Oublié : les yokai s'en prennent d'abord aux âmes. */
+  summonTaunt?: boolean;
   /** Les Douze Shikigami : chaque âme garde un trait de son yokai. */
   shikigami?: boolean;
   /** PV rendus en lançant le Chœur spectral. */

@@ -29,7 +29,7 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 | Hanyō (japonaise) | tes coups remplissent une jauge qui te transforme un moment ; sous 30 % de PV, tu cours plus vite et tu te régénères |
 
 - **Guerrier** : bloque les coups pour remplir sa rage, puis la dépense en attaques puissantes.
-- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi. Chaque âme active réduit un peu tes propres dégâts.
+- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai, qui la prennent pour cible comme toi. Chaque âme active réduit un peu tes propres dégâts.
 - **Lame, Paladin et Rôdeur** arrivent plus tard. Toutes les races ont encore la même apparence.
 
 ### Commandes
