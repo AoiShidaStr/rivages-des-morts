@@ -93,6 +93,33 @@ kbd {
   font-size: 16px;
 }
 
+/* Coup critique de la Lame, marques posées sur les ennemis */
+.float.crit {
+  color: #ffd84a;
+  font-size: 24px;
+}
+
+.float.mark {
+  color: #c9b3ff;
+  font-size: 14px;
+}
+
+.float.hunt {
+  color: #ffb07a;
+  font-size: 14px;
+}
+
+.float.light {
+  color: #ffe39a;
+  font-size: 18px;
+}
+
+/* Coups reçus par une âme liée */
+.float.soul {
+  color: #9fc4ff;
+  font-size: 15px;
+}
+
 /* Barres et compétences */
 .status {
   position: absolute;
@@ -138,6 +165,32 @@ kbd {
 
 .bar.rage.souls.ready {
   box-shadow: 0 0 12px #6ff3ff;
+}
+
+/* Lame : charges du Pas de l'ombre. Paladin : vigueur de l'allié relevé. Rôdeur : l'arc qui se bande. */
+.bar.rage.shadow .fill {
+  background: linear-gradient(#a58fd6, #4b3a78);
+}
+
+.bar.rage.shadow.ready {
+  box-shadow: 0 0 10px #a58fd6;
+}
+
+.bar.rage.light .fill {
+  background: linear-gradient(#ffe39a, #d49a2c);
+}
+
+.bar.rage.light.ready {
+  box-shadow: 0 0 12px #ffd76a;
+}
+
+.bar.rage.draw .fill {
+  background: linear-gradient(#cfe7a0, #6f9a3a);
+  transition: none;
+}
+
+.bar.rage.draw.ready {
+  box-shadow: 0 0 12px #e8ffb0;
 }
 
 .bar .label {

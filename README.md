@@ -29,8 +29,12 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 | Hanyō (japonaise) | tes coups remplissent une jauge qui te transforme un moment ; sous 30 % de PV, tu cours plus vite et tu te régénères |
 
 - **Guerrier** : bloque les coups pour remplir sa rage, puis la dépense en attaques puissantes.
-- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi. Chaque âme active réduit un peu tes propres dégâts.
-- **Lame, Paladin et Rôdeur** arrivent plus tard. Toutes les races ont encore la même apparence.
+- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai, qui la prennent pour cible comme toi. Chaque âme active réduit un peu tes propres dégâts.
+- **Lame** : peu de PV, mais des coups très rapides. Traverse les ennemis pour les marquer, puis achève-les en coups critiques.
+- **Paladin** : robuste. Bouclier levé, il pare tout ce qui vient de face, soigne autour de lui et relève les alliés tombés.
+- **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances.
+
+Toutes les races et les classes ont encore la même apparence.
 
 ### Commandes
 
@@ -48,26 +52,22 @@ Les touches sont pensées pour un clavier AZERTY. Sur un clavier QWERTY, elles r
 | <kbd>K</kbd> | compétences |
 | <kbd>Échap</kbd> | menu (et rappel des commandes) |
 
-**Au combat**
+**Au combat**, pour toutes les classes : <kbd>Z</kbd> <kbd>Q</kbd> <kbd>S</kbd> <kbd>D</kbd> pour se déplacer, la souris pour viser, clic gauche pour frapper (maintenir pour enchaîner ; le Rôdeur tire une flèche), <kbd>Espace</kbd> pour esquiver, <kbd>Échap</kbd> pour la pause. Le clic droit et <kbd>A</kbd> <kbd>E</kbd> <kbd>R</kbd> changent selon la classe :
 
-| Touche | Guerrier | Invocateur |
-| --- | --- | --- |
-| <kbd>Z</kbd> <kbd>Q</kbd> <kbd>S</kbd> <kbd>D</kbd> | se déplacer | se déplacer |
-| Souris | viser | viser |
-| Clic gauche | frapper (maintenir pour enchaîner) | frapper |
-| Clic droit | bloquer : remplit la rage | lier l'âme d'un ennemi vaincu |
-| <kbd>Espace</kbd> | esquiver | esquiver |
-| <kbd>A</kbd> | frappe fracassante (demi-rage), traverse les carapaces | rappel : tes âmes foncent sur l'ennemi visé |
-| <kbd>E</kbd> | bond (25 de rage) | sacrifice : ta plus vieille âme explose |
-| <kbd>R</kbd> | frénésie (30 de rage) | chœur spectral : tes âmes frappent plus fort |
-| <kbd>Échap</kbd> | pause | pause |
+| Classe | Clic droit | <kbd>A</kbd> | <kbd>E</kbd> | <kbd>R</kbd> |
+| --- | --- | --- | --- | --- |
+| Guerrier | bloquer : remplit la rage | frappe fracassante (demi-rage), traverse les carapaces | bond (25 de rage) | frénésie (30 de rage) |
+| Invocateur | lier l'âme d'un ennemi vaincu | rappel : tes âmes foncent sur l'ennemi visé | sacrifice : ta plus vieille âme explose | chœur spectral : tes âmes frappent plus fort |
+| Lame | pas de l'ombre : traverse et marque les ennemis | marque de mort : tous tes coups sur la cible sont critiques | écran de fumée : tu disparais, les yokai attaquent le nuage | danse des lames : tu bondis d'ennemi en ennemi |
+| Paladin | bouclier levé (maintenir) | aura de lumière : soigne autour de toi | marteau lancé : aller-retour | relever : le dernier allié tombé combat pour toi |
+| Rôdeur | tir chargé (maintenir, puis relâcher) | flèche-filet : immobilise | marque du chasseur : la cible prend plus de dégâts | recul : bond en arrière en tirant |
 
 ### Conseils
 
 - **Kodama** : il soigne les autres yokai. Tue-le en premier, un coup interrompt son soin.
-- **Kappa** : sa carapace arrête les coups de face. Passe dans son dos, ou bloque sa charge pour renverser sa coupelle.
+- **Kappa** : sa carapace arrête les coups et les flèches de face. Passe dans son dos, ou bloque sa charge (Guerrier, Paladin) pour renverser sa coupelle.
 - **Kasa-obake** : un cercle rouge sous tes pieds veut dire qu'il va retomber dessus. Esquive.
-- **Oubliés** : ils marquent une pause avant de frapper. Bloque au bon moment pour remplir ta rage. En Invocateur, lie leurs âmes : ce sont les plus fortes.
+- **Oubliés** : ils marquent une pause avant de frapper. Bloque au bon moment pour remplir ta rage. En Invocateur, lie leurs âmes : ce sont les plus fortes. En Paladin, relève-les.
 - **Jorōgumo** : ses toiles te ralentissent. Frappe un feu follet près d'une toile pour la brûler.
 
 ## Lancer le jeu en local

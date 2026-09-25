@@ -155,6 +155,70 @@ export function drawRing(size = 256): HTMLCanvasElement {
   return canvas;
 }
 
+/** Traînée douce orientée vers +X, plus nette à l'arrivée : Pas de l'ombre, Danse des lames. */
+export function drawStreak(width = 256, height = 64): HTMLCanvasElement {
+  const [canvas, ctx] = makeCanvas(width, height);
+  const along = ctx.createLinearGradient(0, 0, width, 0);
+  along.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  along.addColorStop(0.8, 'rgba(255, 255, 255, 0.9)');
+  along.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = along;
+  ctx.beginPath();
+  ctx.moveTo(0, height / 2);
+  ctx.lineTo(width * 0.8, height * 0.1);
+  ctx.lineTo(width, height / 2);
+  ctx.lineTo(width * 0.8, height * 0.9);
+  ctx.closePath();
+  ctx.fill();
+  return canvas;
+}
+
+/** Flèche vue de dessus, pointe vers +X, avec son empennage blanc. */
+export function drawArrow(width = 128, height = 24): HTMLCanvasElement {
+  const [canvas, ctx] = makeCanvas(width, height);
+  const mid = height / 2;
+  ctx.fillStyle = '#8a6a3e';
+  ctx.fillRect(width * 0.12, mid - 1.5, width * 0.74, 3);
+  ctx.fillStyle = '#d9dde0';
+  ctx.beginPath();
+  ctx.moveTo(width, mid);
+  ctx.lineTo(width * 0.84, mid - height * 0.3);
+  ctx.lineTo(width * 0.84, mid + height * 0.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#f4f1ea';
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(width * 0.3, mid);
+    ctx.lineTo(width * 0.12, mid + side * height * 0.45);
+    ctx.lineTo(0, mid + side * height * 0.45);
+    ctx.lineTo(width * 0.16, mid);
+    ctx.closePath();
+    ctx.fill();
+  }
+  return canvas;
+}
+
+/** Marteau du Paladin vu de dessus, tête vers +X : il tournoie en vol. */
+export function drawHammer(size = 96): HTMLCanvasElement {
+  const [canvas, ctx] = makeCanvas(size, size);
+  const c = size / 2;
+  ctx.fillStyle = '#7a5a34';
+  ctx.fillRect(size * 0.12, c - 3, size * 0.6, 6);
+  ctx.fillStyle = '#c9ced2';
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(size * 0.62, size * 0.2, size * 0.26, size * 0.6, 5);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#f2c14e';
+  ctx.beginPath();
+  ctx.arc(size * 0.75, c, size * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+  return canvas;
+}
+
 /** Couloir fléché orienté vers +X : trajectoire annoncée d'une charge. */
 export function drawTelegraph(width = 512, height = 96): HTMLCanvasElement {
   const [canvas, ctx] = makeCanvas(width, height);

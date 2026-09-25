@@ -409,7 +409,7 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
     capped ? h('p', { class: 'note danger' }, `Tetsu ne dépasse pas ton niveau (${cap}) : gagne de l’expérience au donjon pour continuer.`) : null,
     growth.length ? h('h3', {}, 'Au niveau suivant') : null,
     growth.length ? h('dl', { class: 'stats compare' }, ...growth) : null,
-    def.slot === 'arme' && growth.length ? h('p', { class: 'note' }, 'Frappe fracassante, Bond et foudre suivent les dégâts de l’arme.') : null,
+    def.slot === 'arme' && growth.length ? h('p', { class: 'note' }, 'Les compétences de ta classe et la foudre suivent les dégâts de l’arme.') : null,
     !growth.length && !maxed && !capped ? h('p', { class: 'note' }, 'Pas de bonus qui monte : la forge lui apporte ses paliers.') : null,
     h('h3', {}, 'Paliers'),
     h(

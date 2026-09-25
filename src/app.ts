@@ -124,6 +124,9 @@ export class App {
       get mode() {
         return app.mode;
       },
+      get renderer() {
+        return app.d.dungeonRenderer;
+      },
       /** Fait avancer le jeu sans attendre l'écran (onglet masqué, tests automatisés). */
       advance(seconds: number) {
         for (let i = 0; i < Math.round(seconds * 60); i++) app.step(1 / 60);
@@ -571,7 +574,7 @@ export class App {
     // Les compétences de la classe du héros ; E sert aussi à parler sur l'île.
     const cls = heroClass(content.skills, this.d.progress.state.hero);
     const skills = cls.actives.map((a): [string, string] => [a.key, `${a.name.toLowerCase()}${a.key === 'E' ? ' (au combat)' : ''}`]);
-    this.screens.showPause(options, skills);
+    this.screens.showPause(options, skills, cls.kit === 'rodeur');
   }
 
   private async backToTitle(): Promise<void> {

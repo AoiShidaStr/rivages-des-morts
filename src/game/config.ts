@@ -4,7 +4,7 @@ import type { EnemyKind } from './types';
 // Forme des fichiers de src/data : les valeurs s'équilibrent là-bas, sans toucher au code du combat.
 
 /** Jeu de compétences de la classe : clic droit et A / E / R n'ont pas le même rôle. */
-export type Kit = 'guerrier' | 'invocateur';
+export type Kit = 'guerrier' | 'invocateur' | 'lame' | 'paladin' | 'rodeur';
 
 export interface PlayerConfig {
   kit: Kit;
@@ -67,6 +67,9 @@ export interface PlayerConfig {
   };
   /** Âmes liées de l'Invocateur (ignoré par le Guerrier). */
   summon: SummonConfig;
+  blade: BladeConfig;
+  paladin: PaladinConfig;
+  ranger: RangerConfig;
   /** Effets venus des talents, de la race, des reliques et des paliers de tags. */
   perks?: Perks;
 }
@@ -81,6 +84,8 @@ export interface SummonConfig {
   soulLife: number;
   /** Secondes de combat d'une âme liée avant qu'elle ne s'efface. */
   life: number;
+  /** PV d'une âme liée : les yokai l'attaquent, et elle se brise à 0. */
+  hp: number;
   radius: number;
   speed: number;
   damage: number;
@@ -97,8 +102,46 @@ export interface SummonConfig {
   sacrifice: { cooldown: number; damage: number; radius: number };
   /** R : les âmes sont renforcées un moment. */
   choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
-  /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort qu'un feu follet. */
-  kinds: Partial<Record<EnemyKind, { damage: number; speed: number }>>;
+  /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort et encaisse mieux qu'un feu follet. */
+  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number }>>;
+}
+
+/** Lame : frappe vite, marque ses proies et les achève en critiques. */
+export interface BladeConfig {
+  /** Multiplicateur des coups critiques. */
+  critFactor: number;
+  /** Clic droit : dash qui traverse les ennemis et marque chacun d'eux (leur prochain coup reçu est critique). */
+  shadowDash: { distance: number; duration: number; cooldown: number; charges: number; markTime: number };
+  /** A : tous les coups sur la cible sont critiques un moment. */
+  deathMark: { cooldown: number; duration: number; range: number };
+  /** E : nuage de fumée ; le héros disparaît, les yokai attaquent le nuage. */
+  smoke: { cooldown: number; duration: number; radius: number };
+  /** R : la Lame bondit d'ennemi en ennemi et frappe chacun. */
+  dance: { cooldown: number; targets: number; range: number; damage: number; hop: number };
+}
+
+/** Paladin : bouclier levé, aura de soin, marteau lancé, et un allié relevé. */
+export interface PaladinConfig {
+  /** A : zone qui soigne le héros et ses alliés. */
+  aura: { cooldown: number; duration: number; radius: number; heal: number };
+  /** E : le marteau part vers la souris et revient, en frappant à l'aller et au retour. */
+  hammer: { cooldown: number; damage: number; range: number; speed: number; radius: number; knockback: number };
+  /** R : relève le dernier allié tombé (âme brisée, ou yokai vaincu) près du héros. */
+  raise: { cooldown: number; range: number; memory: number };
+}
+
+/** Rôdeur : flèches, tir chargé, filet, marque du chasseur, bond en arrière. */
+export interface RangerConfig {
+  /** La portée des flèches est celle de l'arme (`attack.range`). */
+  arrow: { speed: number; radius: number };
+  /** Clic droit maintenu : la flèche se charge, de 1 à `maxFactor` fois les dégâts. */
+  charged: { time: number; maxFactor: number; moveFactor: number; rangeFactor: number; speedFactor: number };
+  /** A : flèche qui immobilise les ennemis autour de l'impact. */
+  net: { cooldown: number; stun: number; radius: number; range: number };
+  /** E : la cible prend plus de dégâts, de toutes les sources. */
+  huntMark: { cooldown: number; duration: number; bonus: number; range: number };
+  /** R : bond en arrière en tirant une volée vers la souris. */
+  leap: { cooldown: number; distance: number; duration: number; height: number; arrows: number; spreadDeg: number };
 }
 
 /** Effets spéciaux du Guerrier ; absents = inactifs. */
@@ -149,6 +192,8 @@ export interface Perks {
   summonDamageFactor?: number;
   /** Les coups des âmes étourdissent (Éventail de la Jorōgumo). */
   summonStun?: number;
+  /** Masque d'Oublié : les yokai s'en prennent d'abord aux âmes. */
+  summonTaunt?: boolean;
   /** Les Douze Shikigami : chaque âme garde un trait de son yokai. */
   shikigami?: boolean;
   /** PV rendus en lançant le Chœur spectral. */
@@ -163,6 +208,62 @@ export interface Perks {
   sacrificeSoul?: boolean;
   /** Le Jugement : le Sacrifice inflige en plus cette part des PV max des ennemis touchés. */
   judgement?: number;
+
+  // --- Lame ---
+  /** Après une esquive (ou un Pas de l'ombre), les `swings` premiers coups dans les `window` s sont critiques (tag Lame). */
+  dodgeCrit?: { window: number; swings: number };
+  /** Croissant : dégâts infligés aux ennemis traversés par le Pas de l'ombre. */
+  dashDamage?: number;
+  /** Marée d'ombre : tuer un ennemi marqué rend une charge du Pas de l'ombre. */
+  dashRefund?: boolean;
+  /** Poudre aux yeux : l'Écran de fumée étourdit les ennemis proches. */
+  smokeStun?: number;
+  /** Langue d'argent : multiplicateur en plus des critiques portés depuis l'invisibilité. */
+  ambush?: number;
+  /** Métamorphe : chaque ennemi tué pendant l'invisibilité la prolonge. */
+  smokeKillExtend?: number;
+  /** Dernier souffle : dégâts en plus sur les ennemis sous `threshold` de leurs PV. */
+  execute?: { threshold: number; bonus: number };
+  /** Moisson des âmes : la Marque de mort passe à l'ennemi le plus proche quand sa cible meurt. */
+  markJump?: boolean;
+
+  // --- Paladin ---
+  /** Un coup bloqué soigne le héros et ses alliés autour de lui (tag Paladin). */
+  shieldHeal?: { amount: number; radius: number };
+  /** Riposte : un coup bloqué renvoie ces dégâts à l'attaquant. */
+  riposte?: number;
+  /** Gleipnir : un coup bloqué étourdit l'attaquant. */
+  gleipnir?: number;
+  /** Chaleur : l'Aura brûle les ennemis qui s'y trouvent (dégâts par seconde). */
+  auraBurn?: number;
+  /** Ama-no-Iwato : un ennemi qui entre dans l'Aura est étourdi (une fois par Aura). */
+  auraStun?: number;
+  /** Marteau du juge : le Marteau lancé étourdit. */
+  hammerStun?: number;
+  /** Relever te soigne. */
+  raiseHeal?: number;
+  /** Bandelettes : PV et durée des alliés relevés multipliés. */
+  raiseToughness?: number;
+  /** Roi des morts : Relever relève ce nombre d'alliés. */
+  raiseCount?: number;
+
+  // --- Rôdeur ---
+  /** Tir chargé plein : il traverse les ennemis (tag Rôdeur). */
+  chargedPierce?: boolean;
+  /** Tir chargé plein : il pose la Marque du chasseur pendant ces secondes (tag Rôdeur). */
+  chargedMark?: number;
+  /** Tir chargé : dégâts multipliés. */
+  chargedDamage?: number;
+  /** Lune pleine : un tir chargé plein étourdit. */
+  chargedStun?: number;
+  /** Carquois divin : un tir chargé plein part en plusieurs flèches. */
+  splitShot?: number;
+  /** Vent du nord : le Recul laisse un filet là où tu étais. */
+  leapNet?: boolean;
+  /** Curée : tuer une cible marquée recharge la Marque du chasseur. */
+  markRefund?: boolean;
+  /** Kami de la victoire : tes flèches s'infléchissent vers la cible marquée. */
+  homing?: boolean;
 }
 
 export interface EnemyBaseConfig {

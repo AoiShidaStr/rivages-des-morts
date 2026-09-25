@@ -89,7 +89,7 @@ Contrôles communs : clic gauche pour l'attaque de base, clic droit pour la sign
 | --- | --- | --- | --- | --- |
 | Guerrier (Berserker) | Blocage qui remplit la rage | Frappe fracassante : consomme la rage, gros dégâts | Bond : saute sur une zone | Frénésie : attaque plus vite, subit plus de dégâts |
 | Lame (Assassin des ombres) | Dash à travers les ennemis, qui les marque | Marque de mort : la cible prend des critiques | Écran de fumée : invisibilité courte | Danse des lames : enchaînement sur plusieurs cibles |
-| Paladin (Rempart solaire) | Bouclier levé : bloque de face, on avance lentement | Aura de lumière : à activer, soigne autour | Marteau lancé : aller-retour | Relever : ressuscite une invocation détruite |
+| Paladin (Rempart solaire) | Bouclier levé : bloque de face, on avance lentement | Aura de lumière : à activer, soigne autour | Marteau lancé : aller-retour | Relever : relève le dernier allié tombé (invocation détruite ou yokai vaincu) |
 | Invocateur (Lieur d'âmes) | Lier l'âme d'un ennemi vaincu | Rappel : les invocations foncent sur la cible | Sacrifice : une invocation explose | Chœur spectral : renforce les invocations |
 | Rôdeur (Chasseur) | Tir chargé | Flèche-filet : immobilise | Marque du chasseur : la cible prend plus de dégâts | Recul : bond en arrière en tirant |
 
@@ -117,9 +117,39 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 | Orphée, qui charma les Enfers par son chant (soutien) | Chœur spectral soigne aussi le joueur | Chœur spectral ralentit les ennemis proches | Lier une âme est plus rapide | **Chant des Enfers** : un ennemi sous 20 % de PV peut être lié sans être tué |
 | Anubis, gardien de la pesée (sacrifice) | Sacrifice fait plus de dégâts | Sacrifice rend des PV au joueur | Une invocation sacrifiée réduit le temps de recharge de Lier | **Le Jugement** : le Sacrifice d'une âme d'élite inflige des dégâts selon les PV de la cible |
 
-Les arbres de la Lame, du Paladin et du Rôdeur suivront le même modèle, plus tard.
+**Lame (Assassin des ombres)**
 
-**En place** : le Guerrier et l'Invocateur se choisissent à la création ; la Lame, le Paladin et le Rôdeur y sont annoncés. Un yokai vaincu par un Invocateur laisse son âme au sol quelques secondes (un halo bleu) ; liée, elle combat un temps limité, deux âmes à la fois de base, et chacune réduit un peu les dégâts du héros. Rappel, Sacrifice, Chœur spectral et les trois branches suivent le tableau ci-dessus. Les réglages sont dans `src/data/player.json` (bloc `summon`). Pour l'instant, les yokai ne visent pas les âmes : elles s'effacent avec le temps plutôt que sous les coups. Prochaine étape : que les ennemis les prennent pour cible, ce qui donnera son sens au Masque d'Oublié.
+| Branche | Nœud 1 | Nœud 2 | Nœud 3 | Ultime |
+| --- | --- | --- | --- | --- |
+| Tsukuyomi, dieu de la lune (ombre) | Pas de l'ombre revient plus vite | **Croissant** : le Pas de l'ombre porte plus loin et entaille au passage | **Marée d'ombre** : abattre un ennemi marqué rend une charge | **Éclipse** : deux charges de Pas de l'ombre, marques plus longues |
+| Loki, le trompeur (ruse) | Écran de fumée plus long | La fumée étourdit les ennemis proches | **Langue d'argent** : le coup depuis l'ombre fait ×3 | **Métamorphe** : chaque ennemi tué invisible prolonge l'invisibilité |
+| Thanatos, la mort douce (exécution) | Marque de mort plus longue | **Dernier souffle** : +40 % de dégâts sous 30 % de PV | Danse des lames : 2 cibles de plus, recharge plus courte | **Moisson des âmes** : la Marque de mort passe à l'ennemi le plus proche quand sa cible meurt |
+
+**Paladin (Rempart solaire)**
+
+| Branche | Nœud 1 | Nœud 2 | Nœud 3 | Ultime |
+| --- | --- | --- | --- | --- |
+| Amaterasu, déesse du soleil (lumière) | Aura plus large | **Chaleur** : l'Aura brûle les yokai | Aura plus longue | **Ama-no-Iwato** : tout yokai qui entre dans l'Aura est ébloui (étourdi) |
+| Týr, dieu du serment (rempart) | Bouclier sur 180° | Avancer plus vite bouclier levé | **Main de Týr** : un coup bloqué renvoie des dégâts | **Gleipnir** : un coup bloqué étourdit l'attaquant |
+| Osiris, le roi ressuscité (relève) | Relever revient plus vite | **Bandelettes** : alliés relevés plus robustes et plus durables | Relever soigne le Paladin | **Roi des morts** : Relever relève deux alliés, un de plus à la fois |
+
+**Rôdeur (Chasseur)**
+
+| Branche | Nœud 1 | Nœud 2 | Nœud 3 | Ultime |
+| --- | --- | --- | --- | --- |
+| Artémis, la chasseresse (précision) | Tir chargé plus rapide à bander | Tir chargé plus fort | **Lune pleine** : un tir chargé plein étourdit | **Carquois divin** : un tir chargé plein part en trois flèches |
+| Skadi, chasseresse des neiges (contrôle) | Filet plus long | **Skis** : Recul plus long et plus fréquent | Filet plus large et plus fréquent | **Vent du nord** : le Recul laisse un filet derrière soi |
+| Hachiman, dieu de l'arc (traque) | Marque du chasseur plus longue | Marque plus forte (+50 %) | **Curée** : abattre la cible marquée recharge la Marque | **Flèche du kami** : les flèches s'infléchissent vers les cibles marquées |
+
+**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes de départ dans `src/data/items.json`.
+
+- **Lame** : le Pas de l'ombre (clic droit) traverse les ennemis et marque chacun : le prochain coup d'arme sur lui est critique (×2). La Marque de mort rend tous les coups critiques 5 s. L'Écran de fumée laisse un nuage là où était la Lame : invisible 3 s, elle n'est plus visée, les yokai attaquent le nuage, et son premier coup depuis l'ombre est une embuscade critique. La Danse des lames saute d'ennemi en ennemi (5 au plus), invulnérable. Le tag rend critiques les coups qui suivent une esquive. La Jorōgumo n'est pas dupe de la fumée.
+- **Paladin** : le bouclier levé bloque de face comme la garde du Guerrier, sans rage, et renverse la coupelle du kappa. L'Aura suit le héros 6 s et soigne 4 PV par seconde, âmes comprises. Le Marteau frappe à l'aller et au retour. Relever relève le dernier allié tombé à moins de 7 m depuis moins de 12 s (une âme brisée ou un yokai vaincu), qui combat 30 s en âme de lumière dorée ; les alliés relevés n'affaiblissent pas le Paladin. Le tag fait soigner les alliés proches à chaque coup bloqué.
+- **Rôdeur** : le clic gauche tire une flèche à la portée de l'arc (10 m pour le Yumi). Le tir chargé se bande en marchant lentement, jusqu'à ×3 ; une ligne de visée montre sa portée. La carapace du kappa arrête les flèches de face. La Marque du chasseur (+30 % de dégâts reçus) compte pour toutes les sources, âmes comprises. Le tag fait traverser et marquer les tirs chargés pleins.
+
+Toutes les races ont encore la même apparence, quelle que soit la classe ; chaque classe n'a pour l'instant que son arme de départ.
+
+**Invocateur** : un yokai vaincu par un Invocateur laisse son âme au sol quelques secondes (un halo bleu) ; liée, elle combat un temps limité, deux âmes à la fois de base, et chacune réduit un peu les dégâts du héros. Rappel, Sacrifice, Chœur spectral et les trois branches suivent le tableau ci-dessus. Les réglages sont dans `src/data/player.json` (bloc `summon`). Les âmes ont des PV (40 de base, plus pour un kappa, moins pour un feu follet) : chaque yokai s'en prend à la cible la plus proche, héros ou âme, et ses charges, chutes et coups en arc les touchent toutes. Une âme s'efface avec le temps ou se brise sous les coups. Le Masque d'Oublié rend les âmes trois fois plus attirantes que le héros. La Jorōgumo, elle, ne poursuit que le héros, mais ses coups frappent aussi les âmes à portée.
 
 **Système de tags** : chaque compétence, arme ou passif porte un ou deux tags de classe. Réunir 2, 4 ou 6 éléments d'une même classe débloque un bonus de plus en plus fort, comme les traits de TFT.
 
@@ -208,6 +238,9 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 | Kanabō d'oni | Arme | Rare | Guerrier | Coups lents, Frappe fracassante étourdit | Kappa renforcé |
 | Katana de rōnin | Arme | Rare | Guerrier | Plus rapide, le blocage donne plus de rage | Jorōgumo |
 | Grelots d'onmyōji | Arme | Commune | Invocateur | Arme de départ, les invocations tapent plus vite | Départ |
+| Kunai jumeaux | Arme | Commune | Lame | Arme de départ, coups très rapides et courts | Départ |
+| Naginata et bouclier de temple | Arme | Commune | Paladin | Arme de départ, longue portée, coups qui repoussent | Départ |
+| Yumi en bambou | Arme | Commune | Rôdeur | Arme de départ, flèches à 10 m | Départ |
 | Éventail de la Jorōgumo | Arme | Épique | Invocateur | Les invocations posent des toiles qui ralentissent | Jorōgumo |
 | Chapeau de paille | Casque | Commune | — | +PV | Forge (sève) |
 | Masque d'Oublié | Casque | Rare | Invocateur | Les ennemis ciblent les invocations en priorité | Oubliés |
@@ -485,23 +518,23 @@ Le prototype valide le combat et le système d'âmes sur une seule île, avant t
 | 2. Système d'âmes | Invocateur, lier les ennemis vaincus | L'élément unique du jeu fonctionne-t-il ? |
 | 3. Premier donjon | Salles fixes, coffres de fin de combat, boutique de fin, un boss (Jorōgumo) | La boucle donjon + farming est-elle addictive ? |
 | 4. Première île | Zone d'exploration du Yomi, 2 ou 3 quêtes courtes, un marchand | La boucle monde + donjon tient-elle ? |
-| 5. Contenu | Lame, Paladin, Rôdeur, les 4 races, progression entre les donjons | Diversité des builds |
+| 5. Contenu | Lame, Paladin, Rôdeur (en place), les 4 races (en place), progression entre les donjons | Diversité des builds |
 | 6. Suite | Nouvelles îles, niveau max 50, difficulté et rotation des donjons, multijoueur | — |
 
 **Règle de périmètre** : tout concevoir sur papier, mais ne coder que le strict nécessaire à chaque étape.
 
 ### Version 1 : dedans ou plus tard
 
-La V1 est une tranche jouable complète mais petite : une île, un donjon, deux classes. Tout ce qui ajoute un système en plus attend la suite.
+La V1 est une tranche jouable complète mais petite : une île, un donjon, cinq classes avec leur arme de départ. Tout ce qui ajoute un système en plus attend la suite.
 
 | Domaine | Dans la V1 | Plus tard |
 | --- | --- | --- |
 | Monde | Île du Yomi : petite zone, 2 ou 3 quêtes courtes, barque réduite (marchand, forge, ouverture des coffres) | Autres îles, Mésopotamie, agrandissement de la barque |
 | Donjons | Les Rizières noyées, boss Jorōgumo, boutique de fin, coffres, drops | Difficulté à l'entrée, rotation, autres donjons |
-| Classes | Guerrier, Invocateur (en place) | Lame, Paladin, Rôdeur, classe secondaire |
+| Classes | Les cinq classes, avec leur arme de départ (en place) | Armes supplémentaires par classe, classe secondaire |
 | Races | Les quatre races, passifs simples (en place) | Transformation du Hanyō à la demande, apparence par race, Nahual, Sidhe, affinité d'île |
 | Équipement | 7 emplacements, niveaux d'arme, tags et paliers, 2 ou 3 reliques | Sceaux, armes hybrides, éveil, fusion, panoplies |
-| Progression | XP, niveau max 10, arbre de compétences réduit pour les 2 classes | Niveau 20 puis 50, arbre de mémoire, niveaux d'invocation |
+| Progression | XP, niveau max 10, arbre de compétences réduit pour les 5 classes | Niveau 20 puis 50, arbre de mémoire, niveaux d'invocation |
 | Ressources | Oboles, matériaux du Yomi | Éclats de mémoire, Éclats des Tablettes |
 | Multi | Aucun | Coop PvE, puis PvP éventuel |
 

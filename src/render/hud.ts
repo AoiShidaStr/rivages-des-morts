@@ -1,3 +1,4 @@
+import type { Kit } from '../game/config';
 import type { ClassDef } from '../game/loadout';
 import type { GameEvent } from '../game/types';
 import type { World } from '../game/world';
@@ -5,6 +6,14 @@ import { h } from '../ui/dom';
 
 const BANNER_TIME = 2.6;
 const SKILL_KEYS = ['A', 'E', 'R'] as const;
+/** La barre sous les PV : rage du Guerrier, âmes de l'Invocateur, ombre de la Lame, allié du Paladin, arc du Rôdeur. */
+const RESOURCE: Record<Kit, { label: string; style: string }> = {
+  guerrier: { label: 'Rage', style: '' },
+  invocateur: { label: 'Âmes', style: 'souls' },
+  lame: { label: 'Ombre', style: 'shadow' },
+  paladin: { label: 'Allié', style: 'light' },
+  rodeur: { label: 'Tir chargé', style: 'draw' },
+};
 
 interface SkillSlot {
   root: HTMLElement;
@@ -22,7 +31,7 @@ interface SkillView {
 /** Interface de combat en HTML par-dessus le canvas : barres, compétences, annonces de vague et du boss. */
 export class Hud {
   private readonly hpFill: HTMLElement;
-  /** Rage du Guerrier, ou âmes liées de l'Invocateur. */
+  /** Barre de ressource de la classe (voir `RESOURCE`). */
   private readonly rageBar: HTMLElement;
   private readonly rageFill: HTMLElement;
   private readonly rageLabel: HTMLElement;
@@ -68,12 +77,14 @@ export class Hud {
   configure(cls: ClassDef): void {
     const name = (key: string) => cls.actives.find((a) => a.key === key)?.name ?? '';
     for (const key of SKILL_KEYS) this.skills[key].name.textContent = name(key);
-    this.rageBar.classList.toggle('souls', cls.kit === 'invocateur');
-    this.rageLabel.textContent = cls.kit === 'invocateur' ? 'Âmes' : 'Rage';
+    for (const [kit, { style }] of Object.entries(RESOURCE)) {
+      if (style) this.rageBar.classList.toggle(style, kit === cls.kit);
+    }
+    this.rageLabel.textContent = RESOURCE[cls.kit].label;
     const keys: [string, string][] = [
       ['ZQSD', 'se déplacer'],
       ['Souris', 'viser'],
-      ['Clic gauche', 'frapper'],
+      ['Clic gauche', cls.kit === 'rodeur' ? 'tirer' : 'frapper'],
       ['Clic droit', name('Clic droit').toLowerCase()],
       ['Espace', 'esquiver'],
       ...SKILL_KEYS.map((key): [string, string] => [key, name(key).toLowerCase()]),
@@ -87,22 +98,58 @@ export class Hud {
     this.hpFill.style.width = `${(player.hp / cfg.maxHp) * 100}%`;
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
     let views: SkillView[];
+    let fill = 0;
+    let ready = false;
+    let label = RESOURCE[cfg.kit].label;
     if (cfg.kit === 'invocateur') {
       const s = cfg.summon;
       const count = world.summons.length;
       const none = count === 0;
-      this.rageFill.style.width = `${(count / Math.max(1, s.max)) * 100}%`;
-      this.rageBar.classList.toggle('ready', world.soulInReach);
-      const label = `Âmes ${count} / ${s.max}`;
-      if (this.rageLabel.textContent !== label) this.rageLabel.textContent = label;
+      fill = count / Math.max(1, s.max);
+      ready = world.soulInReach;
+      label = `Âmes ${count} / ${s.max}`;
       views = [
         { cooldown: player.recallCooldown / s.recall.cooldown, locked: none },
         { cooldown: player.sacrificeCooldown / s.sacrifice.cooldown, locked: none },
         { cooldown: world.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && world.choir <= 0, active: world.choir > 0 },
       ];
+    } else if (cfg.kit === 'lame') {
+      // Charges du Pas de l'ombre, la suivante se remplit ; invisible, la barre le dit.
+      const b = cfg.blade;
+      const max = b.shadowDash.charges;
+      const refill = player.dashCharges < max ? 1 - player.dashRecharge / b.shadowDash.cooldown : 0;
+      fill = (player.dashCharges + refill) / max;
+      ready = player.dashCharges > 0;
+      label = player.hidden > 0 ? 'Invisible' : max > 1 ? `Ombre ${player.dashCharges} / ${max}` : 'Ombre';
+      views = [
+        { cooldown: player.deathMarkCooldown / b.deathMark.cooldown, locked: false },
+        { cooldown: player.hidden > 0 ? 0 : player.smokeCooldown / b.smoke.cooldown, locked: false, active: player.hidden > 0 },
+        { cooldown: player.danceCooldown / b.dance.cooldown, locked: false },
+      ];
+    } else if (cfg.kit === 'paladin') {
+      // Vigueur de l'allié relevé ; la barre luit quand Relever a quelqu'un à relever.
+      const p = cfg.paladin;
+      const ally = world.summons.find((s) => s.holy);
+      fill = ally?.vigor ?? 0;
+      ready = world.graveInReach;
+      label = ally ? `Allié relevé${world.summons.length > 1 ? ` ×${world.summons.length}` : ''}` : 'Aucun allié';
+      views = [
+        { cooldown: world.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: world.aura > 0 },
+        { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },
+        { cooldown: player.raiseCooldown / p.raise.cooldown, locked: !world.graveInReach },
+      ];
+    } else if (cfg.kit === 'rodeur') {
+      const r = cfg.ranger;
+      fill = player.drawProgress;
+      ready = fill >= 1;
+      views = [
+        { cooldown: player.netCooldown / r.net.cooldown, locked: false },
+        { cooldown: player.huntCooldown / r.huntMark.cooldown, locked: false },
+        { cooldown: player.leapCooldown / r.leap.cooldown, locked: false },
+      ];
     } else {
-      this.rageFill.style.width = `${(player.rage / cfg.rageMax) * 100}%`;
-      this.rageBar.classList.toggle('ready', player.canSmash);
+      fill = player.rage / cfg.rageMax;
+      ready = player.canSmash;
       views = [
         { cooldown: 0, locked: !player.canSmash },
         { cooldown: player.bondCooldown / cfg.bond.cooldown, locked: player.rage < cfg.bond.rageCost },
@@ -113,6 +160,9 @@ export class Hud {
         },
       ];
     }
+    this.rageFill.style.width = `${fill * 100}%`;
+    this.rageBar.classList.toggle('ready', ready);
+    if (this.rageLabel.textContent !== label) this.rageLabel.textContent = label;
     SKILL_KEYS.forEach((key, i) => {
       const slot = this.skills[key];
       const view = views[i];

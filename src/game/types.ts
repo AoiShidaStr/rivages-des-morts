@@ -9,7 +9,9 @@ export type EnemyKind =
   | 'oublie'
   | 'araignee'
   | 'jorogumo';
-export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare';
+export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare' | 'net' | 'daze';
+/** Marques posées sur un ennemi : ombre et mort (Lame), chasseur (Rôdeur). */
+export type MarkKind = 'shadow' | 'death' | 'hunt';
 export type Outcome = 'victory' | 'defeat';
 
 /** Posture affichée : le rendu s'en sert pour animer les sprites (écrasement, tremblement, teinte). */
@@ -23,15 +25,13 @@ export interface InputFrame {
   aim: Vec2;
   attackPressed: boolean;
   attackHeld: boolean;
-  /** Clic droit : blocage du Guerrier, Lier de l'Invocateur. */
+  /** Clic droit : blocage du Guerrier et du Paladin, Lier de l'Invocateur, Pas de l'ombre, tir chargé. */
   signatureHeld: boolean;
   signaturePressed: boolean;
   dodgePressed: boolean;
-  /** A : Frappe fracassante ou Rappel, selon la classe. */
+  /** A, E, R : les trois compétences de la classe (Frappe fracassante, Bond, Frénésie pour le Guerrier…). */
   skillAPressed: boolean;
-  /** E : Bond ou Sacrifice. */
   skillEPressed: boolean;
-  /** R : Frénésie ou Chœur spectral. */
   skillRPressed: boolean;
 }
 
@@ -39,7 +39,7 @@ export interface InputFrame {
 export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string }
   | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number }
-  | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean }
+  | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean }
   | { type: 'playerHit'; pos: Vec2; amount: number }
   | { type: 'guard'; pos: Vec2; rage: number }
   | { type: 'parry'; id: number; pos: Vec2 }
@@ -73,8 +73,21 @@ export type GameEvent =
   | { type: 'soulEnd'; id: number }
   | { type: 'bind'; id: number; pos: Vec2; kind: EnemyKind }
   | { type: 'bindFail'; pos: Vec2 }
-  | { type: 'summonFade'; id: number; pos: Vec2 }
+  | { type: 'summonHit'; id: number; pos: Vec2; amount: number }
+  /** `broken` : l'âme a été détruite par les yokai, plutôt que de s'effacer avec le temps. */
+  | { type: 'summonFade'; id: number; pos: Vec2; broken: boolean }
   | { type: 'recall'; pos: Vec2 }
   | { type: 'sacrifice'; pos: Vec2; radius: number }
   | { type: 'choir'; pos: Vec2; radius: number }
+  // Lame : marques, traînées du Pas de l'ombre et de la Danse des lames, fumée
+  | { type: 'mark'; id: number; pos: Vec2; mark: MarkKind }
+  | { type: 'streak'; from: Vec2; to: Vec2 }
+  | { type: 'smoke'; pos: Vec2; radius: number }
+  // Paladin
+  | { type: 'aura'; pos: Vec2; radius: number }
+  | { type: 'raise'; id: number; pos: Vec2 }
+  | { type: 'raiseFail'; pos: Vec2 }
+  // Rôdeur : filet qui s'ouvre, tir chargé plein
+  | { type: 'netBurst'; pos: Vec2; radius: number }
+  | { type: 'loose'; pos: Vec2; full: boolean }
   | { type: 'end'; outcome: Outcome };
