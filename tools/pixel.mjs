@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { Canvas } from './pixel/canvas.mjs';
 import araignee from './pixel/araignee.mjs';
-import heros from './pixel/heros.mjs';
+import heros, { hero, KIT_IDS, RACE_IDS } from './pixel/heros.mjs';
 import hitodama from './pixel/hitodama.mjs';
 import { human as jorogumo, spider as jorogumoAraignee } from './pixel/jorogumo.mjs';
 import kappa from './pixel/kappa.mjs';
@@ -25,9 +25,14 @@ import kasaObake from './pixel/kasa-obake.mjs';
 import kodama from './pixel/kodama.mjs';
 import oublie from './pixel/oublie.mjs';
 
-// Les clés sont les noms des sprites du jeu (src/data/sprites.json).
+// Les clés sont les noms des sprites du jeu (src/data/sprites.json). Le héros existe pour chaque race et
+// chaque classe : heros-<race>-<classe> (src/render/heroes.ts) ; l'Einherjar guerrier, lui, est `heros`.
+const heroes = Object.fromEntries(
+  RACE_IDS.flatMap((race) => KIT_IDS.map((kit) => [`heros-${race}-${kit}`, hero(race, kit)])).filter(([name]) => name !== 'heros-einherjar-guerrier'),
+);
 const characters = {
   heros,
+  ...heroes,
   oublie,
   hitodama,
   kodama,
@@ -48,7 +53,7 @@ for (const [name, character] of Object.entries(characters)) {
   const { png, json, count } = await buildSheet(name, character);
   await writeFile(path.join(outDir, `${name}.png`), png);
   await writeFile(path.join(outDir, `${name}.json`), `${JSON.stringify(json, null, 2)}\n`);
-  console.log(`${name.padEnd(8)} ${count} images → public/sprites/pixel/${name}.png`);
+  console.log(`${name.padEnd(24)} ${count} images → public/sprites/pixel/${name}.png`);
 }
 
 /** Dessine toutes les poses de toutes les animations sur une seule ligne d'images. */

@@ -141,13 +141,17 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 | Skadi, chasseresse des neiges (contrôle) | Filet plus long | **Skis** : Recul plus long et plus fréquent | Filet plus large et plus fréquent | **Vent du nord** : le Recul laisse un filet derrière soi |
 | Hachiman, dieu de l'arc (traque) | Marque du chasseur plus longue | Marque plus forte (+50 %) | **Curée** : abattre la cible marquée recharge la Marque | **Flèche du kami** : les flèches s'infléchissent vers les cibles marquées |
 
-**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes de départ dans `src/data/items.json`.
+**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes dans `src/data/items.json` : trois par classe au Yomi, sauf l'Invocateur qui en a deux (voir « Kit d'items du Yomi »).
 
-- **Lame** : le Pas de l'ombre (clic droit) traverse les ennemis et marque chacun : le prochain coup d'arme sur lui est critique (×2). La Marque de mort rend tous les coups critiques 5 s. L'Écran de fumée laisse un nuage là où était la Lame : invisible 3 s, elle n'est plus visée, les yokai attaquent le nuage, et son premier coup depuis l'ombre est une embuscade critique. La Danse des lames saute d'ennemi en ennemi (5 au plus), invulnérable. Le tag rend critiques les coups qui suivent une esquive. La Jorōgumo n'est pas dupe de la fumée.
-- **Paladin** : le bouclier levé bloque de face comme la garde du Guerrier, sans rage, et renverse la coupelle du kappa. L'Aura suit le héros 6 s et soigne 4 PV par seconde, âmes comprises. Le Marteau frappe à l'aller et au retour. Relever relève le dernier allié tombé à moins de 7 m depuis moins de 12 s (une âme brisée ou un yokai vaincu), qui combat 30 s en âme de lumière dorée ; les alliés relevés n'affaiblissent pas le Paladin. Le tag fait soigner les alliés proches à chaque coup bloqué.
+- **Guerrier** : sa garde n'arrête que les trois quarts d'un coup de face (le talent Garde du héros, chez Héraclès, la rend totale) ; bloquer rapporte 16 de rage. Nodachi 9 dégâts, Frappe fracassante 38, Frénésie qui accélère les coups de 28 %.
+
+- **Lame** : 90 % des PV du Guerrier, une esquive plus longue qui revient plus vite. Le Pas de l'ombre (clic droit, 2,5 s) traverse les ennemis et marque chacun : le prochain coup d'arme sur lui est critique (×2), et abattre un ennemi marqué rend 4 PV (Festin de l'ombre). La Marque de mort rend tous les coups critiques 5 s. L'Écran de fumée laisse un nuage là où était la Lame : invisible 3 s, elle n'est plus visée, les yokai attaquent le nuage, et son premier coup depuis l'ombre est une embuscade critique. La Danse des lames saute d'ennemi en ennemi (5 au plus), invulnérable. Le tag rend critiques les coups qui suivent une esquive. La Jorōgumo n'est pas dupe de la fumée.
+- **Paladin** : le bouclier levé bloque de face comme la garde du Guerrier, mais arrête le coup en entier, sans rage ; il renverse la coupelle du kappa. L'Aura suit le héros 6 s et soigne 4 PV par seconde, âmes comprises. Le Marteau frappe à l'aller et au retour. Relever relève le dernier allié tombé à moins de 7 m depuis moins de 12 s (une âme brisée ou un yokai vaincu), qui combat 30 s en âme de lumière dorée ; les alliés relevés n'affaiblissent pas le Paladin. Le tag fait soigner les alliés proches à chaque coup bloqué.
 - **Rôdeur** : le clic gauche tire une flèche à la portée de l'arc (10 m pour le Yumi). Le tir chargé se bande en marchant lentement, jusqu'à ×3 ; une ligne de visée montre sa portée. La carapace du kappa arrête les flèches de face. La Marque du chasseur (+30 % de dégâts reçus) compte pour toutes les sources, âmes comprises. Le tag fait traverser et marquer les tirs chargés pleins.
 
-Toutes les races ont encore la même apparence, quelle que soit la classe ; chaque classe n'a pour l'instant que son arme de départ.
+**Équilibrage** : un bot joue chaque classe sur les vagues du donjon, sans rendu, en ratant une partie des attaques annoncées comme un joueur moyen. Il a servi à régler les chiffres ci-dessus. Le Guerrier, qui gardait son blocage levé sans rien perdre, encaisse désormais une partie des coups ; la Lame, qui ne vivait que de ses esquives, gagne des PV, de la portée et un soin sur les ennemis marqués ; le Paladin tape un peu moins fort que le Guerrier, le Rôdeur un peu plus vite qu'avant.
+
+**Apparence** : chaque combinaison de race et de classe a son héros en pixel art (`tools/pixel/heros.mjs`) : la race donne la tête, la peau et la tenue (casque viking, némès égyptien, laurier grec, cornes d'oni), la classe l'arme, la couleur de la cape et les gestes (arc bandé du Rôdeur, bouclier levé du Paladin). L'Einherjar guerrier garde sa planche peinte.
 
 **Invocateur** : un yokai vaincu par un Invocateur laisse son âme au sol quelques secondes (un halo bleu) ; liée, elle combat un temps limité, deux âmes à la fois de base, et chacune réduit un peu les dégâts du héros. Rappel, Sacrifice, Chœur spectral et les trois branches suivent le tableau ci-dessus. Les réglages sont dans `src/data/player.json` (bloc `summon`). Les âmes ont des PV (40 de base, plus pour un kappa, moins pour un feu follet) : chaque yokai s'en prend à la cible la plus proche, héros ou âme, et ses charges, chutes et coups en arc les touchent toutes. Une âme s'efface avec le temps ou se brise sous les coups. Le Masque d'Oublié rend les âmes trois fois plus attirantes que le héros. La Jorōgumo, elle, ne poursuit que le héros, mais ses coups frappent aussi les âmes à portée.
 
@@ -242,6 +246,12 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 | Naginata et bouclier de temple | Arme | Commune | Paladin | Arme de départ, longue portée, coups qui repoussent | Départ |
 | Yumi en bambou | Arme | Commune | Rôdeur | Arme de départ, flèches à 10 m | Départ |
 | Éventail de la Jorōgumo | Arme | Épique | Invocateur | Les invocations posent des toiles qui ralentissent | Jorōgumo |
+| Kusarigama des Oubliés | Arme | Rare | Lame | Portée longue ; Pas de l'ombre plus long, marques plus durables | Oubliés, forge (masques, papier) |
+| Crocs de la Jorōgumo | Arme | Épique | Lame | Chaque coup critique rend des PV | Jorōgumo, boutique de fin |
+| Tetsubō et bouclier-cloche | Arme | Rare | Paladin | Coups lourds ; Marteau lancé plus fort, qui étourdit | Kappa renforcé, forge (écailles, braises) |
+| Miroir de Yata | Arme | Épique | Paladin | Les yokai dans l'Aura font moins de dégâts | Jorōgumo, boutique de fin |
+| Hankyū de chasse | Arme | Rare | Rôdeur | Arc court : tirs rapides, Recul plus fréquent | Kasa-obake, forge (papier, sève) |
+| Arc de soie de la Jorōgumo | Arme | Épique | Rôdeur | Un tir chargé plein ouvre un filet | Jorōgumo, boutique de fin |
 | Chapeau de paille | Casque | Commune | — | +PV | Forge (sève) |
 | Masque d'Oublié | Casque | Rare | Invocateur | Les ennemis ciblent les invocations en priorité | Oubliés |
 | Carapace de kappa | Plastron | Rare | Guerrier | Dégâts de face réduits | Forge (écailles) |
@@ -525,13 +535,13 @@ Le prototype valide le combat et le système d'âmes sur une seule île, avant t
 
 ### Version 1 : dedans ou plus tard
 
-La V1 est une tranche jouable complète mais petite : une île, un donjon, cinq classes avec leur arme de départ. Tout ce qui ajoute un système en plus attend la suite.
+La V1 est une tranche jouable complète mais petite : une île, un donjon, cinq classes et leurs armes du Yomi. Tout ce qui ajoute un système en plus attend la suite.
 
 | Domaine | Dans la V1 | Plus tard |
 | --- | --- | --- |
 | Monde | Île du Yomi : petite zone, 2 ou 3 quêtes courtes, barque réduite (marchand, forge, ouverture des coffres) | Autres îles, Mésopotamie, agrandissement de la barque |
 | Donjons | Les Rizières noyées, boss Jorōgumo, boutique de fin, coffres, drops | Difficulté à l'entrée, rotation, autres donjons |
-| Classes | Les cinq classes, avec leur arme de départ (en place) | Armes supplémentaires par classe, classe secondaire |
+| Classes | Les cinq classes et leurs armes du Yomi (en place) | Armes des autres îles, classe secondaire |
 | Races | Les quatre races, passifs simples (en place) | Transformation du Hanyō à la demande, apparence par race, Nahual, Sidhe, affinité d'île |
 | Équipement | 7 emplacements, niveaux d'arme, tags et paliers, 2 ou 3 reliques | Sceaux, armes hybrides, éveil, fusion, panoplies |
 | Progression | XP, niveau max 10, arbre de compétences réduit pour les 5 classes | Niveau 20 puis 50, arbre de mémoire, niveaux d'invocation |

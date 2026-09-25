@@ -322,6 +322,8 @@ export class Renderer {
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
   private texts: FloatingText[] = [];
+  /** Sprite du héros : sa race et sa classe (src/render/heroes.ts). */
+  private heroSprite = 'heros';
 
   constructor(
     readonly engine: Engine,
@@ -381,6 +383,11 @@ export class Renderer {
     this.guardDecal.mesh.isVisible = false;
   }
 
+  /** Change l'apparence du héros ; un sprite qui n'a pas pu être chargé garde celle par défaut. */
+  setHero(sprite: string): void {
+    this.heroSprite = this.sprites.has(sprite) ? sprite : 'heros';
+  }
+
   /** Directions de l'écran au sol : ZQSD déplace le héros selon ces axes. */
   groundBasis(): { forward: Vec2; right: Vec2 } {
     return { forward: this.forward, right: this.right };
@@ -399,7 +406,7 @@ export class Renderer {
     this.time += dt;
     const player = world.player;
     const seen = new Set<number>([PLAYER_ID]);
-    this.syncEntity(PLAYER_ID, 'heros', {
+    this.syncEntity(PLAYER_ID, this.heroSprite, {
       pos: player.pos,
       facing: player.facing,
       radius: player.radius,
@@ -557,8 +564,9 @@ export class Renderer {
         tint = STUN_TINT;
         break;
       case 'channel':
+        // Le kodama qui soigne vibre et verdit ; le héros qui bande son arc garde ses couleurs.
         sx = sy = 1 + 0.06 * Math.sin(t * 14);
-        tint = CHANNEL_TINT;
+        if (!view.isPlayer) tint = CHANNEL_TINT;
         break;
       case 'airborne':
         sx = 0.88;
@@ -948,9 +956,10 @@ export class Renderer {
       }
       case 'playerHit': {
         const view = this.views.get(PLAYER_ID);
-        if (view) view.flash = 1;
-        this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, 'hurt');
-        this.addShake(0.5);
+        if (view) view.flash = event.blocked ? 0.4 : 1;
+        // Ce qui passe la garde se lit plus discrètement qu'un coup reçu de plein fouet.
+        this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, event.blocked ? 'shield' : 'hurt');
+        this.addShake(event.blocked ? 0.2 : 0.5);
         break;
       }
       case 'guard':

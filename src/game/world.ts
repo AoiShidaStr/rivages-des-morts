@@ -22,8 +22,8 @@ export interface Foe {
   knockback: Vec2;
   /** Seul le héros bloque (Guerrier, Paladin), et seulement de face. */
   isGuarding(from: Vec2): boolean;
-  /** Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin). */
-  guard(world: World, attacker?: Enemy): void;
+  /** Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin), `amount` : la force du coup. */
+  guard(world: World, attacker?: Enemy, amount?: number): void;
   /** Faux si le coup n'a pas porté (esquive, invulnérabilité). */
   takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean;
 }
@@ -205,6 +205,13 @@ export class World {
     return best;
   }
 
+  /** Miroir de Yata : part des dégâts qu'un yokai perd tant qu'il se tient dans l'Aura du Paladin. */
+  dazzle(pos: Vec2): number {
+    const weaken = this.player.cfg.perks?.auraWeaken;
+    if (!weaken || this.aura <= 0) return 0;
+    return distance(pos, this.player.pos) <= this.player.cfg.paladin.aura.radius ? weaken : 0;
+  }
+
   /** Valeur d'une malédiction du niveau de donjon (0 si elle n'est pas active). */
   curse(id: CurseId): number {
     return this.cfg.difficulty?.curses[id] ?? 0;
@@ -283,6 +290,7 @@ export class World {
     const execute = perks.execute;
     if (execute && enemy.hp < enemy.maxHp * execute.threshold) amount *= 1 + execute.bonus;
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
+    if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
     // La marque d'ombre part au premier coup ; sur un ennemi abattu, elle reste pour Marée d'ombre.
     if (!enemy.dead) enemy.marks.shadow = 0;
     const rage = player.cfg.attack.rageOnHit * (perks.hitRageFactor ?? 1);
@@ -565,8 +573,10 @@ export class World {
     const perks = player.cfg.perks ?? {};
     for (const enemy of fallen) {
       if (!enemy.boss) this.graves.push({ kind: enemy.kind, pos: { ...enemy.pos }, time: this.time });
-      // Marée d'ombre : un ennemi marqué abattu rend une charge du Pas de l'ombre.
-      if (perks.dashRefund && (enemy.marks.shadow > 0 || enemy.marks.death > 0)) player.refundDash();
+      // Marée d'ombre : un ennemi marqué abattu rend une charge du Pas de l'ombre ; Festin de l'ombre, des PV.
+      const marked = enemy.marks.shadow > 0 || enemy.marks.death > 0;
+      if (perks.dashRefund && marked) player.refundDash();
+      if (perks.markKillHeal && marked) player.heal(perks.markKillHeal, this);
       // Moisson des âmes : la Marque de mort passe à l'ennemi le plus proche.
       if (perks.markJump && enemy.marks.death > 0 && !enemy.boss) {
         const range = player.cfg.blade.deathMark.range;
@@ -808,6 +818,8 @@ export class World {
         return true;
       case 'arrow':
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);
+        // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
+        if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos);
         if (p.full && !enemy.dead) {
           if (perks.chargedMark) this.hunt(enemy, perks.chargedMark);
           if (perks.chargedStun) enemy.stun(perks.chargedStun, 'daze', this);

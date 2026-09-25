@@ -28,13 +28,13 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 | Demi-dieu (grecque) | un parent divin au choix (Zeus, Arès, Hermès, Athéna) ; une fois par descente, tu te relèves |
 | Hanyō (japonaise) | tes coups remplissent une jauge qui te transforme un moment ; sous 30 % de PV, tu cours plus vite et tu te régénères |
 
-- **Guerrier** : bloque les coups pour remplir sa rage, puis la dépense en attaques puissantes.
+- **Guerrier** : bloque les coups (sa garde en arrête les trois quarts) pour remplir sa rage, puis la dépense en attaques puissantes.
 - **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai, qui la prennent pour cible comme toi. Chaque âme active réduit un peu tes propres dégâts.
 - **Lame** : peu de PV, mais des coups très rapides. Traverse les ennemis pour les marquer, puis achève-les en coups critiques.
 - **Paladin** : robuste. Bouclier levé, il pare tout ce qui vient de face, soigne autour de lui et relève les alliés tombés.
 - **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances.
 
-Toutes les races et les classes ont encore la même apparence.
+Chaque race et chaque classe a son apparence en pixel art : casque viking, némès égyptien, laurier grec ou cornes d'oni, avec l'arme et la cape de la classe.
 
 ### Commandes
 

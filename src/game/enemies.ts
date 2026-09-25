@@ -202,15 +202,24 @@ export abstract class Enemy {
     return world.isFoe(this.focus) ? this.focus : world.player;
   }
 
-  /** Tout coup porté au héros ou à une âme passe par ici : niveau du donjon, élite, « Rancune des noyés ». */
-  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World): boolean {
+  /**
+   * Force réelle d'un coup : niveau du donjon, élite, « Rancune des noyés », et l'Aura du Paladin qui
+   * éblouit les yokai qu'elle baigne (Miroir de Yata).
+   */
+  protected power(amount: number, world: World): number {
     const rancune = world.curse('rancune');
     const angry = rancune && this.hp < this.maxHp * 0.3 ? 1 + rancune : 1;
-    return foe.takeHit(amount * this.might * angry, dir, knockback, world);
+    return amount * this.might * angry * (1 - world.dazzle(this.pos));
   }
 
-  protected hitPlayer(amount: number, dir: Vec2, knockback: number, world: World): boolean {
-    return this.hitFoe(world.player, amount, dir, knockback, world);
+  /** Tout coup porté au héros ou à une âme passe par ici. */
+  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World): boolean {
+    return foe.takeHit(this.power(amount, world), dir, knockback, world);
+  }
+
+  /** Coup paré : la garde du Guerrier en laisse passer une part, le bouclier du Paladin rien. */
+  protected blocked(foe: Foe, amount: number, world: World): void {
+    foe.guard(world, this, this.power(amount, world));
   }
 
   /**
@@ -222,7 +231,7 @@ export abstract class Enemy {
       const toFoe = sub(foe.pos, this.pos);
       if (length(toFoe) > range + foe.radius) continue;
       if (!inCone(dir, normalize(toFoe, dir), degToRad(arcDeg / 2))) continue;
-      if (foe.isGuarding(this.pos)) foe.guard(world, this);
+      if (foe.isGuarding(this.pos)) this.blocked(foe, damage, world);
       else this.hitFoe(foe, damage, dir, knockback, world);
     }
   }
@@ -313,7 +322,7 @@ export class Hitodama extends Enemy {
 
     if (this.retreat > 0 || distance(foe.pos, this.pos) > foe.radius + this.radius) return;
     if (foe.isGuarding(this.pos)) {
-      foe.guard(world, this);
+      this.blocked(foe, this.cfg.contactDamage, world);
       this.retreat = this.cfg.retreatTime;
       this.knockback = scale(toward, -7);
     } else if (this.hitFoe(foe, this.cfg.contactDamage, toward, 3, world)) {
@@ -547,7 +556,7 @@ export class Kappa extends Enemy {
     if (foe) {
       if (foe.isGuarding(this.pos)) {
         // La coupelle se renverse : le kappa est étourdi, le joueur recule et gagne de la rage.
-        foe.guard(world, this);
+        this.blocked(foe, cfg.chargeDamage, world);
         foe.knockback = scale(state.dir, 5);
         world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });
         this.stun(cfg.parryStun, 'parry', world);
@@ -1138,7 +1147,7 @@ export class Jorogumo extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        foe.guard(world, this);
+        this.blocked(foe, cfg.chargeDamage, world);
         foe.knockback = scale(state.dir, 6);
         this.endCharge(world);
         return;
