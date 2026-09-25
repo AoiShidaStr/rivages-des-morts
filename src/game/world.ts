@@ -3,6 +3,7 @@ import type { CurseId } from './difficulty';
 import { Hitodama, Jorogumo, Kappa, KasaObake, Kodama, Oublie, type Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import { Player } from './player';
+import { Summon, type Soul } from './summons';
 import type { EnemyKind, GameEvent, InputFrame, Outcome } from './types';
 
 /** Pause entre deux vagues, en secondes. */
@@ -59,6 +60,11 @@ interface Snare {
 export class World {
   readonly player: Player;
   enemies: Enemy[] = [];
+  /** Invocateur : âmes liées qui combattent, et âmes au sol prêtes à être liées. */
+  summons: Summon[] = [];
+  souls: Soul[] = [];
+  /** Secondes de Chœur spectral restantes. */
+  choir = 0;
   stumps: Stump[] = [];
   webs: Web[] = [];
   state: 'playing' | Outcome = 'playing';
@@ -70,6 +76,8 @@ export class World {
   private nextFxId = -1;
   private hazards: Hazard[] = [];
   private snares: Snare[] = [];
+  /** Ennemis liés vivants (Chant des Enfers) : ils ne laissent pas d'âme au sol. */
+  private readonly boundAlive = new Set<number>();
   private events: GameEvent[] = [];
 
   /** `startWave` permet de commencer directement à une vague (tests, `?vague=7`). */
@@ -99,11 +107,15 @@ export class World {
   update(dt: number, input: InputFrame): void {
     if (this.state !== 'playing') return;
     this.time += dt;
+    this.player.summonCount = this.summons.length;
     this.player.update(dt, input, this);
     // « Hâte des morts » : le temps des yokai passe plus vite.
     const haste = 1 + this.curse('hate');
     // Copie : un ennemi peut en faire apparaître d'autres pendant son tour (araignées, feux follets).
     for (const enemy of [...this.enemies]) enemy.update(dt * haste, this);
+    this.choir = Math.max(0, this.choir - dt);
+    for (const summon of this.summons) summon.update(dt, this);
+    for (const summon of this.summons.filter((s) => s.gone)) this.dismiss(summon);
     this.regenerate(dt);
     this.updateHazards(dt);
     this.updateWebs(dt);
@@ -113,6 +125,8 @@ export class World {
     const fallen = this.enemies.filter((e) => e.dead);
     this.enemies = this.enemies.filter((e) => !e.dead);
     this.releaseWisps(fallen);
+    this.leaveSouls(fallen);
+    this.updateSouls(dt);
     if (this.player.dead) {
       this.finish('defeat');
       return;
@@ -152,6 +166,12 @@ export class World {
         this.emit({ type: 'lightning', pos: { ...enemy.pos } });
         enemy.receiveHit({ amount: perks.storm ?? 0, from: origin, knockback: 1, ignoreShell: true }, this);
       }
+      // Races : un coup sur quelques-uns appelle la foudre de Zeus ; le sang du Hanyō monte.
+      const bolt = player.landHit(this);
+      if (bolt && !enemy.dead) {
+        this.emit({ type: 'lightning', pos: { ...enemy.pos } });
+        enemy.receiveHit({ amount: bolt, from: origin, knockback: 1, ignoreShell: true }, this);
+      }
       if (enemy.dead) player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
@@ -180,6 +200,152 @@ export class World {
       if (enemy.dead) this.player.onKill();
       else if (bond.stun > 0) enemy.stun(bond.stun, 'bond', this);
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
+    }
+  }
+
+  // --- Invocateur -------------------------------------------------------------
+
+  /** Clic droit : lie l'âme au sol la plus proche de la souris, à portée du héros. */
+  bind(aim: Vec2): void {
+    const player = this.player;
+    const cfg = player.cfg.summon;
+    const inReach = (pos: Vec2) => distance(pos, player.pos) <= cfg.bindRange;
+    const soul = closest(this.souls.filter((s) => inReach(s.pos)), aim);
+    if (soul) {
+      this.removeSoul(soul);
+      this.raise(soul.kind, soul.pos);
+      return;
+    }
+    // Chant des Enfers : un ennemi presque vaincu (jamais le boss) se lie sans mourir.
+    const song = player.cfg.perks?.underworldSong;
+    const prey = song ? closest(this.enemies.filter((e) => e.targetable && !e.boss && e.hp <= e.maxHp * song && inReach(e.pos)), aim) : undefined;
+    if (prey) {
+      this.boundAlive.add(prey.id);
+      prey.hp = 0;
+      this.emit({ type: 'death', id: prey.id, pos: { ...prey.pos }, kind: prey.kind });
+      player.onKill();
+      this.raise(prey.kind, prey.pos);
+      return;
+    }
+    this.emit({ type: 'bindFail', pos: { ...player.pos } });
+  }
+
+  /** Vrai si une âme au sol est à portée de Lier (le HUD la signale). */
+  get soulInReach(): boolean {
+    const cfg = this.player.cfg.summon;
+    return this.souls.some((s) => distance(s.pos, this.player.pos) <= cfg.bindRange);
+  }
+
+  /** A : toutes les âmes foncent sur l'ennemi le plus proche de la souris. Faux s'il n'y a personne à envoyer. */
+  recall(aim: Vec2): boolean {
+    const target = closest(this.enemies.filter((e) => e.targetable), aim);
+    if (!this.summons.length || !target) return false;
+    for (const summon of this.summons) summon.rush = { target: target.id, t: this.player.cfg.summon.recall.duration };
+    this.emit({ type: 'recall', pos: { ...target.pos } });
+    return true;
+  }
+
+  /** E : la plus vieille âme explose. */
+  sacrifice(): boolean {
+    const summon = this.summons[0];
+    if (!summon) return false;
+    const player = this.player;
+    const cfg = player.cfg.summon.sacrifice;
+    const perks = player.cfg.perks ?? {};
+    this.dismiss(summon);
+    const center = summon.pos;
+    this.emit({ type: 'sacrifice', pos: { ...center }, radius: cfg.radius });
+    const amount = cfg.damage * (perks.summonDamageFactor ?? 1);
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      // Le Jugement : un poids selon les PV de la cible, allégé pour un boss.
+      const judged = perks.judgement ? enemy.maxHp * perks.judgement * (enemy.boss ? 1 / 3 : 1) : 0;
+      enemy.receiveHit({ amount: amount + judged, from: center, knockback: 6, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+      if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
+    }
+    if (perks.sacrificeHeal) player.heal(perks.sacrificeHeal, this);
+    if (perks.sacrificeSoul) this.addSoul(summon.kind, center);
+    return true;
+  }
+
+  /** R : les âmes frappent plus fort et plus vite un moment. */
+  chorus(): boolean {
+    if (!this.summons.length) return false;
+    const player = this.player;
+    const cfg = player.cfg.summon.choir;
+    const perks = player.cfg.perks ?? {};
+    this.choir = cfg.duration;
+    this.emit({ type: 'choir', pos: { ...player.pos }, radius: cfg.radius });
+    if (perks.choirHeal) player.heal(perks.choirHeal, this);
+    if (perks.choirStun) {
+      for (const enemy of this.enemies) {
+        if (enemy.targetable && distance(enemy.pos, player.pos) <= cfg.radius + enemy.radius) enemy.stun(perks.choirStun, 'bond', this);
+      }
+    }
+    return true;
+  }
+
+  /** Coup d'une âme liée ; `factor` vaut plus de 1 pendant un Rappel. */
+  summonHit(summon: Summon, target: Enemy, factor: number): void {
+    const player = this.player;
+    const cfg = player.cfg.summon;
+    const perks = player.cfg.perks ?? {};
+    // Les Douze Shikigami : le feu follet brûle plus fort, l'Oublié étourdit, le kodama soigne le héros.
+    const trait = perks.shikigami ? summon.kind : null;
+    const fire = trait === 'hitodama' ? 1.5 : 1;
+    const choir = this.choir > 0 ? cfg.choir.damageFactor : 1;
+    const amount = cfg.damage * (cfg.kinds[summon.kind]?.damage ?? 1) * fire * factor * choir * (perks.summonDamageFactor ?? 1);
+    this.emit({ type: 'swing', pos: { ...summon.pos }, dir: summon.facing, range: cfg.attackRange + summon.radius, arcDeg: 90 });
+    target.receiveHit({ amount, from: summon.pos, knockback: cfg.knockback }, this);
+    if (target.dead) player.onKill();
+    else {
+      const stun = Math.max(perks.summonStun ?? 0, trait === 'oublie' ? 0.5 : 0);
+      if (stun) target.stun(stun, 'snare', this);
+    }
+    if (trait === 'kodama') player.heal(2, this);
+    if (target.kind === 'hitodama') this.igniteNear(target.pos);
+  }
+
+  private raise(kind: EnemyKind, pos: Vec2): void {
+    const player = this.player;
+    const cfg = player.cfg.summon;
+    // Au-delà du maximum, la plus vieille âme laisse sa place.
+    while (this.summons.length >= Math.max(1, cfg.max)) this.dismiss(this.summons[0]);
+    const tough = player.cfg.perks?.shikigami && (kind === 'kappa' || kind === 'kappaRenforce');
+    const summon = new Summon(this.nextId++, kind, { ...pos }, cfg, tough ? 2 : 1);
+    this.summons.push(summon);
+    this.emit({ type: 'bind', id: summon.id, pos: { ...pos }, kind });
+  }
+
+  private dismiss(summon: Summon): void {
+    this.summons = this.summons.filter((s) => s !== summon);
+    this.emit({ type: 'summonFade', id: summon.id, pos: { ...summon.pos } });
+  }
+
+  private addSoul(kind: EnemyKind, pos: Vec2): void {
+    const soul = { id: this.nextFxId--, pos: { ...pos }, kind, life: this.player.cfg.summon.soulLife };
+    this.souls.push(soul);
+    this.emit({ type: 'soulSet', id: soul.id, pos: soul.pos });
+  }
+
+  private removeSoul(soul: Soul): void {
+    this.souls = this.souls.filter((s) => s !== soul);
+    this.emit({ type: 'soulEnd', id: soul.id });
+  }
+
+  private updateSouls(dt: number): void {
+    for (const soul of [...this.souls]) {
+      soul.life -= dt;
+      if (soul.life <= 0) this.removeSoul(soul);
+    }
+  }
+
+  /** Chez l'Invocateur, chaque yokai vaincu laisse son âme au sol, sauf quand le boss tombe. */
+  private leaveSouls(fallen: Enemy[]): void {
+    if (this.player.cfg.kit !== 'invocateur' || fallen.some((e) => e.boss)) return;
+    for (const enemy of fallen) {
+      if (!this.boundAlive.delete(enemy.id)) this.addSoul(enemy.kind, enemy.pos);
     }
   }
 
@@ -277,11 +443,15 @@ export class World {
     return clamped;
   }
 
-  /** Empêche les corps au sol de se chevaucher. Pendant une esquive, le joueur traverse les ennemis, pas les souches. */
+  /**
+   * Empêche les corps au sol de se chevaucher. Pendant une esquive, le joueur traverse les ennemis, pas les souches ;
+   * les âmes liées, elles, traversent toujours le héros.
+   */
   private separate(): void {
     const bodies = this.enemies.filter((e) => e.active && e.grounded);
-    for (let i = 0; i < bodies.length; i++) {
-      for (let j = i + 1; j < bodies.length; j++) pushApart(bodies[i], bodies[j]);
+    const crowd: Body[] = [...bodies, ...this.summons];
+    for (let i = 0; i < crowd.length; i++) {
+      for (let j = i + 1; j < crowd.length; j++) pushApart(crowd[i], crowd[j]);
     }
     if (!this.player.dodging) {
       for (const enemy of bodies) {
@@ -293,6 +463,7 @@ export class World {
       for (const enemy of bodies) {
         if (enemy.kind !== 'hitodama') pushOut(enemy, stump);
       }
+      for (const summon of this.summons) pushOut(summon, stump);
     }
   }
 
@@ -387,7 +558,8 @@ export class World {
       const candidates = this.enemies.filter((e) => !e.boss).sort((a, b) => b.maxHp - a.maxHp);
       for (const enemy of candidates.slice(0, elites)) enemy.makeElite(difficulty.elite);
     }
-    this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint: wave.hint });
+    const hint = wave.hints?.[this.player.cfg.kit] ?? wave.hint;
+    this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint });
   }
 
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
@@ -460,6 +632,20 @@ export class World {
     this.state = outcome;
     this.emit({ type: 'end', outcome });
   }
+}
+
+/** L'élément de `items` le plus proche de `point`. */
+function closest<T extends { pos: Vec2 }>(items: readonly T[], point: Vec2): T | undefined {
+  let best: T | undefined;
+  let bestDist = Infinity;
+  for (const item of items) {
+    const d = distance(item.pos, point);
+    if (d < bestDist) {
+      best = item;
+      bestDist = d;
+    }
+  }
+  return best;
 }
 
 function pushApart(a: Body, b: Body): void {

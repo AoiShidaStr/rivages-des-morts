@@ -14,9 +14,10 @@ type Action =
   | { kind: 'bond'; t: number; from: Vec2; to: Vec2 };
 
 /**
- * Le Guerrier : frappe à l'arme, bloque pour remplir sa rage, esquive, et dépense la rage
- * en Frappe fracassante (A), Bond (E) et Frénésie (R). Les talents, la race et les reliques
- * arrivent par `cfg.perks`.
+ * Le héros : il frappe à l'arme et esquive, quelle que soit sa classe.
+ * Guerrier (`cfg.kit`) : bloque pour remplir sa rage, et la dépense en Frappe fracassante (A), Bond (E) et Frénésie (R).
+ * Invocateur : lie les âmes des vaincus (clic droit) et les commande : Rappel (A), Sacrifice (E), Chœur spectral (R).
+ * Les talents, la race et les reliques arrivent par `cfg.perks`.
  */
 export class Player {
   pos: Vec2 = vec(0, 0);
@@ -34,6 +35,20 @@ export class Player {
   /** Secondes pendant lesquelles la Coupelle du kappa reste vide après un coup reçu. */
   coupelleEmpty = 0;
   private bearSkinUsed = false;
+  /** Invocateur : recharges du Rappel, du Sacrifice et du Chœur spectral. */
+  recallCooldown = 0;
+  sacrificeCooldown = 0;
+  choirCooldown = 0;
+  /** Âmes liées actives, tenu à jour par le monde : chacune affaiblit l'Invocateur. */
+  summonCount = 0;
+  /** Oushebti : secondes avant que la carapace d'argile ne se reforme (0 : elle est prête). */
+  clayCooldown = 0;
+  /** Hanyō : jauge de sang yokai (en coups portés) et secondes de transformation restantes. */
+  yokaiGauge = 0;
+  transformed = 0;
+  private divineBloodUsed = false;
+  /** Coups d'arme portés pendant la descente (foudre du fils de Zeus). */
+  private hits = 0;
   /**
    * Fil de la Jorōgumo : vitesse de traction et frein sur la marche, posés par le boss à chaque pas.
    * Le joueur les applique au pas suivant, puis les oublie si le boss ne les renouvelle pas.
@@ -100,14 +115,50 @@ export class Player {
     }
   }
 
-  /** Multiplicateur des dégâts infligés : rage de l'Einherjar, talents, Coupelle du kappa. */
+  /** Multiplicateur des dégâts infligés : race, talents, Coupelle du kappa, âmes liées. */
   damageMultiplier(): number {
     const perks = this.cfg.perks ?? {};
     const missing = 1 - this.hp / this.cfg.maxHp;
     let factor = 1 + (perks.einherjarRage ?? 0) * missing;
     if (perks.lowHpDamage && this.hp < this.cfg.maxHp / 2) factor += perks.lowHpDamage;
     if (perks.coupelle && this.coupelleFull) factor += perks.coupelle.bonus;
+    if (perks.divineMight) factor += perks.divineMight;
+    if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
+    // Chaque âme active affaiblit l'Invocateur (GDD : pas de limite stricte, un malus par invocation).
+    return factor * Math.max(0.2, 1 - this.cfg.summon.malus * this.summonCount);
+  }
+
+  /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
+  private speedFactor(): number {
+    const perks = this.cfg.perks ?? {};
+    let factor = 1;
+    if (perks.yokaiInstinct && this.hp < this.cfg.maxHp * perks.yokaiInstinct.threshold) factor += perks.yokaiInstinct.speed;
+    if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.speed;
     return factor;
+  }
+
+  heal(amount: number, world: World): void {
+    const gained = Math.min(amount, this.cfg.maxHp - this.hp);
+    if (gained <= 0) return;
+    this.hp += gained;
+    world.emit({ type: 'heal', id: 0, pos: { ...this.pos }, amount: gained });
+  }
+
+  /**
+   * Un coup d'arme vient de porter. Remplit le sang yokai du Hanyō, et renvoie les dégâts de la foudre
+   * du fils de Zeus quand c'est son tour (0 sinon).
+   */
+  landHit(world: World): number {
+    const perks = this.cfg.perks ?? {};
+    this.hits++;
+    const blood = perks.yokaiBlood;
+    if (blood && this.transformed <= 0 && ++this.yokaiGauge >= blood.hits) {
+      this.yokaiGauge = 0;
+      this.transformed = blood.duration;
+      world.emit({ type: 'transform', pos: { ...this.pos } });
+    }
+    const zeus = perks.zeusBolt;
+    return zeus && this.hits % zeus.every === 0 ? zeus.damage * this.damageMultiplier() : 0;
   }
 
   update(dt: number, input: InputFrame, world: World): void {
@@ -117,16 +168,27 @@ export class Player {
     this.frenzyCooldown = Math.max(0, this.frenzyCooldown - dt);
     this.frenzy = Math.max(0, this.frenzy - dt);
     this.coupelleEmpty = Math.max(0, this.coupelleEmpty - dt);
+    this.recallCooldown = Math.max(0, this.recallCooldown - dt);
+    this.sacrificeCooldown = Math.max(0, this.sacrificeCooldown - dt);
+    this.choirCooldown = Math.max(0, this.choirCooldown - dt);
+    this.clayCooldown = Math.max(0, this.clayCooldown - dt);
+    this.transformed = Math.max(0, this.transformed - dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
     this.rage = Math.max(0, this.rage - c.rageDecayPerSecond * dt);
     if (input.attackPressed) this.attackBuffer = ATTACK_BUFFER;
     this.moving = false;
 
+    // Instinct yokai : blessé, le Hanyō se régénère.
+    const instinct = c.perks?.yokaiInstinct;
+    if (instinct && this.hp > 0 && this.hp < c.maxHp * instinct.threshold) this.hp = Math.min(c.maxHp, this.hp + instinct.regen * dt);
+
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
-    if (input.frenzyPressed && this.canFrenzy) this.startFrenzy(world);
+    const warrior = c.kit === 'guerrier';
+    if (warrior && input.skillRPressed && this.canFrenzy) this.startFrenzy(world);
     if (input.dodgePressed && this.dodgeCooldown <= 0 && this.canCancel()) this.startDodge(input, world);
-    else if (input.bondPressed && this.canBond && this.canCancel()) this.startBond(input.aim, world);
+    else if (warrior && input.skillEPressed && this.canBond && this.canCancel()) this.startBond(input.aim, world);
+    if (!warrior) this.commandSouls(input, world);
 
     const tether = this.tether;
     this.tether = null;
@@ -192,9 +254,17 @@ export class Player {
   takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean {
     if (this.invulnerable > 0 || this.action.kind === 'bond') return false;
     const perks = this.cfg.perks ?? {};
+    // Corps d'argile : la carapace de l'Oushebti absorbe le coup entier, puis se reforme.
+    if (perks.clayShell && this.clayCooldown <= 0) {
+      this.clayCooldown = perks.clayShell;
+      this.invulnerable = this.cfg.invulnerableAfterHit;
+      world.emit({ type: 'clayShell', pos: { ...this.pos } });
+      return true;
+    }
     let factor = this.cfg.damageTakenFactor ?? 1;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
     if (perks.lionSkin && this.rage >= this.cfg.rageMax / 2) factor *= 1 - perks.lionSkin;
+    if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
     const taken = amount * factor;
     this.hp = Math.max(0, this.hp - taken);
     if (this.hp <= 0 && perks.bearSkin && !this.bearSkinUsed) {
@@ -203,6 +273,12 @@ export class Player {
       this.hp = 1;
       this.rage = this.cfg.rageMax;
       world.emit({ type: 'bearSkin', pos: { ...this.pos } });
+    }
+    if (this.hp <= 0 && perks.divineBlood && !this.divineBloodUsed) {
+      // Sang divin : une fois par descente, le Demi-dieu se relève.
+      this.divineBloodUsed = true;
+      this.hp = this.cfg.maxHp * perks.divineBlood;
+      world.emit({ type: 'divineBlood', pos: { ...this.pos } });
     }
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
     this.invulnerable = this.cfg.invulnerableAfterHit;
@@ -241,8 +317,8 @@ export class Player {
   private updateFree(dt: number, input: InputFrame, aimDir: Vec2, slow: number): void {
     const c = this.cfg;
     this.facing = aimDir;
-    this.blocking = input.blockHeld;
-    if (input.smashPressed && this.canSmash) {
+    this.blocking = c.kit === 'guerrier' && input.signatureHeld;
+    if (c.kit === 'guerrier' && input.skillAPressed && this.canSmash) {
       this.rage -= c.smash.rageCost;
       this.blocking = false;
       this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false };
@@ -253,7 +329,7 @@ export class Player {
       return;
     }
     if (length(input.move) > 0.05) {
-      const speed = c.moveSpeed * slow * (this.blocking ? c.blockMoveFactor : 1);
+      const speed = c.moveSpeed * slow * this.speedFactor() * (this.blocking ? c.blockMoveFactor : 1);
       this.pos = add(this.pos, scale(input.move, speed * dt));
       this.moving = true;
     }
@@ -319,6 +395,15 @@ export class Player {
     this.action = { kind: 'bond', t: 0, from: { ...this.pos }, to: target };
     // Un saut sur place (souris sur le héros) frappe quand même à l'arrivée.
     if (distance(this.pos, target) < 0.1) this.action.t = b.duration * 0.5;
+  }
+
+  /** Invocateur : Lier (clic droit), Rappel (A), Sacrifice (E), Chœur spectral (R). */
+  private commandSouls(input: InputFrame, world: World): void {
+    const s = this.cfg.summon;
+    if (input.signaturePressed && this.canCancel()) world.bind(input.aim);
+    if (input.skillAPressed && this.recallCooldown <= 0 && world.recall(input.aim)) this.recallCooldown = s.recall.cooldown;
+    if (input.skillEPressed && this.sacrificeCooldown <= 0 && world.sacrifice()) this.sacrificeCooldown = s.sacrifice.cooldown;
+    if (input.skillRPressed && this.choirCooldown <= 0 && world.chorus()) this.choirCooldown = s.choir.cooldown;
   }
 
   private startFrenzy(world: World): void {

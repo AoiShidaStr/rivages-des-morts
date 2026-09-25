@@ -2,7 +2,7 @@ import { content } from '../content';
 import type { PlayerConfig } from '../game/config';
 import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
-import { buildLoadout, canLearn, itemLevel, levelProgress, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
+import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { Progress, Slot } from '../game/progress';
 import { h, icon, obole, type Child } from './dom';
 
@@ -12,7 +12,7 @@ const fr = (value: number, digits = 2): string => value.toLocaleString('fr-FR', 
 export interface UiContext {
   progress: Progress;
   basePlayer: PlayerConfig;
-  /** Réglages du Guerrier avec l'équipement, le niveau et les talents actuels. */
+  /** Réglages du héros avec sa race, sa classe, l'équipement, le niveau et les talents actuels. */
   loadout(): Loadout;
   /** `icon` : l'objet ou le matériau dont on montre l'icône à côté du texte. */
   toast(text: string, tone?: 'quest' | 'loot', icon?: string): void;
@@ -100,23 +100,6 @@ function itemBlock(id: string, ...children: Child[]): HTMLElement {
   return h('div', { class: 'item' }, icon(id, 'large'), h('div', { class: 'item-body' }, ...children));
 }
 
-function itemCard(id: string, extra?: string): HTMLElement {
-  const def = content.items[id];
-  const rarity = def.rarity.replace(/\s/g, '-');
-  return itemBlock(
-    id,
-    h(
-      'div',
-      { class: 'item-head' },
-      h('strong', {}, def.name),
-      h('span', { class: `rarity r-${rarity}` }, def.rarity),
-      ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
-    ),
-    h('div', { class: 'item-meta' }, def.slot ? `${content.slots[def.slot]}${extra ?? ''} · ${effectText(def)}` : 'Objet de quête'),
-    h('p', { class: 'item-desc' }, def.description),
-  );
-}
-
 function cost(progress: Progress, oboles: number, materials: Record<string, number>): { node: HTMLElement; ok: boolean } {
   let ok = progress.state.oboles >= oboles;
   const parts: (HTMLElement | string)[] = [obole(oboles)];
@@ -194,25 +177,43 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
   if (!shop) return;
   const render = () => {
     const { progress } = ctx;
+    const { state } = progress;
+    const loadout = ctx.loadout();
     const bonusDiscount = shop.discountIf && progress.check(shop.discountIf.if) ? shop.discountIf.discount : 0;
     const discount = 1 - (1 - (shop.discount ?? 0)) * (1 - bonusDiscount);
-    const rows = shop.stock
+    const offers = shop.stock
       .filter((entry) => progress.check(entry.if))
-      .map(({ item, price }) => {
-        const def = content.items[item];
-        const final = Math.round(price * (1 - discount));
-        const owned = progress.has(item);
-        const affordable = progress.state.oboles >= final;
-        return h(
-          'div',
-          { class: 'row' },
-          itemCard(item),
-          h('div', { class: 'price' }, discount ? h('s', {}, String(price)) : null, obole(final)),
-          h(
+      .map(({ item, price }) => ({ item, price, final: Math.round(price * (1 - discount)), owned: progress.has(item) }));
+    // Ce qu'on peut acheter d'abord, puis ce qui est trop cher, et ce qu'on a déjà tout en bas.
+    const rank = (o: (typeof offers)[number]) => (o.owned ? 2 : state.oboles >= o.final ? 0 : 1);
+    offers.sort((a, b) => rank(a) - rank(b) || a.final - b.final);
+
+    const rows = offers.map(({ item, price, final, owned }) => {
+      const def = content.items[item];
+      const slot = def.slot;
+      const worn = slot ? state.equipped[slot] === item : false;
+      const missing = final - state.oboles;
+      const delta = slot && !worn ? equipDelta(ctx, loadout, item, slot) : [];
+      const action = owned
+        ? slot && !worn
+          ? h(
+              'button',
+              {
+                class: 'btn',
+                onclick: () => {
+                  progress.equip(item, slot);
+                  render();
+                },
+              },
+              'Équiper',
+            )
+          : h('span', { class: 'badge inline' }, worn ? 'Porté' : 'Possédé')
+        : h(
             'button',
             {
-              class: 'btn',
-              disabled: owned || !affordable,
+              class: `btn${missing <= 0 ? ' primary' : ''}`,
+              disabled: missing > 0,
+              title: missing > 0 ? `Il te manque ${missing} oboles` : undefined,
               onclick: () => {
                 progress.gainOboles(-final);
                 acquire(ctx, item);
@@ -220,15 +221,42 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
                 render();
               },
             },
-            owned ? 'Possédé' : affordable ? 'Acheter' : 'Trop cher',
+            missing > 0 ? `Il manque ${missing}` : 'Acheter',
+          );
+      return h(
+        'div',
+        { class: `row offer${owned ? ' owned-offer' : ''}` },
+        itemBlock(
+          item,
+          h(
+            'div',
+            { class: 'item-head' },
+            h('strong', { title: def.description }, def.name),
+            h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
+            ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
           ),
-        );
-      });
+          h('div', { class: 'item-meta' }, slot ? `${content.slots[slot]} · ${effectText(def, itemLevel(state, item))}` : 'Objet de quête'),
+          delta.length ? h('div', { class: 'deltas' }, ...delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text))) : null,
+        ),
+        owned ? h('div') : h('div', { class: 'price' }, discount ? h('s', {}, String(price)) : null, obole(final)),
+        action,
+      );
+    });
     const notes = [
-      shop.discount ? `Prix réduits de ${Math.round(shop.discount * 100)} % : c'est la récompense de ta victoire.` : null,
+      shop.discount ? `−${Math.round(shop.discount * 100)} % : la récompense de ta victoire.` : null,
       bonusDiscount ? shop.discountIf?.note : null,
     ].filter((n): n is string => Boolean(n));
-    host.show(shop.name, purse(progress), h('div', { class: 'list' }, ...notes.map((n) => h('p', { class: 'note' }, n)), ...rows));
+    host.show(
+      shop.name,
+      purse(progress),
+      h(
+        'div',
+        { class: 'list' },
+        ...notes.map((n) => h('p', { class: 'note' }, n)),
+        ...rows,
+        h('p', { class: 'note' }, 'Survole un nom pour lire sa description. Les étiquettes vertes et rouges comparent avec ce que tu portes.'),
+      ),
+    );
   };
   render();
 }
@@ -586,8 +614,20 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
   add(Math.round(((b.dodge.distance - a.dodge.distance) / base.dodge.distance) * 100), ' %', 'esquive');
   add(Math.round(((b.damageTakenFactor ?? 1) - (a.damageTakenFactor ?? 1)) * 100), ' %', 'dégâts subis', true);
   add(Math.round((after.bonus.oboles - before.bonus.oboles) * 100), ' %', 'oboles');
-  add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${content.skills.tag.name}`);
+  const tag = heroClass(content.skills, ctx.progress.state.hero).tag.name;
+  add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${tag}`);
+  if (a.kit === 'invocateur') {
+    add(b.summon.max - a.summon.max, '', `âme${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''} active${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''}`);
+    add(Math.round(b.summon.damage) - Math.round(a.summon.damage), '', 'dégâts des âmes');
+    add(Math.round(b.summon.life - a.summon.life), ' s', 'de vie des âmes');
+  }
   return out;
+}
+
+/** Ce que changerait le fait de porter `id` à la place de l'objet actuel de son emplacement. */
+function equipDelta(ctx: UiContext, loadout: Loadout, id: string, slot: Slot): { text: string; good: boolean }[] {
+  const { state } = ctx.progress;
+  return statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [slot]: id } }, content, ctx.progress.level));
 }
 
 export function openInventory(host: PanelHost, ctx: UiContext): void {
@@ -620,10 +660,26 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       );
     });
 
+    const cls = heroClass(content.skills, state.hero);
     const choices = ofSlot(current).map((id) => {
       const def = content.items[id];
       const equipped = state.equipped[current] === id;
-      const delta = equipped ? [] : statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [current]: id } }, content, progress.level));
+      // Une arme d'une autre classe se garde (multiclassage à venir) mais ne se manie pas.
+      if (!canWield(def, cls)) {
+        return h(
+          'button',
+          { class: 'owned', disabled: true, title: def.description },
+          icon(id, 'medium'),
+          h(
+            'span',
+            { class: 'owned-text' },
+            h('strong', {}, def.name + levelTag(progress, id)),
+            h('small', {}, effectText(def, itemLevel(state, id))),
+            h('small', { class: 'tags' }, `Arme de ${def.tags?.join(' · ')} : un ${cls.name} ne sait pas la manier.`),
+          ),
+        );
+      }
+      const delta = equipped ? [] : equipDelta(ctx, loadout, id, current);
       return h(
         'button',
         {
@@ -649,7 +705,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       );
     });
 
-    const tiers = content.skills.tag.tiers;
+    const tiers = cls.tag.tiers;
     const tagLine = h(
       'div',
       { class: 'tag-tiers' },
@@ -673,6 +729,16 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       h('dd', {}, `${Math.round((cfg.damageTakenFactor ?? 1) * 100)} %`),
       loadout.bonus.oboles ? h('dt', {}, 'Oboles gagnées') : null,
       loadout.bonus.oboles ? h('dd', {}, `+${Math.round(loadout.bonus.oboles * 100)} %`) : null,
+      ...(cfg.kit === 'invocateur'
+        ? [
+            h('dt', {}, 'Âmes actives'),
+            h('dd', {}, String(cfg.summon.max)),
+            h('dt', {}, 'Dégâts d’une âme'),
+            h('dd', {}, String(Math.round(cfg.summon.damage * (cfg.perks?.summonDamageFactor ?? 1)))),
+            h('dt', {}, 'Vie d’une âme'),
+            h('dd', {}, `${Math.round(cfg.summon.life)} s`),
+          ]
+        : []),
     );
 
     const materials = Object.entries(content.materials).filter(([id]) => progress.material(id) > 0);
@@ -691,7 +757,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           h('h3', {}, 'Porté'),
           h('div', { class: 'slots' }, ...slotButtons),
           fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${cfg.attack.damage} dégâts`, stats),
-          fold('inv-tags', false, 'Tags de classe', `${content.skills.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
+          fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
           fold(
             'inv-materials',
             false,
@@ -738,8 +804,11 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
     const { state } = progress;
     const points = progress.skillPoints;
     const xp = levelProgress(skills, state.xp);
+    const cls = heroClass(skills, state.hero);
+    const race = heroRace(skills, state.hero);
+    const parent = state.hero.parent ? race.parents?.[state.hero.parent] : undefined;
 
-    const branches = skills.branches.map((branch) =>
+    const branches = cls.branches.map((branch) =>
       h(
         'div',
         { class: 'branch' },
@@ -775,8 +844,8 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       h(
         'div',
         {},
-        h('strong', {}, `${skills.class.name} · ${skills.class.subtitle}`),
-        h('div', { class: 'note' }, `${skills.race.name} (${skills.race.origin})`),
+        h('strong', {}, `${cls.name} · ${cls.subtitle}`),
+        h('div', { class: 'note' }, `${race.name}${parent ? `, enfant de ${parent.name}` : ''} (${race.origin})`),
       ),
       h(
         'div',
@@ -790,8 +859,8 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
     const passives = h(
       'div',
       { class: 'passives' },
-      ...skills.race.passives.map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
-      ...skills.class.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, a.key), ` ${a.name}`), h('small', {}, a.description))),
+      ...racePassives(skills, state.hero).map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
+      ...cls.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, a.key), ` ${a.name}`), h('small', {}, a.description))),
     );
 
     host.show(

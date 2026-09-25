@@ -90,6 +90,8 @@ interface Snapshot {
   aura?: boolean;
   /** Ennemi d'élite (niveau de donjon élevé). */
   elite?: boolean;
+  /** Âme liée de l'Invocateur : bleue et translucide, elle pâlit avec sa vigueur (de 1 à 0). */
+  spirit?: number;
 }
 
 interface SpriteEntry {
@@ -178,6 +180,9 @@ const FRENZY_TINT = new Color3(1, 0.7, 0.6);
 const ELITE_TINT = new Color3(1, 0.62, 0.38);
 const ELITE_SCALE = 1.22;
 const STORM = new Color3(0.8, 0.9, 1);
+const SPIRIT_TINT = new Color3(0.55, 0.95, 1.1);
+const CLAY = new Color3(0.78, 0.55, 0.35);
+const DIVINE = new Color3(1, 0.86, 0.45);
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
 
@@ -277,6 +282,8 @@ export class Renderer {
   private readonly channels = new Map<number, Fx>();
   private readonly landings = new Map<number, Fx>();
   private readonly snares = new Map<number, Fx>();
+  /** Halos des âmes au sol, en attente d'être liées. */
+  private readonly souls = new Map<number, Fx>();
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private readonly webs = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   private stumpViews: { stumps: readonly Stump[]; meshes: { dispose(): void }[] } = { stumps: [], meshes: [] };
@@ -365,7 +372,7 @@ export class Renderer {
       altitude: player.altitude,
       spawn: 1,
       blink: player.invulnerable > 0 && player.pose !== 'dash',
-      aura: player.frenzy > 0,
+      aura: player.frenzy > 0 || player.transformed > 0,
     }, dt);
     for (const enemy of world.enemies) {
       seen.add(enemy.id);
@@ -378,6 +385,20 @@ export class Renderer {
         spawn: enemy.spawnProgress,
         blink: false,
         elite: enemy.elite,
+      }, dt);
+    }
+    for (const summon of world.summons) {
+      seen.add(summon.id);
+      this.syncEntity(summon.id, summon.kind, {
+        pos: summon.pos,
+        facing: summon.facing,
+        radius: summon.radius,
+        pose: summon.pose,
+        altitude: 0,
+        spawn: summon.spawnProgress,
+        blink: false,
+        aura: world.choir > 0,
+        spirit: summon.vigor,
       }, dt);
     }
     for (const [id, view] of this.views) {
@@ -413,6 +434,7 @@ export class Renderer {
     this.channels.clear();
     this.landings.clear();
     this.snares.clear();
+    this.souls.clear();
     for (const text of this.texts) text.el.remove();
     this.texts = [];
     for (const web of this.webs.values()) this.disposeFx(web);
@@ -507,6 +529,11 @@ export class Renderer {
     }
     // Élite : plus grande, et une lueur rouge doré qui pulse.
     if (s.elite && tint === WHITE) tint = Color3.Lerp(WHITE, ELITE_TINT, 0.65 + 0.35 * Math.sin(t * 5));
+    // Âme liée : toujours bleue, plus vive pendant le Chœur, de plus en plus pâle avant de s'effacer.
+    if (s.spirit !== undefined) {
+      tint = s.aura ? Color3.Lerp(SPIRIT_TINT, WHITE, 0.3 + 0.3 * Math.sin(t * 10)) : SPIRIT_TINT;
+      alpha *= 0.35 + 0.4 * s.spirit;
+    }
     const k = Math.min(1, dt * 18);
     view.sx += (sx - view.sx) * k;
     view.sy += (sy - view.sy) * k;
@@ -913,6 +940,56 @@ export class Renderer {
       case 'snareEnd':
         this.endTracked(this.snares, event.id);
         break;
+      case 'clayShell':
+        this.text(event.pos, 2.3, 'Carapace d’argile', 'shield', 1.1);
+        this.addFx(this.ringFx(event.pos, 2.4, CLAY, 0.35));
+        break;
+      case 'divineBlood':
+        this.text(event.pos, 2.5, 'Sang divin !', 'parry', 1.6);
+        this.addFx(this.ringFx(event.pos, 3.4, DIVINE, 0.6));
+        this.addShake(0.6);
+        break;
+      case 'transform':
+        this.text(event.pos, 2.5, 'Sang yokai !', 'rage', 1.4);
+        this.addFx(this.ringFx(event.pos, 3, RAGE, 0.5));
+        this.addShake(0.4);
+        break;
+      case 'soulSet': {
+        // Le halo d'une âme au sol respire doucement tant qu'on peut la lier.
+        const fx = this.addFx({
+          ...this.ringFx(event.pos, 1.4, SPIRIT, 60),
+          y: 0.024,
+          update: (_k, f) => {
+            f.mesh.scaling.setAll(0.85 + 0.15 * Math.sin(f.age * 5));
+            f.material.setFloat('alpha', Math.min(0.85, f.age * 4) * (0.6 + 0.3 * Math.sin(f.age * 5)));
+          },
+        });
+        this.souls.set(event.id, fx);
+        break;
+      }
+      case 'soulEnd':
+        this.endTracked(this.souls, event.id);
+        break;
+      case 'bind':
+        this.text(event.pos, 2, 'Âme liée', 'parry');
+        this.addFx(this.ringFx(event.pos, 2.4, SPIRIT, 0.45));
+        break;
+      case 'bindFail':
+        this.text(event.pos, 2.3, 'Aucune âme à portée', 'stun', 0.8);
+        break;
+      case 'recall':
+        this.addFx(this.ringFx(event.pos, 2, SPIRIT, 0.3));
+        break;
+      case 'sacrifice':
+        this.addFx(this.ringFx(event.pos, event.radius * 2, SPIRIT, 0.4));
+        this.addFx(this.ringFx(event.pos, event.radius * 2.6, SHADOW_STRIKE, 0.5));
+        this.addShake(0.6);
+        break;
+      case 'choir':
+        this.text(event.pos, 2.3, 'Chœur spectral', 'parry', 1.2);
+        this.addFx(this.ringFx(event.pos, event.radius * 2, SPIRIT, 0.6));
+        break;
+      case 'summonFade':
       case 'dodge':
       case 'wave':
       case 'end':

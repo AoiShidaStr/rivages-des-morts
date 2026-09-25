@@ -1,8 +1,8 @@
-// Du côté de l'île vers le combat : équipement, niveau, talents, race et tags de classe
-// deviennent les réglages du Guerrier pour une descente au donjon.
-import type { PlayerConfig } from './config';
+// Du côté de l'île vers le combat : race, classe, équipement, niveau, talents et tags de classe
+// deviennent les réglages du héros pour une descente au donjon.
+import type { Kit, PlayerConfig } from './config';
 import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type Palier, type UpgradeRules } from './forge';
-import type { ProgressState, Slot } from './progress';
+import type { Hero, ProgressState, Slot } from './progress';
 
 export type BonusKind = 'maxHp' | 'damage' | 'speed' | 'dodge' | 'armor' | 'oboles';
 export type Bonus = Partial<Record<BonusKind, number>>;
@@ -36,12 +36,42 @@ export interface SkillNode {
   effects: ConfigEffect[];
 }
 
-export interface SkillsDef {
-  levels: { max: number; xpBase: number; xpPerLevel: number; hpPerLevel: number; pointsFrom: number; pointsUntil: number };
-  race: { name: string; origin: string; passives: { name: string; description: string; effects: ConfigEffect[] }[] };
-  class: { name: string; subtitle: string; actives: { key: string; name: string; description: string }[] };
+export interface Passive {
+  name: string;
+  description: string;
+  effects: ConfigEffect[];
+}
+
+/** Héritage mythologique du héros : des passifs, et pour le Demi-dieu le choix du parent divin. */
+export interface RaceDef {
+  name: string;
+  origin: string;
+  /** Style de jeu favorisé, sans être imposé. */
+  style: string;
+  passives: Passive[];
+  parents?: Record<string, Passive>;
+}
+
+export interface ClassDef {
+  name: string;
+  subtitle: string;
+  role: string;
+  kit: Kit;
+  /** Arme de départ. */
+  weapon: string;
+  /** Réglages de base de la classe, appliqués avant l'équipement. */
+  effects?: ConfigEffect[];
+  actives: { key: string; name: string; description: string }[];
   tag: { name: string; tiers: { count: number; description: string; effects: ConfigEffect[] }[] };
   branches: { id: string; name: string; subtitle: string; lore: string; nodes: SkillNode[] }[];
+}
+
+export interface SkillsDef {
+  levels: { max: number; xpBase: number; xpPerLevel: number; hpPerLevel: number; pointsFrom: number; pointsUntil: number };
+  races: Record<string, RaceDef>;
+  classes: Record<string, ClassDef>;
+  /** Classes prévues par le GDD, montrées à la création sans être jouables. */
+  upcomingClasses: { name: string; subtitle: string; role: string }[];
 }
 
 export interface LoadoutData {
@@ -57,13 +87,28 @@ export interface Loadout {
   bonus: Required<Bonus>;
   /** Nombre d'objets portés avec le tag de la classe. */
   tagCount: number;
-  /** Palier de tag atteint (index dans skills.tag.tiers), ou -1. */
+  /** Palier de tag atteint (index dans les paliers du tag de la classe), ou -1. */
   tier: number;
 }
 
 /** PV max offerts par la bénédiction des six Jizō. */
 const JIZO_BLESSING = 10;
 const ANY_CLASS = 'Tous';
+
+export const heroRace = (skills: SkillsDef, hero: Hero): RaceDef => skills.races[hero.race] ?? Object.values(skills.races)[0];
+export const heroClass = (skills: SkillsDef, hero: Hero): ClassDef => skills.classes[hero.class] ?? Object.values(skills.classes)[0];
+
+/** Passifs de la race, parent divin compris. */
+export function racePassives(skills: SkillsDef, hero: Hero): Passive[] {
+  const race = heroRace(skills, hero);
+  const parent = hero.parent ? race.parents?.[hero.parent] : undefined;
+  return parent ? [parent, ...race.passives] : race.passives;
+}
+
+/** Une arme ne se manie que par sa classe (son tag, ou « Tous ») ; les autres pièces vont à tout le monde. */
+export function canWield(def: ItemDef, cls: ClassDef): boolean {
+  return def.slot !== 'arme' || !def.tags?.length || def.tags.some((t) => t === cls.tag.name || t === ANY_CLASS);
+}
 
 /** Niveau de forge d'un objet (1 tant qu'il n'a pas été amélioré). */
 export const itemLevel = (state: ProgressState, id: string): number => state.itemLevels[id] ?? 1;
@@ -101,7 +146,7 @@ export function levelProgress(skills: SkillsDef, xp: number): { level: number; i
 /** Un nœud peut être appris si le précédent de sa branche l'est déjà (l'ultime demande les trois autres). */
 export function canLearn(skills: SkillsDef, state: ProgressState, nodeId: string, points: number): boolean {
   if (points <= 0 || state.talents.includes(nodeId)) return false;
-  for (const branch of skills.branches) {
+  for (const branch of heroClass(skills, state.hero).branches) {
     const index = branch.nodes.findIndex((n) => n.id === nodeId);
     if (index >= 0) return branch.nodes.slice(0, index).every((n) => state.talents.includes(n.id));
   }
@@ -110,15 +155,17 @@ export function canLearn(skills: SkillsDef, state: ProgressState, nodeId: string
 
 export function buildLoadout(base: PlayerConfig, state: ProgressState, data: LoadoutData, level: number): Loadout {
   const config = structuredClone(base);
+  const cls = heroClass(data.skills, state.hero);
+  for (const effect of cls.effects ?? []) applyEffect(config, effect);
   const bonus: Required<Bonus> = { maxHp: 0, damage: 0, speed: 0, dodge: 0, armor: 0, oboles: 0 };
   let tagCount = 0;
-  const className = data.skills.tag.name;
+  const className = cls.tag.name;
   const rules = data.upgrade;
   const paliers: Palier[] = [];
 
   for (const id of Object.values(state.equipped)) {
     const item = id ? data.items[id] : undefined;
-    if (!id || !item) continue;
+    if (!id || !item || !canWield(item, cls)) continue;
     const upgradable = isUpgradable(rules, item);
     const lvl = itemLevel(state, id);
     const itemBonus = upgradable ? scaledBonus(rules, item.bonus, lvl) : (item.bonus ?? {});
@@ -131,26 +178,28 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     if (tagged) tagCount += reached.some((p) => p.id === 'double') ? 2 : 1;
   }
 
-  // Arme : ses effets fixent les dégâts de base ; son niveau multiplie tous les dégâts du Guerrier.
+  // Arme : ses effets fixent les dégâts de base ; son niveau multiplie tous les dégâts du héros, âmes comprises.
   const weaponId = state.equipped.arme;
   const power = weaponId ? weaponPower(rules, itemLevel(state, weaponId)) : 1;
   config.attack.damage *= power;
   config.smash.damage *= power;
   config.bond.damage *= power;
+  config.summon.damage *= power;
+  config.summon.sacrifice.damage *= power;
   for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 
   if (state.flags.benediction_jizo) bonus.maxHp += JIZO_BLESSING;
   bonus.maxHp += (level - 1) * data.skills.levels.hpPerLevel;
 
-  for (const passive of data.skills.race.passives) for (const effect of passive.effects) applyEffect(config, effect);
-  for (const branch of data.skills.branches) {
+  for (const passive of racePassives(data.skills, state.hero)) for (const effect of passive.effects) applyEffect(config, effect);
+  for (const branch of cls.branches) {
     for (const node of branch.nodes) if (state.talents.includes(node.id)) for (const effect of node.effects) applyEffect(config, effect);
   }
   let tier = -1;
-  data.skills.tag.tiers.forEach((t, i) => {
+  cls.tag.tiers.forEach((t, i) => {
     if (tagCount >= t.count) tier = i;
   });
-  if (tier >= 0) for (const effect of data.skills.tag.tiers[tier].effects) applyEffect(config, effect);
+  if (tier >= 0) for (const effect of cls.tag.tiers[tier].effects) applyEffect(config, effect);
 
   config.maxHp += bonus.maxHp;
   config.moveSpeed *= 1 + bonus.speed;

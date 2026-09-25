@@ -131,6 +131,15 @@ kbd {
   box-shadow: 0 0 12px var(--rage);
 }
 
+/* Chez l'Invocateur, la barre compte les âmes liées, et luit quand une âme est à portée. */
+.bar.rage.souls .fill {
+  background: linear-gradient(#8ff6ff, #2f9fb3);
+}
+
+.bar.rage.souls.ready {
+  box-shadow: 0 0 12px #6ff3ff;
+}
+
 .bar .label {
   position: absolute;
   left: 8px;
