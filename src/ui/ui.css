@@ -719,13 +719,6 @@ body:not([data-mode='dungeon']) #hud {
   color: var(--ink-2);
 }
 
-.item-desc {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-style: italic;
-  color: #4a4f52;
-}
-
 .price,
 .cost {
   display: grid;
@@ -1546,6 +1539,14 @@ body:not([data-mode='dungeon']) #hud {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
+}
+
+.row.owned-offer {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.row.owned-offer .item-head strong {
+  color: var(--ink-2);
 }
 
 .row.recipe {

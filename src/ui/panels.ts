@@ -94,23 +94,6 @@ function levelTag(progress: Progress, id: string): string {
   return isUpgradable(content.upgrade, content.items[id]) ? ` (niv. ${itemLevel(progress.state, id)})` : '';
 }
 
-function itemCard(def: ItemDef, extra?: string): HTMLElement {
-  const rarity = def.rarity.replace(/\s/g, '-');
-  return h(
-    'div',
-    { class: 'item' },
-    h(
-      'div',
-      { class: 'item-head' },
-      h('strong', {}, def.name),
-      h('span', { class: `rarity r-${rarity}` }, def.rarity),
-      ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
-    ),
-    h('div', { class: 'item-meta' }, def.slot ? `${content.slots[def.slot]}${extra ?? ''} · ${effectText(def)}` : 'Objet de quête'),
-    h('p', { class: 'item-desc' }, def.description),
-  );
-}
-
 function cost(progress: Progress, oboles: number, materials: Record<string, number>): { node: HTMLElement; ok: boolean } {
   let ok = progress.state.oboles >= oboles;
   const parts: (HTMLElement | string)[] = [obole(oboles)];
@@ -183,25 +166,43 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
   if (!shop) return;
   const render = () => {
     const { progress } = ctx;
+    const { state } = progress;
+    const loadout = ctx.loadout();
     const bonusDiscount = shop.discountIf && progress.check(shop.discountIf.if) ? shop.discountIf.discount : 0;
     const discount = 1 - (1 - (shop.discount ?? 0)) * (1 - bonusDiscount);
-    const rows = shop.stock
+    const offers = shop.stock
       .filter((entry) => progress.check(entry.if))
-      .map(({ item, price }) => {
-        const def = content.items[item];
-        const final = Math.round(price * (1 - discount));
-        const owned = progress.has(item);
-        const affordable = progress.state.oboles >= final;
-        return h(
-          'div',
-          { class: 'row' },
-          itemCard(def),
-          h('div', { class: 'price' }, discount ? h('s', {}, String(price)) : null, obole(final)),
-          h(
+      .map(({ item, price }) => ({ item, price, final: Math.round(price * (1 - discount)), owned: progress.has(item) }));
+    // Ce qu'on peut acheter d'abord, puis ce qui est trop cher, et ce qu'on a déjà tout en bas.
+    const rank = (o: (typeof offers)[number]) => (o.owned ? 2 : state.oboles >= o.final ? 0 : 1);
+    offers.sort((a, b) => rank(a) - rank(b) || a.final - b.final);
+
+    const rows = offers.map(({ item, price, final, owned }) => {
+      const def = content.items[item];
+      const slot = def.slot;
+      const worn = slot ? state.equipped[slot] === item : false;
+      const missing = final - state.oboles;
+      const delta = slot && !worn ? equipDelta(ctx, loadout, item, slot) : [];
+      const action = owned
+        ? slot && !worn
+          ? h(
+              'button',
+              {
+                class: 'btn',
+                onclick: () => {
+                  progress.equip(item, slot);
+                  render();
+                },
+              },
+              'Équiper',
+            )
+          : h('span', { class: 'badge inline' }, worn ? 'Porté' : 'Possédé')
+        : h(
             'button',
             {
-              class: 'btn',
-              disabled: owned || !affordable,
+              class: `btn${missing <= 0 ? ' primary' : ''}`,
+              disabled: missing > 0,
+              title: missing > 0 ? `Il te manque ${missing} oboles` : undefined,
               onclick: () => {
                 progress.gainOboles(-final);
                 acquire(ctx, item);
@@ -209,15 +210,43 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
                 render();
               },
             },
-            owned ? 'Possédé' : affordable ? 'Acheter' : 'Trop cher',
+            missing > 0 ? `Il manque ${missing}` : 'Acheter',
+          );
+      return h(
+        'div',
+        { class: `row offer${owned ? ' owned-offer' : ''}` },
+        h(
+          'div',
+          { class: 'item' },
+          h(
+            'div',
+            { class: 'item-head' },
+            h('strong', { title: def.description }, def.name),
+            h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
+            ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
           ),
-        );
-      });
+          h('div', { class: 'item-meta' }, slot ? `${content.slots[slot]} · ${effectText(def, itemLevel(state, item))}` : 'Objet de quête'),
+          delta.length ? h('div', { class: 'deltas' }, ...delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text))) : null,
+        ),
+        owned ? h('div') : h('div', { class: 'price' }, discount ? h('s', {}, String(price)) : null, obole(final)),
+        action,
+      );
+    });
     const notes = [
-      shop.discount ? `Prix réduits de ${Math.round(shop.discount * 100)} % : c'est la récompense de ta victoire.` : null,
+      shop.discount ? `−${Math.round(shop.discount * 100)} % : la récompense de ta victoire.` : null,
       bonusDiscount ? shop.discountIf?.note : null,
     ].filter((n): n is string => Boolean(n));
-    host.show(shop.name, purse(progress), h('div', { class: 'list' }, ...notes.map((n) => h('p', { class: 'note' }, n)), ...rows));
+    host.show(
+      shop.name,
+      purse(progress),
+      h(
+        'div',
+        { class: 'list' },
+        ...notes.map((n) => h('p', { class: 'note' }, n)),
+        ...rows,
+        h('p', { class: 'note' }, 'Survole un nom pour lire sa description. Les étiquettes vertes et rouges comparent avec ce que tu portes.'),
+      ),
+    );
   };
   render();
 }
@@ -577,6 +606,12 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
   return out;
 }
 
+/** Ce que changerait le fait de porter `id` à la place de l'objet actuel de son emplacement. */
+function equipDelta(ctx: UiContext, loadout: Loadout, id: string, slot: Slot): { text: string; good: boolean }[] {
+  const { state } = ctx.progress;
+  return statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [slot]: id } }, content, ctx.progress.level));
+}
+
 export function openInventory(host: PanelHost, ctx: UiContext): void {
   const render = () => {
     const { progress } = ctx;
@@ -610,7 +645,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     const choices = ofSlot(current).map((id) => {
       const def = content.items[id];
       const equipped = state.equipped[current] === id;
-      const delta = equipped ? [] : statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [current]: id } }, content, progress.level));
+      const delta = equipped ? [] : equipDelta(ctx, loadout, id, current);
       return h(
         'button',
         {
