@@ -1,0 +1,37 @@
+{
+  "sourceDir": "~/Pictures/game visual",
+  "outDir": "public/sprites/icones",
+  "previewDir": "public/sprites/sprites/objets",
+  "size": 128,
+  "margin": 0.05,
+  "defaults": {
+    "tolerance": 30,
+    "localTolerance": 18,
+    "maxSaturation": 16,
+    "minPartRatio": 0.02,
+    "glowReach": 24,
+    "glowStep": 9,
+    "alphaFloor": 0.05
+  },
+  "sheets": [
+    {
+      "source": "objets_planche.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "nodachi", "kanabo", "katana-ronin", "chapeau-paille", "kabuto-fendu", "masque-oublie", "shiroshozoku", "carapace-kappa",
+        "hakama-soie", "suneate-ecailles", "geta-kasa", "waraji-pelerin", "lanterne-braise", "magatama-fele", "omamori-temple", "rokumonsen",
+        "talisman-douteux", "dent-kappa", "coupelle-kappa", "fil-joren", "magatama-yasakani", "ema-tetsu", "tasse-ebrechee", "concombre",
+        "tablette-argile", "braise", "seve", "ecaille", "papier", "masque", "soie", null
+      ]
+    }
+  ],
+  "icons": {
+    "kanabo": { "fillHoles": true, "minHole": 40 },
+    "masque-oublie": { "fillHoles": true, "minHole": 150, "holes": [[0.12, 0.375], [0.73, 0.375]] },
+    "lanterne-braise": { "fillHoles": true, "minHole": 150 },
+    "omamori-temple": { "fillHoles": true, "minHole": 150 },
+    "rokumonsen": { "fillHoles": true, "minHole": 60 },
+    "soie": { "fillHoles": true, "minHole": 80 }
+  }
+}

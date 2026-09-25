@@ -4,7 +4,7 @@ import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
 import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { Progress, Slot } from '../game/progress';
-import { h, obole } from './dom';
+import { h, icon, obole, type Child } from './dom';
 
 /** Nombre à la française : « 1,35 ». */
 const fr = (value: number, digits = 2): string => value.toLocaleString('fr-FR', { maximumFractionDigits: digits });
@@ -14,7 +14,8 @@ export interface UiContext {
   basePlayer: PlayerConfig;
   /** Réglages du héros avec sa race, sa classe, l'équipement, le niveau et les talents actuels. */
   loadout(): Loadout;
-  toast(text: string, tone?: 'quest' | 'loot'): void;
+  /** `icon` : l'objet ou le matériau dont on montre l'icône à côté du texte. */
+  toast(text: string, tone?: 'quest' | 'loot', icon?: string): void;
 }
 
 /** Fenêtre centrale (boutique, forge, équipement, quêtes). Échap ou un clic à côté la ferment. */
@@ -94,15 +95,25 @@ function levelTag(progress: Progress, id: string): string {
   return isUpgradable(content.upgrade, content.items[id]) ? ` (niv. ${itemLevel(progress.state, id)})` : '';
 }
 
+/** Fiche d'objet : son icône à gauche, le texte à droite. */
+function itemBlock(id: string, ...children: Child[]): HTMLElement {
+  return h('div', { class: 'item' }, icon(id, 'large'), h('div', { class: 'item-body' }, ...children));
+}
+
 function cost(progress: Progress, oboles: number, materials: Record<string, number>): { node: HTMLElement; ok: boolean } {
   let ok = progress.state.oboles >= oboles;
   const parts: (HTMLElement | string)[] = [obole(oboles)];
   for (const [id, amount] of Object.entries(materials)) {
     const owned = progress.material(id);
     ok &&= owned >= amount;
-    parts.push(h('span', { class: owned >= amount ? 'mat' : 'mat missing' }, `${amount} × ${content.materials[id] ?? id} (${owned})`));
+    parts.push(h('span', { class: `mat with-icon${owned >= amount ? '' : ' missing'}` }, icon(id, 'small'), `${amount} × ${content.materials[id] ?? id} (${owned})`));
   }
   return { node: h('div', { class: 'cost' }, ...parts), ok };
+}
+
+/** Une ligne de butin avec la petite icône de l'objet ou du matériau (coffres, fin de donjon). */
+export function lootLine(id: string, text: string): HTMLElement {
+  return h('span', { class: 'with-icon' }, icon(id, 'small'), text);
 }
 
 function purse(progress: Progress): HTMLElement {
@@ -206,7 +217,7 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
               onclick: () => {
                 progress.gainOboles(-final);
                 acquire(ctx, item);
-                ctx.toast(`Acheté : ${def.name}`, 'loot');
+                ctx.toast(`Acheté : ${def.name}`, 'loot', item);
                 render();
               },
             },
@@ -215,9 +226,8 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
       return h(
         'div',
         { class: `row offer${owned ? ' owned-offer' : ''}` },
-        h(
-          'div',
-          { class: 'item' },
+        itemBlock(
+          item,
           h(
             'div',
             { class: 'item-head' },
@@ -291,7 +301,7 @@ function applyUpgrade(ctx: UiContext, id: string, plan: UpgradePlan): void {
   for (const [m, n] of Object.entries(plan.materials)) progress.gainMaterial(m, -n);
   progress.state.itemLevels[id] = plan.to;
   progress.save();
-  ctx.toast(`${def.name} : niveau ${plan.to}`, 'loot');
+  ctx.toast(`${def.name} : niveau ${plan.to}`, 'loot', id);
   for (const p of reachedPaliers(rules, def, plan.to).slice(before)) ctx.toast(`Palier ${p.level} · ${p.name} : ${p.summary}`, 'quest');
 }
 
@@ -382,14 +392,17 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
   return h(
     'div',
     { class: 'forge-detail' },
-    h(
-      'div',
-      { class: 'item-head' },
-      h('strong', { title: def.description }, def.name),
-      h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
-      worn ? h('span', { class: 'badge inline' }, 'Porté') : null,
+    itemBlock(
+      id,
+      h(
+        'div',
+        { class: 'item-head' },
+        h('strong', { title: def.description }, def.name),
+        h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
+        worn ? h('span', { class: 'badge inline' }, 'Porté') : null,
+      ),
+      h('div', { class: 'item-meta' }, [content.slots[def.slot as Slot], def.summary].filter(Boolean).join(' · ')),
     ),
-    h('div', { class: 'item-meta' }, [content.slots[def.slot as Slot], def.summary].filter(Boolean).join(' · ')),
     h('div', { class: 'detail-level' }, h('span', {}, `Niveau ${level}`), h('small', {}, ` / ${rules.maxLevel}${cap < rules.maxLevel ? ` · plafond ${cap} (ton niveau)` : ''}`)),
     levelTrack(def, level, cap),
     maxed ? h('p', { class: 'note' }, 'Cette pièce est au niveau maximum.') : null,
@@ -445,7 +458,7 @@ function forgePick(ctx: UiContext, id: string, cap: number, selected: boolean, s
       },
     },
     showSlot ? h('span', { class: 'pick-slot' }, content.slots[def.slot as Slot]) : null,
-    h('span', { class: 'pick-name' }, def.name, worn && !showSlot ? h('i', { class: 'worn-dot', title: 'Porté' }) : null),
+    h('span', { class: 'pick-name' }, icon(id, 'small'), def.name, worn && !showSlot ? h('i', { class: 'worn-dot', title: 'Porté' }) : null),
     h('span', { class: 'pick-level' }, maxed ? 'max' : `niv. ${level}`),
     h('span', { class: `pick-state${ready ? ' ready' : ''}` }, ready ? '▲' : ''),
   );
@@ -537,9 +550,8 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         return h(
           'div',
           { class: 'row recipe' },
-          h(
-            'div',
-            { class: 'item' },
+          itemBlock(
+            recipe.item,
             h(
               'div',
               { class: 'item-head' },
@@ -559,7 +571,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
                 progress.gainOboles(-recipe.oboles);
                 for (const [id, amount] of Object.entries(recipe.materials)) progress.gainMaterial(id, -amount);
                 acquire(ctx, recipe.item);
-                ctx.toast(`Forgé : ${def.name}`, 'loot');
+                ctx.toast(`Forgé : ${def.name}`, 'loot', recipe.item);
                 render();
               },
             },
@@ -643,7 +655,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           },
         },
         h('span', { class: 'slot-label' }, label),
-        h('span', { class: 'slot-item' }, id ? content.items[id].name + levelTag(progress, id) : '—'),
+        h('span', { class: 'slot-item' }, id ? icon(id, 'small') : null, id ? content.items[id].name + levelTag(progress, id) : '—'),
         h('span', { class: 'slot-count', title: `${count} objet${count > 1 ? 's' : ''} pour cet emplacement` }, String(count)),
       );
     });
@@ -657,9 +669,14 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
         return h(
           'button',
           { class: 'owned', disabled: true, title: def.description },
-          h('strong', {}, def.name + levelTag(progress, id)),
-          h('small', {}, effectText(def, itemLevel(state, id))),
-          h('small', { class: 'tags' }, `Arme de ${def.tags?.join(' · ')} : un ${cls.name} ne sait pas la manier.`),
+          icon(id, 'medium'),
+          h(
+            'span',
+            { class: 'owned-text' },
+            h('strong', {}, def.name + levelTag(progress, id)),
+            h('small', {}, effectText(def, itemLevel(state, id))),
+            h('small', { class: 'tags' }, `Arme de ${def.tags?.join(' · ')} : un ${cls.name} ne sait pas la manier.`),
+          ),
         );
       }
       const delta = equipped ? [] : equipDelta(ctx, loadout, id, current);
@@ -673,12 +690,18 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
             render();
           },
         },
-        h('strong', {}, def.name + levelTag(progress, id)),
-        h('small', {}, effectText(def, itemLevel(state, id))),
-        def.tags?.length ? h('small', { class: 'tags' }, def.tags.join(' · ')) : null,
-        equipped
-          ? h('span', { class: 'badge' }, 'Équipé')
-          : h('span', { class: 'deltas' }, ...(delta.length ? delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text)) : [h('span', { class: 'delta' }, 'Mêmes caractéristiques')])),
+        icon(id, 'medium'),
+        h(
+          'span',
+          { class: 'owned-text' },
+          h('strong', {}, def.name + levelTag(progress, id)),
+          h('small', {}, effectText(def, itemLevel(state, id))),
+          def.tags?.length ? h('small', { class: 'tags' }, def.tags.join(' · ')) : null,
+          equipped
+            ? null
+            : h('span', { class: 'deltas' }, ...(delta.length ? delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text)) : [h('span', { class: 'delta' }, 'Mêmes caractéristiques')])),
+        ),
+        equipped ? h('span', { class: 'badge' }, 'Équipé') : null,
       );
     });
 
@@ -741,7 +764,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
             'Matériaux',
             materials.length ? String(materials.reduce((sum, [id]) => sum + progress.material(id), 0)) : 'aucun',
             materials.length
-              ? h('div', { class: 'chips' }, ...materials.map(([id, name]) => h('span', { class: 'chip' }, name, h('b', {}, `× ${progress.material(id)}`))))
+              ? h('div', { class: 'chips' }, ...materials.map(([id, name]) => h('span', { class: 'chip' }, icon(id, 'small'), name, h('b', {}, `× ${progress.material(id)}`))))
               : h('p', { class: 'note' }, 'Les ennemis des Rizières noyées en laissent tomber.'),
           ),
           questItems.length
@@ -750,7 +773,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
                 false,
                 'Objets de quête',
                 String(questItems.length),
-                h('ul', { class: 'plain' }, ...questItems.map((id) => h('li', { title: content.items[id]?.description ?? '' }, content.items[id]?.name ?? id))),
+                h('div', { class: 'chips' }, ...questItems.map((id) => h('span', { class: 'chip', title: content.items[id]?.description ?? '' }, icon(id, 'small'), content.items[id]?.name ?? id))),
               )
             : null,
         ),
@@ -1000,6 +1023,6 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (leve
 
 // --- Butin ------------------------------------------------------------------
 
-export function openLoot(host: PanelHost, title: string, lines: string[], onClose?: () => void): void {
+export function openLoot(host: PanelHost, title: string, lines: (string | Node)[], onClose?: () => void): void {
   host.show(title, null, h('div', { class: 'list' }, h('ul', { class: 'loot' }, ...lines.map((l) => h('li', {}, l)))), { onClose });
 }
