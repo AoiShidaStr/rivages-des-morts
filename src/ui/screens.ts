@@ -1,4 +1,4 @@
-import { h, obole } from './dom';
+import { h, icon, obole } from './dom';
 
 const FADE_MS = 450;
 const HOLD_MS = 700;
@@ -147,7 +147,7 @@ export class Screens {
 
   showResult(
     victory: boolean,
-    loot: { level: number; oboles: number; xp: number; materials: string[]; chests: number; unlocked?: number },
+    loot: { level: number; oboles: number; xp: number; materials: (string | Node)[]; chests: number; unlocked?: number },
     options: MenuOption[],
   ): void {
     this.result.replaceChildren(
@@ -199,8 +199,9 @@ export class Screens {
 
   // --- Notifications ----------------------------------------------------------------
 
-  toast(text: string, tone: 'quest' | 'loot' | 'info' = 'info'): void {
-    const el = h('div', { class: `toast ${tone}` }, text);
+  /** `item` : l'objet ou le matériau dont l'icône accompagne le texte. */
+  toast(text: string, tone: 'quest' | 'loot' | 'info' = 'info', item?: string): void {
+    const el = h('div', { class: `toast ${tone}${item ? ' with-icon' : ''}` }, item ? icon(item, 'small') : null, text);
     this.toasts.append(el);
     setTimeout(() => el.classList.add('leaving'), TOAST_MS);
     setTimeout(() => el.remove(), TOAST_MS + 500);

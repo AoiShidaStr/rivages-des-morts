@@ -60,7 +60,7 @@ export interface Effect {
 
 /** Ce que l'interface doit faire après une suite d'effets. */
 export type Action =
-  | { kind: 'toast'; text: string; tone?: 'quest' | 'loot' }
+  | { kind: 'toast'; text: string; tone?: 'quest' | 'loot'; icon?: string }
   | { kind: 'shop'; id: string }
   | { kind: 'forge' }
   | { kind: 'dungeon' }
@@ -266,7 +266,7 @@ export class Progress {
     }
     if (e.give && !this.has(e.give)) {
       this.acquire(e.give, catalog.itemSlot(e.give));
-      actions.push({ kind: 'toast', text: `Objet obtenu : ${catalog.itemName(e.give)}`, tone: 'loot' });
+      actions.push({ kind: 'toast', text: `Objet obtenu : ${catalog.itemName(e.give)}`, tone: 'loot', icon: e.give });
     }
     if (e.take) {
       state.items = state.items.filter((i) => i !== e.take);
@@ -278,7 +278,9 @@ export class Progress {
     }
     if (e.material) {
       this.gainMaterial(e.material[0], e.material[1]);
-      if (e.material[1] > 0) actions.push({ kind: 'toast', text: `+${e.material[1]} ${catalog.materialName(e.material[0])}`, tone: 'loot' });
+      if (e.material[1] > 0) {
+        actions.push({ kind: 'toast', text: `+${e.material[1]} ${catalog.materialName(e.material[0])}`, tone: 'loot', icon: e.material[0] });
+      }
     }
     if (e.toast) actions.push({ kind: 'toast', text: e.toast });
     if (e.open === 'shop' && e.shop) actions.push({ kind: 'shop', id: e.shop });

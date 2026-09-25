@@ -15,6 +15,7 @@ import type { Renderer } from './render/renderer';
 import { DialogueBox } from './ui/dialogue';
 import {
   PanelHost,
+  lootLine,
   openDungeonEntry,
   openForge,
   openInventory,
@@ -94,7 +95,7 @@ export class App {
       progress: d.progress,
       basePlayer: d.config.player,
       loadout: () => this.loadout(),
-      toast: (text, tone) => this.screens.toast(text, tone),
+      toast: (text, tone, icon) => this.screens.toast(text, tone, icon),
     };
   }
 
@@ -313,7 +314,7 @@ export class App {
     for (const action of actions) {
       switch (action.kind) {
         case 'toast':
-          this.screens.toast(action.text, action.tone);
+          this.screens.toast(action.text, action.tone, action.icon);
           break;
         case 'shop':
           openShop(this.panels, this.ui, action.id);
@@ -351,7 +352,7 @@ export class App {
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(materials)) progress.gainMaterial(id, amount);
     progress.save();
-    const lines = [`+${oboles} oboles`, ...Object.entries(materials).map(([id, n]) => `${n} × ${content.materials[id]}`)];
+    const lines = [`+${oboles} oboles`, ...Object.entries(materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`))];
     openLoot(this.panels, `${count} coffre${count > 1 ? 's' : ''} ouvert${count > 1 ? 's' : ''}`, lines);
   }
 
@@ -452,7 +453,7 @@ export class App {
         const known = this.d.progress.has(entry.item) || this.run.items.includes(entry.item);
         if (!known && this.d.progress.check(entry.if) && Math.random() < Math.min(1, entry.chance * rewards.rareChance)) {
           this.run.items.push(entry.item);
-          this.screens.toast(`Butin rare : ${content.items[entry.item]?.name ?? entry.item}`, 'loot');
+          this.screens.toast(`Butin rare : ${content.items[entry.item]?.name ?? entry.item}`, 'loot', entry.item);
         }
       }
     }
@@ -498,8 +499,8 @@ export class App {
         xp,
         chests,
         materials: [
-          ...this.run.items.map((id) => `Objet : ${content.items[id]?.name ?? id}`),
-          ...Object.entries(this.run.materials).map(([id, n]) => `${n} × ${content.materials[id]}`),
+          ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
+          ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
         ],
       },
       options,

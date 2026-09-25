@@ -105,7 +105,8 @@ function keyBlend(data, ref, keyColor, maxResidual) {
   };
 }
 
-function borderMedian(data, w, h) {
+/** Couleur du fond : la médiane des pixels du bord de l'image. */
+export function borderMedian(data, w, h) {
   const channels = [[], [], []];
   const take = (i) => channels.forEach((values, c) => values.push(data[i * 3 + c]));
   for (let x = 0; x < w; x += 4) {

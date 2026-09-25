@@ -11,6 +11,8 @@
     "sprites": "node tools/detourer.mjs",
     "planches": "node tools/planches.mjs",
     "sols": "node tools/sols.mjs",
+    "objets": "node tools/collection-objets.mjs",
+    "icones": "node tools/icones.mjs",
     "pixel": "node tools/pixel.mjs"
   },
   "dependencies": {

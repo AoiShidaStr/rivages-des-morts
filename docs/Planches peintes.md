@@ -1,12 +1,13 @@
 # Sprites peints (Nano Banana)
 
-Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Trois commandes les préparent pour le jeu.
+Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Quatre commandes les préparent pour le jeu.
 
 | Commande | Entrée | Sortie | Réglages |
 | --- | --- | --- | --- |
 | `npm run sprites` | une image fixe (PNJ, décor) | `public/sprites/<nom>.png`, détourée | `tools/sprites.json` |
 | `npm run planches` | une planche d'animation (plusieurs images en grille) | `public/sprites/anim/<nom>.webp` + `.json` | `tools/planches.json` |
 | `npm run sols` | `sol_ile.jpg`, `sol_rizieres.jpg` (vus de dessus) | `public/sprites/sols/` | `tools/sols.mjs` |
+| `npm run icones` | `objets_planche.jpg` (tous les objets en grille) | `public/sprites/icones/<id>.png`, 128 × 128 | `tools/icones.json` |
 
 On peut ne traiter qu'une entrée : `npm run sprites -- decor/ema`, `npm run planches -- heros`.
 
@@ -36,3 +37,16 @@ Dans `src/data/sprites.json` (donjon) ou `src/data/islandSprites.json` (île), l
 ## Sol de l'île
 
 Nano Banana ne garde pas l'échelle du tracé : `npm run sols` retrouve l'échelle et le décalage qui posent les terres peintes sur les cercles praticables de `src/data/island.json` (ce sont eux qui font les collisions), puis fond les bords de l'image dans la brume. La commande affiche le recouvrement obtenu ; en dessous de 80 %, le tracé peint s'écarte trop du jeu.
+
+## Icônes des objets
+
+`npm run objets` dessine en pixel art la planche de référence de tous les objets et matériaux (dans l'ordre de `src/data/items.json`), à donner à Nano Banana avec le prompt de `public/sprites/sprites/objets/Prompt objets.md`. Le résultat peint, `objets_planche.jpg`, est découpé par `npm run icones` : chaque morceau revient à la case de la grille qui contient son centre, et `tools/icones.json` dit quel objet occupe chaque case.
+
+Autour de l'objet, le gris du fond est retiré en demi-transparence (« couleur vers alpha ») : les halos peints restent doux sur le papier de l'interface. Réglages par icône dans `icons` :
+
+| Champ | Rôle |
+| --- | --- |
+| `fillHoles`, `minHole` | vide le fond enfermé par l'objet (boucle d'un cordon, trou des pièces), en poches d'au moins `minHole` pixels |
+| `holes` | ne vide que les poches qui contiennent ces points (fractions de la case) : pour un objet dont les ombres ont le gris du fond, comme le masque blanc |
+
+L'aperçu `public/sprites/sprites/objets/apercu-icones.png` montre toutes les icônes sur le papier et sur l'encre. Pour un nouvel objet : l'ajouter à `items.json`, dessiner son icône pixel dans `tools/pixel/objets.mjs`, régénérer la planche, puis ajouter une planche (ou une case) dans `tools/icones.json`. Un objet sans icône garde une case vide dans l'interface.
