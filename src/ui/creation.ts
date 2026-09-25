@@ -141,9 +141,19 @@ export class CreationScreen {
               },
               'Retour',
             ),
-            h('button', { class: 'btn primary', onclick: () => onDone({ ...hero }) }, `Commencer : ${cls.name} ${race.name}`),
+            h(
+              'button',
+              {
+                class: 'btn primary',
+                onclick: () => {
+                  this.hide();
+                  onDone({ ...hero });
+                },
+              },
+              `Commencer : ${cls.name} ${race.name}`,
+            ),
           ),
-          h('p', { class: 'footnote' }, 'Même apparence pour toutes les races dans ce prototype · les autres classes arrivent'),
+          h('p', { class: 'footnote' }, 'Même apparence pour toutes les races et les classes dans ce prototype'),
         ),
       );
     };

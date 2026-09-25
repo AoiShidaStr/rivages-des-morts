@@ -82,5 +82,24 @@
       "oublie": { "damage": 1.3, "speed": 1, "hp": 1.2 },
       "araignee": { "damage": 0.6, "speed": 1.3, "hp": 0.5 }
     }
+  },
+  "blade": {
+    "critFactor": 2,
+    "shadowDash": { "distance": 4.6, "duration": 0.2, "cooldown": 3, "charges": 1, "markTime": 6 },
+    "deathMark": { "cooldown": 10, "duration": 5, "range": 9 },
+    "smoke": { "cooldown": 12, "duration": 3, "radius": 2.2 },
+    "dance": { "cooldown": 16, "targets": 5, "range": 7, "damage": 14, "hop": 0.1 }
+  },
+  "paladin": {
+    "aura": { "cooldown": 14, "duration": 6, "radius": 3, "heal": 4 },
+    "hammer": { "cooldown": 5, "damage": 16, "range": 7, "speed": 15, "radius": 0.6, "knockback": 4 },
+    "raise": { "cooldown": 20, "range": 7, "memory": 12 }
+  },
+  "ranger": {
+    "arrow": { "speed": 24, "radius": 0.25 },
+    "charged": { "time": 0.9, "maxFactor": 3, "moveFactor": 0.5, "rangeFactor": 1.3, "speedFactor": 1.4 },
+    "net": { "cooldown": 8, "stun": 2.5, "radius": 1.4, "range": 10 },
+    "huntMark": { "cooldown": 10, "duration": 6, "bonus": 0.3, "range": 12 },
+    "leap": { "cooldown": 7, "distance": 4.5, "duration": 0.35, "height": 0.8, "arrows": 3, "spreadDeg": 14 }
   }
 }

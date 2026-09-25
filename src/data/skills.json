@@ -1,5 +1,5 @@
 {
-  "about": "Races et classes du héros. Chaque effet modifie les réglages du personnage (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux, summon.* pour les invocations).",
+  "about": "Races et classes du héros. Chaque effet modifie les réglages du personnage (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux, summon.* pour les invocations, blade.*, paladin.* et ranger.* pour les compétences de la Lame, du Paladin et du Rôdeur).",
   "levels": {
     "about": "Un point de talent par niveau, de pointsFrom à pointsUntil : 9 points pour 12 nœuds, il faut choisir (GDD). Au-delà, chaque niveau donne des PV et relève le plafond de la forge.",
     "max": 50,
@@ -407,11 +407,497 @@
           ]
         }
       ]
+    },
+    "lame": {
+      "name": "Lame",
+      "subtitle": "Assassin des ombres",
+      "role": "DPS mêlée, peu de PV",
+      "kit": "lame",
+      "weapon": "kunai-jumeaux",
+      "about": "Réglages de base de la classe : moins de PV que le Guerrier, une esquive qui revient plus vite.",
+      "effects": [
+        { "op": "set", "path": "kit", "value": "lame" },
+        { "op": "mul", "path": "maxHp", "value": 0.8 },
+        { "op": "mul", "path": "dodge.cooldown", "value": 0.8 }
+      ],
+      "actives": [
+        {
+          "key": "Clic droit",
+          "name": "Pas de l'ombre",
+          "description": "Dash vers la souris à travers les ennemis : chacun est marqué, et ton prochain coup sur lui est critique (×2). Revient en 3 s."
+        },
+        { "key": "A", "name": "Marque de mort", "description": "Pendant 5 s, tous tes coups sur l'ennemi le plus proche de la souris sont critiques." },
+        {
+          "key": "E",
+          "name": "Écran de fumée",
+          "description": "Tu disparais 3 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique."
+        },
+        {
+          "key": "R",
+          "name": "Danse des lames",
+          "description": "Tu bondis d'ennemi en ennemi, jusqu'à 5, et frappes chacun (critique s'il est marqué). Invulnérable pendant la danse."
+        }
+      ],
+      "tag": {
+        "name": "Lame",
+        "tiers": [
+          {
+            "count": 2,
+            "description": "Ton premier coup après une esquive ou un Pas de l'ombre est critique.",
+            "effects": [{ "op": "set", "path": "perks.dodgeCrit", "value": { "window": 1, "swings": 1 } }]
+          },
+          {
+            "count": 4,
+            "description": "Tes deux premiers coups après une esquive sont critiques ; les critiques font ×2,25.",
+            "effects": [
+              { "op": "set", "path": "perks.dodgeCrit", "value": { "window": 1.5, "swings": 2 } },
+              { "op": "add", "path": "blade.critFactor", "value": 0.25 }
+            ]
+          },
+          {
+            "count": 6,
+            "description": "Tes trois premiers coups après une esquive sont critiques ; les critiques font ×2,5.",
+            "effects": [
+              { "op": "set", "path": "perks.dodgeCrit", "value": { "window": 2, "swings": 3 } },
+              { "op": "add", "path": "blade.critFactor", "value": 0.5 }
+            ]
+          }
+        ]
+      },
+      "branches": [
+        {
+          "id": "tsukuyomi",
+          "name": "Tsukuyomi",
+          "subtitle": "Le dieu de la lune · ombre",
+          "lore": "Frère d'Amaterasu, chassé dans la nuit pour avoir tué la déesse de la nourriture. Il ne marche plus que dans l'ombre.",
+          "nodes": [
+            {
+              "id": "tsukuyomi-1",
+              "name": "Pas de lune",
+              "description": "Le Pas de l'ombre revient 1 s plus vite.",
+              "effects": [{ "op": "add", "path": "blade.shadowDash.cooldown", "value": -1 }]
+            },
+            {
+              "id": "tsukuyomi-2",
+              "name": "Croissant",
+              "description": "Le Pas de l'ombre porte 30 % plus loin et entaille les ennemis traversés (8 dégâts).",
+              "effects": [
+                { "op": "mul", "path": "blade.shadowDash.distance", "value": 1.3 },
+                { "op": "set", "path": "perks.dashDamage", "value": 8 }
+              ]
+            },
+            {
+              "id": "tsukuyomi-3",
+              "name": "Marée d'ombre",
+              "description": "Abattre un ennemi marqué rend une charge du Pas de l'ombre.",
+              "effects": [{ "op": "set", "path": "perks.dashRefund", "value": true }]
+            },
+            {
+              "id": "tsukuyomi-4",
+              "name": "Éclipse",
+              "ultimate": true,
+              "description": "Le Pas de l'ombre a deux charges, et ses marques durent 4 s de plus.",
+              "effects": [
+                { "op": "set", "path": "blade.shadowDash.charges", "value": 2 },
+                { "op": "add", "path": "blade.shadowDash.markTime", "value": 4 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "loki",
+          "name": "Loki",
+          "subtitle": "Le dieu trompeur · ruse",
+          "lore": "Le métamorphe d'Asgard se fit tour à tour saumon, jument et vieille femme pour échapper aux dieux.",
+          "nodes": [
+            {
+              "id": "loki-1",
+              "name": "Voile",
+              "description": "L'Écran de fumée dure 1,5 s de plus.",
+              "effects": [{ "op": "add", "path": "blade.smoke.duration", "value": 1.5 }]
+            },
+            {
+              "id": "loki-2",
+              "name": "Poudre aux yeux",
+              "description": "L'Écran de fumée étourdit 1,2 s les ennemis tout proches.",
+              "effects": [{ "op": "set", "path": "perks.smokeStun", "value": 1.2 }]
+            },
+            {
+              "id": "loki-3",
+              "name": "Langue d'argent",
+              "description": "Le coup porté depuis l'ombre fait 50 % de dégâts en plus (×3 au lieu de ×2).",
+              "effects": [{ "op": "set", "path": "perks.ambush", "value": 1.5 }]
+            },
+            {
+              "id": "loki-4",
+              "name": "Métamorphe",
+              "ultimate": true,
+              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s.",
+              "effects": [{ "op": "set", "path": "perks.smokeKillExtend", "value": 1.5 }]
+            }
+          ]
+        },
+        {
+          "id": "thanatos",
+          "name": "Thanatos",
+          "subtitle": "La mort douce · exécution",
+          "lore": "Le jumeau d'Hypnos vient chercher ceux dont le fil est coupé. Sisyphe l'enchaîna une fois ; plus jamais.",
+          "nodes": [
+            {
+              "id": "thanatos-1",
+              "name": "Sentence",
+              "description": "La Marque de mort dure 3 s de plus.",
+              "effects": [{ "op": "add", "path": "blade.deathMark.duration", "value": 3 }]
+            },
+            {
+              "id": "thanatos-2",
+              "name": "Dernier souffle",
+              "description": "Tes coups font 40 % de dégâts en plus aux ennemis sous 30 % de leurs PV.",
+              "effects": [{ "op": "set", "path": "perks.execute", "value": { "threshold": 0.3, "bonus": 0.4 } }]
+            },
+            {
+              "id": "thanatos-3",
+              "name": "Pas de deux",
+              "description": "La Danse des lames frappe 2 cibles de plus et revient 4 s plus tôt.",
+              "effects": [
+                { "op": "add", "path": "blade.dance.targets", "value": 2 },
+                { "op": "add", "path": "blade.dance.cooldown", "value": -4 }
+              ]
+            },
+            {
+              "id": "thanatos-4",
+              "name": "Moisson des âmes",
+              "ultimate": true,
+              "description": "Quand la cible de la Marque de mort meurt (hors boss), la marque passe à l'ennemi le plus proche.",
+              "effects": [{ "op": "set", "path": "perks.markJump", "value": true }]
+            }
+          ]
+        }
+      ]
+    },
+    "paladin": {
+      "name": "Paladin",
+      "subtitle": "Rempart solaire",
+      "role": "Tank, soutien",
+      "kit": "paladin",
+      "weapon": "naginata-temple",
+      "about": "Réglages de base de la classe : plus de PV, un peu plus lent ; les alliés qu'il relève ne l'affaiblissent pas.",
+      "effects": [
+        { "op": "set", "path": "kit", "value": "paladin" },
+        { "op": "mul", "path": "maxHp", "value": 1.25 },
+        { "op": "mul", "path": "moveSpeed", "value": 0.95 },
+        { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
+        { "op": "set", "path": "summon.malus", "value": 0 }
+      ],
+      "actives": [
+        {
+          "key": "Clic droit",
+          "name": "Bouclier levé",
+          "description": "Maintiens pour bloquer les coups de face, en avançant lentement. Bloquer la charge d'un kappa renverse sa coupelle."
+        },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend 4 PV par seconde à toi et à tes alliés proches." },
+        { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
+        {
+          "key": "R",
+          "name": "Relever",
+          "description": "Le dernier allié tombé près de toi (une âme brisée, ou un yokai vaincu) se relève en âme de lumière et combat pour toi 30 s."
+        }
+      ],
+      "tag": {
+        "name": "Paladin",
+        "tiers": [
+          {
+            "count": 2,
+            "description": "Chaque coup bloqué rend 3 PV à toi et à tes alliés proches, âmes comprises.",
+            "effects": [{ "op": "set", "path": "perks.shieldHeal", "value": { "amount": 3, "radius": 3 } }]
+          },
+          {
+            "count": 4,
+            "description": "Chaque coup bloqué rend 5 PV autour de toi ; l'Aura soigne 30 % de plus.",
+            "effects": [
+              { "op": "set", "path": "perks.shieldHeal", "value": { "amount": 5, "radius": 3.5 } },
+              { "op": "mul", "path": "paladin.aura.heal", "value": 1.3 }
+            ]
+          },
+          {
+            "count": 6,
+            "description": "Chaque coup bloqué rend 8 PV autour de toi ; l'Aura soigne 60 % de plus.",
+            "effects": [
+              { "op": "set", "path": "perks.shieldHeal", "value": { "amount": 8, "radius": 4 } },
+              { "op": "mul", "path": "paladin.aura.heal", "value": 1.6 }
+            ]
+          }
+        ]
+      },
+      "branches": [
+        {
+          "id": "amaterasu",
+          "name": "Amaterasu",
+          "subtitle": "La déesse du soleil · lumière",
+          "lore": "Quand elle s'enferma dans la grotte céleste, le monde plongea dans la nuit. Il fallut que les dieux rient et dansent pour qu'elle en sorte.",
+          "nodes": [
+            {
+              "id": "amaterasu-1",
+              "name": "Rayonnement",
+              "description": "L'Aura couvre 40 % de terrain en plus.",
+              "effects": [{ "op": "mul", "path": "paladin.aura.radius", "value": 1.4 }]
+            },
+            {
+              "id": "amaterasu-2",
+              "name": "Chaleur",
+              "description": "L'Aura brûle les yokai qui s'y trouvent : 6 dégâts par seconde.",
+              "effects": [{ "op": "set", "path": "perks.auraBurn", "value": 6 }]
+            },
+            {
+              "id": "amaterasu-3",
+              "name": "Aube",
+              "description": "L'Aura dure 3 s de plus.",
+              "effects": [{ "op": "add", "path": "paladin.aura.duration", "value": 3 }]
+            },
+            {
+              "id": "amaterasu-4",
+              "name": "Ama-no-Iwato",
+              "ultimate": true,
+              "description": "Tout yokai qui entre dans l'Aura est ébloui : étourdi 1,5 s, une fois par Aura.",
+              "effects": [{ "op": "set", "path": "perks.auraStun", "value": 1.5 }]
+            }
+          ]
+        },
+        {
+          "id": "tyr",
+          "name": "Týr",
+          "subtitle": "Le dieu du serment · rempart",
+          "lore": "Il posa sa main dans la gueule de Fenrir en gage de bonne foi, pendant que les dieux enchaînaient le loup. Il la perdit.",
+          "nodes": [
+            {
+              "id": "tyr-1",
+              "name": "Serment",
+              "description": "Ton bouclier couvre un angle bien plus large (130° → 180°).",
+              "effects": [{ "op": "set", "path": "block.arcDeg", "value": 180 }]
+            },
+            {
+              "id": "tyr-2",
+              "name": "Pas ferme",
+              "description": "Bouclier levé, tu avances 60 % plus vite.",
+              "effects": [{ "op": "mul", "path": "blockMoveFactor", "value": 1.6 }]
+            },
+            {
+              "id": "tyr-3",
+              "name": "Main de Týr",
+              "description": "Chaque coup bloqué renvoie 10 dégâts à l'attaquant.",
+              "effects": [{ "op": "set", "path": "perks.riposte", "value": 10 }]
+            },
+            {
+              "id": "tyr-4",
+              "name": "Gleipnir",
+              "ultimate": true,
+              "description": "Un coup bloqué entrave l'attaquant : il est étourdi 1,5 s.",
+              "effects": [{ "op": "set", "path": "perks.gleipnir", "value": 1.5 }]
+            }
+          ]
+        },
+        {
+          "id": "osiris",
+          "name": "Osiris",
+          "subtitle": "Le roi ressuscité · relève",
+          "lore": "Découpé par son frère Seth, il fut rassemblé par Isis et revint à la vie pour régner sur les morts.",
+          "nodes": [
+            {
+              "id": "osiris-1",
+              "name": "Crue du Nil",
+              "description": "Relever revient 6 s plus tôt.",
+              "effects": [{ "op": "add", "path": "paladin.raise.cooldown", "value": -6 }]
+            },
+            {
+              "id": "osiris-2",
+              "name": "Bandelettes",
+              "description": "Tes alliés relevés ont 60 % de PV en plus et restent 60 % plus longtemps.",
+              "effects": [{ "op": "set", "path": "perks.raiseToughness", "value": 1.6 }]
+            },
+            {
+              "id": "osiris-3",
+              "name": "Souffle de vie",
+              "description": "Relever te rend 20 PV.",
+              "effects": [{ "op": "set", "path": "perks.raiseHeal", "value": 20 }]
+            },
+            {
+              "id": "osiris-4",
+              "name": "Roi des morts",
+              "ultimate": true,
+              "description": "Relever relève deux alliés à la fois, et tu peux en garder trois.",
+              "effects": [
+                { "op": "set", "path": "perks.raiseCount", "value": 2 },
+                { "op": "add", "path": "summon.max", "value": 1 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "rodeur": {
+      "name": "Rôdeur",
+      "subtitle": "Chasseur",
+      "role": "DPS à distance",
+      "kit": "rodeur",
+      "weapon": "yumi-bambou",
+      "about": "Réglages de base de la classe : un peu moins de PV ; le clic gauche tire une flèche vers la souris, à la portée de l'arc.",
+      "effects": [
+        { "op": "set", "path": "kit", "value": "rodeur" },
+        { "op": "mul", "path": "maxHp", "value": 0.9 }
+      ],
+      "actives": [
+        {
+          "key": "Clic droit",
+          "name": "Tir chargé",
+          "description": "Maintiens pour bander l'arc en marchant lentement, relâche pour tirer : jusqu'à 3 fois les dégâts, plus loin et plus vite."
+        },
+        {
+          "key": "A",
+          "name": "Flèche-filet",
+          "description": "Un filet s'ouvre sur le premier ennemi touché : tous ceux qui sont autour sont immobilisés 2,5 s."
+        },
+        {
+          "key": "E",
+          "name": "Marque du chasseur",
+          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources."
+        },
+        { "key": "R", "name": "Recul", "description": "Bond en arrière, loin de la souris, en tirant trois flèches vers elle. Invulnérable pendant le saut." }
+      ],
+      "tag": {
+        "name": "Rôdeur",
+        "tiers": [
+          {
+            "count": 2,
+            "description": "Un tir chargé plein traverse les ennemis.",
+            "effects": [{ "op": "set", "path": "perks.chargedPierce", "value": true }]
+          },
+          {
+            "count": 4,
+            "description": "Un tir chargé plein traverse et pose la Marque du chasseur pendant 3 s.",
+            "effects": [
+              { "op": "set", "path": "perks.chargedPierce", "value": true },
+              { "op": "set", "path": "perks.chargedMark", "value": 3 }
+            ]
+          },
+          {
+            "count": 6,
+            "description": "Un tir chargé plein traverse, marque pendant 5 s et fait 30 % de dégâts en plus.",
+            "effects": [
+              { "op": "set", "path": "perks.chargedPierce", "value": true },
+              { "op": "set", "path": "perks.chargedMark", "value": 5 },
+              { "op": "set", "path": "perks.chargedDamage", "value": 1.3 }
+            ]
+          }
+        ]
+      },
+      "branches": [
+        {
+          "id": "artemis",
+          "name": "Artémis",
+          "subtitle": "La chasseresse · précision",
+          "lore": "La sœur d'Apollon ne manquait jamais sa cible. Actéon, qui l'avait surprise au bain, finit dévoré par ses propres chiens.",
+          "nodes": [
+            {
+              "id": "artemis-1",
+              "name": "Œil de lynx",
+              "description": "Le tir chargé se bande 30 % plus vite.",
+              "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.7 }]
+            },
+            {
+              "id": "artemis-2",
+              "name": "Flèche d'argent",
+              "description": "Un tir chargé plein fait jusqu'à 3,6 fois les dégâts, au lieu de 3.",
+              "effects": [{ "op": "add", "path": "ranger.charged.maxFactor", "value": 0.6 }]
+            },
+            {
+              "id": "artemis-3",
+              "name": "Lune pleine",
+              "description": "Un tir chargé plein étourdit 0,8 s.",
+              "effects": [{ "op": "set", "path": "perks.chargedStun", "value": 0.8 }]
+            },
+            {
+              "id": "artemis-4",
+              "name": "Carquois divin",
+              "ultimate": true,
+              "description": "Un tir chargé plein part en trois flèches.",
+              "effects": [{ "op": "set", "path": "perks.splitShot", "value": 3 }]
+            }
+          ]
+        },
+        {
+          "id": "skadi",
+          "name": "Skadi",
+          "subtitle": "La chasseresse des neiges · contrôle",
+          "lore": "La géante des montagnes chasse à skis et à l'arc. Venue venger son père chez les dieux, elle repartit mariée à l'un d'eux.",
+          "nodes": [
+            {
+              "id": "skadi-1",
+              "name": "Givre",
+              "description": "Le filet immobilise 1 s de plus.",
+              "effects": [{ "op": "add", "path": "ranger.net.stun", "value": 1 }]
+            },
+            {
+              "id": "skadi-2",
+              "name": "Skis",
+              "description": "Le Recul porte 40 % plus loin et revient 2 s plus tôt.",
+              "effects": [
+                { "op": "mul", "path": "ranger.leap.distance", "value": 1.4 },
+                { "op": "add", "path": "ranger.leap.cooldown", "value": -2 }
+              ]
+            },
+            {
+              "id": "skadi-3",
+              "name": "Tempête de neige",
+              "description": "Le filet s'ouvre 50 % plus large, et la Flèche-filet revient 2 s plus tôt.",
+              "effects": [
+                { "op": "mul", "path": "ranger.net.radius", "value": 1.5 },
+                { "op": "add", "path": "ranger.net.cooldown", "value": -2 }
+              ]
+            },
+            {
+              "id": "skadi-4",
+              "name": "Vent du nord",
+              "ultimate": true,
+              "description": "Le Recul laisse un filet là où tu te trouvais.",
+              "effects": [{ "op": "set", "path": "perks.leapNet", "value": true }]
+            }
+          ]
+        },
+        {
+          "id": "hachiman",
+          "name": "Hachiman",
+          "subtitle": "Le dieu de l'arc · traque",
+          "lore": "Protecteur des guerriers, on le priait avant de bander l'arc. Les samouraïs lui dédiaient leur première flèche.",
+          "nodes": [
+            {
+              "id": "hachiman-1",
+              "name": "Traqueur",
+              "description": "La Marque du chasseur dure 4 s de plus.",
+              "effects": [{ "op": "add", "path": "ranger.huntMark.duration", "value": 4 }]
+            },
+            {
+              "id": "hachiman-2",
+              "name": "Proie désignée",
+              "description": "La cible marquée prend 50 % de dégâts en plus, au lieu de 30 %.",
+              "effects": [{ "op": "add", "path": "ranger.huntMark.bonus", "value": 0.2 }]
+            },
+            {
+              "id": "hachiman-3",
+              "name": "Curée",
+              "description": "Abattre la cible marquée recharge aussitôt la Marque du chasseur.",
+              "effects": [{ "op": "set", "path": "perks.markRefund", "value": true }]
+            },
+            {
+              "id": "hachiman-4",
+              "name": "Flèche du kami",
+              "ultimate": true,
+              "description": "Tes flèches s'infléchissent d'elles-mêmes vers les cibles marquées.",
+              "effects": [{ "op": "set", "path": "perks.homing", "value": true }]
+            }
+          ]
+        }
+      ]
     }
   },
-  "upcomingClasses": [
-    { "name": "Lame", "subtitle": "Assassin des ombres", "role": "DPS mêlée, peu de PV" },
-    { "name": "Paladin", "subtitle": "Rempart solaire", "role": "Tank, soutien" },
-    { "name": "Rôdeur", "subtitle": "Chasseur", "role": "DPS à distance" }
-  ]
+  "upcomingClasses": []
 }

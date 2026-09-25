@@ -187,6 +187,8 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.summon.damage *= power;
   config.summon.hp *= power;
   config.summon.sacrifice.damage *= power;
+  config.blade.dance.damage *= power;
+  config.paladin.hammer.damage *= power;
   for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 
   if (state.flags.benediction_jizo) bonus.maxHp += JIZO_BLESSING;
@@ -206,8 +208,12 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.moveSpeed *= 1 + bonus.speed;
   config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
   config.attack.damage = Math.round(config.attack.damage + bonus.damage);
-  // La foudre de Susanoo (talent) suit la puissance de l'arme, comme les autres dégâts.
-  if (config.perks?.storm) config.perks.storm *= power;
+  // Les dégâts fixes des talents (foudre de Susanoo, Croissant, Riposte, Chaleur) suivent la puissance de l'arme.
+  const perks = config.perks ?? {};
+  for (const key of ['storm', 'dashDamage', 'riposte', 'auraBurn'] as const) {
+    const value = perks[key];
+    if (value) perks[key] = value * power;
+  }
   config.dodge.distance *= 1 + bonus.dodge;
   return { config, level, bonus, tagCount, tier };
 }

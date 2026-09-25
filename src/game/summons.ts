@@ -1,5 +1,6 @@
 // Âmes de l'Invocateur (GDD, « Système d'âmes ») : un yokai vaincu laisse son âme au sol quelques secondes ;
 // liée, elle se relève et combat aux côtés du héros, jusqu'à s'effacer ou se briser sous les coups des yokai.
+// Le Paladin, lui, relève un allié tombé (Relever) : une âme de lumière qui suit les mêmes règles.
 import type { SummonConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, distance, length, normalize, scale, sub, vec, type Vec2 } from './math';
@@ -41,13 +42,14 @@ export class Summon {
   private rising = 0;
   private grace = 0;
 
-  /** `toughness` multiplie ses PV et sa durée (Les Douze Shikigami pour un kappa). */
+  /** `toughness` multiplie ses PV et sa durée (Les Douze Shikigami pour un kappa) ; `holy` : relevée par un Paladin. */
   constructor(
     readonly id: number,
     readonly kind: EnemyKind,
     public pos: Vec2,
     private readonly cfg: SummonConfig,
     toughness: number,
+    readonly holy = false,
   ) {
     this.life = cfg.life * toughness;
     this.maxLife = this.life;
@@ -98,6 +100,14 @@ export class Summon {
     this.knockback = scale(pushDir, knockback);
     world.emit({ type: 'summonHit', id: this.id, pos: { ...this.pos }, amount });
     return true;
+  }
+
+  /** Soin (Aura de lumière, bouclier du Paladin). */
+  heal(amount: number, world: World): void {
+    const gained = Math.min(amount, this.maxHp - this.hp);
+    if (gained <= 0 || this.gone) return;
+    this.hp += gained;
+    world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
   }
 
   update(dt: number, world: World): void {

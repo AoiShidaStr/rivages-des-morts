@@ -25,7 +25,7 @@ import {
   vec,
   type Vec2,
 } from './math';
-import type { EnemyKind, Pose, StunReason } from './types';
+import type { EnemyKind, MarkKind, Pose, StunReason } from './types';
 import type { Foe, World } from './world';
 
 /** Temps d'apparition pendant lequel un ennemi ne peut ni agir ni être touché. */
@@ -34,12 +34,15 @@ export const SPAWN_TIME = 0.6;
 const AIRBORNE_ALTITUDE = 0.5;
 /** Secondes entre deux choix de cible (héros ou âme liée) : un yokai ne change pas d'avis à chaque pas. */
 const RETARGET_TIME = 0.8;
+const MARK_KINDS: readonly MarkKind[] = ['shadow', 'death', 'hunt'];
 
 export interface Hit {
   amount: number;
   from: Vec2;
   knockback: number;
   ignoreShell?: boolean;
+  /** Coup critique (Lame) : le rendu l'affiche autrement. */
+  crit?: boolean;
 }
 
 export abstract class Enemy {
@@ -59,6 +62,13 @@ export abstract class Enemy {
   /** Le héros ou l'âme liée que ce yokai poursuit. */
   private focus: Foe | null = null;
   private focusTimer = 0;
+  /**
+   * Marques du héros, en secondes restantes. Ombre (Pas de l'ombre de la Lame) : le prochain coup d'arme est critique.
+   * Mort (Marque de mort) : tous les coups d'arme sont critiques. Chasseur (Rôdeur) : tous les dégâts reçus augmentent.
+   */
+  readonly marks: Record<MarkKind, number> = { shadow: 0, death: 0, hunt: 0 };
+  /** Dégâts reçus en plus sous la Marque du chasseur. */
+  huntBonus = 0;
 
   constructor(
     readonly id: number,
@@ -126,6 +136,13 @@ export abstract class Enemy {
     return this.active && this.grounded;
   }
 
+  /** Marque la plus forte portée par l'ennemi, pour le rendu. */
+  get mark(): MarkKind | null {
+    if (this.marks.death > 0) return 'death';
+    if (this.marks.hunt > 0) return 'hunt';
+    return this.marks.shadow > 0 ? 'shadow' : null;
+  }
+
   /** Vrai pour un boss : sa mort termine la vague et dissipe les autres ennemis. */
   get boss(): boolean {
     return false;
@@ -142,6 +159,7 @@ export abstract class Enemy {
       return;
     }
     this.sinceHurt += dt;
+    for (const kind of MARK_KINDS) this.marks[kind] = Math.max(0, this.marks[kind] - dt);
     this.focusTimer -= dt;
     if (this.focusTimer <= 0 || !world.isFoe(this.focus)) {
       this.focus = world.pickFoe(this.pos);
@@ -158,13 +176,14 @@ export abstract class Enemy {
   /** Applique un coup ; renvoie vrai si la carapace l'a en partie arrêté. */
   receiveHit(hit: Hit, world: World): boolean {
     const shielded = !hit.ignoreShell && this.shields(hit.from);
-    const amount = Math.min(hit.amount * (shielded ? this.shieldFactor : 1) * this.damageFactor, this.hp - this.hpFloor);
+    const exposed = this.marks.hunt > 0 ? 1 + this.huntBonus : 1;
+    const amount = Math.min(hit.amount * (shielded ? this.shieldFactor : 1) * this.damageFactor * exposed, this.hp - this.hpFloor);
     this.hp -= amount;
     if (amount > 0) this.sinceHurt = 0;
     const away = normalize(sub(this.pos, hit.from), scale(this.facing, -1));
     const push = hit.knockback * this.base.knockbackFactor * (shielded ? 0.3 : 1);
     this.knockback = add(this.knockback, scale(away, push));
-    world.emit({ type: 'enemyHit', id: this.id, pos: { ...this.pos }, amount, shielded });
+    world.emit({ type: 'enemyHit', id: this.id, pos: { ...this.pos }, amount, shielded, crit: Boolean(hit.crit) });
     if (this.dead) world.emit({ type: 'death', id: this.id, pos: { ...this.pos }, kind: this.kind });
     else if (!shielded) this.onHurt(world);
     return shielded;
@@ -203,7 +222,7 @@ export abstract class Enemy {
       const toFoe = sub(foe.pos, this.pos);
       if (length(toFoe) > range + foe.radius) continue;
       if (!inCone(dir, normalize(toFoe, dir), degToRad(arcDeg / 2))) continue;
-      if (foe.isGuarding(this.pos)) foe.guard(world);
+      if (foe.isGuarding(this.pos)) foe.guard(world, this);
       else this.hitFoe(foe, damage, dir, knockback, world);
     }
   }
@@ -294,7 +313,7 @@ export class Hitodama extends Enemy {
 
     if (this.retreat > 0 || distance(foe.pos, this.pos) > foe.radius + this.radius) return;
     if (foe.isGuarding(this.pos)) {
-      foe.guard(world);
+      foe.guard(world, this);
       this.retreat = this.cfg.retreatTime;
       this.knockback = scale(toward, -7);
     } else if (this.hitFoe(foe, this.cfg.contactDamage, toward, 3, world)) {
@@ -528,7 +547,7 @@ export class Kappa extends Enemy {
     if (foe) {
       if (foe.isGuarding(this.pos)) {
         // La coupelle se renverse : le kappa est étourdi, le joueur recule et gagne de la rage.
-        foe.guard(world);
+        foe.guard(world, this);
         foe.knockback = scale(state.dir, 5);
         world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });
         this.stun(cfg.parryStun, 'parry', world);
@@ -1119,7 +1138,7 @@ export class Jorogumo extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        foe.guard(world);
+        foe.guard(world, this);
         foe.knockback = scale(state.dir, 6);
         this.endCharge(world);
         return;

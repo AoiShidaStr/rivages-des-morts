@@ -1,5 +1,5 @@
 {
-  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du héros (mêmes règles que skills.json, summon.* pour les âmes de l'Invocateur). tags : classes (« Tous » compte pour toutes).",
+  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du héros (mêmes règles que skills.json : summon.* pour les âmes de l'Invocateur, blade.*, paladin.* et ranger.* pour la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes).",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -126,6 +126,72 @@
         { "level": 50, "name": "Dame des rizières", "summary": "Tes âmes font 25 % de dégâts en plus", "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.25 }] }
       ],
       "description": "L'éventail de soie de la Jorōgumo. Quand on l'agite, on entend encore des fils se tendre."
+    },
+    "kunai-jumeaux": {
+      "name": "Kunai jumeaux",
+      "slot": "arme",
+      "rarity": "commune",
+      "tags": ["Lame"],
+      "summary": "Arme de départ de la Lame : coups très rapides mais courts.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 7 },
+        { "op": "set", "path": "attack.range", "value": 1.5 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.04 },
+        { "op": "set", "path": "attack.recovery", "value": 0.13 },
+        { "op": "set", "path": "attack.knockback", "value": 1.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0.5 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Kunai équilibrés", "summary": "Pas de l'ombre : revient 0,5 s plus vite", "effects": [{ "op": "add", "path": "blade.shadowDash.cooldown", "value": -0.5 }] },
+        { "level": 25, "name": "Fil du tranchant", "summary": "Critiques +0,25", "effects": [{ "op": "add", "path": "blade.critFactor", "value": 0.25 }] },
+        { "level": 50, "name": "Ombre jumelle", "summary": "Danse des lames : +2 cibles", "effects": [{ "op": "add", "path": "blade.dance.targets", "value": 2 }] }
+      ],
+      "description": "Deux kunai de fer noirci, noués par un cordon rouge. Un shinobi les a perdus dans les rizières ; ils ont gardé l'habitude de frapper dans le dos."
+    },
+    "naginata-temple": {
+      "name": "Naginata et bouclier de temple",
+      "slot": "arme",
+      "rarity": "commune",
+      "tags": ["Paladin"],
+      "summary": "Arme de départ du Paladin : longue portée, coups lents qui repoussent.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 11 },
+        { "op": "set", "path": "attack.range", "value": 2.2 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.3 },
+        { "op": "set", "path": "attack.knockback", "value": 4 },
+        { "op": "set", "path": "attack.lunge", "value": 0.25 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Marteau lesté", "summary": "Marteau lancé : +25 % de dégâts", "effects": [{ "op": "mul", "path": "paladin.hammer.damage", "value": 1.25 }] },
+        { "level": 25, "name": "Marteau du juge", "summary": "Le Marteau lancé étourdit 0,6 s", "effects": [{ "op": "set", "path": "perks.hammerStun", "value": 0.6 }] },
+        { "level": 50, "name": "Bouclier du sanctuaire", "summary": "Dégâts subis −10 %", "effects": [{ "op": "mul", "path": "damageTakenFactor", "value": 0.9 }] }
+      ],
+      "description": "La naginata d'un moine guerrier et un petit bouclier rond frappé du soleil du temple. Le marteau pend à la ceinture, pour les kappa têtus."
+    },
+    "yumi-bambou": {
+      "name": "Yumi en bambou",
+      "slot": "arme",
+      "rarity": "commune",
+      "tags": ["Rôdeur"],
+      "summary": "Arme de départ du Rôdeur : flèches rapides, portée 10 m.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 7 },
+        { "op": "set", "path": "attack.range", "value": 10 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.26 },
+        { "op": "set", "path": "attack.knockback", "value": 1.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Corde tendue", "summary": "Portée des flèches +2 m", "effects": [{ "op": "add", "path": "attack.range", "value": 2 }] },
+        { "level": 25, "name": "Empennage de faisan", "summary": "Tir chargé : se bande 15 % plus vite", "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.85 }] },
+        { "level": 50, "name": "Arc du pèlerin", "summary": "Recul : une flèche de plus", "effects": [{ "op": "add", "path": "ranger.leap.arrows", "value": 1 }] }
+      ],
+      "description": "Un grand arc asymétrique de bambou laqué, la poignée placée bas comme le veut la tradition. Il chante quand on le bande."
     },
     "chapeau-paille": {
       "name": "Chapeau de paille",
