@@ -10,6 +10,7 @@ import type { DifficultyData } from './game/difficulty';
 import type { UpgradeRules } from './game/forge';
 import type { IslandData } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
+import type { DuplicateRules, ShopOffer } from './game/loot';
 import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
 import type { SpriteManifest } from './render/renderer';
 
@@ -42,7 +43,10 @@ export interface ShopDef {
   discount?: number;
   /** Remise accordée sous condition (Obaa Kiku, après sa quête). */
   discountIf?: { if: Condition[]; discount: number; note: string };
-  stock: { item: string; price: number; if?: Condition[] }[];
+  stock?: { item: string; price: number; if?: Condition[] }[];
+  /** Boutique tirée au hasard à chaque visite (fin de donjon) : jusqu'à `offers.items` objets, puis des lots. */
+  pool?: (ShopOffer & { weight?: number; if?: Condition[] })[];
+  offers?: { items: number; total: number };
 }
 
 export interface RecipeDef {
@@ -80,6 +84,7 @@ export const content = {
   drops: itemsJson.drops as unknown as Record<string, DropDef>,
   chest: itemsJson.chest as { oboles: [number, number]; materials: string[]; count: [number, number] },
   shops: itemsJson.shops as unknown as Record<string, ShopDef>,
+  duplicates: itemsJson.duplicates as DuplicateRules,
   upgrade: itemsJson.forge.upgrade as unknown as UpgradeRules,
   difficulty: difficultyJson as unknown as DifficultyData,
   skills: skillsJson as unknown as SkillsDef,

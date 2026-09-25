@@ -3,6 +3,7 @@ import type { PlayerConfig } from '../game/config';
 import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
 import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
+import type { RolledOffer } from '../game/loot';
 import type { Progress, Slot } from '../game/progress';
 import { h, icon, obole, type Child } from './dom';
 
@@ -172,7 +173,11 @@ function tabs<T extends string>(options: { id: T; label: string; count?: number 
 
 // --- Boutique ---------------------------------------------------------------
 
-export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void {
+/**
+ * Boutique. `rolled` : l'offre tirée au hasard d'une boutique à `pool` (fin de donjon), qui peut
+ * mêler objets et lots de matériaux ; sans elle, le stock fixe de la boutique.
+ */
+export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled?: RolledOffer[]): void {
   const shop = content.shops[shopId];
   if (!shop) return;
   const render = () => {
@@ -181,12 +186,50 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
     const loadout = ctx.loadout();
     const bonusDiscount = shop.discountIf && progress.check(shop.discountIf.if) ? shop.discountIf.discount : 0;
     const discount = 1 - (1 - (shop.discount ?? 0)) * (1 - bonusDiscount);
-    const offers = shop.stock
-      .filter((entry) => progress.check(entry.if))
-      .map(({ item, price }) => ({ item, price, final: Math.round(price * (1 - discount)), owned: progress.has(item) }));
+    const priced = (price: number) => Math.round(price * (1 - discount));
+    const entries: RolledOffer[] = rolled ?? (shop.stock ?? []).filter((entry) => progress.check(entry.if)).map(({ item, price }) => ({ item, price }));
+    const offers = entries
+      .filter((o): o is Extract<RolledOffer, { item: string }> => o.item !== undefined)
+      .map(({ item, price }) => ({ item, price, final: priced(price), owned: progress.has(item) }));
     // Ce qu'on peut acheter d'abord, puis ce qui est trop cher, et ce qu'on a déjà tout en bas.
     const rank = (o: (typeof offers)[number]) => (o.owned ? 2 : state.oboles >= o.final ? 0 : 1);
     offers.sort((a, b) => rank(a) - rank(b) || a.final - b.final);
+    const bundles = entries.filter((o): o is Extract<RolledOffer, { material: string }> => o.material !== undefined);
+
+    const bundleRow = (offer: (typeof bundles)[number]) => {
+      const final = priced(offer.price);
+      const missing = final - state.oboles;
+      const name = content.materials[offer.material] ?? offer.material;
+      return h(
+        'div',
+        { class: `row offer${offer.sold ? ' owned-offer' : ''}` },
+        itemBlock(
+          offer.material,
+          h('div', { class: 'item-head' }, h('strong', {}, `${offer.count} × ${name}`), h('span', { class: 'rarity' }, 'Ressource')),
+          h('div', { class: 'item-meta' }, `Matériau de forge · tu en as ${progress.material(offer.material)}`),
+        ),
+        offer.sold ? h('div') : h('div', { class: 'price' }, discount ? h('s', {}, String(offer.price)) : null, obole(final)),
+        offer.sold
+          ? h('span', { class: 'badge inline' }, 'Acheté')
+          : h(
+              'button',
+              {
+                class: `btn${missing <= 0 ? ' primary' : ''}`,
+                disabled: missing > 0,
+                title: missing > 0 ? `Il te manque ${missing} oboles` : undefined,
+                onclick: () => {
+                  progress.gainOboles(-final);
+                  progress.gainMaterial(offer.material, offer.count);
+                  progress.save();
+                  offer.sold = true;
+                  ctx.toast(`Acheté : ${offer.count} × ${name}`, 'loot', offer.material);
+                  render();
+                },
+              },
+              missing > 0 ? `Il manque ${missing}` : 'Acheter',
+            ),
+      );
+    };
 
     const rows = offers.map(({ item, price, final, owned }) => {
       const def = content.items[item];
@@ -244,6 +287,7 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
     });
     const notes = [
       shop.discount ? `−${Math.round(shop.discount * 100)} % : la récompense de ta victoire.` : null,
+      rolled ? 'L’étal change à chaque victoire : ce qui n’est pas acheté repart avec le marchand.' : null,
       bonusDiscount ? shop.discountIf?.note : null,
     ].filter((n): n is string => Boolean(n));
     host.show(
@@ -254,6 +298,7 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string): void 
         { class: 'list' },
         ...notes.map((n) => h('p', { class: 'note' }, n)),
         ...rows,
+        ...bundles.map(bundleRow),
         h('p', { class: 'note' }, 'Survole un nom pour lire sa description. Les étiquettes vertes et rouges comparent avec ce que tu portes.'),
       ),
     );

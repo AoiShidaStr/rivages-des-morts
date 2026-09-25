@@ -63,8 +63,8 @@ for (const planche of config.planches) {
 /**
  * Détoure la planche source et renvoie ses images dans l'ordre de lecture.
  * Les images sont rangées en grille (`layout` : nombre d'images par ligne, deux lignes égales par défaut).
- * Elles peuvent se toucher (une cape contre la lame de la voisine) : on coupe donc entre elles là où
- * il y a le moins de sujet, près de la position attendue.
+ * La lame d'une image passe souvent au-dessus de la cape de la voisine : aucune coupe droite ne les
+ * sépare. Entre deux images, on coupe donc le long d'un chemin qui serpente dans le fond (voir `seam`).
  */
 async function splitFrames(input, options) {
   const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -76,14 +76,70 @@ async function splitFrames(input, options) {
   const frames = [];
   layout.forEach((columns, r) => {
     const band = { x0: 0, x1: w, y0: rowCuts[r], y1: rowCuts[r + 1] };
-    const columnCuts = cuts(profile(alpha, w, h, band, 'columns'), columns);
+    const rows = band.y1 - band.y0;
+    const seams = expectedCuts(profile(alpha, w, h, band, 'columns'), columns).map(({ at, radius }) => seam(alpha, w, band, at, radius));
     for (let c = 0; c < columns; c++) {
-      const frame = extractFrame(data, alpha, w, { ...band, x0: columnCuts[c], x1: columnCuts[c + 1] }, options);
+      const left = c === 0 ? new Int32Array(rows).fill(band.x0) : seams[c - 1];
+      const right = c === columns - 1 ? new Int32Array(rows).fill(band.x1) : seams[c];
+      const frame = extractFrame(data, alpha, w, { y0: band.y0, y1: band.y1, left, right }, options);
       if (!frame) throw new Error(`${input} : case vide en ligne ${r + 1}, colonne ${c + 1} (vérifier « layout »)`);
       frames.push(frame);
     }
   });
   return frames;
+}
+
+/** Positions régulières des coupes entre `n` images, entre le premier et le dernier pixel de sujet. */
+function expectedCuts({ values, offset }, n) {
+  let first = values.findIndex((v) => v > 0);
+  let last = values.length - 1;
+  while (last > 0 && values[last] === 0) last--;
+  if (first < 0) first = 0;
+  const span = last - first + 1;
+  return Array.from({ length: n - 1 }, (_, k) => ({ at: offset + first + (span * (k + 1)) / n, radius: (span / n) * 0.35 }));
+}
+
+/**
+ * Coupe verticale entre deux images voisines : le chemin de haut en bas de la bande qui traverse le moins
+ * de sujet, en se décalant d'au plus un pixel par ligne, à moins de `radius` de la position attendue.
+ * Renvoie, pour chaque ligne, la première colonne de l'image de droite.
+ */
+function seam(alpha, w, band, expected, radius) {
+  const x0 = Math.max(band.x0 + 1, Math.round(expected - radius));
+  const x1 = Math.min(band.x1 - 1, Math.round(expected + radius));
+  const cols = x1 - x0 + 1;
+  const rows = band.y1 - band.y0;
+  const cost = new Float64Array(rows * cols);
+  const step = new Int8Array(rows * cols);
+  for (let y = 0; y < rows; y++) {
+    for (let c = 0; c < cols; c++) {
+      // Un pixel de sujet coûte 1 ; à coût égal, on reste près de la position attendue et on va droit.
+      const here = (alpha[(band.y0 + y) * w + x0 + c] ? 1 : 0) + Math.abs(x0 + c - expected) * 1e-4;
+      if (y === 0) {
+        cost[c] = here;
+        continue;
+      }
+      let best = Infinity;
+      for (const d of [0, -1, 1]) {
+        const p = c + d;
+        if (p < 0 || p >= cols) continue;
+        const value = cost[(y - 1) * cols + p] + (d ? 1e-5 : 0);
+        if (value < best) {
+          best = value;
+          step[y * cols + c] = d;
+        }
+      }
+      cost[y * cols + c] = best + here;
+    }
+  }
+  const xs = new Int32Array(rows);
+  let c = 0;
+  for (let k = 1; k < cols; k++) if (cost[(rows - 1) * cols + k] < cost[(rows - 1) * cols + c]) c = k;
+  for (let y = rows - 1; y >= 0; y--) {
+    xs[y] = x0 + c;
+    c += step[y * cols + c];
+  }
+  return xs;
 }
 
 /** Quantité de sujet par ligne (ou par colonne) de pixels dans une zone. */
@@ -129,26 +185,32 @@ function cuts({ values, offset }, n) {
 }
 
 /**
- * Découpe une case : pixels RGBA du sujet, et ses repères.
- * Les petits morceaux collés au bord gauche ou droit de la case viennent de l'image voisine : on les retire.
+ * Découpe une case, bornée ligne par ligne par les coupes `left` et `right` : pixels RGBA du sujet, et ses repères.
+ * Les petits morceaux collés à une coupe viennent de l'image voisine : on les retire.
  * Le « corps » est le sujet sans ses parties fines (lame, traînée, pans de cape) : c'est lui qui
  * donne la hauteur de référence, la ligne des pieds et l'axe vertical du personnage.
  */
-function extractFrame(data, alpha, w, cell, options) {
-  const cw = cell.x1 - cell.x0;
-  const ch = cell.y1 - cell.y0;
+function extractFrame(data, alpha, w, region, options) {
+  const { left, right } = region;
+  const cell = { x0: Math.min(...left), y0: region.y0 };
+  const cw = Math.max(...right) - cell.x0;
+  const ch = region.y1 - region.y0;
   const local = new Uint8Array(cw * ch);
-  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) local[y * cw + x] = alpha[(cell.y0 + y) * w + cell.x0 + x];
+  for (let y = 0; y < ch; y++) {
+    for (let x = left[y]; x < right[y]; x++) local[y * cw + x - cell.x0] = alpha[(cell.y0 + y) * w + x];
+  }
   const { labels, parts } = components(local, cw, ch);
   const largest = parts.reduce((max, p) => Math.max(max, p.size), 0);
   if (!largest) return null;
+  const onSide = new Set();
+  for (let y = 0; y < ch; y++) {
+    for (const x of [left[y], right[y] - 1]) {
+      const label = labels[y * cw + x - cell.x0];
+      if (label >= 0) onSide.add(label);
+    }
+  }
   const kept = new Set(
-    parts
-      .filter((p) => {
-        const onSide = p.minX === 0 || p.maxX === cw - 1;
-        return p.size >= largest * (onSide ? 0.15 : options.minPartRatio);
-      })
-      .map((p) => p.label),
+    parts.filter((p) => p.size >= largest * (onSide.has(p.label) ? 0.15 : options.minPartRatio)).map((p) => p.label),
   );
   let minX = cw;
   let minY = ch;

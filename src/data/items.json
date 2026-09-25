@@ -405,6 +405,12 @@
       ]
     }
   },
+  "duplicates": {
+    "about": "Un objet déjà possédé qui tombe à nouveau est fondu par Tetsu à la fin du donjon : des oboles, et des matériaux de son emplacement à la forge (les reliques donnent relicMaterial), selon sa rareté. Le farming reste utile une fois la table de drop complétée.",
+    "oboles": { "commune": 10, "peu commune": 20, "rare": 40, "épique": 80, "légendaire": 200 },
+    "materials": { "commune": 1, "peu commune": 2, "rare": 3, "épique": 5, "légendaire": 8 },
+    "relicMaterial": "soie"
+  },
   "chest": { "oboles": [8, 20], "materials": ["braise", "seve", "ecaille", "papier"], "count": [1, 2] },
   "shops": {
     "obaa": {
@@ -428,12 +434,21 @@
     },
     "fin": {
       "name": "Boutique de fin de donjon",
+      "about": "Tirée au hasard à chaque victoire (GDD : items et ressources liés au donjon) : jusqu'à offers.items objets pas encore possédés, complétés par des lots de matériaux jusqu'à offers.total. weight : chance relative d'être proposé.",
       "discount": 0.25,
-      "stock": [
-        { "item": "magatama-fele", "price": 120 },
-        { "item": "masque-oublie", "price": 90 },
-        { "item": "geta-kasa", "price": 70 },
-        { "item": "kabuto-fendu", "price": 55 }
+      "offers": { "items": 2, "total": 4 },
+      "pool": [
+        { "item": "magatama-fele", "price": 120, "weight": 2 },
+        { "item": "masque-oublie", "price": 90, "weight": 2 },
+        { "item": "geta-kasa", "price": 70, "weight": 3 },
+        { "item": "kabuto-fendu", "price": 55, "weight": 3 },
+        { "item": "coupelle-kappa", "price": 160, "weight": 1 },
+        { "material": "soie", "count": 2, "price": 45, "weight": 2 },
+        { "material": "ecaille", "count": 5, "price": 30, "weight": 3 },
+        { "material": "masque", "count": 4, "price": 30, "weight": 3 },
+        { "material": "papier", "count": 5, "price": 25, "weight": 2 },
+        { "material": "braise", "count": 5, "price": 25, "weight": 2 },
+        { "material": "seve", "count": 5, "price": 20, "weight": 1 }
       ]
     }
   },

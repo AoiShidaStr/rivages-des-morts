@@ -4,6 +4,7 @@ import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
 import { buildLoadout, heroClass, levelProgress, type Loadout } from './game/loadout';
+import { drawWeighted, salvage, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
 import { Progress, bindSelf, type Action } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
@@ -42,10 +43,12 @@ interface Loot {
   xp: number;
   materials: Record<string, number>;
   items: string[];
+  /** Objets déjà possédés tombés à nouveau : fondus en oboles et matériaux (déjà comptés ci-dessus). */
+  duplicates: string[];
   waves: number;
 }
 
-const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], waves: 0 });
+const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], duplicates: [], waves: 0 });
 /** Expérience de la victoire sur la Jorōgumo, la première fois. */
 const BOSS_QUEST_XP = 120;
 
@@ -80,6 +83,8 @@ export class App {
   private last = performance.now();
   private titleAngle = 0;
   private run: Loot = emptyLoot();
+  /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
+  private endShop: RolledOffer[] = [];
   /** Niveau du donjon en cours (choisi à l'entrée). */
   private dungeonLevel = 1;
   private outcome: Outcome | null = null;
@@ -246,6 +251,7 @@ export class App {
     const { island, islandRenderer } = this.d;
     await this.screens.transition('Yomotsu Hirasaka', 'Île du Yomi', () => {
       this.screens.hideTitle();
+      this.creation.hide();
       island.placeAt(content.island.spawn);
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
@@ -467,12 +473,21 @@ export class App {
       if (drop.material && Math.random() < (drop.chance ?? 1)) {
         this.run.materials[drop.material] = (this.run.materials[drop.material] ?? 0) + (drop.count ?? 1) + rewards.extraMaterials;
       }
-      // Armes, reliques et objets de quête : chacun sa chance, jamais en double.
+      // Armes, reliques et objets de quête : chacun sa chance (GDD, drops à la Warframe).
+      // Un objet déjà possédé est fondu en ressources plutôt que perdu.
       for (const entry of drop.items ?? []) {
-        const known = this.d.progress.has(entry.item) || this.run.items.includes(entry.item);
-        if (!known && this.d.progress.check(entry.if) && Math.random() < Math.min(1, entry.chance * rewards.rareChance)) {
+        if (!this.d.progress.check(entry.if) || Math.random() >= Math.min(1, entry.chance * rewards.rareChance)) continue;
+        const def = content.items[entry.item];
+        if (!def) continue;
+        if (!this.d.progress.has(entry.item) && !this.run.items.includes(entry.item)) {
           this.run.items.push(entry.item);
-          this.screens.toast(`Butin rare : ${content.items[entry.item]?.name ?? entry.item}`, 'loot', entry.item);
+          this.screens.toast(`Butin rare : ${def.name}`, 'loot', entry.item);
+        } else if (def.slot) {
+          const s = salvage(content.duplicates, content.upgrade, def);
+          this.run.duplicates.push(entry.item);
+          this.run.oboles += s.oboles;
+          if (s.material) this.run.materials[s.material] = (this.run.materials[s.material] ?? 0) + s.count;
+          this.screens.toast(`Doublon : ${def.name}, fondu en ressources`, 'loot', entry.item);
         }
       }
     }
@@ -497,12 +512,13 @@ export class App {
       const firstWin = progress.quest('dame') !== 'done';
       actions.push(...progress.apply([{ completeQuest: 'dame' }, { set: 'jorogumo_vaincue' }, ...(firstWin ? [{ xp: BOSS_QUEST_XP }] : [])]));
       if (progress.winDungeon(this.dungeonLevel, content.difficulty.maxLevel)) unlocked = progress.state.dungeon.unlocked;
+      this.endShop = this.rollEndShop();
     }
     progress.save();
 
     const options: MenuOption[] = victory
       ? [
-          { label: 'Boutique de fin', action: () => openShop(this.panels, this.ui, 'fin') },
+          { label: 'Boutique de fin', action: () => openShop(this.panels, this.ui, 'fin', this.endShop) },
           { label: 'Retourner sur l’île', primary: true, action: () => void this.returnToIsland() },
         ]
       : [
@@ -519,12 +535,39 @@ export class App {
         chests,
         materials: [
           ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
+          ...this.duplicateLines(),
           ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
         ],
       },
       options,
     );
     void this.runActions(actions);
+  }
+
+  /** « Doublon fondu : Katana de rōnin ×2 (+80 oboles, +6 Écaille de kappa) », un par objet. */
+  private duplicateLines(): HTMLElement[] {
+    const counts = new Map<string, number>();
+    for (const id of this.run.duplicates) counts.set(id, (counts.get(id) ?? 0) + 1);
+    return [...counts].map(([id, n]) => {
+      const def = content.items[id];
+      const s = salvage(content.duplicates, content.upgrade, def);
+      const gain = [`+${s.oboles * n} oboles`, s.material ? `+${s.count * n} ${content.materials[s.material]}` : null].filter(Boolean).join(', ');
+      return lootLine(id, `Doublon fondu : ${def.name}${n > 1 ? ` ×${n}` : ''} (${gain})`);
+    });
+  }
+
+  /**
+   * Boutique de fin (GDD, comme dans Waven) : tirée au hasard à chaque victoire parmi les objets et
+   * ressources du donjon. Jamais un objet déjà possédé ; les lots de matériaux complètent l'offre.
+   */
+  private rollEndShop(): RolledOffer[] {
+    const shop = content.shops.fin;
+    const { progress } = this.d;
+    const eligible = (shop?.pool ?? []).filter((e) => progress.check(e.if) && !(e.item && progress.has(e.item)));
+    const limits = shop?.offers ?? { items: 2, total: 4 };
+    const items = drawWeighted(eligible.filter((e) => e.item), limits.items);
+    const bundles = drawWeighted(eligible.filter((e) => e.material), limits.total - items.length);
+    return [...items, ...bundles].map(({ weight: _weight, if: _if, ...offer }) => offer);
   }
 
   private async retry(): Promise<void> {

@@ -319,9 +319,9 @@ Le premier donjon du Yomi dure environ 10 minutes : 10 salles fixes, toujours da
 
 **Mort** : on garde tout ce qui a été ramassé (XP, ressources et coffres non ouverts), mais on perd sa progression dans le donjon : il faut le recommencer depuis la première salle.
 
-**Boutique de fin** (comme Waven) : après le boss, une petite salle propose des items et ressources liés au donjon, environ 25 % moins chers que sur la barque. Elle récompense la victoire et donne une raison de finir le donjon.
+**Boutique de fin** (comme Waven) : après le boss, une petite salle propose des items et ressources liés au donjon, environ 25 % moins chers que sur la barque. Elle récompense la victoire et donne une raison de finir le donjon. L'étal est tiré au hasard à chaque victoire (en place) : deux objets pas encore possédés, complétés par des lots de matériaux ; ce qui n'est pas acheté repart avec le marchand.
 
-**Drops à la Warframe** : chaque ennemi et chaque boss a sa table de drop, avec un taux par objet. Le joueur sait ce qu'il cherche et où le trouver, ce qui pousse au farming.
+**Drops à la Warframe** : chaque ennemi et chaque boss a sa table de drop, avec un taux par objet. Le joueur sait ce qu'il cherche et où le trouver, ce qui pousse au farming. Un objet déjà possédé qui retombe est un doublon (en place) : Tetsu le fond en oboles et en matériaux de forge selon sa rareté, pour que le farming reste utile une fois la table complétée (réglages dans `items.json`, `duplicates`).
 
 | Rareté | Taux indicatif | Exemples (Jorōgumo) |
 | --- | --- | --- |
