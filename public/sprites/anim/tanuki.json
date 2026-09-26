@@ -1,0 +1,86 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 188,
+    "h": 210
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 188,
+    "y": 0,
+    "w": 188,
+    "h": 210
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 376,
+    "y": 0,
+    "w": 188,
+    "h": 210
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 564,
+    "y": 0,
+    "w": 188,
+    "h": 210
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 752,
+    "y": 0,
+    "w": 188,
+    "h": 210
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 940,
+    "y": 0,
+    "w": 188,
+    "h": 210
+   },
+   "duration": 150
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "tanuki.webp",
+  "size": {
+   "w": 1128,
+   "h": 210
+  },
+  "smooth": true,
+  "bodyHeight": 190,
+  "anchor": {
+   "x": 94,
+   "y": 199
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   }
+  ]
+ }
+}

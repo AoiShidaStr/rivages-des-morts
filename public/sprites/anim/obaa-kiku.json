@@ -1,0 +1,86 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 138,
+    "h": 200
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 138,
+    "y": 0,
+    "w": 138,
+    "h": 200
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 276,
+    "y": 0,
+    "w": 138,
+    "h": 200
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 414,
+    "y": 0,
+    "w": 138,
+    "h": 200
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 552,
+    "y": 0,
+    "w": 138,
+    "h": 200
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 690,
+    "y": 0,
+    "w": 138,
+    "h": 200
+   },
+   "duration": 170
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "obaa-kiku.webp",
+  "size": {
+   "w": 828,
+   "h": 200
+  },
+  "smooth": true,
+  "bodyHeight": 180,
+  "anchor": {
+   "x": 69,
+   "y": 190
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,388 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 316,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 632,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 948,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 1264,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 1580,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 160
+  },
+  {
+   "filename": "move 6",
+   "frame": {
+    "x": 1896,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 7",
+   "frame": {
+    "x": 2212,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 8",
+   "frame": {
+    "x": 2528,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 9",
+   "frame": {
+    "x": 2844,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 10",
+   "frame": {
+    "x": 3160,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 11",
+   "frame": {
+    "x": 3476,
+    "y": 0,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 12",
+   "frame": {
+    "x": 0,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 13",
+   "frame": {
+    "x": 316,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 90
+  },
+  {
+   "filename": "windup 14",
+   "frame": {
+    "x": 632,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 110
+  },
+  {
+   "filename": "windup 15",
+   "frame": {
+    "x": 948,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 110
+  },
+  {
+   "filename": "windup 16",
+   "frame": {
+    "x": 1264,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 110
+  },
+  {
+   "filename": "windup 17",
+   "frame": {
+    "x": 1580,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 110
+  },
+  {
+   "filename": "strike 18",
+   "frame": {
+    "x": 1896,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 60
+  },
+  {
+   "filename": "strike 19",
+   "frame": {
+    "x": 2212,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 80
+  },
+  {
+   "filename": "strike 20",
+   "frame": {
+    "x": 2528,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 220
+  },
+  {
+   "filename": "channel 21",
+   "frame": {
+    "x": 2844,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 130
+  },
+  {
+   "filename": "channel 22",
+   "frame": {
+    "x": 3160,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 130
+  },
+  {
+   "filename": "channel 23",
+   "frame": {
+    "x": 3476,
+    "y": 308,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 130
+  },
+  {
+   "filename": "channel 24",
+   "frame": {
+    "x": 0,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 130
+  },
+  {
+   "filename": "channel 25",
+   "frame": {
+    "x": 316,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 130
+  },
+  {
+   "filename": "channel 26",
+   "frame": {
+    "x": 632,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 130
+  },
+  {
+   "filename": "stunned 27",
+   "frame": {
+    "x": 948,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 150
+  },
+  {
+   "filename": "stunned 28",
+   "frame": {
+    "x": 1264,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 150
+  },
+  {
+   "filename": "stunned 29",
+   "frame": {
+    "x": 1580,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 150
+  },
+  {
+   "filename": "stunned 30",
+   "frame": {
+    "x": 1896,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 150
+  },
+  {
+   "filename": "stunned 31",
+   "frame": {
+    "x": 2212,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 150
+  },
+  {
+   "filename": "stunned 32",
+   "frame": {
+    "x": 2528,
+    "y": 616,
+    "w": 316,
+    "h": 308
+   },
+   "duration": 150
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "jorogumo.webp",
+  "size": {
+   "w": 3792,
+   "h": 924
+  },
+  "smooth": true,
+  "bodyHeight": 260,
+  "anchor": {
+   "x": 158,
+   "y": 295
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   },
+   {
+    "name": "move",
+    "from": 6,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "windup",
+    "from": 14,
+    "to": 17,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "strike",
+    "from": 18,
+    "to": 20,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "channel",
+    "from": 21,
+    "to": 26,
+    "direction": "forward"
+   },
+   {
+    "name": "stunned",
+    "from": 27,
+    "to": 32,
+    "direction": "forward"
+   }
+  ]
+ }
+}

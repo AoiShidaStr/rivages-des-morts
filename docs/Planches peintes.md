@@ -28,6 +28,18 @@ On peut ne traiter qu'une entrée : `npm run sprites -- decor/ema`, `npm run pla
 | `duration` / `durations` | durée de chaque image, en millisecondes |
 | `once` | animation jouée une fois, qui s'arrête sur sa dernière image (coups) |
 
+Une même planche source peut servir à deux animations : l'attaque des nouveaux prompts tient sur une planche de 6 images, l'élan (`"frames": [0, 1, 2]`) puis le coup (`[3, 4, 5]`).
+
+Nano Banana ajoute parfois ce qu'on ne lui a pas demandé. Ces réglages le retirent, pour une animation ou pour toute la planche :
+
+| Champ | Rôle |
+| --- | --- |
+| `eraseLines` | efface les traits droits : lignes de sol, grilles, cadres. `{ "length": 0.03, "vertical": false }` pour de courtes lignes de sol, sans toucher aux pattes et aux bâtons verticaux |
+| `erase` | vide des rectangles, en fractions de l'image (`[x0, y0, x1, y1]`) : titres, numéros des images |
+| `seeds` | points de départ d'un fond d'un autre gris (cases grises dessinées autour des images), un par case |
+| `fillHoles`, `minHole`, `holeTolerance` | vident le fond enfermé par le sujet (entre les pattes et les fils de la Jorōgumo, sous le bâton du kappa) |
+| `tolerance` | écart de couleur accepté pour le fond : plus haut pour effacer des ombres grises, plus bas sur fond noir |
+
 L'outil retire le fond, coupe la grille là où il y a le moins de sujet (les images peuvent se toucher), met toutes les images à la même taille de corps (`bodyHeight`), aligne les pieds et l'axe du corps, et range tout dans des cases de même taille. Pour un décor animé (`"anchor": "box"`), chaque image est recalée sur la première.
 
 `npm run planches -- heros --apercu <dossier>` écrit aussi une bande par animation avec la ligne des pieds (rouge) et l'axe du corps (bleu), pour vérifier l'alignement.

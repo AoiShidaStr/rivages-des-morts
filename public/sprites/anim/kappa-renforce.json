@@ -1,0 +1,351 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 358,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 716,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 1074,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 1432,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 1790,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 150
+  },
+  {
+   "filename": "move 6",
+   "frame": {
+    "x": 2148,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 7",
+   "frame": {
+    "x": 2506,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 8",
+   "frame": {
+    "x": 2864,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 9",
+   "frame": {
+    "x": 3222,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 10",
+   "frame": {
+    "x": 3580,
+    "y": 0,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 11",
+   "frame": {
+    "x": 0,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 12",
+   "frame": {
+    "x": 358,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 13",
+   "frame": {
+    "x": 716,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 90
+  },
+  {
+   "filename": "windup 14",
+   "frame": {
+    "x": 1074,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 110
+  },
+  {
+   "filename": "windup 15",
+   "frame": {
+    "x": 1432,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 110
+  },
+  {
+   "filename": "windup 16",
+   "frame": {
+    "x": 1790,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 110
+  },
+  {
+   "filename": "windup 17",
+   "frame": {
+    "x": 2148,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 110
+  },
+  {
+   "filename": "dash 18",
+   "frame": {
+    "x": 2506,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 19",
+   "frame": {
+    "x": 2864,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 20",
+   "frame": {
+    "x": 3222,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 21",
+   "frame": {
+    "x": 3580,
+    "y": 244,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 22",
+   "frame": {
+    "x": 0,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 23",
+   "frame": {
+    "x": 358,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 60
+  },
+  {
+   "filename": "stunned 24",
+   "frame": {
+    "x": 716,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 25",
+   "frame": {
+    "x": 1074,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 26",
+   "frame": {
+    "x": 1432,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 27",
+   "frame": {
+    "x": 1790,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 28",
+   "frame": {
+    "x": 2148,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 29",
+   "frame": {
+    "x": 2506,
+    "y": 488,
+    "w": 358,
+    "h": 244
+   },
+   "duration": 140
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "kappa-renforce.webp",
+  "size": {
+   "w": 3938,
+   "h": 732
+  },
+  "smooth": true,
+  "bodyHeight": 220,
+  "anchor": {
+   "x": 179,
+   "y": 231
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   },
+   {
+    "name": "move",
+    "from": 6,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "windup",
+    "from": 14,
+    "to": 17,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "dash",
+    "from": 18,
+    "to": 23,
+    "direction": "forward"
+   },
+   {
+    "name": "stunned",
+    "from": 24,
+    "to": 29,
+    "direction": "forward"
+   }
+  ]
+ }
+}

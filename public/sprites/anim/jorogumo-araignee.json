@@ -1,0 +1,378 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 616,
+    "y": 0,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 1232,
+    "y": 0,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 170
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 1848,
+    "y": 0,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 170
+  },
+  {
+   "filename": "move 4",
+   "frame": {
+    "x": 2464,
+    "y": 0,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 5",
+   "frame": {
+    "x": 3080,
+    "y": 0,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 6",
+   "frame": {
+    "x": 0,
+    "y": 481,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 7",
+   "frame": {
+    "x": 616,
+    "y": 481,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 8",
+   "frame": {
+    "x": 1232,
+    "y": 481,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 9",
+   "frame": {
+    "x": 1848,
+    "y": 481,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 10",
+   "frame": {
+    "x": 2464,
+    "y": 481,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 11",
+   "frame": {
+    "x": 3080,
+    "y": 481,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 80
+  },
+  {
+   "filename": "windup 12",
+   "frame": {
+    "x": 0,
+    "y": 962,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 120
+  },
+  {
+   "filename": "windup 13",
+   "frame": {
+    "x": 616,
+    "y": 962,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 120
+  },
+  {
+   "filename": "windup 14",
+   "frame": {
+    "x": 1232,
+    "y": 962,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 120
+  },
+  {
+   "filename": "windup 15",
+   "frame": {
+    "x": 1848,
+    "y": 962,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 120
+  },
+  {
+   "filename": "strike 16",
+   "frame": {
+    "x": 2464,
+    "y": 962,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "strike 17",
+   "frame": {
+    "x": 3080,
+    "y": 962,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "strike 18",
+   "frame": {
+    "x": 0,
+    "y": 1443,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 70
+  },
+  {
+   "filename": "strike 19",
+   "frame": {
+    "x": 616,
+    "y": 1443,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 110
+  },
+  {
+   "filename": "strike 20",
+   "frame": {
+    "x": 1232,
+    "y": 1443,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 120
+  },
+  {
+   "filename": "strike 21",
+   "frame": {
+    "x": 1848,
+    "y": 1443,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 140
+  },
+  {
+   "filename": "dash 22",
+   "frame": {
+    "x": 2464,
+    "y": 1443,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 23",
+   "frame": {
+    "x": 3080,
+    "y": 1443,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 24",
+   "frame": {
+    "x": 0,
+    "y": 1924,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 25",
+   "frame": {
+    "x": 616,
+    "y": 1924,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 26",
+   "frame": {
+    "x": 1232,
+    "y": 1924,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 27",
+   "frame": {
+    "x": 1848,
+    "y": 1924,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 60
+  },
+  {
+   "filename": "airborne 28",
+   "frame": {
+    "x": 2464,
+    "y": 1924,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 110
+  },
+  {
+   "filename": "airborne 29",
+   "frame": {
+    "x": 3080,
+    "y": 1924,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 110
+  },
+  {
+   "filename": "airborne 30",
+   "frame": {
+    "x": 0,
+    "y": 2405,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 110
+  },
+  {
+   "filename": "airborne 31",
+   "frame": {
+    "x": 616,
+    "y": 2405,
+    "w": 616,
+    "h": 481
+   },
+   "duration": 110
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "jorogumo-araignee.webp",
+  "size": {
+   "w": 3696,
+   "h": 2886
+  },
+  "smooth": true,
+  "bodyHeight": 280,
+  "anchor": {
+   "x": 308,
+   "y": 363
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "move",
+    "from": 4,
+    "to": 11,
+    "direction": "forward"
+   },
+   {
+    "name": "windup",
+    "from": 12,
+    "to": 15,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "strike",
+    "from": 16,
+    "to": 21,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "dash",
+    "from": 22,
+    "to": 27,
+    "direction": "forward"
+   },
+   {
+    "name": "airborne",
+    "from": 28,
+    "to": 31,
+    "direction": "forward"
+   }
+  ]
+ }
+}

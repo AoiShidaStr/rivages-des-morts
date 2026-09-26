@@ -1,0 +1,304 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 158,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 316,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 474,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 632,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 150
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 790,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 150
+  },
+  {
+   "filename": "move 6",
+   "frame": {
+    "x": 948,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 7",
+   "frame": {
+    "x": 1106,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 8",
+   "frame": {
+    "x": 1264,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 9",
+   "frame": {
+    "x": 1422,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 10",
+   "frame": {
+    "x": 1580,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 11",
+   "frame": {
+    "x": 1738,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 12",
+   "frame": {
+    "x": 1896,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 13",
+   "frame": {
+    "x": 2054,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 80
+  },
+  {
+   "filename": "channel 14",
+   "frame": {
+    "x": 2212,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 120
+  },
+  {
+   "filename": "channel 15",
+   "frame": {
+    "x": 2370,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 120
+  },
+  {
+   "filename": "channel 16",
+   "frame": {
+    "x": 2528,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 120
+  },
+  {
+   "filename": "channel 17",
+   "frame": {
+    "x": 2686,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 120
+  },
+  {
+   "filename": "channel 18",
+   "frame": {
+    "x": 2844,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 120
+  },
+  {
+   "filename": "channel 19",
+   "frame": {
+    "x": 3002,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 120
+  },
+  {
+   "filename": "stunned 20",
+   "frame": {
+    "x": 3160,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 21",
+   "frame": {
+    "x": 3318,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 22",
+   "frame": {
+    "x": 3476,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 23",
+   "frame": {
+    "x": 3634,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 24",
+   "frame": {
+    "x": 3792,
+    "y": 0,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 140
+  },
+  {
+   "filename": "stunned 25",
+   "frame": {
+    "x": 0,
+    "y": 189,
+    "w": 158,
+    "h": 189
+   },
+   "duration": 140
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "kodama.webp",
+  "size": {
+   "w": 3950,
+   "h": 378
+  },
+  "smooth": true,
+  "bodyHeight": 150,
+  "anchor": {
+   "x": 79,
+   "y": 165
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   },
+   {
+    "name": "move",
+    "from": 6,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "channel",
+    "from": 14,
+    "to": 19,
+    "direction": "forward"
+   },
+   {
+    "name": "stunned",
+    "from": 20,
+    "to": 25,
+    "direction": "forward"
+   }
+  ]
+ }
+}

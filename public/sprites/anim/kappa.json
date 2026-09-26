@@ -1,0 +1,315 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 250,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 500,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 750,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 1000,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 1250,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 6",
+   "frame": {
+    "x": 1500,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 7",
+   "frame": {
+    "x": 1750,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "idle 8",
+   "frame": {
+    "x": 2000,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 120
+  },
+  {
+   "filename": "move 9",
+   "frame": {
+    "x": 2250,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 10",
+   "frame": {
+    "x": 2500,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 11",
+   "frame": {
+    "x": 2750,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 12",
+   "frame": {
+    "x": 3000,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 13",
+   "frame": {
+    "x": 3250,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 14",
+   "frame": {
+    "x": 3500,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 15",
+   "frame": {
+    "x": 3750,
+    "y": 0,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 16",
+   "frame": {
+    "x": 0,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 80
+  },
+  {
+   "filename": "windup 17",
+   "frame": {
+    "x": 250,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 100
+  },
+  {
+   "filename": "windup 18",
+   "frame": {
+    "x": 500,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 100
+  },
+  {
+   "filename": "windup 19",
+   "frame": {
+    "x": 750,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 100
+  },
+  {
+   "filename": "windup 20",
+   "frame": {
+    "x": 1000,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 100
+  },
+  {
+   "filename": "dash 21",
+   "frame": {
+    "x": 1250,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 22",
+   "frame": {
+    "x": 1500,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 23",
+   "frame": {
+    "x": 1750,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 24",
+   "frame": {
+    "x": 2000,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 25",
+   "frame": {
+    "x": 2250,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 60
+  },
+  {
+   "filename": "dash 26",
+   "frame": {
+    "x": 2500,
+    "y": 200,
+    "w": 250,
+    "h": 200
+   },
+   "duration": 60
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "kappa.webp",
+  "size": {
+   "w": 4000,
+   "h": 400
+  },
+  "smooth": true,
+  "bodyHeight": 180,
+  "anchor": {
+   "x": 125,
+   "y": 189
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 8,
+    "direction": "forward"
+   },
+   {
+    "name": "move",
+    "from": 9,
+    "to": 16,
+    "direction": "forward"
+   },
+   {
+    "name": "windup",
+    "from": 17,
+    "to": 20,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "dash",
+    "from": 21,
+    "to": 26,
+    "direction": "forward"
+   }
+  ]
+ }
+}

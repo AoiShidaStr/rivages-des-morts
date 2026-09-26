@@ -1,0 +1,86 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 396,
+    "h": 237
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 396,
+    "y": 0,
+    "w": 396,
+    "h": 237
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 792,
+    "y": 0,
+    "w": 396,
+    "h": 237
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 1188,
+    "y": 0,
+    "w": 396,
+    "h": 237
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 1584,
+    "y": 0,
+    "w": 396,
+    "h": 237
+   },
+   "duration": 160
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 1980,
+    "y": 0,
+    "w": 396,
+    "h": 237
+   },
+   "duration": 160
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "barque.webp",
+  "size": {
+   "w": 2376,
+   "h": 237
+  },
+  "smooth": true,
+  "bodyHeight": 220,
+  "anchor": {
+   "x": 198,
+   "y": 228
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   }
+  ]
+ }
+}
