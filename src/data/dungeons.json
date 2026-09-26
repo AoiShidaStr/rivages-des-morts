@@ -1,0 +1,58 @@
+{
+  "about": "Les donjons du Yomi : nom, boss, textes de fin, effets de la victoire (onVictory à chaque fois, firstVictory la première), boutique de fin, point de retour sur l'île (exit) et décor de l'arène (style : teinte du sol, couleur de la brume, sprites posés autour). Les salles de combat sont dans dungeon.json (Rizières noyées) et dungeon-palais.json (Palais d'Izanami).",
+  "rizieres": {
+    "name": "Rizières noyées",
+    "region": "Donjon du Yomi",
+    "boss": "Jorōgumo",
+    "bossLabel": "la Jorōgumo",
+    "victory": {
+      "title": "Les rizières sont apaisées",
+      "text": "La Jorōgumo est tombée. Les âmes égarées retrouvent peu à peu leur chemin."
+    },
+    "onVictory": [{ "completeQuest": "dame" }, { "set": "jorogumo_vaincue" }],
+    "firstVictory": { "if": [{ "notFlag": "jorogumo_vaincue" }], "then": [{ "xp": 120 }] },
+    "shop": "fin",
+    "style": {
+      "ground": [1, 1, 1],
+      "sky": "#c3cbcf",
+      "decor": [
+        { "sprite": "torii", "x": 12, "z": 12 },
+        { "sprite": "jizo", "x": -5, "z": 10.6 },
+        { "sprite": "jizo", "x": -3, "z": 10.6 },
+        { "sprite": "jizo", "x": -1, "z": 10.6 },
+        { "sprite": "jizo", "x": 1, "z": 10.6 },
+        { "sprite": "jizo", "x": 3, "z": 10.6 },
+        { "sprite": "jizo", "x": 5, "z": 10.6 }
+      ]
+    }
+  },
+  "palais": {
+    "name": "Palais d'Izanami",
+    "region": "Profondeurs du Yomi",
+    "boss": "Izanami",
+    "bossLabel": "Izanami",
+    "victory": {
+      "title": "Izanami s'est souvenue",
+      "text": "La reine du Yomi baisse les bras. Pour la première fois depuis des siècles, quelqu'un est descendu la voir sans s'enfuir."
+    },
+    "onVictory": [{ "completeQuest": "sceau" }, { "set": "izanami_vaincue" }],
+    "firstVictory": {
+      "if": [{ "notFlag": "izanami_vaincue" }],
+      "then": [{ "xp": 250 }, { "toast": "Retourne voir le moine du Rocher : il voudra savoir." }]
+    },
+    "shop": "fin-palais",
+    "exit": { "u": 1.6, "v": 11.4 },
+    "style": {
+      "ground": [0.46, 0.38, 0.55],
+      "sky": "#2e2733",
+      "decor": [
+        { "sprite": "rocher", "x": 12.5, "z": 12.5 },
+        { "sprite": "lanterneAllumee", "x": -10.5, "z": 10.5 },
+        { "sprite": "lanterneAllumee", "x": 10.5, "z": -10.5 },
+        { "sprite": "lanterneAllumee", "x": -4, "z": 11 },
+        { "sprite": "lanterneAllumee", "x": 11, "z": -4 },
+        { "sprite": "torii", "x": -12, "z": -12 }
+      ]
+    }
+  }
+}

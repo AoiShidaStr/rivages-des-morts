@@ -19,10 +19,11 @@ import {
   Vector4,
   type BaseTexture,
 } from '@babylonjs/core';
-import { Jorogumo } from '../game/enemies';
+import type { DungeonStyle } from '../content';
+import { Izanami, Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
-import type { Projectile, Stump, World } from '../game/world';
+import type { PeachTree, Projectile, Stump, World } from '../game/world';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
   drawArrow,
@@ -34,6 +35,7 @@ import {
   drawJizo,
   drawJorogumoSpider,
   drawMissing,
+  drawPeachTree,
   drawRadial,
   drawRing,
   drawSpider,
@@ -51,6 +53,8 @@ const PLACEHOLDERS: Record<string, () => HTMLCanvasElement> = {
   jorogumoAraignee: drawJorogumoSpider,
   araignee: drawSpider,
   souche: drawStump,
+  pecher: () => drawPeachTree(true),
+  pecherNu: () => drawPeachTree(false),
 };
 
 export interface SpriteDef {
@@ -101,6 +105,8 @@ interface Snapshot {
   mark?: MarkKind | null;
   /** Lame invisible : on ne voit plus qu'une ombre. */
   hidden?: boolean;
+  /** Regard d'Izanami (de 0 à 1) : plus on la regarde, plus elle rougeoie. */
+  glare?: number;
 }
 
 interface SpriteEntry {
@@ -190,6 +196,8 @@ const FIRE = new Color3(1, 0.55, 0.2);
 const FRENZY_TINT = new Color3(1, 0.7, 0.6);
 const ELITE_TINT = new Color3(1, 0.62, 0.38);
 const ELITE_SCALE = 1.22;
+const GLARE_TINT = new Color3(1, 0.42, 0.48);
+const PEACH = new Color3(1, 0.72, 0.62);
 const STORM = new Color3(0.8, 0.9, 1);
 const SPIRIT_TINT = new Color3(0.55, 0.95, 1.1);
 const CLAY = new Color3(0.78, 0.55, 0.35);
@@ -319,8 +327,24 @@ export class Renderer {
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private readonly webs = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   private stumpViews: { stumps: readonly Stump[]; meshes: { dispose(): void }[] } = { stumps: [], meshes: [] };
+  /** Pêchers de l'arène d'Izanami : l'arbre en fruit et l'arbre nu, l'un ou l'autre visible. */
+  private peachViews: { trees: readonly PeachTree[]; views: { ripe: Mesh; bare: Mesh }[]; meshes: { dispose(): void }[] } = {
+    trees: [],
+    views: [],
+    meshes: [],
+  };
+  /** Décor autour de l'arène, propre à chaque donjon ; les planches animées (lanternes) y tournent en boucle. */
+  private decor: { meshes: { dispose(): void }[]; animated: { material: ShaderMaterial; anim: SheetAnimation; time: number }[] } = {
+    meshes: [],
+    animated: [],
+  };
+  private groundMaterial: StandardMaterial | null = null;
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
+  /** Croissants des coups, un par largeur d'arc (le nodachi à 150°, le kanabō à 200°…). */
+  private readonly arcTextures = new Map<number, BaseTexture>();
+  /** Repère au sol : la forme du prochain coup d'arme, tournée vers la souris. */
+  private attackGuide: { mesh: Mesh; material: ShaderMaterial; key: string } | null = null;
   private texts: FloatingText[] = [];
   /** Sprite du héros : sa race et sa classe (src/render/heroes.ts). */
   private heroSprite = 'heros';
@@ -378,7 +402,6 @@ export class Renderer {
         this.sprites.set(name, await this.loadSprite(name, def));
       }),
     );
-    this.buildDecor();
     this.guardDecal = this.createDecal('guard', this.fxTextures.crescent, 2.6, 2.6, SPIRIT, 0.5, 0.03);
     this.guardDecal.mesh.isVisible = false;
   }
@@ -429,6 +452,7 @@ export class Renderer {
         blink: false,
         elite: enemy.elite,
         mark: enemy.mark,
+        glare: enemy instanceof Izanami ? enemy.gaze : undefined,
       }, dt);
     }
     for (const summon of world.summons) {
@@ -454,11 +478,17 @@ export class Renderer {
     }
 
     this.updateGuard(player.pos, player.facing, player.pose, dt);
+    this.syncAttackGuide(world);
     this.syncProjectiles(world.projectiles, dt);
     this.syncAura(world);
     this.syncSmoke(world);
     this.syncAim(world);
     this.syncStumps(world.stumps);
+    this.syncPeaches(world.peaches);
+    for (const d of this.decor.animated) {
+      d.time += dt;
+      showFrame(d.material, d.anim, frameAt(d.anim, 'idle', d.time));
+    }
     this.syncWebs(world);
     this.syncThreads(world);
     for (const event of events) this.handle(event);
@@ -489,11 +519,13 @@ export class Renderer {
     if (this.auraDecal) this.auraDecal.mesh.isVisible = false;
     if (this.smokeDecal) this.smokeDecal.mesh.isVisible = false;
     if (this.aimDecal) this.aimDecal.mesh.isVisible = false;
+    if (this.attackGuide) this.attackGuide.mesh.isVisible = false;
     for (const text of this.texts) text.el.remove();
     this.texts = [];
     for (const web of this.webs.values()) this.disposeFx(web);
     this.webs.clear();
     this.syncStumps([]);
+    this.syncPeaches([]);
     this.shake = 0;
     this.cameraTarget.setAll(0);
   }
@@ -584,6 +616,8 @@ export class Renderer {
     }
     // Élite : plus grande, et une lueur rouge doré qui pulse.
     if (s.elite && tint === WHITE) tint = Color3.Lerp(WHITE, ELITE_TINT, 0.65 + 0.35 * Math.sin(t * 5));
+    // Izanami regardée : elle rougeoie à mesure que sa colère monte.
+    if (s.glare && tint === WHITE) tint = Color3.Lerp(WHITE, GLARE_TINT, s.glare * (0.8 + 0.2 * Math.sin(t * 12)));
     // Âme liée : toujours bleue, plus vive pendant le Chœur, de plus en plus pâle avant de s'effacer.
     if (s.spirit !== undefined) {
       const base = s.holy ? HOLY_TINT : SPIRIT_TINT;
@@ -826,6 +860,40 @@ export class Renderer {
     this.stumpViews = { stumps, meshes };
   }
 
+  /** Les pêchers changent seulement au début d'une vague : l'arbre en fruit ou l'arbre nu selon la pêche. */
+  private syncPeaches(trees: readonly PeachTree[]): void {
+    if (trees !== this.peachViews.trees) {
+      for (const mesh of this.peachViews.meshes) mesh.dispose();
+      const meshes: { dispose(): void }[] = [];
+      const views: { ripe: Mesh; bare: Mesh }[] = [];
+      const ripeEntry = this.sprites.get('pecher');
+      const bareEntry = this.sprites.get('pecherNu');
+      trees.forEach((tree, i) => {
+        if (!ripeEntry || !bareEntry) return;
+        const order = SPRITE_ORDER - Math.round(dot(tree.pos, this.forward) * 100);
+        const ripe = this.createSprite(`peach-${i}`, ripeEntry);
+        const bare = this.createSprite(`peach-bare-${i}`, bareEntry);
+        for (const { sprite } of [ripe, bare]) {
+          sprite.position.set(tree.pos.x, 0, tree.pos.z);
+          sprite.alphaIndex = order;
+        }
+        const size = tree.radius * 3;
+        const shadow = this.createDecal(`peach-shadow-${i}`, this.fxTextures.shadow, size, size, Color3.Black(), 0.45, 0.01);
+        shadow.mesh.position.x = tree.pos.x;
+        shadow.mesh.position.z = tree.pos.z;
+        views.push({ ripe: ripe.sprite, bare: bare.sprite });
+        meshes.push(ripe.sprite, ripe.material, bare.sprite, bare.material, shadow.mesh, shadow.material);
+      });
+      this.peachViews = { trees, views, meshes };
+    }
+    trees.forEach((tree, i) => {
+      const view = this.peachViews.views[i];
+      if (!view) return;
+      view.ripe.isVisible = tree.ripe;
+      view.bare.isVisible = !tree.ripe;
+    });
+  }
+
   private syncWebs(world: World): void {
     const burnTime = world.cfg.webs.burnTime;
     const seen = new Set<number>();
@@ -926,11 +994,28 @@ export class Renderer {
   private handle(event: GameEvent): void {
     switch (event.type) {
       case 'swing': {
-        // Coup circulaire : un croissant presque fermé tourne autour du héros. Sinon, le croissant de l'arc visé.
+        // Estoc : un trait droit devant le héros.
+        if (event.shape === 'line') {
+          this.addFx({
+            texture: this.fxTextures.streak,
+            pos: { x: event.pos.x + (event.dir.x * event.range) / 2, z: event.pos.z + (event.dir.z * event.range) / 2 },
+            dir: event.dir,
+            width: event.range * 1.1,
+            depth: (event.width ?? 0.8) * 1.3,
+            color: SLASH,
+            life: 0.13,
+            update: (k, fx) => {
+              fx.material.setFloat('alpha', 0.95 * (1 - k));
+              fx.mesh.scaling.x = 0.7 + 0.3 * k;
+            },
+          });
+          break;
+        }
+        // Coup circulaire : un croissant presque fermé tourne autour du héros. Sinon, le croissant de l'arc de l'arme.
         const full = event.arcDeg >= 360;
         const start = -angleOf(event.dir);
         this.addFx({
-          texture: full ? this.fxTextures.sweep : this.fxTextures.crescent,
+          texture: this.arcTexture(event.arcDeg),
           pos: event.pos,
           dir: event.dir,
           width: event.range * 2,
@@ -979,7 +1064,10 @@ export class Renderer {
         else if (event.reason === 'snare') this.text(event.pos, 2, 'Pris dans le fil', 'parry');
         else if (event.reason === 'net') this.text(event.pos, 2, 'Pris au filet', 'parry');
         else if (event.reason === 'daze') this.text(event.pos, 2, 'Étourdi', 'stun');
-        else if (event.reason === 'snag') {
+        else if (event.reason === 'peach') {
+          this.text(event.pos, 2.8, 'Repoussée !', 'parry', 1.6);
+          this.addFx(this.ringFx(event.pos, 4, PEACH, 0.5));
+        } else if (event.reason === 'snag') {
           this.text(event.pos, 2.6, 'Le fil s’accroche !', 'parry', 1.6);
           this.addFx(this.ringFx(event.pos, 4, SILK, 0.5));
           this.addShake(0.8);
@@ -994,6 +1082,33 @@ export class Renderer {
       case 'bite':
         this.text(event.pos, 2.4, 'Morsure', 'hurt');
         this.addShake(0.4);
+        break;
+      case 'peach': {
+        // La pêche file du pêcher jusqu'à Izanami.
+        const dir = { x: event.to.x - event.from.x, z: event.to.z - event.from.z };
+        const len = Math.hypot(dir.x, dir.z);
+        if (len > 0.1) {
+          this.addFx({
+            texture: this.fxTextures.streak,
+            pos: { x: (event.from.x + event.to.x) / 2, z: (event.from.z + event.to.z) / 2 },
+            dir,
+            width: len,
+            depth: 0.9,
+            color: PEACH,
+            life: 0.45,
+            update: (k, fx) => fx.material.setFloat('alpha', 0.9 * (1 - k)),
+          });
+        }
+        this.addFx(this.ringFx(event.to, 3.2, PEACH, 0.5));
+        this.text(event.from, 2.8, 'Pêche d’Izanagi !', 'parry', 1.4);
+        this.addShake(0.5);
+        break;
+      }
+      case 'wrath':
+        this.addFx(this.ringFx(event.pos, event.radius * 2.2, DANGER, 0.5));
+        this.addFx(this.ringFx(event.pos, event.radius * 2.8, SHADOW_STRIKE, 0.6));
+        this.text(event.pos, 3, 'Colère d’Izanami !', 'hurt', 1.3);
+        this.addShake(0.8);
         break;
       case 'telegraph': {
         this.endTracked(this.telegraphs, event.id);
@@ -1071,6 +1186,8 @@ export class Renderer {
       }
       case 'land':
         this.endTracked(this.landings, event.id);
+        // Rayon nul : l'annonce a été annulée (colère d'Izanami interrompue), rien ne tombe.
+        if (event.radius <= 0) break;
         this.addFx(this.ringFx(event.pos, event.radius * 2.4, DUST, 0.35));
         this.addShake(0.35);
         break;
@@ -1303,6 +1420,57 @@ export class Renderer {
     fx.material.dispose();
   }
 
+  /** Croissant d'un coup de `arcDeg` degrés (360 : le balayage qui tourne autour du héros). */
+  private arcTexture(arcDeg: number): BaseTexture {
+    if (arcDeg >= 360) return this.fxTextures.sweep;
+    const deg = Math.round(arcDeg / 5) * 5;
+    let texture = this.arcTextures.get(deg);
+    if (!texture) {
+      texture = this.canvasTexture(`arc-${deg}`, drawCrescent(256, deg));
+      this.arcTextures.set(deg, texture);
+    }
+    return texture;
+  }
+
+  /**
+   * Repère au sol, très discret : la forme du coup de l'arme (arc ou estoc), tournée vers la souris.
+   * Le héros ne se tourne qu'à gauche ou à droite à l'écran : sans lui, on devine mal où partira le coup.
+   * Il s'éclaire pendant l'élan. Rien pour le Rôdeur (il a sa visée) ni pour un coup à 360°.
+   */
+  private syncAttackGuide(world: World): void {
+    const player = world.player;
+    const attack = player.cfg.attack;
+    const thrust = attack.shape === 'line';
+    const shown = player.cfg.kit !== 'rodeur' && (thrust || attack.arcDeg < 360) && player.pose !== 'dash' && player.pose !== 'airborne' && !player.dead;
+    if (!shown && !this.attackGuide) return;
+    const key = thrust ? 'line' : `arc-${attack.arcDeg}`;
+    if (!this.attackGuide) {
+      // Bleu-esprit, comme la garde : il se lit sur le vert des rizières comme sur le sol sombre du Palais.
+      const decal = this.createDecal('attackGuide', this.fxTextures.streak, 1, 1, SPIRIT, 0.2, 0.022);
+      decal.mesh.alphaIndex = DECAL_ORDER + 1;
+      this.attackGuide = { ...decal, key: '' };
+    }
+    const guide = this.attackGuide;
+    guide.mesh.isVisible = shown;
+    if (!shown) return;
+    if (guide.key !== key) {
+      guide.material.setTexture('textureSampler', thrust ? this.fxTextures.streak : this.arcTexture(attack.arcDeg));
+      guide.key = key;
+    }
+    const dir = player.facing;
+    if (thrust) {
+      guide.mesh.position.x = player.pos.x + (dir.x * attack.range) / 2;
+      guide.mesh.position.z = player.pos.z + (dir.z * attack.range) / 2;
+      guide.mesh.scaling.set(attack.range, 1, attack.width ?? 0.8);
+    } else {
+      guide.mesh.position.x = player.pos.x;
+      guide.mesh.position.z = player.pos.z;
+      guide.mesh.scaling.set(attack.range * 2, 1, attack.range * 2);
+    }
+    guide.mesh.rotation.y = -angleOf(dir);
+    guide.material.setFloat('alpha', player.pose === 'windup' ? 0.7 : 0.35);
+  }
+
   /** Garde levée : un croissant bleu-esprit devant le héros. */
   private updateGuard(pos: Vec2, facing: Vec2, pose: Pose, dt: number): void {
     if (!this.guardDecal) return;
@@ -1348,23 +1516,35 @@ export class Renderer {
     const material = new StandardMaterial('groundMaterial', this.scene);
     material.diffuseTexture = texture;
     material.disableLighting = true;
+    // Sans éclairage, c'est la couleur émise qui module l'image du sol (blanc : l'image telle quelle).
     material.emissiveColor = WHITE;
     material.specularColor = Color3.Black();
     ground.material = material;
     ground.isPickable = false;
+    this.groundMaterial = material;
   }
 
-  private buildDecor(): void {
-    for (const [name, def] of Object.entries(this.manifest)) {
-      const entry = this.sprites.get(name);
-      if (!def.decor || !entry) continue;
-      const spots = Array.isArray(def.decor) ? def.decor : [def.decor];
-      spots.forEach((spot, i) => {
-        const { sprite } = this.createSprite(`decor-${name}-${i}`, entry);
-        sprite.position.set(spot.x, 0, spot.z);
-        sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, this.forward) * 100);
-      });
-    }
+  /** Arène du donjon : teinte du sol, couleur de la brume, décor posé autour (src/data/dungeons.json). */
+  setStyle(style: DungeonStyle): void {
+    if (this.groundMaterial) this.groundMaterial.emissiveColor = new Color3(...style.ground);
+    this.scene.clearColor = Color4.FromHexString(`${style.sky}ff`);
+    for (const mesh of this.decor.meshes) mesh.dispose();
+    const meshes: { dispose(): void }[] = [];
+    const animated: { material: ShaderMaterial; anim: SheetAnimation; time: number }[] = [];
+    style.decor.forEach((spot, i) => {
+      const entry = this.sprites.get(spot.sprite);
+      if (!entry) return;
+      const { sprite, material } = this.createSprite(`decor-${spot.sprite}-${i}`, entry);
+      sprite.position.set(spot.x, 0, spot.z);
+      sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, this.forward) * 100);
+      if (entry.anim) {
+        const time = Math.random() * 2;
+        showFrame(material, entry.anim, frameAt(entry.anim, 'idle', time));
+        animated.push({ material, anim: entry.anim, time });
+      }
+      meshes.push(sprite, material);
+    });
+    this.decor = { meshes, animated };
   }
 
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {

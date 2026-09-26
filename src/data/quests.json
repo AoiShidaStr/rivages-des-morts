@@ -27,6 +27,14 @@
         { "text": "Demander à Charon s'il a vu passer « un roi qui avait peur d'être oublié »." }
       ]
     },
+    "sceau": {
+      "name": "Derrière le sceau",
+      "type": "Principale",
+      "objectives": [
+        { "if": [{ "flag": "sceau_ouvert" }], "text": "Descendre sous le Grand Rocher, dans le Palais d'Izanami, et affronter la reine du Yomi." },
+        { "text": "Dénouer la corde sacrée du Grand Rocher, au bout du chemin du moine." }
+      ]
+    },
     "lanterne": {
       "name": "La lanterne de Yuki",
       "type": "Secondaire",

@@ -8,8 +8,14 @@ export type EnemyKind =
   | 'kasaObake'
   | 'oublie'
   | 'araignee'
-  | 'jorogumo';
-export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare' | 'net' | 'daze';
+  | 'jorogumo'
+  // Palais d'Izanami
+  | 'shikome'
+  | 'ikazuchi'
+  | 'ikusa'
+  | 'izanami';
+/** `peach` : une pêche d'Izanagi a repoussé Izanami. */
+export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare' | 'net' | 'daze' | 'peach';
 /** Marques posées sur un ennemi : ombre et mort (Lame), chasseur (Rôdeur). */
 export type MarkKind = 'shadow' | 'death' | 'hunt';
 export type Outcome = 'victory' | 'defeat';
@@ -38,7 +44,7 @@ export interface InputFrame {
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
 export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string }
-  | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number }
+  | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number }
   | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean }
   /** `blocked` : ce qui a traversé la garde du Guerrier. */
   | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean }
@@ -59,6 +65,9 @@ export type GameEvent =
   | { type: 'bossPhase'; phase: number; label: string; hint?: string }
   | { type: 'webBurn'; id: number; pos: Vec2; radius: number }
   | { type: 'bite'; pos: Vec2 }
+  // Palais d'Izanami : pêche lancée d'un pêcher vers Izanami, cri de colère quand on la regarde trop
+  | { type: 'peach'; from: Vec2; to: Vec2 }
+  | { type: 'wrath'; pos: Vec2; radius: number }
   | { type: 'bondLand'; pos: Vec2; radius: number }
   | { type: 'frenzy'; pos: Vec2 }
   | { type: 'lightning'; pos: Vec2 }

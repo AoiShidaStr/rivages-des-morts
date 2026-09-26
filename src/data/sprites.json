@@ -9,19 +9,16 @@
   "araignee": { "file": "araignee.png", "sheet": { "file": "pixel/araignee.json", "height": 0.87 }, "height": 0.65, "facesRight": true },
   "jorogumo": { "file": "jorogumo.png", "sheet": { "file": "pixel/jorogumo.json", "height": 3.24 }, "height": 2.4, "facesRight": true },
   "jorogumoAraignee": { "file": "jorogumo-araignee.png", "sheet": { "file": "pixel/jorogumoAraignee.json", "height": 3.69 }, "height": 2.9, "facesRight": true },
+  "shikome": { "file": null, "sheet": { "file": "pixel/shikome.json", "height": 2.09 }, "height": 1.6, "facesRight": true },
+  "ikazuchi": { "file": null, "sheet": { "file": "pixel/ikazuchi.json", "height": 1.77 }, "height": 1.2, "facesRight": true, "lift": 0.55 },
+  "ikusa": { "file": null, "sheet": { "file": "pixel/ikusa.json", "height": 2.6 }, "height": 2, "facesRight": true },
+  "izanami": { "file": null, "sheet": { "file": "pixel/izanami.json", "height": 3.4 }, "height": 2.6, "facesRight": true },
+  "izanamiRevelee": { "file": null, "sheet": { "file": "pixel/izanamiRevelee.json", "height": 3.4 }, "height": 2.6, "facesRight": true },
+  "pecher": { "file": null, "height": 2.6, "facesRight": true },
+  "pecherNu": { "file": null, "height": 2.6, "facesRight": true },
   "souche": { "file": "souche.png", "height": 1.6, "facesRight": true },
-  "torii": { "file": "torii.png", "height": 5.5, "facesRight": true, "decor": { "x": 12, "z": 12 } },
-  "jizo": {
-    "file": "jizo.png",
-    "height": 1.1,
-    "facesRight": true,
-    "decor": [
-      { "x": -5, "z": 10.6 },
-      { "x": -3, "z": 10.6 },
-      { "x": -1, "z": 10.6 },
-      { "x": 1, "z": 10.6 },
-      { "x": 3, "z": 10.6 },
-      { "x": 5, "z": 10.6 }
-    ]
-  }
+  "torii": { "file": "torii.png", "height": 5.5, "facesRight": true },
+  "jizo": { "file": "jizo.png", "height": 1.1, "facesRight": true },
+  "rocher": { "file": "rocher.png", "height": 5, "facesRight": true },
+  "lanterneAllumee": { "file": "decor/lanterne.png", "sheet": { "file": "anim/lanterne-allumee.json" }, "height": 1.6, "facesRight": true }
 }

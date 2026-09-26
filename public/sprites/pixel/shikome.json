@@ -1,0 +1,192 @@
+{
+  "frames": [
+    {
+      "filename": "shikome 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 280
+    },
+    {
+      "filename": "shikome 1",
+      "frame": {
+        "x": 46,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 280
+    },
+    {
+      "filename": "shikome 2",
+      "frame": {
+        "x": 92,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 100
+    },
+    {
+      "filename": "shikome 3",
+      "frame": {
+        "x": 138,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 100
+    },
+    {
+      "filename": "shikome 4",
+      "frame": {
+        "x": 184,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 100
+    },
+    {
+      "filename": "shikome 5",
+      "frame": {
+        "x": 230,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 100
+    },
+    {
+      "filename": "shikome 6",
+      "frame": {
+        "x": 276,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 250
+    },
+    {
+      "filename": "shikome 7",
+      "frame": {
+        "x": 322,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 250
+    },
+    {
+      "filename": "shikome 8",
+      "frame": {
+        "x": 368,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 60
+    },
+    {
+      "filename": "shikome 9",
+      "frame": {
+        "x": 414,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 60
+    },
+    {
+      "filename": "shikome 10",
+      "frame": {
+        "x": 460,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 80
+    },
+    {
+      "filename": "shikome 11",
+      "frame": {
+        "x": 506,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 350
+    },
+    {
+      "filename": "shikome 12",
+      "frame": {
+        "x": 552,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 300
+    },
+    {
+      "filename": "shikome 13",
+      "frame": {
+        "x": 598,
+        "y": 0,
+        "w": 46,
+        "h": 40
+      },
+      "duration": 300
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "shikome.png",
+    "size": {
+      "w": 644,
+      "h": 40
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 1,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 2,
+        "to": 5,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 6,
+        "to": 7,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "dash",
+        "from": 8,
+        "to": 9,
+        "direction": "forward"
+      },
+      {
+        "name": "strike",
+        "from": 10,
+        "to": 11,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "stunned",
+        "from": 12,
+        "to": 13,
+        "direction": "forward"
+      }
+    ]
+  }
+}

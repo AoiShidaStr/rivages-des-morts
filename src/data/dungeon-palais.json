@@ -1,0 +1,81 @@
+{
+  "name": "Palais d'Izanami : salles de combat",
+  "arenaHalfSize": 9,
+  "peachRadius": 0.7,
+  "waves": [
+    {
+      "label": "Les servantes du Yomi",
+      "hint": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Esquive sur le côté.",
+      "hints": {
+        "guerrier": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Esquive sur le côté, ou pare le bond (clic droit) : elles restent sonnées.",
+        "paladin": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Bouclier levé (clic droit), pare le bond : elles restent sonnées.",
+        "rodeur": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Recule (R) au moment où elles s'élancent."
+      },
+      "spawns": [{ "kind": "shikome", "count": 3 }]
+    },
+    {
+      "label": "Les dieux du tonnerre",
+      "hint": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Frappe-les pendant leur appel pour l'interrompre.",
+      "hints": {
+        "rodeur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Tes flèches les rattrapent même quand ils fuient.",
+        "invocateur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Envoie tes âmes sur eux (A) : ils fuient le héros, pas les âmes."
+      },
+      "spawns": [
+        { "kind": "ikazuchi", "count": 2 },
+        { "kind": "hitodama", "count": 3 }
+      ]
+    },
+    {
+      "label": "L'armée du Yomi",
+      "hint": "Leur lance porte loin, mais droit devant eux, et s'annonce longtemps. Mets-toi sur le côté, puis frappe.",
+      "spawns": [
+        { "kind": "ikusa", "count": 2 },
+        { "kind": "shikome", "count": 2 }
+      ]
+    },
+    {
+      "label": "La meute",
+      "hint": "Elles arrivent de tous les côtés à la fois. Garde-les devant toi, et ne reste pas sous l'orage.",
+      "spawns": [
+        { "kind": "shikome", "count": 5 },
+        { "kind": "ikazuchi", "count": 1 }
+      ]
+    },
+    {
+      "label": "Le capitaine",
+      "hint": "Un champion de l'armée du Yomi, plus grand et plus robuste que les autres. Sa lance porte encore plus loin.",
+      "spawns": [
+        { "kind": "ikusa", "count": 1, "elite": true },
+        { "kind": "ikusa", "count": 1 },
+        { "kind": "oublie", "count": 2 }
+      ]
+    },
+    {
+      "label": "La tempête",
+      "hint": "Tout le Yomi se lève. Abats les ikazuchi en premier.",
+      "spawns": [
+        { "kind": "ikazuchi", "count": 2 },
+        { "kind": "ikusa", "count": 2 },
+        { "kind": "shikome", "count": 2 },
+        { "kind": "oublie", "count": 2 }
+      ]
+    },
+    {
+      "label": "Izanami",
+      "hint": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Vise à côté d'elle : le bord de ton coup la touchera quand même.",
+      "hints": {
+        "rodeur": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Tu dois viser pour tirer : tire par courtes salves, puis détourne les yeux.",
+        "invocateur": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Tes âmes, elles, peuvent la regarder : laisse-les frapper et vise ailleurs.",
+        "lame": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Frappe-la de côté, puis esquive : tes coups s'annulent à tout moment.",
+        "guerrier": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Vise à côté d'elle : le bord de ton arc la touchera. Un estoc, lui, oblige à la regarder : frappe vite, puis détourne les yeux.",
+        "paladin": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Ta naginata frappe large : vise à côté d'elle. Parer oblige à lui faire face : pare peu."
+      },
+      "spawns": [{ "kind": "izanami", "count": 1 }],
+      "peaches": [
+        { "x": -5.5, "z": 2.5 },
+        { "x": 5.5, "z": 2.5 },
+        { "x": 0, "z": -6 }
+      ]
+    }
+  ]
+}

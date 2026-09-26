@@ -1,7 +1,23 @@
 import type { GameConfig, HazardConfig } from './config';
 import type { CurseId } from './difficulty';
-import { Hitodama, Jorogumo, Kappa, KasaObake, Kodama, Oublie, type Enemy } from './enemies';
-import { add, angleOf, degToRad, distance, fromAngle, inCone, length, normalize, rotateTowards, scale, sub, vec, type Vec2 } from './math';
+import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Oublie, Shikome, type Enemy } from './enemies';
+import {
+  add,
+  angleOf,
+  degToRad,
+  distance,
+  distanceToSegment,
+  dot,
+  fromAngle,
+  inCone,
+  length,
+  normalize,
+  rotateTowards,
+  scale,
+  sub,
+  vec,
+  type Vec2,
+} from './math';
 import { Player } from './player';
 import { Summon, type Soul } from './summons';
 import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome } from './types';
@@ -40,6 +56,17 @@ interface Body {
 export interface Stump {
   pos: Vec2;
   radius: number;
+}
+
+/**
+ * Pêcher d'Izanagi (arène d'Izanami) : un obstacle. Un coup fait tomber sa pêche, qui file repousser
+ * Izanami ; il refleurit ensuite (`regrow` : secondes avant la prochaine pêche).
+ */
+export interface PeachTree {
+  pos: Vec2;
+  radius: number;
+  ripe: boolean;
+  regrow: number;
 }
 
 /** Toile au sol : ralentit le joueur ; un feu follet frappé à côté l'enflamme. */
@@ -139,6 +166,7 @@ export class World {
   /** Paladin : secondes d'Aura de lumière restantes. */
   aura = 0;
   stumps: Stump[] = [];
+  peaches: PeachTree[] = [];
   webs: Web[] = [];
   state: 'playing' | Outcome = 'playing';
   time = 0;
@@ -238,6 +266,7 @@ export class World {
     this.updateHazards(dt);
     this.updateWebs(dt);
     this.updateSnares(dt);
+    this.updatePeaches(dt);
     this.separate();
     this.clearBossMinions();
     const fallen = this.enemies.filter((e) => e.dead);
@@ -254,23 +283,30 @@ export class World {
   }
 
   /**
-   * Coup d'arme : touche une seule fois chaque ennemi à portée, dans l'arc visé (`attack.arcDeg`).
-   * À 360°, le coup balaie tout autour du héros : le sprite ne se tourne que vers la gauche ou la droite,
-   * un arc étroit vers le haut ou le bas de l'écran ne correspondait pas à ce que l'on voit.
+   * Coup d'arme : touche une seule fois chaque ennemi dans la forme de l'arme, tournée vers la souris :
+   * un arc de `attack.arcDeg` degrés (360 : tout autour du héros), ou un estoc (`line`), couloir droit
+   * de `attack.width` de large. Un repère au sol montre cette forme avant le coup.
    * `crit` : multiplicateur de critique du coup (Lame).
    */
   strike(origin: Vec2, dir: Vec2, alreadyHit: Set<number>, crit = 1): void {
     const attack = this.cfg.player.attack;
     // `enemies` peut contenir des morts du pas en cours : `targetable` les écarte.
-    const fullCircle = attack.arcDeg >= 360;
+    const thrust = attack.shape === 'line';
+    const fullCircle = !thrust && attack.arcDeg >= 360;
     const halfArc = degToRad(attack.arcDeg / 2);
+    const tip = add(origin, scale(dir, attack.range));
+    this.shakePeaches(thrust ? add(origin, scale(dir, attack.range / 2)) : origin, thrust ? attack.range / 2 : attack.range);
     for (const enemy of this.enemies) {
       if (!enemy.targetable || alreadyHit.has(enemy.id)) continue;
       const toEnemy = sub(enemy.pos, origin);
       const dist = length(toEnemy);
-      if (dist - enemy.radius > attack.range) continue;
-      // Un ennemi collé au joueur est touché même s'il déborde de l'arc.
-      if (!fullCircle && dist > enemy.radius + 0.2 && !inCone(dir, normalize(toEnemy), halfArc)) continue;
+      if (thrust) {
+        if (dot(toEnemy, dir) < -enemy.radius || distanceToSegment(enemy.pos, origin, tip) > enemy.radius + (attack.width ?? 0.8) / 2) continue;
+      } else {
+        if (dist - enemy.radius > attack.range) continue;
+        // Un ennemi collé au joueur est touché même s'il déborde de l'arc.
+        if (!fullCircle && dist > enemy.radius + 0.2 && !inCone(dir, normalize(toEnemy), halfArc)) continue;
+      }
       alreadyHit.add(enemy.id);
       const shielded = this.weaponHit(enemy, attack.damage, origin, attack.knockback, crit);
       if (shielded) this.player.knockback = scale(dir, -4);
@@ -318,6 +354,7 @@ export class World {
   smash(center: Vec2): void {
     const smash = this.cfg.player.smash;
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
+    this.shakePeaches(center, smash.radius);
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
       enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback: smash.knockback, ignoreShell: true }, this);
@@ -331,6 +368,7 @@ export class World {
   bondLand(center: Vec2): void {
     const bond = this.cfg.player.bond;
     this.emit({ type: 'bondLand', pos: { ...center }, radius: bond.radius });
+    this.shakePeaches(center, bond.radius);
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > bond.radius) continue;
       enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback }, this);
@@ -788,6 +826,7 @@ export class World {
         p.hit.add(enemy.id);
         if (!this.projectileHit(p, enemy)) return false;
       }
+      if (p.kind !== 'net' && this.shakePeaches(p.pos, p.radius) && p.kind === 'arrow') return false;
       const out = this.clampToArena(p.pos, 0);
       if (p.kind === 'hammer') {
         if (!p.returning && (p.range <= 0 || out)) {
@@ -911,9 +950,41 @@ export class World {
     return inWeb ? this.cfg.webs.slowFactor : 1;
   }
 
-  /** Souche qui gêne le passage d'un corps de rayon `radius` placé en `pos`. */
+  /** Souche (ou pêcher) qui gêne le passage d'un corps de rayon `radius` placé en `pos`. */
   insideStump(pos: Vec2, radius: number): Stump | undefined {
-    return this.stumps.find((s) => distance(s.pos, pos) < s.radius + radius);
+    return this.stumps.find((s) => distance(s.pos, pos) < s.radius + radius) ?? this.peachAt(pos, radius);
+  }
+
+  /** Pêcher qui gêne le passage d'un corps de rayon `radius` placé en `pos`. */
+  peachAt(pos: Vec2, radius: number): PeachTree | undefined {
+    return this.peaches.find((p) => distance(p.pos, pos) < p.radius + radius);
+  }
+
+  /**
+   * Un coup atteint les pêchers à `reach` de `center` : chaque pêcher mûr lâche sa pêche, qui file repousser
+   * Izanami (la faiblesse du mythe). Renvoie vrai si un pêcher a été touché.
+   */
+  private shakePeaches(center: Vec2, reach: number): boolean {
+    let touched = false;
+    for (const tree of this.peaches) {
+      if (distance(tree.pos, center) > reach + tree.radius) continue;
+      touched = true;
+      if (!tree.ripe) continue;
+      tree.ripe = false;
+      tree.regrow = this.cfg.enemies.izanami.peach.regrow;
+      const izanami = this.enemies.find((e): e is Izanami => e instanceof Izanami && e.active);
+      this.emit({ type: 'peach', from: { ...tree.pos }, to: izanami ? { ...izanami.pos } : { ...tree.pos } });
+      izanami?.repel(this);
+    }
+    return touched;
+  }
+
+  private updatePeaches(dt: number): void {
+    for (const tree of this.peaches) {
+      if (tree.ripe) continue;
+      tree.regrow -= dt;
+      if (tree.regrow <= 0) tree.ripe = true;
+    }
   }
 
   /** Garde `pos` dans l'arène ; renvoie vrai si la position a été corrigée. */
@@ -946,10 +1017,10 @@ export class World {
         if (enemy.solid) pushApart(this.player, enemy);
       }
     }
-    for (const stump of this.stumps) {
+    for (const stump of [...this.stumps, ...this.peaches]) {
       pushOut(this.player, stump);
       for (const enemy of bodies) {
-        if (enemy.kind !== 'hitodama') pushOut(enemy, stump);
+        if (enemy.kind !== 'hitodama' && enemy.kind !== 'ikazuchi') pushOut(enemy, stump);
       }
       for (const summon of this.summons) pushOut(summon, stump);
     }
@@ -960,7 +1031,8 @@ export class World {
       h.t += dt;
       if (h.t < h.cfg.warning) return true;
       this.emit({ type: 'land', id: h.id, pos: h.pos, radius: h.cfg.radius });
-      // Les chutes viennent toutes de la Jorōgumo : elles suivent sa puissance, et frappent aussi les âmes.
+      if (h.cfg.fx === 'lightning') this.emit({ type: 'lightning', pos: { ...h.pos } });
+      // Les chutes viennent des boss et de leurs serviteurs : elles suivent leur puissance, et frappent aussi les âmes.
       for (const foe of this.foes()) {
         const offset = sub(foe.pos, h.pos);
         if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this);
@@ -1034,9 +1106,14 @@ export class World {
     this.waveTimer = WAVE_PAUSE;
     const wave = waves[this.waveIndex];
     this.stumps = (wave.stumps ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
+    this.peaches = (wave.peaches ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.peachRadius, ripe: true, regrow: 0 }));
     this.webs = [];
     for (const spawn of wave.spawns) {
-      for (let i = 0; i < spawn.count; i++) this.enemies.push(this.createEnemy(spawn.kind, this.spawnPoint()));
+      for (let i = 0; i < spawn.count; i++) {
+        const enemy = this.createEnemy(spawn.kind, this.spawnPoint());
+        if (spawn.elite) enemy.makeElite(this.cfg.champion);
+        this.enemies.push(enemy);
+      }
     }
     // « Âmes d'élite » : les yokai les plus robustes de la vague (jamais le boss) deviennent des élites.
     const elites = this.curse('elites');
@@ -1106,6 +1183,14 @@ export class World {
         return new Oublie(id, pos, cfg.araignee, 'araignee');
       case 'jorogumo':
         return new Jorogumo(id, pos, cfg.jorogumo);
+      case 'shikome':
+        return new Shikome(id, pos, cfg.shikome);
+      case 'ikazuchi':
+        return new Ikazuchi(id, pos, cfg.ikazuchi);
+      case 'ikusa':
+        return new Oublie(id, pos, cfg.ikusa, 'ikusa');
+      case 'izanami':
+        return new Izanami(id, pos, cfg.izanami);
     }
   }
 

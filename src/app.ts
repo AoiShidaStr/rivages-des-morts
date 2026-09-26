@@ -1,5 +1,5 @@
 import type { Engine } from '@babylonjs/core';
-import { content, portraitUrl, type Line } from './content';
+import { content, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
@@ -50,9 +50,6 @@ interface Loot {
 }
 
 const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], duplicates: [], waves: 0 });
-/** Expérience de la victoire sur la Jorōgumo, la première fois. */
-const BOSS_QUEST_XP = 120;
-
 export interface AppDeps {
   engine: Engine;
   input: Input;
@@ -67,6 +64,8 @@ export interface AppDeps {
   devWave: number | null;
   /** `?niveau=N` : niveau du donjon pour `?vague` (tests). */
   devLevel: number | null;
+  /** `?donjon=palais` : donjon de `?vague` (tests). */
+  devDungeon: string;
 }
 
 const randInt = ([min, max]: [number, number]) => min + Math.floor(Math.random() * (max - min + 1));
@@ -86,7 +85,8 @@ export class App {
   private run: Loot = emptyLoot();
   /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
   private endShop: RolledOffer[] = [];
-  /** Niveau du donjon en cours (choisi à l'entrée). */
+  /** Donjon en cours, et son niveau (choisi à l'entrée). */
+  private dungeon: DungeonDef = content.dungeons.rizieres;
   private dungeonLevel = 1;
   private outcome: Outcome | null = null;
   private readonly dialogue: DialogueBox;
@@ -109,7 +109,7 @@ export class App {
   }
 
   start(): void {
-    if (this.d.devWave !== null) void this.enterDungeon(this.d.devWave, false, this.d.devLevel ?? 1);
+    if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
     this.d.engine.runRenderLoop(() => this.frame());
   }
@@ -132,6 +132,9 @@ export class App {
       },
       get renderer() {
         return app.d.dungeonRenderer;
+      },
+      get islandRenderer() {
+        return app.d.islandRenderer;
       },
       /** Fait avancer le jeu sans attendre l'écran (onglet masqué, tests automatisés). */
       advance(seconds: number) {
@@ -283,7 +286,7 @@ export class App {
       xp: levelProgress(content.skills, progress.state.xp),
       points: progress.skillPoints,
       quest: trackedQuest(progress),
-      prompt: target ? { verb: target.def.verb ?? 'Parler à', name: target.name } : null,
+      prompt: target ? { verb: target.verb ?? 'Parler à', name: target.name } : null,
     });
   }
 
@@ -350,10 +353,12 @@ export class App {
         case 'chests':
           this.openChests();
           break;
-        case 'dungeon':
+        case 'dungeon': {
           // Le joueur choisit le niveau du donjon avant d'y entrer.
-          openDungeonEntry(this.panels, this.ui, (level) => void this.descend(level));
+          const id = action.id;
+          openDungeonEntry(this.panels, this.ui, content.dungeons[id], (level) => void this.descend(id, level));
           break;
+        }
       }
     }
   }
@@ -384,25 +389,28 @@ export class App {
   // --- Donjon -----------------------------------------------------------------------
 
   /** Descente depuis l'île, au niveau choisi à l'entrée. */
-  private async descend(level: number): Promise<void> {
+  private async descend(id: string, level: number): Promise<void> {
     if (this.busy) return;
     this.busy = true;
-    await this.enterDungeon(0, true, level);
+    await this.enterDungeon(id, 0, true, level);
     this.busy = false;
   }
 
-  private async enterDungeon(startWave: number, withTransition: boolean, level: number): Promise<void> {
+  private async enterDungeon(id: string, startWave: number, withTransition: boolean, level: number): Promise<void> {
     const { config, dungeonRenderer, hud, islandRenderer } = this.d;
     const player = this.loadout().config;
+    const dungeon = content.dungeons[id] ?? content.dungeons.rizieres;
+    this.dungeon = dungeon;
     this.dungeonLevel = clampLevel(content.difficulty, level);
     const difficulty = difficultyFor(content.difficulty, this.dungeonLevel);
     const begin = () => {
       this.screens.hideResult();
       this.panels.close();
-      this.world = new World({ ...config, player, difficulty }, startWave);
+      this.world = new World({ ...config, ...dungeon.arena, player, difficulty }, startWave);
       dungeonRenderer.reset();
       dungeonRenderer.setHero(heroSprite(this.d.progress.state.hero));
-      hud.reset(this.dungeonLevel);
+      dungeonRenderer.setStyle(dungeon.style);
+      hud.reset(this.dungeonLevel, dungeon.boss);
       hud.configure(heroClass(content.skills, this.d.progress.state.hero));
       this.run = emptyLoot();
       this.outcome = null;
@@ -410,7 +418,7 @@ export class App {
       islandRenderer.hideMarkers();
       this.setMode('dungeon');
     };
-    if (withTransition) await this.screens.transition('Rizières noyées', `Donjon du Yomi · niveau ${this.dungeonLevel}`, begin);
+    if (withTransition) await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${this.dungeonLevel}`, begin);
     else begin();
   }
 
@@ -511,17 +519,18 @@ export class App {
     progress.state.chests += chests;
     const actions: Action[] = progress.gainXp(xp);
     let unlocked: number | undefined;
+    const dungeon = this.dungeon;
     if (victory) {
-      const firstWin = progress.quest('dame') !== 'done';
-      actions.push(...progress.apply([{ completeQuest: 'dame' }, { set: 'jorogumo_vaincue' }, ...(firstWin ? [{ xp: BOSS_QUEST_XP }] : [])]));
-      if (progress.winDungeon(this.dungeonLevel, unlockAfter(content.difficulty, this.dungeonLevel))) unlocked = progress.state.dungeon.unlocked;
-      this.endShop = this.rollEndShop();
+      const firstWin = progress.check(dungeon.firstVictory.if);
+      actions.push(...progress.apply([...dungeon.onVictory, ...(firstWin ? dungeon.firstVictory.then : [])]));
+      if (progress.winDungeon(dungeon.id, this.dungeonLevel, unlockAfter(content.difficulty, this.dungeonLevel))) unlocked = progress.dungeon(dungeon.id).unlocked;
+      this.endShop = this.rollEndShop(dungeon.shop);
     }
     progress.save();
 
     const options: MenuOption[] = victory
       ? [
-          { label: 'Boutique de fin', action: () => openShop(this.panels, this.ui, 'fin', this.endShop) },
+          { label: 'Boutique de fin', action: () => openShop(this.panels, this.ui, dungeon.shop, this.endShop) },
           { label: 'Retourner sur l’île', primary: true, action: () => void this.returnToIsland() },
         ]
       : [
@@ -531,6 +540,8 @@ export class App {
     this.screens.showResult(
       victory,
       {
+        place: dungeon.name,
+        victory: dungeon.victory,
         level: this.dungeonLevel,
         unlocked,
         oboles,
@@ -563,8 +574,8 @@ export class App {
    * Boutique de fin (GDD, comme dans Waven) : tirée au hasard à chaque victoire parmi les objets et
    * ressources du donjon. Jamais un objet déjà possédé ; les lots de matériaux complètent l'offre.
    */
-  private rollEndShop(): RolledOffer[] {
-    const shop = content.shops.fin;
+  private rollEndShop(shopId: string): RolledOffer[] {
+    const shop = content.shops[shopId];
     const { progress } = this.d;
     const eligible = (shop?.pool ?? []).filter((e) => progress.check(e.if) && !(e.item && progress.has(e.item)));
     const limits = shop?.offers ?? { items: 2, total: 4 };
@@ -576,7 +587,7 @@ export class App {
   private async retry(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
-    await this.enterDungeon(0, true, this.dungeonLevel);
+    await this.enterDungeon(this.dungeon.id, 0, true, this.dungeonLevel);
     this.busy = false;
   }
 
@@ -589,7 +600,7 @@ export class App {
       this.screens.hidePause();
       this.panels.close();
       this.world = null;
-      island.placeAt(content.island.dungeonExit);
+      island.placeAt(this.dungeon.exit ?? content.island.dungeonExit);
       islandRenderer.setHero(heroSprite(progress.state.hero));
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');

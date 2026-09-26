@@ -1,12 +1,15 @@
 import type {
   EnemyBaseConfig,
   HitodamaConfig,
+  IkazuchiConfig,
+  IzanamiConfig,
   JorogumoConfig,
   KappaConfig,
   KasaObakeConfig,
   KodamaConfig,
   MeleeConfig,
   OublieConfig,
+  ShikomeConfig,
 } from './config';
 import {
   add,
@@ -731,7 +734,8 @@ type OublieState =
 
 /**
  * Âme oubliée au masque blanc : ennemi de mêlée ordinaire, qui marque une pause avant de frapper.
- * Les petites araignées de la Jorōgumo suivent la même logique, en plus rapides et plus fragiles.
+ * Les petites araignées de la Jorōgumo suivent la même logique, en plus rapides et plus fragiles ;
+ * les guerriers du Yomi aussi, avec une longue lance qui porte loin dans un angle étroit.
  */
 export class Oublie extends Enemy {
   private state: OublieState = { kind: 'chase' };
@@ -741,7 +745,7 @@ export class Oublie extends Enemy {
     id: number,
     pos: Vec2,
     private readonly cfg: OublieConfig,
-    readonly kind: 'oublie' | 'araignee' = 'oublie',
+    readonly kind: 'oublie' | 'araignee' | 'ikusa' = 'oublie',
   ) {
     super(id, pos, cfg);
   }
@@ -1241,5 +1245,603 @@ export class Jorogumo extends Enemy {
     world.emit({ type: 'bite', pos: { ...this.pos } });
     this.strikeAround(this.pos, cfg.biteRange + this.radius, cfg.biteDamage, cfg.biteKnockback, world);
     this.state = { kind: 'grounded', t: cfg.groundedAfterBite };
+  }
+}
+
+// --- Palais d'Izanami -------------------------------------------------------------
+
+type ShikomeState =
+  | { kind: 'chase' }
+  | { kind: 'crouch'; t: number; dir: Vec2 }
+  | { kind: 'lunge'; dir: Vec2; traveled: number }
+  | { kind: 'recover'; t: number }
+  | { kind: 'stunned'; t: number };
+
+/**
+ * Yomotsu-shikome, les furies qu'Izanami lança aux trousses d'Izanagi : rapides, elles encerclent
+ * leur proie, se ramassent sur elles-mêmes (le trait rouge au sol), puis bondissent. Esquiver sur le côté,
+ * ou parer le bond, qui les laisse sonnées.
+ */
+export class Shikome extends Enemy {
+  readonly kind = 'shikome' as const;
+  private state: ShikomeState = { kind: 'chase' };
+  private cooldown = 0.6 + Math.random() * 0.9;
+  /** Côté par lequel elle contourne sa proie : les furies arrivent de plusieurs côtés à la fois. */
+  private readonly flank = Math.random() < 0.5 ? -1 : 1;
+
+  constructor(
+    id: number,
+    pos: Vec2,
+    private readonly cfg: ShikomeConfig,
+  ) {
+    super(id, pos, cfg);
+  }
+
+  get pose(): Pose {
+    switch (this.state.kind) {
+      case 'chase':
+        return 'move';
+      case 'crouch':
+        return 'windup';
+      case 'lunge':
+        return 'dash';
+      case 'recover':
+        return this.state.t > this.cfg.recover - 0.15 ? 'strike' : 'idle';
+      case 'stunned':
+        return 'stunned';
+    }
+  }
+
+  get solid(): boolean {
+    return this.state.kind !== 'lunge';
+  }
+
+  stun(duration: number, reason: StunReason, world: World): void {
+    if (this.state.kind === 'crouch' || this.state.kind === 'lunge') world.emit({ type: 'chargeEnd', id: this.id });
+    this.state = { kind: 'stunned', t: duration };
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  protected think(dt: number, world: World): void {
+    const cfg = this.cfg;
+    const foe = this.foe(world);
+    const toFoe = sub(foe.pos, this.pos);
+    const dist = length(toFoe);
+    const toward = normalize(toFoe, this.facing);
+    this.cooldown = Math.max(0, this.cooldown - dt);
+
+    const state = this.state;
+    switch (state.kind) {
+      case 'chase': {
+        this.facing = toward;
+        // De loin, elle arrive en biais ; de près, droit sur sa proie.
+        const side = vec(-toward.z * this.flank, toward.x * this.flank);
+        const curve = Math.min(0.8, Math.max(0, (dist - cfg.lungeRange) / 4));
+        const gap = dist - this.radius - foe.radius;
+        if (gap > 0.2) this.pos = add(this.pos, scale(normalize(add(toward, scale(side, curve))), cfg.speed * dt));
+        if (this.cooldown <= 0 && dist <= cfg.lungeRange) {
+          this.state = { kind: 'crouch', t: 0, dir: toward };
+          world.emit({ type: 'telegraph', id: this.id, from: { ...this.pos }, dir: toward, length: cfg.lungeDistance, width: this.radius * 2, duration: cfg.crouch });
+        }
+        break;
+      }
+      case 'crouch':
+        state.t += dt;
+        this.facing = state.dir;
+        if (state.t >= cfg.crouch) this.state = { kind: 'lunge', dir: state.dir, traveled: 0 };
+        break;
+      case 'lunge':
+        this.lunge(state, dt, world);
+        break;
+      case 'recover':
+      case 'stunned':
+        state.t -= dt;
+        if (state.t <= 0) {
+          this.cooldown = cfg.cooldown * (0.8 + Math.random() * 0.4);
+          this.state = { kind: 'chase' };
+        }
+        break;
+    }
+  }
+
+  private lunge(state: Extract<ShikomeState, { kind: 'lunge' }>, dt: number, world: World): void {
+    const cfg = this.cfg;
+    const step = cfg.lungeSpeed * dt;
+    this.pos = add(this.pos, scale(state.dir, step));
+    state.traveled += step;
+    const foe = this.bump(world);
+    if (foe) {
+      if (foe.isGuarding(this.pos)) {
+        foe.guard(world, this);
+        world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });
+        this.knockback = scale(state.dir, -6);
+        this.stun(cfg.parryStun, 'parry', world);
+        return;
+      }
+      if (this.hitFoe(foe, cfg.lungeDamage, state.dir, cfg.lungeKnockback, world)) {
+        this.endLunge(world);
+        return;
+      }
+    }
+    if (world.clampToArena(this.pos, this.radius) || state.traveled >= cfg.lungeDistance) this.endLunge(world);
+  }
+
+  private endLunge(world: World): void {
+    world.emit({ type: 'chargeEnd', id: this.id });
+    this.state = { kind: 'recover', t: this.cfg.recover };
+  }
+}
+
+type IkazuchiState = { kind: 'drift' } | { kind: 'channel'; t: number } | { kind: 'stunned'; t: number };
+
+/**
+ * Ikazuchi, l'un des huit dieux du tonnerre nés du corps d'Izanami : il flotte à distance, appelle la foudre
+ * là où se tient sa cible, et disparaît dans un éclair quand on l'approche. Un coup interrompt son appel.
+ */
+export class Ikazuchi extends Enemy {
+  readonly kind = 'ikazuchi' as const;
+  private state: IkazuchiState = { kind: 'drift' };
+  private boltTimer: number;
+  private blinkTimer = 0;
+  private readonly orbit = Math.random() < 0.5 ? -1 : 1;
+
+  constructor(
+    id: number,
+    pos: Vec2,
+    private readonly cfg: IkazuchiConfig,
+  ) {
+    super(id, pos, cfg);
+    this.boltTimer = cfg.boltInterval * (0.4 + Math.random() * 0.5);
+  }
+
+  get pose(): Pose {
+    switch (this.state.kind) {
+      case 'drift':
+        return 'move';
+      case 'channel':
+        return 'channel';
+      case 'stunned':
+        return 'stunned';
+    }
+  }
+
+  get solid(): boolean {
+    return false;
+  }
+
+  stun(duration: number, reason: StunReason, world: World): void {
+    this.state = { kind: 'stunned', t: duration };
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  protected onHurt(): void {
+    if (this.state.kind !== 'channel') return;
+    this.state = { kind: 'drift' };
+    this.boltTimer = this.cfg.boltInterval / 2;
+  }
+
+  protected think(dt: number, world: World): void {
+    const cfg = this.cfg;
+    const foe = this.foe(world);
+    const toFoe = sub(foe.pos, this.pos);
+    const dist = length(toFoe);
+    this.facing = normalize(toFoe, this.facing);
+    this.blinkTimer = Math.max(0, this.blinkTimer - dt);
+
+    const state = this.state;
+    switch (state.kind) {
+      case 'stunned':
+        state.t -= dt;
+        if (state.t <= 0) this.state = { kind: 'drift' };
+        return;
+      case 'channel':
+        state.t += dt;
+        if (state.t < cfg.boltChannel) return;
+        world.dropHazard(foe.pos, cfg.bolt, false);
+        this.state = { kind: 'drift' };
+        this.boltTimer = cfg.boltInterval * (0.85 + Math.random() * 0.3);
+        return;
+      case 'drift': {
+        // Trop près : il disparaît dans un éclair et reparaît au bord de l'arène.
+        if (dist < cfg.fleeDistance && this.blinkTimer <= 0) {
+          world.emit({ type: 'lightning', pos: { ...this.pos } });
+          this.pos = world.edgePoint();
+          world.emit({ type: 'lightning', pos: { ...this.pos } });
+          this.blinkTimer = cfg.blinkCooldown;
+          return;
+        }
+        this.boltTimer -= dt;
+        if (this.boltTimer <= 0 && dist <= cfg.keepDistance * 2) {
+          this.state = { kind: 'channel', t: 0 };
+          return;
+        }
+        // Il tourne autour de sa cible, à bonne distance.
+        const away = scale(this.facing, -1);
+        const around = vec(-this.facing.z * this.orbit, this.facing.x * this.orbit);
+        const radial = dist < cfg.keepDistance - 0.5 ? away : dist > cfg.keepDistance + 0.5 ? this.facing : vec();
+        const move = add(radial, scale(around, 0.6));
+        if (length(move) > 0.01) this.pos = add(this.pos, scale(normalize(move), cfg.speed * dt));
+      }
+    }
+  }
+}
+
+type IzanamiState =
+  | { kind: 'walk' }
+  | { kind: 'melee'; t: number; dir: Vec2 }
+  | { kind: 'meleeRecover'; t: number }
+  | { kind: 'summon'; t: number }
+  | { kind: 'transform'; t: number }
+  | { kind: 'wrath'; t: number }
+  | { kind: 'telegraph'; t: number; dir: Vec2 }
+  | { kind: 'lunge'; dir: Vec2; traveled: number }
+  | { kind: 'recover'; t: number }
+  | { kind: 'stunned'; t: number; repelled: boolean };
+
+const IZANAMI_PHASES = [
+  { label: 'La dame voilée', hint: 'Ne la regarde pas : vise à côté d’elle, le bord de ton coup la touchera quand même.' },
+  { label: 'Son vrai visage', hint: 'Les huit dieux du tonnerre s’éveillent sur son corps. Sors des cercles, et ne la regarde toujours pas.' },
+  {
+    label: 'La poursuite',
+    hint: 'Elle ne craint plus tes coups. Izanagi, lui, n’a pas fui les mains vides : trois pêches repoussèrent la mort…',
+  },
+];
+
+/**
+ * Izanami, boss du Palais, en trois phases :
+ * 1. voilée : étreinte, et des shikome à ses côtés ;
+ * 2. révélée : les huit dieux du tonnerre sur son corps, la foudre tombe, elle disparaît et reparaît ;
+ * 3. poursuite : elle traque le héros et bondit sur lui ; elle ne craint plus les coups, sauf les pêches.
+ * Tout le combat : la regarder (viser vers elle) la renforce, et la jauge pleine déchaîne sa colère.
+ * Sa faiblesse, celle du mythe : une pêche tombée d'un pêcher de l'arène la repousse et l'expose.
+ */
+export class Izanami extends Enemy {
+  readonly kind = 'izanami' as const;
+  phase = 1;
+  /** Jauge du regard, de 0 à 1 : le HUD l'affiche, les dégâts reçus baissent quand elle monte. */
+  gaze = 0;
+  /** Vrai tant que le héros la regarde : le HUD le signale. */
+  watched = false;
+  private state: IzanamiState = { kind: 'walk' };
+  private meleeCooldown = 1;
+  private summonTimer: number;
+  private boltTimer = 2;
+  private blinkTimer: number;
+  private ikazuchiTimer = 3;
+  private lungeCooldown = 1.5;
+
+  constructor(
+    id: number,
+    pos: Vec2,
+    private readonly cfg: IzanamiConfig,
+  ) {
+    super(id, pos, cfg);
+    this.summonTimer = cfg.veiled.summonInterval * 0.5;
+    this.blinkTimer = cfg.revealed.blinkInterval;
+  }
+
+  get boss(): boolean {
+    return true;
+  }
+
+  get sprite(): string {
+    return this.phase === 1 ? 'izanami' : 'izanamiRevelee';
+  }
+
+  get solid(): boolean {
+    return this.state.kind !== 'lunge';
+  }
+
+  get targetable(): boolean {
+    return super.targetable && this.state.kind !== 'transform';
+  }
+
+  /** Stupeur d'une pêche : c'est le moment de frapper. */
+  get repelled(): boolean {
+    return this.state.kind === 'stunned' && this.state.repelled;
+  }
+
+  get pose(): Pose {
+    const state = this.state;
+    switch (state.kind) {
+      case 'walk':
+        return 'move';
+      case 'melee':
+      case 'telegraph':
+      case 'wrath':
+        return 'windup';
+      case 'meleeRecover':
+        return state.t > this.meleeCfg.recover - 0.15 ? 'strike' : 'idle';
+      case 'summon':
+      case 'transform':
+        return 'channel';
+      case 'lunge':
+        return 'dash';
+      case 'stunned':
+        return 'stunned';
+      case 'recover':
+        return 'idle';
+    }
+  }
+
+  stun(duration: number, reason: StunReason, world: World): void {
+    const s = this.state.kind;
+    if (s === 'transform' || (s === 'stunned' && reason !== 'peach')) return;
+    if (s === 'telegraph' || s === 'lunge') world.emit({ type: 'chargeEnd', id: this.id });
+    // La colère interrompue : son cercle d'annonce disparaît.
+    if (s === 'wrath') world.emit({ type: 'land', id: this.id, pos: { ...this.pos }, radius: 0 });
+    const repelled = reason === 'peach';
+    // Un boss se remet vite des coups ; la pêche, elle, la laisse longtemps sans défense.
+    this.state = { kind: 'stunned', t: repelled ? duration : reason === 'smash' ? duration / 2 : duration * 0.6, repelled };
+    if (repelled) this.gaze = 0;
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  /** Une pêche d'Izanagi l'atteint. */
+  repel(world: World): void {
+    this.stun(this.cfg.peach.stun, 'peach', world);
+  }
+
+  protected get damageFactor(): number {
+    if (this.repelled) return this.cfg.peach.damageFactor;
+    // « La regarder la renforce » : sous le regard, elle encaisse de mieux en mieux.
+    const watched = 1 - this.cfg.gaze.guard * this.gaze;
+    return this.phase === 3 ? this.cfg.pursuit.damageFactor * watched : watched;
+  }
+
+  protected get hpFloor(): number {
+    // Chaque phase se joue : on ne saute pas la poursuite, où se cache sa faiblesse.
+    if (this.phase === 1) return this.maxHp * this.cfg.pursuitAt + 1;
+    if (this.phase === 2) return 1;
+    return 0;
+  }
+
+  private get meleeCfg(): MeleeConfig {
+    return this.phase === 1 ? this.cfg.veiled.embrace : this.cfg.revealed.grasp;
+  }
+
+  protected think(dt: number, world: World): void {
+    this.meleeCooldown = Math.max(0, this.meleeCooldown - dt);
+    this.lungeCooldown = Math.max(0, this.lungeCooldown - dt);
+    this.updateGaze(dt, world);
+    if (this.checkPhase(world)) return;
+    if (this.phase >= 2 && this.state.kind !== 'transform') this.thunder(dt, world);
+
+    const state = this.state;
+    // Jauge pleine : sa colère éclate dès qu'elle a les mains libres (en marche, ou juste après un coup).
+    if (this.gaze >= 1 && (state.kind === 'walk' || state.kind === 'meleeRecover' || state.kind === 'recover')) {
+      this.startWrath(world);
+      return;
+    }
+    switch (state.kind) {
+      case 'walk':
+        if (this.phase === 1) this.walkVeiled(dt, world);
+        else if (this.phase === 2) this.walkRevealed(dt, world);
+        else this.walkPursuit(dt, world);
+        break;
+      case 'melee':
+        state.t += dt;
+        if (state.t < this.meleeCfg.windup) break;
+        this.swing(state.dir, world);
+        this.state = { kind: 'meleeRecover', t: this.meleeCfg.recover };
+        this.meleeCooldown = this.meleeCfg.cooldown;
+        break;
+      case 'summon':
+        state.t += dt;
+        if (state.t < this.cfg.veiled.summonChannel) break;
+        this.summon('shikome', this.cfg.veiled.summonCount, this.cfg.veiled.maxShikome, world);
+        this.state = { kind: 'walk' };
+        break;
+      case 'transform':
+        state.t += dt;
+        if (state.t >= this.cfg.transformTime) this.state = { kind: 'walk' };
+        break;
+      case 'wrath':
+        state.t += dt;
+        if (state.t < this.cfg.gaze.wrath.warning) break;
+        this.unleashWrath(world);
+        break;
+      case 'telegraph':
+        state.t += dt;
+        this.facing = state.dir;
+        if (state.t >= this.cfg.pursuit.telegraph) this.state = { kind: 'lunge', dir: state.dir, traveled: 0 };
+        break;
+      case 'lunge':
+        this.lunge(state, dt, world);
+        break;
+      case 'meleeRecover':
+      case 'recover':
+      case 'stunned':
+        state.t -= dt;
+        if (state.t <= 0) this.state = { kind: 'walk' };
+        break;
+    }
+  }
+
+  /** Le héros la regarde s'il vise vers elle (dans le cône `coneDeg`), d'assez près. */
+  private updateGaze(dt: number, world: World): void {
+    const cfg = this.cfg.gaze;
+    const player = world.player;
+    const toHer = sub(this.pos, player.pos);
+    const busy = this.state.kind === 'transform' || this.state.kind === 'wrath' || this.repelled;
+    this.watched = !busy && player.hidden <= 0 && length(toHer) <= cfg.range && inCone(player.facing, normalize(toHer), degToRad(cfg.coneDeg / 2));
+    const rise = cfg.rise * (this.phase === 3 ? this.cfg.pursuit.gazeFactor : 1);
+    this.gaze = this.watched ? Math.min(1, this.gaze + rise * dt) : Math.max(0, this.gaze - cfg.fall * dt);
+  }
+
+  private checkPhase(world: World): boolean {
+    const s = this.state.kind;
+    if (s === 'transform' || this.phase >= 3) return false;
+    const threshold = this.phase === 1 ? this.cfg.revealAt : this.cfg.pursuitAt;
+    if (this.hp > this.maxHp * threshold) return false;
+    if (s === 'telegraph' || s === 'lunge') world.emit({ type: 'chargeEnd', id: this.id });
+    if (s === 'wrath') world.emit({ type: 'land', id: this.id, pos: { ...this.pos }, radius: 0 });
+    this.phase++;
+    this.state = { kind: 'transform', t: 0 };
+    const { label, hint } = IZANAMI_PHASES[this.phase - 1];
+    world.emit({ type: 'bossPhase', phase: this.phase, label, hint });
+    return true;
+  }
+
+  /** Regardée trop longtemps : elle se fige, puis hurle. Le cercle au sol annonce la zone. */
+  private startWrath(world: World): void {
+    this.state = { kind: 'wrath', t: 0 };
+    const wrath = this.cfg.gaze.wrath;
+    world.emit({ type: 'jump', id: this.id, target: { ...this.pos }, radius: wrath.radius, duration: wrath.warning });
+  }
+
+  private unleashWrath(world: World): void {
+    const wrath = this.cfg.gaze.wrath;
+    this.gaze = 0;
+    world.emit({ type: 'land', id: this.id, pos: { ...this.pos }, radius: wrath.radius });
+    world.emit({ type: 'wrath', pos: { ...this.pos }, radius: wrath.radius });
+    this.strikeAround(this.pos, wrath.radius, wrath.damage, wrath.knockback, world);
+    // Sa colère réveille ses serviteurs : des furies, puis le tonnerre.
+    if (this.phase === 1) this.summon('shikome', 2, this.cfg.veiled.maxShikome + 1, world);
+    else this.rainBolts(this.cfg.revealed.boltCount + 1, world);
+    this.state = { kind: 'recover', t: 0.6 };
+  }
+
+  private walkVeiled(dt: number, world: World): void {
+    const cfg = this.cfg.veiled;
+    this.summonTimer -= dt;
+    if (this.summonTimer <= 0) {
+      this.summonTimer = cfg.summonInterval;
+      this.state = { kind: 'summon', t: 0 };
+      return;
+    }
+    this.approach(dt, cfg.speed, world);
+  }
+
+  private walkRevealed(dt: number, world: World): void {
+    const cfg = this.cfg.revealed;
+    // Elle disparaît et reparaît non loin du héros, dans un éclair.
+    this.blinkTimer -= dt;
+    if (this.blinkTimer <= 0) {
+      this.blinkTimer = cfg.blinkInterval;
+      this.blink(world);
+      return;
+    }
+    this.ikazuchiTimer -= dt;
+    if (this.ikazuchiTimer <= 0) {
+      this.ikazuchiTimer = cfg.ikazuchiInterval;
+      this.summon('ikazuchi', 1, cfg.maxIkazuchi, world);
+    }
+    this.approach(dt, cfg.speed, world);
+  }
+
+  private walkPursuit(dt: number, world: World): void {
+    const cfg = this.cfg.pursuit;
+    const player = world.player;
+    const toPlayer = sub(player.pos, this.pos);
+    const dist = length(toPlayer);
+    const toward = normalize(toPlayer, this.facing);
+    this.facing = toward;
+    if (this.lungeCooldown <= 0 && dist <= cfg.lungeRange && dist > this.meleeCfg.range + 1) {
+      this.state = { kind: 'telegraph', t: 0, dir: toward };
+      world.emit({ type: 'telegraph', id: this.id, from: { ...this.pos }, dir: toward, length: cfg.lungeDistance, width: this.radius * 2.2, duration: cfg.telegraph });
+      return;
+    }
+    this.approach(dt, cfg.speed, world);
+  }
+
+  /** Marche vers le héros et l'étreint quand il est à portée. */
+  private approach(dt: number, speed: number, world: World): void {
+    const player = world.player;
+    const toPlayer = sub(player.pos, this.pos);
+    const dist = length(toPlayer);
+    const toward = normalize(toPlayer, this.facing);
+    this.facing = toward;
+    const reach = this.meleeCfg.range + player.radius;
+    if (dist <= reach && this.meleeCooldown <= 0) {
+      this.state = { kind: 'melee', t: 0, dir: toward };
+      return;
+    }
+    if (dist > reach * 0.8) this.pos = add(this.pos, scale(toward, speed * dt));
+  }
+
+  /** Phases 2 et 3 : la foudre tombe sur le héros et autour de lui. */
+  private thunder(dt: number, world: World): void {
+    this.boltTimer -= dt;
+    if (this.boltTimer > 0) return;
+    const pursuit = this.phase === 3;
+    this.boltTimer = pursuit ? this.cfg.pursuit.boltInterval : this.cfg.revealed.boltInterval;
+    this.rainBolts(pursuit ? this.cfg.pursuit.boltCount : this.cfg.revealed.boltCount, world);
+  }
+
+  private rainBolts(count: number, world: World): void {
+    const player = world.player.pos;
+    for (let i = 0; i < count; i++) {
+      // Le premier éclair vise le héros ; les autres tombent autour, pour lui couper la route.
+      const target = i === 0 ? player : add(player, scale(fromAngle(Math.random() * Math.PI * 2), 1.8 + Math.random() * 2.5));
+      world.dropHazard(target, this.cfg.revealed.bolt, false);
+    }
+  }
+
+  private blink(world: World): void {
+    const player = world.player.pos;
+    let best = world.randomPoint(2);
+    let bestScore = Infinity;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const p = world.randomPoint(2);
+      const score = Math.abs(distance(p, player) - 4.5);
+      if (score < bestScore) {
+        best = p;
+        bestScore = score;
+      }
+    }
+    world.emit({ type: 'lightning', pos: { ...this.pos } });
+    this.pos = best;
+    world.emit({ type: 'lightning', pos: { ...this.pos } });
+    this.meleeCooldown = Math.max(this.meleeCooldown, 0.6);
+  }
+
+  private summon(kind: 'shikome' | 'ikazuchi', count: number, max: number, world: World): void {
+    const alive = world.enemies.filter((e) => e.kind === kind && !e.dead).length;
+    const n = Math.min(count, max - alive);
+    for (let i = 0; i < n; i++) {
+      const angle = (i / Math.max(1, n)) * Math.PI * 2 + Math.random();
+      world.spawn(kind, kind === 'ikazuchi' ? world.edgePoint() : add(this.pos, scale(fromAngle(angle), this.radius + 1)));
+    }
+  }
+
+  private swing(dir: Vec2, world: World): void {
+    const cfg = this.meleeCfg;
+    world.emit({ type: 'enemySwing', pos: { ...this.pos }, dir, range: cfg.range });
+    this.strikeArc(dir, cfg.range, cfg.arcDeg, cfg.damage, cfg.knockback, world);
+  }
+
+  private lunge(state: Extract<IzanamiState, { kind: 'lunge' }>, dt: number, world: World): void {
+    const cfg = this.cfg.pursuit;
+    const step = cfg.lungeSpeed * dt;
+    this.pos = add(this.pos, scale(state.dir, step));
+    state.traveled += step;
+    const foe = this.bump(world);
+    if (foe) {
+      if (foe.isGuarding(this.pos)) {
+        foe.guard(world, this);
+        foe.knockback = scale(state.dir, 6);
+        this.endLunge(world);
+        return;
+      }
+      if (this.hitFoe(foe, cfg.lungeDamage, state.dir, cfg.lungeKnockback, world)) {
+        this.endLunge(world);
+        return;
+      }
+    }
+    // Lancée contre un pêcher, elle s'y heurte et recule.
+    if (world.peachAt(this.pos, this.radius)) {
+      world.emit({ type: 'chargeEnd', id: this.id });
+      this.lungeCooldown = cfg.lungeCooldown;
+      this.stun(1.2, 'wall', world);
+      return;
+    }
+    if (world.clampToArena(this.pos, this.radius) || state.traveled >= cfg.lungeDistance) this.endLunge(world);
+  }
+
+  private endLunge(world: World): void {
+    world.emit({ type: 'chargeEnd', id: this.id });
+    this.lungeCooldown = this.cfg.pursuit.lungeCooldown;
+    this.state = { kind: 'recover', t: this.cfg.pursuit.recover };
   }
 }

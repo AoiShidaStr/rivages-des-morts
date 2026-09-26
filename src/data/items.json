@@ -23,11 +23,13 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Guerrier"],
-      "summary": "Longue portée, coups équilibrés.",
+      "summary": "Arc large (150°), coups équilibrés ; on peut bouger peu après le coup.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 150 },
+        { "op": "set", "path": "attack.commit", "value": 0.26 },
         { "op": "set", "path": "attack.windup", "value": 0.08 },
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 3 }
@@ -44,11 +46,13 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "summary": "Coups lents et lourds (15 dégâts) ; la Frappe fracassante étourdit 0,8 s de plus.",
+      "summary": "Arc très large (200°), lent et lourd (15 dégâts) : un coup lancé va jusqu’au bout. La Frappe fracassante étourdit 0,8 s de plus.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 15 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 200 },
+        { "op": "set", "path": "attack.commit", "value": 0.63 },
         { "op": "set", "path": "attack.windup", "value": 0.17 },
         { "op": "set", "path": "attack.recovery", "value": 0.36 },
         { "op": "set", "path": "attack.knockback", "value": 6 },
@@ -66,11 +70,13 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "summary": "Rapide mais léger (7 dégâts) ; bloquer rapporte 50 % de rage en plus.",
+      "summary": "Estoc droit et rapide (7 dégâts), portée 2,1 : on se dégage dès que le coup porte. Bloquer rapporte 50 % de rage en plus.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 1.65 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.range", "value": 2.1 },
+        { "op": "set", "path": "attack.shape", "value": "line" },
+        { "op": "set", "path": "attack.width", "value": 0.9 },
+        { "op": "set", "path": "attack.commit", "value": 0.15 },
         { "op": "set", "path": "attack.windup", "value": 0.05 },
         { "op": "set", "path": "attack.recovery", "value": 0.15 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
@@ -88,11 +94,13 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Invocateur"],
-      "summary": "Arme de départ de l'Invocateur : coups légers, tes âmes frappent 10 % plus vite.",
+      "summary": "Arme de départ de l’Invocateur : le tintement frappe tout autour de toi, mais faiblement ; tes âmes frappent 10 % plus vite.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 6 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.commit", "value": 0.17 },
         { "op": "set", "path": "attack.windup", "value": 0.07 },
         { "op": "set", "path": "attack.recovery", "value": 0.22 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
@@ -110,11 +118,13 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Invocateur"],
-      "summary": "Les coups de tes âmes collent l'ennemi dans la soie : étourdi 0,5 s.",
+      "summary": "Grand coup d’éventail (200°, portée 2,2). Les coups de tes âmes collent l’ennemi dans la soie : étourdi 0,5 s.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 2 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.range", "value": 2.2 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 200 },
+        { "op": "set", "path": "attack.commit", "value": 0.18 },
         { "op": "set", "path": "attack.windup", "value": 0.08 },
         { "op": "set", "path": "attack.recovery", "value": 0.26 },
         { "op": "set", "path": "attack.knockback", "value": 3 },
@@ -132,11 +142,13 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Lame"],
-      "summary": "Arme de départ de la Lame : coups très rapides mais courts.",
+      "summary": "Arme de départ de la Lame : coups très rapides en arc serré (120°) ; on peut feinter et esquiver à tout moment.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 8 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 120 },
+        { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.04 },
         { "op": "set", "path": "attack.recovery", "value": 0.13 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
@@ -154,11 +166,13 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Paladin"],
-      "summary": "Arme de départ du Paladin : longue portée, coups lents qui repoussent.",
+      "summary": "Arme de départ du Paladin : grand arc (180°) à longue portée, coups lents qui repoussent.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 10 },
         { "op": "set", "path": "attack.range", "value": 2.2 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 180 },
+        { "op": "set", "path": "attack.commit", "value": 0.3 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.3 },
         { "op": "set", "path": "attack.knockback", "value": 4 },
@@ -176,11 +190,11 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Rôdeur"],
-      "summary": "Arme de départ du Rôdeur : flèches rapides, portée 10 m.",
+      "summary": "Arme de départ du Rôdeur : flèches rapides, portée 10 m ; on bouge dès la flèche partie.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 8 },
         { "op": "set", "path": "attack.range", "value": 10 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.commit", "value": 0.1 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.22 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
@@ -198,11 +212,13 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Lame"],
-      "summary": "Faucille et chaîne : frappe plus loin (2,3 m) ; le Pas de l'ombre porte 1 m plus loin et ses marques durent 3 s de plus.",
+      "summary": "Faucille et chaîne : arc de 140° qui porte loin (2,3 m), annulable à tout moment ; le Pas de l'ombre porte 1 m plus loin et ses marques durent 3 s de plus.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 2.3 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 140 },
+        { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.06 },
         { "op": "set", "path": "attack.recovery", "value": 0.2 },
         { "op": "set", "path": "attack.knockback", "value": 2.5 },
@@ -222,11 +238,13 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Lame"],
-      "summary": "Deux crocs venimeux : chaque coup critique te rend 2 PV.",
+      "summary": "Deux crocs venimeux en arc serré (120°), annulables à tout moment : chaque coup critique te rend 2 PV.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 120 },
+        { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.04 },
         { "op": "set", "path": "attack.recovery", "value": 0.12 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
@@ -245,11 +263,13 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "summary": "Coups lourds (13 dégâts) ; le Marteau lancé fait 50 % de dégâts en plus et étourdit 0,5 s.",
+      "summary": "Coups lourds (13 dégâts) en arc de 170°, presque impossibles à interrompre ; le Marteau lancé fait 50 % de dégâts en plus et étourdit 0,5 s.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 13 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 170 },
+        { "op": "set", "path": "attack.commit", "value": 0.45 },
         { "op": "set", "path": "attack.windup", "value": 0.14 },
         { "op": "set", "path": "attack.recovery", "value": 0.4 },
         { "op": "set", "path": "attack.knockback", "value": 6 },
@@ -269,11 +289,13 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Paladin"],
-      "summary": "Lance et miroir sacré : les yokai baignés par ton Aura sont éblouis et font 30 % de dégâts en moins.",
+      "summary": "Lance et miroir sacré : estoc droit (portée 2,4) ; les yokai baignés par ton Aura sont éblouis et font 30 % de dégâts en moins.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 10 },
-        { "op": "set", "path": "attack.range", "value": 2.2 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.range", "value": 2.4 },
+        { "op": "set", "path": "attack.shape", "value": "line" },
+        { "op": "set", "path": "attack.width", "value": 1.1 },
+        { "op": "set", "path": "attack.commit", "value": 0.25 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.3 },
         { "op": "set", "path": "attack.knockback", "value": 4 },
@@ -292,11 +314,11 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Rôdeur"],
-      "summary": "Arc court : tirs plus rapides mais portée 8 m ; le Recul revient 2 s plus tôt.",
+      "summary": "Arc court : tirs plus rapides mais portée 8 m, on bouge presque aussitôt ; le Recul revient 2 s plus tôt.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 7 },
         { "op": "set", "path": "attack.range", "value": 8 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.commit", "value": 0.08 },
         { "op": "set", "path": "attack.windup", "value": 0.06 },
         { "op": "set", "path": "attack.recovery", "value": 0.15 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
@@ -320,7 +342,7 @@
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 11 },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
@@ -333,6 +355,78 @@
         { "level": 50, "name": "Toile du Yomi", "summary": "Marque du chasseur : +10 % de dégâts", "effects": [{ "op": "add", "path": "ranger.huntMark.bonus", "value": 0.1 }] }
       ],
       "description": "Une corde tressée de soie de jorōgumo sur un arc de bois noir. Elle colle encore un peu aux doigts."
+    },
+    "totsuka-tsurugi": {
+      "name": "Totsuka-no-tsurugi",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Guerrier"],
+      "summary": "Arc large (170°), lourd (14 dégâts) ; rage pleine, chaque coup appelle la foudre.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 14 },
+        { "op": "set", "path": "attack.range", "value": 2 },
+        { "op": "set", "path": "attack.shape", "value": "arc" },
+        { "op": "set", "path": "attack.arcDeg", "value": 170 },
+        { "op": "set", "path": "attack.commit", "value": 0.36 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.3 },
+        { "op": "set", "path": "attack.knockback", "value": 4 },
+        { "op": "add", "path": "perks.storm", "value": 10 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Dix poings", "summary": "+0,3 de portée", "effects": [{ "op": "add", "path": "attack.range", "value": 0.3 }] },
+        { "level": 25, "name": "Huit tonnerres", "summary": "La foudre de la rage pleine frappe plus fort (+6)", "effects": [{ "op": "add", "path": "perks.storm", "value": 6 }] },
+        { "level": 50, "name": "La fuite d'Izanagi", "summary": "Esquive rechargée 25 % plus vite", "effects": [{ "op": "mul", "path": "dodge.cooldown", "value": 0.75 }] }
+      ],
+      "description": "L'épée longue de dix poings qu'Izanagi brandissait derrière lui en fuyant les huit dieux du tonnerre. Elle crépite encore."
+    },
+    "kaiken-izanami": {
+      "name": "Kaiken d'Izanami",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Lame"],
+      "summary": "Estoc très rapide (portée 1,8), annulable à tout moment ; critiques +0,5.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 8 },
+        { "op": "set", "path": "attack.range", "value": 1.8 },
+        { "op": "set", "path": "attack.shape", "value": "line" },
+        { "op": "set", "path": "attack.width", "value": 0.7 },
+        { "op": "set", "path": "attack.commit", "value": 0 },
+        { "op": "set", "path": "attack.windup", "value": 0.04 },
+        { "op": "set", "path": "attack.recovery", "value": 0.12 },
+        { "op": "set", "path": "attack.knockback", "value": 1.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0.6 },
+        { "op": "add", "path": "blade.critFactor", "value": 0.5 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Lame de deuil", "summary": "Marque de mort : +2 s", "effects": [{ "op": "add", "path": "blade.deathMark.duration", "value": 2 }] },
+        { "level": 25, "name": "Voile noir", "summary": "Écran de fumée : +25 % de rayon", "effects": [{ "op": "mul", "path": "blade.smoke.radius", "value": 1.25 }] },
+        { "level": 50, "name": "Épouse du Yomi", "summary": "Critiques +0,25", "effects": [{ "op": "add", "path": "blade.critFactor", "value": 0.25 }] }
+      ],
+      "description": "Le petit poignard qu'Izanami portait à la ceinture de son kimono des morts. On ne l'a jamais vu sortir de son fourreau ; on a seulement vu ce qu'il laissait."
+    },
+    "arc-pecher": {
+      "name": "Arc du pêcher",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Rôdeur"],
+      "summary": "Flèches lourdes (9 dégâts), portée 11 m ; se bande 20 % plus vite.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.range", "value": 11 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
+        { "op": "set", "path": "attack.windup", "value": 0.12 },
+        { "op": "set", "path": "attack.recovery", "value": 0.28 },
+        { "op": "set", "path": "attack.knockback", "value": 2 },
+        { "op": "set", "path": "attack.lunge", "value": 0 },
+        { "op": "mul", "path": "ranger.charged.time", "value": 0.8 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Sève de pêcher", "summary": "Portée des flèches +1 m", "effects": [{ "op": "add", "path": "attack.range", "value": 1 }] },
+        { "level": 25, "name": "Fruit d'immortalité", "summary": "Tir chargé : +20 % de dégâts", "effects": [{ "op": "mul", "path": "perks.chargedDamage", "value": 1.2 }] },
+        { "level": 50, "name": "Ōkamuzumi", "summary": "Recul : une flèche de plus", "effects": [{ "op": "add", "path": "ranger.leap.arrows", "value": 1 }] }
+      ],
+      "description": "Taillé dans le pêcher de la pente du Yomi, celui où Izanagi cueillit les trois pêches. Les morts n'aiment pas son odeur."
     },
     "chapeau-paille": {
       "name": "Chapeau de paille",
@@ -359,6 +453,16 @@
       "summary": "Les yokai s'en prennent d'abord à tes âmes.",
       "description": "Un masque blanc sans visage. Le porter fait un peu oublier la peur."
     },
+    "voile-izanami": {
+      "name": "Voile d'Izanami",
+      "slot": "casque",
+      "rarity": "rare",
+      "tags": ["Invocateur"],
+      "bonus": { "maxHp": 10 },
+      "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.15 }],
+      "summary": "Tes âmes frappent 15 % plus fort.",
+      "description": "Le voile blanc qui cachait le visage d'Izanami. Les âmes égarées le suivent comme on suit une reine."
+    },
     "shiroshozoku": {
       "name": "Shiroshōzoku",
       "slot": "plastron",
@@ -373,6 +477,14 @@
       "tags": ["Guerrier"],
       "bonus": { "armor": 0.15 },
       "description": "Une carapace taillée en plastron. Les coups glissent dessus."
+    },
+    "do-yomi": {
+      "name": "Dō de l'armée du Yomi",
+      "slot": "plastron",
+      "rarity": "rare",
+      "tags": ["Paladin"],
+      "bonus": { "maxHp": 18, "armor": 0.12 },
+      "description": "Une cuirasse de guerrier du Yomi, lamelles d'os laquées de noir. Tetsu l'a reforgée ; elle garde le froid de sa première vie."
     },
     "hakama-soie": {
       "name": "Hakama de soie",
@@ -450,6 +562,16 @@
       "bonus": { "damage": 1 },
       "description": "Les kappa n'ont pas de dents. Le tanuki assure que si."
     },
+    "peche-okamuzumi": {
+      "name": "Pêche Ōkamuzumi",
+      "slot": "amulette",
+      "rarity": "légendaire",
+      "tags": ["Tous"],
+      "bonus": { "maxHp": 25 },
+      "effects": [{ "op": "add", "path": "perks.valhallaHeal", "value": 2 }],
+      "summary": "Chaque yokai vaincu te rend 2 PV.",
+      "description": "La dernière des trois pêches d'Izanagi. Il la nomma Ōkamuzumi et lui demanda de secourir les vivants comme elle l'avait secouru. Elle n'a jamais pourri."
+    },
     "coupelle-kappa": {
       "name": "Coupelle du kappa",
       "slot": "relique",
@@ -478,6 +600,15 @@
       "summary": "+1 âme active. Sa lueur apaise : +20 PV max.",
       "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?"
     },
+    "peigne-izanagi": {
+      "name": "Peigne d'Izanagi",
+      "slot": "relique",
+      "rarity": "rare",
+      "tags": ["Tous"],
+      "bonus": { "dodge": 0.15, "speed": 0.06 },
+      "summary": "Esquive plus longue, pas plus vif.",
+      "description": "Le peigne qu'Izanagi jeta derrière lui en fuyant : ses dents devinrent des pousses de bambou, et les shikome s'arrêtèrent pour les dévorer."
+    },
     "ema-tetsu": {
       "name": "Ema de Tetsu",
       "rarity": "quête",
@@ -505,7 +636,9 @@
     "ecaille": "Écaille de kappa",
     "papier": "Papier huilé",
     "masque": "Éclat de masque blanc",
-    "soie": "Soie de jorōgumo"
+    "soie": "Soie de jorōgumo",
+    "os": "Os de guerrier du Yomi",
+    "foudre": "Éclat de foudre"
   },
   "drops": {
     "hitodama": { "oboles": 1, "xp": 3, "material": "braise", "chance": 0.5 },
@@ -557,6 +690,24 @@
         { "item": "arc-soie", "chance": 0.25 },
         { "item": "magatama-yasakani", "chance": 0.03 }
       ]
+    },
+    "shikome": { "oboles": 6, "xp": 12, "material": "os", "chance": 0.35 },
+    "ikazuchi": { "oboles": 7, "xp": 14, "material": "foudre", "chance": 0.6 },
+    "ikusa": { "oboles": 9, "xp": 18, "material": "os", "chance": 0.8, "count": 2 },
+    "izanami": {
+      "oboles": 90,
+      "xp": 170,
+      "material": "foudre",
+      "chance": 1,
+      "count": 4,
+      "items": [
+        { "item": "totsuka-tsurugi", "chance": 0.3 },
+        { "item": "kaiken-izanami", "chance": 0.3 },
+        { "item": "arc-pecher", "chance": 0.3 },
+        { "item": "voile-izanami", "chance": 0.3 },
+        { "item": "peigne-izanagi", "chance": 0.25 },
+        { "item": "peche-okamuzumi", "chance": 0.04 }
+      ]
     }
   },
   "duplicates": {
@@ -607,6 +758,23 @@
         { "material": "braise", "count": 5, "price": 25, "weight": 2 },
         { "material": "seve", "count": 5, "price": 20, "weight": 1 }
       ]
+    },
+    "fin-palais": {
+      "name": "Boutique du Palais",
+      "about": "Boutique de fin du Palais d'Izanami, tirée au hasard à chaque victoire comme celle des Rizières noyées.",
+      "discount": 0.25,
+      "offers": { "items": 2, "total": 4 },
+      "pool": [
+        { "item": "shiroshozoku", "price": 45, "weight": 2 },
+        { "item": "magatama-fele", "price": 120, "weight": 2 },
+        { "item": "masque-oublie", "price": 90, "weight": 2 },
+        { "item": "voile-izanami", "price": 170, "weight": 1 },
+        { "item": "peigne-izanagi", "price": 190, "weight": 1 },
+        { "material": "os", "count": 5, "price": 35, "weight": 3 },
+        { "material": "foudre", "count": 3, "price": 40, "weight": 3 },
+        { "material": "soie", "count": 2, "price": 45, "weight": 2 },
+        { "material": "masque", "count": 4, "price": 30, "weight": 2 }
+      ]
     }
   },
   "forge": {
@@ -637,7 +805,8 @@
       { "item": "katana-ronin", "oboles": 80, "materials": { "soie": 3, "masque": 2 } },
       { "item": "kusarigama", "oboles": 60, "materials": { "masque": 4, "papier": 2 } },
       { "item": "tetsubo-cloche", "oboles": 60, "materials": { "ecaille": 5, "braise": 2 } },
-      { "item": "hankyu", "oboles": 50, "materials": { "papier": 4, "seve": 2 } }
+      { "item": "hankyu", "oboles": 50, "materials": { "papier": 4, "seve": 2 } },
+      { "item": "do-yomi", "oboles": 90, "materials": { "os": 6, "foudre": 2 }, "if": [{ "flag": "sceau_ouvert" }] }
     ]
   }
 }

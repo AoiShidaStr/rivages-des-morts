@@ -750,3 +750,104 @@ export function drawJizo(): HTMLCanvasElement {
   }
   return canvas;
 }
+
+/**
+ * Pêcher d'Izanagi (arène d'Izanami) : tronc noueux, fleurs roses ; mûr, il porte une grosse pêche
+ * qui luit. `ripe` faux : le même arbre, la pêche tombée.
+ */
+export function drawPeachTree(ripe: boolean): HTMLCanvasElement {
+  const w = 256;
+  const h = 300;
+  const [canvas, ctx] = makeCanvas(w, h);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  // Tronc et deux branches.
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 30;
+  const trunk: [number, number][] = [
+    [0.5, 0.98],
+    [0.46, 0.72],
+    [0.54, 0.5],
+  ];
+  const branches: [number, number][][] = [
+    [[0.5, 0.58], [0.3, 0.42]],
+    [[0.52, 0.55], [0.74, 0.4]],
+  ];
+  const path = (points: [number, number][]) => {
+    ctx.beginPath();
+    points.forEach(([x, y], i) => (i ? ctx.lineTo(w * x, h * y) : ctx.moveTo(w * x, h * y)));
+    ctx.stroke();
+  };
+  path(trunk);
+  for (const b of branches) path(b);
+  ctx.strokeStyle = '#4a3326';
+  ctx.lineWidth = 22;
+  path(trunk);
+  ctx.lineWidth = 14;
+  for (const b of branches) path(b);
+  // Feuillage en fleurs : des touffes roses, plus claires sur le dessus.
+  const tufts: [number, number, number][] = [
+    [0.5, 0.3, 0.2],
+    [0.28, 0.38, 0.15],
+    [0.72, 0.36, 0.16],
+    [0.38, 0.22, 0.14],
+    [0.64, 0.2, 0.14],
+  ];
+  for (const [x, y, r] of tufts) {
+    ctx.fillStyle = PALETTE.ink;
+    ctx.beginPath();
+    ctx.arc(w * x, h * y, w * r + 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (const [x, y, r] of tufts) {
+    const g = ctx.createRadialGradient(w * x - w * r * 0.3, h * y - w * r * 0.4, 2, w * x, h * y, w * r);
+    g.addColorStop(0, '#ffd9e4');
+    g.addColorStop(0.6, '#f19ab6');
+    g.addColorStop(1, '#b85c7e');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(w * x, h * y, w * r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Petites fleurs blanches éparses.
+  ctx.fillStyle = 'rgba(255, 245, 250, 0.9)';
+  for (const [x, y] of [[0.36, 0.3], [0.58, 0.26], [0.7, 0.42], [0.26, 0.44], [0.48, 0.38], [0.62, 0.14]]) {
+    ctx.beginPath();
+    ctx.arc(w * x, h * y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (ripe) {
+    // La pêche d'Izanagi : grosse, dorée et rose, avec un halo.
+    const [px, py, pr] = [0.5, 0.52, 0.11];
+    const halo = ctx.createRadialGradient(w * px, h * py, 4, w * px, h * py, w * pr * 2.4);
+    halo.addColorStop(0, 'rgba(255, 220, 160, 0.85)');
+    halo.addColorStop(1, 'rgba(255, 220, 160, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * pr * 2.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = PALETTE.ink;
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * pr + 4, 0, Math.PI * 2);
+    ctx.fill();
+    const peach = ctx.createRadialGradient(w * px - 8, h * py - 10, 3, w * px, h * py, w * pr);
+    peach.addColorStop(0, '#fff1c9');
+    peach.addColorStop(0.45, '#ffb77a');
+    peach.addColorStop(1, '#e0587a');
+    ctx.fillStyle = peach;
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * pr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#c24a68';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(w * px, h * py - w * pr * 0.9);
+    ctx.quadraticCurveTo(w * px + 8, h * py, w * px, h * py + w * pr * 0.9);
+    ctx.stroke();
+    ctx.fillStyle = '#6f9a4a';
+    ctx.beginPath();
+    ctx.ellipse(w * px + 12, h * py - w * pr - 4, 14, 6, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  return canvas;
+}

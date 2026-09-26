@@ -141,7 +141,17 @@ export class Screens {
 
   showResult(
     victory: boolean,
-    loot: { level: number; oboles: number; xp: number; materials: (string | Node)[]; chests: number; unlocked?: number },
+    loot: {
+      /** Nom du donjon, et le titre et le texte de sa victoire. */
+      place: string;
+      victory: { title: string; text: string };
+      level: number;
+      oboles: number;
+      xp: number;
+      materials: (string | Node)[];
+      chests: number;
+      unlocked?: number;
+    },
     options: MenuOption[],
   ): void {
     this.result.replaceChildren(
@@ -149,15 +159,13 @@ export class Screens {
         'div',
         { class: `result-card ${victory ? 'victory' : 'defeat'}` },
         h('div', { class: 'title-seal' }, victory ? '勝' : '魂'),
-        h('h1', {}, victory ? 'Les rizières sont apaisées' : 'Ton âme vacille…'),
-        h('div', { class: 'result-level' }, `Rizières noyées · niveau ${loot.level}`),
+        h('h1', {}, victory ? loot.victory.title : 'Ton âme vacille…'),
+        h('div', { class: 'result-level' }, `${loot.place} · niveau ${loot.level}`),
         loot.unlocked ? h('div', { class: 'result-unlock' }, `Niveau ${loot.unlocked} débloqué`) : null,
         h(
           'p',
           { class: 'tagline' },
-          victory
-            ? 'La Jorōgumo est tombée. Les âmes égarées retrouvent peu à peu leur chemin.'
-            : 'Tu te réveilles sur la rive. Tu gardes ce que tu as ramassé, mais le donjon est à recommencer.',
+          victory ? loot.victory.text : 'Tu te réveilles sur la rive. Tu gardes ce que tu as ramassé, mais le donjon est à recommencer.',
         ),
         h(
           'ul',

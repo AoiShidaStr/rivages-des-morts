@@ -19,11 +19,15 @@ import { Canvas } from './pixel/canvas.mjs';
 import araignee from './pixel/araignee.mjs';
 import heros, { hero, KIT_IDS, RACE_IDS } from './pixel/heros.mjs';
 import hitodama from './pixel/hitodama.mjs';
+import ikazuchi from './pixel/ikazuchi.mjs';
+import ikusa from './pixel/ikusa.mjs';
+import { revealed as izanamiRevelee, veiled as izanami } from './pixel/izanami.mjs';
 import { human as jorogumo, spider as jorogumoAraignee } from './pixel/jorogumo.mjs';
 import kappa from './pixel/kappa.mjs';
 import kasaObake from './pixel/kasa-obake.mjs';
 import kodama from './pixel/kodama.mjs';
 import oublie from './pixel/oublie.mjs';
+import shikome from './pixel/shikome.mjs';
 
 // Les clés sont les noms des sprites du jeu (src/data/sprites.json). Le héros existe pour chaque race et
 // chaque classe : heros-<race>-<classe> (src/render/heroes.ts) ; l'Einherjar guerrier, lui, est `heros`.
@@ -42,6 +46,11 @@ const characters = {
   araignee,
   jorogumo,
   jorogumoAraignee,
+  shikome,
+  ikazuchi,
+  ikusa,
+  izanami,
+  izanamiRevelee,
 };
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(projectDir, 'public', 'sprites', 'pixel');

@@ -1,4 +1,4 @@
-import { content } from '../content';
+import { content, type DungeonDef } from '../content';
 import type { PlayerConfig } from '../game/config';
 import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor, unlockAfter } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
@@ -962,14 +962,15 @@ export function openQuests(host: PanelHost, ctx: UiContext): void {
 // --- Entrée du donjon -----------------------------------------------------------
 
 /**
- * Choix du niveau des Rizières noyées (GDD : « Difficulté à l'entrée », comme dans Waven).
- * Seuls les niveaux déjà ouverts sont proposés ; vaincre la Jorōgumo ouvre les suivants, cinq par cinq
+ * Choix du niveau d'un donjon (GDD : « Difficulté à l'entrée », comme dans Waven).
+ * Seuls les niveaux déjà ouverts sont proposés ; vaincre le boss ouvre les suivants, cinq par cinq
  * (1 → 5 → 10…), même si le héros n'est pas encore assez fort pour eux.
  */
-export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (level: number) => void): void {
+export function openDungeonEntry(host: PanelHost, ctx: UiContext, dungeon: DungeonDef, onEnter: (level: number) => void): void {
   const data = content.difficulty;
   const { progress } = ctx;
-  const unlocked = clampLevel(data, progress.state.dungeon.unlocked);
+  const record = progress.dungeon(dungeon.id);
+  const unlocked = clampLevel(data, record.unlocked);
   const playerLevel = progress.level;
   let level = Math.min(unlocked, Math.max(1, playerLevel));
 
@@ -1039,12 +1040,12 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (leve
     unlocked > 1 ? { label: `Le plus haut (${unlocked})`, level: unlocked } : null,
   ].filter((q): q is { label: string; level: number } => q !== null);
 
-  const best = progress.state.dungeon.best;
+  const best = record.best;
   host.show(
-    'Rizières noyées',
+    dungeon.name,
     best
       ? `Record : niveau ${best} · niveaux ouverts : 1 à ${unlocked} sur ${data.maxLevel}`
-      : `Vaincs la Jorōgumo pour ouvrir les niveaux 2 à ${unlockAfter(data, 1)} (jusqu’à ${data.maxLevel}).`,
+      : `Vaincs ${dungeon.bossLabel} pour ouvrir les niveaux 2 à ${unlockAfter(data, 1)} (jusqu’à ${data.maxLevel}).`,
     h(
       'div',
       { class: 'list' },

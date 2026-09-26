@@ -85,7 +85,16 @@
     { "id": "coffre-pont", "name": "Coffre caché", "verb": "Ouvrir", "sprite": "coffre", "u": 3.3, "v": -6.1, "if": [{ "notFlag": "coffre_pont" }] },
     { "id": "coffre-cascade", "name": "Coffre moussu", "verb": "Ouvrir", "sprite": "coffre", "u": 15.3, "v": 8.3, "if": [{ "notFlag": "coffre_cascade" }] },
     { "id": "moine", "name": "Le moine du Rocher", "sprite": "moine", "u": -0.4, "v": 11.6, "solid": 0.4 },
-    { "id": "rocher", "name": "Le Grand Rocher", "verb": "Écouter", "u": 3, "v": 13.6, "reach": 2.4 },
+    {
+      "id": "rocher",
+      "name": "Le Grand Rocher",
+      "nameIf": [{ "if": [{ "flag": "sceau_ouvert" }], "name": "Passage du Yomi" }],
+      "verb": "Écouter",
+      "verbIf": [{ "if": [{ "flag": "sceau_ouvert" }], "verb": "Descendre" }],
+      "u": 3,
+      "v": 13.6,
+      "reach": 2.4
+    },
     { "id": "portail", "name": "Torii noir", "verb": "Entrer", "u": -9.4, "v": 10.8, "reach": 2.2 },
     { "id": "toro-1", "name": "Lanterne de pierre", "verb": "Examiner", "dialogue": "toro", "sprite": "lanterne", "spriteIf": [{ "if": [{ "flag": "allume_toro-1" }], "sprite": "lanterneAllumee" }], "u": -7, "v": -5.2, "solid": 0.35 },
     { "id": "toro-2", "name": "Lanterne de pierre", "verb": "Examiner", "dialogue": "toro", "sprite": "lanterne", "spriteIf": [{ "if": [{ "flag": "allume_toro-2" }], "sprite": "lanterneAllumee" }], "u": -3.4, "v": -5.6, "solid": 0.35 },

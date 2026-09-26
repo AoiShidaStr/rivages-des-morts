@@ -272,6 +272,71 @@ kbd {
   background: linear-gradient(#b13a52, #5e1426);
 }
 
+/* Regard d'Izanami : un œil, une jauge qui monte quand on la regarde. */
+#boss .gaze {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--paper);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+#boss .gaze.visible {
+  display: flex;
+}
+
+#boss .gaze-eye {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(20, 16, 24, 0.75);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13px;
+}
+
+#boss .gaze-bar {
+  position: relative;
+  width: 160px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(20, 16, 24, 0.6);
+}
+
+#boss .gaze-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #9b8fb0, #e8d7ff);
+}
+
+#boss .gaze-label {
+  min-width: 150px;
+  text-align: left;
+}
+
+#boss .gaze.watched .gaze-eye {
+  background: #b13a52;
+  animation: gaze-pulse 0.6s ease-in-out infinite alternate;
+}
+
+#boss .gaze.full .gaze-fill {
+  background: linear-gradient(90deg, #e0604c, #ff3b30);
+}
+
+@keyframes gaze-pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.18);
+  }
+}
+
 /* Annonces */
 #banner {
   position: absolute;

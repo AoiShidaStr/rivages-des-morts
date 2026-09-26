@@ -272,7 +272,9 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 
 Le combat mélange arme au corps à corps, parade/esquive et invocations, en vue isométrique et en temps réel.
 
-- **Arme** : attaque de base, avec un moveset qui change selon le type d'arme.
+- **Arme** : attaque de base, avec un moveset qui change selon le type d'arme (en place) : chaque arme a sa **forme** et son **engagement**.
+  - **Forme** : un arc tourné vers la souris, plus ou moins large (kunai 120°, nodachi 150°, naginata 180°, kanabō 200°), ou un estoc droit et long (katana, kaiken). Seuls les grelots de l'Invocateur frappent tout autour, faiblement. Un repère discret au sol montre la forme du prochain coup.
+  - **Engagement** : le temps pendant lequel un coup lancé ne s'annule pas. Ensuite, se déplacer ou esquiver interrompt la fin du coup. Les kunai se feintent à l'esquive dès l'élan, le katana se dégage dès que le coup porte, le nodachi peu après, et le kanabō va toujours jusqu'au bout. Réglages dans `items.json` (`attack.shape`, `attack.arcDeg`, `attack.commit`).
 - **Parade** : sa forme dépend de la classe (blocage et rage pour le Guerrier, bouclier levé pour le Paladin). Le clic droit porte la mécanique signature de chaque classe.
 - **Esquive** : dash court avec invulnérabilité brève.
 - **Compétences** : 2 à 4 emplacements, volontairement simples (une touche, un effet clair).
@@ -366,7 +368,7 @@ Comme dans Wakfu et Waven, chaque boss a une mécanique qui lui est propre et un
 
 | Boss | Mythe | Piste de mécanique |
 | --- | --- | --- |
-| Izanami (Yomi) | Izanagi avait promis de ne pas la regarder, et l'a fait | La regarder la renforce : il faut l'attaquer sans lui faire face |
+| Izanami (Yomi) | Izanagi avait promis de ne pas la regarder, et l'a fait | La regarder la renforce : il faut l'attaquer sans lui faire face (en place, voir le Palais d'Izanami) |
 | Hadès (Hadès) | Son casque le rend invisible | Invisible : on le repère à ses traces et aux sons |
 | Anubis (Duat) | La pesée du cœur contre la plume de Maât | Une balance à équilibrer pendant le combat pour le rendre vulnérable |
 | Hel (Helheim) | La moitié de son corps est vivante, l'autre morte | Seul un côté est vulnérable à la fois, et il change |
@@ -385,6 +387,42 @@ Trois phases, dans une arène qui se couvre de toiles au fil du combat.
 
 **Faiblesse : le fil de Jōren** : selon une légende, une jorōgumo enroula son fil autour de la jambe d'un homme au bord d'une cascade. Il l'accrocha à une souche, qui fut entraînée dans l'eau. En jeu, des souches et des piliers sont placés dans l'arène. Quand elle attire le joueur avec son fil, une esquive au bon moment autour d'une souche y accroche le fil : la Jorōgumo est arrachée du plafond, s'écrase et reste vulnérable quelques secondes. Rien ne l'indique directement : le joueur doit observer le fil et faire le lien.
 
+## Deuxième donjon : le Palais d'Izanami (en place)
+
+Derrière le Grand Rocher, sous la pente de Yomotsu Hirasaka. Il s'ouvre après la Jorōgumo, par la quête « Derrière le sceau » : le moine raconte qu'Izanami, oubliée des vivants, ronge le sceau ; la corde sacrée du Rocher se dénoue pour une âme sans nom. Même structure que les Rizières : sept salles fixes, coffres, boutique de fin tirée au hasard, niveaux 1 à 100. Le décor reprend le sol des rizières, assombri et violacé, avec des lanternes bleues et le Rocher vu de l'autre côté.
+
+Tout vient du mythe d'Izanagi (Kojiki) : les furies qu'Izanami lança à ses trousses, les huit dieux du tonnerre nés de son corps, l'armée du Yomi, et les trois pêches qui repoussèrent la mort.
+
+| # | Salle | Contenu | Rôle |
+| --- | --- | --- | --- |
+| 1 | Combat | Shikome | Lire le bond annoncé, esquiver sur le côté ou parer |
+| 2 | Combat | Ikazuchi et feux follets | Sortir des cercles de foudre, interrompre les appels |
+| 3 | Combat | Guerriers du Yomi et shikome | Se placer sur le côté d'une lance |
+| 4 | Combat | Meute de shikome, un ikazuchi | Tenir face à plusieurs côtés |
+| 5 | Élite | Capitaine de l'armée du Yomi (champion) | Premier vrai défi du Palais |
+| 6 | Combat | Tout le Yomi | Tester le build |
+| 7 | Boss | Izanami | Fin du donjon |
+
+**Nouveaux yokai**
+
+| Ennemi | Rôle | Comportement | Ce qu'il apprend |
+| --- | --- | --- | --- |
+| Yomotsu-shikome | Essaim rapide | Encercle, se ramasse (trait rouge), puis bondit ; parée, elle reste sonnée | Esquiver au bon moment, parer |
+| Ikazuchi | Soutien à distance | Flotte loin, appelle la foudre sous le héros, disparaît dans un éclair si on l'approche ; un coup interrompt l'appel | Choisir ses cibles, bouger |
+| Guerrier du Yomi | Mêlée lourde | Longue lance dans un angle étroit, annoncée longtemps | Se placer sur le côté |
+
+**Boss : Izanami**, en trois phases.
+
+1. **La dame voilée** : kimono blanc des morts, cheveux sur le visage. Étreinte en mêlée, des shikome à ses côtés.
+2. **Son vrai visage** (sous 65 %) : le corps rongé, les huit dieux du tonnerre crépitent sur elle. La foudre tombe sur le héros et autour, elle disparaît et reparaît, des ikazuchi la rejoignent.
+3. **La poursuite** (sous 32 %) : elle traque le héros et bondit sur lui ; elle ne subit plus que 30 % des dégâts.
+
+**Son regard** (tout le combat) : la regarder, c'est viser vers elle. Sous le regard, une jauge monte : elle encaisse de mieux en mieux (jusqu'à −70 % de dégâts), puis, pleine, sa colère éclate en zone et appelle des renforts. Il faut frapper en visant à côté d'elle : le bord d'un arc large la touche sans la regarder, alors qu'un estoc (katana, kaiken) oblige à la regarder ; le Rôdeur tire par courtes salves, les âmes de l'Invocateur, elles, peuvent la regarder. Parer oblige à lui faire face : c'est un choix.
+
+**Faiblesse : les trois pêches** : fuyant le Yomi, Izanagi lança trois pêches, et l'armée des morts recula. Trois pêchers poussent dans l'arène ; frapper un pêcher mûr fait tomber sa pêche, qui file repousser Izanami : elle reste sans défense 4,5 s et subit 60 % de dégâts en plus. Le pêcher refleurit en 14 s. Le moine raconte l'histoire avant la descente, et l'annonce de la troisième phase la rappelle, sans dire comment s'en servir.
+
+**Butin** : Totsuka-no-tsurugi (Guerrier), Kaiken d'Izanami (Lame), Arc du pêcher (Rôdeur), Voile d'Izanami (Invocateur), Peigne d'Izanagi (relique), Pêche Ōkamuzumi (très rare) ; matériaux : os de guerrier du Yomi, éclats de foudre. Tetsu en forge le Dō de l'armée du Yomi (Paladin).
+
 ## Zone d'exploration du Yomi : Yomotsu Hirasaka
 
 La zone s'appelle Yomotsu Hirasaka, la pente qui sépare les vivants du Yomi dans le mythe japonais. Izanagi l'a scellée avec un rocher en fuyant Izanami. Elle compte 6 lieux, 6 PNJ, 5 quêtes courtes et 4 secrets.
@@ -397,7 +435,7 @@ La zone s'appelle Yomotsu Hirasaka, la pente qui sépare les vivants du Yomi dan
 | Village des âmes | PNJ, marchande, forge |
 | Rizières ouvertes | Exploration, ennemis faibles, secrets |
 | Cascade | Passage caché derrière l'eau |
-| Grand Rocher | Le sceau d'Izanagi, fermé en V1 : une voix se fait entendre derrière |
+| Grand Rocher | Le sceau d'Izanagi : une voix se fait entendre derrière ; après la Jorōgumo, il s'ouvre sur le Palais d'Izanami |
 | Entrée du donjon | Accès aux Rizières noyées |
 
 **PNJ**
@@ -418,6 +456,7 @@ La zone s'appelle Yomotsu Hirasaka, la pente qui sépare les vivants du Yomi dan
 | Le passeur | Principale | Charon présente le monde et envoie le joueur au village | Déblocage du village |
 | Le nom du forgeron | Principale | Retrouver dans les rizières la plaque votive (ema) où Tetsu avait écrit son nom | Tetsu retrouve la mémoire, la forge s'ouvre |
 | La dame des rizières | Principale | Des âmes disparaissent dans les rizières : entrer dans le donjon et vaincre la Jorōgumo | Boutique de fin, suite de l'histoire |
+| Derrière le sceau | Principale | Le moine raconte qu'Izanami ronge le sceau ; dénouer la corde du Grand Rocher, descendre dans le Palais et affronter Izanami | Le Palais d'Izanami, son butin, le dernier mot du moine |
 | La lanterne de Yuki | Secondaire | Rapporter une braise de hitodama | Recette de la Lanterne-braise |
 | Le tanuki parmi les statues | Secondaire | Trouver lequel des Jizō est le tanuki déguisé | Un indice vers un secret et un coffre |
 
@@ -426,7 +465,7 @@ La zone s'appelle Yomotsu Hirasaka, la pente qui sépare les vivants du Yomi dan
 - **Les six Jizō** : dans la tradition japonaise, six statues de Jizō protègent les âmes. Offrir une Obole à chacune donne une récompense unique.
 - **Derrière la cascade** : un coffre et un fragment de mémoire qui raconte la légende du fil de Jōren. Le joueur qui explore obtient ainsi l'indice sur la faiblesse de la Jorōgumo.
 - **Sous le pont des rizières** : un coffre d'Oboles et de matériaux.
-- **Le Grand Rocher** : écouter la voix derrière le sceau débloque un premier fragment sur Izanami, en préparation de la suite.
+- **Le Grand Rocher** : écouter la voix derrière le sceau débloque un premier fragment sur Izanami. Après la Jorōgumo, c'est l'entrée du Palais d'Izanami.
 
 ## Progression
 
@@ -540,7 +579,7 @@ La V1 est une tranche jouable complète mais petite : une île, un donjon, cinq 
 | Domaine | Dans la V1 | Plus tard |
 | --- | --- | --- |
 | Monde | Île du Yomi : petite zone, 2 ou 3 quêtes courtes, barque réduite (marchand, forge, ouverture des coffres) | Autres îles, Mésopotamie, agrandissement de la barque |
-| Donjons | Les Rizières noyées, boss Jorōgumo, boutique de fin, coffres, drops | Difficulté à l'entrée, rotation, autres donjons |
+| Donjons | Les Rizières noyées (Jorōgumo) et le Palais d'Izanami (en place), boutiques de fin, coffres, drops | Rotation, donjons des autres îles |
 | Classes | Les cinq classes et leurs armes du Yomi (en place) | Armes des autres îles, classe secondaire |
 | Races | Les quatre races, passifs simples (en place) | Transformation du Hanyō à la demande, apparence par race, Nahual, Sidhe, affinité d'île |
 | Équipement | 7 emplacements, niveaux d'arme, tags et paliers, 2 ou 3 reliques | Sceaux, armes hybrides, éveil, fusion, panoplies |

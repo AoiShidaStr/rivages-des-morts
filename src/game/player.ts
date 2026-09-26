@@ -411,10 +411,10 @@ export class Player {
   }
 
   /** Temps d'un coup d'arme, raccourcis pendant la Frénésie. */
-  private timing(): { windup: number; active: number; recovery: number } {
+  private timing(): { windup: number; active: number; recovery: number; commit: number } {
     const a = this.cfg.attack;
     const f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
-    return { windup: a.windup * f, active: a.active * f, recovery: a.recovery * f };
+    return { windup: a.windup * f, active: a.active * f, recovery: a.recovery * f, commit: a.commit * f };
   }
 
   private updateFree(dt: number, input: InputFrame, aimDir: Vec2, slow: number): void {
@@ -480,7 +480,7 @@ export class Player {
     if (!a.swung && a.t >= time.windup) {
       a.swung = true;
       if (ranged) world.loose(a.dir);
-      else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range, arcDeg: c.arcDeg });
+      else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
     }
     const recoveryStart = time.windup + time.active;
     if (!ranged && a.t >= time.windup && a.t < recoveryStart) {
@@ -493,6 +493,10 @@ export class Player {
       this.facing = aimDir;
       this.startAttack();
     } else if (a.t >= recoveryStart + time.recovery) {
+      this.action = { kind: 'free' };
+    } else if (!wantsNext && a.t >= Math.max(time.commit, recoveryStart) && length(input.move) > 0.05) {
+      // Passé l'engagement de l'arme, se déplacer interrompt la fin du coup. Jamais avant que le coup ne porte :
+      // on frappe souvent en marchant ; la feinte, elle, passe par l'esquive.
       this.action = { kind: 'free' };
     }
   }
@@ -693,11 +697,13 @@ export class Player {
     world.emit({ type: 'frenzy', pos: { ...this.pos } });
   }
 
-  /** L'esquive et le Bond peuvent interrompre la récupération d'un coup, pas son élan ; et le tir chargé à tout moment. */
+  /**
+   * L'esquive et les compétences de mouvement interrompent un coup une fois passé l'engagement de l'arme
+   * (dès l'élan pour les kunai, jamais pour le kanabō) ; et le tir chargé à tout moment.
+   */
   private canCancel(): boolean {
     const a = this.action;
     if (a.kind === 'free' || a.kind === 'draw') return true;
-    const time = this.timing();
-    return a.kind === 'attack' && a.t >= time.windup + time.active;
+    return a.kind === 'attack' && a.t >= this.timing().commit;
   }
 }
