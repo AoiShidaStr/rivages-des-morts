@@ -572,4 +572,199 @@ export const ICONS = {
     c.line([6, 12], [26, 21], 0, '#c8412f');
     c.line([26, 21], [30, 26], 0, '#c8412f');
   },
+  os(c) {
+    // Os de guerrier du Yomi : fémur ou fragment d'os ancien blanchi, gravé.
+    poly(c, [[7, 23], [10, 26], [23, 11], [20, 8]], '#f0ebe1');
+    poly(c, [[9, 23], [11, 25], [23, 11], [21, 9]], '#dad2c3');
+    // Condyles aux extrémités
+    c.disc(7, 22, 2.2, '#f0ebe1');
+    c.disc(11, 26, 2.2, '#dad2c3');
+    c.disc(21, 7, 2.2, '#f0ebe1');
+    c.disc(25, 11, 2.2, '#dad2c3');
+    c.set(7, 21, '#ffffff');
+    c.set(20, 6, '#ffffff');
+    // Gravures/craquelures sombres
+    px(c, [[14, 16], [15, 15], [17, 13]], '#7a7263');
+  },
+  foudre(c) {
+    // Éclat de foudre : éclat d'éclair solidifié, cyan électrique et cœur blanc.
+    poly(c, [[16, 3], [12, 14], [18, 14], [13, 29], [22, 13], [16, 13]], '#ffe76a');
+    poly(c, [[16, 6], [13, 14], [17, 14], [15, 25], [20, 14], [17, 14]], '#ffffff');
+    px(c, [[7, 11], [8, 12], [24, 8], [25, 9], [9, 22], [10, 23], [23, 20], [24, 21]], '#52e8ff');
+    px(c, [[16, 1], [12, 30]], '#ffe76a');
+  },
+
+  // --- Objets du Palais d'Izanami (Yomi) -------------------------------------------
+  'totsuka-tsurugi'(c) {
+    // Épée droite archaïque à double tranchant, crépitements d'éclairs dorés et cyan.
+    for (let i = 0; i <= 20; i++) {
+      c.set(10 + i, 21 - i, '#eef8ff');
+      c.set(11 + i, 21 - i, '#c5e5f8');
+      c.set(11 + i, 22 - i, '#7eaec9');
+    }
+    c.set(31, 0, '#ffffff');
+    // Garde ailée en bronze antique
+    poly(c, [[7, 23], [12, 18], [14, 20], [9, 25]], '#d4a843');
+    c.set(8, 24, '#ffe785');
+    c.set(13, 19, '#ffe785');
+    c.set(10, 21, '#8a6218');
+    // Poignée tressée et pommeau rond
+    for (let i = 0; i <= 5; i++) {
+      c.set(7 - i, 25 + i, i % 2 ? '#9e3323' : '#4a2118');
+      c.set(8 - i, 25 + i, '#26120e');
+    }
+    c.disc(1, 31, 1.3, '#d4a843');
+    c.set(1, 31, '#ffe785');
+    // Éclairs qui crépitent le long de la lame
+    px(c, [[15, 14], [16, 13], [17, 15], [19, 11], [20, 10], [21, 12], [24, 6], [25, 5], [26, 7]], '#ffe96b');
+    px(c, [[14, 18], [16, 17], [22, 9], [23, 8], [27, 4]], '#68f0ff');
+  },
+
+  'kaiken-izanami'(c) {
+    // Petit poignard de deuil sorti à demi de son fourreau laqué noir, reflets spectraux.
+    // Fourreau noir et or
+    for (let i = 0; i <= 10; i++) {
+      c.set(8 - i, 23 + i, '#1a1820');
+      c.set(9 - i, 23 + i, '#2d2b38');
+      c.set(9 - i, 24 + i, '#111015');
+    }
+    px(c, [[3, 29], [2, 30], [8, 23], [9, 22]], '#d4a843');
+    // Ruban de deuil pourpre qui flotte
+    c.line([6, 25], [10, 29], 0, '#68203d');
+    c.line([10, 29], [14, 30], 0, '#943158');
+    // Bague de garde et poignée
+    c.disc(11, 20, 1.5, '#d4a843');
+    for (let i = 0; i <= 4; i++) {
+      c.set(13 + i, 18 - i, '#1a1820');
+      c.set(14 + i, 18 - i, '#f1f0ea');
+    }
+    // Lame en acier pâle avec aura mauve de mort
+    for (let i = 0; i <= 10; i++) {
+      c.set(12 + i, 19 - i, '#f4f5f8');
+      c.set(13 + i, 19 - i, '#bcc3d0');
+    }
+    c.set(23, 8, '#ffffff');
+    px(c, [[15, 15], [18, 12], [21, 9]], '#b988db');
+    px(c, [[16, 16], [19, 13]], '#7a42a0');
+  },
+
+  'arc-pecher'(c) {
+    // Arc sculpté dans le bois de pêcher du Yomi, fleurs de pêcher et sève dorée.
+    // Bois courbé
+    for (let a = -120; a <= 30; a += 5) {
+      const rad = (a * Math.PI) / 180;
+      const x = Math.round(18 + Math.cos(rad) * 14);
+      const y = Math.round(16 + Math.sin(rad) * 14);
+      c.set(x, y, '#633820');
+      c.set(x - 1, y, '#8c5230');
+    }
+    // Extrémités renforcées
+    c.disc(11, 4, 1.2, '#ebd8a7');
+    c.disc(30, 23, 1.2, '#ebd8a7');
+    // Corde tendue
+    c.line([11, 4], [30, 23], 0, '#f5efe1');
+    // Deux fleurs de pêcher roses écloses sur le bois
+    for (const [fx, fy] of [[15, 7], [26, 15]]) {
+      c.set(fx, fy, '#fff0a3'); // cœur or
+      px(c, [[fx - 1, fy], [fx + 1, fy], [fx, fy - 1], [fx, fy + 1]], '#ff7aa2');
+      px(c, [[fx - 1, fy - 1], [fx + 1, fy + 1]], '#ffa8c4');
+    }
+    // Goutte de sève dorée
+    c.disc(19, 27, 1.2, '#f5bb33');
+    c.set(19, 26, '#fff4b8');
+  },
+
+  'voile-izanami'(c) {
+    // Voile blanc vaporeux d'Izanami, mousseline translucide, diadème spectral et perles.
+    // Diadème en croissant d'argent
+    for (let a = 190; a <= 350; a += 10) {
+      const rad = (a * Math.PI) / 180;
+      const x = Math.round(16 + Math.cos(rad) * 8);
+      const y = Math.round(10 + Math.sin(rad) * 3);
+      c.set(x, y, '#e8f4fc');
+      c.set(x, y + 1, '#97b8d4');
+    }
+    c.disc(16, 7, 1.4, '#cde9ff');
+    c.set(16, 6, '#ffffff');
+    // Voile qui retombe en vagues vaporeuses
+    poly(c, [[9, 10], [23, 10], [27, 26], [22, 29], [16, 26], [10, 29], [5, 26]], '#bdd4e8');
+    poly(c, [[11, 10], [21, 10], [25, 24], [16, 24], [7, 24]], '#e3effa');
+    poly(c, [[13, 11], [19, 11], [22, 22], [16, 23], [10, 22]], '#fbfdff');
+    // Plis et liserés transparents
+    c.line([12, 12], [8, 27], 0, '#ffffff');
+    c.line([16, 11], [16, 25], 0, '#ffffff');
+    c.line([20, 12], [24, 27], 0, '#ffffff');
+  },
+
+  'do-yomi'(c) {
+    // Cuirasse d'os et de lamelles noires laquées du Yomi, cordons pourpres.
+    // Plastron principal
+    poly(c, [[8, 7], [24, 7], [26, 22], [22, 28], [10, 28], [6, 22]], '#1c1b24');
+    poly(c, [[10, 8], [22, 8], [24, 21], [20, 26], [12, 26], [8, 21]], '#2a2936');
+    // Lamelles horizontales
+    for (let y = 11; y <= 23; y += 4) {
+      c.line([10, y], [22, y], 0, '#3f3e50');
+      c.line([10, y + 1], [22, y + 1], 0, '#15141a');
+    }
+    // Cordons de laçage pourpre
+    for (let y = 10; y <= 22; y += 4) {
+      px(c, [[13, y], [14, y], [18, y], [19, y]], '#9c2a38');
+    }
+    // Écusson pectoral en os sculpté pâle
+    poly(c, [[14, 10], [18, 10], [17, 15], [16, 17], [15, 15]], '#eeebe3');
+    px(c, [[15, 11], [17, 11], [16, 14]], '#b0ab9b');
+    // Épaulières
+    poly(c, [[5, 8], [9, 8], [7, 14], [4, 12]], '#2a2936');
+    poly(c, [[23, 8], [27, 8], [28, 12], [25, 14]], '#2a2936');
+  },
+
+  'peche-okamuzumi'(c) {
+    // Pêche divine d'Izanagi, or et rose vermeil, feuilles de jade, aura divine.
+    // Aura de lumière sacrée
+    px(c, [[16, 2], [6, 11], [26, 11], [16, 29], [7, 24], [25, 24], [5, 17], [27, 17]], '#ffe875');
+    // Tige et feuilles de jade
+    c.line([16, 6], [16, 9], 1, '#4a331c');
+    poly(c, [[11, 6], [15, 7], [11, 10]], '#3d824d');
+    poly(c, [[17, 7], [22, 6], [21, 10]], '#54a867');
+    c.set(13, 7, '#72d98a');
+    c.set(19, 7, '#72d98a');
+    // Corps de la pêche (deux joues arrondies qui se rejoignent en pointe vers le bas)
+    c.disc(12, 17, 6, '#e04a58');
+    c.disc(20, 17, 6, '#e04a58');
+    poly(c, [[8, 18], [24, 18], [16, 27]], '#e04a58');
+    // Cœur doré et éclat
+    c.disc(14, 16, 4.5, '#f59842');
+    c.disc(15, 15, 3.5, '#ffd24d');
+    c.disc(14, 14, 2, '#fff494');
+    c.set(13, 13, '#ffffff');
+    // Sillon central de la pêche
+    for (let y = 11; y <= 24; y++) {
+      c.set(16, y, '#ba2b44');
+    }
+  },
+
+  'peigne-izanagi'(c) {
+    // Peigne en bambou doré courbé, dont les dents germent en jeunes pousses.
+    // Dos courbé du peigne en bambou
+    for (let a = 200; a <= 340; a += 8) {
+      const rad = (a * Math.PI) / 180;
+      const x = Math.round(16 + Math.cos(rad) * 11);
+      const y = Math.round(17 + Math.sin(rad) * 6);
+      c.disc(x, y, 1.8, '#c99436');
+      c.set(x, y - 1, '#fed476');
+    }
+    // Dents du peigne
+    for (let x = 8; x <= 24; x += 2) {
+      const len = 7 + Math.sin(((x - 8) / 16) * Math.PI) * 4;
+      c.line([x, 17], [x, Math.round(17 + len)], 0, '#a87422');
+      c.set(x, 17, '#fed476');
+    }
+    // Pousses de bambou vertes qui germent du peigne
+    c.line([9, 13], [6, 7], 1, '#4f913d');
+    c.line([6, 7], [4, 4], 0, '#75c45e');
+    px(c, [[7, 8], [5, 5], [8, 10]], '#9ae885');
+    c.line([22, 13], [25, 7], 1, '#4f913d');
+    c.line([25, 7], [27, 4], 0, '#75c45e');
+    px(c, [[24, 8], [26, 5]], '#9ae885');
+  },
 };

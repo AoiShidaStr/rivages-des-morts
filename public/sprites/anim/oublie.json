@@ -8,7 +8,7 @@
     "w": 648,
     "h": 278
    },
-   "duration": 150
+   "duration": 113
   },
   {
    "filename": "idle 1",
@@ -18,7 +18,7 @@
     "w": 648,
     "h": 278
    },
-   "duration": 150
+   "duration": 113
   },
   {
    "filename": "idle 2",
@@ -28,7 +28,7 @@
     "w": 648,
     "h": 278
    },
-   "duration": 150
+   "duration": 113
   },
   {
    "filename": "idle 3",
@@ -38,7 +38,7 @@
     "w": 648,
     "h": 278
    },
-   "duration": 150
+   "duration": 113
   },
   {
    "filename": "idle 4",
@@ -48,7 +48,7 @@
     "w": 648,
     "h": 278
    },
-   "duration": 150
+   "duration": 113
   },
   {
    "filename": "idle 5",
@@ -58,13 +58,93 @@
     "w": 648,
     "h": 278
    },
-   "duration": 150
+   "duration": 113
+  },
+  {
+   "filename": "idle 6",
+   "frame": {
+    "x": 0,
+    "y": 278,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 113
+  },
+  {
+   "filename": "idle 7",
+   "frame": {
+    "x": 648,
+    "y": 278,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 113
+  },
+  {
+   "filename": "move 0",
+   "frame": {
+    "x": 1296,
+    "y": 278,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 1",
+   "frame": {
+    "x": 1944,
+    "y": 278,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 2",
+   "frame": {
+    "x": 2592,
+    "y": 278,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 3",
+   "frame": {
+    "x": 3240,
+    "y": 278,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 4",
+   "frame": {
+    "x": 0,
+    "y": 556,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 90
+  },
+  {
+   "filename": "move 5",
+   "frame": {
+    "x": 648,
+    "y": 556,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 90
   },
   {
    "filename": "move 6",
    "frame": {
-    "x": 0,
-    "y": 278,
+    "x": 1296,
+    "y": 556,
     "w": 648,
     "h": 278
    },
@@ -73,86 +153,6 @@
   {
    "filename": "move 7",
    "frame": {
-    "x": 648,
-    "y": 278,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "move 8",
-   "frame": {
-    "x": 1296,
-    "y": 278,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "move 9",
-   "frame": {
-    "x": 1944,
-    "y": 278,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "move 10",
-   "frame": {
-    "x": 2592,
-    "y": 278,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "move 11",
-   "frame": {
-    "x": 3240,
-    "y": 278,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "move 12",
-   "frame": {
-    "x": 0,
-    "y": 556,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "move 13",
-   "frame": {
-    "x": 648,
-    "y": 556,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "windup 14",
-   "frame": {
-    "x": 1296,
-    "y": 556,
-    "w": 648,
-    "h": 278
-   },
-   "duration": 90
-  },
-  {
-   "filename": "windup 15",
-   "frame": {
     "x": 1944,
     "y": 556,
     "w": 648,
@@ -161,124 +161,244 @@
    "duration": 90
   },
   {
-   "filename": "windup 16",
+   "filename": "windup 0",
    "frame": {
     "x": 2592,
     "y": 556,
     "w": 648,
     "h": 278
    },
-   "duration": 90
+   "duration": 56
   },
   {
-   "filename": "windup 17",
+   "filename": "windup 1",
    "frame": {
     "x": 3240,
     "y": 556,
     "w": 648,
     "h": 278
    },
-   "duration": 90
+   "duration": 56
   },
   {
-   "filename": "windup 18",
+   "filename": "windup 2",
    "frame": {
     "x": 0,
     "y": 834,
     "w": 648,
     "h": 278
    },
-   "duration": 90
+   "duration": 56
   },
   {
-   "filename": "strike 19",
+   "filename": "windup 3",
    "frame": {
     "x": 648,
     "y": 834,
     "w": 648,
     "h": 278
    },
-   "duration": 50
+   "duration": 56
   },
   {
-   "filename": "strike 20",
+   "filename": "windup 4",
    "frame": {
     "x": 1296,
     "y": 834,
     "w": 648,
     "h": 278
    },
-   "duration": 50
+   "duration": 56
   },
   {
-   "filename": "strike 21",
+   "filename": "windup 5",
    "frame": {
     "x": 1944,
     "y": 834,
     "w": 648,
     "h": 278
    },
-   "duration": 60
+   "duration": 56
   },
   {
-   "filename": "strike 22",
+   "filename": "windup 6",
    "frame": {
     "x": 2592,
     "y": 834,
     "w": 648,
     "h": 278
    },
-   "duration": 90
+   "duration": 56
   },
   {
-   "filename": "strike 23",
+   "filename": "windup 7",
    "frame": {
     "x": 3240,
     "y": 834,
     "w": 648,
     "h": 278
    },
-   "duration": 110
+   "duration": 56
   },
   {
-   "filename": "strike 24",
+   "filename": "strike 0",
    "frame": {
     "x": 0,
     "y": 1112,
     "w": 648,
     "h": 278
    },
-   "duration": 140
+   "duration": 63
   },
   {
-   "filename": "stunned 25",
+   "filename": "strike 1",
    "frame": {
     "x": 648,
     "y": 1112,
     "w": 648,
     "h": 278
    },
-   "duration": 180
+   "duration": 63
   },
   {
-   "filename": "stunned 26",
+   "filename": "strike 2",
    "frame": {
     "x": 1296,
     "y": 1112,
     "w": 648,
     "h": 278
    },
-   "duration": 180
+   "duration": 63
   },
   {
-   "filename": "stunned 27",
+   "filename": "strike 3",
    "frame": {
     "x": 1944,
     "y": 1112,
     "w": 648,
     "h": 278
    },
-   "duration": 180
+   "duration": 63
+  },
+  {
+   "filename": "strike 4",
+   "frame": {
+    "x": 2592,
+    "y": 1112,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 63
+  },
+  {
+   "filename": "strike 5",
+   "frame": {
+    "x": 3240,
+    "y": 1112,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 63
+  },
+  {
+   "filename": "strike 6",
+   "frame": {
+    "x": 0,
+    "y": 1390,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 63
+  },
+  {
+   "filename": "strike 7",
+   "frame": {
+    "x": 648,
+    "y": 1390,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 63
+  },
+  {
+   "filename": "stunned 0",
+   "frame": {
+    "x": 1296,
+    "y": 1390,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 1",
+   "frame": {
+    "x": 1944,
+    "y": 1390,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 2",
+   "frame": {
+    "x": 2592,
+    "y": 1390,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 3",
+   "frame": {
+    "x": 3240,
+    "y": 1390,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 4",
+   "frame": {
+    "x": 0,
+    "y": 1668,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 5",
+   "frame": {
+    "x": 648,
+    "y": 1668,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 6",
+   "frame": {
+    "x": 1296,
+    "y": 1668,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
+  },
+  {
+   "filename": "stunned 7",
+   "frame": {
+    "x": 1944,
+    "y": 1668,
+    "w": 648,
+    "h": 278
+   },
+   "duration": 68
   }
  ],
  "meta": {
@@ -286,7 +406,7 @@
   "image": "oublie.webp",
   "size": {
    "w": 3888,
-   "h": 1390
+   "h": 1946
   },
   "smooth": true,
   "bodyHeight": 240,
@@ -298,33 +418,33 @@
    {
     "name": "idle",
     "from": 0,
-    "to": 5,
+    "to": 7,
     "direction": "forward"
    },
    {
     "name": "move",
-    "from": 6,
-    "to": 13,
+    "from": 8,
+    "to": 15,
     "direction": "forward"
    },
    {
     "name": "windup",
-    "from": 14,
-    "to": 18,
+    "from": 16,
+    "to": 23,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "strike",
-    "from": 19,
-    "to": 24,
+    "from": 24,
+    "to": 31,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "stunned",
-    "from": 25,
-    "to": 27,
+    "from": 32,
+    "to": 39,
     "direction": "forward"
    }
   ]

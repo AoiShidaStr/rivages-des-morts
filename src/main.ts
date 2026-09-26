@@ -29,11 +29,9 @@ const devWave = params.has('vague') ? Math.max(0, Number(params.get('vague')) - 
 const devLevel = params.has('niveau') ? Number(params.get('niveau')) || 1 : null;
 const devDungeon = params.get('donjon') ?? 'rizieres';
 
-/** `?pixel=0` revient aux images peintes, pour comparer avec les planches en pixel art. */
-function spriteManifest(): SpriteManifest {
-  const manifest = withHeroSprites(sprites as SpriteManifest, Object.keys(content.skills.races), Object.keys(content.skills.classes));
-  if (params.get('pixel') !== '0') return manifest;
-  return Object.fromEntries(Object.entries(manifest).map(([name, def]) => [name, { ...def, sheet: undefined }]));
+/** Renvoie le manifeste des sprites avec les planches d'animation appropriées (peintes par défaut, `?pixel=1` pour pixel art). */
+function spriteManifest(base: SpriteManifest): SpriteManifest {
+  return withHeroSprites(base, Object.keys(content.skills.races), Object.keys(content.skills.classes));
 }
 
 function element<T extends HTMLElement>(id: string): T {
@@ -48,8 +46,8 @@ async function start(): Promise<void> {
   const engine = new Engine(canvas, true, { stencil: false }, true);
   const progress = Progress.load(catalog);
   const island = new Island(content.island, progress);
-  const dungeonRenderer = new Renderer(engine, canvas, overlay, spriteManifest(), config.arenaHalfSize);
-  const islandRenderer = new IslandRenderer(engine, canvas, overlay, content.islandSprites);
+  const dungeonRenderer = new Renderer(engine, canvas, overlay, spriteManifest(sprites as SpriteManifest), config.arenaHalfSize);
+  const islandRenderer = new IslandRenderer(engine, canvas, overlay, spriteManifest(content.islandSprites as SpriteManifest));
   await Promise.all([dungeonRenderer.load(), islandRenderer.load(island)]);
 
   const app = new App({

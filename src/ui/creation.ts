@@ -77,9 +77,56 @@ export class CreationScreen {
         ),
       ];
 
+      const previewCanvas = h('canvas', { width: '168', height: '126', class: 'hero-preview-canvas' }) as HTMLCanvasElement;
+      const ctx = previewCanvas.getContext('2d');
+      const comboName = hero.race === 'einherjar' && hero.class === 'guerrier' ? 'heros' : `heros-${hero.race}-${hero.class}`;
+      const animImg = new Image();
+      animImg.src = `${import.meta.env.BASE_URL}sprites/anim/${comboName}.webp`;
+      let frame = 0;
+      let animId: number | null = null;
+      let lastTime = performance.now();
+      const drawFrame = () => {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        ctx.imageSmoothingEnabled = true;
+        if (animImg.complete && animImg.naturalWidth > 0) {
+          const col = frame % 7;
+          const row = Math.floor(frame / 7);
+          ctx.drawImage(animImg, col * 536, row * 296, 536, 296, 0, 0, 168, 126);
+        }
+      };
+      const loop = (now: number) => {
+        if (!previewCanvas.isConnected) return;
+        if (now - lastTime >= 75) {
+          frame = (frame + 1) % 16;
+          lastTime = now;
+          drawFrame();
+        }
+        animId = requestAnimationFrame(loop);
+      };
+      animImg.onload = () => {
+        drawFrame();
+        if (animId !== null) cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(loop);
+      };
+
+      const paintedImg = h('img', {
+        src: `${import.meta.env.BASE_URL}sprites/heros-${hero.race}-${hero.class}.png`,
+        alt: `${race.name} ${cls.name}`,
+        class: 'hero-painted-preview',
+      });
+
+      const previewBox = h(
+        'div',
+        { class: 'hero-preview-box' },
+        h('div', { class: 'hero-preview-visuals' }, paintedImg, previewCanvas),
+        h('span', { class: 'hero-preview-label' }, `${race.name} · ${cls.name}`),
+      );
+
       const detail = h(
         'div',
         { class: 'creation-detail' },
+        previewBox,
         h(
           'div',
           {},
@@ -153,7 +200,7 @@ export class CreationScreen {
               `Commencer : ${cls.name} ${race.name}`,
             ),
           ),
-          h('p', { class: 'footnote' }, 'Même apparence pour toutes les races et les classes dans ce prototype'),
+          h('p', { class: 'footnote' }, 'Chaque classe possède son design peint et ses animations de combat dédiées'),
         ),
       );
     };

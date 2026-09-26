@@ -14,7 +14,8 @@
     "objets": "node tools/collection-objets.mjs",
     "icones": "node tools/icones.mjs",
     "icones-pixel": "node tools/icones-pixel.mjs",
-    "pixel": "node tools/pixel.mjs"
+    "pixel": "node tools/pixel.mjs",
+    "anims-heros": "node tools/generate-all-hero-16frames.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^9.28.0"
