@@ -1,5 +1,7 @@
 import { racePassives, type ItemDef, type SkillsDef } from '../game/loadout';
 import type { Hero } from '../game/progress';
+import { heroImage, heroSprite } from '../render/heroes';
+import type { AsepriteSheet } from '../render/sheets';
 import { h } from './dom';
 
 /**
@@ -77,41 +79,11 @@ export class CreationScreen {
         ),
       ];
 
-      const previewCanvas = h('canvas', { width: '168', height: '126', class: 'hero-preview-canvas' }) as HTMLCanvasElement;
-      const ctx = previewCanvas.getContext('2d');
-      const comboName = hero.race === 'einherjar' && hero.class === 'guerrier' ? 'heros' : `heros-${hero.race}-${hero.class}`;
-      const animImg = new Image();
-      animImg.src = `${import.meta.env.BASE_URL}sprites/anim/${comboName}.webp`;
-      let frame = 0;
-      let animId: number | null = null;
-      let lastTime = performance.now();
-      const drawFrame = () => {
-        if (!ctx) return;
-        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-        ctx.imageSmoothingEnabled = true;
-        if (animImg.complete && animImg.naturalWidth > 0) {
-          const col = frame % 7;
-          const row = Math.floor(frame / 7);
-          ctx.drawImage(animImg, col * 536, row * 296, 536, 296, 0, 0, 168, 126);
-        }
-      };
-      const loop = (now: number) => {
-        if (!previewCanvas.isConnected) return;
-        if (now - lastTime >= 75) {
-          frame = (frame + 1) % 16;
-          lastTime = now;
-          drawFrame();
-        }
-        animId = requestAnimationFrame(loop);
-      };
-      animImg.onload = () => {
-        drawFrame();
-        if (animId !== null) cancelAnimationFrame(animId);
-        animId = requestAnimationFrame(loop);
-      };
-
+      // Aperçu : la peinture du héros, et son animation d'attente telle qu'elle apparaît en jeu.
+      const previewCanvas = h('canvas', { class: 'hero-preview-canvas' });
+      playIdle(previewCanvas, heroSprite(hero));
       const paintedImg = h('img', {
-        src: `${import.meta.env.BASE_URL}sprites/heros-${hero.race}-${hero.class}.png`,
+        src: `${import.meta.env.BASE_URL}sprites/${heroImage(hero)}`,
         alt: `${race.name} ${cls.name}`,
         class: 'hero-painted-preview',
       });
@@ -211,4 +183,62 @@ export class CreationScreen {
   hide(): void {
     this.root.classList.remove('visible');
   }
+}
+
+/** Planches déjà chargées pour l'aperçu : leur découpage et leur image. */
+const sheets = new Map<string, Promise<{ sheet: AsepriteSheet; image: HTMLImageElement } | null>>();
+
+function loadAnim(name: string): Promise<{ sheet: AsepriteSheet; image: HTMLImageElement } | null> {
+  let pending = sheets.get(name);
+  if (!pending) {
+    const base = `${import.meta.env.BASE_URL}sprites/anim/`;
+    pending = fetch(`${base}${name}.json`)
+      .then((response) => (response.ok ? (response.json() as Promise<AsepriteSheet>) : Promise.reject(new Error(name))))
+      .then(
+        (sheet) =>
+          new Promise<{ sheet: AsepriteSheet; image: HTMLImageElement } | null>((resolve) => {
+            const image = new Image();
+            image.onload = () => resolve({ sheet, image });
+            image.onerror = () => resolve(null);
+            image.src = `${base}${sheet.meta.image}`;
+          }),
+      )
+      .catch(() => null);
+    sheets.set(name, pending);
+  }
+  return pending;
+}
+
+/** Joue en boucle l'animation d'attente de la planche `name` dans `canvas`, tant qu'il est affiché. */
+function playIdle(canvas: HTMLCanvasElement, name: string): void {
+  void loadAnim(name).then((anim) => {
+    if (!anim || !canvas.isConnected) return;
+    const { sheet, image } = anim;
+    const tag = sheet.meta.frameTags?.find((t) => t.name === 'idle');
+    const frames = sheet.frames.slice(tag?.from ?? 0, (tag?.to ?? 0) + 1);
+    const { w, h: height } = frames[0].frame;
+    // Une case entière, réduite de moitié : les proportions de la planche sont gardées.
+    canvas.width = Math.round(w / 2);
+    canvas.height = Math.round(height / 2);
+    const ctx = canvas.getContext('2d')!;
+    const total = frames.reduce((sum, f) => sum + f.duration, 0);
+    const start = performance.now();
+    const tick = (now: number) => {
+      if (!canvas.isConnected) return;
+      let t = (now - start) % Math.max(1, total);
+      let frame = frames[frames.length - 1];
+      for (const f of frames) {
+        if (t < f.duration) {
+          frame = f;
+          break;
+        }
+        t -= f.duration;
+      }
+      const { x, y, w: fw, h: fh } = frame.frame;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, x, y, fw, fh, 0, 0, canvas.width, canvas.height);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 }

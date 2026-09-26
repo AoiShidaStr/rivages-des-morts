@@ -26,34 +26,22 @@ async function main() {
     kfs[key] = await loadKeyframesWithLandmarks(path, 35);
   }
 
-  // 1. Base classes (16 frames per animation state)
-  console.log('\n--- Building 16-frame Base Class Sheets ---');
-  for (const cls of ['invocateur', 'lame', 'paladin', 'rodeur']) {
-    const frames = build16FrameHeroSequence(kfs[cls]);
-    await write16FrameSheet(`heros-${cls}`, frames);
-  }
-
-  // 2. Base race warriors (16 frames per animation state)
-  console.log('\n--- Building 16-frame Race Warrior Sheets ---');
-  await write16FrameSheet('heros-oushebti', build16FrameHeroSequence(kfs.oushebti));
-  await write16FrameSheet('heros-demi-dieu', build16FrameHeroSequence(kfs.demidieu));
-  await write16FrameSheet('heros-hanyo', build16FrameHeroSequence(kfs.hanyo));
-
-  // 3. All 20 Race x Class combinations
-  console.log('\n--- Building 16-frame Sheets for All 20 Combinations ---');
+  // Toutes les combinaisons race × classe, sauf l'Einherjar guerrier : il garde sa planche peinte d'origine
+  // (anim/heros.json, npm run planches). Le jeu ne charge que la planche du héros joué (src/render/heroes.ts).
+  console.log('\n--- Building 16-frame Sheets for the Race x Class combinations ---');
   const races = ['einherjar', 'oushebti', 'demi-dieu', 'hanyo'];
   const classes = ['guerrier', 'invocateur', 'lame', 'paladin', 'rodeur'];
 
   for (const race of races) {
     const tint = raceTints[race];
     for (const cls of classes) {
+      if (race === 'einherjar' && cls === 'guerrier') continue;
       const comboName = `heros-${race}-${cls}`;
       let baseKfs;
       if (cls === 'guerrier') {
         if (race === 'oushebti') baseKfs = kfs.oushebti;
         else if (race === 'demi-dieu') baseKfs = kfs.demidieu;
         else if (race === 'hanyo') baseKfs = kfs.hanyo;
-        else baseKfs = kfs.demidieu; // fallback for einherjar warrior motion
       } else {
         baseKfs = kfs[cls];
       }

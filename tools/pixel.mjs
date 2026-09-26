@@ -30,9 +30,9 @@ import oublie from './pixel/oublie.mjs';
 import shikome from './pixel/shikome.mjs';
 
 // Les clés sont les noms des sprites du jeu (src/data/sprites.json). Le héros existe pour chaque race et
-// chaque classe : heros-<race>-<classe> (src/render/heroes.ts).
+// chaque classe : heros-<race>-<classe> (src/render/heroes.ts) ; l'Einherjar guerrier, lui, est `heros`.
 const heroes = Object.fromEntries(
-  RACE_IDS.flatMap((race) => KIT_IDS.map((kit) => [`heros-${race}-${kit}`, hero(race, kit)])),
+  RACE_IDS.flatMap((race) => KIT_IDS.map((kit) => [`heros-${race}-${kit}`, hero(race, kit)])).filter(([name]) => name !== 'heros-einherjar-guerrier'),
 );
 const characters = {
   heros,

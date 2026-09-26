@@ -24,6 +24,7 @@ import { Izanami, Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { PeachTree, Projectile, Stump, World } from '../game/world';
+import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
   drawArrow,
@@ -348,6 +349,11 @@ export class Renderer {
   private texts: FloatingText[] = [];
   /** Sprite du héros : sa race et sa classe (src/render/heroes.ts). */
   private heroSprite = 'heros';
+  /** Le héros demandé, affiché dès que sa planche est chargée. */
+  private wantedHero = 'heros';
+  private readonly heroLoads = new Map<string, Promise<void>>();
+  /** Planches de héros remplacées : libérées une fois la vue du héros refaite (voir sync). */
+  private retiredHeroTextures: BaseTexture[] = [];
 
   constructor(
     readonly engine: Engine,
@@ -397,18 +403,54 @@ export class Renderer {
     // Toile peinte si elle existe, sinon le dessin provisoire du constructeur.
     const web = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/toile.png`).catch(() => null);
     if (web) this.fxTextures.web = web;
-    await Promise.all(
-      Object.entries(this.manifest).map(async ([name, def]) => {
-        this.sprites.set(name, await this.loadSprite(name, def));
-      }),
-    );
+    // Les planches des héros des autres races et classes ne se chargent qu'à la demande (setHero) :
+    // chacune pèse plusieurs dizaines de Mo en mémoire graphique.
+    await Promise.all([
+      ...Object.entries(this.manifest)
+        .filter(([name]) => !isHeroVariant(name))
+        .map(async ([name, def]) => {
+          this.sprites.set(name, await this.loadSprite(name, def));
+        }),
+      ...(isHeroVariant(this.wantedHero) ? [this.loadHero(this.wantedHero)] : []),
+    ]);
     this.guardDecal = this.createDecal('guard', this.fxTextures.crescent, 2.6, 2.6, SPIRIT, 0.5, 0.03);
     this.guardDecal.mesh.isVisible = false;
   }
 
-  /** Change l'apparence du héros ; un sprite qui n'a pas pu être chargé garde celle par défaut. */
+  /**
+   * Change l'apparence du héros. Sa planche se charge à la première demande (on peut l'appeler avant `load`
+   * pour qu'elle arrive avec le reste) ; en attendant, il garde l'apparence précédente.
+   */
   setHero(sprite: string): void {
-    this.heroSprite = this.sprites.has(sprite) ? sprite : 'heros';
+    this.wantedHero = this.manifest[sprite] ? sprite : 'heros';
+    if (this.sprites.has(this.wantedHero)) this.showHero(this.wantedHero);
+    // Le héros de base arrive avec les autres sprites (load) ; les autres races et classes, à la demande.
+    else if (isHeroVariant(this.wantedHero)) void this.loadHero(this.wantedHero);
+  }
+
+  private loadHero(name: string): Promise<void> {
+    if (this.sprites.has(name)) return Promise.resolve();
+    let pending = this.heroLoads.get(name);
+    if (!pending) {
+      pending = this.loadSprite(name, this.manifest[name]).then((entry) => {
+        this.sprites.set(name, entry);
+        this.heroLoads.delete(name);
+        if (this.wantedHero === name) this.showHero(name);
+      });
+      this.heroLoads.set(name, pending);
+    }
+    return pending;
+  }
+
+  /** Affiche le héros `name` et libère la planche d'un héros d'une autre race ou classe qui ne sert plus. */
+  private showHero(name: string): void {
+    const previous = this.heroSprite;
+    this.heroSprite = name;
+    if (previous !== name && isHeroVariant(previous)) {
+      const entry = this.sprites.get(previous);
+      this.sprites.delete(previous);
+      if (entry) this.retiredHeroTextures.push(entry.texture);
+    }
   }
 
   /** Directions de l'écran au sol : ZQSD déplace le héros selon ces axes. */
@@ -440,6 +482,9 @@ export class Renderer {
       aura: player.frenzy > 0 || player.transformed > 0,
       hidden: player.hidden > 0,
     }, dt);
+    // La vue du héros vient d'être refaite avec sa nouvelle planche : l'ancienne peut partir.
+    for (const texture of this.retiredHeroTextures) texture.dispose();
+    this.retiredHeroTextures = [];
     for (const enemy of world.enemies) {
       seen.add(enemy.id);
       this.syncEntity(enemy.id, enemy.sprite, {

@@ -10,7 +10,7 @@ import type { GameConfig } from './game/config';
 import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
-import { withHeroSprites } from './render/heroes';
+import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { IslandRenderer } from './render/islandRenderer';
 import { Renderer, type SpriteManifest } from './render/renderer';
@@ -48,6 +48,10 @@ async function start(): Promise<void> {
   const island = new Island(content.island, progress);
   const dungeonRenderer = new Renderer(engine, canvas, overlay, spriteManifest(sprites as SpriteManifest), config.arenaHalfSize);
   const islandRenderer = new IslandRenderer(engine, canvas, overlay, spriteManifest(content.islandSprites as SpriteManifest));
+  // Seule la planche du héros de la sauvegarde se charge avec le reste ; les autres races et classes, à la demande.
+  const hero = heroSprite(progress.state.hero);
+  dungeonRenderer.setHero(hero);
+  islandRenderer.setHero(hero);
   await Promise.all([dungeonRenderer.load(), islandRenderer.load(island)]);
 
   const app = new App({

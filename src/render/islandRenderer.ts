@@ -19,6 +19,7 @@ import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawIslandGround, drawProp } from './pixelArt';
 import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
+import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 
@@ -76,6 +77,9 @@ export class IslandRenderer {
   /** Décors animés (cascade, portail…), qui bouclent sur leur animation d'attente. */
   private readonly animatedProps: Billboard[] = [];
   private player: Billboard | null = null;
+  /** Le héros demandé (race et classe), affiché dès que sa planche est chargée. */
+  private wantedHero = 'heros';
+  private readonly heroLoads = new Map<string, Promise<void>>();
   private highlight: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private shadowTexture!: BaseTexture;
   private readonly markers = new Map<string, Marker>();
@@ -108,32 +112,67 @@ export class IslandRenderer {
   async load(island: Island): Promise<void> {
     this.shadowTexture = this.canvasTexture('islandShadow', drawRadial(), false);
     await this.buildGround(island);
-    await Promise.all(
-      Object.entries(this.manifest).map(async ([name, def]) => {
-        const entry = await this.loadEntry(name, def);
-        if (entry) this.sprites.set(name, entry);
-      }),
-    );
+    // Les planches des héros des autres races et classes ne se chargent qu'à la demande (setHero) :
+    // chacune pèse plusieurs dizaines de Mo en mémoire graphique.
+    await Promise.all([
+      ...Object.entries(this.manifest)
+        .filter(([name]) => !isHeroVariant(name))
+        .map(async ([name, def]) => {
+          const entry = await this.loadEntry(name, def);
+          if (entry) this.sprites.set(name, entry);
+        }),
+      ...(isHeroVariant(this.wantedHero) ? [this.loadHero(this.wantedHero)] : []),
+    ]);
     for (const prop of island.data.props) {
       const entry = this.entryFor(prop.sprite, prop.height);
       if (!entry) continue;
       const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
       if (entry.anim) this.animatedProps.push(view);
     }
-    this.player = this.billboard('player', this.required('heros'), island.player.pos, 0.4, 'heros');
+    const hero = this.sprites.has(this.wantedHero) ? this.wantedHero : 'heros';
+    this.player = this.billboard('player', this.required(hero), island.player.pos, 0.4, hero);
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
     ring.mesh.isVisible = false;
     this.highlight = ring;
   }
 
-  /** Change l'apparence du héros (race et classe) ; sans planche, il garde l'image par défaut. */
+  /**
+   * Change l'apparence du héros (race et classe). Sa planche se charge à la première demande (on peut l'appeler
+   * avant `load` pour qu'elle arrive avec le reste) ; en attendant, il garde l'apparence précédente.
+   */
   setHero(sprite: string): void {
+    this.wantedHero = this.manifest[sprite] ? sprite : 'heros';
+    if (this.sprites.has(this.wantedHero)) this.showHero(this.wantedHero);
+    // Le héros de base arrive avec les autres sprites (load) ; les autres races et classes, à la demande.
+    else if (isHeroVariant(this.wantedHero)) void this.loadHero(this.wantedHero);
+  }
+
+  private loadHero(name: string): Promise<void> {
+    if (this.sprites.has(name)) return Promise.resolve();
+    let pending = this.heroLoads.get(name);
+    if (!pending) {
+      pending = this.loadEntry(name, this.manifest[name]).then((entry) => {
+        if (entry) this.sprites.set(name, entry);
+        this.heroLoads.delete(name);
+        if (this.wantedHero === name) this.showHero(name);
+      });
+      this.heroLoads.set(name, pending);
+    }
+    return pending;
+  }
+
+  /** Refait l'image du héros, et libère la planche d'un héros d'une autre race ou classe qui ne sert plus. */
+  private showHero(sprite: string): void {
     const old = this.player;
     if (!old || old.sprite === sprite) return;
     const entry = this.entryFor(sprite) ?? this.required('heros');
     const pos = { x: old.mesh.position.x, z: old.mesh.position.z };
     this.disposeBillboard(old);
     this.player = this.billboard('player', entry, pos, 0.4, sprite);
+    if (isHeroVariant(old.sprite)) {
+      this.sprites.get(old.sprite)?.texture.dispose();
+      this.sprites.delete(old.sprite);
+    }
   }
 
   /** Point de vue du menu principal : la caméra dérive lentement au-dessus du village. */
