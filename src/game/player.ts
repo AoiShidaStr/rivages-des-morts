@@ -235,7 +235,7 @@ export class Player {
     const warrior = c.kit === 'guerrier';
     if (warrior && input.skillRPressed && this.canFrenzy) this.startFrenzy(world);
     if (input.dodgePressed && this.dodgeCooldown <= 0 && this.canCancel()) this.startDodge(input, world);
-    else if (warrior && input.skillEPressed && this.canBond && this.canCancel()) this.startBond(input.aim, world);
+    else if (warrior && input.skillEPressed && this.canBond && this.canCancel()) this.startBond(input.aimGround, world);
     if (c.kit === 'invocateur') this.commandSouls(input, world);
     else if (c.kit === 'lame') this.bladeSkills(input, aimDir, world);
     else if (c.kit === 'paladin') this.paladinSkills(input, aimDir, world);

@@ -211,8 +211,13 @@ const MARK_COLORS: Record<MarkKind, Color3> = {
   death: new Color3(0.85, 0.2, 0.45),
   hunt: new Color3(1, 0.6, 0.3),
 };
-/** Hauteur de vol des flèches et du marteau. */
-const PROJECTILE_HEIGHT = 0.9;
+/**
+ * Hauteur de visée : la poitrine des personnages. La souris vise ce plan plutôt que le sol : en vue
+ * isométrique, le sol sous le curseur est 1,3 m derrière le corps que l'on pointe.
+ */
+export const AIM_HEIGHT = 0.9;
+/** Hauteur de vol des flèches et du marteau : celle de la visée, pour qu'ils passent sous le curseur. */
+const PROJECTILE_HEIGHT = AIM_HEIGHT;
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
 
@@ -416,12 +421,12 @@ export class Renderer {
     return { forward: this.forward, right: this.right };
   }
 
-  /** Point du sol sous le curseur (coordonnées CSS du canvas). */
-  pickGround(cssX: number, cssY: number): Vec2 | null {
+  /** Point sous la souris (coordonnées CSS du canvas) sur le plan horizontal à `height` au-dessus du sol (0 : le sol), ramené au sol. */
+  pickGround(cssX: number, cssY: number, height = 0): Vec2 | null {
     const ratio = this.engine.getRenderWidth() / Math.max(1, this.canvas.clientWidth);
     const ray = this.scene.createPickingRay(cssX * ratio, cssY * ratio, Matrix.Identity(), this.camera);
     if (Math.abs(ray.direction.y) < 1e-6) return null;
-    const t = -ray.origin.y / ray.direction.y;
+    const t = (height - ray.origin.y) / ray.direction.y;
     return { x: ray.origin.x + ray.direction.x * t, z: ray.origin.z + ray.direction.z * t };
   }
 
@@ -795,19 +800,22 @@ export class Renderer {
     material.setFloat('alpha', 0.55 * Math.min(1, world.aura) + 0.15 * Math.sin(this.time * 6));
   }
 
-  /** Tir chargé : un trait part du Rôdeur vers la souris, jusqu'où ira la flèche. */
+  /**
+   * Visée du Rôdeur : un trait part de sa poitrine vers la souris, jusqu'où ira la flèche. Il vole à la hauteur
+   * des flèches, donc passe sous le curseur. Discret au repos, il s'allonge et s'éclaire pendant le tir chargé.
+   */
   private syncAim(world: World): void {
     const player = world.player;
     const k = player.drawProgress;
-    const drawing = player.cfg.kit === 'rodeur' && player.pose !== 'dash' && k > 0;
-    if (!drawing && !this.aimDecal) return;
+    const shown = player.cfg.kit === 'rodeur' && player.pose !== 'dash' && player.pose !== 'airborne' && !player.dead;
+    if (!shown && !this.aimDecal) return;
     if (!this.aimDecal) {
-      this.aimDecal = this.createDecal('aim', this.fxTextures.streak, 1, 0.35, DRAW, 0.6, 0.035);
+      this.aimDecal = this.createDecal('aim', this.fxTextures.streak, 1, 0.35, DRAW, 0.6, PROJECTILE_HEIGHT);
       this.aimDecal.mesh.alphaIndex = DECAL_ORDER + 2;
     }
     const { mesh, material } = this.aimDecal;
-    mesh.isVisible = drawing;
-    if (!drawing) return;
+    mesh.isVisible = shown;
+    if (!shown) return;
     const charged = player.cfg.ranger.charged;
     const reach = player.cfg.attack.range * (1 + (charged.rangeFactor - 1) * k);
     const dir = player.facing;
@@ -815,8 +823,9 @@ export class Renderer {
     mesh.position.z = player.pos.z + (dir.z * reach) / 2;
     mesh.rotation.y = -angleOf(dir);
     mesh.scaling.x = reach;
+    mesh.scaling.z = k > 0 ? 1 : 0.6;
     material.setColor3('tint', k >= 1 ? WHITE : DRAW);
-    material.setFloat('alpha', k >= 1 ? 0.75 + 0.2 * Math.sin(this.time * 20) : 0.25 + 0.4 * k);
+    material.setFloat('alpha', k >= 1 ? 0.75 + 0.2 * Math.sin(this.time * 20) : k > 0 ? 0.25 + 0.4 * k : 0.16);
   }
 
   /** Nuage de l'Écran de fumée, là où les yokai croient trouver la Lame. */
