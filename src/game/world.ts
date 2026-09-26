@@ -14,6 +14,8 @@ const SPAWN_CLEARANCE = 5;
 const SAP_DELAY = 3;
 /** Avec le Masque d'Oublié, une âme compte comme si elle était trois fois plus proche que le héros. */
 const TAUNT_PULL = 3;
+/** Sans lui, un yokai préfère le héros : une âme doit être une fois et demie plus proche pour l'attirer. */
+const HERO_PULL = 1.5;
 
 /** Ce qu'un yokai peut attaquer : le héros, ou une âme liée de l'Invocateur. */
 export interface Foe {
@@ -22,8 +24,8 @@ export interface Foe {
   knockback: Vec2;
   /** Seul le héros bloque (Guerrier, Paladin), et seulement de face. */
   isGuarding(from: Vec2): boolean;
-  /** Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin). */
-  guard(world: World, attacker?: Enemy): void;
+  /** Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin), `amount` : la force du coup. */
+  guard(world: World, attacker?: Enemy, amount?: number): void;
   /** Faux si le coup n'a pas porté (esquive, invulnérabilité). */
   takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean;
 }
@@ -187,11 +189,11 @@ export class World {
   }
 
   /**
-   * La cible d'un yokai : la plus proche, entre le héros et les âmes. Avec le Masque d'Oublié, les âmes passent devant.
-   * Invisible, le héros est remplacé par son nuage de fumée.
+   * La cible d'un yokai : la plus proche, entre le héros et les âmes, le héros passant devant à distance égale.
+   * Avec le Masque d'Oublié, ce sont les âmes qui passent devant. Invisible, le héros est remplacé par son nuage de fumée.
    */
   pickFoe(from: Vec2): Foe {
-    const pull = this.player.cfg.perks?.summonTaunt ? TAUNT_PULL : 1;
+    const pull = this.player.cfg.perks?.summonTaunt ? TAUNT_PULL : 1 / HERO_PULL;
     let best: Foe = this.player.hidden > 0 && this.smoke ? this.smoke : this.player;
     let bestScore = distance(from, best.pos);
     for (const summon of this.summons) {
@@ -203,6 +205,13 @@ export class World {
       }
     }
     return best;
+  }
+
+  /** Miroir de Yata : part des dégâts qu'un yokai perd tant qu'il se tient dans l'Aura du Paladin. */
+  dazzle(pos: Vec2): number {
+    const weaken = this.player.cfg.perks?.auraWeaken;
+    if (!weaken || this.aura <= 0) return 0;
+    return distance(pos, this.player.pos) <= this.player.cfg.paladin.aura.radius ? weaken : 0;
   }
 
   /** Valeur d'une malédiction du niveau de donjon (0 si elle n'est pas active). */
@@ -283,6 +292,7 @@ export class World {
     const execute = perks.execute;
     if (execute && enemy.hp < enemy.maxHp * execute.threshold) amount *= 1 + execute.bonus;
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
+    if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
     // La marque d'ombre part au premier coup ; sur un ennemi abattu, elle reste pour Marée d'ombre.
     if (!enemy.dead) enemy.marks.shadow = 0;
     const rage = player.cfg.attack.rageOnHit * (perks.hitRageFactor ?? 1);
@@ -565,8 +575,10 @@ export class World {
     const perks = player.cfg.perks ?? {};
     for (const enemy of fallen) {
       if (!enemy.boss) this.graves.push({ kind: enemy.kind, pos: { ...enemy.pos }, time: this.time });
-      // Marée d'ombre : un ennemi marqué abattu rend une charge du Pas de l'ombre.
-      if (perks.dashRefund && (enemy.marks.shadow > 0 || enemy.marks.death > 0)) player.refundDash();
+      // Marée d'ombre : un ennemi marqué abattu rend une charge du Pas de l'ombre ; Festin de l'ombre, des PV.
+      const marked = enemy.marks.shadow > 0 || enemy.marks.death > 0;
+      if (perks.dashRefund && marked) player.refundDash();
+      if (perks.markKillHeal && marked) player.heal(perks.markKillHeal, this);
       // Moisson des âmes : la Marque de mort passe à l'ennemi le plus proche.
       if (perks.markJump && enemy.marks.death > 0 && !enemy.boss) {
         const range = player.cfg.blade.deathMark.range;
@@ -808,6 +820,8 @@ export class World {
         return true;
       case 'arrow':
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);
+        // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
+        if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos);
         if (p.full && !enemy.dead) {
           if (perks.chargedMark) this.hunt(enemy, perks.chargedMark);
           if (perks.chargedStun) enemy.stun(perks.chargedStun, 'daze', this);
@@ -1038,18 +1052,22 @@ export class World {
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
     const enemy = this.instantiate(kind, this.nextId++, pos);
     enemy.facing = normalize(sub(this.player.pos, pos));
-    // Niveau du donjon : tous les yokai sont renforcés, le boss encore plus sous le « Regard d'Izanami ».
+    // Niveau du donjon : tous les yokai sont renforcés ; le boss a sa propre base, et plus encore sous le « Regard d'Izanami ».
     const difficulty = this.cfg.difficulty;
     if (difficulty) {
-      const izanami = enemy.boss ? 1 + this.curse('izanami') : 1;
-      enemy.empower(difficulty.hp * izanami, difficulty.damage * izanami);
+      if (enemy.boss) {
+        const izanami = 1 + this.curse('izanami');
+        enemy.empower(difficulty.boss.hp * izanami, difficulty.boss.damage * izanami);
+      } else {
+        enemy.empower(difficulty.hp, difficulty.damage);
+      }
     }
     return enemy;
   }
 
   /** Puissance des attaques de zone de la Jorōgumo (niveau du donjon, « Regard d'Izanami »). */
   private bossMight(): number {
-    return (this.cfg.difficulty?.damage ?? 1) * (1 + this.curse('izanami'));
+    return (this.cfg.difficulty?.boss.damage ?? 1) * (1 + this.curse('izanami'));
   }
 
   /** « Sève du Yomi » : un yokai épargné quelques secondes se régénère. */

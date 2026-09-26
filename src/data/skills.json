@@ -34,10 +34,10 @@
       "passives": [
         {
           "name": "Serviteur funéraire",
-          "description": "+1 invocation active et des invocations 50 % plus durables (Invocateur).",
+          "description": "+1 invocation active et des invocations 30 % plus durables (Invocateur).",
           "effects": [
             { "op": "add", "path": "summon.max", "value": 1 },
-            { "op": "mul", "path": "summon.life", "value": 1.5 }
+            { "op": "mul", "path": "summon.life", "value": 1.3 }
           ]
         },
         {
@@ -110,7 +110,7 @@
       "kit": "guerrier",
       "weapon": "nodachi",
       "actives": [
-        { "key": "Clic droit", "name": "Blocage", "description": "Bloque les coups de face et remplit la rage." },
+        { "key": "Clic droit", "name": "Blocage", "description": "Arrête les trois quarts d'un coup de face et remplit la rage." },
         { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit." },
         { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
         { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
@@ -188,8 +188,11 @@
             {
               "id": "heracles-1",
               "name": "Garde du héros",
-              "description": "Ta garde couvre un angle bien plus large (130° → 180°).",
-              "effects": [{ "op": "set", "path": "block.arcDeg", "value": 180 }]
+              "description": "Ta garde arrête tout le coup, au lieu des trois quarts, et couvre un angle bien plus large (130° → 180°).",
+              "effects": [
+                { "op": "set", "path": "block.reduction", "value": 1 },
+                { "op": "set", "path": "block.arcDeg", "value": 180 }
+              ]
             },
             {
               "id": "heracles-2",
@@ -265,11 +268,11 @@
         {
           "key": "Clic droit",
           "name": "Lier",
-          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 30 s. Chaque âme active réduit tes propres dégâts de 8 %."
+          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 24 s. Chaque âme active réduit tes propres dégâts de 10 %."
         },
-        { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent deux fois plus fort." },
+        { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent 60 % plus fort." },
         { "key": "E", "name": "Sacrifice", "description": "Ta plus vieille âme explose : gros dégâts autour d’elle." },
-        { "key": "R", "name": "Chœur spectral", "description": "Pendant 6 s, tes âmes frappent 60 % plus fort et vont 30 % plus vite." }
+        { "key": "R", "name": "Chœur spectral", "description": "Pendant 6 s, tes âmes frappent 40 % plus fort et vont 20 % plus vite." }
       ],
       "tag": {
         "name": "Invocateur",
@@ -414,17 +417,19 @@
       "role": "DPS mêlée, peu de PV",
       "kit": "lame",
       "weapon": "kunai-jumeaux",
-      "about": "Réglages de base de la classe : moins de PV que le Guerrier, une esquive qui revient plus vite.",
+      "about": "Réglages de base de la classe : un peu moins de PV que le Guerrier, une esquive plus longue qui revient plus vite, et 4 PV rendus par ennemi marqué abattu (Festin de l'ombre).",
       "effects": [
         { "op": "set", "path": "kit", "value": "lame" },
-        { "op": "mul", "path": "maxHp", "value": 0.8 },
-        { "op": "mul", "path": "dodge.cooldown", "value": 0.8 }
+        { "op": "mul", "path": "maxHp", "value": 0.9 },
+        { "op": "mul", "path": "dodge.cooldown", "value": 0.8 },
+        { "op": "add", "path": "dodge.invulnerable", "value": 0.06 },
+        { "op": "set", "path": "perks.markKillHeal", "value": 4 }
       ],
       "actives": [
         {
           "key": "Clic droit",
           "name": "Pas de l'ombre",
-          "description": "Dash vers la souris à travers les ennemis : chacun est marqué, et ton prochain coup sur lui est critique (×2). Revient en 3 s."
+          "description": "Dash vers la souris à travers les ennemis : chacun est marqué, et ton prochain coup sur lui est critique (×2). Abattre un ennemi marqué te rend 4 PV. Revient en 2,5 s."
         },
         { "key": "A", "name": "Marque de mort", "description": "Pendant 5 s, tous tes coups sur l'ennemi le plus proche de la souris sont critiques." },
         {
@@ -581,9 +586,10 @@
       "role": "Tank, soutien",
       "kit": "paladin",
       "weapon": "naginata-temple",
-      "about": "Réglages de base de la classe : plus de PV, un peu plus lent ; les alliés qu'il relève ne l'affaiblissent pas.",
+      "about": "Réglages de base de la classe : plus de PV, un peu plus lent ; son bouclier arrête les coups en entier, et les alliés qu'il relève ne l'affaiblissent pas.",
       "effects": [
         { "op": "set", "path": "kit", "value": "paladin" },
+        { "op": "set", "path": "block.reduction", "value": 1 },
         { "op": "mul", "path": "maxHp", "value": 1.25 },
         { "op": "mul", "path": "moveSpeed", "value": 0.95 },
         { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
@@ -600,7 +606,7 @@
         {
           "key": "R",
           "name": "Relever",
-          "description": "Le dernier allié tombé près de toi (une âme brisée, ou un yokai vaincu) se relève en âme de lumière et combat pour toi 30 s."
+          "description": "Le dernier allié tombé près de toi (une âme brisée, ou un yokai vaincu) se relève en âme de lumière et combat pour toi 24 s."
         }
       ],
       "tag": {
@@ -743,7 +749,7 @@
       "about": "Réglages de base de la classe : un peu moins de PV ; le clic gauche tire une flèche vers la souris, à la portée de l'arc.",
       "effects": [
         { "op": "set", "path": "kit", "value": "rodeur" },
-        { "op": "mul", "path": "maxHp", "value": 0.9 }
+        { "op": "mul", "path": "maxHp", "value": 0.95 }
       ],
       "actives": [
         {

@@ -4,7 +4,7 @@ Les personnages sont affichés en pixel art animé : une planche d'images (PNG) 
 
 | Sprite | Fichier du générateur | Animations |
 | --- | --- | --- |
-| `heros` | `tools/pixel/heros.mjs` | idle, move, windup, strike, guard, dash |
+| `heros`, `heros-<race>-<classe>` | `tools/pixel/heros.mjs` | idle, move, windup, strike, guard, dash (+ channel, l'arc bandé du Rôdeur) |
 | `oublie` | `tools/pixel/oublie.mjs` | idle, move, windup, strike, stunned |
 | `hitodama` | `tools/pixel/hitodama.mjs` | move |
 | `kodama` | `tools/pixel/kodama.mjs` | idle, move, channel, stunned |
@@ -14,6 +14,8 @@ Les personnages sont affichés en pixel art animé : une planche d'images (PNG) 
 | `jorogumo`, `jorogumoAraignee` | `tools/pixel/jorogumo.mjs` | idle, move, windup, strike, channel, stunned (+ dash, airborne pour l'araignée) |
 
 Les souches, les Jizō et le torii restent des images fixes.
+
+Le héros existe pour chaque race et chaque classe (`heros-oushebti-paladin`, `heros-hanyo-lame`…) : dans `tools/pixel/heros.mjs`, `RACES` donne la tête, le torse et les couleurs du corps, `KITS` la cape, l'arme, sa prise en main et les animations (le Rôdeur a les siennes : il bande l'arc au lieu de frapper). `heros` tout court est l'Einherjar guerrier, que le jeu affiche avec sa planche peinte (`src/render/heroes.ts`). Pour ajouter une race ou une classe, lui donner une entrée dans `RACES` ou `KITS`, puis `npm run pixel`.
 
 `?pixel=0` dans l'adresse du jeu revient aux images peintes, pour comparer.
 

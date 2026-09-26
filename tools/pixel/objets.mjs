@@ -94,6 +94,179 @@ export const ICONS = {
     px(c, [[13, 30], [15, 29], [16, 29]], '#e0554a');
   },
 
+  'grelots-onmyoji'(c) {
+    // Shakujō : bâton de bois, anneau d'or en haut, grelots et bandes de papier ofuda.
+    c.line([4, 29], [21, 12], 1, '#6b4a2c');
+    c.line([5, 28], [21, 12], 0, '#9a7450');
+    for (let a = 0; a < 360; a += 20) {
+      const t = (a * Math.PI) / 180;
+      c.set(24 + Math.round(Math.cos(t) * 5), 8 + Math.round(Math.sin(t) * 5), '#e3b85a');
+    }
+    for (const [x, y] of [[19, 13], [29, 11], [23, 15]]) {
+      c.disc(x, y + 2, 1.5, '#e3b85a');
+      c.set(x - 1, y + 1, '#fff2b0');
+      c.set(x, y + 3, '#8a6d2c');
+    }
+    c.line([14, 19], [15, 25], 0, '#f4efe2');
+    c.line([15, 19], [17, 24], 0, '#e8e2d4');
+    px(c, [[15, 21], [16, 22]], '#c8412f');
+  },
+  'eventail-jorogumo'(c) {
+    // Éventail ouvert de soie noire et rouge, nervures blanches comme une toile, rivet d'or.
+    for (let r = 4; r <= 14; r++) {
+      for (let a = -165; a <= -15; a += 2) {
+        const t = (a * Math.PI) / 180;
+        const band = Math.floor((a + 165) / 15) % 2;
+        c.set(16 + Math.round(Math.cos(t) * r), 25 + Math.round(Math.sin(t) * r), r > 12 ? '#e0554a' : band ? '#3a2230' : '#5a2a3a');
+      }
+    }
+    for (let a = -165; a <= -15; a += 15) {
+      const t = (a * Math.PI) / 180;
+      c.line([16, 25], [16 + Math.cos(t) * 14, 25 + Math.sin(t) * 14], 0, '#d9dde6');
+    }
+    for (const r of [8, 11]) {
+      for (let a = -160; a <= -20; a += 4) {
+        const t = (a * Math.PI) / 180;
+        c.set(16 + Math.round(Math.cos(t) * r), 25 + Math.round(Math.sin(t) * r), '#c9d2dc');
+      }
+    }
+    c.line([16, 25], [16, 30], 1, '#2b1d22');
+    c.disc(16, 25, 1.2, '#e3b85a');
+  },
+  'kunai-jumeaux'(c) {
+    // Deux kunai croisés, pointes en haut, anneaux au pommeau, noués d'un cordon rouge.
+    const kunai = (x0, y0, dx, dy) => {
+      c.disc(x0, y0, 1.6, '#e3b85a');
+      c.disc(x0, y0, 0.5, '#1d1a1c');
+      c.line([x0 + dx * 2, y0 + dy * 2], [x0 + dx * 7, y0 + dy * 7], 1, '#8e2f2a');
+      poly(c, [[x0 + dx * 8 - dy * 2.5, y0 + dy * 8 + dx * 2.5], [x0 + dx * 8 + dy * 2.5, y0 + dy * 8 - dx * 2.5], [x0 + dx * 26, y0 + dy * 26]], '#dfe6ee');
+      c.line([x0 + dx * 8, y0 + dy * 8], [x0 + dx * 25, y0 + dy * 25], 0, '#9eacb6');
+    };
+    kunai(4, 28, 0.707, -0.707);
+    kunai(28, 28, -0.707, -0.707);
+    c.line([12, 21], [20, 21], 0, '#c8412f');
+    px(c, [[15, 22], [16, 23], [17, 22]], '#e0554a');
+  },
+  'naginata-temple'(c) {
+    // Naginata en diagonale, lame courbe, et le petit bouclier rond du temple devant.
+    c.line([2, 30], [21, 11], 0.6, '#7a2a22');
+    c.line([3, 30], [21, 12], 0, '#a8433a');
+    c.disc(21, 11, 1.2, '#e3b85a');
+    poly(c, [[22, 9], [24, 11], [31, 2], [29, 1]], '#dfe6ee');
+    c.line([23, 10], [30, 2], 0, '#9eacb6');
+    c.set(31, 1, '#ffffff');
+    c.disc(10, 22, 7, '#7a5a26');
+    c.disc(10, 22, 5.6, '#d9a93f');
+    c.disc(10, 22, 2.2, '#c8412f');
+    for (const [x, y] of [[10, 17], [10, 27], [5, 22], [15, 22]]) c.set(x, y, '#fff2b0');
+    px(c, [[7, 19], [8, 18]], '#f3d88a');
+  },
+  'yumi-bambou'(c) {
+    // Grand arc asymétrique de bambou laqué : la poignée est placée bas, la corde tendue.
+    const top = [9, 1];
+    const bottom = [5, 30];
+    let prev = top;
+    for (let i = 1; i <= 20; i++) {
+      const t = i / 20;
+      const y = 1 + t * 29;
+      const x = 9 - t * 4 + Math.sin(t * Math.PI) * 13 * (1 - 0.3 * t);
+      c.line(prev, [x, y], 0.6, i % 5 === 0 ? '#2b1d12' : '#8a6a3e');
+      prev = [x, y];
+    }
+    c.line(top, bottom, 0, '#f4efe2');
+    c.rect(17, 19, 2, 4, '#c8412f');
+    px(c, [[10, 2], [12, 4]], '#b8925a');
+  },
+  kusarigama(c) {
+    // Faucille au manche de bois, chaîne qui pend en boucle jusqu'à un poids de fer.
+    c.line([8, 22], [16, 12], 1, '#6b4a2c');
+    poly(c, [[15, 12], [18, 9], [25, 7], [30, 10], [26, 9], [20, 11]], '#dfe6ee');
+    c.line([17, 10], [27, 8], 0, '#9eacb6');
+    c.set(30, 10, '#ffffff');
+    for (let i = 0; i <= 14; i++) {
+      const t = i / 14;
+      const x = 8 - t * 5 + Math.sin(t * Math.PI) * 3;
+      const y = 22 + t * 6;
+      c.set(x, y, i % 2 ? '#8f9aa3' : '#56646f');
+    }
+    c.disc(3, 29, 1.8, '#4a4d55');
+    c.set(2, 28, '#8a909b');
+  },
+  'crocs-jorogumo'(c) {
+    // Deux crocs d'araignée recourbés vers l'extérieur, pointes violettes de venin, poignées gainées de soie.
+    const fang = (x, flip) => {
+      for (let i = 0; i <= 24; i++) {
+        const t = i / 24;
+        const fx = x + flip * Math.sin(t * 2.4) * 6;
+        const fy = 21 - t * 18;
+        const r = 2.4 * (1 - t) + 0.3;
+        c.disc(fx, fy, r, t > 0.72 ? '#8b3fa8' : '#efe6d2');
+        c.set(fx - flip * r, fy, t > 0.72 ? '#5e2474' : '#c9bfa6');
+      }
+      c.rect(x - 2, 22, 5, 8, '#dfe6ee');
+      for (let y = 23; y < 30; y += 2) c.line([x - 2, y], [x + 2, y], 0, '#aeb8c4');
+    };
+    fang(11, -1);
+    fang(21, 1);
+    px(c, [[14, 26], [16, 27], [18, 26]], '#c8412f');
+  },
+  'tetsubo-cloche'(c) {
+    // Barre de fer cloutée en diagonale, et une cloche de temple fendue en guise de bouclier.
+    poly(c, [[3, 26], [6, 29], [24, 9], [21, 6]], '#4a4d55');
+    c.line([5, 26], [22, 8], 0, '#8a909b');
+    for (const [x, y] of [[9, 22], [13, 18], [17, 14], [21, 10], [11, 22], [15, 18], [19, 14]]) c.set(x, y, '#dfe3ea');
+    poly(c, [[16, 30], [30, 30], [28, 24], [27, 17], [23, 14], [19, 17], [18, 24]], '#8a6a2a');
+    poly(c, [[18, 28], [28, 28], [26, 23], [25, 18], [23, 16], [21, 18], [20, 23]], '#c9973f');
+    c.line([22, 17], [20, 25], 0, '#5a4a20');
+    c.rect(22, 12, 3, 2, '#5a4a20');
+    px(c, [[24, 19], [25, 21]], '#f3d88a');
+  },
+  'miroir-yata'(c) {
+    // Miroir sacré octogonal de bronze : face claire qui reflète, cordon de soie rouge.
+    const oct = [[11, 4], [21, 4], [28, 11], [28, 21], [21, 28], [11, 28], [4, 21], [4, 11]];
+    poly(c, oct, '#8a6a2a');
+    poly(c, oct.map(([x, y]) => [16 + (x - 16) * 0.8, 16 + (y - 16) * 0.8]), '#c9973f');
+    c.disc(16, 16, 7.5, '#dfe9ef');
+    c.disc(16, 16, 5, '#f4fbff');
+    px(c, [[12, 12], [13, 11], [14, 12], [13, 13]], '#ffffff');
+    px(c, [[18, 19], [20, 17]], '#b9d6e6');
+    c.line([16, 1], [16, 4], 0, '#c8412f');
+    c.line([14, 1], [18, 1], 0, '#e0554a');
+  },
+  hankyu(c) {
+    // Arc court de cavalier, bien cambré, et deux flèches empennées de rouge.
+    let prev = [8, 5];
+    for (let i = 1; i <= 16; i++) {
+      const t = i / 16;
+      const pt = [8 + Math.sin(t * Math.PI) * 9, 5 + t * 22];
+      c.line(prev, pt, 0.6, i === 8 ? '#2b1d12' : '#7a5230');
+      prev = pt;
+    }
+    c.line([8, 5], [8, 27], 0, '#f4efe2');
+    for (const dy of [0, 4]) {
+      c.line([12, 14 + dy], [30, 10 + dy], 0, '#c9a36a');
+      c.set(30, 10 + dy, '#dfe6ee');
+      c.set(31, 10 + dy, '#dfe6ee');
+      px(c, [[12, 13 + dy], [13, 15 + dy], [14, 13 + dy]], '#c8412f');
+    }
+  },
+  'arc-soie'(c) {
+    // Arc de bois noir, corde de soie blanche, une toile d'araignée tissée contre la poignée.
+    let prev = [10, 2];
+    for (let i = 1; i <= 20; i++) {
+      const t = i / 20;
+      const pt = [10 + Math.sin(t * Math.PI) * 12, 2 + t * 28];
+      c.line(prev, pt, 0.6, i % 5 === 0 ? '#5a2a3a' : '#2b2330');
+      prev = pt;
+    }
+    c.line([10, 2], [10, 30], 0, '#ffffff');
+    // La toile : quatre rayons depuis la poignée et un fil qui les relie.
+    const grip = [21, 16];
+    for (const [x, y] of [[16, 10], [14, 16], [16, 22], [19, 25]]) c.line(grip, [x, y], 0, '#c9d2dc');
+    for (const [x, y] of [[18, 12], [17, 16], [18, 20]]) c.set(x, y, '#ffffff');
+    c.rect(20, 14, 3, 4, '#c8412f');
+  },
+
   // --- Reliques -------------------------------------------------------------
   'coupelle-kappa'(c) {
     // Coupelle de céramique pleine d'une eau qui ne déborde jamais.

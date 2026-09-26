@@ -25,7 +25,7 @@
       "tags": ["Guerrier"],
       "summary": "Longue portée, coups équilibrés.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 10 },
+        { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.08 },
@@ -44,9 +44,9 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "summary": "Coups lents et lourds (17 dégâts) ; la Frappe fracassante étourdit 0,8 s de plus.",
+      "summary": "Coups lents et lourds (15 dégâts) ; la Frappe fracassante étourdit 0,8 s de plus.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 17 },
+        { "op": "set", "path": "attack.damage", "value": 15 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.17 },
@@ -66,9 +66,9 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "summary": "Rapide mais léger (8 dégâts) ; bloquer rapporte 50 % de rage en plus.",
+      "summary": "Rapide mais léger (7 dégâts) ; bloquer rapporte 50 % de rage en plus.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 8 },
+        { "op": "set", "path": "attack.damage", "value": 7 },
         { "op": "set", "path": "attack.range", "value": 1.65 },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.05 },
@@ -88,7 +88,7 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Invocateur"],
-      "summary": "Arme de départ de l'Invocateur : coups légers, tes âmes frappent 20 % plus vite.",
+      "summary": "Arme de départ de l'Invocateur : coups légers, tes âmes frappent 10 % plus vite.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 6 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
@@ -96,7 +96,7 @@
         { "op": "set", "path": "attack.windup", "value": 0.07 },
         { "op": "set", "path": "attack.recovery", "value": 0.22 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
-        { "op": "mul", "path": "summon.attackCooldown", "value": 0.8 }
+        { "op": "mul", "path": "summon.attackCooldown", "value": 0.9 }
       ],
       "paliers": [
         { "level": 10, "name": "Tintement", "summary": "Tes âmes courent 15 % plus vite", "effects": [{ "op": "mul", "path": "summon.speed", "value": 1.15 }] },
@@ -134,13 +134,13 @@
       "tags": ["Lame"],
       "summary": "Arme de départ de la Lame : coups très rapides mais courts.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 1.5 },
+        { "op": "set", "path": "attack.damage", "value": 8 },
+        { "op": "set", "path": "attack.range", "value": 1.7 },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.04 },
         { "op": "set", "path": "attack.recovery", "value": 0.13 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0.5 }
+        { "op": "set", "path": "attack.lunge", "value": 0.3 }
       ],
       "paliers": [
         { "level": 10, "name": "Kunai équilibrés", "summary": "Pas de l'ombre : revient 0,5 s plus vite", "effects": [{ "op": "add", "path": "blade.shadowDash.cooldown", "value": -0.5 }] },
@@ -156,7 +156,7 @@
       "tags": ["Paladin"],
       "summary": "Arme de départ du Paladin : longue portée, coups lents qui repoussent.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 11 },
+        { "op": "set", "path": "attack.damage", "value": 10 },
         { "op": "set", "path": "attack.range", "value": 2.2 },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
@@ -178,11 +178,11 @@
       "tags": ["Rôdeur"],
       "summary": "Arme de départ du Rôdeur : flèches rapides, portée 10 m.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
+        { "op": "set", "path": "attack.damage", "value": 8 },
         { "op": "set", "path": "attack.range", "value": 10 },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
-        { "op": "set", "path": "attack.recovery", "value": 0.26 },
+        { "op": "set", "path": "attack.recovery", "value": 0.22 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
         { "op": "set", "path": "attack.lunge", "value": 0 }
       ],
@@ -192,6 +192,147 @@
         { "level": 50, "name": "Arc du pèlerin", "summary": "Recul : une flèche de plus", "effects": [{ "op": "add", "path": "ranger.leap.arrows", "value": 1 }] }
       ],
       "description": "Un grand arc asymétrique de bambou laqué, la poignée placée bas comme le veut la tradition. Il chante quand on le bande."
+    },
+    "kusarigama": {
+      "name": "Kusarigama des Oubliés",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Lame"],
+      "summary": "Faucille et chaîne : frappe plus loin (2,3 m) ; le Pas de l'ombre porte 1 m plus loin et ses marques durent 3 s de plus.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.range", "value": 2.3 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.06 },
+        { "op": "set", "path": "attack.recovery", "value": 0.2 },
+        { "op": "set", "path": "attack.knockback", "value": 2.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0.2 },
+        { "op": "add", "path": "blade.shadowDash.distance", "value": 1 },
+        { "op": "add", "path": "blade.shadowDash.markTime", "value": 3 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Chaîne longue", "summary": "+0,3 de portée", "effects": [{ "op": "add", "path": "attack.range", "value": 0.3 }] },
+        { "level": 25, "name": "Faucille affûtée", "summary": "Critiques +0,25", "effects": [{ "op": "add", "path": "blade.critFactor", "value": 0.25 }] },
+        { "level": 50, "name": "Moisson des masques", "summary": "Danse des lames : +2 cibles", "effects": [{ "op": "add", "path": "blade.dance.targets", "value": 2 }] }
+      ],
+      "description": "Une faucille de riziculteur au bout d'une chaîne rouillée. Les Oubliés s'en servaient pour moissonner ; maintenant, ils moissonnent autre chose."
+    },
+    "crocs-jorogumo": {
+      "name": "Crocs de la Jorōgumo",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Lame"],
+      "summary": "Deux crocs venimeux : chaque coup critique te rend 2 PV.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.04 },
+        { "op": "set", "path": "attack.recovery", "value": 0.12 },
+        { "op": "set", "path": "attack.knockback", "value": 1.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0.3 },
+        { "op": "set", "path": "perks.critHeal", "value": 2 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Venin", "summary": "Critiques +0,25", "effects": [{ "op": "add", "path": "blade.critFactor", "value": 0.25 }] },
+        { "level": 25, "name": "Morsure lente", "summary": "Marque de mort : +2 s", "effects": [{ "op": "add", "path": "blade.deathMark.duration", "value": 2 }] },
+        { "level": 50, "name": "Reine des rizières", "summary": "Chaque critique rend 2 PV de plus", "effects": [{ "op": "add", "path": "perks.critHeal", "value": 2 }] }
+      ],
+      "description": "Arrachés à la Jorōgumo et montés sur des poignées de soie. Le venin n'a jamais séché ; il répare celui qui les tient."
+    },
+    "tetsubo-cloche": {
+      "name": "Tetsubō et bouclier-cloche",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Paladin"],
+      "summary": "Coups lourds (13 dégâts) ; le Marteau lancé fait 50 % de dégâts en plus et étourdit 0,5 s.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 13 },
+        { "op": "set", "path": "attack.range", "value": 1.9 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.14 },
+        { "op": "set", "path": "attack.recovery", "value": 0.4 },
+        { "op": "set", "path": "attack.knockback", "value": 6 },
+        { "op": "set", "path": "attack.lunge", "value": 0.25 },
+        { "op": "mul", "path": "paladin.hammer.damage", "value": 1.5 },
+        { "op": "set", "path": "perks.hammerStun", "value": 0.5 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Fer lesté", "summary": "Recul des coups +2", "effects": [{ "op": "add", "path": "attack.knockback", "value": 2 }] },
+        { "level": 25, "name": "Glas", "summary": "Le Marteau étourdit 0,4 s de plus", "effects": [{ "op": "add", "path": "perks.hammerStun", "value": 0.4 }] },
+        { "level": 50, "name": "Cloche du temple", "summary": "Marteau lancé : revient 1,5 s plus tôt", "effects": [{ "op": "add", "path": "paladin.hammer.cooldown", "value": -1.5 }] }
+      ],
+      "description": "Une barre de fer cloutée et une cloche de temple fendue en guise de bouclier. Chaque coup sonne comme l'appel à la prière."
+    },
+    "miroir-yata": {
+      "name": "Miroir de Yata",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Paladin"],
+      "summary": "Lance et miroir sacré : les yokai baignés par ton Aura sont éblouis et font 30 % de dégâts en moins.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 10 },
+        { "op": "set", "path": "attack.range", "value": 2.2 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.3 },
+        { "op": "set", "path": "attack.knockback", "value": 4 },
+        { "op": "set", "path": "attack.lunge", "value": 0.25 },
+        { "op": "set", "path": "perks.auraWeaken", "value": 0.3 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Éclat", "summary": "Aura : +0,5 de rayon", "effects": [{ "op": "add", "path": "paladin.aura.radius", "value": 0.5 }] },
+        { "level": 25, "name": "Reflet", "summary": "Un coup bloqué renvoie 6 dégâts", "effects": [{ "op": "add", "path": "perks.riposte", "value": 6 }] },
+        { "level": 50, "name": "Soleil levant", "summary": "Aura : soigne 30 % de plus", "effects": [{ "op": "mul", "path": "paladin.aura.heal", "value": 1.3 }] }
+      ],
+      "description": "Le miroir octogonal qui tira Amaterasu hors de sa grotte, ou son reflet tombé au Yomi. La Jorōgumo n'osait pas s'y regarder."
+    },
+    "hankyu": {
+      "name": "Hankyū de chasse",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Rôdeur"],
+      "summary": "Arc court : tirs plus rapides mais portée 8 m ; le Recul revient 2 s plus tôt.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 7 },
+        { "op": "set", "path": "attack.range", "value": 8 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.06 },
+        { "op": "set", "path": "attack.recovery", "value": 0.15 },
+        { "op": "set", "path": "attack.knockback", "value": 1.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0 },
+        { "op": "add", "path": "ranger.leap.cooldown", "value": -2 },
+        { "op": "mul", "path": "ranger.arrow.speed", "value": 1.2 }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Carquois léger", "summary": "Flèche-filet : revient 1 s plus tôt", "effects": [{ "op": "add", "path": "ranger.net.cooldown", "value": -1 }] },
+        { "level": 25, "name": "Tir réflexe", "summary": "Recul : deux flèches de plus", "effects": [{ "op": "add", "path": "ranger.leap.arrows", "value": 2 }] },
+        { "level": 50, "name": "Pluie de flèches", "summary": "Tir chargé : jusqu'à 0,5 fois les dégâts en plus", "effects": [{ "op": "add", "path": "ranger.charged.maxFactor", "value": 0.5 }] }
+      ],
+      "description": "Un petit arc de cavalier, taillé pour tirer vite plutôt que loin. Le kasa-obake qui le gardait s'en servait comme manche."
+    },
+    "arc-soie": {
+      "name": "Arc de soie de la Jorōgumo",
+      "slot": "arme",
+      "rarity": "épique",
+      "tags": ["Rôdeur"],
+      "summary": "Corde de soie d'araignée : un tir chargé plein ouvre un filet sur le premier ennemi touché.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.range", "value": 11 },
+        { "op": "set", "path": "attack.arcDeg", "value": 360 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.24 },
+        { "op": "set", "path": "attack.knockback", "value": 1.5 },
+        { "op": "set", "path": "attack.lunge", "value": 0 },
+        { "op": "set", "path": "perks.chargedNet", "value": true }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Soie tendue", "summary": "Tir chargé : se bande 15 % plus vite", "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.85 }] },
+        { "level": 25, "name": "Cocon", "summary": "Le filet immobilise 0,5 s de plus", "effects": [{ "op": "add", "path": "ranger.net.stun", "value": 0.5 }] },
+        { "level": 50, "name": "Toile du Yomi", "summary": "Marque du chasseur : +10 % de dégâts", "effects": [{ "op": "add", "path": "ranger.huntMark.bonus", "value": 0.1 }] }
+      ],
+      "description": "Une corde tressée de soie de jorōgumo sur un arc de bois noir. Elle colle encore un peu aux doigts."
     },
     "chapeau-paille": {
       "name": "Chapeau de paille",
@@ -384,12 +525,22 @@
       "count": 2,
       "items": [
         { "item": "kanabo", "chance": 0.35 },
+        { "item": "tetsubo-cloche", "chance": 0.25 },
         { "item": "coupelle-kappa", "chance": 0.15 },
         { "item": "tasse-ebrechee", "chance": 0.6, "if": [{ "quest": "tasse", "is": "active" }, { "notHas": "tasse-ebrechee" }] }
       ]
     },
-    "kasaObake": { "oboles": 4, "xp": 8, "material": "papier", "chance": 0.6 },
-    "oublie": { "oboles": 4, "xp": 8, "material": "masque", "chance": 0.5, "items": [{ "item": "kabuto-fendu", "chance": 0.06 }] },
+    "kasaObake": { "oboles": 4, "xp": 8, "material": "papier", "chance": 0.6, "items": [{ "item": "hankyu", "chance": 0.06 }] },
+    "oublie": {
+      "oboles": 4,
+      "xp": 8,
+      "material": "masque",
+      "chance": 0.5,
+      "items": [
+        { "item": "kabuto-fendu", "chance": 0.06 },
+        { "item": "kusarigama", "chance": 0.04 }
+      ]
+    },
     "araignee": { "oboles": 1, "xp": 1 },
     "jorogumo": {
       "oboles": 60,
@@ -401,6 +552,9 @@
         { "item": "katana-ronin", "chance": 0.4 },
         { "item": "fil-joren", "chance": 0.4 },
         { "item": "eventail-jorogumo", "chance": 0.3 },
+        { "item": "crocs-jorogumo", "chance": 0.25 },
+        { "item": "miroir-yata", "chance": 0.25 },
+        { "item": "arc-soie", "chance": 0.25 },
         { "item": "magatama-yasakani", "chance": 0.03 }
       ]
     }
@@ -443,6 +597,9 @@
         { "item": "geta-kasa", "price": 70, "weight": 3 },
         { "item": "kabuto-fendu", "price": 55, "weight": 3 },
         { "item": "coupelle-kappa", "price": 160, "weight": 1 },
+        { "item": "crocs-jorogumo", "price": 180, "weight": 1 },
+        { "item": "miroir-yata", "price": 180, "weight": 1 },
+        { "item": "arc-soie", "price": 180, "weight": 1 },
         { "material": "soie", "count": 2, "price": 45, "weight": 2 },
         { "material": "ecaille", "count": 5, "price": 30, "weight": 3 },
         { "material": "masque", "count": 4, "price": 30, "weight": 3 },
@@ -477,7 +634,10 @@
       { "item": "hakama-soie", "oboles": 20, "materials": { "soie": 2 } },
       { "item": "lanterne-braise", "oboles": 15, "materials": { "braise": 2 }, "if": [{ "flag": "recette_lanterne" }] },
       { "item": "kanabo", "oboles": 60, "materials": { "ecaille": 5, "masque": 1 } },
-      { "item": "katana-ronin", "oboles": 80, "materials": { "soie": 3, "masque": 2 } }
+      { "item": "katana-ronin", "oboles": 80, "materials": { "soie": 3, "masque": 2 } },
+      { "item": "kusarigama", "oboles": 60, "materials": { "masque": 4, "papier": 2 } },
+      { "item": "tetsubo-cloche", "oboles": 60, "materials": { "ecaille": 5, "braise": 2 } },
+      { "item": "hankyu", "oboles": 50, "materials": { "papier": 4, "seve": 2 } }
     ]
   }
 }
