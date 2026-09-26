@@ -416,7 +416,7 @@
           ["voyageur", "Prends ce fragment. Il vient des Tablettes du Destin ; c'est lui qui m'a mené jusqu'ici. Garde-le : il te mènera plus loin que moi."],
           ["voyageur", "On se reverra, sur une autre rive. D'ici là, n'oublie pas ton nom. Quand tu l'auras retrouvé."]
         ],
-        "then": [{ "completeQuest": "voyageur" }, { "give": "tablette-argile" }, { "xp": 100 }, { "toast": "Fin de la première île. La suite du voyage mène vers d'autres rives…" }]
+        "then": [{ "completeQuest": "voyageur" }, { "give": "tablette-argile" }, { "xp": 100 }, { "toast": "Fin du premier chapitre. Derrière le Grand Rocher, quelqu'un attend encore…" }]
       },
       {
         "if": [{ "quest": "voyageur", "is": "active" }],
@@ -456,6 +456,27 @@
     ],
     "moine": [
       {
+        "if": [{ "flag": "jorogumo_vaincue" }, { "quest": "sceau", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["moine", "Tu as vaincu la dame des rizières… Alors écoute-moi. Depuis sa chute, le Grand Rocher tremble."],
+          ["moine", "De l'autre côté, quelque chose a senti ta force. Izanami n'a jamais cessé d'attendre, et les vivants l'ont oubliée. La colère d'une déesse oubliée ronge le sceau."],
+          ["moine", "Si personne ne descend l'apaiser, il cédera de lui-même, et tout le Yomi avec. On raconte que la corde sacrée se dénoue pour une âme sans nom."],
+          ["moine", "Si tu descends, souviens-toi de ce qu'a fait Izanagi : il ne s'est jamais retourné. Et trois pêches ont suffi à repousser l'armée des morts."]
+        ],
+        "then": [{ "startQuest": "sceau" }]
+      },
+      {
+        "if": [{ "flag": "izanami_vaincue" }, { "notFlag": "moine_izanami" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes la descente, le palais, et Izanami qui a fini par baisser les bras.)"],
+          ["moine", "Tu l'as regardée en face, à la fin ? … Non. Tu as fait mieux : tu t'es souvenu d'elle."],
+          ["moine", "Tant qu'une âme se souviendra d'elle, elle ne rongera plus le sceau."]
+        ],
+        "then": [{ "set": "moine_izanami" }, { "xp": 40 }]
+      },
+      {
         "if": [{ "quest": "sutra", "is": "none" }],
         "marker": "!",
         "lines": [
@@ -482,6 +503,10 @@
         "lines": [["moine", "Trois pages : près de la cascade, dans les rizières, et devant le torii noir. ({sutra_pages} / 3)"]]
       },
       {
+        "if": [{ "quest": "sceau", "is": "active" }],
+        "lines": [["moine", "Ne la regarde pas, quoi qu'elle te dise. Et souviens-toi des pêches."]]
+      },
+      {
         "if": [{ "notFlag": "fragment_izanami" }],
         "lines": [["moine", "Certains disent qu'on entend encore Izanami, si on colle l'oreille contre la pierre. Moi, je n'ose pas."]]
       },
@@ -490,6 +515,30 @@
       }
     ],
     "rocher": [
+      {
+        "if": [{ "quest": "sceau", "is": "active" }, { "notFlag": "sceau_ouvert" }],
+        "marker": "!",
+        "lines": [["narrateur", "La corde sacrée frémit sous tes doigts. Derrière la pierre, quelqu'un retient son souffle."]],
+        "choices": [
+          {
+            "text": "Dénouer la corde sacrée",
+            "then": [{ "set": "sceau_ouvert" }, { "set": "fragment_izanami" }, { "toast": "Le Grand Rocher a glissé : une pente descend vers le Yomi." }],
+            "reply": [
+              ["voix", "… Te voilà enfin. Tu n'as pas de nom, toi non plus."],
+              ["voix", "Descends. Mais ne me regarde pas."]
+            ]
+          },
+          { "text": "Pas encore" }
+        ]
+      },
+      {
+        "if": [{ "flag": "sceau_ouvert" }],
+        "lines": [["narrateur", "Le rocher a glissé de côté. Une pente s'enfonce dans le noir ; au fond, des lanternes bleues."]],
+        "choices": [
+          { "text": "Descendre dans le Palais d'Izanami", "then": [{ "enterDungeon": "palais" }] },
+          { "text": "Pas encore" }
+        ]
+      },
       {
         "if": [{ "notFlag": "fragment_izanami" }],
         "lines": [["narrateur", "Le Grand Rocher, ceint d'une épaisse corde sacrée. Ses fissures rougeoient faiblement."]],

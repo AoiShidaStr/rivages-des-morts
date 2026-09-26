@@ -532,3 +532,40 @@ export const rocher = looping(78, 82, 6, 0.18, (c, frame, frames) => {
   rope(c, points, 2.2, ['#8a7440', '#d9c38a', '#efe0ae']);
   for (const x of [17, 31, 47, 61]) shide(c, x, ropeY(x) + 3, 10);
 });
+
+// --- Palais d'Izanami -----------------------------------------------------------------------------
+
+/** Pêcher en fleurs du palais ; `ripe` : la pêche d'Izanagi, dorée et rose, luit au milieu des branches. */
+function peachTree(c, ripe) {
+  // Tronc et deux branches.
+  c.line([22, 47], [20, 34], 2.2, WOOD[1]);
+  c.line([20, 34], [24, 24], 1.8, WOOD[1]);
+  c.line([22, 28], [12, 21], 1.2, WOOD[1]);
+  c.line([23, 27], [33, 20], 1.2, WOOD[1]);
+  c.line([19, 46], [18, 34], 0, WOOD[2]);
+  c.line([24, 46], [22, 35], 0, WOOD[0]);
+  // Touffes de fleurs roses, plus claires sur le dessus.
+  const tufts = [[22, 14, 9, 7], [11, 18, 7, 5], [34, 17, 7, 5], [16, 10, 6, 4], [29, 9, 6, 4]];
+  for (const [cx, cy, rx, ry] of tufts) {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        const nx = (x - cx) / rx;
+        const ny = (y - cy) / ry;
+        if (nx * nx + ny * ny + (noise(x, y, 3, 17) - 0.5) * 0.45 > 1) continue;
+        const lit = -ny * 0.8 - nx * 0.3 + (hash(x, y, 3) - 0.5) * 0.6;
+        c.set(x, y, lit > 0.55 ? '#ffd9e4' : lit > 0 ? '#f19ab6' : lit > -0.5 ? '#d47898' : '#b85c7e');
+      }
+    }
+  }
+  for (const [x, y] of [[15, 13], [25, 10], [31, 18], [9, 19], [20, 17], [27, 6]]) c.set(x, y, '#fff5fa');
+  if (ripe) {
+    // Halo de lumière autour de la pêche, puis le fruit.
+    for (let a = 0; a < 360; a += 30) c.set(22 + Math.cos((a * Math.PI) / 180) * 6, 27 + Math.sin((a * Math.PI) / 180) * 5, '#ffe7a8');
+    c.ellipse(22, 27, 3.5, 3.5, ['#d4705a', '#f0a070', '#ffe0a0']);
+    c.set(22, 23, '#6f9f4f');
+    c.set(23, 23, '#8fbf5f');
+  }
+}
+
+export const pecher = still(44, 48, (c) => peachTree(c, true));
+export const pecherNu = still(44, 48, (c) => peachTree(c, false));

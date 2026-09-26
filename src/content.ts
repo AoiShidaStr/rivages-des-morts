@@ -1,14 +1,18 @@
 // Contenu de l'île en données (src/data) : on l'ajoute ou le modifie sans toucher au code.
 import dialoguesJson from './data/dialogues.json';
 import difficultyJson from './data/difficulty.json';
+import rizieresJson from './data/dungeon.json';
+import palaisJson from './data/dungeon-palais.json';
+import dungeonsJson from './data/dungeons.json';
 import islandJson from './data/island.json';
 import islandSpritesJson from './data/islandSprites.json';
 import itemsJson from './data/items.json';
 import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
+import type { GameConfig } from './game/config';
 import type { DifficultyData } from './game/difficulty';
 import type { UpgradeRules } from './game/forge';
-import type { IslandData } from './game/island';
+import type { IslandData, ScreenPoint } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
 import type { DuplicateRules, ShopOffer } from './game/loot';
 import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
@@ -67,6 +71,50 @@ export interface DropDef {
   items?: { item: string; chance: number; if?: Condition[] }[];
 }
 
+/** Décor d'une arène : teinte du sol, couleur de la brume, sprites posés autour (voir src/data/sprites.json). */
+export interface DungeonStyle {
+  ground: [number, number, number];
+  sky: string;
+  decor: { sprite: string; x: number; z: number }[];
+}
+
+/** Ce qui change d'un donjon à l'autre dans la configuration du combat. */
+export type ArenaConfig = Pick<GameConfig, 'arenaHalfSize' | 'stumpRadius' | 'peachRadius' | 'webs' | 'champion' | 'waves'>;
+
+/** Un donjon (src/data/dungeons.json), avec ses salles de combat. */
+export interface DungeonDef {
+  id: string;
+  name: string;
+  /** Sous-titre du fondu d'entrée, avant le niveau (« Donjon du Yomi · niveau 3 »). */
+  region: string;
+  boss: string;
+  /** Le boss dans une phrase (« Vaincs la Jorōgumo »). */
+  bossLabel: string;
+  victory: { title: string; text: string };
+  /** Effets de chaque victoire (quête terminée, drapeau), puis ceux de la première seulement. */
+  onVictory: Effect[];
+  firstVictory: { if: Condition[]; then: Effect[] };
+  /** Boutique de fin tirée au hasard après la victoire. */
+  shop: string;
+  /** Point de retour sur l'île (par défaut, devant le torii noir). */
+  exit?: ScreenPoint;
+  style: DungeonStyle;
+  arena: ArenaConfig;
+}
+
+/** Réglages communs aux arènes, qu'un donjon peut remplacer. */
+const ARENA_DEFAULTS = {
+  stumpRadius: rizieresJson.stumpRadius,
+  webs: rizieresJson.webs,
+  peachRadius: 0.7,
+  champion: { hp: 1.8, damage: 1.3 },
+};
+
+function dungeon(id: 'rizieres' | 'palais', arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>): DungeonDef {
+  const meta = dungeonsJson[id] as unknown as Omit<DungeonDef, 'id' | 'arena'>;
+  return { id, ...meta, arena: { ...ARENA_DEFAULTS, ...arena } };
+}
+
 export interface QuestDef {
   name: string;
   type: string;
@@ -91,6 +139,10 @@ export const content = {
   skills: skillsJson as unknown as SkillsDef,
   recipes: itemsJson.forge.recipes as unknown as RecipeDef[],
   quests: questsJson.quests as Record<string, QuestDef>,
+  dungeons: {
+    rizieres: dungeon('rizieres', rizieresJson as unknown as ArenaConfig),
+    palais: dungeon('palais', palaisJson as unknown as ArenaConfig),
+  } as Record<string, DungeonDef>,
   triggers: questsJson.triggers as unknown as Catalog['triggers'],
 };
 

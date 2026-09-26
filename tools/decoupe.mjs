@@ -6,9 +6,71 @@ export function alphaMask(data, w, h, options) {
   const background = floodBackground(data, w, h, options);
   const alpha = new Uint8Array(w * h);
   for (let i = 0; i < w * h; i++) alpha[i] = background[i] ? 0 : 255;
+  if (options.erase) eraseBoxes(alpha, w, h, options.erase);
+  if (options.eraseLines) eraseLines(alpha, w, h, options.eraseLines === true ? {} : options.eraseLines);
   removeSmallParts(alpha, w, h, options.minPartRatio);
   softenEdges(alpha, w, h);
   return alpha;
+}
+
+/** Vide des rectangles de l'image (en fractions de sa taille : [x0, y0, x1, y1]), là où Nano Banana a écrit du texte. */
+export function eraseBoxes(alpha, w, h, boxes) {
+  for (const [x0, y0, x1, y1] of boxes) {
+    for (let y = Math.round(y0 * h); y < Math.round(y1 * h); y++) {
+      for (let x = Math.round(x0 * w); x < Math.round(x1 * w); x++) alpha[y * w + x] = 0;
+    }
+  }
+}
+
+/**
+ * Efface les traits droits que Nano Banana ajoute parfois : ligne de sol, grille, cadres des images.
+ * Un trait est une suite d'au moins `length` pixels de sujet (en fraction de la largeur ou de la hauteur),
+ * tous plus fins que `thickness` dans l'autre sens. Là où le trait passe sous un pied, le sujet est épais :
+ * ces quelques pixels restent collés au personnage. `vertical: false` épargne les traits verticaux
+ * (pattes d'araignée, bâtons) quand seule la ligne de sol est à effacer.
+ */
+export function eraseLines(alpha, w, h, { thickness, length = 0.1, vertical = true } = {}) {
+  const thin = thickness ?? Math.max(3, Math.round(Math.min(w, h) * 0.008));
+  const erase = new Uint8Array(w * h);
+  // Épaisseur du sujet en chaque pixel, en travers du trait cherché.
+  const across = (horizontal) => {
+    const run = new Int32Array(w * h);
+    const lines = horizontal ? w : h;
+    const len = horizontal ? h : w;
+    const at = (line, k) => (horizontal ? k * w + line : line * w + k);
+    for (let line = 0; line < lines; line++) {
+      let start = -1;
+      for (let k = 0; k <= len; k++) {
+        const on = k < len && alpha[at(line, k)];
+        if (on && start < 0) start = k;
+        if (!on && start >= 0) {
+          for (let j = start; j < k; j++) run[at(line, j)] = k - start;
+          start = -1;
+        }
+      }
+    }
+    return run;
+  };
+  for (const horizontal of vertical ? [true, false] : [true]) {
+    const thickness = across(horizontal);
+    const lines = horizontal ? h : w;
+    const len = horizontal ? w : h;
+    const min = Math.round(length * len);
+    const at = (line, k) => (horizontal ? line * w + k : k * w + line);
+    for (let line = 0; line < lines; line++) {
+      let start = -1;
+      for (let k = 0; k <= len; k++) {
+        const i = k < len ? at(line, k) : -1;
+        const on = i >= 0 && alpha[i] && thickness[i] <= thin;
+        if (on && start < 0) start = k;
+        if (!on && start >= 0) {
+          if (k - start >= min) for (let j = start; j < k; j++) erase[at(line, j)] = 1;
+          start = -1;
+        }
+      }
+    }
+  }
+  for (let i = 0; i < w * h; i++) if (erase[i]) alpha[i] = 0;
 }
 
 /**
@@ -23,14 +85,15 @@ export function floodBackground(data, w, h, options) {
   let head = 0;
   let tail = 0;
 
-  const greyWithin = (i, maxGap, maxSat) => {
+  const greyNear = (i, color, maxGap, maxSat) => {
     const r = data[i * 3];
     const g = data[i * 3 + 1];
     const b = data[i * 3 + 2];
     const saturation = Math.max(r, g, b) - Math.min(r, g, b);
-    const gap = Math.abs(r - ref[0]) + Math.abs(g - ref[1]) + Math.abs(b - ref[2]);
+    const gap = Math.abs(r - color[0]) + Math.abs(g - color[1]) + Math.abs(b - color[2]);
     return saturation <= maxSat && gap <= maxGap * 3;
   };
+  const greyWithin = (i, maxGap, maxSat) => greyNear(i, ref, maxGap, maxSat);
 
   // Aura peinte (ex. le halo vert du kodama) : ses pixels sont un mélange du fond et d'une couleur
   // `keyColor`. On les reconnaît à leur faible distance au segment fond → keyColor.
@@ -74,6 +137,16 @@ export function floodBackground(data, w, h, options) {
     seed(y * w + w - 1);
   }
   spread();
+
+  // Fond d'un autre gris, fermé par un cadre (les cases que Nano Banana dessine parfois autour des images) :
+  // on le remplit depuis les points `seeds` (en fractions de l'image), chacun comparé à sa propre couleur.
+  for (const [fx, fy] of options.seeds ?? []) {
+    const start = Math.round(fy * (h - 1)) * w + Math.round(fx * (w - 1));
+    const color = [data[start * 3], data[start * 3 + 1], data[start * 3 + 2]];
+    accepts = (i) => greyNear(i, color, tolerance, maxSaturation);
+    seed(start);
+    spread();
+  }
 
   // Fond enfermé par le sujet (entre les poutres d'un torii, par exemple). On n'accepte ici que le gris
   // presque exact du fond, et seulement en grandes poches, pour ne pas percer les parties grises du sujet.

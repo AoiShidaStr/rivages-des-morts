@@ -27,6 +27,8 @@ export interface InteractableDef extends ScreenPoint {
   name: string;
   nameIf?: { if: Condition[]; name: string }[];
   verb?: string;
+  /** Verbe qui remplace `verb` sous condition (le Grand Rocher ouvert : « Descendre »). */
+  verbIf?: { if: Condition[]; verb: string }[];
   sprite?: string;
   /** Image qui remplace `sprite` sous condition (lanterne allumée…). */
   spriteIf?: { if: Condition[]; sprite: string }[];
@@ -64,6 +66,7 @@ export interface Interactable {
   def: InteractableDef;
   pos: Vec2;
   name: string;
+  verb?: string;
   sprite?: string;
   reach: number;
 }
@@ -112,6 +115,7 @@ export class Island {
         def,
         pos: toWorld(def),
         name: def.nameIf?.find((n) => this.progress.check(n.if))?.name ?? def.name,
+        verb: def.verbIf?.find((n) => this.progress.check(n.if))?.verb ?? def.verb,
         sprite: def.spriteIf?.find((n) => this.progress.check(n.if))?.sprite ?? def.sprite,
         reach: def.reach ?? DEFAULT_REACH,
       }));

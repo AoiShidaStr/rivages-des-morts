@@ -22,6 +22,155 @@
       ]
     },
     {
+      "name": "oublie",
+      "bodyHeight": 240,
+      "animations": [
+        { "tag": "idle", "source": "sprites/oublie_idle.jpg", "count": 6, "duration": 150 },
+        { "tag": "move", "source": "sprites/oublie_move.jpg", "count": 8, "duration": 90 },
+        { "tag": "windup", "source": "sprites/oublie_windup.jpg", "layout": [3, 2], "ref": 0, "duration": 90, "once": true, "eraseLines": { "length": 0.04 } },
+        { "tag": "strike", "source": "sprites/oublie_strike.jpg", "count": 6, "ref": 5, "durations": [50, 50, 60, 90, 110, 140], "once": true },
+        { "tag": "stunned", "source": "sprites/oublie_stunned.jpg", "layout": [3, 2], "frames": [1, 2, 4], "ref": 4, "duration": 180, "tolerance": 14, "fillHoles": true, "minHole": 60 }
+      ]
+    },
+    {
+      "name": "hitodama",
+      "bodyHeight": 120,
+      "animations": [
+        { "tag": "move", "source": "sprites/hitodama_move.jpg", "count": 8, "frames": [0, 1, 2, 3, 5, 6, 7], "duration": 85, "eraseLines": true, "erase": [[0, 0, 1, 0.075], [0, 0.93, 1, 1], [0.03, 0.1, 0.06, 0.16], [0.265, 0.1, 0.295, 0.16], [0.5, 0.1, 0.53, 0.16], [0.735, 0.1, 0.765, 0.16], [0.03, 0.5, 0.06, 0.56], [0.265, 0.5, 0.295, 0.56], [0.5, 0.5, 0.53, 0.56], [0.735, 0.5, 0.765, 0.56]],
+          "seeds": [[0.05, 0.45], [0.28, 0.45], [0.52, 0.45], [0.75, 0.45], [0.05, 0.87], [0.28, 0.87], [0.52, 0.87], [0.75, 0.87]] },
+        { "tag": "stunned", "source": "sprites/hitodama_stunned.jpg", "count": 6, "duration": 120, "eraseLines": true }
+      ]
+    },
+    {
+      "name": "kodama",
+      "bodyHeight": 150,
+      "animations": [
+        { "tag": "idle", "source": "sprites/kodama_idle.jpg", "count": 6, "duration": 150 },
+        { "tag": "move", "source": "sprites/kodama_move.jpg", "count": 8, "duration": 80 },
+        { "tag": "channel", "source": "sprites/kodama_channel.jpg", "count": 6, "ref": 0, "duration": 120 },
+        { "tag": "stunned", "source": "sprites/kodama_stunned.jpg", "count": 6, "duration": 140, "eraseLines": true }
+      ]
+    },
+    {
+      "name": "kappa",
+      "bodyHeight": 180,
+      "fillHoles": true,
+      "minHole": 300,
+      "holeTolerance": 14,
+      "animations": [
+        { "tag": "idle", "source": "sprites/kappa_idle.jpg", "layout": [3, 3, 3], "duration": 120 },
+        { "tag": "move", "source": "sprites/kappa_move.jpg", "count": 8, "duration": 80 },
+        { "tag": "windup", "source": "sprites/kappa_windup.jpg", "count": 4, "ref": 0, "duration": 100, "once": true },
+        { "tag": "dash", "source": "sprites/kappa_dash.jpg", "count": 6, "duration": 60, "eraseLines": { "length": 0.03, "vertical": false }, "tolerance": 60 }
+      ]
+    },
+    {
+      "name": "kappa-renforce",
+      "bodyHeight": 220,
+      "fillHoles": true,
+      "minHole": 300,
+      "holeTolerance": 14,
+      "animations": [
+        { "tag": "idle", "source": "sprites/kappa-renforce_idle.jpg", "count": 6, "duration": 150 },
+        { "tag": "move", "source": "sprites/kappa-renforce_move.jpg", "count": 8, "duration": 90, "eraseLines": { "length": 0.03, "vertical": false } },
+        { "tag": "windup", "source": "sprites/kappa-renforce_windup.jpg", "count": 4, "ref": 0, "duration": 110, "once": true, "eraseLines": { "length": 0.03, "vertical": false } },
+        { "tag": "dash", "source": "sprites/kappa-renforce_dash.jpg", "count": 6, "duration": 60 },
+        { "tag": "stunned", "source": "sprites/kappa-renforce_stunned.jpg", "count": 6, "duration": 140 }
+      ]
+    },
+    {
+      "name": "kasa-obake",
+      "bodyHeight": 190,
+      "fillHoles": true,
+      "minHole": 800,
+      "holeTolerance": 18,
+      "animations": [
+        { "tag": "idle", "source": "sprites/kasa-obake_idle.jpg", "count": 6, "duration": 110, "eraseLines": { "length": 0.03, "vertical": false } },
+        { "tag": "airborne", "source": "sprites/kasa-obake_airborne.jpg", "count": 4, "duration": 110 },
+        { "tag": "stunned", "source": "sprites/kasa-obake_stunned.jpg", "count": 6, "duration": 140, "eraseLines": { "length": 0.03, "vertical": false } }
+      ]
+    },
+    {
+      "name": "araignee",
+      "bodyHeight": 100,
+      "animations": [
+        { "tag": "idle", "source": "sprites/araignee_idle.jpg", "count": 4, "duration": 140 },
+        { "tag": "move", "source": "sprites/araignee_move.jpg", "count": 8, "duration": 60 },
+        { "tag": "windup", "source": "sprites/araignee_strike.jpg", "count": 4, "frames": [0], "ref": 3, "duration": 100, "once": true },
+        { "tag": "strike", "source": "sprites/araignee_strike.jpg", "count": 4, "frames": [1, 2, 3], "ref": 3, "durations": [60, 110, 140], "once": true },
+        { "tag": "stunned", "source": "sprites/araignee_stunned.jpg", "count": 6, "frames": [1, 2, 3, 4, 5], "duration": 140 }
+      ]
+    },
+    {
+      "name": "jorogumo",
+      "bodyHeight": 260,
+      "animations": [
+        { "tag": "idle", "source": "sprites/jorogumo-humaine_idle.jpg", "count": 6, "duration": 160 },
+        { "tag": "move", "source": "sprites/jorogumo-humaine_move.jpg", "count": 8, "duration": 90 },
+        { "tag": "windup", "source": "sprites/jorogumo-humaine_windup.jpg", "count": 4, "ref": 0, "duration": 110, "once": true },
+        { "tag": "strike", "source": "sprites/jorogumo-humaine_windup.jpg", "count": 4, "frames": [3, 1, 0], "ref": 0, "durations": [60, 80, 220], "once": true },
+        { "tag": "channel", "source": "sprites/jorogumo-humaine_channel.jpg", "count": 6, "ref": 0, "duration": 130 },
+        { "tag": "stunned", "source": "sprites/jorogumo-humaine_stunned.jpg", "count": 6, "duration": 150 }
+      ]
+    },
+    {
+      "name": "jorogumo-araignee",
+      "bodyHeight": 280,
+      "tolerance": 42,
+      "fillHoles": true,
+      "minHole": 200,
+      "holeTolerance": 20,
+      "eraseLines": { "length": 0.04, "vertical": false },
+      "animations": [
+        { "tag": "idle", "source": "sprites/jorogumo-araignee_idle.jpg", "count": 6, "frames": [1, 2, 3, 4], "duration": 170 },
+        { "tag": "move", "source": "sprites/jorogumo-araignee_move.jpg", "count": 8, "duration": 80 },
+        { "tag": "windup", "source": "sprites/jorogumo-araignee_windup.jpg", "count": 4, "ref": 0, "duration": 120, "once": true },
+        { "tag": "strike", "source": "sprites/jorogumo-araignee_strike.jpg", "count": 6, "ref": 5, "durations": [60, 60, 70, 110, 120, 140], "once": true },
+        { "tag": "dash", "source": "sprites/jorogumo-araignee_dash.jpg", "count": 6, "duration": 60 },
+        { "tag": "airborne", "source": "sprites/jorogumo-araignee_airborne.jpg", "count": 4, "ref": 0, "duration": 110 }
+      ]
+    },
+    {
+      "name": "charon",
+      "bodyHeight": 240,
+      "animations": [{ "tag": "idle", "source": "sprites/charon_idle.jpg", "count": 6, "duration": 160 }]
+    },
+    {
+      "name": "moine",
+      "bodyHeight": 220,
+      "animations": [{ "tag": "idle", "source": "sprites/moine_idle.jpg", "count": 6, "duration": 170 }]
+    },
+    {
+      "name": "tanuki",
+      "bodyHeight": 190,
+      "animations": [{ "tag": "idle", "source": "sprites/tanuki_idle.jpg", "count": 6, "duration": 150 }]
+    },
+    {
+      "name": "obaa-kiku",
+      "bodyHeight": 180,
+      "animations": [{ "tag": "idle", "source": "sprites/obaa-kiku_idle.jpg", "count": 6, "duration": 170 }]
+    },
+    {
+      "name": "rocher",
+      "anchor": "box",
+      "bodyHeight": 384,
+      "animations": [{ "tag": "idle", "source": "sprites/decor_ile_rocher.jpg", "count": 6, "duration": 150 }]
+    },
+    {
+      "name": "barque",
+      "anchor": "box",
+      "bodyHeight": 220,
+      "animations": [{ "tag": "idle", "source": "sprites/decor_ile_barque.jpg", "count": 6, "duration": 160 }]
+    },
+    {
+      "name": "torii",
+      "anchor": "box",
+      "bodyHeight": 384,
+      "fillHoles": true,
+      "minHole": 600,
+      "animations": [{ "tag": "idle", "source": "sprites/decor_ile_torii.jpg", "count": 6, "duration": 150 }]
+    },
+    {
       "name": "forge",
       "anchor": "box",
       "bodyHeight": 384,

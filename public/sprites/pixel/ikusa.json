@@ -1,0 +1,166 @@
+{
+  "frames": [
+    {
+      "filename": "ikusa 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 350
+    },
+    {
+      "filename": "ikusa 1",
+      "frame": {
+        "x": 70,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 350
+    },
+    {
+      "filename": "ikusa 2",
+      "frame": {
+        "x": 140,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 160
+    },
+    {
+      "filename": "ikusa 3",
+      "frame": {
+        "x": 210,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 160
+    },
+    {
+      "filename": "ikusa 4",
+      "frame": {
+        "x": 280,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 160
+    },
+    {
+      "filename": "ikusa 5",
+      "frame": {
+        "x": 350,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 160
+    },
+    {
+      "filename": "ikusa 6",
+      "frame": {
+        "x": 420,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 300
+    },
+    {
+      "filename": "ikusa 7",
+      "frame": {
+        "x": 490,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 300
+    },
+    {
+      "filename": "ikusa 8",
+      "frame": {
+        "x": 560,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ikusa 9",
+      "frame": {
+        "x": 630,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 400
+    },
+    {
+      "filename": "ikusa 10",
+      "frame": {
+        "x": 700,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 300
+    },
+    {
+      "filename": "ikusa 11",
+      "frame": {
+        "x": 770,
+        "y": 0,
+        "w": 70,
+        "h": 50
+      },
+      "duration": 300
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "ikusa.png",
+    "size": {
+      "w": 840,
+      "h": 50
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 1,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 2,
+        "to": 5,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 6,
+        "to": 7,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "strike",
+        "from": 8,
+        "to": 9,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "stunned",
+        "from": 10,
+        "to": 11,
+        "direction": "forward"
+      }
+    ]
+  }
+}

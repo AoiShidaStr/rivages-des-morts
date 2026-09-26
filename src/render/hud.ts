@@ -1,4 +1,5 @@
 import type { Kit } from '../game/config';
+import { Izanami } from '../game/enemies';
 import type { ClassDef } from '../game/loadout';
 import type { GameEvent } from '../game/types';
 import type { World } from '../game/world';
@@ -45,6 +46,11 @@ export class Hud {
   private readonly boss: HTMLElement;
   private readonly bossName: HTMLElement;
   private readonly bossFill: HTMLElement;
+  /** Jauge du regard d'Izanami, sous la barre du boss. */
+  private readonly gaze: HTMLElement;
+  private readonly gazeFill: HTMLElement;
+  private readonly gazeLabel: HTMLElement;
+  private bossTitle = 'Jorōgumo';
   private bannerTimer = 0;
 
   constructor(root: HTMLElement) {
@@ -71,6 +77,10 @@ export class Hud {
     this.boss = find('#boss');
     this.bossName = find('#boss .name');
     this.bossFill = find('#boss .fill');
+    this.gazeFill = h('div', { class: 'gaze-fill' });
+    this.gazeLabel = h('span', { class: 'gaze-label' }, 'Son regard');
+    this.gaze = h('div', { class: 'gaze', title: 'Plus tu la regardes, plus elle encaisse ; jauge pleine, sa colère éclate.' }, h('span', { class: 'gaze-eye' }, '目'), h('div', { class: 'gaze-bar' }, this.gazeFill), this.gazeLabel);
+    this.boss.append(this.gaze);
   }
 
   /** Noms des compétences, barre et rappel des commandes selon la classe du héros. */
@@ -174,13 +184,23 @@ export class Hud {
     const boss = world.enemies.find((e) => e.boss);
     this.boss.classList.toggle('visible', Boolean(boss));
     if (boss) this.bossFill.style.width = `${(Math.max(0, boss.hp) / boss.maxHp) * 100}%`;
+    // Izanami : la jauge de son regard, et l'alerte quand le héros la regarde.
+    const izanami = boss instanceof Izanami ? boss : null;
+    this.gaze.classList.toggle('visible', izanami !== null);
+    if (izanami) {
+      this.gazeFill.style.width = `${izanami.gaze * 100}%`;
+      this.gaze.classList.toggle('watched', izanami.watched);
+      this.gaze.classList.toggle('full', izanami.gaze > 0.75);
+      const label = izanami.repelled ? 'Repoussée par la pêche !' : izanami.watched ? 'Elle te voit…' : 'Son regard';
+      if (this.gazeLabel.textContent !== label) this.gazeLabel.textContent = label;
+    }
 
     for (const event of events) {
       if (event.type === 'wave') {
         const level = world.cfg.difficulty?.level ?? 1;
         this.announce(`Niveau ${level} · Vague ${event.index + 1} / ${event.total}`, event.label, event.hint);
       } else if (event.type === 'bossPhase') {
-        this.bossName.textContent = `Jorōgumo · niv. ${world.cfg.difficulty?.level ?? 1} · ${event.label}`;
+        this.bossName.textContent = `${this.bossTitle} · niv. ${world.cfg.difficulty?.level ?? 1} · ${event.label}`;
         this.announce(`Phase ${event.phase} / 3`, event.label, event.hint);
       } else if (event.type === 'end') {
         this.hint.classList.remove('visible');
@@ -200,10 +220,12 @@ export class Hud {
     this.hint.classList.toggle('visible', Boolean(hint));
   }
 
-  reset(level = 1): void {
+  /** Nouvelle descente : niveau du donjon et nom de son boss. */
+  reset(level = 1, boss = 'Jorōgumo'): void {
     this.hint.classList.remove('visible');
     this.banner.classList.remove('visible');
     this.bannerTimer = 0;
-    this.bossName.textContent = `Jorōgumo · niv. ${level}`;
+    this.bossTitle = boss;
+    this.bossName.textContent = `${boss} · niv. ${level}`;
   }
 }

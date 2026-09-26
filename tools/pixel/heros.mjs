@@ -432,6 +432,36 @@ export const WEAPONS = {
     smear: 0,
     draw: (c, hand, pose, handB) => bow(c, hand, pose.blade, pose.draw ? handB : null, { half: 7, wood: WOOD_DARK, grip: '#c8412f' }),
   },
+  // Palais d'Izanami.
+  'totsuka-tsurugi': {
+    twoHanded: true,
+    smear: 18,
+    draw: (c, hand, pose) => {
+      blade(c, hand, pose.blade, 17, { blade: '#f4f8fb', bladeShade: '#c9d2dc', guard: '#c9973f', wrap: '#5a3a22' });
+      // La lame crépite encore : deux étincelles bleues le long du fil.
+      c.set(...at(hand, pose.blade, 8, -1), '#9ff3ff');
+      c.set(...at(hand, pose.blade, 14, 1), '#9ff3ff');
+    },
+  },
+  'kaiken-izanami': {
+    smear: 6,
+    draw: (c, hand, pose) => {
+      c.line(at(hand, pose.blade, -2), hand, 0, '#e8e6f0');
+      c.line(at(hand, pose.blade, 1), at(hand, pose.blade, 6), 0, '#26222a');
+      c.set(...at(hand, pose.blade, 7), '#8b3fa8');
+    },
+    // Le fourreau, tenu dans la main arrière.
+    back: (c, hand) => c.line(hand, at(hand, 110, 5), 0, '#4a4452'),
+  },
+  'arc-pecher': {
+    smear: 0,
+    draw: (c, hand, pose, handB) => {
+      bow(c, hand, pose.blade, pose.draw ? handB : null, { wood: '#8a5a4a', grip: '#5a2a3a' });
+      const [ux, uy] = dir(pose.blade);
+      c.set(hand[0] + uy * 5 + ux * 2, hand[1] - ux * 5 + uy * 2, '#f19ab6');
+      c.set(hand[0] - uy * 6 + ux * 2, hand[1] + ux * 6 + uy * 2, '#ffd9e4');
+    },
+  },
   'arc-soie': {
     smear: 0,
     draw: (c, hand, pose, handB) =>
@@ -474,6 +504,23 @@ const HELMETS = {
       'k.kKKKKKK.....',
     ],
   },
+  // Voile blanc d'Izanami : un diadème d'or, et le voile qui tombe sur le visage et les épaules.
+  'voile-izanami': {
+    at: [0, -1],
+    keys: { V: '#eef1f4', v: '#c9d0d8', g: '#c9973f' },
+    rows: [
+      '...gggggg...',
+      '..VVVVVVVV..',
+      '.VVVVVVVVVV.',
+      '.VVvVVVVvVV.',
+      'VVVvVVVVvVVV',
+      'VVvVVVVVVvVV',
+      'VVvVVVVVVvV.',
+      'VvVVVVVVVVv.',
+      'VvVV.VVVVv..',
+      'Vv....VVv...',
+    ],
+  },
   // Masque blanc sans traits des Oubliés, sur le visage.
   'masque-oublie': {
     at: [6, 4],
@@ -498,6 +545,19 @@ const CHESTS = {
       '.wWWWWwWWw.',
       '..WWWWwWW..',
       '..WWWwWWW..',
+    ],
+  },
+  // Dō de l'armée du Yomi : lamelles d'os laquées de noir, lacet rouge au milieu.
+  'do-yomi': {
+    keys: { K: '#26222a', k: '#4a4452', B: '#e8e2d0', R: '#c8412f' },
+    sleeve: ['#26222a', '#1a171d'],
+    rows: [
+      '.KKKKKKKKK.',
+      'KBBBBRBBBBK',
+      'KkkkkRkkkkK',
+      '.BBBBRBBBB.',
+      '..kkkRkkk..',
+      '..BBBRBBB..',
     ],
   },
   // Carapace de kappa : la coque verte dans le dos, les plaques du ventre devant.
@@ -578,6 +638,11 @@ const AMULETS = {
   'talisman-douteux': (c, [x, y]) => {
     c.rect(x, y, 2, 3, '#f4efe2');
     c.set(x, y + 1, '#c8412f');
+  },
+  'peche-okamuzumi': (c, [x, y]) => {
+    c.rect(x, y, 2, 2, '#f0a070');
+    c.set(x + 1, y, '#ffe0a0');
+    c.set(x + 1, y - 1, '#6f9f4f');
   },
   'dent-kappa': (c, [x, y]) => {
     c.set(x, y, '#f4f2ec');

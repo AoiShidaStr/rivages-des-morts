@@ -1,0 +1,162 @@
+{
+ "frames": [
+  {
+   "filename": "move 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "move 1",
+   "frame": {
+    "x": 234,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "move 2",
+   "frame": {
+    "x": 468,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "move 3",
+   "frame": {
+    "x": 702,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "move 4",
+   "frame": {
+    "x": 936,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "move 5",
+   "frame": {
+    "x": 1170,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "move 6",
+   "frame": {
+    "x": 1404,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 85
+  },
+  {
+   "filename": "stunned 7",
+   "frame": {
+    "x": 1638,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 120
+  },
+  {
+   "filename": "stunned 8",
+   "frame": {
+    "x": 1872,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 120
+  },
+  {
+   "filename": "stunned 9",
+   "frame": {
+    "x": 2106,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 120
+  },
+  {
+   "filename": "stunned 10",
+   "frame": {
+    "x": 2340,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 120
+  },
+  {
+   "filename": "stunned 11",
+   "frame": {
+    "x": 2574,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 120
+  },
+  {
+   "filename": "stunned 12",
+   "frame": {
+    "x": 2808,
+    "y": 0,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 120
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "hitodama.webp",
+  "size": {
+   "w": 3042,
+   "h": 149
+  },
+  "smooth": true,
+  "bodyHeight": 120,
+  "anchor": {
+   "x": 117,
+   "y": 131
+  },
+  "frameTags": [
+   {
+    "name": "move",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   },
+   {
+    "name": "stunned",
+    "from": 7,
+    "to": 12,
+    "direction": "forward"
+   }
+  ]
+ }
+}

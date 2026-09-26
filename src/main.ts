@@ -3,7 +3,6 @@ import './style.css';
 import './ui/ui.css';
 import { App } from './app';
 import { catalog, content } from './content';
-import dungeon from './data/dungeon.json';
 import enemies from './data/enemies.json';
 import player from './data/player.json';
 import sprites from './data/sprites.json';
@@ -16,20 +15,19 @@ import { IslandRenderer } from './render/islandRenderer';
 import { Renderer, styleManifest, type SpriteManifest } from './render/renderer';
 import { ART_STYLE } from './style';
 
+// L'arène (salles, souches, pêchers) change avec le donjon : celle des Rizières noyées sert de base.
 const config: GameConfig = {
-  arenaHalfSize: dungeon.arenaHalfSize,
-  stumpRadius: dungeon.stumpRadius,
-  webs: dungeon.webs,
+  ...content.dungeons.rizieres.arena,
   player: player as GameConfig['player'],
-  enemies,
-  waves: dungeon.waves as GameConfig['waves'],
+  enemies: enemies as GameConfig['enemies'],
 };
 
 /** `?vague=7` lance directement le donjon à la septième vague (le boss), pour tester sans passer par l'île. */
 const params = new URLSearchParams(location.search);
 const devWave = params.has('vague') ? Math.max(0, Number(params.get('vague')) - 1) || 0 : null;
-/** `?vague=1&niveau=40` : même chose, au niveau de donjon 40. */
+/** `?vague=1&niveau=40` : même chose, au niveau de donjon 40 ; `&donjon=palais` : dans le Palais d'Izanami. */
 const devLevel = params.has('niveau') ? Number(params.get('niveau')) || 1 : null;
+const devDungeon = params.get('donjon') ?? 'rizieres';
 
 function element<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -61,6 +59,7 @@ async function start(): Promise<void> {
     uiRoot: element('ui'),
     devWave,
     devLevel,
+    devDungeon,
   });
   app.start();
 

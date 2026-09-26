@@ -572,4 +572,100 @@ export const ICONS = {
     c.line([6, 12], [26, 21], 0, '#c8412f');
     c.line([26, 21], [30, 26], 0, '#c8412f');
   },
+
+  // --- Palais d'Izanami ------------------------------------------------------
+  'totsuka-tsurugi'(c) {
+    // Épée droite à double tranchant, pommeau en anneau, garde de bronze ; des étincelles de foudre.
+    for (let i = 0; i <= 18; i++) {
+      c.set(11 + i, 19 - i, '#f4f8fb');
+      c.set(12 + i, 19 - i, '#c9d2dc');
+      c.set(12 + i, 20 - i, '#8f9aa3');
+    }
+    c.set(30, 1, '#f4f8fb');
+    c.line([8, 20], [13, 25], 0, '#c9973f');
+    c.line([7, 21], [12, 26], 0, '#8a6a2a');
+    c.line([5, 25], [9, 21], 1, '#5a3a22');
+    for (let a = 0; a < 360; a += 45) c.set(3 + Math.cos((a * Math.PI) / 180) * 2.2, 28 + Math.sin((a * Math.PI) / 180) * 2.2, '#c9973f');
+    px(c, [[20, 4], [21, 5], [20, 6], [26, 12], [27, 13], [26, 14], [15, 6], [16, 7]], '#9ff3ff');
+    px(c, [[21, 4], [27, 12]], '#ffffff');
+  },
+  'kaiken-izanami'(c) {
+    // Petit poignard dans un fourreau laqué noir, cordon blanc des morts, une brume violette qui en sort.
+    poly(c, [[9, 25], [24, 8], [27, 11], [12, 28]], '#26222a');
+    c.line([11, 25], [24, 10], 0, '#4a4452');
+    poly(c, [[5, 29], [9, 25], [12, 28], [8, 32]], '#e8e6f0');
+    px(c, [[7, 28], [9, 27], [8, 30]], '#aeb8c4');
+    c.line([10, 27], [4, 21], 0, '#f4f2ec');
+    c.line([4, 21], [6, 17], 0, '#f4f2ec');
+    for (const [x, y] of [[25, 6], [27, 4], [24, 3], [28, 7], [29, 3]]) c.disc(x, y, 1, '#8b3fa8');
+    px(c, [[26, 5], [28, 5]], '#c98ce0');
+  },
+  'arc-pecher'(c) {
+    // Arc de bois de pêcher rose-brun, fleurs aux branches, corde claire.
+    let prev = [9, 3];
+    for (let i = 1; i <= 20; i++) {
+      const t = i / 20;
+      const pt = [9 + Math.sin(t * Math.PI) * 13, 3 + t * 26];
+      c.line(prev, pt, 0.6, i === 10 ? '#5a2a3a' : '#8a5a4a');
+      prev = pt;
+    }
+    c.line([9, 3], [9, 29], 0, '#f4efe2');
+    for (const [x, y] of [[14, 6], [20, 11], [21, 18], [15, 26], [18, 24]]) {
+      c.disc(x, y, 1.2, '#f19ab6');
+      c.set(x, y, '#ffd9e4');
+    }
+  },
+  'voile-izanami'(c) {
+    // Voile blanc qui tombe d'un diadème d'or, plis translucides.
+    c.line([8, 7], [24, 7], 0.8, '#c9973f');
+    px(c, [[12, 5], [16, 4], [20, 5]], '#e3b85a');
+    poly(c, [[8, 8], [24, 8], [28, 29], [4, 29]], '#eef1f4');
+    for (const x of [9, 13, 17, 21, 25]) c.line([x - 1, 9], [x + (x - 16) * 0.35, 28], 0, '#c9d0d8');
+    for (let x = 5; x <= 27; x++) if (x % 3) c.set(x, 29, '#dfe4ea');
+    px(c, [[12, 12], [19, 14], [15, 20]], '#ffffff');
+  },
+  'do-yomi'(c) {
+    // Cuirasse de lamelles d'os laquées de noir, lacets rouges.
+    poly(c, [[7, 5], [25, 5], [27, 28], [5, 28]], '#26222a');
+    for (let y = 8; y <= 26; y += 4) {
+      c.line([7, y], [25, y], 0, '#e8e2d0');
+      for (let x = 8; x <= 24; x += 3) c.set(x, y + 1, '#4a4452');
+    }
+    c.line([16, 6], [16, 27], 0, '#c8412f');
+    c.line([6, 5], [11, 2], 1, '#26222a');
+    c.line([26, 5], [21, 2], 1, '#26222a');
+  },
+  'peche-okamuzumi'(c) {
+    // La pêche d'Izanagi : dorée et rose, deux feuilles, un halo.
+    for (let a = 0; a < 360; a += 20) c.set(16 + Math.cos((a * Math.PI) / 180) * 13, 18 + Math.sin((a * Math.PI) / 180) * 12, '#ffe7a8');
+    c.ellipse(16, 18, 9, 9, ['#d4705a', '#f0a070', '#ffe0a0']);
+    c.line([16, 10], [16, 20], 0, '#c86050');
+    poly(c, [[16, 9], [22, 4], [25, 6], [19, 10]], '#6f9f4f');
+    poly(c, [[16, 9], [11, 5], [9, 8], [14, 11]], '#8fbf5f');
+  },
+  'peigne-izanagi'(c) {
+    // Peigne de buis, dents fines, et trois pousses de bambou qui en sortent.
+    poly(c, [[5, 14], [27, 14], [26, 19], [6, 19]], '#d9b56a');
+    c.line([5, 14], [27, 14], 0, '#f0d58a');
+    for (let x = 7; x <= 25; x += 2) c.line([x, 19], [x, 26], 0, '#b38b45');
+    for (const x of [9, 16, 23]) {
+      c.line([x, 13], [x + 1, 3], 0.6, '#6f9f4f');
+      c.set(x + 2, 6, '#8fbf5f');
+      c.set(x, 9, '#4f7f3a');
+    }
+  },
+  os(c) {
+    // Éclat d'os de guerrier du Yomi, laqué de noir d'un côté.
+    poly(c, [[6, 22], [22, 6], [27, 9], [11, 26]], '#e8e2d0');
+    poly(c, [[16, 18], [26, 8], [27, 9], [18, 20]], '#26222a');
+    c.disc(6, 24, 2.5, '#f4efe2');
+    c.disc(25, 7, 2.5, '#f4efe2');
+    c.line([9, 22], [21, 10], 0, '#c9c3b2');
+  },
+  foudre(c) {
+    // Éclat de foudre figé, zigzag bleu et blanc.
+    poly(c, [[18, 2], [8, 17], [15, 17], [11, 30], [25, 12], [17, 12], [22, 2]], '#9ff3ff');
+    poly(c, [[18, 5], [11, 15], [16, 15], [14, 24], [21, 14], [15, 14], [19, 5]], '#ffffff');
+    px(c, [[6, 8], [27, 20], [5, 24]], '#9ff3ff');
+  },
 };

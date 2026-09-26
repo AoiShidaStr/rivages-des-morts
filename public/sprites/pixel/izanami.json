@@ -1,0 +1,238 @@
+{
+  "frames": [
+    {
+      "filename": "izanami 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 320
+    },
+    {
+      "filename": "izanami 1",
+      "frame": {
+        "x": 52,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 320
+    },
+    {
+      "filename": "izanami 2",
+      "frame": {
+        "x": 104,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 320
+    },
+    {
+      "filename": "izanami 3",
+      "frame": {
+        "x": 156,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 320
+    },
+    {
+      "filename": "izanami 4",
+      "frame": {
+        "x": 208,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 160
+    },
+    {
+      "filename": "izanami 5",
+      "frame": {
+        "x": 260,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 160
+    },
+    {
+      "filename": "izanami 6",
+      "frame": {
+        "x": 312,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 160
+    },
+    {
+      "filename": "izanami 7",
+      "frame": {
+        "x": 364,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 160
+    },
+    {
+      "filename": "izanami 8",
+      "frame": {
+        "x": 416,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 250
+    },
+    {
+      "filename": "izanami 9",
+      "frame": {
+        "x": 468,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 250
+    },
+    {
+      "filename": "izanami 10",
+      "frame": {
+        "x": 520,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 80
+    },
+    {
+      "filename": "izanami 11",
+      "frame": {
+        "x": 572,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 400
+    },
+    {
+      "filename": "izanami 12",
+      "frame": {
+        "x": 624,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 140
+    },
+    {
+      "filename": "izanami 13",
+      "frame": {
+        "x": 676,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 140
+    },
+    {
+      "filename": "izanami 14",
+      "frame": {
+        "x": 728,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 70
+    },
+    {
+      "filename": "izanami 15",
+      "frame": {
+        "x": 780,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 70
+    },
+    {
+      "filename": "izanami 16",
+      "frame": {
+        "x": 832,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 300
+    },
+    {
+      "filename": "izanami 17",
+      "frame": {
+        "x": 884,
+        "y": 0,
+        "w": 52,
+        "h": 60
+      },
+      "duration": 300
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "izanami.png",
+    "size": {
+      "w": 936,
+      "h": 60
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      },
+      {
+        "name": "move",
+        "from": 4,
+        "to": 7,
+        "direction": "forward"
+      },
+      {
+        "name": "windup",
+        "from": 8,
+        "to": 9,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "strike",
+        "from": 10,
+        "to": 11,
+        "direction": "forward",
+        "repeat": "1"
+      },
+      {
+        "name": "channel",
+        "from": 12,
+        "to": 13,
+        "direction": "forward"
+      },
+      {
+        "name": "dash",
+        "from": 14,
+        "to": 15,
+        "direction": "forward"
+      },
+      {
+        "name": "stunned",
+        "from": 16,
+        "to": 17,
+        "direction": "forward"
+      }
+    ]
+  }
+}

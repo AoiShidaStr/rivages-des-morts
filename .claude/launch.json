@@ -8,7 +8,7 @@
       "port": 5173
     },
     {
-      "name": "jeu-2",
+      "name": "jeu-5174",
       "runtimeExecutable": "node",
       "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5174", "--strictPort"],
       "port": 5174

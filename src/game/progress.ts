@@ -22,14 +22,19 @@ export interface ProgressState {
   equipped: Partial<Record<Slot, string>>;
   /** Niveau de forge de chaque pièce d'équipement possédée (forge de Tetsu). */
   itemLevels: Record<string, number>;
-  /** Donjon des Rizières noyées : plus haut niveau ouvert, et plus haut niveau vaincu. */
-  dungeon: { unlocked: number; best: number };
+  /** Par donjon (rizieres, palais…) : plus haut niveau ouvert, et plus haut niveau vaincu. */
+  dungeons: Record<string, DungeonRecord>;
   materials: Record<string, number>;
   /** Drapeaux et compteurs libres, posés par les dialogues. */
   flags: Record<string, number>;
   quests: Record<string, Exclude<QuestStatus, 'none'>>;
   /** Coffres gagnés en donjon, à ouvrir sur la barque. */
   chests: number;
+}
+
+export interface DungeonRecord {
+  unlocked: number;
+  best: number;
 }
 
 /** Toutes les clés présentes doivent être vraies. */
@@ -60,7 +65,8 @@ export interface Effect {
   toast?: string;
   open?: 'shop' | 'forge';
   shop?: string;
-  enterDungeon?: boolean;
+  /** Ouvre l'entrée d'un donjon (`true` : les Rizières noyées). */
+  enterDungeon?: boolean | string;
   openChests?: boolean;
   xp?: number;
   resetTalents?: boolean;
@@ -71,7 +77,7 @@ export type Action =
   | { kind: 'toast'; text: string; tone?: 'quest' | 'loot'; icon?: string }
   | { kind: 'shop'; id: string }
   | { kind: 'forge' }
-  | { kind: 'dungeon' }
+  | { kind: 'dungeon'; id: string }
   | { kind: 'chests' };
 
 export interface Catalog {
@@ -105,7 +111,7 @@ function fresh(): ProgressState {
     items: [STARTING_WEAPON],
     equipped: { arme: STARTING_WEAPON },
     itemLevels: { [STARTING_WEAPON]: 1 },
-    dungeon: { unlocked: 1, best: 0 },
+    dungeons: {},
     materials: {},
     flags: {},
     quests: {},
@@ -198,9 +204,14 @@ export class Progress {
     if (slot) this.state.itemLevels[item] ??= 1;
   }
 
-  /** Une victoire au niveau `level` ouvre les niveaux jusqu'à `next` ; renvoie vrai si de nouveaux niveaux s'ouvrent. */
-  winDungeon(level: number, next: number): boolean {
-    const dungeon = this.state.dungeon;
+  /** Niveaux ouverts et record d'un donjon (le niveau 1 est toujours ouvert). */
+  dungeon(id: string): DungeonRecord {
+    return (this.state.dungeons[id] ??= { unlocked: 1, best: 0 });
+  }
+
+  /** Une victoire au niveau `level` ouvre les niveaux du donjon jusqu'à `next` ; renvoie vrai si de nouveaux niveaux s'ouvrent. */
+  winDungeon(id: string, level: number, next: number): boolean {
+    const dungeon = this.dungeon(id);
     dungeon.best = Math.max(dungeon.best, level);
     if (next <= dungeon.unlocked) return false;
     dungeon.unlocked = next;
@@ -303,7 +314,7 @@ export class Progress {
       state.talents = [];
       actions.push({ kind: 'toast', text: 'Arbre de compétences réinitialisé : tes points sont rendus.' });
     }
-    if (e.enterDungeon) actions.push({ kind: 'dungeon' });
+    if (e.enterDungeon) actions.push({ kind: 'dungeon', id: e.enterDungeon === true ? 'rizieres' : e.enterDungeon });
     if (e.openChests) actions.push({ kind: 'chests' });
   }
 }
@@ -317,16 +328,22 @@ function levelUpToast(level: number, point: boolean): Action {
  * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
  * pas de héros (c'était toujours un Guerrier Einherjar).
  */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeon' | 'hero'> &
-  Partial<Pick<ProgressState, 'itemLevels' | 'dungeon' | 'hero'>> & { weaponLevel?: number; weaponLevels?: Record<string, number> };
+type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeons' | 'hero'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'dungeons' | 'hero'>> & {
+    weaponLevel?: number;
+    weaponLevels?: Record<string, number>;
+    /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
+    dungeon?: DungeonRecord;
+  };
 
 function migrate(saved: SavedState, catalog: Catalog): ProgressState {
-  const { weaponLevel, weaponLevels, ...rest } = saved;
+  const { weaponLevel, weaponLevels, dungeon, ...rest } = saved;
   const state: ProgressState = { ...fresh(), ...rest };
   state.hero = saved.hero ?? { ...DEFAULT_HERO };
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
   // Une Jorōgumo déjà vaincue compte comme une victoire au niveau 1.
-  state.dungeon = saved.dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });
+  const rizieres = dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });
+  state.dungeons = { rizieres, ...saved.dungeons };
   const weapon = catalog.startingWeapon(state.hero.class);
   if (!state.items.includes(weapon)) state.items.unshift(weapon);
   state.itemLevels[weapon] ??= 1;

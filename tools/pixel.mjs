@@ -19,6 +19,9 @@ import { drawSheet } from './pixel/sheet.mjs';
 import araignee from './pixel/araignee.mjs';
 import heros from './pixel/heros.mjs';
 import hitodama from './pixel/hitodama.mjs';
+import ikazuchi from './pixel/ikazuchi.mjs';
+import ikusa from './pixel/ikusa.mjs';
+import { revealed as izanamiRevelee, veiled as izanami } from './pixel/izanami.mjs';
 import { human as jorogumo, spider as jorogumoAraignee } from './pixel/jorogumo.mjs';
 import kappa from './pixel/kappa.mjs';
 import kasaObake from './pixel/kasa-obake.mjs';
@@ -30,6 +33,7 @@ import { islandGround, paddyGround } from './pixel/sols.mjs';
 import { Canvas } from './pixel/canvas.mjs';
 import { ICONS, OUTLINE as ICON_OUTLINE, SIZE as ICON_SIZE } from './pixel/objets.mjs';
 import { readFile } from 'node:fs/promises';
+import shikome from './pixel/shikome.mjs';
 
 // Les clés sont les noms des sprites du jeu (src/data/sprites.json). Le héros, lui, est dessiné dans le jeu
 // d'après sa race, sa classe et son équipement (src/render/pixelHero.ts) : `heros` n'est que la planche de
@@ -69,6 +73,13 @@ const characters = {
   argile: decors.argile,
   barque: decors.barque,
   rocher: decors.rocher,
+  pecher: decors.pecher,
+  'pecher-nu': decors.pecherNu,
+  shikome,
+  ikazuchi,
+  ikusa,
+  izanami,
+  izanamiRevelee,
 };
 /** Agrandissement des portraits de dialogue (sans lissage). */
 const PORTRAIT_SCALE = 6;

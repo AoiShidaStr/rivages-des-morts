@@ -24,6 +24,17 @@
         "talisman-douteux", "dent-kappa", "coupelle-kappa", "fil-joren", "magatama-yasakani", "ema-tetsu", "tasse-ebrechee", "concombre",
         "tablette-argile", "braise", "seve", "ecaille", "papier", "masque", "soie", null
       ]
+    },
+    {
+      "source": "objets_planche_2.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "grelots-onmyoji", "eventail-jorogumo", "kunai-jumeaux", "naginata-temple", "yumi-bambou", "totsuka-tsurugi", "kaiken-izanami", "arc-pecher",
+        "voile-izanami", "do-yomi", "peche-okamuzumi", "peigne-izanagi", "os", "foudre", "kusarigama", "crocs-jorogumo",
+        "tetsubo-cloche", "miroir-yata", "hankyu", "arc-soie", null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ]
     }
   ],
   "icons": {

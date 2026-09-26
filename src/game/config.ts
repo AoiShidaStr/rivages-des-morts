@@ -21,10 +21,22 @@ export interface PlayerConfig {
   attack: {
     damage: number;
     range: number;
+    /**
+     * Forme du coup, propre à chaque arme : `arc` frappe dans un arc de `arcDeg` degrés vers la souris
+     * (360 : tout autour du héros) ; `line` est un estoc, un couloir droit de `width` de large.
+     */
+    shape?: 'arc' | 'line';
     arcDeg: number;
+    width?: number;
     windup: number;
     active: number;
     recovery: number;
+    /**
+     * Engagement, en secondes depuis le début du coup : pendant ce temps, le héros ne peut ni bouger
+     * ni esquiver. Ensuite, se déplacer (sans redemander un coup) ou esquiver interrompt la fin du coup.
+     * 0 : on peut feinter pendant l'élan ; la durée entière du coup : il va jusqu'au bout.
+     */
+    commit: number;
     /** Distance parcourue en avant pendant le coup. */
     lunge: number;
     knockback: number;
@@ -374,6 +386,98 @@ export interface HazardConfig {
   radius: number;
   damage: number;
   knockback: number;
+  /** `lightning` : un éclair tombe à l'impact (Ikazuchi, Izanami), plutôt qu'un fil ou un parapluie. */
+  fx?: 'lightning';
+}
+
+/** Yomotsu-shikome : furie du Yomi qui se ramasse sur elle-même, puis bondit griffes en avant. */
+export interface ShikomeConfig extends EnemyBaseConfig {
+  speed: number;
+  /** Distance à partir de laquelle elle se ramasse pour bondir. */
+  lungeRange: number;
+  crouch: number;
+  lungeSpeed: number;
+  lungeDistance: number;
+  lungeDamage: number;
+  lungeKnockback: number;
+  recover: number;
+  cooldown: number;
+  /** Étourdissement quand le héros pare son bond. */
+  parryStun: number;
+}
+
+/** Ikazuchi : dieu du tonnerre né du corps d'Izanami ; il reste à distance et appelle la foudre. */
+export interface IkazuchiConfig extends EnemyBaseConfig {
+  speed: number;
+  keepDistance: number;
+  fleeDistance: number;
+  boltInterval: number;
+  /** Temps pendant lequel il appelle la foudre ; un coup l'interrompt. */
+  boltChannel: number;
+  bolt: HazardConfig;
+  /** Délai entre deux disparitions, quand le héros s'approche trop. */
+  blinkCooldown: number;
+}
+
+/**
+ * Izanami, boss du Palais, en trois phases (voilée, révélée, poursuite).
+ * Son regard : la regarder (viser vers elle) la renforce, jusqu'à la colère.
+ * Sa faiblesse cachée : les pêches d'Izanagi, qu'on fait tomber des pêchers de l'arène.
+ */
+export interface IzanamiConfig extends EnemyBaseConfig {
+  /** Seuils de PV (fraction du maximum) : elle se révèle, puis se lance à la poursuite du héros. */
+  revealAt: number;
+  pursuitAt: number;
+  transformTime: number;
+  gaze: {
+    /** Angle du cône de visée du héros dans lequel elle se sent regardée. */
+    coneDeg: number;
+    range: number;
+    /** Montée de la jauge par seconde regardée, et descente par seconde sans la regarder. */
+    rise: number;
+    fall: number;
+    /** Part des dégâts qu'elle ignore quand la jauge est pleine. */
+    guard: number;
+    /** Colère quand la jauge est pleine : un cri en zone. */
+    wrath: HazardConfig;
+  };
+  veiled: {
+    speed: number;
+    embrace: MeleeConfig;
+    summonInterval: number;
+    summonChannel: number;
+    summonCount: number;
+    maxShikome: number;
+  };
+  revealed: {
+    speed: number;
+    grasp: MeleeConfig;
+    blinkInterval: number;
+    boltInterval: number;
+    boltCount: number;
+    bolt: HazardConfig;
+    ikazuchiInterval: number;
+    maxIkazuchi: number;
+  };
+  pursuit: {
+    speed: number;
+    /** Part des dégâts qu'elle subit pendant la poursuite, hors de la stupeur d'une pêche. */
+    damageFactor: number;
+    /** La jauge du regard monte plus vite. */
+    gazeFactor: number;
+    lungeRange: number;
+    lungeCooldown: number;
+    telegraph: number;
+    lungeSpeed: number;
+    lungeDistance: number;
+    lungeDamage: number;
+    lungeKnockback: number;
+    recover: number;
+    boltInterval: number;
+    boltCount: number;
+  };
+  /** Une pêche d'Izanagi la repousse : stupeur et dégâts reçus en plus. Le pêcher refleurit ensuite. */
+  peach: { stun: number; damageFactor: number; regrow: number };
 }
 
 export interface JorogumoConfig extends EnemyBaseConfig {
@@ -461,6 +565,10 @@ export interface EnemyConfigs {
   oublie: OublieConfig;
   araignee: OublieConfig;
   jorogumo: JorogumoConfig;
+  shikome: ShikomeConfig;
+  ikazuchi: IkazuchiConfig;
+  ikusa: OublieConfig;
+  izanami: IzanamiConfig;
 }
 
 export interface WaveConfig {
@@ -468,9 +576,12 @@ export interface WaveConfig {
   hint?: string;
   /** Conseil propre à une classe, à la place de `hint` (le Guerrier bloque, l'Invocateur lie des âmes). */
   hints?: Partial<Record<Kit, string>>;
-  spawns: { kind: EnemyKind; count: number }[];
-  /** Souches placées dans l'arène pour cette vague (arène du boss). */
+  /** `elite` : ce yokai est un champion (plus grand, plus résistant), quel que soit le niveau. */
+  spawns: { kind: EnemyKind; count: number; elite?: boolean }[];
+  /** Souches placées dans l'arène pour cette vague (arène de la Jorōgumo). */
   stumps?: { x: number; z: number }[];
+  /** Pêchers d'Izanagi placés dans l'arène pour cette vague (arène d'Izanami). */
+  peaches?: { x: number; z: number }[];
 }
 
 export interface GameConfig {
@@ -479,6 +590,10 @@ export interface GameConfig {
   enemies: EnemyConfigs;
   webs: WebConfig;
   stumpRadius: number;
+  /** Rayon d'un pêcher (obstacle, et portée à laquelle un coup en fait tomber la pêche). */
+  peachRadius: number;
+  /** Champion demandé par une vague (`elite`), hors malédiction « Âmes d'élite ». */
+  champion: { hp: number; damage: number };
   waves: WaveConfig[];
   /** Niveau du donjon choisi à l'entrée ; absent = niveau 1, sans renfort. */
   difficulty?: Difficulty;

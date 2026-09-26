@@ -199,5 +199,99 @@
     },
     "hitodamaCount": 2,
     "hitodamaInterval": 5
+  },
+  "shikome": {
+    "maxHp": 34,
+    "radius": 0.4,
+    "mass": 0.9,
+    "knockbackFactor": 1,
+    "speed": 3.6,
+    "lungeRange": 3.8,
+    "crouch": 0.5,
+    "lungeSpeed": 13,
+    "lungeDistance": 4.5,
+    "lungeDamage": 12,
+    "lungeKnockback": 5,
+    "recover": 0.75,
+    "cooldown": 1.5,
+    "parryStun": 1.8
+  },
+  "ikazuchi": {
+    "maxHp": 30,
+    "radius": 0.4,
+    "mass": 0.6,
+    "knockbackFactor": 1.3,
+    "speed": 2.6,
+    "keepDistance": 6.5,
+    "fleeDistance": 3.2,
+    "boltInterval": 3.4,
+    "boltChannel": 0.6,
+    "bolt": { "warning": 0.95, "radius": 1.25, "damage": 14, "knockback": 3, "fx": "lightning" },
+    "blinkCooldown": 3.5
+  },
+  "ikusa": {
+    "maxHp": 80,
+    "radius": 0.5,
+    "mass": 2.2,
+    "knockbackFactor": 0.45,
+    "speed": 1.9,
+    "attackRange": 2.7,
+    "arcDeg": 34,
+    "windup": 0.75,
+    "recover": 0.95,
+    "damage": 17,
+    "knockback": 6,
+    "cooldown": 1.5
+  },
+  "izanami": {
+    "maxHp": 1150,
+    "radius": 0.6,
+    "mass": 9,
+    "knockbackFactor": 0.08,
+    "revealAt": 0.65,
+    "pursuitAt": 0.32,
+    "transformTime": 1.5,
+    "gaze": {
+      "coneDeg": 50,
+      "range": 14,
+      "rise": 0.55,
+      "fall": 0.4,
+      "guard": 0.7,
+      "wrath": { "warning": 0.9, "radius": 4.2, "damage": 20, "knockback": 9 }
+    },
+    "veiled": {
+      "speed": 2,
+      "embrace": { "range": 2.3, "arcDeg": 120, "windup": 0.6, "recover": 0.7, "damage": 14, "knockback": 5, "cooldown": 1.3 },
+      "summonInterval": 12,
+      "summonChannel": 1.1,
+      "summonCount": 2,
+      "maxShikome": 3
+    },
+    "revealed": {
+      "speed": 2.3,
+      "grasp": { "range": 2.4, "arcDeg": 130, "windup": 0.5, "recover": 0.6, "damage": 16, "knockback": 6, "cooldown": 1.2 },
+      "blinkInterval": 6,
+      "boltInterval": 2.8,
+      "boltCount": 3,
+      "bolt": { "warning": 1, "radius": 1.3, "damage": 15, "knockback": 4, "fx": "lightning" },
+      "ikazuchiInterval": 10,
+      "maxIkazuchi": 2
+    },
+    "pursuit": {
+      "speed": 3.1,
+      "damageFactor": 0.3,
+      "gazeFactor": 1.4,
+      "lungeRange": 7.5,
+      "lungeCooldown": 3.5,
+      "telegraph": 0.75,
+      "lungeSpeed": 12,
+      "lungeDistance": 7,
+      "lungeDamage": 20,
+      "lungeKnockback": 8,
+      "recover": 0.9,
+      "boltInterval": 3.8,
+      "boltCount": 2
+    },
+    "peach": { "stun": 4.5, "damageFactor": 1.6, "regrow": 14 }
   }
 }
