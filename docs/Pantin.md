@@ -1,11 +1,13 @@
 # Pantin articulé (façon Wakfu)
 
+> Deux pistes sont à l'essai. En **pixel art** (le style par défaut), le héros est dessiné à la volée par `tools/pixel/heros.mjs` d'après sa race, sa classe et tout son équipement : voir [Pixel art](<Pixel art.md>). Ce document décrit la piste **peinte** : un pantin en morceaux peints, visible en style peint (`?style=peint`).
+
 Au lieu d'une planche par animation, le héros est un **pantin** : des morceaux peints (tête, torse, bras, jambes…) accrochés à des os et animés par rotation. Une seule image peinte par personnage, des animations écrites une fois pour tous les humanoïdes, et l'équipement porté se voit en jeu.
 
 ## Voir le prototype
 
-- `npm run dev`, puis ouvrir `http://localhost:5173/?pantin` : le héros est dessiné en morceaux provisoires (dessinés au canvas), avec l'arme équipée dans la main et le casque sur la tête.
-- Sans `?pantin`, le jeu garde la planche peinte du héros tant que les morceaux peints n'existent pas.
+- `npm run dev`, puis ouvrir `http://localhost:5173/?style=peint&pantin` : le héros est dessiné en morceaux provisoires (dessinés au canvas), avec l'arme équipée dans la main et le casque sur la tête.
+- Sans `?pantin`, le style peint garde la planche peinte du héros tant que les morceaux peints n'existent pas.
 
 ## Morceaux peints
 
