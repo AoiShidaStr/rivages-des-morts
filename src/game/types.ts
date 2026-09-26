@@ -27,8 +27,13 @@ export type Pose = 'idle' | 'move' | 'windup' | 'channel' | 'strike' | 'guard' |
 export interface InputFrame {
   /** Direction de déplacement au sol, de longueur 0 à 1. */
   move: Vec2;
-  /** Point du sol sous la souris. */
+  /**
+   * Point visé, à hauteur de poitrine : là où volent les flèches et où l'on voit le corps des ennemis.
+   * Toutes les directions (coups, tirs, élans) et le choix d'une cible partent de lui.
+   */
   aim: Vec2;
+  /** Point du sol sous la souris : pour les compétences qui visent une zone au sol (Bond). */
+  aimGround: Vec2;
   attackPressed: boolean;
   attackHeld: boolean;
   /** Clic droit : blocage du Guerrier et du Paladin, Lier de l'Invocateur, Pas de l'ombre, tir chargé. */

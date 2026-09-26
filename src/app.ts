@@ -13,7 +13,7 @@ import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
-import type { Renderer } from './render/renderer';
+import { AIM_HEIGHT, type Renderer } from './render/renderer';
 import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
 import {
@@ -462,10 +462,12 @@ export class App {
   private readCombatInput(world: World): InputFrame {
     const { input, dungeonRenderer } = this.d;
     const { forward, right } = dungeonRenderer.groundBasis();
-    const aim = dungeonRenderer.pickGround(input.pointer.x, input.pointer.y) ?? add(world.player.pos, world.player.facing);
+    const { x, y } = input.pointer;
+    const fallback = add(world.player.pos, world.player.facing);
     return {
       move: this.readMove(forward, right),
-      aim,
+      aim: dungeonRenderer.pickGround(x, y, AIM_HEIGHT) ?? fallback,
+      aimGround: dungeonRenderer.pickGround(x, y) ?? fallback,
       attackPressed: input.consumeClick(0),
       attackHeld: input.isButtonDown(0),
       signatureHeld: input.isButtonDown(2),

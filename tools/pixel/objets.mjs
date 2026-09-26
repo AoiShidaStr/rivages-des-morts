@@ -267,6 +267,61 @@ export const ICONS = {
     c.rect(20, 14, 3, 4, '#c8412f');
   },
 
+  'totsuka-tsurugi'(c) {
+    // Tsurugi droite à double tranchant, en bronze, pommeau en anneau ; la foudre crépite le long de la lame.
+    for (let i = 0; i <= 20; i++) {
+      c.set(9 + i, 22 - i, '#f0d890');
+      c.set(10 + i, 22 - i, '#c9a55a');
+      c.set(10 + i, 23 - i, '#8a6d2c');
+      c.set(11 + i, 23 - i, '#b08a3e');
+    }
+    c.line([6, 20], [12, 26], 0, '#6b4a1c');
+    for (let i = 0; i <= 3; i++) {
+      c.set(7 - i, 25 + i, i % 2 ? '#5a3a1c' : '#7a5230');
+      c.set(8 - i, 25 + i, '#3a2412');
+    }
+    for (let a = 0; a < 360; a += 30) {
+      const t = (a * Math.PI) / 180;
+      c.set(2 + Math.round(Math.cos(t) * 2), 29 + Math.round(Math.sin(t) * 2), '#c9a55a');
+    }
+    px(c, [[19, 7], [20, 6], [19, 5], [20, 4], [26, 10], [27, 11], [26, 12], [27, 13], [13, 12], [12, 13]], '#ffe066');
+    px(c, [[20, 5], [27, 12]], '#fffbe0');
+  },
+  'kaiken-izanami'(c) {
+    // Petit poignard dans un fourreau laqué blanc, bague d'argent ; une tache sombre suinte de l'embouchure.
+    for (let i = 0; i <= 15; i++) {
+      c.set(8 + i, 24 - i, '#ffffff');
+      c.set(9 + i, 24 - i, '#e8e2d4');
+      c.set(9 + i, 25 - i, '#bdb6a9');
+      c.set(10 + i, 25 - i, '#a39c90');
+    }
+    c.disc(8, 25, 1.2, '#aeb8c4');
+    c.line([23, 8], [25, 10], 0, '#dfe6ee');
+    c.line([24, 8], [26, 10], 0, '#8f9aa3');
+    for (let i = 0; i <= 5; i++) {
+      c.set(25 + i, 8 - i, i % 2 ? '#2b2330' : '#3e3446');
+      c.set(26 + i, 8 - i, '#1d1a1c');
+    }
+    px(c, [[22, 10], [21, 11], [22, 12], [20, 12], [21, 13], [19, 14], [20, 15]], '#4a1a26');
+    px(c, [[23, 11], [20, 13], [19, 16]], '#2b0f16');
+  },
+  'arc-pecher'(c) {
+    // Arc de pêcher noueux, corde pâle, fleurs roses qui poussent le long du bois.
+    let prev = [9, 3];
+    for (let i = 1; i <= 20; i++) {
+      const t = i / 20;
+      const pt = [9 + Math.sin(t * Math.PI) * 13, 3 + t * 26];
+      c.line(prev, pt, 0.7, i % 4 === 0 ? '#4d2f1c' : '#7a4a2c');
+      prev = pt;
+    }
+    c.line([9, 3], [9, 29], 0, '#efe6d0');
+    for (const [x, y] of [[14, 6], [21, 13], [20, 21], [14, 26]]) {
+      c.disc(x, y, 1.4, '#f4a6c0');
+      c.set(x, y, '#ffd84a');
+    }
+    px(c, [[17, 9], [18, 9], [22, 17], [23, 17], [17, 24], [16, 24]], '#6fae4a');
+  },
+
   // --- Reliques -------------------------------------------------------------
   'coupelle-kappa'(c) {
     // Coupelle de céramique pleine d'une eau qui ne déborde jamais.
@@ -296,6 +351,18 @@ export const ICONS = {
     }
     for (const [x, y] of [[4, 5], [27, 6], [26, 26], [5, 25]]) c.set(x, y, '#fff2b8');
     magatama(c, 14, 12, 7, ['#155c38', '#1f7a4d', '#7fdca8']);
+  },
+
+  'peigne-izanagi'(c) {
+    // Peigne de bois sombre aux longues dents ; des pousses de bambou naissent au bout des dents.
+    poly(c, [[5, 9], [9, 6], [23, 6], [27, 9], [26, 13], [6, 13]], '#4d2f1c');
+    c.line([9, 7], [23, 7], 0, '#7a5230');
+    for (let x = 7; x <= 25; x += 2) c.line([x, 13], [x, 21], 0, '#5a3a22');
+    for (const x of [9, 15, 21, 25]) {
+      c.line([x, 21], [x, 28], 0, '#6fae4a');
+      c.set(x, 24, '#3e7a2c');
+      poly(c, [[x, 26], [x + 3, 24], [x + 1, 27]], '#8fd060');
+    }
   },
 
   // --- Casques --------------------------------------------------------------
@@ -338,6 +405,16 @@ export const ICONS = {
     for (let x = 6; x < 27; x++) c.set(x, 29 + Math.round(Math.sin(x * 0.9)), x % 3 ? '#aeb8c4' : '#cfd6de');
   },
 
+  'voile-izanami'(c) {
+    // Voile blanc des morts, posé sur une tête invisible, avec le bandeau triangulaire (hitaikakushi).
+    poly(c, [[16, 3], [24, 8], [27, 18], [29, 29], [3, 29], [5, 18], [8, 8]], '#d9d6e0');
+    poly(c, [[16, 3], [24, 8], [27, 18], [29, 29], [18, 29], [19, 12]], '#c4c0cc');
+    poly(c, [[15, 4], [9, 8], [6, 18], [5, 28], [10, 28], [11, 14]], '#f4f2f8');
+    for (const x of [8, 13, 19, 24]) c.line([x, 17], [x + Math.round((x - 16) * 0.3), 29], 0, '#b3aebe');
+    poly(c, [[11, 9], [21, 9], [16, 15]], '#ffffff');
+    c.line([6, 9], [26, 9], 0, '#9c97a8');
+  },
+
   // --- Plastrons --------------------------------------------------------------
   shiroshozoku(c) {
     // Kimono blanc des morts, croisé droite sur gauche, ceinture claire.
@@ -361,6 +438,24 @@ export const ICONS = {
     c.rect(3, 22, 26, 2, '#6b4a2a');
     c.rect(4, 11, 3, 4, '#c9a24a');
     c.rect(25, 21, 3, 4, '#c9a24a');
+  },
+
+  'do-yomi'(c) {
+    // Cuirasse de lamelles d'os laquées de noir, lacées de rouge.
+    poly(c, [[5, 6], [12, 4], [14, 8], [18, 8], [20, 4], [27, 6], [27, 13], [25, 28], [7, 28], [5, 13]], '#26242b');
+    poly(c, [[18, 8], [20, 4], [27, 6], [27, 13], [25, 28], [18, 28]], '#1a191e');
+    for (let y = 11; y <= 25; y += 4) {
+      c.line([6, y], [26, y], 0, '#3e3b46');
+      c.line([6, y + 1], [26, y + 1], 0, '#d8d0bd');
+    }
+    for (let x = 9; x <= 23; x += 4) {
+      for (let y = 9; y <= 26; y += 4) {
+        c.set(x, y, '#c8412f');
+        c.set(x, y + 2, '#9b2f22');
+      }
+    }
+    c.line([12, 4], [7, 6], 0, '#c8412f');
+    c.line([20, 4], [25, 6], 0, '#c8412f');
   },
 
   // --- Jambières ----------------------------------------------------------------
@@ -476,6 +571,21 @@ export const ICONS = {
     c.rect(13, 9, 7, 2, '#8a6a4a');
   },
 
+  'peche-okamuzumi'(c) {
+    // La dernière pêche d'Izanagi : ronde, dorée et rose, deux feuilles, une lueur d'or.
+    for (let a = 0; a < 24; a++) {
+      if (a % 2) continue;
+      const t = (a / 24) * Math.PI * 2;
+      c.set(16 + Math.round(Math.cos(t) * 13), 18 + Math.round(Math.sin(t) * 12), '#f0d27a');
+    }
+    c.ellipse(16, 19, 9, 9, ['#c8506a', '#f08a78', '#ffd0a0']);
+    c.line([16, 11], [14, 26], 0, '#d8667a');
+    c.line([16, 10], [17, 6], 0, '#5a3a1c');
+    poly(c, [[17, 8], [25, 4], [22, 10]], '#5fa040');
+    poly(c, [[16, 9], [8, 5], [11, 11]], '#4a8a30');
+    px(c, [[11, 15], [12, 14], [12, 16]], '#fff0d0');
+  },
+
   // --- Objets de quête ------------------------------------------------------------
   'ema-tetsu'(c) {
     // Plaque votive en bois, cordon rouge, nom du forgeron griffonné (illisible) et un marteau.
@@ -573,198 +683,23 @@ export const ICONS = {
     c.line([26, 21], [30, 26], 0, '#c8412f');
   },
   os(c) {
-    // Os de guerrier du Yomi : fémur ou fragment d'os ancien blanchi, gravé.
-    poly(c, [[7, 23], [10, 26], [23, 11], [20, 8]], '#f0ebe1');
-    poly(c, [[9, 23], [11, 25], [23, 11], [21, 9]], '#dad2c3');
-    // Condyles aux extrémités
-    c.disc(7, 22, 2.2, '#f0ebe1');
-    c.disc(11, 26, 2.2, '#dad2c3');
-    c.disc(21, 7, 2.2, '#f0ebe1');
-    c.disc(25, 11, 2.2, '#dad2c3');
-    c.set(7, 21, '#ffffff');
-    c.set(20, 6, '#ffffff');
-    // Gravures/craquelures sombres
-    px(c, [[14, 16], [15, 15], [17, 13]], '#7a7263');
+    // Os de guerrier du Yomi : trois os croisés, liés d'un lacet d'armure laqué noir.
+    const bone = (x0, y0, x1, y1) => {
+      c.line([x0, y0], [x1, y1], 1, '#d8d0bd');
+      c.disc(x0, y0, 2, '#e8e2d4');
+      c.disc(x1, y1, 2, '#e8e2d4');
+    };
+    bone(6, 24, 26, 8);
+    bone(6, 8, 26, 24);
+    bone(5, 17, 27, 17);
+    c.rect(14, 12, 4, 10, '#1d1a1c');
+    px(c, [[15, 13], [16, 16], [15, 19], [16, 21]], '#c8412f');
   },
   foudre(c) {
-    // Éclat de foudre : éclat d'éclair solidifié, cyan électrique et cœur blanc.
-    poly(c, [[16, 3], [12, 14], [18, 14], [13, 29], [22, 13], [16, 13]], '#ffe76a');
-    poly(c, [[16, 6], [13, 14], [17, 14], [15, 25], [20, 14], [17, 14]], '#ffffff');
-    px(c, [[7, 11], [8, 12], [24, 8], [25, 9], [9, 22], [10, 23], [23, 20], [24, 21]], '#52e8ff');
-    px(c, [[16, 1], [12, 30]], '#ffe76a');
-  },
-
-  // --- Objets du Palais d'Izanami (Yomi) -------------------------------------------
-  'totsuka-tsurugi'(c) {
-    // Épée droite archaïque à double tranchant, crépitements d'éclairs dorés et cyan.
-    for (let i = 0; i <= 20; i++) {
-      c.set(10 + i, 21 - i, '#eef8ff');
-      c.set(11 + i, 21 - i, '#c5e5f8');
-      c.set(11 + i, 22 - i, '#7eaec9');
-    }
-    c.set(31, 0, '#ffffff');
-    // Garde ailée en bronze antique
-    poly(c, [[7, 23], [12, 18], [14, 20], [9, 25]], '#d4a843');
-    c.set(8, 24, '#ffe785');
-    c.set(13, 19, '#ffe785');
-    c.set(10, 21, '#8a6218');
-    // Poignée tressée et pommeau rond
-    for (let i = 0; i <= 5; i++) {
-      c.set(7 - i, 25 + i, i % 2 ? '#9e3323' : '#4a2118');
-      c.set(8 - i, 25 + i, '#26120e');
-    }
-    c.disc(1, 31, 1.3, '#d4a843');
-    c.set(1, 31, '#ffe785');
-    // Éclairs qui crépitent le long de la lame
-    px(c, [[15, 14], [16, 13], [17, 15], [19, 11], [20, 10], [21, 12], [24, 6], [25, 5], [26, 7]], '#ffe96b');
-    px(c, [[14, 18], [16, 17], [22, 9], [23, 8], [27, 4]], '#68f0ff');
-  },
-
-  'kaiken-izanami'(c) {
-    // Petit poignard de deuil sorti à demi de son fourreau laqué noir, reflets spectraux.
-    // Fourreau noir et or
-    for (let i = 0; i <= 10; i++) {
-      c.set(8 - i, 23 + i, '#1a1820');
-      c.set(9 - i, 23 + i, '#2d2b38');
-      c.set(9 - i, 24 + i, '#111015');
-    }
-    px(c, [[3, 29], [2, 30], [8, 23], [9, 22]], '#d4a843');
-    // Ruban de deuil pourpre qui flotte
-    c.line([6, 25], [10, 29], 0, '#68203d');
-    c.line([10, 29], [14, 30], 0, '#943158');
-    // Bague de garde et poignée
-    c.disc(11, 20, 1.5, '#d4a843');
-    for (let i = 0; i <= 4; i++) {
-      c.set(13 + i, 18 - i, '#1a1820');
-      c.set(14 + i, 18 - i, '#f1f0ea');
-    }
-    // Lame en acier pâle avec aura mauve de mort
-    for (let i = 0; i <= 10; i++) {
-      c.set(12 + i, 19 - i, '#f4f5f8');
-      c.set(13 + i, 19 - i, '#bcc3d0');
-    }
-    c.set(23, 8, '#ffffff');
-    px(c, [[15, 15], [18, 12], [21, 9]], '#b988db');
-    px(c, [[16, 16], [19, 13]], '#7a42a0');
-  },
-
-  'arc-pecher'(c) {
-    // Arc sculpté dans le bois de pêcher du Yomi, fleurs de pêcher et sève dorée.
-    // Bois courbé
-    for (let a = -120; a <= 30; a += 5) {
-      const rad = (a * Math.PI) / 180;
-      const x = Math.round(18 + Math.cos(rad) * 14);
-      const y = Math.round(16 + Math.sin(rad) * 14);
-      c.set(x, y, '#633820');
-      c.set(x - 1, y, '#8c5230');
-    }
-    // Extrémités renforcées
-    c.disc(11, 4, 1.2, '#ebd8a7');
-    c.disc(30, 23, 1.2, '#ebd8a7');
-    // Corde tendue
-    c.line([11, 4], [30, 23], 0, '#f5efe1');
-    // Deux fleurs de pêcher roses écloses sur le bois
-    for (const [fx, fy] of [[15, 7], [26, 15]]) {
-      c.set(fx, fy, '#fff0a3'); // cœur or
-      px(c, [[fx - 1, fy], [fx + 1, fy], [fx, fy - 1], [fx, fy + 1]], '#ff7aa2');
-      px(c, [[fx - 1, fy - 1], [fx + 1, fy + 1]], '#ffa8c4');
-    }
-    // Goutte de sève dorée
-    c.disc(19, 27, 1.2, '#f5bb33');
-    c.set(19, 26, '#fff4b8');
-  },
-
-  'voile-izanami'(c) {
-    // Voile blanc vaporeux d'Izanami, mousseline translucide, diadème spectral et perles.
-    // Diadème en croissant d'argent
-    for (let a = 190; a <= 350; a += 10) {
-      const rad = (a * Math.PI) / 180;
-      const x = Math.round(16 + Math.cos(rad) * 8);
-      const y = Math.round(10 + Math.sin(rad) * 3);
-      c.set(x, y, '#e8f4fc');
-      c.set(x, y + 1, '#97b8d4');
-    }
-    c.disc(16, 7, 1.4, '#cde9ff');
-    c.set(16, 6, '#ffffff');
-    // Voile qui retombe en vagues vaporeuses
-    poly(c, [[9, 10], [23, 10], [27, 26], [22, 29], [16, 26], [10, 29], [5, 26]], '#bdd4e8');
-    poly(c, [[11, 10], [21, 10], [25, 24], [16, 24], [7, 24]], '#e3effa');
-    poly(c, [[13, 11], [19, 11], [22, 22], [16, 23], [10, 22]], '#fbfdff');
-    // Plis et liserés transparents
-    c.line([12, 12], [8, 27], 0, '#ffffff');
-    c.line([16, 11], [16, 25], 0, '#ffffff');
-    c.line([20, 12], [24, 27], 0, '#ffffff');
-  },
-
-  'do-yomi'(c) {
-    // Cuirasse d'os et de lamelles noires laquées du Yomi, cordons pourpres.
-    // Plastron principal
-    poly(c, [[8, 7], [24, 7], [26, 22], [22, 28], [10, 28], [6, 22]], '#1c1b24');
-    poly(c, [[10, 8], [22, 8], [24, 21], [20, 26], [12, 26], [8, 21]], '#2a2936');
-    // Lamelles horizontales
-    for (let y = 11; y <= 23; y += 4) {
-      c.line([10, y], [22, y], 0, '#3f3e50');
-      c.line([10, y + 1], [22, y + 1], 0, '#15141a');
-    }
-    // Cordons de laçage pourpre
-    for (let y = 10; y <= 22; y += 4) {
-      px(c, [[13, y], [14, y], [18, y], [19, y]], '#9c2a38');
-    }
-    // Écusson pectoral en os sculpté pâle
-    poly(c, [[14, 10], [18, 10], [17, 15], [16, 17], [15, 15]], '#eeebe3');
-    px(c, [[15, 11], [17, 11], [16, 14]], '#b0ab9b');
-    // Épaulières
-    poly(c, [[5, 8], [9, 8], [7, 14], [4, 12]], '#2a2936');
-    poly(c, [[23, 8], [27, 8], [28, 12], [25, 14]], '#2a2936');
-  },
-
-  'peche-okamuzumi'(c) {
-    // Pêche divine d'Izanagi, or et rose vermeil, feuilles de jade, aura divine.
-    // Aura de lumière sacrée
-    px(c, [[16, 2], [6, 11], [26, 11], [16, 29], [7, 24], [25, 24], [5, 17], [27, 17]], '#ffe875');
-    // Tige et feuilles de jade
-    c.line([16, 6], [16, 9], 1, '#4a331c');
-    poly(c, [[11, 6], [15, 7], [11, 10]], '#3d824d');
-    poly(c, [[17, 7], [22, 6], [21, 10]], '#54a867');
-    c.set(13, 7, '#72d98a');
-    c.set(19, 7, '#72d98a');
-    // Corps de la pêche (deux joues arrondies qui se rejoignent en pointe vers le bas)
-    c.disc(12, 17, 6, '#e04a58');
-    c.disc(20, 17, 6, '#e04a58');
-    poly(c, [[8, 18], [24, 18], [16, 27]], '#e04a58');
-    // Cœur doré et éclat
-    c.disc(14, 16, 4.5, '#f59842');
-    c.disc(15, 15, 3.5, '#ffd24d');
-    c.disc(14, 14, 2, '#fff494');
-    c.set(13, 13, '#ffffff');
-    // Sillon central de la pêche
-    for (let y = 11; y <= 24; y++) {
-      c.set(16, y, '#ba2b44');
-    }
-  },
-
-  'peigne-izanagi'(c) {
-    // Peigne en bambou doré courbé, dont les dents germent en jeunes pousses.
-    // Dos courbé du peigne en bambou
-    for (let a = 200; a <= 340; a += 8) {
-      const rad = (a * Math.PI) / 180;
-      const x = Math.round(16 + Math.cos(rad) * 11);
-      const y = Math.round(17 + Math.sin(rad) * 6);
-      c.disc(x, y, 1.8, '#c99436');
-      c.set(x, y - 1, '#fed476');
-    }
-    // Dents du peigne
-    for (let x = 8; x <= 24; x += 2) {
-      const len = 7 + Math.sin(((x - 8) / 16) * Math.PI) * 4;
-      c.line([x, 17], [x, Math.round(17 + len)], 0, '#a87422');
-      c.set(x, 17, '#fed476');
-    }
-    // Pousses de bambou vertes qui germent du peigne
-    c.line([9, 13], [6, 7], 1, '#4f913d');
-    c.line([6, 7], [4, 4], 0, '#75c45e');
-    px(c, [[7, 8], [5, 5], [8, 10]], '#9ae885');
-    c.line([22, 13], [25, 7], 1, '#4f913d');
-    c.line([25, 7], [27, 4], 0, '#75c45e');
-    px(c, [[24, 8], [26, 5]], '#9ae885');
+    // Éclat de foudre figée : un zigzag jaune au cœur blanc, et quelques étincelles.
+    poly(c, [[18, 2], [8, 17], [15, 17], [11, 30], [25, 12], [17, 12], [22, 2]], '#e0a020');
+    poly(c, [[18, 4], [11, 16], [17, 16], [14, 26], [22, 13], [15, 13], [20, 4]], '#ffe066');
+    c.line([18, 6], [13, 15], 0, '#fffbe0');
+    px(c, [[6, 8], [27, 20], [25, 27], [5, 24]], '#fff4a8');
   },
 };
