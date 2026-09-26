@@ -10,7 +10,7 @@ import { Progress, bindSelf, type Action } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import { World } from './game/world';
 import type { Input } from './input';
-import { heroSprite } from './render/heroes';
+import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import { AIM_HEIGHT, type Renderer } from './render/renderer';
@@ -257,7 +257,7 @@ export class App {
       this.screens.hideTitle();
       this.creation.hide();
       island.placeAt(content.island.spawn);
-      islandRenderer.setHero(heroSprite(this.d.progress.state.hero));
+      this.setHero();
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });
@@ -334,7 +334,9 @@ export class App {
   private async playLines(lines: Line[]): Promise<void> {
     for (const [speakerId, text] of lines) {
       const speaker = content.speakers[speakerId] ?? { name: speakerId };
-      await this.dialogue.say({ name: speaker.name, portrait: portraitUrl(speaker.sprite) }, this.d.progress.format(text));
+      // Le héros parle avec le visage de sa race et de sa classe.
+      const portrait = speaker.sprite === 'heros' ? `${import.meta.env.BASE_URL}sprites/${heroImage(this.d.progress.state.hero)}` : portraitUrl(speaker.sprite);
+      await this.dialogue.say({ name: speaker.name, portrait }, this.d.progress.format(text));
     }
   }
 
@@ -408,7 +410,7 @@ export class App {
       this.panels.close();
       this.world = new World({ ...config, ...dungeon.arena, player, difficulty }, startWave);
       dungeonRenderer.reset();
-      dungeonRenderer.setHero(heroSprite(this.d.progress.state.hero));
+      this.setHero();
       dungeonRenderer.setStyle(dungeon.style);
       hud.reset(this.dungeonLevel, dungeon.boss);
       hud.configure(heroClass(content.skills, this.d.progress.state.hero));
@@ -445,6 +447,16 @@ export class App {
     hud.update(world, events, dt);
     dungeonRenderer.render();
     if (this.outcome) this.finishDungeon(this.outcome);
+  }
+
+  /**
+   * Donne au héros l'apparence de sa race et de sa classe, sur l'île comme au donjon : la planche du donjon se
+   * charge ainsi pendant qu'on est encore sur l'île.
+   */
+  private setHero(): void {
+    const sprite = heroSprite(this.d.progress.state.hero);
+    this.d.islandRenderer.setHero(sprite);
+    this.d.dungeonRenderer.setHero(sprite);
   }
 
   private readCombatInput(world: World): InputFrame {
@@ -603,7 +615,7 @@ export class App {
       this.panels.close();
       this.world = null;
       island.placeAt(this.dungeon.exit ?? content.island.dungeonExit);
-      islandRenderer.setHero(heroSprite(progress.state.hero));
+      this.setHero();
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });

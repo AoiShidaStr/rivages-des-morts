@@ -1,5 +1,7 @@
 import { racePassives, type ItemDef, type SkillsDef } from '../game/loadout';
 import type { Hero } from '../game/progress';
+import { heroImage, heroSprite } from '../render/heroes';
+import type { AsepriteSheet } from '../render/sheets';
 import { h } from './dom';
 
 /**
@@ -77,9 +79,26 @@ export class CreationScreen {
         ),
       ];
 
+      // Aperçu : la peinture du héros, et son animation d'attente telle qu'elle apparaît en jeu.
+      const previewCanvas = h('canvas', { class: 'hero-preview-canvas' });
+      playIdle(previewCanvas, heroSprite(hero));
+      const paintedImg = h('img', {
+        src: `${import.meta.env.BASE_URL}sprites/${heroImage(hero)}`,
+        alt: `${race.name} ${cls.name}`,
+        class: 'hero-painted-preview',
+      });
+
+      const previewBox = h(
+        'div',
+        { class: 'hero-preview-box' },
+        h('div', { class: 'hero-preview-visuals' }, paintedImg, previewCanvas),
+        h('span', { class: 'hero-preview-label' }, `${race.name} · ${cls.name}`),
+      );
+
       const detail = h(
         'div',
         { class: 'creation-detail' },
+        previewBox,
         h(
           'div',
           {},
@@ -153,7 +172,7 @@ export class CreationScreen {
               `Commencer : ${cls.name} ${race.name}`,
             ),
           ),
-          h('p', { class: 'footnote' }, 'Même apparence pour toutes les races et les classes dans ce prototype'),
+          h('p', { class: 'footnote' }, 'Chaque classe possède son design peint et ses animations de combat dédiées'),
         ),
       );
     };
@@ -164,4 +183,62 @@ export class CreationScreen {
   hide(): void {
     this.root.classList.remove('visible');
   }
+}
+
+/** Planches déjà chargées pour l'aperçu : leur découpage et leur image. */
+const sheets = new Map<string, Promise<{ sheet: AsepriteSheet; image: HTMLImageElement } | null>>();
+
+function loadAnim(name: string): Promise<{ sheet: AsepriteSheet; image: HTMLImageElement } | null> {
+  let pending = sheets.get(name);
+  if (!pending) {
+    const base = `${import.meta.env.BASE_URL}sprites/anim/`;
+    pending = fetch(`${base}${name}.json`)
+      .then((response) => (response.ok ? (response.json() as Promise<AsepriteSheet>) : Promise.reject(new Error(name))))
+      .then(
+        (sheet) =>
+          new Promise<{ sheet: AsepriteSheet; image: HTMLImageElement } | null>((resolve) => {
+            const image = new Image();
+            image.onload = () => resolve({ sheet, image });
+            image.onerror = () => resolve(null);
+            image.src = `${base}${sheet.meta.image}`;
+          }),
+      )
+      .catch(() => null);
+    sheets.set(name, pending);
+  }
+  return pending;
+}
+
+/** Joue en boucle l'animation d'attente de la planche `name` dans `canvas`, tant qu'il est affiché. */
+function playIdle(canvas: HTMLCanvasElement, name: string): void {
+  void loadAnim(name).then((anim) => {
+    if (!anim || !canvas.isConnected) return;
+    const { sheet, image } = anim;
+    const tag = sheet.meta.frameTags?.find((t) => t.name === 'idle');
+    const frames = sheet.frames.slice(tag?.from ?? 0, (tag?.to ?? 0) + 1);
+    const { w, h: height } = frames[0].frame;
+    // Une case entière, réduite de moitié : les proportions de la planche sont gardées.
+    canvas.width = Math.round(w / 2);
+    canvas.height = Math.round(height / 2);
+    const ctx = canvas.getContext('2d')!;
+    const total = frames.reduce((sum, f) => sum + f.duration, 0);
+    const start = performance.now();
+    const tick = (now: number) => {
+      if (!canvas.isConnected) return;
+      let t = (now - start) % Math.max(1, total);
+      let frame = frames[frames.length - 1];
+      for (const f of frames) {
+        if (t < f.duration) {
+          frame = f;
+          break;
+        }
+        t -= f.duration;
+      }
+      const { x, y, w: fw, h: fh } = frame.frame;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, x, y, fw, fh, 0, 0, canvas.width, canvas.height);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 }

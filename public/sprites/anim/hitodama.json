@@ -8,7 +8,7 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
    "filename": "move 1",
@@ -18,7 +18,7 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
    "filename": "move 2",
@@ -28,7 +28,7 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
    "filename": "move 3",
@@ -38,7 +38,7 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
    "filename": "move 4",
@@ -48,7 +48,7 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
    "filename": "move 5",
@@ -58,7 +58,7 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
    "filename": "move 6",
@@ -68,75 +68,105 @@
     "w": 234,
     "h": 149
    },
-   "duration": 85
+   "duration": 74
   },
   {
-   "filename": "stunned 7",
+   "filename": "move 7",
    "frame": {
     "x": 1638,
     "y": 0,
     "w": 234,
     "h": 149
    },
-   "duration": 120
+   "duration": 74
   },
   {
-   "filename": "stunned 8",
+   "filename": "stunned 0",
    "frame": {
     "x": 1872,
     "y": 0,
     "w": 234,
     "h": 149
    },
-   "duration": 120
+   "duration": 90
   },
   {
-   "filename": "stunned 9",
+   "filename": "stunned 1",
    "frame": {
     "x": 2106,
     "y": 0,
     "w": 234,
     "h": 149
    },
-   "duration": 120
+   "duration": 90
   },
   {
-   "filename": "stunned 10",
+   "filename": "stunned 2",
    "frame": {
-    "x": 2340,
-    "y": 0,
+    "x": 0,
+    "y": 149,
     "w": 234,
     "h": 149
    },
-   "duration": 120
+   "duration": 90
   },
   {
-   "filename": "stunned 11",
+   "filename": "stunned 3",
    "frame": {
-    "x": 2574,
-    "y": 0,
+    "x": 234,
+    "y": 149,
     "w": 234,
     "h": 149
    },
-   "duration": 120
+   "duration": 90
   },
   {
-   "filename": "stunned 12",
+   "filename": "stunned 4",
    "frame": {
-    "x": 2808,
-    "y": 0,
+    "x": 468,
+    "y": 149,
     "w": 234,
     "h": 149
    },
-   "duration": 120
+   "duration": 90
+  },
+  {
+   "filename": "stunned 5",
+   "frame": {
+    "x": 702,
+    "y": 149,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 90
+  },
+  {
+   "filename": "stunned 6",
+   "frame": {
+    "x": 936,
+    "y": 149,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 90
+  },
+  {
+   "filename": "stunned 7",
+   "frame": {
+    "x": 1170,
+    "y": 149,
+    "w": 234,
+    "h": 149
+   },
+   "duration": 90
   }
  ],
  "meta": {
   "app": "tools/planches.mjs",
   "image": "hitodama.webp",
   "size": {
-   "w": 3042,
-   "h": 149
+   "w": 2340,
+   "h": 298
   },
   "smooth": true,
   "bodyHeight": 120,
@@ -148,13 +178,13 @@
    {
     "name": "move",
     "from": 0,
-    "to": 6,
+    "to": 7,
     "direction": "forward"
    },
    {
     "name": "stunned",
-    "from": 7,
-    "to": 12,
+    "from": 8,
+    "to": 15,
     "direction": "forward"
    }
   ]

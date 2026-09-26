@@ -12,7 +12,7 @@ export interface SheetAnimation {
  * `npm run planches` ajoutent `smooth` (image peinte, filtrée sans pixels nets), `bodyHeight`
  * (hauteur du corps en pixels) et `anchor` (position des pieds dans une case).
  */
-interface AsepriteSheet {
+export interface AsepriteSheet {
   frames: { frame: { x: number; y: number; w: number; h: number }; duration: number }[];
   meta: {
     image: string;
