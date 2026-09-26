@@ -34,7 +34,7 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 - **Paladin** : robuste. Bouclier levé, il pare tout ce qui vient de face, soigne autour de lui et relève les alliés tombés.
 - **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances.
 
-Chaque race et chaque classe a son apparence en pixel art : casque viking, némès égyptien, laurier grec ou cornes d'oni, avec l'arme et la cape de la classe.
+Tout le jeu est en pixel art. Chaque race et chaque classe a son apparence (casque viking, némès égyptien, laurier grec ou cornes d'oni, cape de la classe), et tout l'équipement porté se voit sur le héros : arme, casque, plastron, jambières, bottes et amulette. L'inventaire montre le héros en grand, et survoler un objet le lui fait essayer.
 
 ### Commandes
 
@@ -83,10 +83,12 @@ npm run dev
 
 Puis ouvre http://localhost:5173 dans le navigateur.
 
-Deux options d'URL pour tester :
+Options d'URL pour tester :
 
 - `?vague=7` lance directement le donjon à la septième vague (le boss), sans passer par l'île.
-- `?pixel=0` remplace le pixel art par les images peintes.
+- `?style=peint` remplace le pixel art par les images peintes (aussi depuis le bouton « Graphismes » de l'écran titre) ; `?style=pixel` y revient.
+
+En développement, http://localhost:5173/editeur.html ouvre l'éditeur d'animations du héros.
 
 ## Pour aller plus loin
 

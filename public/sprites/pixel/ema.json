@@ -1,0 +1,30 @@
+{
+  "frames": [
+    {
+      "filename": "ema 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 26,
+        "h": 23
+      },
+      "duration": 1000
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "ema.png",
+    "size": {
+      "w": 26,
+      "h": 23
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 0,
+        "direction": "forward"
+      }
+    ]
+  }
+}

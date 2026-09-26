@@ -1,6 +1,7 @@
 import { racePassives, type ItemDef, type SkillsDef } from '../game/loadout';
 import type { Hero } from '../game/progress';
 import { h } from './dom';
+import { HeroPreview } from './heroPreview';
 
 /**
  * Création du héros (GDD, multiclassage « à la création ») : une race, et pour le Demi-dieu son parent divin,
@@ -18,6 +19,8 @@ export class CreationScreen {
     const raceIds = Object.keys(skills.races);
     const classIds = Object.keys(skills.classes);
     const hero: Hero = { race: raceIds[0], class: classIds[0] };
+    // Le héros choisi, en pixel art, qui montre son arme de départ en action.
+    const preview = new HeroPreview(3, ['idle', 'move', 'windup', 'strike', 'guard']);
 
     const render = () => {
       const race = skills.races[hero.race];
@@ -77,9 +80,11 @@ export class CreationScreen {
         ),
       ];
 
+      preview.show({ race: hero.race, class: hero.class, gear: { arme: cls.weapon } });
       const detail = h(
         'div',
-        { class: 'creation-detail' },
+        { class: 'creation-detail with-hero' },
+        preview.el,
         h(
           'div',
           {},

@@ -1,8 +1,9 @@
 // Découpe les icônes peintes des objets (planche de Nano Banana, voir « Prompt objets.md ») en PNG carrés
 // transparents pour l'interface : public/sprites/icones/<id>.png.
 //
-// Usage : npm run icones
+// Usage : npm run icones (ou `node tools/icones.mjs tools/pieces.json` : npm run pieces)
 // Réglages : tools/icones.json (planches sources, objet de chaque case, retouches par icône).
+// Avec `"square": false` (morceaux du pantin), chaque image garde ses proportions, à `size` pixels de haut.
 //
 // Chaque morceau détouré revient à la case de la grille qui contient son centre. Autour de l'objet,
 // on retire le gris du fond au lieu de couper net (le « couleur vers alpha » de GIMP) : les halos peints
@@ -15,7 +16,8 @@ import sharp from 'sharp';
 import { borderMedian, components, floodBackground } from './decoupe.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const config = JSON.parse(await readFile(path.join(projectDir, 'tools', 'icones.json'), 'utf8'));
+const configFile = process.argv[2] ? path.resolve(process.argv[2]) : path.join(projectDir, 'tools', 'icones.json');
+const config = JSON.parse(await readFile(configFile, 'utf8'));
 const sourceDir = config.sourceDir.replace(/^~(?=$|[\\/])/, os.homedir());
 const outDir = path.join(projectDir, config.outDir);
 const exists = (file) => access(file).then(() => true, () => false);
@@ -168,6 +170,14 @@ async function cutIcon(image, { labels, background, bg }, kept, cell, options) {
   }
   const bw = maxX - minX + 1;
   const bh = maxY - minY + 1;
+  if (config.square === false) {
+    // Morceau du pantin : cadre au plus près, sans marge (les pivots sont en fractions de l'image).
+    const crop = await sharp(rgba, { raw: { width: rw, height: rh, channels: 4 } })
+      .extract({ left: minX, top: minY, width: bw, height: bh })
+      .raw()
+      .toBuffer();
+    return sharp(crop, { raw: { width: bw, height: bh, channels: 4 } }).resize({ height: Math.min(config.size, bh), kernel: 'lanczos3' });
+  }
   const side = Math.round(Math.max(bw, bh) * (1 + 2 * config.margin));
   const padX = side - bw;
   const padY = side - bh;

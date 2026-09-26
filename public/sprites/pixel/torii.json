@@ -1,0 +1,30 @@
+{
+  "frames": [
+    {
+      "filename": "torii 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 78,
+        "h": 88
+      },
+      "duration": 1000
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "torii.png",
+    "size": {
+      "w": 78,
+      "h": 88
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 0,
+        "direction": "forward"
+      }
+    ]
+  }
+}

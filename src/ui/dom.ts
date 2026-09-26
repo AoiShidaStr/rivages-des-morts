@@ -1,3 +1,5 @@
+import { PIXEL } from '../style';
+
 export type Child = Node | string | number | null | undefined | false;
 type Attr = string | boolean | undefined | ((event: Event) => void);
 
@@ -22,16 +24,16 @@ export function h<K extends keyof HTMLElementTagNameMap>(
 }
 
 /**
- * Icône peinte d'un objet ou d'un matériau (public/sprites/icones, découpées par `npm run icones`).
- * `small` se glisse dans une ligne de texte ; `medium` et `large` sont des cases encadrées.
- * Un objet sans icône garde sa case vide (ou rien, en petit).
+ * Icône d'un objet ou d'un matériau : peinte (public/sprites/icones, `npm run icones`) ou, en style pixel,
+ * en pixel art (public/sprites/pixel/icones, `npm run pixel`). `small` se glisse dans une ligne de texte ;
+ * `medium` et `large` sont des cases encadrées. Un objet sans icône garde sa case vide (ou rien, en petit).
  */
 export function icon(id: string, size: 'small' | 'medium' | 'large' = 'medium'): HTMLSpanElement {
   return h(
     'span',
     { class: `icon ${size}` },
     h('img', {
-      src: `${import.meta.env.BASE_URL}sprites/icones/${id}.png`,
+      src: `${import.meta.env.BASE_URL}sprites/${PIXEL ? 'pixel/icones' : 'icones'}/${id}.png`,
       alt: '',
       draggable: 'false',
       onerror: (e) => (e.currentTarget as HTMLElement).parentElement?.classList.add('missing'),

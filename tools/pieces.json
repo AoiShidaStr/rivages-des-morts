@@ -1,0 +1,24 @@
+{
+  "sourceDir": "~/Pictures/game visual",
+  "outDir": "public/sprites/pieces/heros",
+  "size": 512,
+  "square": false,
+  "defaults": {
+    "tolerance": 30,
+    "localTolerance": 18,
+    "maxSaturation": 16,
+    "minPartRatio": 0.02,
+    "glowReach": 0,
+    "glowStep": 0,
+    "alphaFloor": 0.05
+  },
+  "sheets": [
+    {
+      "source": "sprites/heros_pieces.jpg",
+      "columns": 4,
+      "rows": 3,
+      "ids": ["tete", "torse", "bassin", "cape", "bras", "avant-bras", "main", "cuisse", "tibia", "pied", null, null]
+    }
+  ],
+  "icons": {}
+}

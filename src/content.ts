@@ -16,8 +16,8 @@ import type { IslandData, ScreenPoint } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
 import type { DuplicateRules, ShopOffer } from './game/loot';
 import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
-import { withHeroSprites } from './render/heroes';
 import type { SpriteManifest } from './render/renderer';
+import { PIXEL } from './style';
 
 /** Une réplique : [locuteur, texte]. */
 export type Line = [string, string];
@@ -123,7 +123,7 @@ export interface QuestDef {
 
 export const content = {
   island: islandJson as unknown as IslandData,
-  islandSprites: withHeroSprites(islandSpritesJson as SpriteManifest, Object.keys(skillsJson.races), Object.keys(skillsJson.classes)),
+  islandSprites: islandSpritesJson as SpriteManifest,
   speakers: dialoguesJson.speakers as Record<string, SpeakerDef>,
   dialogues: dialoguesJson.dialogues as unknown as Record<string, Variant[]>,
   items: itemsJson.items as unknown as Record<string, ItemDef>,
@@ -159,8 +159,15 @@ export const catalog: Catalog = {
   triggers: content.triggers,
 };
 
-/** Image d'un personnage pour les portraits de dialogue. */
+/**
+ * Image d'un personnage pour les portraits de dialogue. En pixel art, le portrait tiré de sa planche
+ * (public/sprites/pixel/portraits, `npm run pixel`) ; en style peint, son image peinte.
+ */
 export function portraitUrl(sprite: string | undefined): string | null {
-  const file = sprite ? content.islandSprites[sprite]?.file : null;
-  return file ? `${import.meta.env.BASE_URL}sprites/${file}` : null;
+  const def = sprite ? content.islandSprites[sprite] : undefined;
+  if (PIXEL) {
+    const name = def?.pixel?.replace(/^.*\//, '').replace(/\.json$/, '');
+    return name ? `${import.meta.env.BASE_URL}sprites/pixel/portraits/${name}.png` : null;
+  }
+  return def?.file ? `${import.meta.env.BASE_URL}sprites/${def.file}` : null;
 }

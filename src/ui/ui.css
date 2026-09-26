@@ -507,6 +507,13 @@ body:not([data-mode='dungeon']) #hud {
   transform-origin: top center;
 }
 
+/* Pixel art : le portrait est déjà cadré sur le visage, agrandi sans lissage. */
+[data-style='pixel'] .dialogue .portrait img {
+  height: 100%;
+  transform: none;
+  image-rendering: pixelated;
+}
+
 .dialogue .body {
   position: relative;
   flex: 1;
@@ -1773,6 +1780,31 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 14px;
 }
 
+.creation-detail.with-hero {
+  grid-template-columns: auto 1fr 1fr;
+  align-items: start;
+}
+
+/* Aperçu du héros en pixel art (création, inventaire). */
+.hero-preview {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 6px 8px 2px;
+  background: radial-gradient(ellipse at 50% 85%, rgba(29, 34, 38, 0.18), transparent 45%), linear-gradient(#e9eef0, #c3cbcf);
+  border: 1px solid rgba(29, 34, 38, 0.2);
+  border-radius: 4px;
+}
+
+.hero-preview-canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.paper-doll {
+  margin-bottom: 10px;
+}
+
 .creation-detail h3 {
   margin: 0 0 6px;
   font-family: var(--serif);
@@ -1854,6 +1886,28 @@ body:not([data-mode='dungeon']) #hud {
 .icon.large {
   width: 64px;
   height: 64px;
+}
+
+/* Pixel art : icônes de 32 pixels, agrandies d'un facteur entier sans lissage. */
+[data-style='pixel'] .icon img {
+  image-rendering: pixelated;
+}
+
+[data-style='pixel'] .icon.small {
+  width: 32px;
+  height: 32px;
+}
+
+[data-style='pixel'] .icon.medium {
+  width: 42px;
+  height: 42px;
+  padding: 4px;
+}
+
+[data-style='pixel'] .icon.large {
+  width: 72px;
+  height: 72px;
+  padding: 3px;
 }
 
 .with-icon {

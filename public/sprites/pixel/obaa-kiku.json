@@ -1,0 +1,60 @@
+{
+  "frames": [
+    {
+      "filename": "obaa-kiku 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 26,
+        "h": 30
+      },
+      "duration": 280
+    },
+    {
+      "filename": "obaa-kiku 1",
+      "frame": {
+        "x": 26,
+        "y": 0,
+        "w": 26,
+        "h": 30
+      },
+      "duration": 280
+    },
+    {
+      "filename": "obaa-kiku 2",
+      "frame": {
+        "x": 52,
+        "y": 0,
+        "w": 26,
+        "h": 30
+      },
+      "duration": 280
+    },
+    {
+      "filename": "obaa-kiku 3",
+      "frame": {
+        "x": 78,
+        "y": 0,
+        "w": 26,
+        "h": 30
+      },
+      "duration": 280
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "obaa-kiku.png",
+    "size": {
+      "w": 104,
+      "h": 30
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      }
+    ]
+  }
+}

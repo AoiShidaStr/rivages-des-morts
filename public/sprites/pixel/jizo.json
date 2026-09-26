@@ -1,0 +1,30 @@
+{
+  "frames": [
+    {
+      "filename": "jizo 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 21
+      },
+      "duration": 1000
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "jizo.png",
+    "size": {
+      "w": 14,
+      "h": 21
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 0,
+        "direction": "forward"
+      }
+    ]
+  }
+}
