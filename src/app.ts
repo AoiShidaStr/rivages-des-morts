@@ -1,7 +1,7 @@
 import type { Engine } from '@babylonjs/core';
 import { content, portraitUrl, type Line } from './content';
 import type { GameConfig } from './game/config';
-import { clampLevel, difficultyFor, rewardsFor } from './game/difficulty';
+import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
 import { buildLoadout, heroClass, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, salvage, type RolledOffer } from './game/loot';
@@ -10,6 +10,7 @@ import { Progress, bindSelf, type Action } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import { World } from './game/world';
 import type { Input } from './input';
+import { heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import type { Renderer } from './render/renderer';
@@ -253,6 +254,7 @@ export class App {
       this.screens.hideTitle();
       this.creation.hide();
       island.placeAt(content.island.spawn);
+      islandRenderer.setHero(heroSprite(this.d.progress.state.hero));
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });
@@ -400,6 +402,7 @@ export class App {
       this.panels.close();
       this.world = new World({ ...config, player, difficulty }, startWave);
       dungeonRenderer.reset();
+      dungeonRenderer.setHero(heroSprite(this.d.progress.state.hero));
       hud.reset(this.dungeonLevel);
       hud.configure(heroClass(content.skills, this.d.progress.state.hero));
       this.run = emptyLoot();
@@ -513,7 +516,7 @@ export class App {
     if (victory) {
       const firstWin = progress.quest('dame') !== 'done';
       actions.push(...progress.apply([{ completeQuest: 'dame' }, { set: 'jorogumo_vaincue' }, ...(firstWin ? [{ xp: BOSS_QUEST_XP }] : [])]));
-      if (progress.winDungeon(this.dungeonLevel, content.difficulty.maxLevel)) unlocked = progress.state.dungeon.unlocked;
+      if (progress.winDungeon(this.dungeonLevel, unlockAfter(content.difficulty, this.dungeonLevel))) unlocked = progress.state.dungeon.unlocked;
       this.endShop = this.rollEndShop();
     }
     progress.save();
@@ -589,6 +592,7 @@ export class App {
       this.panels.close();
       this.world = null;
       island.placeAt(content.island.dungeonExit);
+      islandRenderer.setHero(heroSprite(progress.state.hero));
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });

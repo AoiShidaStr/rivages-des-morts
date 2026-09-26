@@ -152,8 +152,8 @@ export class Player {
       case 'dance':
         return 'strike';
       case 'draw':
-        // Pas de pose d'arc dans la planche du héros : le rendu trace plutôt la visée.
-        return this.moving ? 'move' : 'idle';
+        // Arc bandé : l'animation « channel » des planches du Rôdeur.
+        return 'channel';
       case 'bond':
       case 'leap':
         return 'airborne';
@@ -320,7 +320,10 @@ export class Player {
    * Un coup a été bloqué. Guerrier : la rage monte. Paladin : le bouclier soigne les alliés proches (tag),
    * renvoie des dégâts (Riposte) et entrave l'attaquant (Gleipnir).
    */
-  guard(world: World, attacker?: Enemy): void {
+  guard(world: World, attacker?: Enemy, amount = 0): void {
+    // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
+    const chip = amount * (1 - this.cfg.block.reduction);
+    if (chip > 0) this.loseHp(chip * this.damageTakenFactor(), world, true);
     if (this.cfg.kit !== 'paladin') {
       const gain = this.cfg.block.rageOnGuard * (1 + (this.cfg.perks?.guardRageFactor ?? 0));
       const gained = this.gainRage(gain);
@@ -350,11 +353,27 @@ export class Player {
       world.emit({ type: 'clayShell', pos: { ...this.pos } });
       return true;
     }
+    this.loseHp(amount * this.damageTakenFactor(), world, false);
+    if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
+    this.invulnerable = this.cfg.invulnerableAfterHit;
+    this.knockback = scale(pushDir, knockback);
+    if (this.action.kind === 'attack') this.action = { kind: 'free' };
+    return true;
+  }
+
+  /** Part des dégâts réellement subis : équipement, Frénésie, Peau du lion, sang yokai. */
+  private damageTakenFactor(): number {
+    const perks = this.cfg.perks ?? {};
     let factor = this.cfg.damageTakenFactor ?? 1;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
     if (perks.lionSkin && this.rage >= this.cfg.rageMax / 2) factor *= 1 - perks.lionSkin;
     if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
-    const taken = amount * factor;
+    return factor;
+  }
+
+  /** Retire des PV ; Peau d'ours et Sang divin empêchent une fois de tomber. `blocked` : à travers la garde. */
+  private loseHp(taken: number, world: World, blocked: boolean): void {
+    const perks = this.cfg.perks ?? {};
     this.hp = Math.max(0, this.hp - taken);
     if (this.hp <= 0 && perks.bearSkin && !this.bearSkinUsed) {
       // Peau d'ours : une fois par descente, le Berserkir refuse de tomber.
@@ -369,12 +388,7 @@ export class Player {
       this.hp = this.cfg.maxHp * perks.divineBlood;
       world.emit({ type: 'divineBlood', pos: { ...this.pos } });
     }
-    if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
-    this.invulnerable = this.cfg.invulnerableAfterHit;
-    this.knockback = scale(pushDir, knockback);
-    if (this.action.kind === 'attack') this.action = { kind: 'free' };
-    world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken });
-    return true;
+    world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked });
   }
 
   /** Ajoute de la rage (paliers du tag Guerrier compris) ; renvoie ce qui a été gagné. */

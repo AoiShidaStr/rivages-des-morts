@@ -14,6 +14,7 @@
     "objets": "node tools/collection-objets.mjs",
     "icones": "node tools/icones.mjs",
     "pieces": "node tools/icones.mjs tools/pieces.json",
+    "icones-pixel": "node tools/icones-pixel.mjs",
     "pixel": "node tools/pixel.mjs"
   },
   "dependencies": {

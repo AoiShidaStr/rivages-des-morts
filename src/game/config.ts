@@ -30,7 +30,8 @@ export interface PlayerConfig {
     knockback: number;
     rageOnHit: number;
   };
-  block: { arcDeg: number; rageOnGuard: number };
+  /** `reduction` : part d'un coup bloqué qui est arrêtée (1 : tout ; le reste passe quand même). */
+  block: { arcDeg: number; rageOnGuard: number; reduction: number };
   dodge: { distance: number; duration: number; invulnerable: number; cooldown: number };
   smash: {
     rageCost: number;
@@ -226,6 +227,10 @@ export interface Perks {
   execute?: { threshold: number; bonus: number };
   /** Moisson des âmes : la Marque de mort passe à l'ennemi le plus proche quand sa cible meurt. */
   markJump?: boolean;
+  /** Festin de l'ombre : abattre un ennemi marqué rend ces PV. */
+  markKillHeal?: number;
+  /** Crocs de la Jorōgumo : chaque coup critique rend ces PV. */
+  critHeal?: number;
 
   // --- Paladin ---
   /** Un coup bloqué soigne le héros et ses alliés autour de lui (tag Paladin). */
@@ -238,6 +243,8 @@ export interface Perks {
   auraBurn?: number;
   /** Ama-no-Iwato : un ennemi qui entre dans l'Aura est étourdi (une fois par Aura). */
   auraStun?: number;
+  /** Miroir de Yata : les yokai baignés par l'Aura font cette part de dégâts en moins. */
+  auraWeaken?: number;
   /** Marteau du juge : le Marteau lancé étourdit. */
   hammerStun?: number;
   /** Relever te soigne. */
@@ -256,6 +263,8 @@ export interface Perks {
   chargedDamage?: number;
   /** Lune pleine : un tir chargé plein étourdit. */
   chargedStun?: number;
+  /** Arc de soie : un tir chargé plein ouvre un filet sur le premier ennemi touché. */
+  chargedNet?: boolean;
   /** Carquois divin : un tir chargé plein part en plusieurs flèches. */
   splitShot?: number;
   /** Vent du nord : le Recul laisse un filet là où tu étais. */

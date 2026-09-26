@@ -1,7 +1,8 @@
 {
-  "about": "Niveau du donjon, choisi à l'entrée (GDD : « Difficulté à l'entrée », comme dans Waven). Chaque niveau au-dessus du premier ajoute des PV et des dégâts aux yokai ; à certains niveaux, une malédiction du Yomi s'ajoute. Une malédiction qui revient avec le même id remplace la précédente (Hâte II remplace Hâte). Les récompenses montent avec le niveau. Gagner au niveau N débloque le niveau N+1.",
+  "about": "Niveau du donjon, choisi à l'entrée (GDD : « Difficulté à l'entrée », comme dans Waven). Chaque niveau au-dessus du premier ajoute des PV et des dégâts aux yokai ; à certains niveaux, une malédiction du Yomi s'ajoute. Une malédiction qui revient avec le même id remplace la précédente (Hâte II remplace Hâte). Les récompenses montent avec le niveau. Les yokai partent plus forts que le héros (×1,4 PV, ×1,6 dégâts ; la Jorōgumo ×1,1 et ×1,2) et gagnent +8 % de PV et +9 % de dégâts par niveau, plus vite que le héros ne progresse : à niveau égal, le donjon devient toujours plus dur. Une victoire ouvre les niveaux jusqu'au prochain multiple de 5 (gagner au niveau 1 ouvre jusqu'au 5, au 5 jusqu'au 10).",
   "maxLevel": 100,
-  "enemy": { "hpPerLevel": 0.06, "damagePerLevel": 0.035 },
+  "unlockStep": 5,
+  "enemy": { "base": { "hp": 1.4, "damage": 1.6 }, "bossBase": { "hp": 1.1, "damage": 1.2 }, "hpPerLevel": 0.08, "damagePerLevel": 0.09 },
   "rewards": { "obolesPerLevel": 0.1, "xpPerLevel": 0.15, "rareChancePerLevel": 0.01, "extraMaterialEvery": 20 },
   "elite": { "hp": 1.8, "damage": 1.3 },
   "curses": [

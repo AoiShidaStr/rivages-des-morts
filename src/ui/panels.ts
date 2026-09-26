@@ -1,6 +1,6 @@
 import { content } from '../content';
 import type { PlayerConfig } from '../game/config';
-import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor } from '../game/difficulty';
+import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor, unlockAfter } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
 import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { RolledOffer } from '../game/loot';
@@ -963,7 +963,8 @@ export function openQuests(host: PanelHost, ctx: UiContext): void {
 
 /**
  * Choix du niveau des Rizières noyées (GDD : « Difficulté à l'entrée », comme dans Waven).
- * Seuls les niveaux déjà ouverts sont proposés ; vaincre la Jorōgumo ouvre le suivant.
+ * Seuls les niveaux déjà ouverts sont proposés ; vaincre la Jorōgumo ouvre les suivants, cinq par cinq
+ * (1 → 5 → 10…), même si le héros n'est pas encore assez fort pour eux.
  */
 export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (level: number) => void): void {
   const data = content.difficulty;
@@ -989,7 +990,12 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (leve
     const next = nextCurse(data, level);
     value.textContent = `Niveau ${level}`;
     const parts: (HTMLElement | null)[] = [
-      level > playerLevel + 5 ? h('p', { class: 'note danger' }, `Dangereux pour ton niveau (${playerLevel}) : améliore ton équipement chez Tetsu avant de descendre si bas.`) : null,
+      level > playerLevel + 5
+        ? h('p', { class: 'note danger' }, `Dangereux pour ton niveau (${playerLevel}) : améliore ton équipement chez Tetsu avant de descendre si bas.`)
+        : level > playerLevel
+          ? h('p', { class: 'note' }, `Au-dessus de ton niveau (${playerLevel}) : les yokai y sont plus forts que toi.`)
+          : null,
+      unlockAfter(data, level) > unlocked ? h('p', { class: 'note' }, `Une victoire à ce niveau ouvre jusqu’au niveau ${unlockAfter(data, level)}.`) : null,
       h(
         'div',
         { class: 'entry-cols' },
@@ -1000,6 +1006,10 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (leve
           h('dd', {}, `×${fr(d.hp)}`),
           h('dt', {}, 'Dégâts des yokai'),
           h('dd', {}, `×${fr(d.damage)}`),
+          h('dt', {}, 'PV de la Jorōgumo'),
+          h('dd', {}, `×${fr(d.boss.hp)}`),
+          h('dt', {}, 'Ses dégâts'),
+          h('dd', {}, `×${fr(d.boss.damage)}`),
         ),
         h(
           'dl',
@@ -1032,16 +1042,20 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, onEnter: (leve
   const best = progress.state.dungeon.best;
   host.show(
     'Rizières noyées',
-    best ? `Record : niveau ${best} · niveaux ouverts : 1 à ${unlocked} sur ${data.maxLevel}` : `Vaincs la Jorōgumo pour ouvrir le niveau 2 (jusqu’à ${data.maxLevel}).`,
+    best
+      ? `Record : niveau ${best} · niveaux ouverts : 1 à ${unlocked} sur ${data.maxLevel}`
+      : `Vaincs la Jorōgumo pour ouvrir les niveaux 2 à ${unlockAfter(data, 1)} (jusqu’à ${data.maxLevel}).`,
     h(
       'div',
       { class: 'list' },
       h(
         'div',
         { class: 'level-picker' },
+        h('button', { class: 'btn small', onclick: () => set(level - data.unlockStep) }, `−${data.unlockStep}`),
         h('button', { class: 'btn small', onclick: () => set(level - 1) }, '−'),
         slider,
         h('button', { class: 'btn small', onclick: () => set(level + 1) }, '+'),
+        h('button', { class: 'btn small', onclick: () => set(level + data.unlockStep) }, `+${data.unlockStep}`),
         value,
       ),
       h('div', { class: 'row-pills' }, ...quick.map((q) => h('button', { class: 'btn small', onclick: () => set(q.level) }, q.label))),

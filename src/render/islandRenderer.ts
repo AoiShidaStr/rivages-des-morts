@@ -133,6 +133,16 @@ export class IslandRenderer {
     this.player?.entry.puppet?.setGear(gear);
   }
 
+  /** Change l'apparence du héros (race et classe) ; sans planche, il garde l'image par défaut. */
+  setHero(sprite: string): void {
+    const old = this.player;
+    if (!old || old.sprite === sprite) return;
+    const entry = this.entryFor(sprite) ?? this.required('heros');
+    const pos = { x: old.mesh.position.x, z: old.mesh.position.z };
+    this.disposeBillboard(old);
+    this.player = this.billboard('player', entry, pos, 0.4, sprite);
+  }
+
   /** Point de vue du menu principal : la caméra dérive lentement au-dessus du village. */
   focus(target: Vec2, dt: number, snap = false): void {
     const follow = snap ? 1 : 1 - Math.exp(-6 * dt);

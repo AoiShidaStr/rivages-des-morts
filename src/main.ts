@@ -11,6 +11,7 @@ import type { GameConfig } from './game/config';
 import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
+import { withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { IslandRenderer } from './render/islandRenderer';
 import { Renderer, type SpriteManifest } from './render/renderer';
@@ -32,7 +33,7 @@ const devLevel = params.has('niveau') ? Number(params.get('niveau')) || 1 : null
 
 /** `?pixel=0` revient aux images peintes, pour comparer avec les planches en pixel art. */
 function spriteManifest(): SpriteManifest {
-  const manifest = sprites as SpriteManifest;
+  const manifest = withHeroSprites(sprites as SpriteManifest, Object.keys(content.skills.races), Object.keys(content.skills.classes));
   if (params.get('pixel') !== '0') return manifest;
   return Object.fromEntries(Object.entries(manifest).map(([name, def]) => [name, { ...def, sheet: undefined }]));
 }

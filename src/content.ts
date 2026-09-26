@@ -12,6 +12,7 @@ import type { IslandData } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
 import type { DuplicateRules, ShopOffer } from './game/loot';
 import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
+import { withHeroSprites } from './render/heroes';
 import type { SpriteManifest } from './render/renderer';
 
 /** Une réplique : [locuteur, texte]. */
@@ -74,7 +75,7 @@ export interface QuestDef {
 
 export const content = {
   island: islandJson as unknown as IslandData,
-  islandSprites: islandSpritesJson as SpriteManifest,
+  islandSprites: withHeroSprites(islandSpritesJson as SpriteManifest, Object.keys(skillsJson.races), Object.keys(skillsJson.classes)),
   speakers: dialoguesJson.speakers as Record<string, SpeakerDef>,
   dialogues: dialoguesJson.dialogues as unknown as Record<string, Variant[]>,
   items: itemsJson.items as unknown as Record<string, ItemDef>,

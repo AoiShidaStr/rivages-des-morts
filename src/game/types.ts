@@ -40,7 +40,8 @@ export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string }
   | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number }
   | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean }
-  | { type: 'playerHit'; pos: Vec2; amount: number }
+  /** `blocked` : ce qui a traversé la garde du Guerrier. */
+  | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean }
   | { type: 'guard'; pos: Vec2; rage: number }
   | { type: 'parry'; id: number; pos: Vec2 }
   | { type: 'stun'; id: number; pos: Vec2; reason: StunReason }
