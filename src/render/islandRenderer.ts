@@ -18,9 +18,11 @@ import {
 import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawIslandGround, drawProp } from './pixelArt';
-import { Puppet, type Gear } from './puppet';
+import { PIXEL, PPU, pixelView } from '../style';
+import { heroSheet, lookKey, type HeroLook } from './pixelHero';
+import { Puppet } from './puppet';
 import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
-import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
+import { frameAt, loadSheet, sheetFromCanvas, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 
 /** Assez grand pour que la caméra ne voie jamais le bord du sol, même au bout du ponton. */
@@ -42,6 +44,8 @@ interface SpriteEntry {
   facesRight: boolean;
   anim?: SheetAnimation;
   puppet?: Puppet;
+  /** Pixel art à l'échelle `PPU` : jamais agrandi ni réduit, pour garder des pixels nets. */
+  native?: boolean;
 }
 
 interface Billboard {
@@ -78,6 +82,7 @@ export class IslandRenderer {
   /** Décors animés (cascade, portail…), qui bouclent sur leur animation d'attente. */
   private readonly animatedProps: Billboard[] = [];
   private player: Billboard | null = null;
+  private heroKey = '';
   private highlight: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private shadowTexture!: BaseTexture;
   private readonly markers = new Map<string, Marker>();
@@ -128,19 +133,36 @@ export class IslandRenderer {
     this.highlight = ring;
   }
 
-  /** Équipement dessiné sur le pantin du héros. */
-  setHeroGear(gear: Gear): void {
-    this.player?.entry.puppet?.setGear(gear);
-  }
-
-  /** Change l'apparence du héros (race et classe) ; sans planche, il garde l'image par défaut. */
-  setHero(sprite: string): void {
+  /**
+   * Apparence du héros : race, classe et équipement. En pixel art, sa planche est redessinée à chaque
+   * changement ; en style peint, l'Einherjar guerrier garde son image peinte (ou son pantin équipé).
+   */
+  setHeroLook(look: HeroLook): void {
     const old = this.player;
-    if (!old || old.sprite === sprite) return;
-    const entry = this.entryFor(sprite) ?? this.required('heros');
+    if (!old) return;
+    const painted = !PIXEL && look.race === 'einherjar' && look.class === 'guerrier';
+    const key = painted ? 'heros' : lookKey(look);
+    if (painted) this.required('heros').puppet?.setGear(look.gear);
+    if (key === this.heroKey) return;
+    let entry: SpriteEntry;
+    if (painted) {
+      entry = this.required('heros');
+    } else {
+      const { canvas, sheet } = heroSheet(look);
+      const body = this.manifest.heros.height;
+      entry = { ...sheetFromCanvas(this.scene, `heros:${key}`, canvas, sheet, { bodyHeight: body, ppu: PPU }), body, facesRight: true, native: true };
+    }
     const pos = { x: old.mesh.position.x, z: old.mesh.position.z };
+    const visible = old.mesh.isVisible;
+    const faceRight = old.faceRight;
     this.disposeBillboard(old);
-    this.player = this.billboard('player', entry, pos, 0.4, sprite);
+    // La planche dessinée pour l'ancienne apparence ne sert plus à personne.
+    if (old.entry !== this.sprites.get('heros')) old.entry.texture.dispose();
+    this.player = this.billboard('player', entry, pos, 0.4, 'heros');
+    this.player.mesh.isVisible = visible;
+    this.player.shadow.isVisible = visible;
+    this.player.faceRight = faceRight;
+    this.heroKey = key;
   }
 
   /** Point de vue du menu principal : la caméra dérive lentement au-dessus du village. */
@@ -215,6 +237,8 @@ export class IslandRenderer {
   }
 
   render(): void {
+    // L'île et le donjon partagent l'écran : la résolution du pixel art est remise à celle de cette vue.
+    this.fitView();
     this.scene.render();
   }
 
@@ -223,7 +247,9 @@ export class IslandRenderer {
   /** Sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art. */
   private async buildGround(island: Island): Promise<void> {
     const ground = MeshBuilder.CreateGround('islandGround', { width: WORLD_SIZE, height: WORLD_SIZE }, this.scene);
-    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/ile.jpg`).catch(() => null);
+    // Pixel art : sol dessiné par `npm run pixel`, sans lissage ; sinon le sol peint, ou le dessin provisoire.
+    const file = PIXEL ? 'pixel/sols/ile.png' : 'sols/ile.jpg';
+    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/${file}`, PIXEL).catch(() => null);
     const texture = painted ?? this.canvasTexture('islandGroundTexture', drawIslandGround(island.data, WORLD_SIZE, PIXELS_PER_UNIT), true);
     texture.hasAlpha = false;
     const material = new StandardMaterial('islandGroundMaterial', this.scene);
@@ -245,7 +271,7 @@ export class IslandRenderer {
     }
     if (def.sheet) {
       try {
-        const sheet = await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height);
+        const sheet = await loadSheet(this.scene, def.sheet.file, { bodyHeight: def.height, cellHeight: def.sheet.height });
         return { ...sheet, body: def.height, facesRight: true };
       } catch {
         console.warn(`Planche introuvable : ${def.sheet.file}. L'image fixe la remplace.`);
@@ -258,6 +284,14 @@ export class IslandRenderer {
         return { texture, aspect: width / height, height: def.height, body: def.height, below: 0, facesRight: def.facesRight };
       } catch {
         console.warn(`Sprite de l'île introuvable : ${def.file}.${def.placeholder ? ' Le dessin provisoire le remplace.' : ''}`);
+      }
+    }
+    if (def.pixel) {
+      try {
+        const sheet = await loadSheet(this.scene, def.pixel, { bodyHeight: def.height, ppu: PPU });
+        return { ...sheet, body: def.height, facesRight: true, native: true };
+      } catch {
+        console.warn(`Planche en pixel art de l'île introuvable : ${def.pixel}.`);
       }
     }
     return def.placeholder ? this.pixelEntry(name, def.placeholder, def.height) : null;
@@ -287,7 +321,7 @@ export class IslandRenderer {
       return entry;
     }
     const entry = this.sprites.get(sprite);
-    if (!entry || !height) return entry ?? null;
+    if (!entry || !height || entry.native) return entry ?? null;
     const k = height / entry.body;
     return { ...entry, height: entry.height * k, body: height, below: entry.below * k };
   }
@@ -371,11 +405,12 @@ export class IslandRenderer {
   }
 
   private fitView(): void {
+    const half = pixelView(this.engine, this.canvas, VIEW_HALF_HEIGHT);
     const aspect = this.engine.getRenderWidth() / Math.max(1, this.engine.getRenderHeight());
-    this.camera.orthoTop = VIEW_HALF_HEIGHT;
-    this.camera.orthoBottom = -VIEW_HALF_HEIGHT;
-    this.camera.orthoLeft = -VIEW_HALF_HEIGHT * aspect;
-    this.camera.orthoRight = VIEW_HALF_HEIGHT * aspect;
+    this.camera.orthoTop = half;
+    this.camera.orthoBottom = -half;
+    this.camera.orthoLeft = -half * aspect;
+    this.camera.orthoRight = half * aspect;
   }
 
   // --- Marqueurs de quête ------------------------------------------------------

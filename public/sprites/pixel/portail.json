@@ -1,0 +1,80 @@
+{
+  "frames": [
+    {
+      "filename": "portail 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 74,
+        "h": 82
+      },
+      "duration": 100
+    },
+    {
+      "filename": "portail 1",
+      "frame": {
+        "x": 74,
+        "y": 0,
+        "w": 74,
+        "h": 82
+      },
+      "duration": 100
+    },
+    {
+      "filename": "portail 2",
+      "frame": {
+        "x": 148,
+        "y": 0,
+        "w": 74,
+        "h": 82
+      },
+      "duration": 100
+    },
+    {
+      "filename": "portail 3",
+      "frame": {
+        "x": 222,
+        "y": 0,
+        "w": 74,
+        "h": 82
+      },
+      "duration": 100
+    },
+    {
+      "filename": "portail 4",
+      "frame": {
+        "x": 296,
+        "y": 0,
+        "w": 74,
+        "h": 82
+      },
+      "duration": 100
+    },
+    {
+      "filename": "portail 5",
+      "frame": {
+        "x": 370,
+        "y": 0,
+        "w": 74,
+        "h": 82
+      },
+      "duration": 100
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "portail.png",
+    "size": {
+      "w": 444,
+      "h": 82
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 5,
+        "direction": "forward"
+      }
+    ]
+  }
+}

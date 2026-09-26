@@ -23,8 +23,10 @@ import { Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { Projectile, Stump, World } from '../game/world';
-import { Puppet, type Gear } from './puppet';
-import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
+import { PIXEL, PPU, pixelView } from '../style';
+import { heroSheet, lookKey, type HeroLook } from './pixelHero';
+import { Puppet } from './puppet';
+import { frameAt, loadSheet, sheetFromCanvas, showFrame, type SheetAnimation } from './sheets';
 import {
   drawArrow,
   drawCrescent,
@@ -65,6 +67,11 @@ export interface SpriteDef {
    */
   sheet?: { file: string; height?: number };
   /**
+   * Planche en pixel art (JSON « Array » dans public/sprites), dessinée à l'échelle `PPU` (src/style.ts) :
+   * c'est la seule image utilisée en style pixel, et le recours du style peint quand l'image peinte manque.
+   */
+  pixel?: string;
+  /**
    * Pantin articulé (src/data/pantin.json), prioritaire sur la planche dès que ses morceaux peints sont
    * dans public/sprites/pieces/<nom>/ (ou avec `?pantin` dans l'adresse, en morceaux provisoires).
    */
@@ -82,6 +89,15 @@ export interface SpriteDef {
 }
 
 export type SpriteManifest = Record<string, SpriteDef>;
+
+/**
+ * Le manifeste vu par le style graphique en cours : en pixel art, il ne reste que les planches en pixel art
+ * (ou, à défaut, les dessins provisoires) ; en style peint, les images peintes passent en premier.
+ */
+export function styleManifest(manifest: SpriteManifest): SpriteManifest {
+  if (!PIXEL) return manifest;
+  return Object.fromEntries(Object.entries(manifest).map(([name, def]) => [name, { ...def, file: null, sheet: undefined, puppet: false }]));
+}
 
 /** Ce que le rendu a besoin de savoir d'une entité à chaque image. */
 interface Snapshot {
@@ -331,6 +347,7 @@ export class Renderer {
   private texts: FloatingText[] = [];
   /** Sprite du héros : sa race et sa classe (src/render/heroes.ts). */
   private heroSprite = 'heros';
+  private heroKey = '';
 
   constructor(
     readonly engine: Engine,
@@ -378,7 +395,7 @@ export class Renderer {
   async load(): Promise<void> {
     await this.buildGround();
     // Toile peinte si elle existe, sinon le dessin provisoire du constructeur.
-    const web = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/toile.png`).catch(() => null);
+    const web = PIXEL ? null : await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/toile.png`).catch(() => null);
     if (web) this.fxTextures.web = web;
     await Promise.all(
       Object.entries(this.manifest).map(async ([name, def]) => {
@@ -390,14 +407,35 @@ export class Renderer {
     this.guardDecal.mesh.isVisible = false;
   }
 
-  /** Équipement dessiné sur le pantin du héros (sans effet sur une planche ou une image fixe). */
-  setHeroGear(gear: Gear): void {
-    this.sprites.get('heros')?.puppet?.setGear(gear);
-  }
-
-  /** Change l'apparence du héros ; un sprite qui n'a pas pu être chargé garde celle par défaut. */
-  setHero(sprite: string): void {
-    this.heroSprite = this.sprites.has(sprite) ? sprite : 'heros';
+  /**
+   * Apparence du héros : race, classe et équipement. En pixel art, sa planche est redessinée à chaque
+   * changement ; en style peint, l'Einherjar guerrier garde son image peinte (ou son pantin équipé).
+   */
+  setHeroLook(look: HeroLook): void {
+    const painted = !PIXEL && look.race === 'einherjar' && look.class === 'guerrier';
+    if (painted) {
+      this.sprites.get('heros')?.puppet?.setGear(look.gear);
+      this.heroSprite = 'heros';
+      return;
+    }
+    const key = lookKey(look);
+    if (key === this.heroKey) {
+      this.heroSprite = `heros:${key}`;
+      return;
+    }
+    const { canvas, sheet } = heroSheet(look);
+    const name = `heros:${key}`;
+    const loaded = sheetFromCanvas(this.scene, name, canvas, sheet, { bodyHeight: this.manifest.heros.height, ppu: PPU });
+    this.sprites.set(name, { ...loaded, facesRight: true });
+    const old = this.heroKey ? `heros:${this.heroKey}` : null;
+    this.heroKey = key;
+    this.heroSprite = name;
+    if (old) {
+      // La vue du héros est refaite à la prochaine synchronisation : l'ancienne planche ne sert plus après cette image.
+      const entry = this.sprites.get(old);
+      this.sprites.delete(old);
+      queueMicrotask(() => entry?.texture.dispose());
+    }
   }
 
   /** Directions de l'écran au sol : ZQSD déplace le héros selon ces axes. */
@@ -481,6 +519,8 @@ export class Renderer {
   }
 
   render(): void {
+    // L'île et le donjon partagent l'écran : la résolution du pixel art est remise à celle de cette vue.
+    this.fitView();
     this.scene.render();
   }
 
@@ -634,7 +674,7 @@ export class Renderer {
   }
 
   private createView(id: number, spriteName: string, radius: number): EntityView {
-    const def = this.manifest[spriteName];
+    const def = this.manifest[spriteName] ?? (spriteName.startsWith('heros:') ? this.manifest.heros : undefined);
     const entry = this.sprites.get(spriteName);
     if (!def || !entry) throw new Error(`Sprite inconnu : ${spriteName}`);
     const node = new TransformNode(`entity-${id}`, this.scene);
@@ -1356,7 +1396,9 @@ export class Renderer {
   /** Sol peint (sols/rizieres.jpg, cadré comme le dessin provisoire) s'il existe, sinon le dessin. */
   private async buildGround(): Promise<void> {
     const ground = MeshBuilder.CreateGround('ground', { width: GROUND_SIZE, height: GROUND_SIZE }, this.scene);
-    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/rizieres.jpg`).catch(() => null);
+    // Pixel art : rizières dessinées par `npm run pixel`, sans lissage ; sinon le sol peint, ou le dessin provisoire.
+    const file = PIXEL ? 'pixel/sols/rizieres.png' : 'sols/rizieres.jpg';
+    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/${file}`, PIXEL).catch(() => null);
     const texture = painted ?? this.canvasTexture('groundTexture', drawGround(2048, GROUND_SIZE, this.arenaHalfSize, PADDY_SIZE));
     texture.hasAlpha = false;
     const material = new StandardMaterial('groundMaterial', this.scene);
@@ -1386,7 +1428,7 @@ export class Renderer {
     if (puppet) return { texture: puppet.texture, aspect: puppet.aspect, height: puppet.height, below: puppet.below, facesRight: true, puppet };
     if (def.sheet) {
       try {
-        return { ...(await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height)), facesRight: true };
+        return { ...(await loadSheet(this.scene, def.sheet.file, { bodyHeight: def.height, cellHeight: def.sheet.height })), facesRight: true };
       } catch {
         console.warn(`Planche introuvable : ${def.sheet.file}. L'image fixe la remplace.`);
       }
@@ -1398,6 +1440,13 @@ export class Renderer {
         return { texture, aspect: width / height, height: def.height, facesRight: def.facesRight };
       } catch {
         console.warn(`Sprite introuvable : ${def.file}. Un dessin provisoire le remplace.`);
+      }
+    }
+    if (def.pixel) {
+      try {
+        return { ...(await loadSheet(this.scene, def.pixel, { bodyHeight: def.height, ppu: PPU })), facesRight: true };
+      } catch {
+        console.warn(`Planche en pixel art introuvable : ${def.pixel}. Un dessin provisoire la remplace.`);
       }
     }
     const canvas = PLACEHOLDERS[name]?.() ?? drawMissing(name);
@@ -1421,11 +1470,12 @@ export class Renderer {
   }
 
   private fitView(): void {
+    const half = pixelView(this.engine, this.canvas, VIEW_HALF_HEIGHT);
     const aspect = this.engine.getRenderWidth() / Math.max(1, this.engine.getRenderHeight());
-    this.camera.orthoTop = VIEW_HALF_HEIGHT;
-    this.camera.orthoBottom = -VIEW_HALF_HEIGHT;
-    this.camera.orthoLeft = -VIEW_HALF_HEIGHT * aspect;
-    this.camera.orthoRight = VIEW_HALF_HEIGHT * aspect;
+    this.camera.orthoTop = half;
+    this.camera.orthoBottom = -half;
+    this.camera.orthoLeft = -half * aspect;
+    this.camera.orthoRight = half * aspect;
   }
 
   private updateCamera(target: Vec2, dt: number): void {

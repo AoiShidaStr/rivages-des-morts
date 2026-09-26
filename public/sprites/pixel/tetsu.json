@@ -1,0 +1,60 @@
+{
+  "frames": [
+    {
+      "filename": "tetsu 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 34,
+        "h": 42
+      },
+      "duration": 280
+    },
+    {
+      "filename": "tetsu 1",
+      "frame": {
+        "x": 34,
+        "y": 0,
+        "w": 34,
+        "h": 42
+      },
+      "duration": 280
+    },
+    {
+      "filename": "tetsu 2",
+      "frame": {
+        "x": 68,
+        "y": 0,
+        "w": 34,
+        "h": 42
+      },
+      "duration": 280
+    },
+    {
+      "filename": "tetsu 3",
+      "frame": {
+        "x": 102,
+        "y": 0,
+        "w": 34,
+        "h": 42
+      },
+      "duration": 280
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "tetsu.png",
+    "size": {
+      "w": 136,
+      "h": 42
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      }
+    ]
+  }
+}

@@ -10,7 +10,8 @@ import { Progress, bindSelf, type Action } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import { World } from './game/world';
 import type { Input } from './input';
-import { heroSprite } from './render/heroes';
+import { heroPortrait, type HeroLook } from './render/pixelHero';
+import { PIXEL, switchStyle } from './style';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import type { Renderer } from './render/renderer';
@@ -217,6 +218,11 @@ export class App {
       primary: !hasSave,
       action: () => this.createHero(),
     });
+    // Comparer les deux directions artistiques : tout en pixel art, ou les images peintes.
+    options.push({
+      label: PIXEL ? 'Graphismes : pixel art (voir les peints)' : 'Graphismes : peints (voir le pixel art)',
+      action: () => switchStyle(PIXEL ? 'peint' : 'pixel'),
+    });
     this.screens.showTitle(options);
   }
 
@@ -254,7 +260,7 @@ export class App {
       this.screens.hideTitle();
       this.creation.hide();
       island.placeAt(content.island.spawn);
-      islandRenderer.setHero(heroSprite(this.d.progress.state.hero));
+      islandRenderer.setHeroLook(this.heroLook());
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });
@@ -275,7 +281,7 @@ export class App {
     if (entered) this.screens.announceArea(entered.name);
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
-    islandRenderer.setHeroGear(progress.state.equipped);
+    islandRenderer.setHeroLook(this.heroLook());
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
     islandRenderer.render();
     this.screens.updateIslandHud({
@@ -332,7 +338,9 @@ export class App {
   private async playLines(lines: Line[]): Promise<void> {
     for (const [speakerId, text] of lines) {
       const speaker = content.speakers[speakerId] ?? { name: speakerId };
-      await this.dialogue.say({ name: speaker.name, portrait: portraitUrl(speaker.sprite) }, this.d.progress.format(text));
+      // Le héros parle avec son propre visage : sa race, son casque.
+      const portrait = speaker.sprite === 'heros' && PIXEL ? heroPortrait(this.heroLook()) : portraitUrl(speaker.sprite);
+      await this.dialogue.say({ name: speaker.name, portrait }, this.d.progress.format(text));
     }
   }
 
@@ -402,7 +410,7 @@ export class App {
       this.panels.close();
       this.world = new World({ ...config, player, difficulty }, startWave);
       dungeonRenderer.reset();
-      dungeonRenderer.setHero(heroSprite(this.d.progress.state.hero));
+      dungeonRenderer.setHeroLook(this.heroLook());
       hud.reset(this.dungeonLevel);
       hud.configure(heroClass(content.skills, this.d.progress.state.hero));
       this.run = emptyLoot();
@@ -434,11 +442,17 @@ export class App {
     }
     const events = world.drainEvents();
     for (const event of events) this.track(event);
-    dungeonRenderer.setHeroGear(this.d.progress.state.equipped);
+    dungeonRenderer.setHeroLook(this.heroLook());
     dungeonRenderer.sync(world, events, dt);
     hud.update(world, events, dt);
     dungeonRenderer.render();
     if (this.outcome) this.finishDungeon(this.outcome);
+  }
+
+  /** Race, classe et objets portés : le héros est dessiné avec son équipement. */
+  private heroLook(): HeroLook {
+    const { hero, equipped } = this.d.progress.state;
+    return { race: hero.race, class: hero.class, gear: equipped };
   }
 
   private readCombatInput(world: World): InputFrame {
@@ -592,7 +606,7 @@ export class App {
       this.panels.close();
       this.world = null;
       island.placeAt(content.island.dungeonExit);
-      islandRenderer.setHero(heroSprite(progress.state.hero));
+      islandRenderer.setHeroLook(this.heroLook());
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });

@@ -1,0 +1,80 @@
+{
+  "frames": [
+    {
+      "filename": "rocher 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 78,
+        "h": 82
+      },
+      "duration": 180
+    },
+    {
+      "filename": "rocher 1",
+      "frame": {
+        "x": 78,
+        "y": 0,
+        "w": 78,
+        "h": 82
+      },
+      "duration": 180
+    },
+    {
+      "filename": "rocher 2",
+      "frame": {
+        "x": 156,
+        "y": 0,
+        "w": 78,
+        "h": 82
+      },
+      "duration": 180
+    },
+    {
+      "filename": "rocher 3",
+      "frame": {
+        "x": 234,
+        "y": 0,
+        "w": 78,
+        "h": 82
+      },
+      "duration": 180
+    },
+    {
+      "filename": "rocher 4",
+      "frame": {
+        "x": 312,
+        "y": 0,
+        "w": 78,
+        "h": 82
+      },
+      "duration": 180
+    },
+    {
+      "filename": "rocher 5",
+      "frame": {
+        "x": 390,
+        "y": 0,
+        "w": 78,
+        "h": 82
+      },
+      "duration": 180
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "rocher.png",
+    "size": {
+      "w": 468,
+      "h": 82
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 5,
+        "direction": "forward"
+      }
+    ]
+  }
+}

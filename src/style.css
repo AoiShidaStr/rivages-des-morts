@@ -32,6 +32,11 @@ body {
   cursor: crosshair;
 }
 
+/* Pixel art : l'écran est rendu en basse résolution, puis agrandi sans lissage (src/style.ts). */
+[data-style='pixel'] #game {
+  image-rendering: pixelated;
+}
+
 #overlay,
 #hud {
   position: fixed;

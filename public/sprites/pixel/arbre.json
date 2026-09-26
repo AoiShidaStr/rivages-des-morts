@@ -1,0 +1,30 @@
+{
+  "frames": [
+    {
+      "filename": "arbre 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 66,
+        "h": 68
+      },
+      "duration": 1000
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "arbre.png",
+    "size": {
+      "w": 66,
+      "h": 68
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 0,
+        "direction": "forward"
+      }
+    ]
+  }
+}

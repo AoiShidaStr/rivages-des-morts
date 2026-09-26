@@ -1,0 +1,30 @@
+{
+  "frames": [
+    {
+      "filename": "argile 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 36
+      },
+      "duration": 1000
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "argile.png",
+    "size": {
+      "w": 24,
+      "h": 36
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 0,
+        "direction": "forward"
+      }
+    ]
+  }
+}

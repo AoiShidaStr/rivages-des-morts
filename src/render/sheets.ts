@@ -1,4 +1,4 @@
-import { Vector4, type Scene, type ShaderMaterial, type Texture } from '@babylonjs/core';
+import { DynamicTexture, Texture, Vector4, type Scene, type ShaderMaterial } from '@babylonjs/core';
 import { loadTexture } from './renderer';
 
 /** Planche découpée : rectangle de chaque image (en UV) et plages d'images par posture. */
@@ -12,7 +12,7 @@ export interface SheetAnimation {
  * `npm run planches` ajoutent `smooth` (image peinte, filtrée sans pixels nets), `bodyHeight`
  * (hauteur du corps en pixels) et `anchor` (position des pieds dans une case).
  */
-interface AsepriteSheet {
+export interface AsepriteSheet {
   frames: { frame: { x: number; y: number; w: number; h: number }; duration: number }[];
   meta: {
     image: string;
@@ -35,17 +35,38 @@ export interface LoadedSheet {
 }
 
 /**
- * Charge une planche et son découpage. `bodyHeight` est la taille du personnage dans le monde : pour une
- * planche qui connaît la hauteur du corps et la place des pieds, la case est dimensionnée d'après elle.
- * Sinon (planches en pixel art), `cellHeight` donne directement la hauteur d'une case.
+ * Taille d'une planche dans le monde. `bodyHeight` est la taille du personnage : pour une planche qui connaît
+ * la hauteur du corps et la place des pieds, la case est dimensionnée d'après elle. Sinon, `cellHeight` donne
+ * directement la hauteur d'une case, ou `ppu` la déduit du nombre de pixels par unité (pixel art).
  */
-export async function loadSheet(scene: Scene, jsonPath: string, bodyHeight: number, cellHeight?: number): Promise<LoadedSheet> {
+export interface SheetSize {
+  bodyHeight: number;
+  cellHeight?: number;
+  ppu?: number;
+}
+
+/** Charge une planche et son découpage (JSON dans public/sprites, l'image à côté). */
+export async function loadSheet(scene: Scene, jsonPath: string, size: SheetSize): Promise<LoadedSheet> {
   const base = `${import.meta.env.BASE_URL}sprites/`;
   const response = await fetch(`${base}${jsonPath}`);
   if (!response.ok) throw new Error(jsonPath);
   const sheet = (await response.json()) as AsepriteSheet;
   const dir = jsonPath.includes('/') ? jsonPath.slice(0, jsonPath.lastIndexOf('/') + 1) : '';
   const texture = await loadTexture(scene, `${base}${dir}${sheet.meta.image}`, !sheet.meta.smooth);
+  return describeSheet(sheet, texture, size);
+}
+
+/** Planche dessinée dans le jeu (héros en pixel art avec son équipement) : même découpage qu'un fichier. */
+export function sheetFromCanvas(scene: Scene, name: string, canvas: HTMLCanvasElement, sheet: AsepriteSheet, size: SheetSize): LoadedSheet {
+  const texture = new DynamicTexture(name, canvas, scene, false, Texture.NEAREST_SAMPLINGMODE);
+  texture.hasAlpha = true;
+  texture.wrapU = Texture.CLAMP_ADDRESSMODE;
+  texture.wrapV = Texture.CLAMP_ADDRESSMODE;
+  texture.update();
+  return describeSheet(sheet, texture, size);
+}
+
+function describeSheet(sheet: AsepriteSheet, texture: Texture, { bodyHeight, cellHeight, ppu }: SheetSize): LoadedSheet {
   const { w: W, h: H } = sheet.meta.size;
   // L'image est retournée à la lecture (v = 0 en bas) : la rangée du haut a le plus grand v.
   const frames = sheet.frames.map(({ frame: f, duration }) => ({
@@ -55,7 +76,7 @@ export async function loadSheet(scene: Scene, jsonPath: string, bodyHeight: numb
   const tags = new Map((sheet.meta.frameTags ?? []).map((t) => [t.name, { from: t.from, to: t.to, once: t.repeat === '1' }]));
   const first = sheet.frames[0].frame;
   const { bodyHeight: bodyPx, anchor } = sheet.meta;
-  const height = bodyPx ? (bodyHeight * first.h) / bodyPx : (cellHeight ?? bodyHeight);
+  const height = bodyPx ? (bodyHeight * first.h) / bodyPx : ppu ? first.h / ppu : (cellHeight ?? bodyHeight);
   const below = bodyPx && anchor ? (height * (first.h - anchor.y)) / first.h : 0;
   return { texture, aspect: first.w / first.h, height, below, anim: { frames, tags } };
 }

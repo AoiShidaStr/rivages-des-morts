@@ -1,0 +1,60 @@
+{
+  "frames": [
+    {
+      "filename": "cascade 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 62,
+        "h": 60
+      },
+      "duration": 100
+    },
+    {
+      "filename": "cascade 1",
+      "frame": {
+        "x": 62,
+        "y": 0,
+        "w": 62,
+        "h": 60
+      },
+      "duration": 100
+    },
+    {
+      "filename": "cascade 2",
+      "frame": {
+        "x": 124,
+        "y": 0,
+        "w": 62,
+        "h": 60
+      },
+      "duration": 100
+    },
+    {
+      "filename": "cascade 3",
+      "frame": {
+        "x": 186,
+        "y": 0,
+        "w": 62,
+        "h": 60
+      },
+      "duration": 100
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "cascade.png",
+    "size": {
+      "w": 248,
+      "h": 60
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      }
+    ]
+  }
+}

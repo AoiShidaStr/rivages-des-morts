@@ -1,16 +1,23 @@
 // Toile de pixels minimale : points, disques, traits épais, pièces dessinées en texte, contour.
+// Sans dépendance à Node : les outils (npm run pixel) et le jeu (héros dessiné à la volée) s'en servent.
 
 /** '#rrggbb' → [r, g, b, 255] */
 export function rgba(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255, 255];
+  let c = cache.get(hex);
+  if (!c) {
+    const n = parseInt(hex.slice(1), 16);
+    c = [(n >> 16) & 255, (n >> 8) & 255, n & 255, 255];
+    cache.set(hex, c);
+  }
+  return c;
 }
+const cache = new Map();
 
 export class Canvas {
   constructor(width, height) {
     this.width = width;
     this.height = height;
-    this.data = Buffer.alloc(width * height * 4);
+    this.data = new Uint8ClampedArray(width * height * 4);
   }
 
   inside(x, y) {
@@ -100,7 +107,7 @@ export class Canvas {
 
   blit(src, ox, oy) {
     for (let y = 0; y < src.height; y++) {
-      src.data.copy(this.data, ((oy + y) * this.width + ox) * 4, y * src.width * 4, (y + 1) * src.width * 4);
+      this.data.set(src.data.subarray(y * src.width * 4, (y + 1) * src.width * 4), ((oy + y) * this.width + ox) * 4);
     }
   }
 }

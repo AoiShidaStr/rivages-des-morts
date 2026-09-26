@@ -1,0 +1,60 @@
+{
+  "frames": [
+    {
+      "filename": "moine 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 30,
+        "h": 40
+      },
+      "duration": 280
+    },
+    {
+      "filename": "moine 1",
+      "frame": {
+        "x": 30,
+        "y": 0,
+        "w": 30,
+        "h": 40
+      },
+      "duration": 280
+    },
+    {
+      "filename": "moine 2",
+      "frame": {
+        "x": 60,
+        "y": 0,
+        "w": 30,
+        "h": 40
+      },
+      "duration": 280
+    },
+    {
+      "filename": "moine 3",
+      "frame": {
+        "x": 90,
+        "y": 0,
+        "w": 30,
+        "h": 40
+      },
+      "duration": 280
+    }
+  ],
+  "meta": {
+    "app": "tools/pixel.mjs",
+    "image": "moine.png",
+    "size": {
+      "w": 120,
+      "h": 40
+    },
+    "frameTags": [
+      {
+        "name": "idle",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      }
+    ]
+  }
+}

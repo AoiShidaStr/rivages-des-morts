@@ -6,6 +6,7 @@ import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, level
 import type { RolledOffer } from '../game/loot';
 import type { Progress, Slot } from '../game/progress';
 import { h, icon, obole, type Child } from './dom';
+import { HeroPreview } from './heroPreview';
 
 /** Nombre à la française : « 1,35 ». */
 const fr = (value: number, digits = 2): string => value.toLocaleString('fr-FR', { maximumFractionDigits: digits });
@@ -676,6 +677,8 @@ function equipDelta(ctx: UiContext, loadout: Loadout, id: string, slot: Slot): {
 }
 
 export function openInventory(host: PanelHost, ctx: UiContext): void {
+  // Le héros tel qu'il est équipé ; survoler un objet le lui fait essayer.
+  const preview = new HeroPreview(3, ['idle', 'strike', 'idle', 'move']);
   const render = () => {
     const { progress } = ctx;
     const { state } = progress;
@@ -706,6 +709,8 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     });
 
     const cls = heroClass(content.skills, state.hero);
+    const lookWith = (slot: Slot, id?: string) => ({ race: state.hero.race, class: state.hero.class, gear: { ...state.equipped, [slot]: id } });
+    preview.show(lookWith(current, state.equipped[current]));
     const choices = ofSlot(current).map((id) => {
       const def = content.items[id];
       const equipped = state.equipped[current] === id;
@@ -734,6 +739,8 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
             progress.equip(id, current);
             render();
           },
+          onmouseenter: () => preview.show(lookWith(current, id)),
+          onmouseleave: () => preview.show(lookWith(current, state.equipped[current])),
         },
         icon(id, 'medium'),
         h(
@@ -800,6 +807,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           'div',
           { class: 'col' },
           h('h3', {}, 'Porté'),
+          h('div', { class: 'paper-doll' }, preview.el),
           h('div', { class: 'slots' }, ...slotButtons),
           fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${cfg.attack.damage} dégâts`, stats),
           fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
