@@ -16,7 +16,7 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 
 1. **Nouvelle partie** : choisis ta race et ta classe, puis Charon, le passeur, te dépose sur l'île.
 2. **Explore l'île** : parle aux habitants avec <kbd>E</kbd>. Un **!** au-dessus d'un personnage veut dire qu'il a quelque chose pour toi. Ta quête en cours s'affiche en haut à droite (<kbd>J</kbd> pour toutes les voir).
-3. **Entre dans le donjon** : le torii noir, au nord-ouest de l'île, mène aux Rizières noyées. Six vagues de yokai t'attendent, puis la Jorōgumo, une araignée géante en trois phases.
+3. **Entre dans le donjon** : le torii noir, au nord-ouest de l'île, mène aux Rizières noyées. Six vagues de yokai t'attendent, puis la Jorōgumo, une araignée géante en trois phases. À l'entrée, choisis le niveau du donjon : les yokai y sont plus forts que toi, et ils se renforcent plus vite que toi d'un niveau à l'autre. Une victoire ouvre les niveaux suivants jusqu'au prochain multiple de 5 (gagne au niveau 1 et tu peux tenter directement le niveau 5).
 4. **Reviens plus fort** : tu gardes ton butin même si tu meurs. Ouvre tes coffres sur la barque de Charon, achète et forge de l'équipement puis équipe-le (<kbd>I</kbd>), dépense tes points de compétence (<kbd>K</kbd>), puis retente ta chance.
 
 ### Races et classes
@@ -29,7 +29,7 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 | Hanyō (japonaise) | tes coups remplissent une jauge qui te transforme un moment ; sous 30 % de PV, tu cours plus vite et tu te régénères |
 
 - **Guerrier** : bloque les coups (sa garde en arrête les trois quarts) pour remplir sa rage, puis la dépense en attaques puissantes.
-- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai, qui la prennent pour cible comme toi. Chaque âme active réduit un peu tes propres dégâts.
+- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai. Les yokai visent plutôt toi que tes âmes, sauf si tu portes le Masque d'Oublié. Chaque âme active réduit un peu tes propres dégâts.
 - **Lame** : peu de PV, mais des coups très rapides. Traverse les ennemis pour les marquer, puis achève-les en coups critiques.
 - **Paladin** : robuste. Bouclier levé, il pare tout ce qui vient de face, soigne autour de lui et relève les alliés tombés.
 - **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances.

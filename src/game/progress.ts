@@ -198,11 +198,10 @@ export class Progress {
     if (slot) this.state.itemLevels[item] ??= 1;
   }
 
-  /** Une victoire au niveau `level` ouvre le niveau suivant ; renvoie vrai si c'est un nouveau niveau. */
-  winDungeon(level: number, maxLevel: number): boolean {
+  /** Une victoire au niveau `level` ouvre les niveaux jusqu'à `next` ; renvoie vrai si de nouveaux niveaux s'ouvrent. */
+  winDungeon(level: number, next: number): boolean {
     const dungeon = this.state.dungeon;
     dungeon.best = Math.max(dungeon.best, level);
-    const next = Math.min(maxLevel, level + 1);
     if (next <= dungeon.unlocked) return false;
     dungeon.unlocked = next;
     return true;

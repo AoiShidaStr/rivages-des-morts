@@ -34,10 +34,10 @@
       "passives": [
         {
           "name": "Serviteur funéraire",
-          "description": "+1 invocation active et des invocations 50 % plus durables (Invocateur).",
+          "description": "+1 invocation active et des invocations 30 % plus durables (Invocateur).",
           "effects": [
             { "op": "add", "path": "summon.max", "value": 1 },
-            { "op": "mul", "path": "summon.life", "value": 1.5 }
+            { "op": "mul", "path": "summon.life", "value": 1.3 }
           ]
         },
         {
@@ -268,11 +268,11 @@
         {
           "key": "Clic droit",
           "name": "Lier",
-          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 30 s. Chaque âme active réduit tes propres dégâts de 8 %."
+          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 24 s. Chaque âme active réduit tes propres dégâts de 10 %."
         },
-        { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent deux fois plus fort." },
+        { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent 60 % plus fort." },
         { "key": "E", "name": "Sacrifice", "description": "Ta plus vieille âme explose : gros dégâts autour d’elle." },
-        { "key": "R", "name": "Chœur spectral", "description": "Pendant 6 s, tes âmes frappent 60 % plus fort et vont 30 % plus vite." }
+        { "key": "R", "name": "Chœur spectral", "description": "Pendant 6 s, tes âmes frappent 40 % plus fort et vont 20 % plus vite." }
       ],
       "tag": {
         "name": "Invocateur",
@@ -606,7 +606,7 @@
         {
           "key": "R",
           "name": "Relever",
-          "description": "Le dernier allié tombé près de toi (une âme brisée, ou un yokai vaincu) se relève en âme de lumière et combat pour toi 30 s."
+          "description": "Le dernier allié tombé près de toi (une âme brisée, ou un yokai vaincu) se relève en âme de lumière et combat pour toi 24 s."
         }
       ],
       "tag": {

@@ -14,6 +14,8 @@ const SPAWN_CLEARANCE = 5;
 const SAP_DELAY = 3;
 /** Avec le Masque d'Oublié, une âme compte comme si elle était trois fois plus proche que le héros. */
 const TAUNT_PULL = 3;
+/** Sans lui, un yokai préfère le héros : une âme doit être une fois et demie plus proche pour l'attirer. */
+const HERO_PULL = 1.5;
 
 /** Ce qu'un yokai peut attaquer : le héros, ou une âme liée de l'Invocateur. */
 export interface Foe {
@@ -187,11 +189,11 @@ export class World {
   }
 
   /**
-   * La cible d'un yokai : la plus proche, entre le héros et les âmes. Avec le Masque d'Oublié, les âmes passent devant.
-   * Invisible, le héros est remplacé par son nuage de fumée.
+   * La cible d'un yokai : la plus proche, entre le héros et les âmes, le héros passant devant à distance égale.
+   * Avec le Masque d'Oublié, ce sont les âmes qui passent devant. Invisible, le héros est remplacé par son nuage de fumée.
    */
   pickFoe(from: Vec2): Foe {
-    const pull = this.player.cfg.perks?.summonTaunt ? TAUNT_PULL : 1;
+    const pull = this.player.cfg.perks?.summonTaunt ? TAUNT_PULL : 1 / HERO_PULL;
     let best: Foe = this.player.hidden > 0 && this.smoke ? this.smoke : this.player;
     let bestScore = distance(from, best.pos);
     for (const summon of this.summons) {
@@ -1050,18 +1052,22 @@ export class World {
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
     const enemy = this.instantiate(kind, this.nextId++, pos);
     enemy.facing = normalize(sub(this.player.pos, pos));
-    // Niveau du donjon : tous les yokai sont renforcés, le boss encore plus sous le « Regard d'Izanami ».
+    // Niveau du donjon : tous les yokai sont renforcés ; le boss a sa propre base, et plus encore sous le « Regard d'Izanami ».
     const difficulty = this.cfg.difficulty;
     if (difficulty) {
-      const izanami = enemy.boss ? 1 + this.curse('izanami') : 1;
-      enemy.empower(difficulty.hp * izanami, difficulty.damage * izanami);
+      if (enemy.boss) {
+        const izanami = 1 + this.curse('izanami');
+        enemy.empower(difficulty.boss.hp * izanami, difficulty.boss.damage * izanami);
+      } else {
+        enemy.empower(difficulty.hp, difficulty.damage);
+      }
     }
     return enemy;
   }
 
   /** Puissance des attaques de zone de la Jorōgumo (niveau du donjon, « Regard d'Izanami »). */
   private bossMight(): number {
-    return (this.cfg.difficulty?.damage ?? 1) * (1 + this.curse('izanami'));
+    return (this.cfg.difficulty?.boss.damage ?? 1) * (1 + this.curse('izanami'));
   }
 
   /** « Sève du Yomi » : un yokai épargné quelques secondes se régénère. */

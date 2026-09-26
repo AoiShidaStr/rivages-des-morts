@@ -1,7 +1,7 @@
 import type { Engine } from '@babylonjs/core';
 import { content, portraitUrl, type Line } from './content';
 import type { GameConfig } from './game/config';
-import { clampLevel, difficultyFor, rewardsFor } from './game/difficulty';
+import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
 import { buildLoadout, heroClass, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, salvage, type RolledOffer } from './game/loot';
@@ -514,7 +514,7 @@ export class App {
     if (victory) {
       const firstWin = progress.quest('dame') !== 'done';
       actions.push(...progress.apply([{ completeQuest: 'dame' }, { set: 'jorogumo_vaincue' }, ...(firstWin ? [{ xp: BOSS_QUEST_XP }] : [])]));
-      if (progress.winDungeon(this.dungeonLevel, content.difficulty.maxLevel)) unlocked = progress.state.dungeon.unlocked;
+      if (progress.winDungeon(this.dungeonLevel, unlockAfter(content.difficulty, this.dungeonLevel))) unlocked = progress.state.dungeon.unlocked;
       this.endShop = this.rollEndShop();
     }
     progress.save();

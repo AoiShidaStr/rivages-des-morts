@@ -88,7 +88,7 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Invocateur"],
-      "summary": "Arme de départ de l'Invocateur : coups légers, tes âmes frappent 20 % plus vite.",
+      "summary": "Arme de départ de l'Invocateur : coups légers, tes âmes frappent 10 % plus vite.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 6 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
@@ -96,7 +96,7 @@
         { "op": "set", "path": "attack.windup", "value": 0.07 },
         { "op": "set", "path": "attack.recovery", "value": 0.22 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
-        { "op": "mul", "path": "summon.attackCooldown", "value": 0.8 }
+        { "op": "mul", "path": "summon.attackCooldown", "value": 0.9 }
       ],
       "paliers": [
         { "level": 10, "name": "Tintement", "summary": "Tes âmes courent 15 % plus vite", "effects": [{ "op": "mul", "path": "summon.speed", "value": 1.15 }] },
