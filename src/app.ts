@@ -273,6 +273,7 @@ export class App {
     if (entered) this.screens.announceArea(entered.name);
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
+    islandRenderer.setHeroGear(progress.state.equipped);
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
     islandRenderer.render();
     this.screens.updateIslandHud({
@@ -430,6 +431,7 @@ export class App {
     }
     const events = world.drainEvents();
     for (const event of events) this.track(event);
+    dungeonRenderer.setHeroGear(this.d.progress.state.equipped);
     dungeonRenderer.sync(world, events, dt);
     hud.update(world, events, dt);
     dungeonRenderer.render();

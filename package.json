@@ -13,6 +13,7 @@
     "sols": "node tools/sols.mjs",
     "objets": "node tools/collection-objets.mjs",
     "icones": "node tools/icones.mjs",
+    "pieces": "node tools/icones.mjs tools/pieces.json",
     "pixel": "node tools/pixel.mjs"
   },
   "dependencies": {

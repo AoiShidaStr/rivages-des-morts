@@ -1,5 +1,5 @@
 {
-  "heros": { "file": "heros.png", "sheet": { "file": "anim/heros.json" }, "height": 1.75, "facesRight": true },
+  "heros": { "file": "heros.png", "sheet": { "file": "anim/heros.json" }, "puppet": true, "height": 1.75, "facesRight": true },
   "torii": { "file": "torii.png", "height": 4.2, "facesRight": true },
   "charon": { "file": "charon.png", "height": 2.1, "facesRight": true },
   "obaaKiku": { "file": "obaa-kiku.png", "height": 1.45, "facesRight": false },

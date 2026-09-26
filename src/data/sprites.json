@@ -1,5 +1,5 @@
 {
-  "heros": { "file": "heros.png", "sheet": { "file": "anim/heros.json" }, "height": 1.75, "facesRight": true },
+  "heros": { "file": "heros.png", "sheet": { "file": "anim/heros.json" }, "puppet": true, "height": 1.75, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "sheet": { "file": "pixel/hitodama.json", "height": 1.2 }, "height": 0.9, "facesRight": false, "lift": 0.45 },
   "kodama": { "file": "kodama.png", "sheet": { "file": "pixel/kodama.json", "height": 1.23 }, "height": 1.15, "facesRight": true, "lift": 0.15 },
   "kappa": { "file": "kappa.png", "sheet": { "file": "pixel/kappa.json", "height": 1.93 }, "height": 1.45, "facesRight": true },

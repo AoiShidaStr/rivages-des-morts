@@ -18,6 +18,7 @@ import {
 import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawIslandGround, drawProp } from './pixelArt';
+import { Puppet, type Gear } from './puppet';
 import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
@@ -40,6 +41,7 @@ interface SpriteEntry {
   below: number;
   facesRight: boolean;
   anim?: SheetAnimation;
+  puppet?: Puppet;
 }
 
 interface Billboard {
@@ -126,6 +128,11 @@ export class IslandRenderer {
     this.highlight = ring;
   }
 
+  /** Équipement dessiné sur le pantin du héros. */
+  setHeroGear(gear: Gear): void {
+    this.player?.entry.puppet?.setGear(gear);
+  }
+
   /** Point de vue du menu principal : la caméra dérive lentement au-dessus du village. */
   focus(target: Vec2, dt: number, snap = false): void {
     const follow = snap ? 1 : 1 - Math.exp(-6 * dt);
@@ -175,7 +182,9 @@ export class IslandRenderer {
       this.player.mesh.isVisible = showPlayer;
       this.player.shadow.isVisible = showPlayer;
       this.face(this.player, p.facing);
-      if (this.player.entry.anim) {
+      if (this.player.entry.puppet) {
+        this.player.entry.puppet.update(p.moving ? 'move' : 'idle', dt);
+      } else if (this.player.entry.anim) {
         this.play(this.player, p.moving ? 'move' : 'idle', dt);
       } else {
         const hop = p.moving ? Math.abs(Math.sin(this.time * 9)) : 0;
@@ -219,6 +228,11 @@ export class IslandRenderer {
   /** Planche animée, image peinte, ou à défaut le dessin provisoire désigné par `placeholder`. */
   private async loadEntry(name: string, def: SpriteDef): Promise<SpriteEntry | null> {
     const base = `${import.meta.env.BASE_URL}sprites/`;
+    const puppet = def.puppet ? await Puppet.load(this.scene, name, def.height) : null;
+    if (puppet) {
+      const { texture, aspect, height, below } = puppet;
+      return { texture, aspect, height, body: def.height, below, facesRight: true, puppet };
+    }
     if (def.sheet) {
       try {
         const sheet = await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height);

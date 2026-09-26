@@ -23,6 +23,7 @@ import { Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { Projectile, Stump, World } from '../game/world';
+import { Puppet, type Gear } from './puppet';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
   drawArrow,
@@ -63,6 +64,11 @@ export interface SpriteDef {
    * est la hauteur d'une image entière de la planche, marges comprises.
    */
   sheet?: { file: string; height?: number };
+  /**
+   * Pantin articulé (src/data/pantin.json), prioritaire sur la planche dès que ses morceaux peints sont
+   * dans public/sprites/pieces/<nom>/ (ou avec `?pantin` dans l'adresse, en morceaux provisoires).
+   */
+  puppet?: boolean;
   /** Hauteur à l'écran, en unités du monde. */
   height: number;
   /** Sens dans lequel regarde le sujet sur l'image. */
@@ -113,6 +119,7 @@ interface SpriteEntry {
   /** Hauteur de l'image sous les pieds (marge d'une case de planche) : le sprite descend d'autant. */
   below?: number;
   anim?: SheetAnimation;
+  puppet?: Puppet;
 }
 
 interface EntityView {
@@ -381,6 +388,11 @@ export class Renderer {
     this.guardDecal.mesh.isVisible = false;
   }
 
+  /** Équipement dessiné sur le pantin du héros (sans effet sur une planche ou une image fixe). */
+  setHeroGear(gear: Gear): void {
+    this.sprites.get('heros')?.puppet?.setGear(gear);
+  }
+
   /** Directions de l'écran au sol : ZQSD déplace le héros selon ces axes. */
   groundBasis(): { forward: Vec2; right: Vec2 } {
     return { forward: this.forward, right: this.right };
@@ -513,8 +525,10 @@ export class Renderer {
 
     // Une planche animée joue l'animation de la posture ; sinon, une seule image que l'on anime
     // par l'écrasement, le tremblement et la teinte.
-    const anim = this.sprites.get(spriteName)?.anim;
-    if (anim) this.playSheet(view, anim, s.pose, dt);
+    const entry = this.sprites.get(spriteName);
+    const anim = entry?.anim ?? entry?.puppet;
+    if (entry?.puppet) entry.puppet.update(s.pose, dt);
+    else if (entry?.anim) this.playSheet(view, entry.anim, s.pose, dt);
     const t = this.time + view.phase;
     let sx = 1;
     let sy = 1;
@@ -1359,6 +1373,8 @@ export class Renderer {
   }
 
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {
+    const puppet = def.puppet ? await Puppet.load(this.scene, name, def.height) : null;
+    if (puppet) return { texture: puppet.texture, aspect: puppet.aspect, height: puppet.height, below: puppet.below, facesRight: true, puppet };
     if (def.sheet) {
       try {
         return { ...(await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height)), facesRight: true };
