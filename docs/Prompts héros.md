@@ -24,30 +24,32 @@ Enregistrer les résultats dans `~/Pictures/game visual/heros/` :
 
 L'Einherjar, l'Oushebti et le Demi-dieu guerriers ont déjà leur planche de profil : pour eux, seulement la planche face et dos.
 
-Si une pose sort mal, demander dans la même conversation : `Redraw only pose 4, keep everything else identical.`
+Si ça sort mal, demander dans la même conversation :
+- une pose ratée : `Redraw only pose 4, keep everything else identical.`
+- des figures qui se chevauchent : `Some figures overlap. Redraw the same sheet with more space: every figure, weapon included, must stay inside its own cell with empty grey background all around it, even if the figures get smaller.`
 
 ## Guerrier
 
 **Profil**
 
 ```
-The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors and weapon, nothing added or removed. Six poses in one single row, left to right, every figure in three-quarter view facing right:
+The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors and weapon, nothing added or removed. Six poses on a grid of 3 columns and 2 rows (poses 1 to 3 on the top row, poses 4 to 6 on the bottom row, left to right), every figure in three-quarter view facing right:
 1. idle: calm guard stance, weapon held low in both hands.
 2. running: mid-stride, leaning forward, weapon held low at the side.
 3. wind-up: weapon raised high above the head, body coiled.
 4. strike: the end of a wide horizontal slash, weapon fully extended forward, front knee bent.
 5. guard: weapon held upright in front of the body, braced, feet planted.
 6. dash: a low fast lunge forward, body almost horizontal, weapon trailing behind.
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 **Face et dos**
 
 ```
-The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, weapon and proportions, nothing added or removed. Two rows of four poses, left to right: 1. idle, calm guard stance, weapon held low. 2. running, mid-stride. 3. wind-up, weapon raised high above the head. 4. strike, the end of a wide slash, weapon extended forward.
+The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, weapon and proportions, nothing added or removed. A grid of 4 columns and 2 rows, the same four poses on each row, left to right: 1. idle, calm guard stance, weapon held low. 2. running, mid-stride. 3. wind-up, weapon raised high above the head. 4. strike, the end of a wide slash, weapon extended forward.
 Top row: three-quarter FRONT view. The character faces the viewer and the bottom-right corner of the image: we see the face, the chest and the front of the outfit.
 Bottom row: three-quarter BACK view. The character turns away from the viewer and faces the top-right corner of the image: we see the back of the head, the back of the outfit and the weapon from behind; the face is hidden. Back details stay consistent with the front (hair, cloak, straps, sheath).
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 ## Invocateur
@@ -55,23 +57,23 @@ Bottom row: three-quarter BACK view. The character turns away from the viewer an
 **Profil**
 
 ```
-The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors and staff, nothing added or removed. Six poses in one single row, left to right, every figure in three-quarter view facing right:
+The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors and staff, nothing added or removed. Six poses on a grid of 3 columns and 2 rows (poses 1 to 3 on the top row, poses 4 to 6 on the bottom row, left to right), every figure in three-quarter view facing right:
 1. idle: standing calmly, staff held upright at the side.
 2. running: mid-stride, sleeves and clothes streaming back, staff held diagonally.
 3. wind-up: staff raised high overhead to cast a spell, the other hand open.
 4. strike: staff thrust forward to release the spell, the other arm swept back.
 5. guard: staff held horizontally in front of the body with both hands.
 6. dash: a quick gliding step forward, leaning low, clothes flaring.
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no magic, no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no magic, no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 **Face et dos**
 
 ```
-The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, staff and proportions, nothing added or removed. Two rows of four poses, left to right: 1. idle, standing calmly, staff upright at the side. 2. running, mid-stride. 3. wind-up, staff raised high overhead to cast. 4. strike, staff thrust forward.
+The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, staff and proportions, nothing added or removed. A grid of 4 columns and 2 rows, the same four poses on each row, left to right: 1. idle, standing calmly, staff upright at the side. 2. running, mid-stride. 3. wind-up, staff raised high overhead to cast. 4. strike, staff thrust forward.
 Top row: three-quarter FRONT view. The character faces the viewer and the bottom-right corner of the image: we see the face, the chest and the front of the outfit.
 Bottom row: three-quarter BACK view. The character turns away from the viewer and faces the top-right corner of the image: we see the back of the head, the back of the outfit and the staff from behind; the face is hidden. Back details stay consistent with the front (hair, sleeves, sash, belt).
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no magic, no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no magic, no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 ## Lame
@@ -79,23 +81,23 @@ Bottom row: three-quarter BACK view. The character turns away from the viewer an
 **Profil**
 
 ```
-The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors and twin blades, nothing added or removed. Six poses in one single row, left to right, every figure in three-quarter view facing right:
+The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors and twin blades, nothing added or removed. Six poses on a grid of 3 columns and 2 rows (poses 1 to 3 on the top row, poses 4 to 6 on the bottom row, left to right), every figure in three-quarter view facing right:
 1. idle: low crouch, both blades held in a reverse grip.
 2. running: a low sprint, leaning forward, blades held back along the forearms.
 3. wind-up: both blades raised crossed above the head.
 4. strike: the end of a wide slashing sweep, one arm extended forward, the other swept back.
 5. guard: crouched, both blades crossed in front of the face.
 6. dash: a low forward slide on one knee, one hand touching the ground.
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 **Face et dos**
 
 ```
-The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, twin blades and proportions, nothing added or removed. Two rows of four poses, left to right: 1. idle, low crouch, blades in a reverse grip. 2. running, a low sprint. 3. wind-up, both blades raised crossed above the head. 4. strike, the end of a wide slashing sweep.
+The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, twin blades and proportions, nothing added or removed. A grid of 4 columns and 2 rows, the same four poses on each row, left to right: 1. idle, low crouch, blades in a reverse grip. 2. running, a low sprint. 3. wind-up, both blades raised crossed above the head. 4. strike, the end of a wide slashing sweep.
 Top row: three-quarter FRONT view. The character faces the viewer and the bottom-right corner of the image: we see the face, the chest and the front of the outfit.
 Bottom row: three-quarter BACK view. The character turns away from the viewer and faces the top-right corner of the image: we see the back of the head, the back of the outfit and the blades from behind; the face is hidden. Back details stay consistent with the front (hair, mask, wrappings, belt).
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 ## Paladin
@@ -103,23 +105,23 @@ Bottom row: three-quarter BACK view. The character turns away from the viewer an
 **Profil**
 
 ```
-The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, armor, colors, polearm and shield, nothing added or removed. Six poses in one single row, left to right, every figure in three-quarter view facing right:
+The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, armor, colors, polearm and shield, nothing added or removed. Six poses on a grid of 3 columns and 2 rows (poses 1 to 3 on the top row, poses 4 to 6 on the bottom row, left to right), every figure in three-quarter view facing right:
 1. idle: standing tall, polearm upright, shield at the side.
 2. running: mid-stride, shield forward, polearm held diagonally behind.
 3. wind-up: polearm drawn back over the shoulder, shield raised.
 4. strike: a long lunging thrust, polearm fully extended forward.
 5. guard: shield raised in front of the body, braced, polearm behind it.
 6. dash: a shield charge forward, shoulder first, body low.
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 **Face et dos**
 
 ```
-The attached image is our game hero. Draw a sheet of this exact character: same face, body, armor, colors, polearm, shield and proportions, nothing added or removed. Two rows of four poses, left to right: 1. idle, standing tall, polearm upright, shield at the side. 2. running, mid-stride, shield forward. 3. wind-up, polearm drawn back over the shoulder. 4. strike, a long lunging thrust.
+The attached image is our game hero. Draw a sheet of this exact character: same face, body, armor, colors, polearm, shield and proportions, nothing added or removed. A grid of 4 columns and 2 rows, the same four poses on each row, left to right: 1. idle, standing tall, polearm upright, shield at the side. 2. running, mid-stride, shield forward. 3. wind-up, polearm drawn back over the shoulder. 4. strike, a long lunging thrust.
 Top row: three-quarter FRONT view. The character faces the viewer and the bottom-right corner of the image: we see the face, the chest and the front of the armor.
 Bottom row: three-quarter BACK view. The character turns away from the viewer and faces the top-right corner of the image: we see the back of the head or helmet, the back of the armor and the back of the shield; the face is hidden. Back details stay consistent with the front (helmet, cape, straps).
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 ## Rôdeur
@@ -127,23 +129,23 @@ Bottom row: three-quarter BACK view. The character turns away from the viewer an
 **Profil**
 
 ```
-The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors, bow and quiver, nothing added or removed. Six poses in one single row, left to right, every figure in three-quarter view facing right:
+The attached image is our game hero. Draw an animation key-pose sheet of this exact character: same face, body, outfit, colors, bow and quiver, nothing added or removed. Six poses on a grid of 3 columns and 2 rows (poses 1 to 3 on the top row, poses 4 to 6 on the bottom row, left to right), every figure in three-quarter view facing right:
 1. idle: alert stance, bow held low in one hand.
 2. running: a swift stalking run, bow held low.
 3. wind-up: arrow nocked, bowstring drawn back to the cheek.
 4. strike: the arrow just released, bowstring snapped forward, bow arm extended.
 5. guard: crouched, bow held across the body.
 6. dash: an agile leap backward, knees tucked, bow in hand.
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 **Face et dos**
 
 ```
-The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, bow, quiver and proportions, nothing added or removed. Two rows of four poses, left to right: 1. idle, alert stance, bow held low. 2. running, a swift stalking run. 3. wind-up, bowstring drawn back to the cheek. 4. strike, the arrow just released, bow arm extended.
+The attached image is our game hero. Draw a sheet of this exact character: same face, body, outfit, colors, bow, quiver and proportions, nothing added or removed. A grid of 4 columns and 2 rows, the same four poses on each row, left to right: 1. idle, alert stance, bow held low. 2. running, a swift stalking run. 3. wind-up, bowstring drawn back to the cheek. 4. strike, the arrow just released, bow arm extended.
 Top row: three-quarter FRONT view. The character faces the viewer and the bottom-right corner of the image: we see the face, the chest and the front of the outfit.
 Bottom row: three-quarter BACK view. The character turns away from the viewer and faces the top-right corner of the image: we see the back of the head, the quiver on the back and the back of the outfit; the face is hidden. Back details stay consistent with the front (hair, cloak, quiver straps).
-2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Every figure fully visible with a wide empty margin around it, all figures at the same scale, feet on the same invisible baseline, evenly spaced and not touching. Landscape 16:9, highest resolution.
+2D hand-painted game sprite art in the exact style of the attached image: clean dark outlines, soft cel shading, rich but slightly muted colors, seen slightly from above. Flat uniform light grey background, no ground, no ground shadow, no text, no numbers, no labels, no frames, no painted effects (no motion trails, no smoke, no sparks, no glow, no speed lines). Each figure stands alone in its own invisible cell of the grid: the whole figure, weapon, cape and hair included, stays inside its cell with a wide empty margin of grey background on every side. Nothing overlaps or touches a neighbouring figure: no weapon, cape or limb crosses into another cell; draw long weapons angled up or down, or draw the figures smaller, rather than let them overlap. No grid lines drawn. All figures at the same scale, feet on the same invisible baseline on each row. Landscape 16:9, highest resolution.
 ```
 
 ## Kling
