@@ -1,6 +1,6 @@
 # Sprites peints (Nano Banana)
 
-Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Quatre commandes les préparent pour le jeu, une cinquième prépare les poses clés des héros pour Kling.
+Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Quatre commandes les préparent pour le jeu ; deux autres préparent les animations des héros (voir [Prompts des héros](Prompts%20h%C3%A9ros.md)).
 
 | Commande | Entrée | Sortie | Réglages |
 | --- | --- | --- | --- |
@@ -9,6 +9,7 @@ Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game vi
 | `npm run sols` | `sol_ile.jpg`, `sol_rizieres.jpg` (vus de dessus) | `public/sprites/sols/` | `tools/sols.mjs` |
 | `npm run icones` | `objets_planche.jpg` (tous les objets en grille) | `public/sprites/icones/<id>.png`, 128 × 128 | `tools/icones.json` |
 | `npm run poses -- <planche>` | une planche de poses clés (Nano Banana 2) | `poses/<planche>/pose-<n>.png`, une pose par image carrée, pour Kling | voir [Prompts des héros](Prompts%20h%C3%A9ros.md) |
+| `npm run kit-heros` | `~/Pictures/game visual/heros/<race>-<classe>/profil.jpg`, `face-dos.jpg` | un dossier par animation : poses de début et de fin, prompts | `tools/prompts-heros.mjs` |
 
 On peut ne traiter qu'une entrée : `npm run sprites -- decor/ema`, `npm run planches -- heros`.
 
