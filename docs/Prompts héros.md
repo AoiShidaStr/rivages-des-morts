@@ -150,7 +150,7 @@ Bottom row: three-quarter BACK view. The character turns away from the viewer an
 
 ## Kling
 
-Dans Kling : **Image vers vidéo**, option **Images de début et de fin** (Start & End Frames), **5 secondes**. Les images sont les poses des planches, chacune seule sur le fond gris (`npm run poses`, outil à écrire). Les prompts valent pour les trois vues : la pose jointe montre déjà dans quel sens regarde le héros.
+Dans Kling : **Image vers vidéo**, option **Images de début et de fin** (Start & End Frames), **5 secondes**. Les images sont les poses des planches, chacune seule sur le fond gris, découpées par `npm run poses` (voir plus bas). Les prompts valent pour les trois vues : la pose jointe montre déjà dans quel sens regarde le héros.
 
 | Vidéo | Image de début | Image de fin | Vues |
 | --- | --- | --- | --- |
@@ -284,8 +284,19 @@ The character makes an agile leap backward, knees tucked, bow in hand, then land
 
 ## Après Kling
 
-**Outils à écrire :**
-- `npm run poses` : découpe chaque pose d'une planche et la centre dans une image carrée sur le fond gris, prête pour Kling ;
-- `npm run videos` : extrait 8 à 16 images par vidéo (ffmpeg installé par npm, gratuit) et les passe à `npm run planches`, qui aligne déjà les pieds et l'axe du corps.
+**Découper les poses pour Kling :**
+
+```bash
+npm run poses -- "<planche ou dossier de planches>"
+```
+
+- **Résultat :** pour chaque planche, un dossier `poses/<planche>/` à côté d'elle, avec :
+  - `pose-1.png`, `pose-2.png`… : chaque pose seule au centre d'une image carrée de 1024 pixels, dans l'ordre de lecture (lignes de haut en bas, poses de gauche à droite) ;
+  - `apercu.jpg` : toutes les poses numérotées.
+- **Planche face et dos :** poses 1 à 4 de face, 5 à 8 de dos. Si le nom de la planche contient `face-dos`, les fichiers s'appellent directement `face-1`… et `dos-1`….
+- **Alignement :** toutes les poses d'une planche gardent la même échelle, les pieds à la même hauteur et le corps sur le même axe. Prises comme début et fin d'une vidéo, elles ne font donc pas sauter le personnage.
+- **Nombre de poses :** détecté tout seul, même quand Nano Banana en a dessiné plus ou moins que demandé. Si des figures se touchent trop et que le compte est faux, le donner à la main : `--grille 3x2` (colonnes x lignes). Autres options : `--taille 1024`, `--sortie <dossier>`.
+
+**Outil à écrire :** `npm run videos`, qui extraira 8 à 16 images par vidéo (ffmpeg installé par npm, gratuit) et les passera à `npm run planches`, qui aligne déjà les pieds et l'axe du corps.
 
 **Code du jeu :** il n'affiche aujourd'hui que le profil. Il faudra une animation par vue et le choix de la vue selon la direction du déplacement.
