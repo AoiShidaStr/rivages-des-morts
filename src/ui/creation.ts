@@ -7,6 +7,7 @@ import { h } from './dom';
 /**
  * Création du héros (GDD, multiclassage « à la création ») : une race, et pour le Demi-dieu son parent divin,
  * puis une classe. Tout tient sur un écran : on clique, le résumé en bas suit.
+ * Le même écran sert au moine du Rocher pour changer de race et de classe en cours de partie (`current`).
  */
 export class CreationScreen {
   private readonly root: HTMLDivElement;
@@ -16,10 +17,10 @@ export class CreationScreen {
     parent.append(this.root);
   }
 
-  show(skills: SkillsDef, items: Record<string, ItemDef>, onDone: (hero: Hero) => void, onBack: () => void): void {
+  show(skills: SkillsDef, items: Record<string, ItemDef>, onDone: (hero: Hero) => void, onBack: () => void, current?: Hero): void {
     const raceIds = Object.keys(skills.races);
     const classIds = Object.keys(skills.classes);
-    const hero: Hero = { race: raceIds[0], class: classIds[0] };
+    const hero: Hero = current ? { ...current } : { race: raceIds[0], class: classIds[0] };
 
     const render = () => {
       const race = skills.races[hero.race];
@@ -28,6 +29,7 @@ export class CreationScreen {
       if (!parents.length) delete hero.parent;
       const cls = skills.classes[hero.class];
       const parent = hero.parent ? race.parents?.[hero.parent] : undefined;
+      const unchanged = current !== undefined && hero.race === current.race && hero.parent === current.parent && hero.class === current.class;
 
       const raceCards = raceIds.map((id) => {
         const r = skills.races[id];
@@ -117,9 +119,15 @@ export class CreationScreen {
         h(
           'div',
           { class: 'creation-card' },
-          h('div', { class: 'title-seal' }, '魂'),
-          h('h1', {}, 'Qui étais-tu ?'),
-          h('p', { class: 'tagline' }, 'Ton âme a tout oublié, sauf ce qu’elle a été : un héritage, et une manière de se battre.'),
+          h('div', { class: 'title-seal' }, current ? '輪' : '魂'),
+          h('h1', {}, current ? 'Quelle autre vie ?' : 'Qui étais-tu ?'),
+          h(
+            'p',
+            { class: 'tagline' },
+            current
+              ? 'Ton âme a vécu plus d’une vie. Retrouve un autre héritage, une autre manière de te battre, ou les deux. Tes points de compétence te seront rendus.'
+              : 'Ton âme a tout oublié, sauf ce qu’elle a été : un héritage, et une manière de se battre.',
+          ),
           h('h2', {}, 'Race'),
           h('div', { class: 'choices' }, ...raceCards),
           parents.length
@@ -158,21 +166,24 @@ export class CreationScreen {
                   onBack();
                 },
               },
-              'Retour',
+              current ? 'Garder cette vie' : 'Retour',
             ),
             h(
               'button',
               {
                 class: 'btn primary',
+                disabled: unchanged,
                 onclick: () => {
                   this.hide();
                   onDone({ ...hero });
                 },
               },
-              `Commencer : ${cls.name} ${race.name}`,
+              unchanged ? 'C’est déjà ta vie' : current ? `Devenir ${cls.name} ${race.name}` : `Commencer : ${cls.name} ${race.name}`,
             ),
           ),
-          h('p', { class: 'footnote' }, 'Chaque classe possède son design peint et ses animations de combat dédiées'),
+          current
+            ? h('p', { class: 'footnote' }, 'Ton équipement, tes oboles et tes quêtes te suivent. Arme : la meilleure que tu possèdes pour cette classe.')
+            : h('p', { class: 'footnote' }, 'Chaque classe possède son design peint et ses animations de combat dédiées'),
         ),
       );
     };

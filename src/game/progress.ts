@@ -1,5 +1,7 @@
 // Progression conservée entre les sessions : oboles, objets, matériaux, quêtes et drapeaux.
 // Les dialogues et les quêtes (src/data) la lisent avec des conditions et la modifient avec des effets.
+// Chaque personnage a son emplacement de sauvegarde (saves.ts) ; `Progress` tient celui qu'on joue.
+import { LocalSaveStore, newSlotId, type SaveStore } from './saves';
 
 export type Slot = 'arme' | 'casque' | 'plastron' | 'jambieres' | 'bottes' | 'amulette' | 'relique';
 export type QuestStatus = 'none' | 'active' | 'done';
@@ -70,6 +72,8 @@ export interface Effect {
   openChests?: boolean;
   xp?: number;
   resetTalents?: boolean;
+  /** Ouvre le choix d'une autre race et d'une autre classe (le moine du Rocher). */
+  changeHero?: boolean;
 }
 
 /** Ce que l'interface doit faire après une suite d'effets. */
@@ -78,7 +82,8 @@ export type Action =
   | { kind: 'shop'; id: string }
   | { kind: 'forge' }
   | { kind: 'dungeon'; id: string }
-  | { kind: 'chests' };
+  | { kind: 'chests' }
+  | { kind: 'changeHero' };
 
 export interface Catalog {
   itemName(id: string): string;
@@ -94,7 +99,25 @@ export interface Catalog {
   triggers: { if: Condition[]; then: Effect[] }[];
 }
 
-const SAVE_KEY = 'rivages-des-morts:sauvegarde';
+/** Personnages que l'on peut garder en même temps. */
+export const MAX_CHARACTERS = 6;
+
+/** Un personnage sauvegardé, tel que le montre l'écran des personnages. */
+export interface CharacterSummary {
+  id: string;
+  hero: Hero;
+  level: number;
+  oboles: number;
+  savedAt: number;
+}
+
+/** Fichier d'export : la sauvegarde, marquée pour qu'on reconnaisse un fichier du jeu à l'import. */
+interface ExportFile {
+  jeu: 'rivages-des-morts';
+  format: 1;
+  exporte: string;
+  sauvegarde: ProgressState;
+}
 
 /** L'arme de départ du Guerrier. */
 export const STARTING_WEAPON = 'nodachi';
@@ -120,43 +143,110 @@ function fresh(): ProgressState {
 }
 
 export class Progress {
-  state: ProgressState;
+  state: ProgressState = fresh();
+  /** Emplacement du personnage joué ; null avant d'en avoir choisi ou créé un. */
+  slot: string | null = null;
 
-  private constructor(state: ProgressState, private readonly catalog: Catalog) {
+  private constructor(
+    private readonly catalog: Catalog,
+    private readonly store: SaveStore,
+  ) {}
+
+  /** Charge le dernier personnage joué, s'il y en a un. */
+  static load(catalog: Catalog, store: SaveStore = new LocalSaveStore()): Progress {
+    const progress = new Progress(catalog, store);
+    const last = progress.characters()[0];
+    if (last) progress.use(last.id, false);
+    return progress;
+  }
+
+  /** Les personnages sauvegardés, du plus récemment joué au plus ancien (les illisibles sont ignorés). */
+  characters(): CharacterSummary[] {
+    return this.store.list().flatMap(({ id, savedAt }) => {
+      const state = this.readSlot(id);
+      if (!state) return [];
+      return [{ id, hero: state.hero, level: this.catalog.levelFor(state.xp), oboles: state.oboles, savedAt }];
+    });
+  }
+
+  get canCreate(): boolean {
+    return this.characters().length < MAX_CHARACTERS;
+  }
+
+  /** Reprend un personnage sauvegardé ; `touch` le place en tête de liste (« Continuer »). */
+  use(id: string, touch = true): boolean {
+    const state = this.readSlot(id);
+    if (!state) return false;
     this.state = state;
+    this.slot = id;
+    if (touch) this.save();
+    return true;
   }
 
-  static load(catalog: Catalog): Progress {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as SavedState) : null;
-      if (parsed?.version === 1) return new Progress(migrate(parsed, catalog), catalog);
-    } catch {
-      // Sauvegarde illisible ou stockage indisponible : on repart de zéro.
-    }
-    return new Progress(fresh(), catalog);
-  }
-
-  static hasSave(): boolean {
-    try {
-      return localStorage.getItem(SAVE_KEY) !== null;
-    } catch {
-      return false;
-    }
+  /** Efface un personnage ; si c'est celui qu'on joue, plus aucun n'est choisi. */
+  remove(id: string): void {
+    this.store.remove(id);
+    if (this.slot !== id) return;
+    this.slot = null;
+    this.state = fresh();
   }
 
   save(): void {
-    try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(this.state));
-    } catch {
-      // Navigation privée ou stockage plein : la partie continue sans sauvegarde.
-    }
+    // Sans personnage choisi (tests lancés avec ?vague), rien n'est écrit.
+    if (this.slot) this.store.write(this.slot, this.state);
   }
 
-  /** Nouvelle partie : le héros choisi à la création, avec l'arme de départ de sa classe. */
+  /** Nouveau personnage, dans un nouvel emplacement : le héros choisi à la création, avec l'arme de départ de sa classe. */
   start(hero: Hero): void {
     const weapon = this.catalog.startingWeapon(hero.class);
     this.state = { ...fresh(), hero, items: [weapon], equipped: { arme: weapon }, itemLevels: { [weapon]: 1 } };
+    this.slot = newSlotId();
+    this.save();
+  }
+
+  /** Contenu du fichier d'export d'un personnage (JSON lisible). */
+  exportSlot(id: string): string | null {
+    const state = this.readSlot(id);
+    if (!state) return null;
+    const file: ExportFile = { jeu: 'rivages-des-morts', format: 1, exporte: new Date().toISOString(), sauvegarde: state };
+    return JSON.stringify(file, null, 2);
+  }
+
+  /**
+   * Ajoute un personnage depuis un fichier d'export (ou une ancienne sauvegarde brute) et renvoie son emplacement.
+   * Lève une erreur au message lisible si le fichier ne convient pas.
+   */
+  importSave(text: string): string {
+    if (!this.canCreate) throw new Error(`Tu as déjà ${MAX_CHARACTERS} personnages : supprimes-en un avant d'importer.`);
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Ce fichier n'est pas une sauvegarde de Rivages des Morts.");
+    }
+    const saved = isExportFile(data) ? data.sauvegarde : data;
+    if (!isSavedState(saved)) throw new Error("Ce fichier n'est pas une sauvegarde de Rivages des Morts.");
+    const id = newSlotId();
+    this.store.write(id, migrate(saved, this.catalog));
+    return id;
+  }
+
+  private readSlot(id: string): ProgressState | null {
+    const saved = this.store.read(id);
+    return isSavedState(saved) ? migrate(saved, this.catalog) : null;
+  }
+
+  /**
+   * Changement de race et de classe en cours de partie : les talents de l'ancienne classe sont rendus, et le héros
+   * prend `weapon`, une arme de sa classe (reçue si elle lui manque). Le reste de la progression est gardé.
+   */
+  changeHero(hero: Hero, weapon: string): void {
+    const { state } = this;
+    state.hero = { ...hero };
+    state.talents = [];
+    this.acquire(weapon);
+    state.itemLevels[weapon] ??= 1;
+    state.equipped.arme = weapon;
     this.save();
   }
 
@@ -316,6 +406,7 @@ export class Progress {
     }
     if (e.enterDungeon) actions.push({ kind: 'dungeon', id: e.enterDungeon === true ? 'rizieres' : e.enterDungeon });
     if (e.openChests) actions.push({ kind: 'chests' });
+    if (e.changeHero) actions.push({ kind: 'changeHero' });
   }
 }
 
@@ -335,6 +426,16 @@ type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeons' | 'hero'> &
     /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
     dungeon?: DungeonRecord;
   };
+
+function isSavedState(value: unknown): value is SavedState {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Partial<SavedState>;
+  return v.version === 1 && Array.isArray(v.items);
+}
+
+function isExportFile(value: unknown): value is ExportFile {
+  return typeof value === 'object' && value !== null && (value as Partial<ExportFile>).jeu === 'rivages-des-morts';
+}
 
 function migrate(saved: SavedState, catalog: Catalog): ProgressState {
   const { weaponLevel, weaponLevels, dungeon, ...rest } = saved;

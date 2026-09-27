@@ -147,8 +147,11 @@ export interface PaladinConfig {
 export interface RangerConfig {
   /** La portée des flèches est celle de l'arme (`attack.range`). */
   arrow: { speed: number; radius: number };
-  /** Clic droit maintenu : la flèche se charge, de 1 à `maxFactor` fois les dégâts. */
-  charged: { time: number; maxFactor: number; moveFactor: number; rangeFactor: number; speedFactor: number };
+  /**
+   * Clic droit maintenu : la flèche se charge, de `minFactor` à `maxFactor` fois les dégâts, selon la charge.
+   * Une flèche lâchée aussitôt ne fait presque rien : on ne peut pas mitrailler au clic droit en marchant.
+   */
+  charged: { time: number; minFactor: number; maxFactor: number; moveFactor: number; rangeFactor: number; speedFactor: number };
   /** A : flèche qui immobilise les ennemis autour de l'impact. */
   net: { cooldown: number; stun: number; radius: number; range: number };
   /** E : la cible prend plus de dégâts, de toutes les sources. */
