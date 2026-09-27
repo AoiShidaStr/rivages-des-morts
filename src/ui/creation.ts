@@ -7,7 +7,7 @@ import { h } from './dom';
 /**
  * Création du héros (GDD, multiclassage « à la création ») : une race, et pour le Demi-dieu son parent divin,
  * puis une classe. Tout tient sur un écran : on clique, le résumé en bas suit.
- * Le même écran sert au moine du Rocher pour changer de classe en cours de partie (`current`) : la race est gardée.
+ * Le même écran sert au moine du Rocher pour changer de race et de classe en cours de partie (`current`).
  */
 export class CreationScreen {
   private readonly root: HTMLDivElement;
@@ -29,7 +29,7 @@ export class CreationScreen {
       if (!parents.length) delete hero.parent;
       const cls = skills.classes[hero.class];
       const parent = hero.parent ? race.parents?.[hero.parent] : undefined;
-      const unchanged = current !== undefined && hero.class === current.class;
+      const unchanged = current !== undefined && hero.race === current.race && hero.parent === current.parent && hero.class === current.class;
 
       const raceCards = raceIds.map((id) => {
         const r = skills.races[id];
@@ -125,12 +125,12 @@ export class CreationScreen {
             'p',
             { class: 'tagline' },
             current
-              ? 'Ton âme a vécu plus d’une vie. Ton héritage reste le même, mais tu peux retrouver une autre manière de te battre. Tes points de compétence te seront rendus.'
+              ? 'Ton âme a vécu plus d’une vie. Retrouve un autre héritage, une autre manière de te battre, ou les deux. Tes points de compétence te seront rendus.'
               : 'Ton âme a tout oublié, sauf ce qu’elle a été : un héritage, et une manière de se battre.',
           ),
-          current ? null : h('h2', {}, 'Race'),
-          current ? null : h('div', { class: 'choices' }, ...raceCards),
-          parents.length && !current
+          h('h2', {}, 'Race'),
+          h('div', { class: 'choices' }, ...raceCards),
+          parents.length
             ? h(
                 'div',
                 { class: 'parents' },
@@ -178,7 +178,7 @@ export class CreationScreen {
                   onDone({ ...hero });
                 },
               },
-              unchanged ? `Tu es déjà ${cls.name}` : current ? `Devenir ${cls.name}` : `Commencer : ${cls.name} ${race.name}`,
+              unchanged ? 'C’est déjà ta vie' : current ? `Devenir ${cls.name} ${race.name}` : `Commencer : ${cls.name} ${race.name}`,
             ),
           ),
           current

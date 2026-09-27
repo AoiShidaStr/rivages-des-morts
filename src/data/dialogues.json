@@ -503,8 +503,8 @@
         "lines": [["moine", "Trois pages : près de la cascade, dans les rizières, et devant le torii noir. ({sutra_pages} / 3)"]],
         "choices": [
           {
-            "text": "Retrouver une autre vie (changer de classe)",
-            "then": [{ "changeClass": true }],
+            "text": "Retrouver une autre vie (changer de race ou de classe)",
+            "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
           },
           { "text": "Au revoir" }
@@ -515,8 +515,8 @@
         "lines": [["moine", "Ne la regarde pas, quoi qu'elle te dise. Et souviens-toi des pêches."]],
         "choices": [
           {
-            "text": "Retrouver une autre vie (changer de classe)",
-            "then": [{ "changeClass": true }],
+            "text": "Retrouver une autre vie (changer de race ou de classe)",
+            "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
           },
           { "text": "Au revoir" }
@@ -527,8 +527,8 @@
         "lines": [["moine", "Certains disent qu'on entend encore Izanami, si on colle l'oreille contre la pierre. Moi, je n'ose pas."]],
         "choices": [
           {
-            "text": "Retrouver une autre vie (changer de classe)",
-            "then": [{ "changeClass": true }],
+            "text": "Retrouver une autre vie (changer de race ou de classe)",
+            "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
           },
           { "text": "Au revoir" }
@@ -538,8 +538,8 @@
         "lines": [["moine", "Tu l'as entendue, n'est-ce pas ? Ne l'écoute pas trop longtemps. Les voix du Yomi retiennent ceux qui les écoutent."]],
         "choices": [
           {
-            "text": "Retrouver une autre vie (changer de classe)",
-            "then": [{ "changeClass": true }],
+            "text": "Retrouver une autre vie (changer de race ou de classe)",
+            "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
           },
           { "text": "Au revoir" }

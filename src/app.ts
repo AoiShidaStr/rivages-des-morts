@@ -383,8 +383,8 @@ export class App {
         case 'chests':
           this.openChests();
           break;
-        case 'changeClass':
-          await this.changeClass();
+        case 'changeHero':
+          await this.changeHero();
           break;
         case 'dungeon': {
           // Le joueur choisit le niveau du donjon avant d'y entrer.
@@ -397,20 +397,20 @@ export class App {
   }
 
   /**
-   * Le moine du Rocher, comme Withers dans Baldur's Gate 3 : on reprend le choix de la classe à l'écran de création.
-   * La race, l'équipement, les oboles et les quêtes sont gardés ; les points de compétence sont rendus.
+   * Le moine du Rocher, comme Withers dans Baldur's Gate 3 : on reprend le choix de la race et de la classe à l'écran
+   * de création. L'équipement, les oboles et les quêtes sont gardés ; les points de compétence sont rendus.
    */
-  private changeClass(): Promise<void> {
+  private changeHero(): Promise<void> {
     const { progress } = this.d;
     return new Promise((resolve) => {
       this.creation.show(
         content.skills,
         content.items,
         (hero) => {
-          const cls = heroClass(content.skills, hero);
-          progress.changeClass(hero.class, classWeapon(content.items, progress.state, cls));
+          const weapon = classWeapon(content.items, progress.state, heroClass(content.skills, hero));
+          progress.changeHero(hero, weapon);
           this.setHero();
-          this.screens.toast(`Tu te souviens de ta vie de ${cls.name}. Tes points de compétence te sont rendus.`, 'quest');
+          this.screens.toast(`Une autre vie te revient : ${heroLabel(content.skills, hero)}. Tes points de compétence te sont rendus.`, 'quest');
           resolve();
         },
         resolve,

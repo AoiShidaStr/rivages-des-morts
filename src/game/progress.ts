@@ -72,8 +72,8 @@ export interface Effect {
   openChests?: boolean;
   xp?: number;
   resetTalents?: boolean;
-  /** Ouvre le choix d'une autre classe (le moine du Rocher). */
-  changeClass?: boolean;
+  /** Ouvre le choix d'une autre race et d'une autre classe (le moine du Rocher). */
+  changeHero?: boolean;
 }
 
 /** Ce que l'interface doit faire après une suite d'effets. */
@@ -83,7 +83,7 @@ export type Action =
   | { kind: 'forge' }
   | { kind: 'dungeon'; id: string }
   | { kind: 'chests' }
-  | { kind: 'changeClass' };
+  | { kind: 'changeHero' };
 
 export interface Catalog {
   itemName(id: string): string;
@@ -237,12 +237,12 @@ export class Progress {
   }
 
   /**
-   * Changement de classe en cours de partie : les talents de l'ancienne classe sont rendus, et le héros prend
-   * `weapon`, une arme de sa nouvelle classe (reçue si elle lui manque). Le reste de la progression est gardé.
+   * Changement de race et de classe en cours de partie : les talents de l'ancienne classe sont rendus, et le héros
+   * prend `weapon`, une arme de sa classe (reçue si elle lui manque). Le reste de la progression est gardé.
    */
-  changeClass(heroClass: string, weapon: string): void {
+  changeHero(hero: Hero, weapon: string): void {
     const { state } = this;
-    state.hero = { ...state.hero, class: heroClass };
+    state.hero = { ...hero };
     state.talents = [];
     this.acquire(weapon);
     state.itemLevels[weapon] ??= 1;
@@ -406,7 +406,7 @@ export class Progress {
     }
     if (e.enterDungeon) actions.push({ kind: 'dungeon', id: e.enterDungeon === true ? 'rizieres' : e.enterDungeon });
     if (e.openChests) actions.push({ kind: 'chests' });
-    if (e.changeClass) actions.push({ kind: 'changeClass' });
+    if (e.changeHero) actions.push({ kind: 'changeHero' });
   }
 }
 
