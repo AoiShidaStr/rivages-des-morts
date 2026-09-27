@@ -3,10 +3,10 @@ import { content, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
-import { buildLoadout, classWeapon, heroClass, levelProgress, type Loadout } from './game/loadout';
+import { buildLoadout, classWeapon, heroClass, heroLabel, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, salvage, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
-import { Progress, bindSelf, type Action } from './game/progress';
+import { MAX_CHARACTERS, bindSelf, type Action, type Progress } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import { World } from './game/world';
 import type { Input } from './input';
@@ -14,6 +14,7 @@ import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import { AIM_HEIGHT, type Renderer } from './render/renderer';
+import { openCharacters } from './ui/characters';
 import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
 import {
@@ -212,19 +213,46 @@ export class App {
 
   private showTitle(): void {
     this.setMode('title');
-    const hasSave = Progress.hasSave();
+    const characters = this.d.progress.characters();
+    const last = characters[0];
     const options: MenuOption[] = [];
-    if (hasSave) options.push({ label: 'Continuer', primary: true, action: () => void this.beginIsland(false) });
-    options.push({
-      label: hasSave ? 'Nouvelle partie (efface la sauvegarde)' : 'Nouvelle partie',
-      primary: !hasSave,
-      action: () => this.createHero(),
-    });
+    if (last) {
+      options.push({ label: `Continuer : ${heroLabel(content.skills, last.hero)}, niv. ${last.level}`, primary: true, action: () => this.play(last.id) });
+    }
+    options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
+    options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
     this.screens.showTitle(options);
   }
 
-  /** Nouvelle partie : on choisit d'abord sa race et sa classe. */
+  /** Les personnages sauvegardés : en reprendre un, en créer, exporter, importer, supprimer. */
+  private openCharacters(): void {
+    openCharacters(
+      this.panels,
+      this.ui,
+      {
+        play: (id) => {
+          this.panels.close();
+          this.play(id);
+        },
+        create: () => {
+          this.panels.close();
+          this.createHero();
+        },
+      },
+      () => this.showTitle(),
+    );
+  }
+
+  private play(id: string): void {
+    if (this.d.progress.use(id)) void this.beginIsland(false);
+  }
+
+  /** Nouveau personnage, dans un emplacement libre : on choisit d'abord sa race et sa classe. */
   private createHero(): void {
+    if (!this.d.progress.canCreate) {
+      this.screens.toast(`${MAX_CHARACTERS} personnages au plus : supprimes-en un dans « Personnages » pour en créer un autre.`);
+      return;
+    }
     this.screens.hideTitle();
     this.creation.show(
       content.skills,

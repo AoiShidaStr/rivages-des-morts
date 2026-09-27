@@ -98,6 +98,9 @@ const ANY_CLASS = 'Tous';
 export const heroRace = (skills: SkillsDef, hero: Hero): RaceDef => skills.races[hero.race] ?? Object.values(skills.races)[0];
 export const heroClass = (skills: SkillsDef, hero: Hero): ClassDef => skills.classes[hero.class] ?? Object.values(skills.classes)[0];
 
+/** « Rôdeur Hanyō » : la classe puis la race, comme à la création. */
+export const heroLabel = (skills: SkillsDef, hero: Hero): string => `${heroClass(skills, hero).name} ${heroRace(skills, hero).name}`;
+
 /** Passifs de la race, parent divin compris. */
 export function racePassives(skills: SkillsDef, hero: Hero): Passive[] {
   const race = heroRace(skills, hero);
