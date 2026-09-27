@@ -18,6 +18,7 @@ La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisi
 2. **Explore l'île** : parle aux habitants avec <kbd>E</kbd>. Un **!** au-dessus d'un personnage veut dire qu'il a quelque chose pour toi. Ta quête en cours s'affiche en haut à droite (<kbd>J</kbd> pour toutes les voir).
 3. **Entre dans le donjon** : le torii noir, au nord-ouest de l'île, mène aux Rizières noyées. Six vagues de yokai t'attendent, puis la Jorōgumo, une araignée géante en trois phases. À l'entrée, choisis le niveau du donjon : les yokai y sont plus forts que toi, et ils se renforcent plus vite que toi d'un niveau à l'autre. Une victoire ouvre les niveaux suivants jusqu'au prochain multiple de 5 (gagne au niveau 1 et tu peux tenter directement le niveau 5).
 4. **Reviens plus fort** : tu gardes ton butin même si tu meurs. Ouvre tes coffres sur la barque de Charon, achète et forge de l'équipement puis équipe-le (<kbd>I</kbd>), dépense tes points de compétence (<kbd>K</kbd>), puis retente ta chance.
+5. **Change de classe** : le moine du Rocher t'aide à retrouver une autre vie. Tu gardes ta race, ton équipement et ta progression ; tes points de compétence te sont rendus.
 
 ### Races et classes
 

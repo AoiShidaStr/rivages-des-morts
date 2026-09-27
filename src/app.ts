@@ -3,7 +3,7 @@ import { content, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
-import { buildLoadout, heroClass, levelProgress, type Loadout } from './game/loadout';
+import { buildLoadout, classWeapon, heroClass, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, salvage, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
 import { Progress, bindSelf, type Action } from './game/progress';
@@ -355,6 +355,9 @@ export class App {
         case 'chests':
           this.openChests();
           break;
+        case 'changeClass':
+          await this.changeClass();
+          break;
         case 'dungeon': {
           // Le joueur choisit le niveau du donjon avant d'y entrer.
           const id = action.id;
@@ -363,6 +366,29 @@ export class App {
         }
       }
     }
+  }
+
+  /**
+   * Le moine du Rocher, comme Withers dans Baldur's Gate 3 : on reprend le choix de la classe à l'écran de création.
+   * La race, l'équipement, les oboles et les quêtes sont gardés ; les points de compétence sont rendus.
+   */
+  private changeClass(): Promise<void> {
+    const { progress } = this.d;
+    return new Promise((resolve) => {
+      this.creation.show(
+        content.skills,
+        content.items,
+        (hero) => {
+          const cls = heroClass(content.skills, hero);
+          progress.changeClass(hero.class, classWeapon(content.items, progress.state, cls));
+          this.setHero();
+          this.screens.toast(`Tu te souviens de ta vie de ${cls.name}. Tes points de compétence te sont rendus.`, 'quest');
+          resolve();
+        },
+        resolve,
+        progress.state.hero,
+      );
+    });
   }
 
   /** Les coffres gagnés en combat s'ouvrent sur la barque de Charon, comme dans Waven. */

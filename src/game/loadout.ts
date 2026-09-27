@@ -110,6 +110,13 @@ export function canWield(def: ItemDef, cls: ClassDef): boolean {
   return def.slot !== 'arme' || !def.tags?.length || def.tags.some((t) => t === cls.tag.name || t === ANY_CLASS);
 }
 
+/** Arme prise en changeant de classe : la plus forgée de celles qu'on possède pour elle, sinon son arme de départ. */
+export function classWeapon(items: Record<string, ItemDef>, state: ProgressState, cls: ClassDef): string {
+  const owned = state.items.filter((id) => items[id]?.slot === 'arme' && canWield(items[id], cls));
+  owned.sort((a, b) => itemLevel(state, b) - itemLevel(state, a));
+  return owned[0] ?? cls.weapon;
+}
+
 /** Niveau de forge d'un objet (1 tant qu'il n'a pas été amélioré). */
 export const itemLevel = (state: ProgressState, id: string): number => state.itemLevels[id] ?? 1;
 
