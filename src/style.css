@@ -199,6 +199,10 @@ kbd {
   font-size: 9px;
 }
 
+.bar.ally .label.lag {
+  color: #ffb36b;
+}
+
 .bar.rage.ready {
   box-shadow: 0 0 12px var(--rage);
 }

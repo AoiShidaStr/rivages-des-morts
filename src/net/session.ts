@@ -1,7 +1,20 @@
 // Une partie en coop : le salon, puis les descentes. L'hôte garde la liste des joueurs et lance la descente ;
 // pendant le combat, il reçoit les commandes des invités et leur renvoie l'état de la partie.
-import type { InputFrame } from '../game/types';
-import { MAX_PLAYERS, PROTOCOL, type Announce, type InputPacket, type Lobby, type LobbyPlayer, type Member, type Start, type StatePacket } from './protocol';
+import {
+  MAX_PLAYERS,
+  PROTOCOL,
+  packSnapshot,
+  unpackSnapshot,
+  type Announce,
+  type EventPacket,
+  type InputPacket,
+  type Lobby,
+  type LobbyPlayer,
+  type Member,
+  type SharedSnap,
+  type Snapshot,
+  type Start,
+} from './protocol';
 import { openRoom, type Json, type Network, type Room } from './transport';
 
 /** Lettres des codes : ni 0 ni O, ni 1 ni I, pour qu'on ne les confonde pas en les dictant. */
@@ -12,6 +25,8 @@ const JOIN_TIMEOUT = 20_000;
 /** Une partie publique s'annonce toutes les `ANNOUNCE_EVERY` ms, et disparaît de la liste sans nouvelle depuis `ANNOUNCE_TTL`. */
 const ANNOUNCE_EVERY = 3_000;
 const ANNOUNCE_TTL = 10_000;
+/** Un invité mesure son ping toutes les `PING_EVERY` ms. */
+const PING_EVERY = 1_000;
 
 export const newCode = (): string =>
   Array.from({ length: CODE_LENGTH }, () => CODE_LETTERS[Math.floor(Math.random() * CODE_LETTERS.length)]).join('');
@@ -32,10 +47,12 @@ export interface SessionEvents {
   lobby?(lobby: Lobby): void;
   /** La descente commence. */
   start?(start: Start): void;
-  /** Invité : l'état de la partie envoyé par l'hôte. */
-  state?(packet: StatePacket): void;
+  /** Invité : un instantané de la partie envoyé par l'hôte. */
+  state?(snap: Snapshot): void;
+  /** Invité : les événements du combat. */
+  events?(packet: EventPacket): void;
   /** Hôte : les commandes d'un invité, à sa place. */
-  input?(seat: number, frame: InputFrame): void;
+  input?(seat: number, packet: InputPacket): void;
   /** Hôte, en pleine descente : un invité est parti. */
   left?(seat: number): void;
   /** La session est finie : on l'a quittée, l'hôte est parti, ou il a refusé. */
@@ -52,7 +69,12 @@ export class CoopSession {
   private board: PublicBoard | null = null;
   private announcer = 0;
   private joinTimer = 0;
+  private pinger = 0;
   private done = false;
+  /** Numéro de la dernière descente lancée par l'hôte. */
+  private run = 0;
+  /** Invité : aller-retour jusqu'à l'hôte (ms), lissé. */
+  ping = 0;
 
   private constructor(
     readonly role: 'host' | 'guest',
@@ -131,10 +153,12 @@ export class CoopSession {
       }
       this.broadcastLobby();
     });
-    room.on('input', (data, from) => {
+    room.on('in', (data, from) => {
       const seat = this.seats.get(from);
-      if (seat !== undefined) this.handlers.input?.(seat, data as unknown as InputPacket);
+      if (seat !== undefined && data && typeof data === 'object') this.handlers.input?.(seat, data as unknown as InputPacket);
     });
+    // L'invité mesure son ping : on lui renvoie aussitôt son message.
+    room.on('ping', (data, from) => room.sendFast('pong', data, from));
     room.onPeerLeave((peer) => {
       if (!this.members.delete(peer)) return;
       this.lobby.players = this.lobby.players.filter((p) => p.peer !== peer);
@@ -190,14 +214,22 @@ export class CoopSession {
     });
     this.lobby.inGame = true;
     this.broadcastLobby();
-    const start = (seat: number): Start => ({ dungeon: this.lobby.dungeon, level: this.lobby.level, seat, heroes });
+    const run = ++this.run;
+    const start = (seat: number): Start => ({ run, dungeon: this.lobby.dungeon, level: this.lobby.level, seat, heroes });
     for (const [peer, seat] of this.seats) if (seat > 0) this.room.send('start', start(seat) as unknown as Json, peer);
     return start(0);
   }
 
-  /** Hôte : l'état de la partie, pour tous les invités. */
-  sendState(packet: StatePacket): void {
-    this.room.send('state', packet as unknown as Json);
+  /** Hôte : un instantané pour chaque invité, avec la dernière de ses commandes jouée. */
+  sendSnapshots(shared: SharedSnap, run: number, ack: (seat: number) => number): void {
+    for (const [peer, seat] of this.seats) {
+      if (seat > 0 && this.members.has(peer)) this.room.sendFast('snap', packSnapshot(shared, run, seat, ack(seat)), peer);
+    }
+  }
+
+  /** Hôte : les événements du combat, pour tous les invités (canal sûr). */
+  sendEvents(packet: EventPacket): void {
+    this.room.send('evts', packet as unknown as Json);
   }
 
   /** Hôte : la descente est finie, on revient au salon (les invités doivent se redire prêts). */
@@ -234,9 +266,22 @@ export class CoopSession {
     room.on('start', (data, from) => {
       if (from === this.hostPeer) this.handlers.start?.(data as unknown as Start);
     });
-    room.on('state', (data, from) => {
-      if (from === this.hostPeer) this.handlers.state?.(data as unknown as StatePacket);
+    room.on('snap', (data, from) => {
+      if (from !== this.hostPeer) return;
+      const snap = unpackSnapshot(data);
+      if (snap) this.handlers.state?.(snap);
     });
+    room.on('evts', (data, from) => {
+      if (from === this.hostPeer) this.handlers.events?.(data as unknown as EventPacket);
+    });
+    room.on('pong', (data, from) => {
+      if (from !== this.hostPeer || typeof data !== 'number') return;
+      const rtt = performance.now() - data;
+      this.ping = this.ping ? this.ping + (rtt - this.ping) * 0.3 : rtt;
+    });
+    this.pinger = window.setInterval(() => {
+      if (this.hostPeer) room.sendFast('ping', performance.now(), this.hostPeer);
+    }, PING_EVERY);
     room.onPeerLeave((peer) => {
       if (peer === this.hostPeer) this.close('L’hôte a quitté la partie.');
     });
@@ -249,8 +294,8 @@ export class CoopSession {
   }
 
   /** Invité : ses commandes de ce pas, pour l'hôte. */
-  sendInput(frame: InputFrame): void {
-    if (this.hostPeer) this.room.send('input', frame as unknown as Json, this.hostPeer);
+  sendInput(packet: InputPacket): void {
+    if (this.hostPeer) this.room.sendFast('in', packet as unknown as Json, this.hostPeer);
   }
 
   // --- Fin ---------------------------------------------------------------------
@@ -265,6 +310,7 @@ export class CoopSession {
     this.done = true;
     window.clearTimeout(this.joinTimer);
     window.clearInterval(this.announcer);
+    window.clearInterval(this.pinger);
     this.board?.close();
     this.room.leave();
     this.handlers.closed?.(reason);

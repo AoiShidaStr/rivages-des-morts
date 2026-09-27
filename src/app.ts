@@ -1,4 +1,5 @@
 import type { Engine } from '@babylonjs/core';
+import { whileHidden } from './background';
 import { content, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
@@ -12,11 +13,11 @@ import { MAX_CHARACTERS, bindSelf, type Action, type Progress } from './game/pro
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import type { WorldView } from './game/view';
 import { World } from './game/world';
-import { idleFrame, mergeFrames, played } from './net/frames';
+import { InputSender, RemoteInput, idleFrame } from './net/frames';
 import { MirrorWorld } from './net/mirror';
-import { SNAPSHOT_EVERY, snapshotOf, type Member, type Start } from './net/protocol';
+import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
 import type { CoopSession } from './net/session';
-import type { Network } from './net/transport';
+import { traffic, type Network } from './net/transport';
 import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
@@ -112,15 +113,16 @@ export class App {
   private mirror: MirrorWorld | null = null;
   private lobbyOpen = false;
   private refreshLobby: (() => void) | null = null;
-  /** Hôte : dernière commande de chaque invité (avec ses appuis pas encore joués), pas de simulation, événements à envoyer. */
-  private readonly remote = new Map<number, InputFrame>();
+  /** Numéro de la descente en coop : les paquets d'une descente précédente sont ignorés. */
+  private coopRun = 0;
+  /** Hôte : les commandes de chaque invité, pas de simulation, événements à envoyer. */
+  private readonly remote = new Map<number, RemoteInput>();
   private hostTick = 0;
   private sentTick = 0;
   private outbox: GameEvent[] = [];
-  /** Invité : événements reçus de l'hôte, pas encore montrés ; commande en attente d'envoi. */
+  /** Invité : événements reçus de l'hôte, pas encore montrés ; ses commandes numérotées, une par pas. */
   private inbox: GameEvent[] = [];
-  private pending: InputFrame | undefined;
-  private sentAt = 0;
+  private sender: InputSender | null = null;
   /** Un dialogue, une transition ou une action à plusieurs étapes est en cours. */
   private busy = false;
   private accumulator = 0;
@@ -158,6 +160,10 @@ export class App {
     if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
     this.d.engine.runRenderLoop(() => this.frame());
+    // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
+    whileHidden(() => {
+      if (this.coop?.isHost && this.world && this.mode === 'dungeon') this.frame();
+    });
   }
 
   /** Accès depuis la console, en développement. */
@@ -174,6 +180,8 @@ export class App {
       get mirror() {
         return app.mirror;
       },
+      /** Octets échangés en coop depuis l'ouverture de la page. */
+      traffic,
       get island() {
         return app.d.island;
       },
@@ -548,7 +556,8 @@ export class App {
       while (this.accumulator >= STEP && steps < MAX_STEPS_PER_FRAME) {
         const mine = this.screens.paused ? idleFrame(world.player.pos) : this.readCombatInput(world);
         if (online) {
-          world.update(STEP, [mine, ...world.players.slice(1).map((hero) => this.remoteInput(hero.id, hero.pos))]);
+          const now = performance.now();
+          world.update(STEP, [mine, ...world.players.slice(1).map((hero) => this.remote.get(hero.id)?.frame(hero.pos, now) ?? idleFrame(hero.pos))]);
           this.hostTick++;
         } else {
           world.update(STEP, this.bots.length ? [mine, ...this.bots.map((bot) => bot.input())] : mine);
@@ -572,8 +581,10 @@ export class App {
       else if (event.type === 'smash') this.hitstop = 0.04;
     }
     dungeonRenderer.sync(world, events, dt);
+    if (online) hud.pings = world.players.slice(1).map((hero) => this.remote.get(hero.id)?.ping);
     hud.update(world, events, dt);
-    dungeonRenderer.render();
+    // Onglet caché : l'hôte fait avancer le combat pour ses amis, sans rien dessiner.
+    if (!document.hidden) dungeonRenderer.render();
     if (this.outcome) this.finishDungeon(this.outcome);
   }
 
@@ -589,47 +600,53 @@ export class App {
 
   // --- Coop en ligne ---------------------------------------------------------------
 
-  /** Hôte : la commande de l'invité à cette place (immobile s'il n'en a pas encore envoyé). */
-  private remoteInput(seat: number, pos: Vec2): InputFrame {
-    const frame = this.remote.get(seat);
-    if (!frame) return idleFrame(pos);
-    this.remote.set(seat, played(frame));
-    return frame;
-  }
-
-  /** Hôte : les événements de la partie partent avec le prochain instantané, vingt fois par seconde. */
+  /**
+   * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
+   * depuis le précédent (canal sûr).
+   */
   private shareState(world: World, events: GameEvent[]): void {
     const session = this.coop;
     if (!session) return;
     this.outbox.push(...events);
     const ended = events.some((e) => e.type === 'end');
     if (this.hostTick - this.sentTick < SNAPSHOT_EVERY && !ended) return;
-    session.sendState({ snap: snapshotOf(world, this.hostTick), events: this.outbox });
+    if (this.outbox.length) session.sendEvents({ run: this.coopRun, tick: this.hostTick, events: this.outbox });
+    session.sendSnapshots(shareSnapshot(world, this.hostTick), this.coopRun, (seat) => this.remote.get(seat)?.applied ?? 0);
     this.outbox = [];
     this.sentTick = this.hostTick;
   }
 
-  /** Invité : envoie ses commandes à l'hôte et montre la partie telle qu'il la décrit. */
+  /** Invité : envoie ses commandes à l'hôte, une par pas comme chez l'hôte, et montre la partie telle qu'il la décrit. */
   private updateGuest(dt: number): void {
     const mirror = this.mirror;
+    const session = this.coop;
     if (!mirror) return;
     const { input, dungeonRenderer, hud } = this.d;
     const now = performance.now();
-    const frame = this.screens.paused ? idleFrame(mirror.player.pos) : this.readCombatInput(mirror);
-    input.flush();
-    this.pending = mergeFrames(this.pending, frame);
-    // Au plus soixante commandes par seconde, même sur un écran plus rapide : les appuis s'accumulent entre deux.
-    if (this.coop && now - this.sentAt >= 1000 / 60 - 1) {
-      this.coop.sendInput(this.pending);
-      this.pending = undefined;
-      this.sentAt = now;
+    this.accumulator += dt;
+    let steps = 0;
+    let packet: InputPacket | null = null;
+    while (this.accumulator >= STEP && steps < MAX_STEPS_PER_FRAME) {
+      const frame = this.screens.paused ? idleFrame(mirror.player.pos) : this.readCombatInput(mirror);
+      if (this.sender) {
+        packet = this.sender.next(frame, session?.ping ?? 0);
+        mirror.record(packet.seq, frame);
+      }
+      this.accumulator -= STEP;
+      steps++;
     }
+    if (steps === MAX_STEPS_PER_FRAME) this.accumulator = 0;
+    if (steps > 0) input.flush();
+    // La dernière commande suffit : elle porte la direction du moment et le compte de tous les appuis.
+    if (packet) session?.sendInput(packet);
     mirror.update(now);
     const events = this.inbox;
     this.inbox = [];
     for (const event of events) this.track(event);
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
+      // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
+      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 ? session?.ping : undefined));
       hud.update(mirror, events, dt);
     }
     dungeonRenderer.render();
@@ -675,11 +692,11 @@ export class App {
         if (this.lobbyOpen) this.refreshLobby?.();
       },
       start: (start) => void this.startCoop(start),
-      state: (packet) => {
-        this.mirror?.push(packet.snap, performance.now());
-        this.inbox.push(...packet.events);
+      state: (snap) => this.mirror?.push(snap, performance.now()),
+      events: (packet) => {
+        if (this.mirror && packet.run === this.mirror.run) this.inbox.push(...packet.events);
       },
-      input: (seat, frame) => this.remote.set(seat, mergeFrames(this.remote.get(seat), frame)),
+      input: (seat, packet) => this.remote.get(seat)?.receive(packet, performance.now()),
       left: (seat) => this.world?.retire(seat),
       closed: (reason) => this.sessionClosed(session, reason),
     };
@@ -729,19 +746,22 @@ export class App {
     const configs = start.heroes.map((hero) => hero.config);
     const others = start.heroes.filter((_, seat) => seat !== start.seat);
     await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${level} · ${start.heroes.length} héros`, () => {
+      this.coopRun = start.run;
       if (session.isHost) {
         const difficulty = difficultyFor(content.difficulty, level, configs.length);
         this.world = new World({ ...this.d.config, ...dungeon.arena, player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
         this.remote.clear();
+        for (let seat = 1; seat < configs.length; seat++) this.remote.set(seat, new RemoteInput(start.run));
         this.hostTick = 0;
         this.sentTick = 0;
         this.outbox = [];
       } else {
         this.world = null;
-        this.mirror = new MirrorWorld(configs, start.seat, dungeon.arena.webs.burnTime, level);
+        const arena = { halfSize: dungeon.arena.arenaHalfSize, webSlow: dungeon.arena.webs.slowFactor, webBurnTime: dungeon.arena.webs.burnTime };
+        this.mirror = new MirrorWorld(configs, start.seat, start.run, arena, level);
+        this.sender = new InputSender(start.run);
         this.inbox = [];
-        this.pending = undefined;
       }
       this.bots = [];
       this.prepareDungeon(dungeon, level, others);

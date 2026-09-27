@@ -33,7 +33,10 @@ Pendant la descente :
 - Chacun garde son butin, ses oboles et son expérience. Une victoire ouvre les niveaux suivants pour tous.
 - Les yokai ont plus de PV à plusieurs, et chaque vague compte un yokai de plus par joueur.
 - Un héros à 0 PV tombe **à terre**. Reste 4 s à côté de lui pour le relever, ou utilise Relever du Paladin. La descente échoue seulement quand tout le monde est à terre.
-- Le combat tourne chez l'hôte : il doit **garder l'onglet du jeu au premier plan**, sinon le navigateur ralentit la partie pour tous. Si l'hôte quitte, la descente s'arrête, mais chacun garde ce qu'il a ramassé.
+- Le combat tourne chez l'hôte. Il continue même si l'hôte passe sur un autre onglet ou une autre fenêtre. Si l'hôte quitte, la descente s'arrête, mais chacun garde ce qu'il a ramassé.
+- Le **ping** de chacun s'affiche à côté de son nom, sous ta barre de vie. Il passe en orange au-delà de 150 ms.
+- Ton héros répond tout de suite à tes déplacements, même quand tu n'es pas l'hôte. Les coups, les esquives et les compétences partent chez l'hôte : leur retard dépend du ping.
+- Pour une partie fluide, l'hôte doit être le joueur qui a la meilleure connexion, idéalement en câble plutôt qu'en Wi-Fi. La puissance de l'ordinateur compte peu. Chaque ami coûte environ 15 Ko/s d'envoi à l'hôte.
 - Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas.
 
 ### Races et classes
