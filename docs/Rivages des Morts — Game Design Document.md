@@ -548,6 +548,14 @@ Le jeu tourne dans le navigateur avec **Babylon.js** (JavaScript/TypeScript), po
   - **Héros à terre** : un héros à 0 PV tombe à terre. Un allié qui reste 4 s à côté de lui le relève avec 30 % de PV, et Relever du Paladin le remet debout avec 50 %. La descente échoue quand tous sont à terre.
   - **Difficulté selon le nombre de héros** (`party` dans `src/data/difficulty.json`) : PV des yokai ×1,8 à deux et ×2,8 à trois, PV du boss ×2,1 et ×3,3, et un yokai de plus par vague pour chaque héros en plus.
   - **Test sans réseau** : `?coop=2` ou `?coop=3` ajoute des alliés joués par l'ordinateur (`src/game/bot.ts`).
+  - **En place (étapes 2 et 3, réseau et salons)** : on joue en coop depuis l'écran titre ou le menu de l'île (« Coop en ligne »).
+    - **Transport** (`src/net/transport.ts`) : Trystero relie les navigateurs en WebRTC ; la mise en relation passe par des relais Nostr publics. `?reseau=local` relie les onglets d'un même navigateur, pour les tests.
+    - **Salon** (`src/net/session.ts`, `src/ui/coop.ts`) : l'hôte crée une partie avec un code de 4 caractères (ni 0, O, 1 ni I), publique ou non. Les autres la rejoignent par le code ou par la liste des parties publiques, où chaque hôte s'annonce toutes les 3 s. L'hôte choisit le donjon et le niveau parmi ceux qu'il a ouverts, puis lance la descente quand tous sont prêts. Après la descente, on revient au salon.
+    - **Combat** : l'hôte fait tourner le monde à 60 pas par seconde avec les commandes de chacun. Aucun appui n'est perdu (`src/net/frames.ts`). Il envoie 20 instantanés par seconde avec les événements du moment (`src/net/protocol.ts`).
+    - **Chez l'invité** (`src/net/mirror.ts`) : l'invité affiche la partie de l'hôte, avec les autres héros et les yokai interpolés 100 ms en arrière. Son propre héros suit le dernier instantané. Le rendu et le HUD lisent une `WorldView` (`src/game/view.ts`), que le `World` de l'hôte et la copie de l'invité fournissent tous les deux.
+    - **Butin séparé** : chacun tire son propre butin à partir des yokai vaincus, et garde ses oboles, son XP et ses coffres. Une victoire ouvre les niveaux pour chacun.
+    - **Départs** : un invité qui part laisse son héros à terre pour de bon. Si l'hôte part, la descente s'arrête pour tous, et chacun garde son butin. Les versions différentes du jeu ne se mélangent pas (`PROTOCOL`).
+  - **Plus tard** : prédire le déplacement du héros de l'invité, accepter une parade un peu tardive à cause du décalage, se reconnecter après une coupure, un relais TURN pour les réseaux qui bloquent le WebRTC, et l'île partagée.
 - **Cibles** : navigateurs desktop en priorité, mobile à évaluer.
 
 ### Créer la zone d'exploration du Yomi

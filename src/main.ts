@@ -70,6 +70,7 @@ async function start(): Promise<void> {
     devLevel,
     devDungeon,
     devCoop,
+    network: params.get('reseau') === 'local' ? 'local' : 'trystero',
   });
   app.start();
 

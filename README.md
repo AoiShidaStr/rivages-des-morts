@@ -20,6 +20,22 @@ Chaque personnage est sauvegardé automatiquement dans le navigateur (six au plu
 4. **Reviens plus fort** : tu gardes ton butin même si tu meurs. Ouvre tes coffres sur la barque de Charon, achète et forge de l'équipement puis équipe-le (<kbd>I</kbd>), dépense tes points de compétence (<kbd>K</kbd>), puis retente ta chance.
 5. **Change de race ou de classe** : le moine du Rocher t'aide à retrouver une autre vie, gratuitement. Tu gardes ton équipement et ta progression ; tes points de compétence te sont rendus.
 
+### Jouer à plusieurs (coop en ligne)
+
+Jusqu'à **trois joueurs**, chacun avec son héros. C'est gratuit : les navigateurs se relient directement, sans compte ni serveur.
+
+1. Sur l'écran titre, choisis **Coop en ligne**. Sur l'île, tu peux aussi passer par <kbd>Échap</kbd>, puis **Coop en ligne**.
+2. **Créer une partie** : tu es l'hôte. Un code de quatre caractères s'affiche, donne-le à tes amis. Coche **Partie publique** pour que ta partie apparaisse aussi dans la liste des autres joueurs.
+3. **Rejoindre** : tape le code d'un ami, ou choisis une partie dans la liste des **parties publiques**. Clique ensuite sur **Je suis prêt**.
+4. L'hôte choisit le donjon et son niveau, puis clique sur **Descendre ensemble** quand tout le monde est prêt.
+
+Pendant la descente :
+- Chacun garde son butin, ses oboles et son expérience. Une victoire ouvre les niveaux suivants pour tous.
+- Les yokai ont plus de PV à plusieurs, et chaque vague compte un yokai de plus par joueur.
+- Un héros à 0 PV tombe **à terre**. Reste 4 s à côté de lui pour le relever, ou utilise Relever du Paladin. La descente échoue seulement quand tout le monde est à terre.
+- Le combat tourne chez l'hôte : il doit **garder l'onglet du jeu au premier plan**, sinon le navigateur ralentit la partie pour tous. Si l'hôte quitte, la descente s'arrête, mais chacun garde ce qu'il a ramassé.
+- Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas.
+
 ### Races et classes
 
 | Race | Passifs |

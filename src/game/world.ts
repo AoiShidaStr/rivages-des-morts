@@ -275,6 +275,11 @@ export class World {
     return this.players[id] ?? this.players[0];
   }
 
+  /** Le héros que poursuit ce yokai (le premier en solo, ou s'il n'en a pas encore choisi). */
+  preyOf(enemyId: number): number {
+    return this.prey.get(enemyId)?.hero.id ?? 0;
+  }
+
   /** Le héros debout le plus proche de `pos`, invisible ou non (le premier si tous sont tombés). */
   nearestHero(pos: Vec2): Player {
     return closest(this.standing, pos) ?? this.players[0];
@@ -284,7 +289,7 @@ export class World {
    * La proie d'un yokai parmi les héros : le plus proche, revu toutes les deux secondes ou quand il tombe.
    * Les boss la poursuivent ; les autres yokai s'en servent quand ils n'ont pas de cible.
    */
-  private preyOf(enemy: Enemy, dt: number): Player {
+  private chase(enemy: Enemy, dt: number): Player {
     if (this.players.length === 1) return this.players[0];
     const current = this.prey.get(enemy.id);
     if (current && !current.hero.dead && current.t > 0) {
@@ -373,7 +378,7 @@ export class World {
     // « Hâte des morts » : le temps des yokai passe plus vite.
     const haste = 1 + this.curse('hate');
     // Copie : un ennemi peut en faire apparaître d'autres pendant son tour (araignées, feux follets).
-    for (const enemy of [...this.enemies]) this.act(this.preyOf(enemy, dt * haste), () => enemy.update(dt * haste, this));
+    for (const enemy of [...this.enemies]) this.act(this.chase(enemy, dt * haste), () => enemy.update(dt * haste, this));
     for (const hero of this.players) {
       hero.choir = Math.max(0, hero.choir - dt);
       if (hero.smoke && hero.hidden <= 0) hero.smoke = null;
@@ -419,10 +424,20 @@ export class World {
         hero.smoke = null;
         if (this.players.length > 1) this.emit({ type: 'heroDown', hero: hero.id, pos: { ...hero.pos } });
       }
+      if (hero.gone) continue;
       const helped = this.standing.some((ally) => distance(ally.pos, hero.pos) <= REVIVE_RANGE + ally.radius);
       hero.revive = helped ? hero.revive + dt : Math.max(0, hero.revive - dt / 2);
       if (hero.revive >= REVIVE_TIME) this.reviveHero(hero, REVIVE_HP);
     }
+  }
+
+  /** Coop : le joueur de ce héros est parti. Son héros tombe et ne se relève plus. */
+  retire(id: number): void {
+    const hero = this.players[id];
+    if (!hero || hero.gone) return;
+    hero.gone = true;
+    hero.hp = 0;
+    hero.revive = 0;
   }
 
   /** Relève un héros à terre avec une part de ses PV. */
@@ -560,8 +575,12 @@ export class World {
 
   /** Vrai si une âme au sol est à portée de Lier (le HUD la signale). */
   get soulInReach(): boolean {
-    const cfg = this.player.cfg.summon;
-    return this.souls.some((s) => distance(s.pos, this.player.pos) <= cfg.bindRange);
+    return this.soulNear(this.player);
+  }
+
+  /** Vrai si une âme au sol est à portée de Lier pour `hero`. */
+  soulNear(hero: Player): boolean {
+    return this.souls.some((s) => distance(s.pos, hero.pos) <= hero.cfg.summon.bindRange);
   }
 
   /** A : toutes les âmes foncent sur l'ennemi le plus proche de la souris. Faux s'il n'y a personne à envoyer. */
@@ -871,7 +890,7 @@ export class World {
   graveNear(hero: Player): boolean {
     const range = hero.cfg.paladin.raise.range;
     const near = (pos: Vec2) => distance(pos, hero.pos) <= range;
-    return this.graves.some((g) => near(g.pos)) || this.players.some((p) => p.dead && near(p.pos));
+    return this.graves.some((g) => near(g.pos)) || this.players.some((p) => p.dead && !p.gone && near(p.pos));
   }
 
   /** R : Relever. Les alliés tombés le plus récemment près du héros se relèvent en âmes de lumière. Faux s'il n'y a personne. */
@@ -880,7 +899,7 @@ export class World {
     const range = player.cfg.paladin.raise.range;
     const perks = player.cfg.perks ?? {};
     // Un héros à terre passe avant tout : Relever le remet debout avec la moitié de ses PV.
-    const fallen = this.players.find((p) => p.dead && distance(p.pos, player.pos) <= range);
+    const fallen = this.players.find((p) => p.dead && !p.gone && distance(p.pos, player.pos) <= range);
     if (fallen) {
       this.reviveHero(fallen, 0.5);
       this.emit({ type: 'raise', id: -1, pos: { ...fallen.pos } });

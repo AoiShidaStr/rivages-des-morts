@@ -99,6 +99,8 @@ export class Player {
   smoke: Decoy | null = null;
   /** Coop : secondes passées par un allié à le relever, tant que le héros est à terre. */
   revive = 0;
+  /** Coop : son joueur a quitté la partie ; le héros reste à terre. */
+  gone = false;
 
   /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
   constructor(

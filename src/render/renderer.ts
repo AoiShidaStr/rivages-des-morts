@@ -20,10 +20,10 @@ import {
   type BaseTexture,
 } from '@babylonjs/core';
 import type { DungeonStyle } from '../content';
-import { Izanami, Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
-import { REVIVE_TIME, type PeachTree, type Projectile, type Stump, type World } from '../game/world';
+import type { PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
+import { REVIVE_TIME } from '../game/world';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
@@ -335,15 +335,17 @@ export class Renderer {
   private readonly smokeDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   /** Coop : les autres héros, leur planche et l'étiquette à leur nom. */
   private allies: { sprite: string; name: string; label: HTMLElement }[] = [];
+  /** Le héros de ce joueur (0 en solo et pour l'hôte, sa place pour un invité). */
+  private localId = 0;
   /** Étiquette « à terre » du héros de ce joueur. */
   private downLabel: HTMLElement | null = null;
   /** Visée du tir chargé du Rôdeur : elle s'allonge et s'éclaire à mesure que l'arc se bande. */
   private aimDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private readonly webs = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
-  private stumpViews: { stumps: readonly Stump[]; meshes: { dispose(): void }[] } = { stumps: [], meshes: [] };
+  private stumpViews: { stumps: readonly StumpView[]; meshes: { dispose(): void }[] } = { stumps: [], meshes: [] };
   /** Pêchers de l'arène d'Izanami : l'arbre en fruit et l'arbre nu, l'un ou l'autre visible. */
-  private peachViews: { trees: readonly PeachTree[]; views: { ripe: Mesh; bare: Mesh }[]; meshes: { dispose(): void }[] } = {
+  private peachViews: { trees: readonly PeachView[]; views: { ripe: Mesh; bare: Mesh }[]; meshes: { dispose(): void }[] } = {
     trees: [],
     views: [],
     meshes: [],
@@ -496,9 +498,10 @@ export class Renderer {
     return { x: ray.origin.x + ray.direction.x * t, z: ray.origin.z + ray.direction.z * t };
   }
 
-  sync(world: World, events: readonly GameEvent[], dt: number): void {
+  sync(world: WorldView, events: readonly GameEvent[], dt: number): void {
     this.time += dt;
     const player = world.player;
+    this.localId = player.id;
     const seen = new Set<number>([PLAYER_ID]);
     this.syncEntity(PLAYER_ID, this.heroSprite, {
       pos: player.pos,
@@ -528,7 +531,7 @@ export class Renderer {
         blink: false,
         elite: enemy.elite,
         mark: enemy.mark,
-        glare: enemy instanceof Izanami ? enemy.gaze : undefined,
+        glare: enemy.gaze,
       }, dt);
     }
     for (const summon of world.summons) {
@@ -832,7 +835,7 @@ export class Renderer {
   // --- Classes : projectiles, aura, fumée ------------------------------------
 
   /** Flèches et marteau : un décalque qui vole à hauteur de poitrine, dans le sens de sa course. */
-  private syncProjectiles(projectiles: readonly Projectile[], dt: number): void {
+  private syncProjectiles(projectiles: readonly ProjectileView[], dt: number): void {
     const seen = new Set<number>();
     for (const p of projectiles) {
       seen.add(p.id);
@@ -862,12 +865,12 @@ export class Renderer {
    * Coop : les autres héros. Chacun a son sprite et une étiquette à son nom ; à terre, l'étiquette dit
    * qu'il faut le relever et montre où en est la relève.
    */
-  private syncAllies(world: World, seen: Set<number>, dt: number): void {
-    const heroes = world.players;
-    heroes.slice(1).forEach((hero, i) => {
+  private syncAllies(world: WorldView, seen: Set<number>, dt: number): void {
+    const me = world.player;
+    world.players.filter((hero) => hero !== me).forEach((hero, i) => {
       const ally = this.allies[i];
       if (!ally) return;
-      const id = ALLY_ID - i;
+      const id = ALLY_ID - hero.id;
       seen.add(id);
       this.syncEntity(id, this.sprites.has(ally.sprite) ? ally.sprite : 'heros', {
         pos: hero.pos,
@@ -888,8 +891,7 @@ export class Renderer {
       this.placeLabel(ally.label, hero.pos, 2.9);
     });
     // Le héros de ce joueur, à terre : un allié peut venir le relever.
-    const me = heroes[0];
-    if (heroes.length > 1 && me.dead) {
+    if (world.players.length > 1 && me.dead) {
       if (!this.downLabel) {
         this.downLabel = document.createElement('div');
         this.downLabel.className = 'ally-label down';
@@ -913,7 +915,7 @@ export class Renderer {
   }
 
   /** Aura de lumière du Paladin : un anneau doré qui suit chaque héros qui l'a lancée, et respire. */
-  private syncAura(world: World): void {
+  private syncAura(world: WorldView): void {
     for (const hero of world.players) {
       const active = hero.aura > 0;
       let decal = this.auraDecals.get(hero.id);
@@ -939,7 +941,7 @@ export class Renderer {
    * Visée du Rôdeur : un trait part de sa poitrine vers la souris, jusqu'où ira la flèche. Il vole à la hauteur
    * des flèches, donc passe sous le curseur. Discret au repos, il s'allonge et s'éclaire pendant le tir chargé.
    */
-  private syncAim(world: World): void {
+  private syncAim(world: WorldView): void {
     const player = world.player;
     const k = player.drawProgress;
     const shown = player.cfg.kit === 'rodeur' && player.pose !== 'dash' && player.pose !== 'airborne' && !player.dead;
@@ -964,7 +966,7 @@ export class Renderer {
   }
 
   /** Nuage de l'Écran de fumée, là où les yokai croient trouver la Lame. */
-  private syncSmoke(world: World): void {
+  private syncSmoke(world: WorldView): void {
     for (const hero of world.players) {
       const smoke = hero.smoke;
       let decal = this.smokeDecals.get(hero.id);
@@ -988,7 +990,7 @@ export class Renderer {
   // --- Arène du boss : souches, toiles et fils -------------------------------
 
   /** Les souches changent seulement au début d'une vague : on refait tout quand la liste change. */
-  private syncStumps(stumps: readonly Stump[]): void {
+  private syncStumps(stumps: readonly StumpView[]): void {
     if (stumps === this.stumpViews.stumps) return;
     for (const mesh of this.stumpViews.meshes) mesh.dispose();
     const meshes: { dispose(): void }[] = [];
@@ -1009,7 +1011,7 @@ export class Renderer {
   }
 
   /** Les pêchers changent seulement au début d'une vague : l'arbre en fruit ou l'arbre nu selon la pêche. */
-  private syncPeaches(trees: readonly PeachTree[]): void {
+  private syncPeaches(trees: readonly PeachView[]): void {
     if (trees !== this.peachViews.trees) {
       for (const mesh of this.peachViews.meshes) mesh.dispose();
       const meshes: { dispose(): void }[] = [];
@@ -1042,7 +1044,7 @@ export class Renderer {
     });
   }
 
-  private syncWebs(world: World): void {
+  private syncWebs(world: WorldView): void {
     const burnTime = world.cfg.webs.burnTime;
     const seen = new Set<number>();
     for (const web of world.webs) {
@@ -1098,9 +1100,9 @@ export class Renderer {
     return { pull: cylinder('threadPull', pullMaterial), pullMaterial, drag: cylinder('threadDrag', material('threadDrag', SILK)) };
   }
 
-  private syncThreads(world: World): void {
+  private syncThreads(world: WorldView): void {
     const { pull, pullMaterial, drag } = this.threads;
-    const boss = world.enemies.find((e): e is Jorogumo => e instanceof Jorogumo && !e.dead);
+    const boss = world.enemies.find((e) => e.kind === 'jorogumo' && !e.dead);
     pull.isVisible = false;
     drag.isVisible = false;
     if (!boss) return;
@@ -1114,7 +1116,9 @@ export class Renderer {
     }
     const thread = boss.thread;
     if (thread) {
-      const player = world.player;
+      // En coop, le fil va vers le héros qu'elle poursuit, pas forcément celui de ce joueur.
+      const prey = world.preyOf(boss.id);
+      const player = world.players.find((h) => h.id === prey) ?? world.player;
       pull.isVisible = true;
       // Visé, le fil est rouge et clignote ; tendu, il est blanc et épais.
       pullMaterial.emissiveColor = thread.taut ? SILK : Math.sin(this.time * 25) > 0 ? DANGER : SILK;
@@ -1188,8 +1192,8 @@ export class Renderer {
         break;
       }
       case 'playerHit': {
-        const mine = event.hero === 0;
-        const view = this.views.get(mine ? PLAYER_ID : ALLY_ID - (event.hero - 1));
+        const mine = event.hero === this.localId;
+        const view = this.views.get(mine ? PLAYER_ID : ALLY_ID - event.hero);
         if (view) view.flash = event.blocked ? 0.4 : 1;
         // Ce qui passe la garde se lit plus discrètement qu'un coup reçu de plein fouet.
         this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, event.blocked ? 'shield' : 'hurt');
@@ -1198,7 +1202,7 @@ export class Renderer {
         break;
       }
       case 'heroDown':
-        this.text(event.pos, 2.4, event.hero === 0 ? 'À terre !' : 'Allié à terre !', 'hurt', 1.4);
+        this.text(event.pos, 2.4, event.hero === this.localId ? 'À terre !' : 'Allié à terre !', 'hurt', 1.4);
         break;
       case 'heroRevived':
         this.text(event.pos, 2.4, 'Relevé !', 'heal', 1.4);
@@ -1593,7 +1597,7 @@ export class Renderer {
    * Le héros ne se tourne qu'à gauche ou à droite à l'écran : sans lui, on devine mal où partira le coup.
    * Il s'éclaire pendant l'élan. Rien pour le Rôdeur (il a sa visée) ni pour un coup à 360°.
    */
-  private syncAttackGuide(world: World): void {
+  private syncAttackGuide(world: WorldView): void {
     const player = world.player;
     const attack = player.cfg.attack;
     const thrust = attack.shape === 'line';
