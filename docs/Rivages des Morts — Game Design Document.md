@@ -571,13 +571,30 @@ Le jeu tourne dans le navigateur avec **Babylon.js** (JavaScript/TypeScript), po
   - **Difficulté selon le nombre de héros** (`party` dans `src/data/difficulty.json`) : PV des yokai ×1,8 à deux et ×2,8 à trois, PV du boss ×2,1 et ×3,3, et un yokai de plus par vague pour chaque héros en plus.
   - **Test sans réseau** : `?coop=2` ou `?coop=3` ajoute des alliés joués par l'ordinateur (`src/game/bot.ts`).
   - **En place (étapes 2 et 3, réseau et salons)** : on joue en coop depuis l'écran titre ou le menu de l'île (« Coop en ligne »).
-    - **Transport** (`src/net/transport.ts`) : Trystero relie les navigateurs en WebRTC ; la mise en relation passe par des relais Nostr publics. `?reseau=local` relie les onglets d'un même navigateur, pour les tests.
+    - **Transport** (`src/net/transport.ts`) : Trystero relie les navigateurs en WebRTC ; la mise en relation passe par des relais Nostr publics. Deux canaux par paire de joueurs. Le canal sûr, celui de Trystero, porte le salon et les événements du combat : tout arrive, dans l'ordre. Le canal rapide, non ordonné et sans renvoi, porte les instantanés et les commandes : un paquet perdu est remplacé par le suivant, au lieu de bloquer ceux qui suivent. Pour les tests :
+      - `?reseau=local` relie les onglets d'un même navigateur ;
+      - `&ping=120&gigue=40&perte=2&debit=1000` y simule Internet : aller-retour en ms, écart aléatoire en ms, pertes en %, débit montant en kbit/s ;
+      - `?relais=ws://…` remplace les relais Nostr publics par un relais local.
     - **Salon** (`src/net/session.ts`, `src/ui/coop.ts`) : l'hôte crée une partie avec un code de 4 caractères (ni 0, O, 1 ni I), publique ou non. Les autres la rejoignent par le code ou par la liste des parties publiques, où chaque hôte s'annonce toutes les 3 s. L'hôte choisit le donjon et le niveau parmi ceux qu'il a ouverts, puis lance la descente quand tous sont prêts. Après la descente, on revient au salon.
-    - **Combat** : l'hôte fait tourner le monde à 60 pas par seconde avec les commandes de chacun. Aucun appui n'est perdu (`src/net/frames.ts`). Il envoie 20 instantanés par seconde avec les événements du moment (`src/net/protocol.ts`).
-    - **Chez l'invité** (`src/net/mirror.ts`) : l'invité affiche la partie de l'hôte, avec les autres héros et les yokai interpolés 100 ms en arrière. Son propre héros suit le dernier instantané. Le rendu et le HUD lisent une `WorldView` (`src/game/view.ts`), que le `World` de l'hôte et la copie de l'invité fournissent tous les deux.
+    - **Combat** : l'hôte fait tourner le monde à 60 pas par seconde avec les commandes de chacun. Il continue quand son onglet est caché : un Worker (`src/background.ts`) prend le relais de l'animation.
+      - **Commandes** (`src/net/frames.ts`) : l'invité en envoie une par pas, numérotée. Ses appuis sont comptés depuis le début de la descente : aucun ne se perd, même quand un paquet se perd. Si un invité ne donne plus de nouvelles depuis 500 ms, son héros s'arrête.
+      - **Instantanés** (`src/net/protocol.ts`) : l'hôte en envoie 20 par seconde à chaque invité, sur le canal rapide. Un instantané fait moins d'1 Ko : les valeurs par défaut sont omises, les noms de champs sont remplacés par des codes courts, et chaque invité ne reçoit que ses propres recharges. Il porte aussi l'accusé de la dernière commande jouée. Les événements partent à part, sur le canal sûr.
+    - **Chez l'invité** (`src/net/mirror.ts`, `src/net/predict.ts`) :
+      - **Les autres** (héros, yokai, âmes, projectiles) sont interpolés dans le passé proche. Le retard s'ajuste à l'irrégularité des arrivées : de 4 à 30 pas, 6 à 7 sur un bon réseau. L'horloge accélère ou ralentit d'au plus 10 % pour suivre, sans saut. Faute d'instantané récent, les mouvements se prolongent 100 ms.
+      - **Son propre héros** est prédit. On part de sa position chez l'hôte et on rejoue les commandes pas encore jouées : marche, garde, arc bandé, toiles, souches, bords de l'arène. Les coups, les esquives et les compétences attendent l'hôte. Les écarts se résorbent en 60 ms (demi-vie).
+      - Le rendu et le HUD lisent une `WorldView` (`src/game/view.ts`), que le `World` de l'hôte et la copie de l'invité fournissent tous les deux.
+    - **Ping** : chaque invité mesure le sien chaque seconde et le transmet à l'hôte. Il s'affiche à côté du nom de chaque allié.
     - **Butin séparé** : chacun tire son propre butin à partir des yokai vaincus, et garde ses oboles, son XP et ses coffres. Une victoire ouvre les niveaux pour chacun.
     - **Départs** : un invité qui part laisse son héros à terre pour de bon. Si l'hôte part, la descente s'arrête pour tous, et chacun garde son butin. Les versions différentes du jeu ne se mélangent pas (`PROTOCOL`).
-  - **Plus tard** : prédire le déplacement du héros de l'invité, accepter une parade un peu tardive à cause du décalage, se reconnecter après une coupure, un relais TURN pour les réseaux qui bloquent le WebRTC, et l'île partagée.
+  - **Mesures** (réseau simulé : 100 ms de ping, 30 ms de gigue, 2 % de pertes) :
+
+    | | Avant | Après |
+    | --- | --- | --- |
+    | Délai entre la touche et le premier mouvement affiché | ~390 ms | ~10 ms |
+    | Images où le héros de l'invité reste figé en marchant | 67 % | 0 % |
+    | Débit de l'hôte vers un invité | ~41 Ko/s | ~15 Ko/s |
+
+  - **Plus tard** : prédire aussi l'esquive, accepter une parade un peu tardive à cause du décalage, se reconnecter après une coupure, un relais TURN pour les réseaux qui bloquent le WebRTC, et l'île partagée.
 - **Cibles** : navigateurs desktop en priorité, mobile à évaluer.
 
 ### Créer la zone d'exploration du Yomi

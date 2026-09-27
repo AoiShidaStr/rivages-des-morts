@@ -6,6 +6,8 @@ import { keyName, moveKeys, withKeys } from '../keys';
 import { h } from '../ui/dom';
 
 const BANNER_TIME = 2.6;
+/** Au-delà de ce ping (ms), il s'affiche en couleur d'alerte. */
+const LAGGY = 150;
 const SKILL_KEYS = ['A', 'E', 'R'] as const;
 /** La barre sous les PV : rage du Guerrier, âmes de l'Invocateur, ombre de la Lame, allié du Paladin, arc du Rôdeur. */
 const RESOURCE: Record<Kit, { label: string; style: string }> = {
@@ -53,6 +55,8 @@ export class Hud {
   /** Coop : une petite barre de PV par allié, sous celle du héros. */
   private readonly allyList: HTMLElement;
   private allyBars: { fill: HTMLElement; name: HTMLElement; label: string }[] = [];
+  /** Coop en ligne : ping de chaque allié, dans l'ordre des alliés (inconnu : rien d'affiché). */
+  pings: (number | undefined)[] = [];
   private bossTitle = 'Jorōgumo';
   private bannerTimer = 0;
 
@@ -90,6 +94,7 @@ export class Hud {
 
   /** Coop : noms des autres héros, dans l'ordre (aucun en solo). */
   setAllies(names: string[]): void {
+    this.pings = [];
     this.allyBars = names.map((label) => ({ fill: h('div', { class: 'fill' }), name: h('span', { class: 'label' }, label), label }));
     this.allyList.replaceChildren(...this.allyBars.map((bar) => h('div', { class: 'bar ally' }, bar.fill, bar.name)));
   }
@@ -125,7 +130,9 @@ export class Hud {
       const hero = others[i];
       if (!hero) return;
       bar.fill.style.width = `${(Math.max(0, hero.hp) / hero.cfg.maxHp) * 100}%`;
-      bar.name.textContent = hero.dead ? `${bar.label} · à terre` : bar.label;
+      const ping = this.pings[i];
+      bar.name.textContent = `${bar.label}${hero.dead ? ' · à terre' : ''}${ping ? ` · ${Math.round(ping)} ms` : ''}`;
+      bar.name.classList.toggle('lag', (ping ?? 0) > LAGGY);
     });
     const mine = world.summons.filter((s) => s.owner === player.id);
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;

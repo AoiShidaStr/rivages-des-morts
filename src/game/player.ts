@@ -29,6 +29,15 @@ type Action =
  * Rôdeur : tire à l'arc, tir chargé (clic droit), Flèche-filet (A), Marque du chasseur (E), Recul (R).
  * Les talents, la race et les reliques arrivent par `cfg.perks`.
  */
+/** Vitesse de marche en plus : instinct (blessé) et transformation du Hanyō. */
+export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): number {
+  const perks = cfg.perks ?? {};
+  let factor = 1;
+  if (perks.yokaiInstinct && hp < cfg.maxHp * perks.yokaiInstinct.threshold) factor += perks.yokaiInstinct.speed;
+  if (perks.yokaiBlood && transformed > 0) factor += perks.yokaiBlood.speed;
+  return factor;
+}
+
 export class Player {
   pos: Vec2 = vec(0, 0);
   facing: Vec2 = vec(1, 0);
@@ -196,11 +205,7 @@ export class Player {
 
   /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
   private speedFactor(): number {
-    const perks = this.cfg.perks ?? {};
-    let factor = 1;
-    if (perks.yokaiInstinct && this.hp < this.cfg.maxHp * perks.yokaiInstinct.threshold) factor += perks.yokaiInstinct.speed;
-    if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.speed;
-    return factor;
+    return walkFactor(this.cfg, this.hp, this.transformed);
   }
 
   heal(amount: number, world: World): void {

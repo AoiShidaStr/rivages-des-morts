@@ -1455,7 +1455,7 @@ function pushApart(a: Body, b: Body): void {
 }
 
 /** Repousse un corps hors d'un obstacle fixe. */
-function pushOut(body: Body, stump: Stump): void {
+export function pushOut(body: { pos: Vec2; radius: number }, stump: { pos: Vec2; radius: number }): void {
   const delta = sub(body.pos, stump.pos);
   const dist = length(delta);
   const minDist = body.radius + stump.radius;

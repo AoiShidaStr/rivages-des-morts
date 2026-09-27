@@ -12,6 +12,19 @@ function isInteractiveUi(target: EventTarget | null): boolean {
   return !!target.closest('#ui button, #ui .btn, #ui a, #ui input, #ui select, #ui [tabindex]');
 }
 
+/** Types de champs qui ne servent pas à écrire : leurs touches restent au jeu. */
+const NOT_TEXT = new Set(['checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'file', 'color', 'image']);
+
+/**
+ * Champ où l'on écrit (pseudo, code d'une partie en coop) : ses touches ne commandent pas le jeu, sinon
+ * taper un I ouvrirait l'équipement, et un Z ferait marcher le héros. Seule Échap garde son rôle.
+ */
+function isTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable || target instanceof HTMLTextAreaElement) return true;
+  return target instanceof HTMLInputElement && !NOT_TEXT.has(target.type);
+}
+
 /**
  * Clavier et souris. Les touches sont lues par position physique (`KeyboardEvent.code`) :
  * ZQSD sur un clavier AZERTY correspond à KeyW, KeyA, KeyS, KeyD, et la touche A à KeyQ.
@@ -29,6 +42,7 @@ export class Input {
 
   constructor(canvas: HTMLCanvasElement) {
     window.addEventListener('keydown', (e) => {
+      if (isTyping(e.target) && e.code !== 'Escape') return;
       if (CAPTURED_KEYS.has(e.code)) e.preventDefault();
       if (e.repeat) return;
       this.down.add(e.code);
