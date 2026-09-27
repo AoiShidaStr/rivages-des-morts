@@ -734,7 +734,7 @@ export class World {
     const perks = player.cfg.perks ?? {};
     const k = charge ?? 0;
     const full = charge !== undefined && k >= 1;
-    const power = charge === undefined ? 1 : mix(1, ranger.charged.maxFactor, k) * (perks.chargedDamage ?? 1);
+    const power = charge === undefined ? 1 : mix(ranger.charged.minFactor, ranger.charged.maxFactor, k) * (perks.chargedDamage ?? 1);
     const count = full && perks.splitShot ? perks.splitShot : 1;
     for (let i = 0; i < count; i++) {
       const angle = angleOf(dir) + degToRad(10) * (i - (count - 1) / 2);

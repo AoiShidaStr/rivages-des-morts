@@ -755,7 +755,7 @@
         {
           "key": "Clic droit",
           "name": "Tir chargé",
-          "description": "Maintiens pour bander l'arc en marchant lentement, relâche pour tirer : jusqu'à 3 fois les dégâts, plus loin et plus vite."
+          "description": "Maintiens pour bander l'arc en marchant lentement, relâche pour tirer : de 0,2 fois les dégâts si tu lâches aussitôt à 3 fois une fois bandé à fond, plus loin et plus vite."
         },
         {
           "key": "A",
