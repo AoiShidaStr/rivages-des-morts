@@ -48,6 +48,28 @@ kbd {
   color: var(--ink);
 }
 
+/* Coop : nom des autres héros au-dessus de leur tête, avec une barre de PV (--hp, de 0 à 1) */
+.ally-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 1px 6px 3px;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, #7fd07a calc(var(--hp, 1) * 100%), rgba(0, 0, 0, 0.35) 0) bottom / 100% 3px no-repeat,
+    rgba(12, 10, 16, 0.55);
+  color: #fff6e0;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ally-label.down {
+  background: rgba(120, 20, 20, 0.7);
+  color: #ffd9d0;
+}
+
 /* Textes flottants au-dessus des combattants */
 .float {
   position: absolute;
@@ -152,6 +174,29 @@ kbd {
 
 .bar.rage .fill {
   background: linear-gradient(#ffb25c, #d8572a);
+}
+
+/* Coop : barres de PV des alliés, plus fines, sous celle du héros */
+.allies {
+  display: grid;
+  gap: 4px;
+}
+
+.allies:empty {
+  display: none;
+}
+
+.bar.ally {
+  height: 12px;
+  border-width: 1px;
+}
+
+.bar.ally .fill {
+  background: linear-gradient(#8fd27f, #3f8a36);
+}
+
+.bar.ally .label {
+  font-size: 9px;
 }
 
 .bar.rage.ready {

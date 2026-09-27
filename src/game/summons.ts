@@ -36,6 +36,8 @@ export class Summon {
   readonly mass = 0.6;
   /** Rappel : l'ennemi sur lequel l'âme fonce, et les secondes de ruée restantes. */
   rush: { target: number; t: number } | null = null;
+  /** Le héros qui l'a liée ou relevée. */
+  owner = 0;
   private cooldown = 0;
   private striking = 0;
   private moving = false;

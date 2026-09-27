@@ -50,6 +50,9 @@ export class Hud {
   private readonly gaze: HTMLElement;
   private readonly gazeFill: HTMLElement;
   private readonly gazeLabel: HTMLElement;
+  /** Coop : une petite barre de PV par allié, sous celle du héros. */
+  private readonly allyList: HTMLElement;
+  private allyBars: { fill: HTMLElement; name: HTMLElement; label: string }[] = [];
   private bossTitle = 'Jorōgumo';
   private bannerTimer = 0;
 
@@ -81,6 +84,14 @@ export class Hud {
     this.gazeLabel = h('span', { class: 'gaze-label' }, 'Son regard');
     this.gaze = h('div', { class: 'gaze', title: 'Plus tu la regardes, plus elle encaisse ; jauge pleine, sa colère éclate.' }, h('span', { class: 'gaze-eye' }, '目'), h('div', { class: 'gaze-bar' }, this.gazeFill), this.gazeLabel);
     this.boss.append(this.gaze);
+    this.allyList = h('div', { class: 'allies' });
+    find('.bar.hp').after(this.allyList);
+  }
+
+  /** Coop : noms des autres héros, dans l'ordre (aucun en solo). */
+  setAllies(names: string[]): void {
+    this.allyBars = names.map((label) => ({ fill: h('div', { class: 'fill' }), name: h('span', { class: 'label' }, label), label }));
+    this.allyList.replaceChildren(...this.allyBars.map((bar) => h('div', { class: 'bar ally' }, bar.fill, bar.name)));
   }
 
   /** Noms des compétences, barre et rappel des commandes selon la classe du héros. */
@@ -106,6 +117,13 @@ export class Hud {
     const player = world.player;
     const cfg = player.cfg;
     this.hpFill.style.width = `${(player.hp / cfg.maxHp) * 100}%`;
+    this.allyBars.forEach((bar, i) => {
+      const hero = world.players[i + 1];
+      if (!hero) return;
+      bar.fill.style.width = `${(Math.max(0, hero.hp) / hero.cfg.maxHp) * 100}%`;
+      bar.name.textContent = hero.dead ? `${bar.label} · à terre` : bar.label;
+    });
+    const mine = world.summons.filter((s) => s.owner === player.id);
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
     let views: SkillView[];
     let fill = 0;
@@ -113,7 +131,7 @@ export class Hud {
     let label = RESOURCE[cfg.kit].label;
     if (cfg.kit === 'invocateur') {
       const s = cfg.summon;
-      const count = world.summons.length;
+      const count = mine.length;
       const none = count === 0;
       fill = count / Math.max(1, s.max);
       ready = world.soulInReach;
@@ -139,10 +157,10 @@ export class Hud {
     } else if (cfg.kit === 'paladin') {
       // Vigueur de l'allié relevé ; la barre luit quand Relever a quelqu'un à relever.
       const p = cfg.paladin;
-      const ally = world.summons.find((s) => s.holy);
+      const ally = mine.find((s) => s.holy);
       fill = ally?.vigor ?? 0;
       ready = world.graveInReach;
-      label = ally ? `Allié relevé${world.summons.length > 1 ? ` ×${world.summons.length}` : ''}` : 'Aucun allié';
+      label = ally ? `Allié relevé${mine.length > 1 ? ` ×${mine.length}` : ''}` : 'Aucun allié';
       views = [
         { cooldown: world.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: world.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },

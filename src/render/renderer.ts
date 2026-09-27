@@ -23,7 +23,7 @@ import type { DungeonStyle } from '../content';
 import { Izanami, Jorogumo } from '../game/enemies';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
-import type { PeachTree, Projectile, Stump, World } from '../game/world';
+import { REVIVE_TIME, type PeachTree, type Projectile, type Stump, type World } from '../game/world';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
@@ -106,6 +106,8 @@ interface Snapshot {
   mark?: MarkKind | null;
   /** Lame invisible : on ne voit plus qu'une ombre. */
   hidden?: boolean;
+  /** Coop : héros à terre, grisé et couché, en attendant qu'un allié le relève. */
+  downed?: boolean;
   /** Regard d'Izanami (de 0 à 1) : plus on la regarde, plus elle rougeoie. */
   glare?: number;
 }
@@ -162,6 +164,8 @@ interface FloatingText {
 }
 
 const PLAYER_ID = 0;
+/** Coop : les vues des alliés prennent ces identifiants (et en dessous), loin de ceux des ennemis et des effets. */
+const ALLY_ID = -1_000_000_000;
 /** Posture de repli quand une planche n'a pas d'animation pour la posture demandée. */
 const FALLBACK_POSE: Partial<Record<Pose, Pose>> = {
   dash: 'move',
@@ -326,8 +330,13 @@ export class Renderer {
   /** Flèches et marteau en vol. */
   private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
-  private auraDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
-  private smokeDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
+  /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
+  private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  private readonly smokeDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  /** Coop : les autres héros, leur planche et l'étiquette à leur nom. */
+  private allies: { sprite: string; name: string; label: HTMLElement }[] = [];
+  /** Étiquette « à terre » du héros de ce joueur. */
+  private downLabel: HTMLElement | null = null;
   /** Visée du tir chargé du Rôdeur : elle s'allonge et s'éclaire à mesure que l'arc se bande. */
   private aimDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private guardDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
@@ -433,6 +442,21 @@ export class Renderer {
     else if (isHeroVariant(this.wantedHero)) void this.loadHero(this.wantedHero);
   }
 
+  /** Coop : les autres héros de la partie, dans l'ordre (le deuxième, puis le troisième). */
+  setAllies(allies: { sprite: string; name: string }[]): void {
+    for (const ally of this.allies) ally.label.remove();
+    this.downLabel?.remove();
+    this.downLabel = null;
+    this.allies = allies.map((ally) => {
+      const sprite = this.manifest[ally.sprite] ? ally.sprite : 'heros';
+      if (isHeroVariant(sprite)) void this.loadHero(sprite);
+      const label = document.createElement('div');
+      label.className = 'ally-label';
+      this.overlay.append(label);
+      return { sprite, name: ally.name, label };
+    });
+  }
+
   private loadHero(name: string): Promise<void> {
     if (this.sprites.has(name)) return Promise.resolve();
     let pending = this.heroLoads.get(name);
@@ -451,7 +475,7 @@ export class Renderer {
   private showHero(name: string): void {
     const previous = this.heroSprite;
     this.heroSprite = name;
-    if (previous !== name && isHeroVariant(previous)) {
+    if (previous !== name && isHeroVariant(previous) && !this.allies.some((a) => a.sprite === previous)) {
       const entry = this.sprites.get(previous);
       this.sprites.delete(previous);
       if (entry) this.retiredHeroTextures.push(entry.texture);
@@ -480,13 +504,15 @@ export class Renderer {
       pos: player.pos,
       facing: player.facing,
       radius: player.radius,
-      pose: player.pose,
+      pose: player.dead ? 'stunned' : player.pose,
       altitude: player.altitude,
       spawn: 1,
-      blink: player.invulnerable > 0 && player.pose !== 'dash',
+      blink: player.invulnerable > 0 && player.pose !== 'dash' && !player.dead,
+      downed: player.dead,
       aura: player.frenzy > 0 || player.transformed > 0,
       hidden: player.hidden > 0,
     }, dt);
+    this.syncAllies(world, seen, dt);
     // La vue du héros vient d'être refaite avec sa nouvelle planche : l'ancienne peut partir.
     for (const texture of this.retiredHeroTextures) texture.dispose();
     this.retiredHeroTextures = [];
@@ -515,7 +541,7 @@ export class Renderer {
         altitude: 0,
         spawn: summon.spawnProgress,
         blink: false,
-        aura: world.choir > 0,
+        aura: (world.players[summon.owner]?.choir ?? 0) > 0,
         spirit: summon.vigor,
         holy: summon.holy,
       }, dt);
@@ -566,8 +592,8 @@ export class Renderer {
     this.souls.clear();
     for (const view of this.projectiles.values()) this.disposeFx(view);
     this.projectiles.clear();
-    if (this.auraDecal) this.auraDecal.mesh.isVisible = false;
-    if (this.smokeDecal) this.smokeDecal.mesh.isVisible = false;
+    for (const decal of [...this.auraDecals.values(), ...this.smokeDecals.values()]) decal.mesh.isVisible = false;
+    this.setAllies([]);
     if (this.aimDecal) this.aimDecal.mesh.isVisible = false;
     if (this.attackGuide) this.attackGuide.mesh.isVisible = false;
     for (const text of this.texts) text.el.remove();
@@ -678,6 +704,12 @@ export class Renderer {
     if (s.hidden) {
       tint = HIDDEN_TINT;
       alpha *= 0.3;
+    }
+    if (s.downed) {
+      tint = HIDDEN_TINT;
+      alpha *= 0.6;
+      sx *= 1.25;
+      sy *= 0.45;
     }
     this.updateMarkRing(view, s.mark ?? null, s.radius, t);
     const k = Math.min(1, dt * 18);
@@ -826,23 +858,81 @@ export class Renderer {
     }
   }
 
-  /** Aura de lumière du Paladin : un anneau doré qui suit le héros et respire. */
-  private syncAura(world: World): void {
-    const active = world.aura > 0;
-    if (!active && !this.auraDecal) return;
-    if (!this.auraDecal) {
-      this.auraDecal = this.createDecal('aura', this.fxTextures.ring, 2, 2, DIVINE, 0.7, 0.025);
-      this.auraDecal.mesh.alphaIndex = DECAL_ORDER + 1;
+  /**
+   * Coop : les autres héros. Chacun a son sprite et une étiquette à son nom ; à terre, l'étiquette dit
+   * qu'il faut le relever et montre où en est la relève.
+   */
+  private syncAllies(world: World, seen: Set<number>, dt: number): void {
+    const heroes = world.players;
+    heroes.slice(1).forEach((hero, i) => {
+      const ally = this.allies[i];
+      if (!ally) return;
+      const id = ALLY_ID - i;
+      seen.add(id);
+      this.syncEntity(id, this.sprites.has(ally.sprite) ? ally.sprite : 'heros', {
+        pos: hero.pos,
+        facing: hero.facing,
+        radius: hero.radius,
+        pose: hero.dead ? 'stunned' : hero.pose,
+        altitude: hero.altitude,
+        spawn: 1,
+        blink: hero.invulnerable > 0 && hero.pose !== 'dash' && !hero.dead,
+        downed: hero.dead,
+        aura: hero.frenzy > 0 || hero.transformed > 0,
+        hidden: hero.hidden > 0,
+      }, dt);
+      const hp = Math.max(0, hero.hp / hero.cfg.maxHp);
+      ally.label.textContent = hero.dead ? `${ally.name} · à terre ${reviveText(hero.revive)}` : ally.name;
+      ally.label.classList.toggle('down', hero.dead);
+      ally.label.style.setProperty('--hp', String(hp));
+      this.placeLabel(ally.label, hero.pos, 2.9);
+    });
+    // Le héros de ce joueur, à terre : un allié peut venir le relever.
+    const me = heroes[0];
+    if (heroes.length > 1 && me.dead) {
+      if (!this.downLabel) {
+        this.downLabel = document.createElement('div');
+        this.downLabel.className = 'ally-label down';
+        this.overlay.append(this.downLabel);
+      }
+      this.downLabel.textContent = `À terre : un allié peut te relever ${reviveText(me.revive)}`;
+      this.placeLabel(this.downLabel, me.pos, 2.9);
+    } else if (this.downLabel) {
+      this.downLabel.remove();
+      this.downLabel = null;
     }
-    const { mesh, material } = this.auraDecal;
-    mesh.isVisible = active;
-    if (!active) return;
-    const radius = world.player.cfg.paladin.aura.radius;
-    mesh.position.x = world.player.pos.x;
-    mesh.position.z = world.player.pos.z;
-    mesh.scaling.setAll(radius * (1 + 0.03 * Math.sin(this.time * 4)));
-    // Elle pâlit pendant sa dernière seconde.
-    material.setFloat('alpha', 0.55 * Math.min(1, world.aura) + 0.15 * Math.sin(this.time * 6));
+  }
+
+  /** Place une étiquette HTML au-dessus d'un point du sol. */
+  private placeLabel(el: HTMLElement, pos: Vec2, height: number): void {
+    const width = this.engine.getRenderWidth();
+    const viewport = this.camera.viewport.toGlobal(width, this.engine.getRenderHeight());
+    const screen = Vector3.Project(new Vector3(pos.x, height, pos.z), Matrix.Identity(), this.scene.getTransformMatrix(), viewport);
+    const toCss = this.canvas.clientWidth / Math.max(1, width);
+    el.style.transform = `translate(${screen.x * toCss}px, ${screen.y * toCss}px) translate(-50%, -100%)`;
+  }
+
+  /** Aura de lumière du Paladin : un anneau doré qui suit chaque héros qui l'a lancée, et respire. */
+  private syncAura(world: World): void {
+    for (const hero of world.players) {
+      const active = hero.aura > 0;
+      let decal = this.auraDecals.get(hero.id);
+      if (!active && !decal) continue;
+      if (!decal) {
+        decal = this.createDecal(`aura-${hero.id}`, this.fxTextures.ring, 2, 2, DIVINE, 0.7, 0.025);
+        decal.mesh.alphaIndex = DECAL_ORDER + 1;
+        this.auraDecals.set(hero.id, decal);
+      }
+      const { mesh, material } = decal;
+      mesh.isVisible = active;
+      if (!active) continue;
+      const radius = hero.cfg.paladin.aura.radius;
+      mesh.position.x = hero.pos.x;
+      mesh.position.z = hero.pos.z;
+      mesh.scaling.setAll(radius * (1 + 0.03 * Math.sin(this.time * 4)));
+      // Elle pâlit pendant sa dernière seconde.
+      material.setFloat('alpha', 0.55 * Math.min(1, hero.aura) + 0.15 * Math.sin(this.time * 6));
+    }
   }
 
   /**
@@ -875,20 +965,24 @@ export class Renderer {
 
   /** Nuage de l'Écran de fumée, là où les yokai croient trouver la Lame. */
   private syncSmoke(world: World): void {
-    const smoke = world.smoke;
-    if (!smoke && !this.smokeDecal) return;
-    if (!this.smokeDecal) {
-      this.smokeDecal = this.createDecal('smoke', this.fxTextures.shadow, 2, 2, SMOKE, 0.6, 0.04);
-      this.smokeDecal.mesh.alphaIndex = DECAL_ORDER + 1;
+    for (const hero of world.players) {
+      const smoke = hero.smoke;
+      let decal = this.smokeDecals.get(hero.id);
+      if (!smoke && !decal) continue;
+      if (!decal) {
+        decal = this.createDecal(`smoke-${hero.id}`, this.fxTextures.shadow, 2, 2, SMOKE, 0.6, 0.04);
+        decal.mesh.alphaIndex = DECAL_ORDER + 1;
+        this.smokeDecals.set(hero.id, decal);
+      }
+      const { mesh, material } = decal;
+      mesh.isVisible = smoke !== null;
+      if (!smoke) continue;
+      mesh.position.x = smoke.pos.x;
+      mesh.position.z = smoke.pos.z;
+      mesh.scaling.setAll(smoke.cloud * 1.2 * (1 + 0.06 * Math.sin(this.time * 3)));
+      mesh.rotation.y = this.time * 0.4;
+      material.setFloat('alpha', 0.85 * Math.min(1, hero.hidden * 2));
     }
-    const { mesh, material } = this.smokeDecal;
-    mesh.isVisible = smoke !== null;
-    if (!smoke) return;
-    mesh.position.x = smoke.pos.x;
-    mesh.position.z = smoke.pos.z;
-    mesh.scaling.setAll(smoke.cloud * 1.2 * (1 + 0.06 * Math.sin(this.time * 3)));
-    mesh.rotation.y = this.time * 0.4;
-    material.setFloat('alpha', 0.85 * Math.min(1, world.player.hidden * 2));
   }
 
   // --- Arène du boss : souches, toiles et fils -------------------------------
@@ -1094,13 +1188,21 @@ export class Renderer {
         break;
       }
       case 'playerHit': {
-        const view = this.views.get(PLAYER_ID);
+        const mine = event.hero === 0;
+        const view = this.views.get(mine ? PLAYER_ID : ALLY_ID - (event.hero - 1));
         if (view) view.flash = event.blocked ? 0.4 : 1;
         // Ce qui passe la garde se lit plus discrètement qu'un coup reçu de plein fouet.
         this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, event.blocked ? 'shield' : 'hurt');
-        this.addShake(event.blocked ? 0.2 : 0.5);
+        // Seuls les coups reçus par son propre héros secouent l'écran.
+        if (mine) this.addShake(event.blocked ? 0.2 : 0.5);
         break;
       }
+      case 'heroDown':
+        this.text(event.pos, 2.4, event.hero === 0 ? 'À terre !' : 'Allié à terre !', 'hurt', 1.4);
+        break;
+      case 'heroRevived':
+        this.text(event.pos, 2.4, 'Relevé !', 'heal', 1.4);
+        break;
       case 'guard':
         this.guardPulse = 1;
         // Le Paladin ne gagne pas de rage : son bouclier pare, simplement.
@@ -1687,4 +1789,10 @@ export class Renderer {
       return true;
     });
   }
+}
+
+/** Où en est la relève d’un héros à terre, en pour cent (vide tant que personne n’est à côté). */
+function reviveText(revive: number): string {
+  if (revive <= 0) return '';
+  return `${Math.min(100, Math.round((revive / REVIVE_TIME) * 100))} %`;
 }

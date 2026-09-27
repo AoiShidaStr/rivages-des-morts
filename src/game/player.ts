@@ -2,7 +2,7 @@ import type { PlayerConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, lerp, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { InputFrame, Pose } from './types';
-import type { World } from './world';
+import type { Decoy, World } from './world';
 
 /** Durée pendant laquelle un clic reste en mémoire pour enchaîner les coups. */
 const ATTACK_BUFFER = 0.2;
@@ -89,7 +89,22 @@ export class Player {
   private action: Action = { kind: 'free' };
   private attackBuffer = 0;
 
-  constructor(readonly cfg: PlayerConfig) {
+  /** Paladin : secondes d'Aura de lumière restantes, et ennemis déjà étourdis par celle-ci (Ama-no-Iwato). */
+  aura = 0;
+  auraTick = 0;
+  readonly auraStunned = new Set<number>();
+  /** Invocateur : secondes de Chœur spectral restantes. */
+  choir = 0;
+  /** Lame : nuage de l'Écran de fumée, que les yokai prennent pour le héros tant qu'il est invisible. */
+  smoke: Decoy | null = null;
+  /** Coop : secondes passées par un allié à le relever, tant que le héros est à terre. */
+  revive = 0;
+
+  /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
+  constructor(
+    readonly cfg: PlayerConfig,
+    readonly id = 0,
+  ) {
     this.hp = cfg.maxHp;
     this.dashCharges = cfg.blade.shadowDash.charges;
   }
@@ -388,7 +403,7 @@ export class Player {
       this.hp = this.cfg.maxHp * perks.divineBlood;
       world.emit({ type: 'divineBlood', pos: { ...this.pos } });
     }
-    world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked });
+    world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked, hero: this.id });
   }
 
   /** Ajoute de la rage (paliers du tag Guerrier compris) ; renvoie ce qui a été gagné. */

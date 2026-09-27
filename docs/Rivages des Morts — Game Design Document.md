@@ -543,7 +543,11 @@ Le jeu tourne dans le navigateur avec **Babylon.js** (JavaScript/TypeScript), po
 
 - **Moteur** : Babylon.js, avec sa physique (Havok), ses animations et son GUI intégrés.
 - **Données** : items, compétences et tags décrits en JSON, pour ajouter du contenu sans toucher au code du combat.
-- **Multi (plus tard)** : serveur Node, par exemple avec Colyseus. Solo et coop PvE d'abord, PvP peut-être plus tard. L'architecture doit séparer dès le départ la logique de jeu du rendu.
+- **Multi (en cours)** : coop PvE jusqu'à **3 joueurs**, en P2P gratuit. Le navigateur d'un joueur, l'hôte, fait tourner le combat. Les autres lui envoient leurs commandes et reçoivent l'état de la partie. La mise en relation passe par des relais publics (Trystero, WebRTC), sans serveur à payer. On rejoint une partie avec un code, ou depuis une liste de parties publiques. PvP peut-être plus tard.
+  - **En place (étape 1, sans réseau)** : le combat accepte 1 à 3 héros. Chacun a ses âmes, son Aura, sa fumée et ses projectiles. Les yokai choisissent leur cible parmi tous les héros et toutes les âmes.
+  - **Héros à terre** : un héros à 0 PV tombe à terre. Un allié qui reste 4 s à côté de lui le relève avec 30 % de PV, et Relever du Paladin le remet debout avec 50 %. La descente échoue quand tous sont à terre.
+  - **Difficulté selon le nombre de héros** (`party` dans `src/data/difficulty.json`) : PV des yokai ×1,8 à deux et ×2,8 à trois, PV du boss ×2,1 et ×3,3, et un yokai de plus par vague pour chaque héros en plus.
+  - **Test sans réseau** : `?coop=2` ou `?coop=3` ajoute des alliés joués par l'ordinateur (`src/game/bot.ts`).
 - **Cibles** : navigateurs desktop en priorité, mobile à évaluer.
 
 ### Créer la zone d'exploration du Yomi

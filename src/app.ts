@@ -3,6 +3,8 @@ import { content, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { toWorld, type Interactable, type Island } from './game/island';
+import { Bot } from './game/bot';
+import type { PlayerConfig } from './game/config';
 import { buildLoadout, classWeapon, heroClass, heroLabel, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, salvage, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
@@ -67,7 +69,20 @@ export interface AppDeps {
   devLevel: number | null;
   /** `?donjon=palais` : donjon de `?vague` (tests). */
   devDungeon: string;
+  /** `?coop=N` : nombre de héros, les alliés étant joués par l'ordinateur (tests de la coop sans réseau). */
+  devCoop: number;
 }
+
+/** Un allié de la descente : ses réglages, son apparence et son nom. */
+interface Ally {
+  config: PlayerConfig;
+  sprite: string;
+  name: string;
+}
+
+/** Classes des alliés joués par l'ordinateur, dans l'ordre où on les ajoute (en sautant celle du joueur). */
+const ALLY_CLASSES = ['paladin', 'rodeur', 'guerrier', 'lame', 'invocateur'];
+const ALLY_RACES = ['oushebti', 'demi-dieu', 'hanyo', 'einherjar'];
 
 const randInt = ([min, max]: [number, number]) => min + Math.floor(Math.random() * (max - min + 1));
 
@@ -78,6 +93,8 @@ const randInt = ([min, max]: [number, number]) => min + Math.floor(Math.random()
 export class App {
   private mode: Mode = 'title';
   private world: World | null = null;
+  /** Alliés joués par l'ordinateur (`?coop`), un par héros après le premier. */
+  private bots: Bot[] = [];
   /** Un dialogue, une transition ou une action à plusieurs étapes est en cours. */
   private busy = false;
   private accumulator = 0;
@@ -455,16 +472,21 @@ export class App {
   private async enterDungeon(id: string, startWave: number, withTransition: boolean, level: number): Promise<void> {
     const { config, dungeonRenderer, hud, islandRenderer } = this.d;
     const player = this.loadout().config;
+    const allies = this.botAllies();
     const dungeon = content.dungeons[id] ?? content.dungeons.rizieres;
     this.dungeon = dungeon;
     this.dungeonLevel = clampLevel(content.difficulty, level);
-    const difficulty = difficultyFor(content.difficulty, this.dungeonLevel);
+    const difficulty = difficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length);
     const begin = () => {
       this.screens.hideResult();
       this.panels.close();
-      this.world = new World({ ...config, ...dungeon.arena, player, difficulty }, startWave);
+      const world = new World({ ...config, ...dungeon.arena, player, allies: allies.map((a) => a.config), difficulty }, startWave);
+      this.world = world;
+      this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
       dungeonRenderer.reset();
       this.setHero();
+      dungeonRenderer.setAllies(allies.map((a) => ({ sprite: a.sprite, name: a.name })));
+      hud.setAllies(allies.map((a) => a.name));
       dungeonRenderer.setStyle(dungeon.style);
       hud.reset(this.dungeonLevel, dungeon.boss);
       hud.configure(heroClass(content.skills, this.d.progress.state.hero));
@@ -486,7 +508,8 @@ export class App {
       this.accumulator += dt;
       let steps = 0;
       while (this.accumulator >= STEP && steps < MAX_STEPS_PER_FRAME) {
-        world.update(STEP, this.readCombatInput(world));
+        const mine = this.readCombatInput(world);
+        world.update(STEP, this.bots.length ? [mine, ...this.bots.map((bot) => bot.input())] : mine);
         this.accumulator -= STEP;
         steps++;
       }
@@ -531,6 +554,22 @@ export class App {
       skillEPressed: input.consumeKey('KeyE'),
       skillRPressed: input.consumeKey('KeyR'),
     };
+  }
+
+  /**
+   * `?coop=N` : les alliés joués par l'ordinateur, au niveau du héros, avec l'arme de départ de leur classe
+   * et sans talents.
+   */
+  private botAllies(): Ally[] {
+    const { config, progress } = this.d;
+    const classes = ALLY_CLASSES.filter((c) => c !== progress.state.hero.class);
+    return classes.slice(0, this.d.devCoop - 1).map((cls, i) => {
+      const hero = { race: ALLY_RACES[i % ALLY_RACES.length], class: cls };
+      const weapon = content.skills.classes[cls].weapon;
+      const state = { ...progress.state, hero, talents: [], equipped: { arme: weapon }, items: [weapon], itemLevels: {} };
+      const name = `${content.skills.classes[cls].name} (ordinateur)`;
+      return { config: buildLoadout(config.player, state, content, progress.level).config, sprite: heroSprite(hero), name };
+    });
   }
 
   /** Réglages du héros avec sa race, sa classe, l'équipement, le niveau et les talents actuels. */

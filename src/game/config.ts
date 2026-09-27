@@ -590,6 +590,8 @@ export interface WaveConfig {
 export interface GameConfig {
   arenaHalfSize: number;
   player: PlayerConfig;
+  /** Coop : les héros des autres joueurs (ou alliés du bot), après le premier. */
+  allies?: PlayerConfig[];
   enemies: EnemyConfigs;
   webs: WebConfig;
   stumpRadius: number;
