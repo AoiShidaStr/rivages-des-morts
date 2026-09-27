@@ -493,7 +493,10 @@ export class Renderer {
 
   /** Point sous la souris (coordonnées CSS du canvas) sur le plan horizontal à `height` au-dessus du sol (0 : le sol), ramené au sol. */
   pickGround(cssX: number, cssY: number, height = 0): Vec2 | null {
-    const ratio = this.engine.getRenderWidth() / Math.max(1, this.canvas.clientWidth);
+    // Babylon attend des pixels CSS et les multiplie lui-même par la densité de l'écran (zoom Windows à 125 %,
+    // écran Retina…) : on ne corrige que l'écart restant, si le canvas était étiré en CSS. Multiplier aussi par la
+    // densité ici décalait la visée d'autant, de plus en plus loin du coin haut gauche de l'écran.
+    const ratio = (this.engine.getRenderWidth() / Math.max(1, this.canvas.clientWidth)) * this.engine.getHardwareScalingLevel();
     const ray = this.scene.createPickingRay(cssX * ratio, cssY * ratio, Matrix.Identity(), this.camera);
     if (Math.abs(ray.direction.y) < 1e-6) return null;
     const t = (height - ray.origin.y) / ray.direction.y;
