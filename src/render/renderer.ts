@@ -159,6 +159,8 @@ interface Fx {
 interface FloatingText {
   el: HTMLDivElement;
   pos: Vector3;
+  vx: number;
+  kind: string;
   age: number;
   life: number;
 }
@@ -1771,7 +1773,15 @@ export class Renderer {
     el.className = `float ${kind}`;
     el.textContent = label;
     this.overlay.append(el);
-    this.texts.push({ el, pos: new Vector3(pos.x + (Math.random() - 0.5) * 0.3, height, pos.z), age: 0, life });
+    const vx = (Math.random() - 0.5) * (kind === 'crit' ? 0.7 : 0.4);
+    this.texts.push({
+      el,
+      pos: new Vector3(pos.x + (Math.random() - 0.5) * 0.25, height, pos.z),
+      vx,
+      kind,
+      age: 0,
+      life,
+    });
   }
 
   private updateTexts(dt: number): void {
@@ -1786,10 +1796,25 @@ export class Renderer {
         text.el.remove();
         return false;
       }
-      const rise = new Vector3(0, text.age * 0.9, 0);
-      const screen = Vector3.Project(text.pos.add(rise), Matrix.Identity(), transform, viewport);
-      text.el.style.transform = `translate(${screen.x * toCss}px, ${screen.y * toCss}px) translate(-50%, -50%)`;
-      text.el.style.opacity = String(1 - (text.age / text.life) ** 2);
+      const progress = text.age / text.life;
+      // Trajectoire en léger arc ascendant
+      const riseY = Math.sin(Math.min(1, progress * 1.5) * (Math.PI / 2)) * 1.05;
+      const driftX = text.vx * Math.min(1, progress * 1.8);
+      const worldPos = text.pos.add(new Vector3(driftX, riseY, 0));
+      const screen = Vector3.Project(worldPos, Matrix.Identity(), transform, viewport);
+
+      // Effet d'impact "pop" : grossissement rapide puis stabilisation
+      let scale = 1;
+      if (progress < 0.12) {
+        const k = progress / 0.12;
+        scale = text.kind === 'crit' ? 0.85 + 0.65 * k : 0.85 + 0.35 * k;
+      } else if (progress < 0.28) {
+        const k = (progress - 0.12) / 0.16;
+        scale = text.kind === 'crit' ? 1.5 - 0.5 * k : 1.2 - 0.2 * k;
+      }
+
+      text.el.style.transform = `translate(${screen.x * toCss}px, ${screen.y * toCss}px) translate(-50%, -50%) scale(${scale.toFixed(3)})`;
+      text.el.style.opacity = String(Math.max(0, 1 - progress ** 2.2));
       return true;
     });
   }

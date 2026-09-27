@@ -133,6 +133,8 @@ export class App {
   private dungeon: DungeonDef = content.dungeons.rizieres;
   private dungeonLevel = 1;
   private outcome: Outcome | null = null;
+  /** Micro-pause d'impact (hitstop) sur les coups critiques et parades majeures pour le game feel. */
+  private hitstop = 0;
   private readonly dialogue: DialogueBox;
   private readonly panels: PanelHost;
   private readonly screens: Screens;
@@ -533,7 +535,10 @@ export class App {
     const { input, dungeonRenderer, hud } = this.d;
     // En ligne, le menu n'arrête pas le combat : les autres jouent encore.
     const online = this.coop !== null;
-    if (online || !this.screens.paused) {
+    if (this.hitstop > 0 && !online) {
+      // Le monde se fige, mais les clics et les touches restent en attente : rien n'est perdu pendant la pause.
+      this.hitstop = Math.max(0, this.hitstop - dt);
+    } else if (online || !this.screens.paused) {
       this.accumulator += dt;
       let steps = 0;
       while (this.accumulator >= STEP && steps < MAX_STEPS_PER_FRAME) {
@@ -554,7 +559,14 @@ export class App {
     }
     const events = world.drainEvents();
     if (online) this.shareState(world, events);
-    for (const event of events) this.track(event);
+    for (const event of events) {
+      this.track(event);
+      // Micro-pause d'impact, seul : en ligne, figer un joueur le décalerait des autres.
+      if (online) continue;
+      if (event.type === 'enemyHit' && event.crit) this.hitstop = 0.045;
+      else if (event.type === 'parry') this.hitstop = 0.05;
+      else if (event.type === 'smash') this.hitstop = 0.04;
+    }
     dungeonRenderer.sync(world, events, dt);
     hud.update(world, events, dt);
     dungeonRenderer.render();
@@ -750,6 +762,7 @@ export class App {
     this.run = emptyLoot();
     this.outcome = null;
     this.accumulator = 0;
+    this.hitstop = 0;
     islandRenderer.hideMarkers();
     this.setMode('dungeon');
   }
