@@ -3,6 +3,8 @@
 // Chaque personnage a son emplacement de sauvegarde (saves.ts) ; `Progress` tient celui qu'on joue.
 import { LocalSaveStore, newSlotId, type SaveStore } from './saves';
 
+import { keyName } from '../keys';
+
 export type Slot = 'arme' | 'casque' | 'plastron' | 'jambieres' | 'bottes' | 'amulette' | 'relique';
 export type QuestStatus = 'none' | 'active' | 'done';
 
@@ -52,6 +54,13 @@ export interface Condition {
   count?: [string, number];
   chests?: number;
   level?: number;
+  /** Race ou classe du héros : une réplique propre à chaque personnage, pour qui recommence avec un autre. */
+  race?: string;
+  class?: string;
+  /** Meilleure victoire dans un donjon (`*` : dans n'importe lequel) au moins à ce niveau. */
+  dungeon?: [string, number];
+  /** Une pièce d'équipement forgée au moins à ce niveau. */
+  forged?: number;
 }
 
 export interface Effect {
@@ -323,11 +332,24 @@ export class Progress {
     return actions;
   }
 
-  /** Remplace {oboles}, {coffres} et les compteurs {nom} par leur valeur. */
+  /** Meilleure victoire dans un donjon, ou dans n'importe lequel (`*`). */
+  record(id: string): number {
+    const records = id === '*' ? Object.values(this.state.dungeons) : [this.state.dungeons[id]];
+    return Math.max(0, ...records.map((r) => r?.best ?? 0));
+  }
+
+  /** Plus haut niveau de forge parmi les pièces possédées. */
+  get forgeMax(): number {
+    return Math.max(0, ...Object.values(this.state.itemLevels));
+  }
+
+  /** Remplace {oboles}, {coffres}, {record_<donjon>}, {forge_max} et les compteurs {nom} par leur valeur. */
   format(text: string): string {
-    return text.replace(/\{(\w+)\}/g, (match, key: string) => {
+    return text.replace(/\{([\w*]+)\}/g, (match, key: string) => {
       if (key === 'oboles') return String(this.state.oboles);
       if (key === 'coffres') return String(this.state.chests);
+      if (key === 'forge_max') return String(this.forgeMax);
+      if (key.startsWith('record_')) return String(this.record(key.slice('record_'.length)));
       if (key in this.state.flags) return String(this.state.flags[key]);
       return match === '{self}' ? match : '0';
     });
@@ -359,6 +381,10 @@ export class Progress {
     if (c.count !== undefined && this.flag(c.count[0]) < c.count[1]) return false;
     if (c.chests !== undefined && this.state.chests < c.chests) return false;
     if (c.level !== undefined && this.level < c.level) return false;
+    if (c.race !== undefined && this.state.hero.race !== c.race) return false;
+    if (c.class !== undefined && this.state.hero.class !== c.class) return false;
+    if (c.dungeon !== undefined && this.record(c.dungeon[0]) < c.dungeon[1]) return false;
+    if (c.forged !== undefined && this.forgeMax < c.forged) return false;
     return true;
   }
 
@@ -411,7 +437,7 @@ export class Progress {
 }
 
 function levelUpToast(level: number, point: boolean): Action {
-  const text = point ? `Niveau ${level} ! +1 point de compétence (touche K)` : `Niveau ${level} ! Tetsu peut forger ton équipement jusqu’au niveau ${level}.`;
+  const text = point ? `Niveau ${level} ! +1 point de compétence (touche ${keyName('K')})` : `Niveau ${level} ! Tetsu peut forger ton équipement jusqu’au niveau ${level}.`;
   return { kind: 'toast', text, tone: 'quest' };
 }
 

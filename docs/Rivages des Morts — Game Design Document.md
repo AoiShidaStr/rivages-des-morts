@@ -306,27 +306,44 @@ flowchart LR
 
 **Règle des quêtes** : courtes et sans corvée. Pas de chaînes interminables ni d'allers-retours inutiles. Une quête se boucle en quelques minutes ou en un donjon.
 
+**Durée de vie sans nouveau contenu** : les quêtes s'étalent sur la progression au lieu de toutes s'ouvrir à l'arrivée, et les objectifs de fin de partie sont des paliers que le joueur franchit de toute façon (niveau de donjon, niveau de forge), jamais une collecte à part. Les PNJ changent de réplique d'une visite à l'autre (bavardages qui tournent, selon la progression) et saluent différemment chaque race et chaque classe : recommencer avec un autre héros fait découvrir d'autres répliques.
+
 **Donjons** : des parcours fixes, identiques à chaque passage, comme dans Waven. Aucune récompense entre les salles : chaque combat laisse des coffres, ouverts plus tard. Un boss clôt le donjon, suivi d'une boutique de fin à prix réduit.
 
 **Hub** : la barque de Charon. Marchand, forgeron et maître des classes y vivent, et elle s'agrandit avec la progression.
 
 ## Premier donjon : les Rizières noyées
 
-Le premier donjon du Yomi dure environ 10 minutes : 10 salles fixes, toujours dans le même ordre, jusqu'à la Jorōgumo. Un parcours fixe se conçoit et s'équilibre plus facilement, ce qui convient bien au prototype.
+Le premier donjon du Yomi dure 8 à 10 minutes : 7 salles fixes, toujours dans le même ordre, jusqu'à la Jorōgumo. Un parcours fixe se conçoit et s'équilibre plus facilement, ce qui convient bien au prototype. Il tient dans les 20 premières minutes de jeu (voir plus bas). Chaque salle affiche un indice propre à la classe du héros.
 
 | # | Salle | Contenu | Rôle |
 | --- | --- | --- | --- |
 | 1 | Combat | Hitodama (feux follets) | Apprendre déplacement et attaque |
 | 2 | Combat | Hitodama + kodama | Choisir ses cibles (le kodama soigne) |
-| 3 | Combat | Kappa | Apprendre à bloquer |
-| 4 | Événement | Une âme oubliée | Petit choix rapide, récompense, lore |
-| 5 | Élite | Kappa renforcé | Premier vrai défi |
-| 6 | Trésor | Coffre caché dans les rizières | Oboles et matériaux |
-| 7 | Combat | Kasa-obake | Ennemis imprévisibles |
-| 8 | Combat | Mélange de tous les yokai et Oubliés | Tester le build |
-| 9 | Sanctuaire | Autel en ruine | Soin avant le boss |
-| 10 | Boss | Jorōgumo | Fin du donjon |
-| 11 | Boutique de fin | Marchand du donjon | Récompense : achats à prix réduit |
+| 3 | Combat | Kappa | Apprendre à contourner ou bloquer |
+| 4 | Élite | Kappa renforcé | Premier vrai défi |
+| 5 | Combat | Kasa-obake | Esquiver ce qui tombe du ciel |
+| 6 | Combat | Mélange de tous les yokai et Oubliés | Tester le build |
+| 7 | Boss | Jorōgumo | Fin du donjon |
+| — | Boutique de fin | Marchand du donjon | Récompense : achats à prix réduit |
+
+Pas de salle d'événement, de trésor ni de sanctuaire pour l'instant : les secrets et les coffres cachés sont sur l'île, et le donjon reste un enchaînement de combats.
+
+### Les 20 premières minutes
+
+Du titre à la fin de la première descente : écran titre et création du héros (0 à 3 min), Charon et le village (3 à 8 min), les Rizières noyées (8 à 18 min), retour, coffres et forge (18 à 20 min). Choix arrêtés pour cette séquence :
+
+| Sujet | Choix | Pourquoi |
+| --- | --- | --- |
+| Difficulté | Le jeu reste dur dès le niveau 1 (yokai ×1,4 PV, ×1,6 dégâts) : on ne l'adoucit pas pour la première descente | Un jeu exigeant accroche mieux qu'un jeu trop simple ; perdre contre la Jorōgumo fait partie de l'apprentissage |
+| Île | Le joueur explore librement avant la première descente : tous les PNJ et leurs « ! » sont là dès l'arrivée | L'île fait partie de la découverte |
+| Retour de donjon | Tous les donjons ramènent au ponton de Charon | Les coffres s'ouvrent sur la barque, le hub : on les ouvre dès le retour, sans traverser l'île |
+| Butin | Entièrement tiré au sort, même la première fois | Les tables de drop à la Warframe donnent leur sens au farming |
+| Création du héros | Chaque classe affiche sa difficulté (★ à ★★★) et son style en une ligne, sans présélection | Choisir en connaissance de cause, sans imposer de classe |
+| Son | Des bruitages d'abord (combat et interface), la musique plus tard, quand la direction artistique sera figée | Le retour de chaque coup compte plus que l'ambiance dans les premières minutes |
+| Retour de coup | Chiffre de dégâts et secousse à chaque coup porté ; micro-pause de 40 à 50 ms sur un critique ou une parade ; une attaque lancée passe avant la garde, et la garde interrompt la fin d'un coup | Chaque coup doit se sentir, même avec des graphismes provisoires |
+| Touches affichées | Les indices et les menus montrent la touche réelle du clavier du joueur (AZERTY, QWERTY…), AZERTY par défaut si le navigateur ne la donne pas | « A » en AZERTY est « Q » en QWERTY : un indice faux fait perdre un combat |
+| Chargement web | Au plus 15 Mo au premier lancement, avec un écran de chargement qui montre la progression ; le Palais et les héros non choisis se chargent à la demande, images en WebP | La version en ligne du portfolio doit démarrer vite |
 
 **Coffres** : chaque combat gagné laisse un coffre, dont le contenu suit les tables de drop. On les ouvre plus tard, sur la barque, comme dans Waven.
 
@@ -458,8 +475,13 @@ La zone s'appelle Yomotsu Hirasaka, la pente qui sépare les vivants du Yomi dan
 | Le nom du forgeron | Principale | Retrouver dans les rizières la plaque votive (ema) où Tetsu avait écrit son nom | Tetsu retrouve la mémoire, la forge s'ouvre |
 | La dame des rizières | Principale | Des âmes disparaissent dans les rizières : entrer dans le donjon et vaincre la Jorōgumo | Boutique de fin, suite de l'histoire |
 | Derrière le sceau | Principale | Le moine raconte qu'Izanami ronge le sceau ; dénouer la corde du Grand Rocher, descendre dans le Palais et affronter Izanami | Le Palais d'Izanami, son butin, le dernier mot du moine |
+| Le calme des rives | Principale | Après Izanami : Charon ne partira que si le fond du Yomi se tait. Vaincre la Jorōgumo et Izanami au niveau 10 | Oboles, XP, la barque prête pour la prochaine rive |
 | La lanterne de Yuki | Secondaire | Rapporter une braise de hitodama | Recette de la Lanterne-braise |
-| Le tanuki parmi les statues | Secondaire | Trouver lequel des Jizō est le tanuki déguisé | Un indice vers un secret et un coffre |
+| Les lanternes d'Obon | Secondaire | Après Izanami (tant qu'elle retient les morts, le chemin reste sombre) : allumer les quatre lanternes de pierre | Yuki retrouve sa mère et quitte l'île |
+| Le tanuki parmi les statues | Secondaire | Trouver lequel des Jizō est le tanuki déguisé | Un indice vers un secret et un coffre ; ensuite, ses indices désignent toujours le prochain secret à trouver |
+| La tasse ébréchée | Secondaire | Après la Jorōgumo : retrouver sur les kappa la tasse du mari d'Obaa | Le nom de Genzō, le Rokumonsen, −10 % chez Obaa |
+| Une lame qui se souvient | Secondaire | Au niveau 5 : faire forger une pièce jusqu'au niveau 10 | Soie de jorōgumo (le matériau des paliers suivants) |
+| La chronique des profondeurs | Secondaire | Après Izanami : à chaque nouvelle malédiction franchie (niveaux 10, 20, 30, 40, 60, 70, 100), la raconter au moine | Oboles et XP à chaque chapitre ; au niveau 100, la Pêche Ōkamuzumi |
 
 **Secrets**
 

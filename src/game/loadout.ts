@@ -56,6 +56,10 @@ export interface ClassDef {
   name: string;
   subtitle: string;
   role: string;
+  /** Difficulté de prise en main, de 1 à 3 étoiles, affichée à la création du héros. */
+  difficulty: number;
+  /** Le style de jeu en une phrase, pour choisir sa classe en connaissance de cause. */
+  playstyle: string;
   kit: Kit;
   /** Arme de départ. */
   weapon: string;

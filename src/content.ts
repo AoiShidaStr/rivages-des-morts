@@ -19,8 +19,8 @@ import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot }
 import { withHeroSprites } from './render/heroes';
 import type { SpriteManifest } from './render/renderer';
 
-/** Une réplique : [locuteur, texte]. */
-export type Line = [string, string];
+/** Une réplique : [locuteur, texte], et parfois ses conditions (une race, une classe…) : sinon, elle est sautée. */
+export type Line = [string, string] | [string, string, Condition[]];
 
 export interface Choice {
   text: string;
@@ -34,6 +34,11 @@ export interface Variant {
   /** « ! » : quelque chose de nouveau ; « ? » : une quête à rendre. */
   marker?: string;
   lines: Line[];
+  /**
+   * Bavardage : après `lines`, une seule de ces répliques, à tour de rôle d'une visite à l'autre
+   * (parmi celles dont les conditions sont remplies).
+   */
+  pool?: { if?: Condition[]; lines: Line[] }[];
   choices?: Choice[];
   then?: Effect[];
 }

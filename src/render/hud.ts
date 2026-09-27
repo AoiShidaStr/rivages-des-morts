@@ -2,6 +2,7 @@ import type { Kit } from '../game/config';
 import type { ClassDef } from '../game/loadout';
 import type { GameEvent } from '../game/types';
 import type { WorldView } from '../game/view';
+import { keyName, moveKeys, withKeys } from '../keys';
 import { h } from '../ui/dom';
 
 const BANNER_TIME = 2.6;
@@ -93,21 +94,24 @@ export class Hud {
     this.allyList.replaceChildren(...this.allyBars.map((bar) => h('div', { class: 'bar ally' }, bar.fill, bar.name)));
   }
 
-  /** Noms des compétences, barre et rappel des commandes selon la classe du héros. */
+  /** Noms des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur. */
   configure(cls: ClassDef): void {
     const name = (key: string) => cls.actives.find((a) => a.key === key)?.name ?? '';
-    for (const key of SKILL_KEYS) this.skills[key].name.textContent = name(key);
+    for (const key of SKILL_KEYS) {
+      this.skills[key].name.textContent = name(key);
+      this.skills[key].root.querySelector('kbd')!.textContent = keyName(key);
+    }
     for (const [kit, { style }] of Object.entries(RESOURCE)) {
       if (style) this.rageBar.classList.toggle(style, kit === cls.kit);
     }
     this.rageLabel.textContent = RESOURCE[cls.kit].label;
     const keys: [string, string][] = [
-      ['ZQSD', 'se déplacer'],
+      [moveKeys(), 'se déplacer'],
       ['Souris', 'viser'],
       ['Clic gauche', cls.kit === 'rodeur' ? 'tirer' : 'frapper'],
       ['Clic droit', name('Clic droit').toLowerCase()],
       ['Espace', 'esquiver'],
-      ...SKILL_KEYS.map((key): [string, string] => [key, name(key).toLowerCase()]),
+      ...SKILL_KEYS.map((key): [string, string] => [keyName(key), name(key).toLowerCase()]),
     ];
     this.controls.replaceChildren(...keys.flatMap(([key, label], i) => [i ? ' · ' : '', h('kbd', {}, key), ` ${label}`]));
   }
@@ -235,7 +239,7 @@ export class Hud {
     this.bannerLabel.textContent = label;
     this.banner.classList.add('visible');
     this.bannerTimer = BANNER_TIME;
-    this.hint.textContent = hint ?? '';
+    this.hint.textContent = withKeys(hint ?? '');
     this.hint.classList.toggle('visible', Boolean(hint));
   }
 

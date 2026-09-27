@@ -236,7 +236,7 @@ export class App {
       if (key('KeyE') || key('Space') || key('Enter')) this.dialogue.advance();
       if (key('ArrowUp') || key('KeyW')) this.dialogue.move(-1);
       if (key('ArrowDown') || key('KeyS')) this.dialogue.move(1);
-      for (let n = 1; n <= 4; n++) if (key(`Digit${n}`) || key(`Numpad${n}`)) this.dialogue.pick(n - 1);
+      for (let n = 1; n <= 9; n++) if (key(`Digit${n}`) || key(`Numpad${n}`)) this.dialogue.pick(n - 1);
       return;
     }
     if (this.panels.open) {
@@ -398,7 +398,10 @@ export class App {
       const variant = variants.find((v) => progress.check(v.if));
       if (!variant) return;
       await this.playLines(variant.lines);
-      const actions = progress.apply(variant.then);
+      const chatter = (variant.pool ?? []).filter((p) => progress.check(p.if));
+      const turn = `bavardage_${it.def.dialogue ?? it.def.id}`;
+      if (chatter.length > 0) await this.playLines(chatter[progress.flag(turn) % chatter.length].lines);
+      const actions = progress.apply([...(chatter.length > 0 ? [{ add: [turn, 1] as [string, number] }] : []), ...(variant.then ?? [])]);
       const available = (variant.choices ?? []).filter((c) => progress.check(c.if));
       if (available.length > 0) {
         const choice = available[await this.dialogue.choose(available.map((c) => c.text))];
@@ -414,7 +417,8 @@ export class App {
   }
 
   private async playLines(lines: Line[]): Promise<void> {
-    for (const [speakerId, text] of lines) {
+    for (const [speakerId, text, conditions] of lines) {
+      if (!this.d.progress.check(conditions)) continue;
       const speaker = content.speakers[speakerId] ?? { name: speakerId };
       // Le héros parle avec le visage de sa race et de sa classe.
       const portrait = speaker.sprite === 'heros' ? `${import.meta.env.BASE_URL}sprites/${heroImage(this.d.progress.state.hero)}` : portraitUrl(speaker.sprite);

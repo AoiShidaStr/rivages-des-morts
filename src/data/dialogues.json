@@ -25,6 +25,10 @@
           ["charon", "Encore une âme. Descends de ma barque, et vite : d'autres attendent sur toutes les rives du monde."],
           ["heros", "Où suis-je ?"],
           ["charon", "Au Yomi, l'au-delà des Japonais. Enfin, ce qu'il en reste. Depuis l'effondrement, je fais la navette entre tous les au-delà. Personne ne m'a demandé mon avis."],
+          ["charon", "Une âme du Nord, avec une hache dans le regard. Les Valkyries t'ont laissée tomber en route ? Le Valhalla s'est effondré, lui aussi.", [{ "race": "einherjar" }]],
+          ["charon", "Une statuette d'Égypte. Tu devais trimer aux champs d'Osiris à la place de ton maître, c'est ça ? Les champs d'Ialou sont sous l'eau, eux aussi.", [{ "race": "oushebti" }]],
+          ["charon", "Un enfant de l'Olympe. Autrefois, je t'aurais fait traverser le Styx. Aujourd'hui, c'est le Styx qui déborde partout.", [{ "race": "demi-dieu" }]],
+          ["charon", "À moitié yokai, toi. Ici, tu es presque chez toi. Presque.", [{ "race": "hanyo" }]],
           ["charon", "Tu ne te souviens de rien, hein ? Ça arrive souvent, ces temps-ci. Les vivants oublient, et les morts s'égarent."],
           ["charon", "Monte au village des âmes, en haut du chemin. Quelqu'un là-haut saura te remettre d'aplomb."]
         ],
@@ -62,9 +66,39 @@
         "lines": [["charon", "Les rizières noyées, derrière le torii noir, au nord-ouest. Et les coffres que tu rapportes, c'est sur ma barque qu'on les ouvre."]]
       },
       {
+        "if": [{ "flag": "izanami_vaincue" }, { "quest": "calme", "is": "none" }],
+        "marker": "!",
         "lines": [
-          ["charon", "Les rizières sont calmes. Pas mal, pour une âme sans nom."],
-          ["charon", "Les autres rives attendront encore un peu : la suite de ton voyage n'est pas encore tracée."]
+          ["charon", "Izanami s'est calmée, à ce qu'on dit. Et la Jorōgumo ne tisse plus. Pas mal, pour une âme sans nom."],
+          ["charon", "Mais le fond du Yomi gronde encore. Tant que ça bouillonne là-dessous, ma barque ne passera pas : le courant la retournerait."],
+          ["heros", "Qu'est-ce qu'il faut faire ?"],
+          ["charon", "Descendre plus bas. Dans les rizières et dans le palais, jusqu'au dixième niveau, là où les morts ont hâte. Quand les deux reines y seront tombées, on en reparle."]
+        ],
+        "then": [{ "startQuest": "calme" }]
+      },
+      {
+        "if": [{ "quest": "calme", "is": "active" }, { "dungeon": ["rizieres", 10] }, { "dungeon": ["palais", 10] }],
+        "marker": "?",
+        "lines": [
+          ["narrateur", "Charon plonge la main dans l'eau noire, longtemps."],
+          ["charon", "… Le courant s'est apaisé. Tu as fait taire le fond du Yomi, âme sans nom."],
+          ["charon", "La barque est prête. Il ne manque plus qu'une rive où accoster, et celle-là, personne ne l'a encore tracée. Tiens, pour la route."]
+        ],
+        "then": [{ "completeQuest": "calme" }, { "oboles": 120 }, { "xp": 150 }]
+      },
+      {
+        "if": [{ "quest": "calme", "is": "active" }],
+        "lines": [["charon", "Le dixième niveau, dans les rizières et dans le palais. Le courant me le dira, quand ce sera fait."]]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "if": [{ "flag": "jorogumo_vaincue" }, { "quest": "sceau", "is": "none" }], "lines": [["charon", "Le moine du Rocher te cherchait. Il dit que la pierre tremble. Moi, je dis que c'est le vent. Va le voir quand même."]] },
+          { "lines": [["charon", "Chaque victoire ouvre des niveaux plus profonds. Plus tu descends, plus les morts s'accrochent, et plus ils laissent derrière eux."]] },
+          { "lines": [["charon", "Les coffres ? Sur ma barque. Toujours sur ma barque. Je ne suis pas une consigne, mais c'est tout comme."]] },
+          { "lines": [["charon", "Ce que tu rapportes en double, Tetsu le fond. Rien ne se perd, au Yomi. Sauf les noms."]] },
+          { "if": [{ "quest": "calme", "is": "done" }], "lines": [["charon", "La barque est prête. Quand une rive sera en vue, tu seras le premier à le savoir. Enfin, le deuxième : moi d'abord."]] },
+          { "if": [{ "quest": "calme", "is": "none" }], "lines": [["charon", "Les rizières sont calmes. Pas mal, pour une âme sans nom."]] }
         ]
       }
     ],
@@ -119,12 +153,20 @@
         "then": [{ "take": "tasse-ebrechee" }, { "completeQuest": "tasse" }, { "set": "remise_obaa" }, { "give": "rokumonsen" }, { "xp": 50 }]
       },
       {
-        "lines": [["obaa", "Un thé ? Non, les morts n'ont pas soif. Mais ils ont toujours besoin de quelque chose."]],
+        "lines": [],
+        "pool": [
+          { "lines": [["obaa", "Un thé ? Non, les morts n'ont pas soif. Mais ils ont toujours besoin de quelque chose."]] },
+          { "if": [{ "race": "einherjar" }], "lines": [["obaa", "Couvre-toi, voyons : tu as l'air d'arriver d'un pays où il neige même l'été."]] },
+          { "if": [{ "notFlag": "benediction_jizo" }], "lines": [["obaa", "Les six Jizō, près de Yuki… Une obole à chacun, et ils veillent sur toi. C'est ce qu'on disait, de mon temps."]] },
+          { "lines": [["obaa", "Le tanuki m'a vendu une théière « authentique ». Elle fuit par le fond. Mais elle est jolie."]] },
+          { "if": [{ "flag": "remise_obaa" }], "lines": [["obaa", "Genzō aimait les pêches. Il disait qu'elles chassaient les mauvais esprits. Je m'en souviens, maintenant."]] },
+          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["obaa", "On dit que la reine d'en bas s'est calmée. Le thé aurait meilleur goût… si on pouvait encore le boire."]] }
+        ],
         "choices": [
           { "text": "Voir tes marchandises", "then": [{ "open": "shop", "shop": "obaa" }] },
           {
             "text": "Tu as l'air soucieuse ?",
-            "if": [{ "quest": "tasse", "is": "none" }],
+            "if": [{ "quest": "tasse", "is": "none" }, { "flag": "jorogumo_vaincue" }],
             "reply": [
               ["obaa", "Soucieuse ? Moi ? … Bon. Quand les rizières ont été noyées, j'y ai perdu la tasse de mon mari. Une tasse en grès, ébréchée au bord."],
               ["obaa", "Les kappa ramassent tout ce qui brille, là-bas. Si tu en croises un… Et puis c'est idiot : je ne me souviens même plus de son nom."]
@@ -168,7 +210,12 @@
         "lines": [
           ["heros", "(Tu lui tends la plaque de bois.)"],
           ["forgeron", "Tetsu. Tetsu… Oui. C'est mon nom."],
-          ["tetsu", "Mes mains s'en souviennent. Merci, âme sans nom. La forge est ouverte : apporte-moi des oboles et des écailles de kappa, et je rendrai tes lames dignes du Yomi."]
+          ["tetsu", "Mes mains s'en souviennent. Merci, âme sans nom. La forge est ouverte : apporte-moi des oboles et des écailles de kappa, et je rendrai tes lames dignes du Yomi."],
+          ["tetsu", "À commencer par ton nodachi : il a plus d'entailles que de tranchant.", [{ "class": "guerrier" }]],
+          ["tetsu", "Des grelots d'onmyōji… Je ne forge pas les clochettes, d'habitude. Pour toi, je ferai une exception.", [{ "class": "invocateur" }]],
+          ["tetsu", "Des kunai jumeaux. Petites lames, gros entretien. Je m'en occupe.", [{ "class": "lame" }]],
+          ["tetsu", "Une naginata de temple. Les moines savaient choisir leur acier. Moi, je sais le garder vivant.", [{ "class": "paladin" }]],
+          ["tetsu", "Un yumi de bambou ? Je ne travaille pas le bambou… mais les pointes, les renforts et la corde, oui.", [{ "class": "rodeur" }]]
         ],
         "then": [{ "take": "ema-tetsu" }, { "set": "nom_tetsu" }, { "set": "forge_ouverte" }, { "completeQuest": "forgeron" }, { "xp": 40 }]
       },
@@ -177,7 +224,32 @@
         "lines": [["forgeron", "L'ema… dans les rizières ouvertes, à l'est. Une petite plaque de bois sur un support."]]
       },
       {
-        "lines": [["tetsu", "Le feu est chaud. Qu'est-ce qu'on forge ?"]],
+        "if": [{ "quest": "lame", "is": "none" }, { "level": 5 }],
+        "marker": "!",
+        "lines": [
+          ["tetsu", "Tu as grandi, âme sans nom. Ton équipement, lui, n'a pas suivi."],
+          ["tetsu", "Une pièce que je reforge garde la mémoire de chaque coup. Monte-en une jusqu'au niveau 10, et je te donnerai de quoi aller plus loin."]
+        ],
+        "then": [{ "startQuest": "lame" }]
+      },
+      {
+        "if": [{ "quest": "lame", "is": "active" }, { "forged": 10 }],
+        "marker": "?",
+        "lines": [
+          ["tetsu", "Niveau 10. Écoute-la sonner : elle te reconnaît, maintenant."],
+          ["tetsu", "Au niveau 25, il me faudra de la soie de jorōgumo pour aller plus loin. En voilà pour commencer. Et au 50, la pièce se liera à ton âme."]
+        ],
+        "then": [{ "completeQuest": "lame" }, { "material": ["soie", 3] }, { "xp": 60 }]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["tetsu", "Le feu est chaud. Qu'est-ce qu'on forge ?"]] },
+          { "lines": [["tetsu", "Je ne forge pas plus loin que ce que tu es. Une lame suit son porteur : grandis, et elle grandira."]] },
+          { "lines": [["tetsu", "Une pièce montée au niveau 25 compte double pour ton art. Au 50, elle compte pour tous. Le métal a de la mémoire."]] },
+          { "if": [{ "flag": "sceau_ouvert" }, { "notHas": "do-yomi" }], "lines": [["tetsu", "Des os du Yomi et de la foudre figée… Rapporte-m'en, et je te fais un Dō que même Izanami n'entamerait pas."]] },
+          { "lines": [["tetsu", "Les doublons que tu rapportes, je les fonds. Rien de ce qui a été forgé ne se perd."]] }
+        ],
         "choices": [
           { "text": "Utiliser la forge", "then": [{ "open": "forge" }] },
           {
@@ -224,9 +296,19 @@
         "lines": [["yuki", "Une braise de feu follet… Dans les rizières noyées, il y en a plein. Ils brûlent, fais attention."]]
       },
       {
+        "if": [{ "quest": "obon", "is": "none" }, { "notFlag": "izanami_vaincue" }],
+        "lines": [],
+        "pool": [
+          { "lines": [["yuki", "Ma lanterne brille, mais le chemin s'arrête au Grand Rocher. Le moine dit que la dame derrière retient les morts."]] },
+          { "lines": [["yuki", "Tu crois que Maman m'attend ? … Oui. Les mamans attendent toujours."]] },
+          { "lines": [["yuki", "Les Jizō veillent sur les enfants. Moi, je veille sur les Jizō. Comme ça, c'est juste."]] }
+        ]
+      },
+      {
         "if": [{ "quest": "obon", "is": "none" }],
         "marker": "!",
         "lines": [
+          ["yuki", "Tu es descendu voir la dame derrière le Rocher ? Depuis, la brume est plus légère."],
           ["yuki", "Ma lanterne brille, mais le chemin est encore sombre."],
           ["yuki", "Pour l'Obon, chez moi, on allumait des lanternes pour que les morts retrouvent la maison. Il y a quatre lanternes de pierre sur l'île. Si elles brillaient toutes…"],
           ["yuki", "Il faudrait une braise de feu follet pour chacune."]
@@ -296,7 +378,10 @@
     ],
     "jizo-faux": [
       {
-        "lines": [["narrateur", "Un Jizō de pierre… qui sent drôlement le saké. Et qui respire, peut-être ?"]],
+        "lines": [
+          ["narrateur", "Un Jizō de pierre… qui sent drôlement le saké. Et qui respire, peut-être ?"],
+          ["narrateur", "Ton sang de yokai ne s'y trompe pas : cette statue-là est aussi vivante que toi. Enfin, aussi morte.", [{ "race": "hanyo" }]]
+        ],
         "choices": [
           {
             "text": "Le secouer",
@@ -324,9 +409,28 @@
           },
           {
             "text": "Un indice ?",
-            "reply": [
-              ["tanuki", "Sous le pont des rizières. Et on raconte qu'il y a quelque chose derrière la cascade, mais l'eau, très peu pour moi."]
-            ]
+            "if": [{ "notFlag": "coffre_pont" }],
+            "reply": [["tanuki", "Sous le pont des rizières, quelqu'un a caché un coffre. Pas moi. Enfin, peut-être moi."]]
+          },
+          {
+            "text": "Un indice ?",
+            "if": [{ "flag": "coffre_pont" }, { "notFlag": "coffre_cascade" }],
+            "reply": [["tanuki", "On raconte qu'il y a quelque chose derrière la cascade, à l'est. Mais l'eau, très peu pour moi."]]
+          },
+          {
+            "text": "Un indice ?",
+            "if": [{ "flag": "coffre_pont" }, { "flag": "coffre_cascade" }, { "notFlag": "benediction_jizo" }],
+            "reply": [["tanuki", "Mes voisins de pierre, là. Une obole à chacun des six, et ils te rendent la politesse. Pas à moi, hein : moi, je ne compte pas. ({offrandes} / 6)"]]
+          },
+          {
+            "text": "Un indice ?",
+            "if": [{ "flag": "coffre_pont" }, { "flag": "coffre_cascade" }, { "flag": "benediction_jizo" }, { "notFlag": "fragment_izanami" }],
+            "reply": [["tanuki", "Le Grand Rocher. Colle l'oreille contre la pierre. Moi, j'ai essayé une fois : j'ai fait des cauchemars pendant un siècle."]]
+          },
+          {
+            "text": "Un indice ?",
+            "if": [{ "flag": "coffre_pont" }, { "flag": "coffre_cascade" }, { "flag": "benediction_jizo" }, { "flag": "fragment_izanami" }],
+            "reply": [["tanuki", "Tu as tout trouvé. Tout ! Tu es pire qu'un tanuki. Pour l'île, en tout cas. Dans les donjons, plus on descend, plus les trésors sont vrais."]]
           },
           { "text": "Partir" }
         ]
@@ -338,6 +442,7 @@
         "marker": "!",
         "lines": [
           ["kawataro", "Kyuu ! Un humain ! … Ah non, une âme. Pardon, l'habitude."],
+          ["kawataro", "Oh, tu sens le yokai, toi ! À moitié ? C'est déjà ça. Cousin !", [{ "race": "hanyo" }]],
           ["kawataro", "Je suis Kawatarō. Je ne suis pas comme ceux des rizières noyées : eux ont oublié les bonnes manières. Moi, je salue."],
           ["kawataro", "Dis… tu n'aurais pas un concombre ? Depuis que je suis mort, je n'en ai pas croqué un seul."]
         ],
@@ -360,7 +465,13 @@
         "lines": [["kawataro", "Un concombre… Le tanuki vend de tout, paraît-il. Même des choses vraies."]]
       },
       {
-        "lines": [["kawataro", "Tu as salué quelqu'un aujourd'hui ? Ça ne coûte rien, et ça renverse des coupelles."]]
+        "lines": [],
+        "pool": [
+          { "lines": [["kawataro", "Tu as salué quelqu'un aujourd'hui ? Ça ne coûte rien, et ça renverse des coupelles."]] },
+          { "lines": [["kawataro", "Les kappa renforcés portent des choses lourdes : un kanabō, un tetsubō, une cloche… Ils aiment ce qui fait du bruit."]] },
+          { "if": [{ "notFlag": "tanuki_trouve" }], "lines": [["kawataro", "Il paraît qu'un des Jizō sent le saké. Moi je ne dis rien : je suis un kappa poli."]] },
+          { "if": [{ "quest": "concombre", "is": "done" }], "lines": [["kawataro", "Kyuu… Ce concombre, je m'en souviendrai longtemps. Plus longtemps que de mon nom, peut-être."]] }
+        ]
       }
     ],
     "nanashi": [
@@ -392,7 +503,12 @@
         "lines": [["nanashi", "Trois éclats de masque… Les Oubliés des rizières en portent. Je t'attendrai. Enfin, je crois."]]
       },
       {
-        "lines": [["isamu", "Isamu. Tu t'en souviens ? … Merci. La mer me manque, mais moins qu'avant."]]
+        "lines": [],
+        "pool": [
+          { "lines": [["isamu", "Isamu. Tu t'en souviens ? … Merci. La mer me manque, mais moins qu'avant."]] },
+          { "lines": [["isamu", "Les Oubliés des rizières… Je leur ressemblais. Frappe-les vite : ce n'est pas de la cruauté, c'est de la pitié."]] },
+          { "lines": [["isamu", "Ma fille m'attendait sur le quai. Si elle est passée par ici, le passeur l'a vue. Je n'ose pas lui demander."]] }
+        ]
       }
     ],
     "voyageur": [
@@ -402,6 +518,7 @@
         "lines": [
           ["narrateur", "Un homme massif, fait d'argile craquelée, contemple la mer. Des herbes poussent dans ses fissures."],
           ["voyageur", "Tu as vaincu l'araignée ? Alors tu es de ceux qui avancent."],
+          ["voyageur", "… Tu es d'argile, toi aussi. On nous a façonnés pour servir. Moi, j'ai fini par choisir qui servir : un ami.", [{ "race": "oushebti" }]],
           ["voyageur", "Je cherche un roi. Un roi qui avait peur d'être oublié. Il a volé quelque chose, et toutes les rives se sont effondrées."],
           ["voyageur", "Le passeur voit tout le monde passer. Demande-lui s'il l'a vu."]
         ],
@@ -423,7 +540,12 @@
         "lines": [["voyageur", "Le passeur… demande-lui. Il se souvient de tout, même quand il fait semblant du contraire."]]
       },
       {
-        "lines": [["voyageur", "Mon nom ? … Pas encore. Ici, un nom se mérite. Et le mien pèse lourd."]]
+        "lines": [],
+        "pool": [
+          { "lines": [["voyageur", "Mon nom ? … Pas encore. Ici, un nom se mérite. Et le mien pèse lourd."]] },
+          { "lines": [["voyageur", "Le fragment de tablette que tu portes est tiède, non ? Il sent quand une rive s'effondre."]] },
+          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["voyageur", "Tu as regardé une reine des morts en face, et tu es remonté. Mon ami, lui, n'a jamais su regarder la mort."]] }
+        ]
       }
     ],
     "sutra": [
@@ -462,6 +584,7 @@
           ["moine", "Tu as vaincu la dame des rizières… Alors écoute-moi. Depuis sa chute, le Grand Rocher tremble."],
           ["moine", "De l'autre côté, quelque chose a senti ta force. Izanami n'a jamais cessé d'attendre, et les vivants l'ont oubliée. La colère d'une déesse oubliée ronge le sceau."],
           ["moine", "Si personne ne descend l'apaiser, il cédera de lui-même, et tout le Yomi avec. On raconte que la corde sacrée se dénoue pour une âme sans nom."],
+          ["moine", "Chez toi aussi, on raconte cette histoire, n'est-ce pas ? Un chanteur descendu chercher sa femme, qui s'est retourné trop tôt.", [{ "race": "demi-dieu" }]],
           ["moine", "Si tu descends, souviens-toi de ce qu'a fait Izanagi : il ne s'est jamais retourné. Et trois pêches ont suffi à repousser l'armée des morts."]
         ],
         "then": [{ "startQuest": "sceau" }]
@@ -475,6 +598,79 @@
           ["moine", "Tant qu'une âme se souviendra d'elle, elle ne rongera plus le sceau."]
         ],
         "then": [{ "set": "moine_izanami" }, { "xp": 40 }]
+      },
+      {
+        "if": [{ "flag": "moine_izanami" }, { "quest": "chronique", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["moine", "Tu redescendras, n'est-ce pas ? Plus bas que le palais, là où la mort s'épaissit."],
+          ["moine", "Alors raconte-moi. Chaque fois qu'un nouveau mal du Yomi se lève devant toi, viens me le dire : je l'écrirai dans le sutra, pour ceux qui viendront après."]
+        ],
+        "then": [{ "startQuest": "chronique" }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 10] }, { "notFlag": "chronique_10" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le niveau 10, et la hâte des morts.)"],
+          ["moine", "Au dixième niveau, les morts ont hâte. Hâte d'être oubliés pour de bon, ou hâte qu'on se souvienne d'eux ? Même eux ne le savent plus."]
+        ],
+        "then": [{ "set": "chronique_10" }, { "oboles": 20 }, { "xp": 30 }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 20] }, { "notFlag": "chronique_20" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le niveau 20, et les âmes d'élite.)"],
+          ["moine", "Plus bas, certains s'accrochent plus fort que les autres. La rancune tient debout plus longtemps que l'amour, hélas."]
+        ],
+        "then": [{ "set": "chronique_20" }, { "oboles": 40 }, { "xp": 40 }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 30] }, { "notFlag": "chronique_30" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le niveau 30, et les feux follets vengeurs.)"],
+          ["moine", "Chaque yokai qui tombe libère son feu follet… C'est ce qui reste d'une âme quand tout le reste est parti : de la chaleur, et de la colère."]
+        ],
+        "then": [{ "set": "chronique_30" }, { "oboles": 60 }, { "xp": 50 }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 40] }, { "notFlag": "chronique_40" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le niveau 40, et la sève du Yomi.)"],
+          ["moine", "Les kodama plantent leurs racines jusque-là ? Alors la forêt des morts pousse sous nos pieds. Ne laisse rien reprendre son souffle."]
+        ],
+        "then": [{ "set": "chronique_40" }, { "oboles": 80 }, { "xp": 60 }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 60] }, { "notFlag": "chronique_60" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le niveau 60, et l'écorce des kodama.)"],
+          ["moine", "Les lames glissent sur eux comme sur l'écorce d'un vieux cèdre. Frappe autrement : la terre, la foudre, la force brute."]
+        ],
+        "then": [{ "set": "chronique_60" }, { "oboles": 120 }, { "xp": 80 }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 70] }, { "notFlag": "chronique_70" }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le niveau 70, et la rancune des noyés.)"],
+          ["moine", "Plus ils sont près de disparaître, plus ils mordent. Je les comprends. Achève-les vite : c'est la seule bonté qui leur reste."]
+        ],
+        "then": [{ "set": "chronique_70" }, { "oboles": 140 }, { "xp": 90 }]
+      },
+      {
+        "if": [{ "quest": "chronique", "is": "active" }, { "dungeon": ["*", 100] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes le centième niveau, et le regard d'Izanami posé sur toi à travers sa servante.)"],
+          ["moine", "Elle te regarde encore, tout au fond. … Et toi, tu ne t'es pas retourné."],
+          ["moine", "Je n'ai plus rien à t'apprendre. Prends ceci : la dernière pêche d'Izanagi. Elle a repoussé une armée de morts ; elle saura te ramener."]
+        ],
+        "then": [{ "completeQuest": "chronique" }, { "give": "peche-okamuzumi" }, { "oboles": 300 }, { "xp": 300 }]
       },
       {
         "if": [{ "quest": "sutra", "is": "none" }],

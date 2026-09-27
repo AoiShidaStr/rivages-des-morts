@@ -1,5 +1,6 @@
 import { racePassives, type ItemDef, type SkillsDef } from '../game/loadout';
 import type { Hero } from '../game/progress';
+import { keyName } from '../keys';
 import { heroImage, heroSprite } from '../render/heroes';
 import type { AsepriteSheet } from '../render/sheets';
 import { h } from './dom';
@@ -67,6 +68,7 @@ export class CreationScreen {
             h('small', { class: 'choice-origin' }, c.subtitle),
             h('span', { class: 'choice-style' }, c.role),
             h('small', { class: 'choice-line' }, 'Arme : ', h('b', {}, items[c.weapon]?.name ?? c.weapon)),
+            h('small', { class: 'choice-line' }, 'Difficulté : ', stars(c.difficulty)),
           );
         }),
         ...skills.upcomingClasses.map((c) =>
@@ -111,7 +113,8 @@ export class CreationScreen {
           'div',
           {},
           h('h3', {}, `${cls.name} · ${cls.subtitle}`),
-          ...cls.actives.map((a) => h('p', {}, h('kbd', {}, a.key), ' ', h('b', {}, a.name), ` : ${a.description}`)),
+          h('p', { class: 'class-playstyle' }, stars(cls.difficulty), ' ', cls.playstyle),
+          ...cls.actives.map((a) => h('p', {}, h('kbd', {}, keyName(a.key)), ' ', h('b', {}, a.name), ` : ${a.description}`)),
         ),
       );
 
@@ -252,4 +255,11 @@ function playIdle(canvas: HTMLCanvasElement, name: string): void {
     };
     requestAnimationFrame(tick);
   });
+}
+
+/** Difficulté de prise en main d'une classe : ★☆☆ à ★★★. */
+function stars(level: number): HTMLElement {
+  const n = Math.max(1, Math.min(3, level));
+  const label = ['facile', 'moyenne', 'difficile'][n - 1];
+  return h('span', { class: 'stars', title: `Prise en main ${label}` }, '★'.repeat(n), h('span', { class: 'stars-off' }, '★'.repeat(3 - n)));
 }

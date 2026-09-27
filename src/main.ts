@@ -10,6 +10,7 @@ import type { GameConfig } from './game/config';
 import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
+import { loadKeyboardLayout } from './keys';
 import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { IslandRenderer } from './render/islandRenderer';
@@ -43,6 +44,8 @@ function element<T extends HTMLElement>(id: string): T {
 }
 
 async function start(): Promise<void> {
+  // Avant toute interface : les touches s'affichent selon le clavier du joueur.
+  await loadKeyboardLayout();
   const canvas = element<HTMLCanvasElement>('game');
   const overlay = element('overlay');
   const engine = new Engine(canvas, true, { stencil: false }, true);

@@ -1775,6 +1775,19 @@ body:not([data-mode='dungeon']) #hud {
   color: var(--ink-2);
 }
 
+.stars {
+  color: var(--vermilion);
+  letter-spacing: 1px;
+}
+
+.stars-off {
+  opacity: 0.25;
+}
+
+.class-playstyle {
+  font-style: italic;
+}
+
 .parents {
   display: flex;
   flex-wrap: wrap;

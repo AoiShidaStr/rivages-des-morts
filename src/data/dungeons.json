@@ -1,5 +1,5 @@
 {
-  "about": "Les donjons du Yomi : nom, boss, textes de fin, effets de la victoire (onVictory à chaque fois, firstVictory la première), boutique de fin, point de retour sur l'île (exit) et décor de l'arène (style : teinte du sol, couleur de la brume, sprites posés autour). Les salles de combat sont dans dungeon.json (Rizières noyées) et dungeon-palais.json (Palais d'Izanami).",
+  "about": "Les donjons du Yomi : nom, boss, textes de fin, effets de la victoire (onVictory à chaque fois, firstVictory la première), boutique de fin, point de retour sur l'île (exit, sinon le ponton de Charon : island.json, dungeonExit) et décor de l'arène (style : teinte du sol, couleur de la brume, sprites posés autour). Les salles de combat sont dans dungeon.json (Rizières noyées) et dungeon-palais.json (Palais d'Izanami).",
   "rizieres": {
     "name": "Rizières noyées",
     "region": "Donjon du Yomi",
@@ -41,7 +41,6 @@
       "then": [{ "xp": 250 }, { "toast": "Retourne voir le moine du Rocher : il voudra savoir." }]
     },
     "shop": "fin-palais",
-    "exit": { "u": 1.6, "v": 11.4 },
     "style": {
       "ground": [0.46, 0.38, 0.55],
       "sky": "#2e2733",
