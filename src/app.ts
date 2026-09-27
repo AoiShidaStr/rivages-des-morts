@@ -10,7 +10,13 @@ import { drawWeighted, salvage, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
 import { MAX_CHARACTERS, bindSelf, type Action, type Progress } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
+import type { WorldView } from './game/view';
 import { World } from './game/world';
+import { idleFrame, mergeFrames, played } from './net/frames';
+import { MirrorWorld } from './net/mirror';
+import { SNAPSHOT_EVERY, snapshotOf, type Member, type Start } from './net/protocol';
+import type { CoopSession } from './net/session';
+import type { Network } from './net/transport';
 import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
@@ -32,6 +38,7 @@ import {
   trackedQuest,
   type UiContext,
 } from './ui/panels';
+import { openCoopMenu, openLobby } from './ui/coop';
 import { Screens, type MenuOption } from './ui/screens';
 
 type Mode = 'title' | 'island' | 'dungeon' | 'result';
@@ -71,6 +78,8 @@ export interface AppDeps {
   devDungeon: string;
   /** `?coop=N` : nombre de héros, les alliés étant joués par l'ordinateur (tests de la coop sans réseau). */
   devCoop: number;
+  /** Coop en ligne : Trystero (WebRTC entre navigateurs), ou `?reseau=local` entre onglets (tests). */
+  network: Network;
 }
 
 /** Un allié de la descente : ses réglages, son apparence et son nom. */
@@ -95,6 +104,23 @@ export class App {
   private world: World | null = null;
   /** Alliés joués par l'ordinateur (`?coop`), un par héros après le premier. */
   private bots: Bot[] = [];
+  /**
+   * Coop en ligne : la session (salon puis descentes). L'hôte fait tourner `world` ; un invité n'a que `mirror`,
+   * la partie telle que l'hôte la lui décrit.
+   */
+  private coop: CoopSession | null = null;
+  private mirror: MirrorWorld | null = null;
+  private lobbyOpen = false;
+  private refreshLobby: (() => void) | null = null;
+  /** Hôte : dernière commande de chaque invité (avec ses appuis pas encore joués), pas de simulation, événements à envoyer. */
+  private readonly remote = new Map<number, InputFrame>();
+  private hostTick = 0;
+  private sentTick = 0;
+  private outbox: GameEvent[] = [];
+  /** Invité : événements reçus de l'hôte, pas encore montrés ; commande en attente d'envoi. */
+  private inbox: GameEvent[] = [];
+  private pending: InputFrame | undefined;
+  private sentAt = 0;
   /** Un dialogue, une transition ou une action à plusieurs étapes est en cours. */
   private busy = false;
   private accumulator = 0;
@@ -138,6 +164,13 @@ export class App {
     return {
       get world() {
         return app.world;
+      },
+      /** Coop en ligne : la session, et chez un invité la partie telle que l'hôte la décrit. */
+      get coop() {
+        return app.coop;
+      },
+      get mirror() {
+        return app.mirror;
       },
       get island() {
         return app.d.island;
@@ -186,7 +219,7 @@ export class App {
         this.updateDungeon(dt);
         break;
       case 'result':
-        if (this.world) this.d.dungeonRenderer.sync(this.world, [], dt);
+        if (this.world ?? this.mirror) this.d.dungeonRenderer.sync((this.world ?? this.mirror) as WorldView, [], dt);
         this.d.dungeonRenderer.render();
         break;
     }
@@ -236,6 +269,7 @@ export class App {
     if (last) {
       options.push({ label: `Continuer : ${heroLabel(content.skills, last.hero)}, niv. ${last.level}`, primary: true, action: () => this.play(last.id) });
     }
+    if (last) options.push({ label: 'Coop en ligne', action: () => this.play(last.id, () => this.openCoop()) });
     options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
     this.screens.showTitle(options);
@@ -260,8 +294,9 @@ export class App {
     );
   }
 
-  private play(id: string): void {
-    if (this.d.progress.use(id)) void this.beginIsland(false);
+  /** Reprend ce personnage sur l'île ; `then` : ce qu'on fait une fois arrivé (ouvrir la coop). */
+  private play(id: string, then?: () => void): void {
+    if (this.d.progress.use(id)) void this.beginIsland(false).then(then);
   }
 
   /** Nouveau personnage, dans un emplacement libre : on choisit d'abord sa race et sa classe. */
@@ -470,7 +505,7 @@ export class App {
   }
 
   private async enterDungeon(id: string, startWave: number, withTransition: boolean, level: number): Promise<void> {
-    const { config, dungeonRenderer, hud, islandRenderer } = this.d;
+    const { config } = this.d;
     const player = this.loadout().config;
     const allies = this.botAllies();
     const dungeon = content.dungeons[id] ?? content.dungeons.rizieres;
@@ -478,38 +513,37 @@ export class App {
     this.dungeonLevel = clampLevel(content.difficulty, level);
     const difficulty = difficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length);
     const begin = () => {
-      this.screens.hideResult();
-      this.panels.close();
       const world = new World({ ...config, ...dungeon.arena, player, allies: allies.map((a) => a.config), difficulty }, startWave);
       this.world = world;
+      this.mirror = null;
       this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
-      dungeonRenderer.reset();
-      this.setHero();
-      dungeonRenderer.setAllies(allies.map((a) => ({ sprite: a.sprite, name: a.name })));
-      hud.setAllies(allies.map((a) => a.name));
-      dungeonRenderer.setStyle(dungeon.style);
-      hud.reset(this.dungeonLevel, dungeon.boss);
-      hud.configure(heroClass(content.skills, this.d.progress.state.hero));
-      this.run = emptyLoot();
-      this.outcome = null;
-      this.accumulator = 0;
-      islandRenderer.hideMarkers();
-      this.setMode('dungeon');
+      this.prepareDungeon(dungeon, this.dungeonLevel, allies);
     };
     if (withTransition) await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${this.dungeonLevel}`, begin);
     else begin();
   }
 
   private updateDungeon(dt: number): void {
+    if (this.mirror) {
+      this.updateGuest(dt);
+      return;
+    }
     const world = this.world;
     if (!world) return;
     const { input, dungeonRenderer, hud } = this.d;
-    if (!this.screens.paused) {
+    // En ligne, le menu n'arrête pas le combat : les autres jouent encore.
+    const online = this.coop !== null;
+    if (online || !this.screens.paused) {
       this.accumulator += dt;
       let steps = 0;
       while (this.accumulator >= STEP && steps < MAX_STEPS_PER_FRAME) {
-        const mine = this.readCombatInput(world);
-        world.update(STEP, this.bots.length ? [mine, ...this.bots.map((bot) => bot.input())] : mine);
+        const mine = this.screens.paused ? idleFrame(world.player.pos) : this.readCombatInput(world);
+        if (online) {
+          world.update(STEP, [mine, ...world.players.slice(1).map((hero) => this.remoteInput(hero.id, hero.pos))]);
+          this.hostTick++;
+        } else {
+          world.update(STEP, this.bots.length ? [mine, ...this.bots.map((bot) => bot.input())] : mine);
+        }
         this.accumulator -= STEP;
         steps++;
       }
@@ -519,6 +553,7 @@ export class App {
       input.flush();
     }
     const events = world.drainEvents();
+    if (online) this.shareState(world, events);
     for (const event of events) this.track(event);
     dungeonRenderer.sync(world, events, dt);
     hud.update(world, events, dt);
@@ -536,7 +571,190 @@ export class App {
     this.d.dungeonRenderer.setHero(sprite);
   }
 
-  private readCombatInput(world: World): InputFrame {
+  // --- Coop en ligne ---------------------------------------------------------------
+
+  /** Hôte : la commande de l'invité à cette place (immobile s'il n'en a pas encore envoyé). */
+  private remoteInput(seat: number, pos: Vec2): InputFrame {
+    const frame = this.remote.get(seat);
+    if (!frame) return idleFrame(pos);
+    this.remote.set(seat, played(frame));
+    return frame;
+  }
+
+  /** Hôte : les événements de la partie partent avec le prochain instantané, vingt fois par seconde. */
+  private shareState(world: World, events: GameEvent[]): void {
+    const session = this.coop;
+    if (!session) return;
+    this.outbox.push(...events);
+    const ended = events.some((e) => e.type === 'end');
+    if (this.hostTick - this.sentTick < SNAPSHOT_EVERY && !ended) return;
+    session.sendState({ snap: snapshotOf(world, this.hostTick), events: this.outbox });
+    this.outbox = [];
+    this.sentTick = this.hostTick;
+  }
+
+  /** Invité : envoie ses commandes à l'hôte et montre la partie telle qu'il la décrit. */
+  private updateGuest(dt: number): void {
+    const mirror = this.mirror;
+    if (!mirror) return;
+    const { input, dungeonRenderer, hud } = this.d;
+    const now = performance.now();
+    const frame = this.screens.paused ? idleFrame(mirror.player.pos) : this.readCombatInput(mirror);
+    input.flush();
+    this.pending = mergeFrames(this.pending, frame);
+    // Au plus soixante commandes par seconde, même sur un écran plus rapide : les appuis s'accumulent entre deux.
+    if (this.coop && now - this.sentAt >= 1000 / 60 - 1) {
+      this.coop.sendInput(this.pending);
+      this.pending = undefined;
+      this.sentAt = now;
+    }
+    mirror.update(now);
+    const events = this.inbox;
+    this.inbox = [];
+    for (const event of events) this.track(event);
+    if (mirror.ready) {
+      dungeonRenderer.sync(mirror, events, dt);
+      hud.update(mirror, events, dt);
+    }
+    dungeonRenderer.render();
+    if (this.outcome) this.finishDungeon(this.outcome);
+  }
+
+  /** Ouvre la coop : le salon si on est déjà dans une partie, sinon créer ou rejoindre. */
+  private openCoop(): void {
+    if (this.coop) {
+      this.showLobby();
+      return;
+    }
+    openCoopMenu(this.panels, {
+      progress: this.d.progress,
+      network: this.d.network,
+      member: (name) => this.member(name),
+      opened: (session) => this.joinSession(session),
+      toast: (text) => this.screens.toast(text),
+    });
+  }
+
+  /** Ce héros, tel qu'on le présente au salon ; `name` : le pseudo (sinon celui déjà donné). */
+  private member(name?: string): Member {
+    if (name !== undefined) this.memberName = name;
+    const hero = this.d.progress.state.hero;
+    return {
+      name: name ?? this.memberName,
+      race: hero.race,
+      cls: hero.class,
+      level: this.d.progress.level,
+      sprite: heroSprite(hero),
+      config: this.loadout().config,
+    };
+  }
+
+  /** Pseudo choisi en ouvrant la coop. */
+  private memberName = '';
+
+  private joinSession(session: CoopSession): void {
+    this.coop = session;
+    session.handlers = {
+      lobby: () => {
+        if (this.lobbyOpen) this.refreshLobby?.();
+      },
+      start: (start) => void this.startCoop(start),
+      state: (packet) => {
+        this.mirror?.push(packet.snap, performance.now());
+        this.inbox.push(...packet.events);
+      },
+      input: (seat, frame) => this.remote.set(seat, mergeFrames(this.remote.get(seat), frame)),
+      left: (seat) => this.world?.retire(seat),
+      closed: (reason) => this.sessionClosed(session, reason),
+    };
+    this.showLobby();
+  }
+
+  private showLobby(): void {
+    const session = this.coop;
+    if (!session) return;
+    this.lobbyOpen = true;
+    this.refreshLobby = openLobby(this.panels, session, this.d.progress, {
+      launch: () => {
+        if (session.isHost && session.allReady) void this.startCoop(session.start(this.member()));
+      },
+      quit: () => {
+        this.panels.close();
+        session.leave();
+      },
+      ready: (ready) => session.setReady(ready, this.member()),
+      closed: () => {
+        this.lobbyOpen = false;
+      },
+    });
+  }
+
+  /** La session est finie : on l'a quittée, ou l'hôte est parti. Un invité en pleine descente garde son butin. */
+  private sessionClosed(session: CoopSession, reason: string): void {
+    if (this.coop !== session) return;
+    this.coop = null;
+    if (this.lobbyOpen) this.panels.close();
+    if (reason) this.screens.toast(reason);
+    if (this.mode === 'dungeon' && this.mirror && !this.outcome) this.finishDungeon('defeat');
+  }
+
+  /** Une descente à plusieurs commence : l'hôte fait tourner le combat, les invités l'affichent. */
+  private async startCoop(start: Start): Promise<void> {
+    const session = this.coop;
+    if (!session) return;
+    // Un dialogue ou une transition en cours : on descend dès qu'ils sont finis.
+    if (this.busy || this.dialogue.open) {
+      window.setTimeout(() => void this.startCoop(start), 250);
+      return;
+    }
+    this.busy = true;
+    const dungeon = content.dungeons[start.dungeon] ?? content.dungeons.rizieres;
+    const level = clampLevel(content.difficulty, start.level);
+    const configs = start.heroes.map((hero) => hero.config);
+    const others = start.heroes.filter((_, seat) => seat !== start.seat);
+    await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${level} · ${start.heroes.length} héros`, () => {
+      if (session.isHost) {
+        const difficulty = difficultyFor(content.difficulty, level, configs.length);
+        this.world = new World({ ...this.d.config, ...dungeon.arena, player: configs[0], allies: configs.slice(1), difficulty });
+        this.mirror = null;
+        this.remote.clear();
+        this.hostTick = 0;
+        this.sentTick = 0;
+        this.outbox = [];
+      } else {
+        this.world = null;
+        this.mirror = new MirrorWorld(configs, start.seat, dungeon.arena.webs.burnTime, level);
+        this.inbox = [];
+        this.pending = undefined;
+      }
+      this.bots = [];
+      this.prepareDungeon(dungeon, level, others);
+    });
+    this.busy = false;
+  }
+
+  /** Remet l'affichage à neuf pour une descente : décor, héros, alliés, HUD. */
+  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[]): void {
+    const { dungeonRenderer, hud, islandRenderer } = this.d;
+    this.screens.hideResult();
+    this.panels.close();
+    this.dungeon = dungeon;
+    this.dungeonLevel = level;
+    dungeonRenderer.reset();
+    this.setHero();
+    dungeonRenderer.setAllies(allies);
+    hud.setAllies(allies.map((a) => a.name));
+    dungeonRenderer.setStyle(dungeon.style);
+    hud.reset(level, dungeon.boss);
+    hud.configure(heroClass(content.skills, this.d.progress.state.hero));
+    this.run = emptyLoot();
+    this.outcome = null;
+    this.accumulator = 0;
+    islandRenderer.hideMarkers();
+    this.setMode('dungeon');
+  }
+
+  private readCombatInput(world: WorldView): InputFrame {
     const { input, dungeonRenderer } = this.d;
     const { forward, right } = dungeonRenderer.groundBasis();
     const { x, y } = input.pointer;
@@ -635,7 +853,21 @@ export class App {
     }
     progress.save();
 
-    const options: MenuOption[] = victory
+    const session = this.coop;
+    if (session?.isHost) session.backToLobby();
+    const options: MenuOption[] = session
+      ? [
+          ...(victory ? [{ label: 'Boutique de fin', action: () => openShop(this.panels, this.ui, dungeon.shop, this.endShop) }] : []),
+          {
+            label: 'Quitter la coop',
+            action: () => {
+              session.leave();
+              void this.returnToIsland();
+            },
+          },
+          { label: 'Retour au salon', primary: true, action: () => void this.returnToIsland().then(() => this.showLobby()) },
+        ]
+      : victory
       ? [
           { label: 'Boutique de fin', action: () => openShop(this.panels, this.ui, dungeon.shop, this.endShop) },
           { label: 'Retourner sur l’île', primary: true, action: () => void this.returnToIsland() },
@@ -707,6 +939,7 @@ export class App {
       this.screens.hidePause();
       this.panels.close();
       this.world = null;
+      this.mirror = null;
       island.placeAt(this.dungeon.exit ?? content.island.dungeonExit);
       this.setHero();
       islandRenderer.focus(island.player.pos, 0, true);
@@ -720,12 +953,22 @@ export class App {
 
   private openPause(): void {
     const options: MenuOption[] = [{ label: 'Reprendre', primary: true, action: () => this.screens.hidePause() }];
+    const session = this.coop;
     if (this.mode === 'dungeon') {
       options.push({
-        label: 'Abandonner le donjon',
+        label: session ? 'Quitter la partie en coop' : 'Abandonner le donjon',
         action: () => {
           this.screens.hidePause();
-          this.finishDungeon('defeat');
+          session?.leave();
+          if (this.mode === 'dungeon' && !this.outcome) this.finishDungeon('defeat');
+        },
+      });
+    } else if (this.mode === 'island') {
+      options.push({
+        label: session ? 'Salon coop' : 'Coop en ligne',
+        action: () => {
+          this.screens.hidePause();
+          this.openCoop();
         },
       });
     }

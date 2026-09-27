@@ -1,8 +1,7 @@
 import type { Kit } from '../game/config';
-import { Izanami } from '../game/enemies';
 import type { ClassDef } from '../game/loadout';
 import type { GameEvent } from '../game/types';
-import type { World } from '../game/world';
+import type { WorldView } from '../game/view';
 import { h } from '../ui/dom';
 
 const BANNER_TIME = 2.6;
@@ -113,12 +112,13 @@ export class Hud {
     this.controls.replaceChildren(...keys.flatMap(([key, label], i) => [i ? ' · ' : '', h('kbd', {}, key), ` ${label}`]));
   }
 
-  update(world: World, events: readonly GameEvent[], dt: number): void {
+  update(world: WorldView, events: readonly GameEvent[], dt: number): void {
     const player = world.player;
     const cfg = player.cfg;
     this.hpFill.style.width = `${(player.hp / cfg.maxHp) * 100}%`;
+    const others = world.players.filter((hero) => hero !== player);
     this.allyBars.forEach((bar, i) => {
-      const hero = world.players[i + 1];
+      const hero = others[i];
       if (!hero) return;
       bar.fill.style.width = `${(Math.max(0, hero.hp) / hero.cfg.maxHp) * 100}%`;
       bar.name.textContent = hero.dead ? `${bar.label} · à terre` : bar.label;
@@ -139,7 +139,7 @@ export class Hud {
       views = [
         { cooldown: player.recallCooldown / s.recall.cooldown, locked: none },
         { cooldown: player.sacrificeCooldown / s.sacrifice.cooldown, locked: none },
-        { cooldown: world.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && world.choir <= 0, active: world.choir > 0 },
+        { cooldown: player.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && player.choir <= 0, active: player.choir > 0 },
       ];
     } else if (cfg.kit === 'lame') {
       // Charges du Pas de l'ombre, la suivante se remplit ; invisible, la barre le dit.
@@ -162,7 +162,7 @@ export class Hud {
       ready = world.graveInReach;
       label = ally ? `Allié relevé${mine.length > 1 ? ` ×${mine.length}` : ''}` : 'Aucun allié';
       views = [
-        { cooldown: world.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: world.aura > 0 },
+        { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },
         { cooldown: player.raiseCooldown / p.raise.cooldown, locked: !world.graveInReach },
       ];
@@ -203,12 +203,13 @@ export class Hud {
     this.boss.classList.toggle('visible', Boolean(boss));
     if (boss) this.bossFill.style.width = `${(Math.max(0, boss.hp) / boss.maxHp) * 100}%`;
     // Izanami : la jauge de son regard, et l'alerte quand le héros la regarde.
-    const izanami = boss instanceof Izanami ? boss : null;
+    const izanami = boss?.kind === 'izanami' ? boss : null;
     this.gaze.classList.toggle('visible', izanami !== null);
     if (izanami) {
-      this.gazeFill.style.width = `${izanami.gaze * 100}%`;
-      this.gaze.classList.toggle('watched', izanami.watched);
-      this.gaze.classList.toggle('full', izanami.gaze > 0.75);
+      const gaze = izanami.gaze ?? 0;
+      this.gazeFill.style.width = `${gaze * 100}%`;
+      this.gaze.classList.toggle('watched', Boolean(izanami.watched));
+      this.gaze.classList.toggle('full', gaze > 0.75);
       const label = izanami.repelled ? 'Repoussée par la pêche !' : izanami.watched ? 'Elle te voit…' : 'Son regard';
       if (this.gazeLabel.textContent !== label) this.gazeLabel.textContent = label;
     }

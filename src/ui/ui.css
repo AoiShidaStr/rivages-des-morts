@@ -2032,3 +2032,122 @@ body:not([data-mode='dungeon']) #hud {
   height: 28px;
   margin: -4px 0;
 }
+
+/* --- Coop en ligne : menu, liste des parties publiques, salon ------------------------- */
+
+.coop h3 {
+  margin: 8px 0 0;
+}
+
+.coop .entry-actions {
+  gap: 10px;
+}
+
+.coop-field,
+.coop-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coop-check input {
+  accent-color: var(--vermilion);
+}
+
+.coop-input {
+  flex: 1;
+  max-width: 260px;
+  padding: 6px 10px;
+  border: 1px solid rgba(20, 24, 28, 0.3);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  font: inherit;
+  pointer-events: auto;
+}
+
+.coop-code-input {
+  max-width: 7em;
+  font-family: ui-monospace, monospace;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.coop-join {
+  display: flex;
+  gap: 10px;
+}
+
+.coop-share {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--vermilion);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.coop-share small {
+  color: var(--ink-2);
+}
+
+.coop-code {
+  flex: 1;
+  font-family: ui-monospace, monospace;
+  font-size: 30px;
+  letter-spacing: 0.3em;
+}
+
+.coop-players,
+.coop-games {
+  display: grid;
+  gap: 6px;
+}
+
+.coop-player,
+.coop-game {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(20, 24, 28, 0.15);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.coop-player > div,
+.coop-game > div {
+  display: grid;
+  flex: 1;
+  gap: 1px;
+}
+
+.coop-player small,
+.coop-game small {
+  color: var(--ink-2);
+}
+
+.coop-player.me {
+  border-color: var(--vermilion);
+}
+
+.coop-player.empty {
+  border-style: dashed;
+  background: none;
+  opacity: 0.6;
+}
+
+.coop-status,
+.coop-count {
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgba(20, 24, 28, 0.1);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.coop-status.ready {
+  background: var(--moss);
+  color: #fff;
+}
