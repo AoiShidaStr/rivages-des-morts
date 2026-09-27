@@ -45,10 +45,6 @@
     { "name": "heros-rodeur", "source": "heros_rodeur.jpg" },
     { "name": "heros-oushebti", "source": "heros_oushebti.jpg" },
     { "name": "heros-demi-dieu", "source": "heros_demi-dieu.jpg" },
-    { "name": "heros-hanyo", "source": "heros_hanyo.jpg" },
-    { "name": "heros-einherjar-invocateur", "source": "heros/einherjar-invocateur_fiche.jpg" },
-    { "name": "heros-einherjar-lame", "source": "heros/einherjar-lame_fiche.jpg" },
-    { "name": "heros-einherjar-paladin", "source": "heros/einherjar-paladin_fiche.jpg" },
-    { "name": "heros-einherjar-rodeur", "source": "heros/einherjar-rodeur_fiche.jpg" }
+    { "name": "heros-hanyo", "source": "heros_hanyo.jpg" }
   ]
 }
