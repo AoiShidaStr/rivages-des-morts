@@ -3,6 +3,7 @@
 import type { Kit, PlayerConfig } from './config';
 import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type Palier, type UpgradeRules } from './forge';
 import type { Hero, ProgressState, Slot } from './progress';
+import type { EnemyKind } from './types';
 
 export type BonusKind = 'maxHp' | 'damage' | 'speed' | 'dodge' | 'armor' | 'oboles';
 export type Bonus = Partial<Record<BonusKind, number>>;
@@ -50,6 +51,24 @@ export interface RaceDef {
   style: string;
   passives: Passive[];
   parents?: Record<string, Passive>;
+  /** Affinité de la race avec chaque classe : un passif de plus, propre à la classe du héros. */
+  affinities?: Record<string, Passive>;
+}
+
+/** Un yokai que l'Invocateur peut prendre pour compagnon. */
+export interface CompanionKind {
+  name: string;
+  description: string;
+  damage: number;
+  hp: number;
+  speed: number;
+  rate: number;
+}
+
+export interface CompanionDef {
+  default: string;
+  respawn: number;
+  kinds: Record<string, CompanionKind>;
 }
 
 export interface ClassDef {
@@ -65,6 +84,8 @@ export interface ClassDef {
   weapon: string;
   /** Réglages de base de la classe, appliqués avant l'équipement. */
   effects?: ConfigEffect[];
+  /** Invocateur : les compagnons au choix. */
+  companion?: CompanionDef;
   actives: { key: string; name: string; description: string }[];
   tag: { name: string; tiers: { count: number; description: string; effects: ConfigEffect[] }[] };
   branches: { id: string; name: string; subtitle: string; lore: string; nodes: SkillNode[] }[];
@@ -105,12 +126,20 @@ export const heroClass = (skills: SkillsDef, hero: Hero): ClassDef => skills.cla
 /** « Rôdeur Hanyō » : la classe puis la race, comme à la création. */
 export const heroLabel = (skills: SkillsDef, hero: Hero): string => `${heroClass(skills, hero).name} ${heroRace(skills, hero).name}`;
 
-/** Passifs de la race, parent divin compris. */
+/** Passifs de la race : parent divin, passifs communs, puis l'affinité avec la classe du héros. */
 export function racePassives(skills: SkillsDef, hero: Hero): Passive[] {
   const race = heroRace(skills, hero);
   const parent = hero.parent ? race.parents?.[hero.parent] : undefined;
-  return parent ? [parent, ...race.passives] : race.passives;
+  const affinity = race.affinities?.[hero.class];
+  return [...(parent ? [parent] : []), ...race.passives, ...(affinity ? [affinity] : [])];
 }
+
+/** Le compagnon choisi, s'il existe encore, sinon celui par défaut de la classe. */
+export function companionOf(def: CompanionDef, state: Pick<ProgressState, 'companion'>): string {
+  return state.companion && def.kinds[state.companion] ? state.companion : def.default;
+}
+
+const pick = (k: CompanionKind) => ({ damage: k.damage, hp: k.hp, speed: k.speed, rate: k.rate });
 
 /** Une arme ne se manie que par sa classe (son tag, ou « Tous ») ; les autres pièces vont à tout le monde. */
 export function canWield(def: ItemDef, cls: ClassDef): boolean {
@@ -171,6 +200,10 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   const config = structuredClone(base);
   const cls = heroClass(data.skills, state.hero);
   for (const effect of cls.effects ?? []) applyEffect(config, effect);
+  if (cls.companion) {
+    const kind = companionOf(cls.companion, state);
+    config.summon.companion = { kind: kind as EnemyKind, respawn: cls.companion.respawn, ...pick(cls.companion.kinds[kind]) };
+  }
   const bonus: Required<Bonus> = { maxHp: 0, damage: 0, speed: 0, dodge: 0, armor: 0, oboles: 0 };
   let tagCount = 0;
   const className = cls.tag.name;
@@ -203,6 +236,8 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.summon.sacrifice.damage *= power;
   config.blade.dance.damage *= power;
   config.paladin.hammer.damage *= power;
+  // Les soins du Paladin suivent aussi son arme : ils gardent leur poids quand les PV montent avec les niveaux.
+  config.paladin.aura.heal *= power;
   for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 
   if (state.flags.benediction_jizo) bonus.maxHp += JIZO_BLESSING;
@@ -224,10 +259,11 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.attack.damage = Math.round(config.attack.damage + bonus.damage);
   // Les dégâts fixes des talents (foudre de Susanoo, Croissant, Riposte, Chaleur) suivent la puissance de l'arme.
   const perks = config.perks ?? {};
-  for (const key of ['storm', 'dashDamage', 'riposte', 'auraBurn'] as const) {
+  for (const key of ['storm', 'dashDamage', 'riposte', 'auraBurn', 'yokaiAuraBurn'] as const) {
     const value = perks[key];
     if (value) perks[key] = value * power;
   }
+  if (perks.shieldHeal) perks.shieldHeal = { ...perks.shieldHeal, amount: perks.shieldHeal.amount * power };
   config.dodge.distance *= 1 + bonus.dodge;
   return { config, level, bonus, tagCount, tier };
 }

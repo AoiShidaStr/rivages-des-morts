@@ -29,6 +29,9 @@ type Action =
  * Rôdeur : tire à l'arc, tir chargé (clic droit), Flèche-filet (A), Marque du chasseur (E), Recul (R).
  * Les talents, la race et les reliques arrivent par `cfg.perks`.
  */
+/** Soin des âmes versé dès qu'il atteint ces PV. */
+const LEECH_SIP = 3;
+
 /** Vitesse de marche en plus : instinct (blessé) et transformation du Hanyō. */
 export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): number {
   const perks = cfg.perks ?? {};
@@ -62,7 +65,7 @@ export class Player {
   summonCount = 0;
   /** Oushebti : secondes avant que la carapace d'argile ne se reforme (0 : elle est prête). */
   clayCooldown = 0;
-  /** Hanyō : jauge de sang yokai (en coups portés) et secondes de transformation restantes. */
+  /** Hanyō : jauge de sang yokai (en dégâts infligés) et secondes de transformation restantes. */
   yokaiGauge = 0;
   transformed = 0;
   /** Lame : charges du Pas de l'ombre et recharge de la suivante, recharges des compétences. */
@@ -77,6 +80,10 @@ export class Player {
   /** Lame (tag) : coups critiques encore dus après une esquive, et le temps qu'il reste pour les porter. */
   private critWindow = 0;
   private critSwings = 0;
+  /** Paladin : jauge de garde, secondes de garde brisée, et secondes depuis le dernier coup bloqué. */
+  guardLeft: number;
+  guardBroken = 0;
+  private guardRest = 0;
   /** Paladin : recharges de l'Aura, du Marteau et de Relever. */
   auraCooldown = 0;
   hammerCooldown = 0;
@@ -85,7 +92,10 @@ export class Player {
   netCooldown = 0;
   huntCooldown = 0;
   leapCooldown = 0;
-  private divineBloodUsed = false;
+  /** Demi-dieu : l'Égide divine a déjà servi pendant cette vague. */
+  private aegisUsed = false;
+  /** Soin des âmes pas encore versé (voir `leech`). */
+  private leechPool = 0;
   /** Coups d'arme portés pendant la descente (foudre du fils de Zeus). */
   private hits = 0;
   /**
@@ -118,6 +128,7 @@ export class Player {
     readonly cfg: PlayerConfig,
     readonly id = 0,
   ) {
+    this.guardLeft = cfg.paladin.guard.max;
     this.hp = cfg.maxHp;
     this.dashCharges = cfg.blade.shadowDash.charges;
   }
@@ -208,6 +219,14 @@ export class Player {
     return walkFactor(this.cfg, this.hp, this.transformed);
   }
 
+  /** Soin goutte à goutte (âmes de l'Invocateur) : versé par petites gorgées, pour ne pas couvrir l'écran de chiffres. */
+  leech(amount: number, world: World): void {
+    this.leechPool += amount;
+    if (this.leechPool < LEECH_SIP) return;
+    this.heal(this.leechPool, world);
+    this.leechPool = 0;
+  }
+
   heal(amount: number, world: World): void {
     const gained = Math.min(amount, this.cfg.maxHp - this.hp);
     if (gained <= 0) return;
@@ -215,26 +234,46 @@ export class Player {
     world.emit({ type: 'heal', id: 0, pos: { ...this.pos }, amount: gained });
   }
 
-  /**
-   * Un coup d'arme vient de porter. Remplit le sang yokai du Hanyō, et renvoie les dégâts de la foudre
-   * du fils de Zeus quand c'est son tour (0 sinon).
-   */
-  landHit(world: World): number {
-    const perks = this.cfg.perks ?? {};
+  /** Un coup d'arme vient de porter : renvoie les dégâts de la foudre du fils de Zeus quand c'est son tour (0 sinon). */
+  landHit(): number {
+    const zeus = this.cfg.perks?.zeusBolt;
     this.hits++;
-    const blood = perks.yokaiBlood;
-    if (blood && this.transformed <= 0 && ++this.yokaiGauge >= blood.hits) {
-      this.yokaiGauge = 0;
-      this.transformed = blood.duration;
-      world.emit({ type: 'transform', pos: { ...this.pos } });
-    }
-    const zeus = perks.zeusBolt;
     return zeus && this.hits % zeus.every === 0 ? zeus.damage * this.damageMultiplier() : 0;
+  }
+
+  /** Dégâts infligés par ce héros ou les siens (âmes, flèches, marteau…) : ils remplissent le sang yokai du Hanyō. */
+  dealt(amount: number, world: World): void {
+    const blood = this.cfg.perks?.yokaiBlood;
+    if (!blood || this.transformed > 0 || this.dead) return;
+    this.yokaiGauge += amount;
+    if (this.yokaiGauge < blood.fill * this.cfg.maxHp) return;
+    this.yokaiGauge = 0;
+    this.transformed = blood.duration;
+    world.emit({ type: 'transform', pos: { ...this.pos } });
+  }
+
+  /** Une nouvelle vague commence : l'Égide divine du Demi-dieu est de nouveau prête. */
+  newWave(): void {
+    this.aegisUsed = false;
+  }
+
+  /** Sous cette part de ses PV (affinités de l'Einherjar). */
+  private below(threshold: number): boolean {
+    return this.hp < this.cfg.maxHp * threshold;
+  }
+
+  /** Einherjar lame, Hanyō lame : l'esquive et le Pas de l'ombre reviennent plus vite. */
+  private get haste(): number {
+    const perks = this.cfg.perks ?? {};
+    let factor = 1;
+    if (perks.lowHpHaste && this.below(perks.lowHpHaste.threshold)) factor *= perks.lowHpHaste.factor;
+    if (perks.yokaiDash && this.transformed > 0) factor *= perks.yokaiDash;
+    return factor;
   }
 
   update(dt: number, input: InputFrame, world: World): void {
     const c = this.cfg;
-    this.dodgeCooldown = Math.max(0, this.dodgeCooldown - dt);
+    this.dodgeCooldown = Math.max(0, this.dodgeCooldown - dt * this.haste);
     this.bondCooldown = Math.max(0, this.bondCooldown - dt);
     this.frenzyCooldown = Math.max(0, this.frenzyCooldown - dt);
     this.frenzy = Math.max(0, this.frenzy - dt);
@@ -247,7 +286,10 @@ export class Player {
     this.tickKitCooldowns(dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
-    this.rage = Math.max(0, this.rage - c.rageDecayPerSecond * dt);
+    this.recoverGuard(dt);
+    // Einherjar guerrier : près de la mort, la rage ne retombe plus.
+    const furious = c.perks?.lowHpRage && this.below(c.perks.lowHpRage.threshold);
+    if (!furious) this.rage = Math.max(0, this.rage - c.rageDecayPerSecond * dt);
     if (input.attackPressed) this.attackBuffer = ATTACK_BUFFER;
     // Pendant l'engagement d'un coup, la demande attend qu'on puisse l'interrompre ; ensuite, elle s'efface vite.
     const buffered = this.buffered;
@@ -347,6 +389,22 @@ export class Player {
     world.clampToArena(this.pos, this.radius);
   }
 
+  /** Guerrier et Paladin lèvent leur garde, sauf quand celle du Paladin vient de se briser. */
+  get canGuard(): boolean {
+    return (this.cfg.kit === 'guerrier' || this.cfg.kit === 'paladin') && this.guardBroken <= 0;
+  }
+
+  /** Paladin : la garde brisée se relève, puis la jauge remonte quand on ne bloque plus rien. */
+  private recoverGuard(dt: number): void {
+    if (this.cfg.kit !== 'paladin') return;
+    const g = this.cfg.paladin.guard;
+    this.guardBroken = Math.max(0, this.guardBroken - dt);
+    this.guardRest += dt;
+    const low = this.cfg.perks?.lowHpGuard;
+    const regen = g.regen * (low && this.below(low.threshold) ? low.factor : 1);
+    if (this.guardRest >= g.delay) this.guardLeft = Math.min(g.max, this.guardLeft + regen * dt);
+  }
+
   /** Vrai si le joueur bloque et fait face à `from`. */
   isGuarding(from: Vec2): boolean {
     if (!this.blocking || this.action.kind !== 'free') return false;
@@ -370,7 +428,17 @@ export class Player {
     }
     const perks = this.cfg.perks ?? {};
     world.emit({ type: 'guard', pos: { ...this.pos }, rage: 0 });
-    if (perks.shieldHeal) world.healAllies(this.pos, perks.shieldHeal.radius, perks.shieldHeal.amount);
+    // La garde s'use selon la force du coup ; vide, elle se brise.
+    const g = this.cfg.paladin.guard;
+    this.guardRest = 0;
+    this.guardLeft -= Math.max(g.minCost, (g.cost * 100 * amount) / this.cfg.maxHp);
+    if (this.guardLeft <= 0) {
+      this.guardLeft = 0;
+      this.guardBroken = g.breakTime;
+      this.blocking = false;
+      world.emit({ type: 'guardBreak', pos: { ...this.pos } });
+    }
+    if (perks.shieldHeal) world.healAllies(this.pos, perks.shieldHeal.radius, perks.shieldHeal.amount, this);
     if (!attacker || attacker.dead) return;
     if (perks.riposte) {
       attacker.receiveHit({ amount: perks.riposte * this.damageMultiplier(), from: this.pos, knockback: 4 }, world);
@@ -389,6 +457,14 @@ export class Player {
       this.clayCooldown = perks.clayShell;
       this.invulnerable = this.cfg.invulnerableAfterHit;
       world.emit({ type: 'clayShell', pos: { ...this.pos } });
+      // Affinités de l'Oushebti : l'argile qui éclate nourrit la rage, rend l'ombre, remplit la garde, ou reste en leurre.
+      if (perks.clayRage) this.gainRage(perks.clayRage);
+      if (perks.clayDash) this.refundDash();
+      if (perks.clayGuard) {
+        this.guardLeft = this.cfg.paladin.guard.max;
+        this.guardBroken = 0;
+      }
+      if (perks.clayDecoy) world.clayDecoy(this, perks.clayDecoy);
       return true;
     }
     this.loseHp(amount * this.damageTakenFactor(), world, false);
@@ -409,7 +485,7 @@ export class Player {
     return factor;
   }
 
-  /** Retire des PV ; Peau d'ours et Sang divin empêchent une fois de tomber. `blocked` : à travers la garde. */
+  /** Retire des PV ; Peau d'ours empêche une fois de tomber, l'Égide divine protège au bord de la mort. `blocked` : à travers la garde. */
   private loseHp(taken: number, world: World, blocked: boolean): void {
     const perks = this.cfg.perks ?? {};
     this.hp = Math.max(0, this.hp - taken);
@@ -420,18 +496,23 @@ export class Player {
       this.rage = this.cfg.rageMax;
       world.emit({ type: 'bearSkin', pos: { ...this.pos } });
     }
-    if (this.hp <= 0 && perks.divineBlood && !this.divineBloodUsed) {
-      // Sang divin : une fois par descente, le Demi-dieu se relève.
-      this.divineBloodUsed = true;
-      this.hp = this.cfg.maxHp * perks.divineBlood;
-      world.emit({ type: 'divineBlood', pos: { ...this.pos } });
+    const aegis = perks.divineAegis;
+    if (aegis && !this.aegisUsed && this.hp > 0 && this.below(aegis.threshold)) {
+      // Égide divine : une fois par vague, le Demi-dieu au bord de la mort devient intouchable un instant.
+      this.aegisUsed = true;
+      this.invulnerable = Math.max(this.invulnerable, aegis.invulnerable);
+      this.hp = Math.min(this.cfg.maxHp, this.hp + this.cfg.maxHp * aegis.heal);
+      world.emit({ type: 'divineAegis', pos: { ...this.pos } });
     }
     world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked, hero: this.id });
   }
 
   /** Ajoute de la rage (paliers du tag Guerrier compris) ; renvoie ce qui a été gagné. */
   gainRage(amount: number): number {
-    const gain = amount * (this.cfg.perks?.rageGainFactor ?? 1);
+    const perks = this.cfg.perks ?? {};
+    let gain = amount * (perks.rageGainFactor ?? 1);
+    if (perks.lowHpRage && this.below(perks.lowHpRage.threshold)) gain *= perks.lowHpRage.gain;
+    if (perks.yokaiRage && this.transformed > 0) gain *= perks.yokaiRage;
     const before = this.rage;
     this.rage = Math.min(this.cfg.rageMax, this.rage + gain);
     return this.rage - before;
@@ -440,7 +521,7 @@ export class Player {
   /** Un ennemi vient de tomber sous nos coups. */
   onKill(): void {
     const perks = this.cfg.perks ?? {};
-    let heal = perks.valhallaHeal ?? 0;
+    let heal = (perks.valhallaHeal ?? 0) + this.cfg.maxHp * (perks.valhallaShare ?? 0);
     if (this.frenzy > 0) heal += perks.frenzyHealOnKill ?? 0;
     this.hp = Math.min(this.cfg.maxHp, this.hp + heal);
     const cut = perks.cooldownOnKill ?? 0;
@@ -467,7 +548,7 @@ export class Player {
       return;
     }
 
-    this.blocking = (c.kit === 'guerrier' || c.kit === 'paladin') && input.signatureHeld;
+    this.blocking = this.canGuard && input.signatureHeld;
     if (c.kit === 'rodeur' && input.signatureHeld) {
       this.action = { kind: 'draw', t: 0 };
       return;
@@ -539,7 +620,7 @@ export class Player {
 
     // Passé l'engagement de l'arme et l'impact, lever la garde (clic droit) interrompt la fin du coup
     const canInterrupt = a.t >= Math.max(time.commit, recoveryStart);
-    const wantsGuard = (this.cfg.kit === 'guerrier' || this.cfg.kit === 'paladin') && input.signatureHeld;
+    const wantsGuard = this.canGuard && input.signatureHeld;
     if (canInterrupt && wantsGuard) {
       this.action = { kind: 'free' };
       this.blocking = true;
@@ -623,7 +704,7 @@ export class Player {
     // Les charges du Pas de l'ombre reviennent une à une.
     const dash = this.cfg.blade.shadowDash;
     if (this.dashCharges >= dash.charges) return;
-    this.dashRecharge -= dt;
+    this.dashRecharge -= dt * this.haste;
     if (this.dashRecharge > 0) return;
     this.dashCharges++;
     this.dashRecharge = dash.cooldown;
@@ -723,7 +804,8 @@ export class Player {
     world: World,
   ): void {
     const c = this.cfg;
-    a.t += dt;
+    // Hanyō rôdeur : transformé, l'arc se bande plus vite.
+    a.t += dt * (c.perks?.yokaiDraw && this.transformed > 0 ? c.perks.yokaiDraw : 1);
     this.facing = aimDir;
     if (!input.signatureHeld) {
       world.loose(aimDir, this.drawProgress);

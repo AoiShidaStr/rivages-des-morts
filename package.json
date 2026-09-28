@@ -18,7 +18,8 @@
     "anims-heros": "node tools/generate-all-hero-16frames.mjs",
     "poses": "node tools/poses.mjs",
     "kit-heros": "node tools/kit-heros.mjs",
-    "doc-heros": "node tools/doc-heros.mjs"
+    "doc-heros": "node tools/doc-heros.mjs",
+    "equilibrage": "node tools/equilibrage.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^9.28.0",
