@@ -41,18 +41,22 @@ Pendant la descente :
 
 ### Races et classes
 
-| Race | Passifs |
-| --- | --- |
-| Einherjar (nordique) | plus tu perds de PV, plus tu frappes fort ; chaque ennemi tué te soigne |
-| Oushebti (égyptienne) | une carapace d'argile absorbe un coup toutes les 8 s ; +1 âme active et des âmes plus durables |
-| Demi-dieu (grecque) | un parent divin au choix (Zeus, Arès, Hermès, Athéna) ; une fois par descente, tu te relèves |
-| Hanyō (japonaise) | tes coups remplissent une jauge qui te transforme un moment ; sous 30 % de PV, tu cours plus vite et tu te régénères |
+Toutes les races vont avec toutes les classes. Chaque race a ses passifs communs, et une **affinité** qui change selon ta classe.
 
-- **Guerrier** : bloque les coups (sa garde en arrête les trois quarts) pour remplir sa rage, puis la dépense en attaques puissantes.
-- **Invocateur** : chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai. Les yokai visent plutôt toi que tes âmes, sauf si tu portes le Masque d'Oublié. Chaque âme active réduit un peu tes propres dégâts.
-- **Lame** : peu de PV, mais des coups très rapides. Traverse les ennemis pour les marquer, puis achève-les en coups critiques.
-- **Paladin** : robuste. Bouclier levé, il pare tout ce qui vient de face, soigne autour de lui et relève les alliés tombés.
-- **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances.
+| Race | Passifs communs | Affinité selon la classe (exemples) |
+| --- | --- | --- |
+| Einherjar (nordique) | plus tu perds de PV, plus tu frappes fort ; chaque ennemi tué te rend 2,5 % de tes PV | Guerrier : blessé, ta rage ne retombe plus. Rôdeur : blessé, tes flèches transpercent. |
+| Oushebti (égyptienne) | une carapace d'argile absorbe un coup toutes les 8 s | Invocateur : +1 âme active. Guerrier : la carapace brisée donne de la rage. Rôdeur : elle laisse une statuette-leurre. |
+| Demi-dieu (grecque) | un parent divin au choix (Zeus, Arès, Hermès, Athéna) ; une fois par vague, au bord de la mort, tu deviens intouchable un instant et tu récupères des PV | le parent divin, au choix |
+| Hanyō (japonaise) | tes dégâts remplissent une jauge qui te transforme un moment ; sous 30 % de PV, tu cours plus vite et tu te régénères | Lame : transformé, ton Pas de l'ombre revient deux fois plus vite. Paladin : ton Aura brûle. |
+
+Chaque classe a aussi sa façon de se soigner :
+
+- **Guerrier** : bloque les coups (sa garde en arrête 90 %) pour remplir sa rage, puis la dépense en attaques puissantes. Sa Frappe fracassante le soigne quand elle touche.
+- **Invocateur** : un **compagnon** yokai, que tu choisis dans l'arbre de compétences (<kbd>K</kbd>), te suit dès le début de chaque descente et se reforme s'il tombe. En plus, chaque yokai vaincu laisse son âme au sol quelques secondes (un halo bleu). Clic droit pour la lier : elle se relève et combat pour toi, jusqu'à s'effacer ou se briser sous les coups des yokai. Les yokai visent plutôt toi que tes âmes, sauf si tu portes le Masque d'Oublié. Chaque âme liée réduit un peu tes propres dégâts, et tu récupères une part des dégâts de tes âmes.
+- **Lame** : peu de PV, mais des coups très rapides. Traverse les ennemis pour les marquer, puis achève-les en coups critiques. Abattre un ennemi marqué la soigne.
+- **Paladin** : tank et soutien. Bouclier levé, il arrête 85 % des coups de face tant que sa **garde** tient (chaque coup bloqué l'use ; vide, elle se brise un instant). Il soigne ses alliés deux fois mieux que lui-même, et relève les alliés tombés.
+- **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances. Abattre la cible de sa Marque du chasseur le soigne.
 
 Chaque race et chaque classe a son apparence en pixel art : casque viking, némès égyptien, laurier grec ou cornes d'oni, avec l'arme et la cape de la classe.
 
@@ -79,7 +83,7 @@ Les touches sont pensées pour un clavier AZERTY. Sur un clavier QWERTY, elles r
 | Guerrier | bloquer : remplit la rage | frappe fracassante (demi-rage), traverse les carapaces | bond (25 de rage) | frénésie (30 de rage) |
 | Invocateur | lier l'âme d'un ennemi vaincu | rappel : tes âmes foncent sur l'ennemi visé | sacrifice : ta plus vieille âme explose | chœur spectral : tes âmes frappent plus fort |
 | Lame | pas de l'ombre : traverse et marque les ennemis | marque de mort : tous tes coups sur la cible sont critiques | écran de fumée : tu disparais, les yokai attaquent le nuage | danse des lames : tu bondis d'ennemi en ennemi |
-| Paladin | bouclier levé (maintenir) | aura de lumière : soigne autour de toi | marteau lancé : aller-retour | relever : le dernier allié tombé combat pour toi |
+| Paladin | bouclier levé (maintenir), tant que ta garde tient | aura de lumière : soigne tes alliés, et toi un peu | marteau lancé : aller-retour | relever : le dernier allié tombé combat pour toi |
 | Rôdeur | tir chargé (maintenir, puis relâcher) | flèche-filet : immobilise | marque du chasseur : la cible prend plus de dégâts | recul : bond en arrière en tirant |
 
 ### Conseils

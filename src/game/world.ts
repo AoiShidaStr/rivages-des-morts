@@ -215,6 +215,8 @@ export class World {
   /** Héros déjà signalés à terre. */
   private readonly downed = new Set<Player>();
   private graves: Grave[] = [];
+  /** Invocateur : secondes avant que le compagnon de chaque héros (par place) ne se reforme. */
+  private readonly companionTimers = new Map<number, number>();
   private events: GameEvent[] = [];
 
   /** `startWave` permet de commencer directement à une vague (tests, `?vague=7`). */
@@ -260,6 +262,11 @@ export class World {
     return this.summons.filter((s) => s.owner === this.actor.id);
   }
 
+  /** Âmes liées du héros qui agit, sans son compagnon : ce sont elles que le maximum limite et que le Sacrifice consume. */
+  private get bound(): Summon[] {
+    return this.mine.filter((s) => !s.companion);
+  }
+
   /** Fait agir `hero` le temps de `fn` : ses compétences, ses talents et ses âmes. */
   private act<T>(hero: Player, fn: () => T): T {
     const previous = this.actor;
@@ -303,6 +310,8 @@ export class World {
 
   emit(event: GameEvent): void {
     this.events.push(event);
+    // Les dégâts du héros qui agit (ses coups, ses âmes, ses flèches) remplissent le sang yokai du Hanyō.
+    if (event.type === 'enemyHit') this.actor.dealt(event.amount, this);
   }
 
   drainEvents(): GameEvent[] {
@@ -372,7 +381,8 @@ export class World {
     const inputs: readonly InputFrame[] = Array.isArray(input) ? input : [input];
     this.time += dt;
     for (const hero of this.players) {
-      hero.summonCount = this.summons.filter((s) => s.owner === hero.id).length;
+      // Le compagnon ne compte pas : il n'affaiblit pas l'Invocateur.
+      hero.summonCount = this.summons.filter((s) => s.owner === hero.id && !s.companion).length;
       if (!hero.dead) this.act(hero, () => hero.update(dt, inputs[hero.id] ?? idleInput(hero), this));
     }
     // « Hâte des morts » : le temps des yokai passe plus vite.
@@ -385,6 +395,7 @@ export class World {
     }
     for (const summon of this.summons) this.act(this.hero(summon.owner), () => summon.update(dt, this));
     for (const summon of this.summons.filter((s) => s.gone)) this.dismiss(summon);
+    this.updateCompanions(dt);
     for (const hero of this.players) this.act(hero, () => this.updateAura(dt));
     this.updateProjectiles(dt);
     this.regenerate(dt);
@@ -507,8 +518,8 @@ export class World {
       this.emit({ type: 'lightning', pos: { ...enemy.pos } });
       enemy.receiveHit({ amount: perks.storm ?? 0, from, knockback: 1, ignoreShell: true }, this);
     }
-    // Races : un coup sur quelques-uns appelle la foudre de Zeus ; le sang du Hanyō monte.
-    const bolt = player.landHit(this);
+    // Fils de Zeus : un coup sur quelques-uns appelle la foudre (le sang du Hanyō, lui, monte dans `emit`).
+    const bolt = player.landHit();
     if (bolt && !enemy.dead) {
       this.emit({ type: 'lightning', pos: { ...enemy.pos } });
       enemy.receiveHit({ amount: bolt, from, knockback: 1, ignoreShell: true }, this);
@@ -523,13 +534,17 @@ export class World {
     const smash = this.player.cfg.smash;
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     this.shakePeaches(center, smash.radius);
+    let struck = false;
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
+      struck = true;
       enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback: smash.knockback, ignoreShell: true }, this);
       if (!enemy.dead) enemy.stun(smash.stun, 'smash', this);
       else this.player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
+    // Le Guerrier se soigne en dépensant sa rage, pourvu que la Frappe porte.
+    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal, this);
   }
 
   /** Atterrissage du Bond : dégâts de zone autour du héros, étourdissement avec le talent d'Héraclès. */
@@ -595,7 +610,7 @@ export class World {
 
   /** E : la plus vieille âme explose. */
   sacrifice(): boolean {
-    const summon = this.mine[0];
+    const summon = this.bound[0];
     if (!summon) return false;
     const player = this.player;
     const cfg = player.cfg.summon.sacrifice;
@@ -640,10 +655,13 @@ export class World {
     const cfg = player.cfg.summon;
     const perks = player.cfg.perks ?? {};
     // Les Douze Shikigami : le feu follet brûle plus fort, l'Oublié étourdit, le kodama soigne le héros.
-    const trait = perks.shikigami ? summon.kind : null;
+    const trait = perks.shikigami || summon.companion ? summon.kind : null;
     const fire = trait === 'hitodama' ? 1.5 : 1;
     const choir = this.choir > 0 ? cfg.choir.damageFactor : 1;
-    const amount = cfg.damage * (cfg.kinds[summon.kind]?.damage ?? 1) * fire * factor * choir * (perks.summonDamageFactor ?? 1);
+    // Affinités : les âmes de l'Einherjar partagent sa rage, celles du Hanyō transformé son sang yokai.
+    const fury = perks.soulsFury ? 1 + (perks.einherjarRage ?? 0) * (1 - player.hp / player.cfg.maxHp) : 1;
+    const blood = perks.yokaiSouls && player.transformed > 0 ? 1 + (perks.yokaiBlood?.damage ?? 0) : 1;
+    const amount = cfg.damage * summon.damageFactor * fire * factor * choir * fury * blood * (perks.summonDamageFactor ?? 1);
     this.emit({ type: 'swing', pos: { ...summon.pos }, dir: summon.facing, range: cfg.attackRange + summon.radius, arcDeg: 90 });
     target.receiveHit({ amount, from: summon.pos, knockback: cfg.knockback }, this);
     if (target.dead) player.onKill();
@@ -652,6 +670,8 @@ export class World {
       if (stun) target.stun(stun, 'snare', this);
     }
     if (trait === 'kodama') player.heal(2, this);
+    // L'Invocateur récupère une part des dégâts de ses âmes.
+    if (cfg.leech) player.leech(amount * cfg.leech, this);
     if (target.kind === 'hitodama') this.igniteNear(target.pos);
   }
 
@@ -660,8 +680,8 @@ export class World {
     const player = this.player;
     const cfg = player.cfg.summon;
     const perks = player.cfg.perks ?? {};
-    // Au-delà du maximum, la plus vieille âme laisse sa place.
-    while (this.mine.length >= Math.max(1, cfg.max)) this.dismiss(this.mine[0]);
+    // Au-delà du maximum, la plus vieille âme laisse sa place (le compagnon, lui, ne compte pas).
+    while (this.bound.length >= Math.max(1, cfg.max)) this.dismiss(this.bound[0]);
     // Les Douze Shikigami : un kappa lié garde sa carapace, deux fois plus de PV et de durée.
     const tough = perks.shikigami && (kind === 'kappa' || kind === 'kappaRenforce') ? 2 : 1;
     const summon = new Summon(this.nextId++, kind, { ...pos }, cfg, holy ? (perks.raiseToughness ?? 1) : tough, holy);
@@ -673,9 +693,28 @@ export class World {
 
   private dismiss(summon: Summon): void {
     this.summons = this.summons.filter((s) => s !== summon);
+    // Le compagnon détruit se reforme un peu plus tard.
+    if (summon.companion) this.companionTimers.set(summon.owner, this.hero(summon.owner).cfg.summon.companion?.respawn ?? 0);
     // Une âme brisée par les yokai peut être relevée par un Paladin.
     if (summon.broken) this.graves.push({ kind: summon.kind, pos: { ...summon.pos }, time: this.time });
     this.emit({ type: 'summonFade', id: summon.id, pos: { ...summon.pos }, broken: summon.broken });
+  }
+
+  /** Invocateur : le compagnon se lève au début de la descente, et se reforme après avoir été détruit. */
+  private updateCompanions(dt: number): void {
+    for (const hero of this.standing) {
+      const companion = hero.cfg.summon.companion;
+      if (!companion || this.summons.some((s) => s.owner === hero.id && s.companion)) continue;
+      const left = (this.companionTimers.get(hero.id) ?? 0) - dt;
+      this.companionTimers.set(hero.id, left);
+      if (left > 0) continue;
+      const pos = add(hero.pos, scale(hero.facing, -1.2));
+      this.clampToArena(pos, hero.cfg.summon.radius);
+      const summon = new Summon(this.nextId++, companion.kind, pos, hero.cfg.summon, 1, false, companion);
+      summon.owner = hero.id;
+      this.summons.push(summon);
+      this.emit({ type: 'bind', id: summon.id, pos: { ...pos }, kind: companion.kind });
+    }
   }
 
   private addSoul(kind: EnemyKind, pos: Vec2): void {
@@ -732,6 +771,13 @@ export class World {
     if (!target) return false;
     this.markEnemy(target, 'death', cfg.duration);
     return true;
+  }
+
+  /** Oushebti rôdeur : la carapace éclatée laisse une statuette d'argile ; les yokai s'en prennent à elle un moment. */
+  clayDecoy(hero: Player, seconds: number): void {
+    hero.smoke = new Decoy({ ...hero.pos }, 1);
+    hero.hidden = Math.max(hero.hidden, seconds);
+    this.emit({ type: 'smoke', pos: { ...hero.pos }, radius: 1 });
   }
 
   /** E : Écran de fumée. Le nuage reste là où était le héros ; les yokai s'en prennent à lui tant que le héros est invisible. */
@@ -800,8 +846,9 @@ export class World {
         const next = closest(this.enemies.filter((e) => e.targetable && distance(e.pos, enemy.pos) <= range), enemy.pos);
         if (next) this.markEnemy(next, 'death', enemy.marks.death);
       }
-      // Curée : abattre la proie marquée recharge la Marque du chasseur.
+      // Curée : abattre la proie marquée recharge la Marque du chasseur. Et le Rôdeur se soigne sur sa proie.
       if (perks.markRefund && enemy.marks.hunt > 0) player.huntCooldown = 0;
+      if (player.cfg.kit === 'rodeur' && enemy.marks.hunt > 0) player.heal(player.cfg.maxHp * player.cfg.ranger.huntMark.killHeal, this);
       // Métamorphe : chaque ennemi tué pendant l'invisibilité la prolonge.
       if (perks.smokeKillExtend && player.hidden > 0) player.hidden += perks.smokeKillExtend;
     }
@@ -846,18 +893,24 @@ export class World {
     // Un soin par seconde, le premier dès l'activation : six pour une Aura de 6 s.
     if (player.auraTick > 0 || player.aura <= 0) return;
     player.auraTick = 1;
-    this.healAllies(player.pos, cfg.radius, cfg.heal);
-    if (!perks.auraBurn) return;
+    this.healAllies(player.pos, cfg.radius, cfg.heal, player);
+    // Chaleur (talent) ; Hanyō paladin transformé : l'Aura brûle aussi.
+    const burn = (perks.auraBurn ?? 0) + (player.transformed > 0 ? (perks.yokaiAuraBurn ?? 0) : 0);
+    if (!burn) return;
     for (const enemy of inside) {
-      enemy.receiveHit({ amount: perks.auraBurn * player.damageMultiplier(), from: player.pos, knockback: 0, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: burn * player.damageMultiplier(), from: player.pos, knockback: 0, ignoreShell: true }, this);
       if (enemy.dead) player.onKill();
     }
   }
 
-  /** Soigne les héros debout et les âmes alliées autour de `center` (Aura, bouclier du Paladin). */
-  healAllies(center: Vec2, radius: number, amount: number): void {
+  /**
+   * Soigne les héros debout et les âmes alliées autour de `center` (Aura, bouclier du Paladin). Le Paladin qui soigne
+   * (`healer`) n'en reçoit qu'une part : il soigne mieux les autres que lui-même.
+   */
+  healAllies(center: Vec2, radius: number, amount: number, healer?: Player): void {
     for (const hero of this.standing) {
-      if (distance(hero.pos, center) <= radius + hero.radius) hero.heal(amount, this);
+      const share = hero === healer ? hero.cfg.paladin.selfHeal : 1;
+      if (distance(hero.pos, center) <= radius + hero.radius) hero.heal(amount * share, this);
     }
     for (const summon of this.summons) {
       if (distance(summon.pos, center) <= radius + summon.radius) summon.heal(amount, this);
@@ -945,7 +998,8 @@ export class World {
         damage: attack.damage * power,
         knockback: attack.knockback * (full ? 2 : 1),
         radius: ranger.arrow.radius,
-        pierce: full && Boolean(perks.chargedPierce),
+        // Einherjar rôdeur : près de la mort, toutes les flèches transpercent.
+        pierce: (full && Boolean(perks.chargedPierce)) || (perks.lowHpPierce !== undefined && player.hp < player.cfg.maxHp * perks.lowHpPierce),
         full,
       });
     }
@@ -1337,6 +1391,7 @@ export class World {
       for (const enemy of candidates.slice(0, elites)) enemy.makeElite(difficulty.elite);
     }
     const hint = wave.hints?.[this.player.cfg.kit] ?? wave.hint;
+    for (const hero of this.players) hero.newWave();
     this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint });
   }
 

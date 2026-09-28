@@ -57,6 +57,8 @@ export type GameEvent =
   | { type: 'heroDown'; hero: number; pos: Vec2 }
   | { type: 'heroRevived'; hero: number; pos: Vec2 }
   | { type: 'guard'; pos: Vec2; rage: number }
+  /** La garde du Paladin se brise : sa jauge est vide. */
+  | { type: 'guardBreak'; pos: Vec2 }
   | { type: 'parry'; id: number; pos: Vec2 }
   | { type: 'stun'; id: number; pos: Vec2; reason: StunReason }
   | { type: 'telegraph'; id: number; from: Vec2; dir: Vec2; length: number; width: number; duration: number }
@@ -84,7 +86,7 @@ export type GameEvent =
   | { type: 'snareEnd'; id: number }
   // Races
   | { type: 'clayShell'; pos: Vec2 }
-  | { type: 'divineBlood'; pos: Vec2 }
+  | { type: 'divineAegis'; pos: Vec2 }
   | { type: 'transform'; pos: Vec2 }
   // Invocateur : âmes au sol, âmes liées et leurs compétences
   | { type: 'soulSet'; id: number; pos: Vec2 }

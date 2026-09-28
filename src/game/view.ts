@@ -40,6 +40,9 @@ export interface HeroView {
   readonly danceCooldown: number;
   readonly auraCooldown: number;
   readonly hammerCooldown: number;
+  /** Paladin : jauge de garde, et secondes de garde brisée. */
+  readonly guardLeft: number;
+  readonly guardBroken: number;
   readonly raiseCooldown: number;
   readonly netCooldown: number;
   readonly huntCooldown: number;
@@ -83,6 +86,8 @@ export interface SummonView {
   readonly spawnProgress: number;
   readonly vigor: number;
   readonly holy: boolean;
+  /** Le compagnon permanent de l'Invocateur. */
+  readonly companion: boolean;
 }
 
 export interface ProjectileView {

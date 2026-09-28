@@ -1403,8 +1403,12 @@ export class Renderer {
         this.text(event.pos, 2.3, 'Carapace d’argile', 'shield', 1.1);
         this.addFx(this.ringFx(event.pos, 2.4, CLAY, 0.35));
         break;
-      case 'divineBlood':
-        this.text(event.pos, 2.5, 'Sang divin !', 'parry', 1.6);
+      case 'guardBreak':
+        this.text(event.pos, 2.3, 'Garde brisée', 'hurt', 1.2);
+        this.addShake(0.35);
+        break;
+      case 'divineAegis':
+        this.text(event.pos, 2.5, 'Égide divine !', 'parry', 1.6);
         this.addFx(this.ringFx(event.pos, 3.4, DIVINE, 0.6));
         this.addShake(0.6);
         break;

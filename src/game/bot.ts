@@ -95,7 +95,7 @@ export class Bot {
     const toTarget = normalize(sub(target.pos, p.pos));
     input.aim = { ...target.pos };
     input.aimGround = { ...target.pos };
-    const canBlock = kit === 'guerrier' || kit === 'paladin';
+    const canBlock = p.canGuard;
 
     // Réactions aux attaques annoncées.
     const land = threats.find((th): th is Extract<Threat, { type: 'land' }> => th.type === 'land');

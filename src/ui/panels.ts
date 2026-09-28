@@ -2,7 +2,21 @@ import { content, type DungeonDef } from '../content';
 import type { PlayerConfig } from '../game/config';
 import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor, unlockAfter } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
-import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
+import {
+  buildLoadout,
+  canLearn,
+  canWield,
+  companionOf,
+  heroClass,
+  heroRace,
+  itemLevel,
+  levelProgress,
+  racePassives,
+  type Bonus,
+  type BonusKind,
+  type ItemDef,
+  type Loadout,
+} from '../game/loadout';
 import type { RolledOffer } from '../game/loot';
 import type { Progress, Slot } from '../game/progress';
 import { keyName } from '../keys';
@@ -902,6 +916,34 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       ),
     );
 
+    // Invocateur : son compagnon permanent, au choix parmi les yokai.
+    const companionDef = cls.companion;
+    const chosen = companionDef ? companionOf(companionDef, state) : '';
+    const companions = companionDef
+      ? h(
+          'div',
+          { class: 'companions' },
+          ...Object.entries(companionDef.kinds).map(([id, kind]) =>
+            h(
+              'button',
+              {
+                class: `node${id === chosen ? ' learned' : ''}`,
+                onclick: () => {
+                  if (id === chosen) return;
+                  state.companion = id;
+                  progress.save();
+                  ctx.toast(`Compagnon : ${kind.name}`, 'quest');
+                  render();
+                },
+              },
+              h('span', { class: 'node-rank' }, id === chosen ? 'Ton compagnon' : 'Choisir'),
+              h('strong', {}, kind.name),
+              h('small', {}, kind.description),
+            ),
+          ),
+        )
+      : null;
+
     const passives = h(
       'div',
       { class: 'passives' },
@@ -912,7 +954,17 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
     host.show(
       'Arbre de compétences',
       `1 point par niveau jusqu’au niveau ${skills.levels.pointsUntil} · les nœuds d’une branche s’apprennent dans l’ordre · réinitialisation gratuite sur la barque de Charon`,
-      h('div', { class: 'list' }, header, h('div', { class: 'tree' }, ...branches), h('h3', {}, 'Passifs et compétences'), passives),
+      h(
+        'div',
+        { class: 'list' },
+        header,
+        companions ? h('h3', {}, 'Compagnon') : null,
+        companions ? h('p', { class: 'note' }, 'Il te suit dès le début de chaque descente, d’une vague à l’autre, et se reforme s’il tombe. Il n’affaiblit pas tes coups. On en change quand on veut.') : null,
+        companions,
+        h('div', { class: 'tree' }, ...branches),
+        h('h3', {}, 'Passifs et compétences'),
+        passives,
+      ),
       { wide: true },
     );
   };

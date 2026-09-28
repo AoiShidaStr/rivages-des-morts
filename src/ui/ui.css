@@ -1146,6 +1146,12 @@ body:not([data-mode='dungeon']) #hud {
   color: #4a4f52;
 }
 
+.companions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
 .node {
   position: relative;
   display: grid;

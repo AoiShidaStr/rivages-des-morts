@@ -13,39 +13,88 @@
     "einherjar": {
       "name": "Einherjar",
       "origin": "Nordique · guerrier mort au combat",
-      "style": "Agressif",
+      "style": "Agressif, se bat au bord de la mort",
       "passives": [
         {
           "name": "Rage du guerrier mort",
-          "description": "Plus tu perds de PV, plus tu frappes fort : jusqu'à +30 % de dégâts près de la mort.",
-          "effects": [{ "op": "set", "path": "perks.einherjarRage", "value": 0.3 }]
+          "description": "Plus tu perds de PV, plus tu frappes fort : jusqu'à +35 % de dégâts près de la mort.",
+          "effects": [{ "op": "set", "path": "perks.einherjarRage", "value": 0.35 }]
         },
         {
           "name": "Festin du Valhalla",
-          "description": "Chaque ennemi tué te rend 2 PV.",
-          "effects": [{ "op": "set", "path": "perks.valhallaHeal", "value": 2 }]
+          "description": "Chaque ennemi tué te rend 2,5 % de tes PV.",
+          "effects": [{ "op": "set", "path": "perks.valhallaShare", "value": 0.025 }]
         }
-      ]
+      ],
+      "affinities": {
+        "guerrier": {
+          "name": "Colère des morts",
+          "description": "Sous la moitié de tes PV, ta rage ne retombe plus et monte 30 % plus vite.",
+          "effects": [{ "op": "set", "path": "perks.lowHpRage", "value": { "threshold": 0.5, "gain": 1.3 } }]
+        },
+        "invocateur": {
+          "name": "Chœur des Einherjar",
+          "description": "Tes âmes partagent ta Rage du guerrier mort : elles frappent plus fort quand tu es blessé.",
+          "effects": [{ "op": "set", "path": "perks.soulsFury", "value": true }]
+        },
+        "lame": {
+          "name": "Dernier assaut",
+          "description": "Sous la moitié de tes PV, l'esquive et le Pas de l'ombre reviennent 50 % plus vite.",
+          "effects": [{ "op": "set", "path": "perks.lowHpHaste", "value": { "threshold": 0.5, "factor": 1.5 } }]
+        },
+        "paladin": {
+          "name": "Bouclier du Valhalla",
+          "description": "Sous la moitié de tes PV, ta garde remonte deux fois plus vite.",
+          "effects": [{ "op": "set", "path": "perks.lowHpGuard", "value": { "threshold": 0.5, "factor": 2 } }]
+        },
+        "rodeur": {
+          "name": "Flèches des morts",
+          "description": "Sous la moitié de tes PV, toutes tes flèches transpercent les ennemis.",
+          "effects": [{ "op": "set", "path": "perks.lowHpPierce", "value": 0.5 }]
+        }
+      }
     },
     "oushebti": {
       "name": "Oushebti",
       "origin": "Égyptienne · statuette funéraire animée",
-      "style": "Invocateur, résistant",
+      "style": "Résistant, serviteur",
       "passives": [
-        {
-          "name": "Serviteur funéraire",
-          "description": "+1 invocation active et des invocations 30 % plus durables (Invocateur).",
-          "effects": [
-            { "op": "add", "path": "summon.max", "value": 1 },
-            { "op": "mul", "path": "summon.life", "value": 1.3 }
-          ]
-        },
         {
           "name": "Corps d'argile",
           "description": "Une carapace d'argile absorbe entièrement un coup toutes les 8 s.",
           "effects": [{ "op": "set", "path": "perks.clayShell", "value": 8 }]
         }
-      ]
+      ],
+      "affinities": {
+        "guerrier": {
+          "name": "Colère d'argile",
+          "description": "Quand ta carapace absorbe un coup, tu gagnes 25 de rage.",
+          "effects": [{ "op": "set", "path": "perks.clayRage", "value": 25 }]
+        },
+        "invocateur": {
+          "name": "Serviteur funéraire",
+          "description": "+1 âme active, et des âmes 30 % plus durables.",
+          "effects": [
+            { "op": "add", "path": "summon.max", "value": 1 },
+            { "op": "mul", "path": "summon.life", "value": 1.3 }
+          ]
+        },
+        "lame": {
+          "name": "Argile fuyante",
+          "description": "Quand ta carapace absorbe un coup, une charge du Pas de l'ombre te revient.",
+          "effects": [{ "op": "set", "path": "perks.clayDash", "value": true }]
+        },
+        "paladin": {
+          "name": "Rempart d'argile",
+          "description": "Quand ta carapace absorbe un coup, ta garde se remplit et se relève si elle était brisée.",
+          "effects": [{ "op": "set", "path": "perks.clayGuard", "value": true }]
+        },
+        "rodeur": {
+          "name": "Statuette funéraire",
+          "description": "Quand ta carapace absorbe un coup, elle laisse une statuette d'argile : les yokai s'en prennent à elle 3 s, et te perdent de vue.",
+          "effects": [{ "op": "set", "path": "perks.clayDecoy", "value": 3 }]
+        }
+      }
     },
     "demi-dieu": {
       "name": "Demi-dieu",
@@ -53,9 +102,9 @@
       "style": "Polyvalent",
       "passives": [
         {
-          "name": "Sang divin",
-          "description": "Une fois par descente, tu te relèves avec la moitié de tes PV au lieu de tomber.",
-          "effects": [{ "op": "set", "path": "perks.divineBlood", "value": 0.5 }]
+          "name": "Égide divine",
+          "description": "Une fois par vague, quand tu passes sous 25 % de PV, tu es intouchable 2 s et tu récupères 10 % de tes PV.",
+          "effects": [{ "op": "set", "path": "perks.divineAegis", "value": { "threshold": 0.35, "invulnerable": 3, "heal": 0.3 } }]
         }
       ],
       "parents": {
@@ -66,8 +115,8 @@
         },
         "ares": {
           "name": "Arès",
-          "description": "Parent divin : +12 % de dégâts, avec toutes les attaques.",
-          "effects": [{ "op": "set", "path": "perks.divineMight", "value": 0.12 }]
+          "description": "Parent divin : +15 % de dégâts, avec toutes les attaques.",
+          "effects": [{ "op": "set", "path": "perks.divineMight", "value": 0.15 }]
         },
         "hermes": {
           "name": "Hermès",
@@ -79,8 +128,8 @@
         },
         "athena": {
           "name": "Athéna",
-          "description": "Parent divin : 12 % de dégâts subis en moins.",
-          "effects": [{ "op": "mul", "path": "damageTakenFactor", "value": 0.88 }]
+          "description": "Parent divin : 15 % de dégâts subis en moins.",
+          "effects": [{ "op": "mul", "path": "damageTakenFactor", "value": 0.85 }]
         }
       }
     },
@@ -91,15 +140,42 @@
       "passives": [
         {
           "name": "Sang yokai",
-          "description": "Chaque coup porté remplit une jauge. Pleine, elle te transforme 8 s : +35 % de dégâts et +15 % de vitesse, mais 15 % de dégâts subis en plus.",
-          "effects": [{ "op": "set", "path": "perks.yokaiBlood", "value": { "hits": 25, "duration": 8, "damage": 0.35, "speed": 0.15, "taken": 0.15 } }]
+          "description": "Tes dégâts, de toutes les sources, remplissent une jauge. Pleine, elle te transforme 8 s : +35 % de dégâts et +15 % de vitesse, mais 10 % de dégâts subis en plus.",
+          "effects": [{ "op": "set", "path": "perks.yokaiBlood", "value": { "fill": 3, "duration": 8, "damage": 0.35, "speed": 0.15, "taken": 0.1 } }]
         },
         {
           "name": "Instinct yokai",
           "description": "Sous 30 % de PV, tu cours 25 % plus vite et tu régénères 3 PV par seconde.",
           "effects": [{ "op": "set", "path": "perks.yokaiInstinct", "value": { "threshold": 0.3, "speed": 0.25, "regen": 3 } }]
         }
-      ]
+      ],
+      "affinities": {
+        "guerrier": {
+          "name": "Furie du oni",
+          "description": "Transformé, ta rage monte deux fois plus vite.",
+          "effects": [{ "op": "set", "path": "perks.yokaiRage", "value": 2 }]
+        },
+        "invocateur": {
+          "name": "Cortège yokai",
+          "description": "Transformé, tes âmes frappent 35 % plus fort, comme toi.",
+          "effects": [{ "op": "set", "path": "perks.yokaiSouls", "value": true }]
+        },
+        "lame": {
+          "name": "Pas du renard",
+          "description": "Transformé, l'esquive et le Pas de l'ombre reviennent deux fois plus vite.",
+          "effects": [{ "op": "set", "path": "perks.yokaiDash", "value": 2 }]
+        },
+        "paladin": {
+          "name": "Lumière de feu follet",
+          "description": "Transformé, ton Aura brûle les yokai qui s'y trouvent : 8 dégâts par seconde.",
+          "effects": [{ "op": "set", "path": "perks.yokaiAuraBurn", "value": 8 }]
+        },
+        "rodeur": {
+          "name": "Œil du tengu",
+          "description": "Transformé, tu bandes ton arc 50 % plus vite.",
+          "effects": [{ "op": "set", "path": "perks.yokaiDraw", "value": 1.5 }]
+        }
+      }
     }
   },
   "classes": {
@@ -113,12 +189,12 @@
       "weapon": "nodachi",
       "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
       "effects": [
-        { "op": "mul", "path": "maxHp", "value": 1.15 },
+        { "op": "mul", "path": "maxHp", "value": 1.4 },
         { "op": "set", "path": "block.reduction", "value": 0.9 }
       ],
       "actives": [
         { "key": "Clic droit", "name": "Blocage", "description": "Arrête 90 % d'un coup de face et remplit la rage." },
-        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit." },
+        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit. Si elle touche, elle te rend 4 % de tes PV." },
         { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
         { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
       ],
@@ -262,9 +338,25 @@
       "subtitle": "Lieur d’âmes",
       "role": "Contrôle par les âmes",
       "difficulty": 3,
-      "playstyle": "Lie les âmes des yokai vaincus et laisse-les se battre pour toi : lent à démarrer, fort une fois lancé.",
+      "playstyle": "Un yokai compagnon, choisi, te suit partout ; lie en plus les âmes des yokai vaincus et laisse-les se battre pour toi.",
       "kit": "invocateur",
       "weapon": "grelots-onmyoji",
+      "companion": {
+        "about": "Compagnon permanent de l'Invocateur, choisi dans l'arbre de compétences : présent dès le début de la descente, il reste d'une vague à l'autre, ne compte pas dans les âmes actives et n'affaiblit pas le héros. Détruit, il se reforme après `respawn` s. Ses PV et ses dégâts sont ceux d'une âme liée (summon.hp, summon.damage) multipliés par les siens ; `rate` : cadence de ses coups. Feu follet, kodama et Oublié gardent leur trait (Les Douze Shikigami). Plus tard : capturer ses compagnons, comme l'Osamodas de Wakfu.",
+        "default": "kappa",
+        "respawn": 10,
+        "kinds": {
+          "kappa": { "name": "Kappa", "description": "Lent et très robuste : il encaisse les coups à ta place.", "damage": 0.9, "hp": 1.8, "speed": 0.85, "rate": 1 },
+          "kodama": { "name": "Kodama", "description": "Esprit d'arbre : chacun de ses coups te rend 2 PV.", "damage": 0.8, "hp": 1, "speed": 1, "rate": 1 },
+          "hitodama": { "name": "Feu follet", "description": "Rapide et fragile ; ses flammes font 50 % de dégâts en plus.", "damage": 0.9, "hp": 0.7, "speed": 1.35, "rate": 1 },
+          "oublie": { "name": "Oublié", "description": "Guerrier sans nom : chacun de ses coups étourdit 0,5 s.", "damage": 1, "hp": 1.1, "speed": 1, "rate": 1 },
+          "kasaObake": { "name": "Kasa-obake", "description": "Ombrelle hantée, vive et équilibrée.", "damage": 1.2, "hp": 1.1, "speed": 1.1, "rate": 1 },
+          "araignee": { "name": "Araignée", "description": "Frappe presque deux fois plus souvent, mais fragile.", "damage": 0.7, "hp": 0.7, "speed": 1.3, "rate": 1.7 },
+          "shikome": { "name": "Shikome", "description": "Chasseresse des Enfers : rapide et mordante, mais fragile.", "damage": 1.35, "hp": 0.8, "speed": 1.3, "rate": 1 },
+          "ikazuchi": { "name": "Ikazuchi", "description": "Éclair vivant : vif, il frappe souvent.", "damage": 1.1, "hp": 0.8, "speed": 1.2, "rate": 1.3 },
+          "ikusa": { "name": "Ikusa", "description": "Soldat en armure : solide et puissant, mais lent.", "damage": 1.2, "hp": 1.4, "speed": 0.9, "rate": 1 }
+        }
+      },
       "about": "Réglages de base de la classe, appliqués avant l’équipement : l’Invocateur frappe moins fort et a moins de PV que le Guerrier, ses âmes font le travail.",
       "effects": [
         { "op": "set", "path": "kit", "value": "invocateur" },
@@ -277,7 +369,7 @@
         {
           "key": "Clic droit",
           "name": "Lier",
-          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 24 s. Chaque âme active réduit tes propres dégâts de 10 %."
+          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 24 s. Chaque âme active réduit tes propres dégâts de 10 %. Tu récupères 5 % des dégâts de tes âmes, compagnon compris."
         },
         { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent 60 % plus fort." },
         { "key": "E", "name": "Sacrifice", "description": "Ta plus vieille âme explose : gros dégâts autour d’elle." },
@@ -596,14 +688,14 @@
       "subtitle": "Rempart solaire",
       "role": "Tank, soutien",
       "difficulty": 1,
-      "playstyle": "Bouclier levé, tu encaisses et tu soignes : la classe qui pardonne le plus.",
+      "playstyle": "Bouclier levé, tu encaisses et tu soignes tes alliés mieux que toi-même : ménage ta garde.",
       "kit": "paladin",
       "weapon": "naginata-temple",
-      "about": "Réglages de base de la classe : plus de PV, un peu plus lent ; son bouclier arrête les coups en entier, et les alliés qu'il relève ne l'affaiblissent pas.",
+      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 85 % d'un coup tant que sa garde tient (player.json, paladin.guard), et les alliés qu'il relève ne l'affaiblissent pas. Il ne reçoit que la moitié de ses propres soins (paladin.selfHeal) : c'est un soutien, pas un solitaire invincible.",
       "effects": [
         { "op": "set", "path": "kit", "value": "paladin" },
-        { "op": "set", "path": "block.reduction", "value": 1 },
-        { "op": "mul", "path": "maxHp", "value": 1.25 },
+        { "op": "set", "path": "block.reduction", "value": 0.85 },
+        { "op": "mul", "path": "maxHp", "value": 1.15 },
         { "op": "mul", "path": "moveSpeed", "value": 0.95 },
         { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
         { "op": "set", "path": "summon.malus", "value": 0 }
@@ -612,9 +704,9 @@
         {
           "key": "Clic droit",
           "name": "Bouclier levé",
-          "description": "Maintiens pour bloquer les coups de face, en avançant lentement. Bloquer la charge d'un kappa renverse sa coupelle."
+          "description": "Maintiens pour arrêter 85 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
         },
-        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend 4 PV par seconde à toi et à tes alliés proches." },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et soigne chaque seconde tes alliés proches, âmes comprises (3 PV avec une arme de niveau 1, plus avec la forge), et moitié moins toi-même." },
         { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
         {
           "key": "R",
@@ -627,7 +719,7 @@
         "tiers": [
           {
             "count": 2,
-            "description": "Chaque coup bloqué rend 3 PV à toi et à tes alliés proches, âmes comprises.",
+            "description": "Chaque coup bloqué rend 3 PV à tes alliés proches, âmes comprises, et moitié moins à toi.",
             "effects": [{ "op": "set", "path": "perks.shieldHeal", "value": { "amount": 3, "radius": 3 } }]
           },
           {
@@ -764,7 +856,7 @@
       "about": "Réglages de base de la classe : un peu moins de PV ; le clic gauche tire une flèche vers la souris, à la portée de l'arc.",
       "effects": [
         { "op": "set", "path": "kit", "value": "rodeur" },
-        { "op": "mul", "path": "maxHp", "value": 0.95 }
+        { "op": "mul", "path": "maxHp", "value": 1.25 }
       ],
       "actives": [
         {
@@ -780,7 +872,7 @@
         {
           "key": "E",
           "name": "Marque du chasseur",
-          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources."
+          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 6 % de tes PV. Revient en 8 s."
         },
         { "key": "R", "name": "Recul", "description": "Bond en arrière, loin de la souris, en tirant trois flèches vers elle. Invulnérable pendant le saut." }
       ],

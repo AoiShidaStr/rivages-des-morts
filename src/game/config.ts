@@ -55,6 +55,8 @@ export interface PlayerConfig {
     recovery: number;
     knockback: number;
     stun: number;
+    /** Part des PV max rendue quand la Frappe touche au moins un ennemi : dépenser sa rage soigne. */
+    heal: number;
   };
   /** E : saut sur une zone, qui frappe à l'atterrissage. */
   bond: {
@@ -109,6 +111,8 @@ export interface SummonConfig {
   leash: number;
   /** Dégâts du héros en moins pour chaque âme active (GDD : chaque invocation affaiblit le joueur). */
   malus: number;
+  /** Part des dégâts de ses âmes que l'Invocateur récupère en PV. */
+  leech: number;
   /** A : les âmes foncent sur l'ennemi visé et frappent plus fort. */
   recall: { cooldown: number; speed: number; damageFactor: number; duration: number };
   /** E : la plus vieille âme explose. */
@@ -117,6 +121,20 @@ export interface SummonConfig {
   choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
   /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort et encaisse mieux qu'un feu follet. */
   kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number }>>;
+  /**
+   * Compagnon permanent de l'Invocateur (choisi par le joueur) : son yokai, ses multiplicateurs de dégâts, de PV,
+   * de vitesse et de cadence, et les secondes avant qu'il ne se reforme. Absent pour les autres classes.
+   */
+  companion?: CompanionStats;
+}
+
+export interface CompanionStats {
+  kind: EnemyKind;
+  respawn: number;
+  damage: number;
+  hp: number;
+  speed: number;
+  rate: number;
 }
 
 /** Lame : frappe vite, marque ses proies et les achève en critiques. */
@@ -135,8 +153,16 @@ export interface BladeConfig {
 
 /** Paladin : bouclier levé, aura de soin, marteau lancé, et un allié relevé. */
 export interface PaladinConfig {
-  /** A : zone qui soigne le héros et ses alliés. */
+  /** A : zone qui soigne les alliés de `heal` PV par seconde (le Paladin lui-même, d'une part `selfHeal`). */
   aura: { cooldown: number; duration: number; radius: number; heal: number };
+  /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
+  selfHeal: number;
+  /**
+   * Jauge de garde : chaque coup bloqué l'use de `cost` points par % des PV max du héros qu'il aurait retirés
+   * (au moins `minCost`). Vide, la garde se brise pendant `breakTime` s. Elle remonte de `regen` par seconde
+   * après `delay` s sans rien bloquer.
+   */
+  guard: { max: number; cost: number; minCost: number; regen: number; delay: number; breakTime: number };
   /** E : le marteau part vers la souris et revient, en frappant à l'aller et au retour. */
   hammer: { cooldown: number; damage: number; range: number; speed: number; radius: number; knockback: number };
   /** R : relève le dernier allié tombé (âme brisée, ou yokai vaincu) près du héros. */
@@ -154,8 +180,8 @@ export interface RangerConfig {
   charged: { time: number; minFactor: number; maxFactor: number; moveFactor: number; rangeFactor: number; speedFactor: number };
   /** A : flèche qui immobilise les ennemis autour de l'impact. */
   net: { cooldown: number; stun: number; radius: number; range: number };
-  /** E : la cible prend plus de dégâts, de toutes les sources. */
-  huntMark: { cooldown: number; duration: number; bonus: number; range: number };
+  /** E : la cible prend plus de dégâts, de toutes les sources ; l'abattre rend `killHeal` des PV max. */
+  huntMark: { cooldown: number; duration: number; bonus: number; range: number; killHeal: number };
   /** R : bond en arrière en tirant une volée vers la souris. */
   leap: { cooldown: number; distance: number; duration: number; height: number; arrows: number; spreadDeg: number };
 }
@@ -182,7 +208,7 @@ export interface Perks {
   bearSkin?: boolean;
   /** Einherjar : dégâts en plus selon les PV perdus (valeur à 0 PV). */
   einherjarRage?: number;
-  /** Einherjar : PV rendus par ennemi tué. */
+  /** PV rendus par ennemi tué (Cor de Gjallarhorn). */
   valhallaHeal?: number;
   /** Coupelle du kappa : dégâts en plus tant qu'on n'est pas touché. */
   coupelle?: { bonus: number; emptyTime: number };
@@ -190,16 +216,49 @@ export interface Perks {
   joren?: { stun: number; life: number; radius: number };
 
   // --- Races ---
+  /** Einherjar (Festin du Valhalla) : part des PV max rendue par ennemi tué. */
+  valhallaShare?: number;
+  /** Einherjar guerrier : sous `threshold` des PV, la rage ne retombe plus et monte `gain` fois plus vite. */
+  lowHpRage?: { threshold: number; gain: number };
+  /** Einherjar invocateur : les âmes profitent aussi de la Rage du guerrier mort. */
+  soulsFury?: boolean;
+  /** Einherjar lame : sous `threshold` des PV, l'esquive et le Pas de l'ombre reviennent `factor` fois plus vite. */
+  lowHpHaste?: { threshold: number; factor: number };
+  /** Einherjar paladin : sous `threshold` des PV, la garde remonte `factor` fois plus vite. */
+  lowHpGuard?: { threshold: number; factor: number };
+  /** Einherjar rôdeur : sous cette part des PV, toutes les flèches transpercent. */
+  lowHpPierce?: number;
   /** Oushebti : une carapace d'argile absorbe un coup, puis se reforme après ce nombre de secondes. */
   clayShell?: number;
-  /** Demi-dieu : une fois par descente, se relève avec cette part de ses PV. */
-  divineBlood?: number;
+  /** Oushebti guerrier : rage gagnée quand la carapace absorbe un coup. */
+  clayRage?: number;
+  /** Oushebti lame : la carapace qui absorbe un coup rend une charge du Pas de l'ombre. */
+  clayDash?: boolean;
+  /** Oushebti paladin : la carapace qui absorbe un coup remplit la garde. */
+  clayGuard?: boolean;
+  /** Oushebti rôdeur : la carapace qui absorbe un coup laisse une statuette que les yokai attaquent, ces secondes. */
+  clayDecoy?: number;
+  /** Demi-dieu : une fois par vague, passé sous `threshold` des PV, invulnérable `invulnerable` s et soigné de `heal` des PV max. */
+  divineAegis?: { threshold: number; invulnerable: number; heal: number };
   /** Demi-dieu, fils de Zeus : un coup d'arme sur `every` appelle la foudre. */
   zeusBolt?: { every: number; damage: number };
   /** Demi-dieu, fils d'Arès : dégâts en plus, pour toutes les attaques. */
   divineMight?: number;
-  /** Hanyō : les coups remplissent une jauge ; pleine, elle transforme le héros un moment. */
-  yokaiBlood?: { hits: number; duration: number; damage: number; speed: number; taken: number };
+  /**
+   * Hanyō : les dégâts infligés, de toutes les sources (arme, flèches, âmes, compétences), remplissent une jauge ;
+   * à `fill` fois ses PV max, elle transforme le héros un moment.
+   */
+  yokaiBlood?: { fill: number; duration: number; damage: number; speed: number; taken: number };
+  /** Hanyō guerrier : transformé, la rage monte ce nombre de fois plus vite. */
+  yokaiRage?: number;
+  /** Hanyō invocateur : transformé, ses âmes frappent aussi plus fort. */
+  yokaiSouls?: boolean;
+  /** Hanyō lame : transformé, le Pas de l'ombre et l'esquive reviennent ce nombre de fois plus vite. */
+  yokaiDash?: number;
+  /** Hanyō paladin : transformé, l'Aura brûle les yokai (dégâts par seconde). */
+  yokaiAuraBurn?: number;
+  /** Hanyō rôdeur : transformé, l'arc se bande ce nombre de fois plus vite. */
+  yokaiDraw?: number;
   /** Hanyō : sous `threshold` des PV, vitesse en plus et régénération. */
   yokaiInstinct?: { threshold: number; speed: number; regen: number };
 

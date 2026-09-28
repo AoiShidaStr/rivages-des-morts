@@ -10,7 +10,7 @@ import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 2;
+export const PROTOCOL = 3;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -134,6 +134,7 @@ const COOLDOWNS = {
   danceCooldown: 0,
   auraCooldown: 0,
   hammerCooldown: 0,
+  guardBroken: 0,
   raiseCooldown: 0,
   netCooldown: 0,
   huntCooldown: 0,
@@ -141,7 +142,7 @@ const COOLDOWNS = {
 } as const;
 
 /** Champs du héros que seul son joueur reçoit. */
-const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'dashCharges', 'rage', 'canSmash', 'drawProgress', 'soulNear', 'graveNear', 'hammerOut'];
+const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'dashCharges', 'guardLeft', 'rage', 'canSmash', 'drawProgress', 'soulNear', 'graveNear', 'hammerOut'];
 
 const HERO_DEFAULTS: Partial<HeroSnap> = {
   pose: 'idle',
@@ -159,12 +160,13 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   rage: 0,
   canSmash: false,
   ...COOLDOWNS,
+  guardLeft: 100,
   soulNear: false,
   graveNear: false,
   hammerOut: false,
 };
 const ENEMY_DEFAULTS: Partial<EnemyView> = { pose: 'idle', altitude: 0, spawnProgress: 1, elite: false, mark: null, dead: false, boss: false };
-const SUMMON_DEFAULTS: Partial<SummonView> = { pose: 'idle', spawnProgress: 1, vigor: 1, holy: false };
+const SUMMON_DEFAULTS: Partial<SummonView> = { pose: 'idle', spawnProgress: 1, vigor: 1, holy: false, companion: false };
 const PROJECTILE_DEFAULTS: Partial<ProjectileView> = { full: false };
 const WEB_DEFAULTS: Partial<WebView> = { burning: null };
 const NO_DEFAULTS = {};
@@ -175,9 +177,9 @@ const VECTORS = new Set(['pos', 'facing', 'dir', 'to']);
 /** Champs des instantanés, dans un ordre fixe : leur rang donne leur code. Un champ absent de la liste garde son nom. */
 const FIELDS = [
   ...['id', 'pos', 'facing', 'radius', 'pose', 'hp', 'kind', 'sprite', 'maxHp', 'altitude', 'spawnProgress', 'elite', 'mark', 'dead', 'boss', 'prey'],
-  ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'holy', 'dir', 'full', 'ripe', 'age', 'burning'],
+  ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'holy', 'dir', 'full', 'ripe', 'age', 'burning', 'companion'],
   ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'choir', 'smoke', 'cloud', 'drawProgress', 'rage', 'canSmash'],
-  ...['dashCharges', 'soulNear', 'graveNear', 'hammerOut', ...Object.keys(COOLDOWNS)],
+  ...['dashCharges', 'soulNear', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS)],
 ];
 const CODE = new Map(FIELDS.map((name, i) => [name, i.toString(36)]));
 const NAME = new Map(FIELDS.map((name, i) => [i.toString(36), name]));
@@ -258,6 +260,8 @@ function heroSnaps(world: World): HeroSnap[] {
     danceCooldown: p.danceCooldown,
     auraCooldown: p.auraCooldown,
     hammerCooldown: p.hammerCooldown,
+    guardLeft: p.guardLeft,
+    guardBroken: p.guardBroken,
     raiseCooldown: p.raiseCooldown,
     netCooldown: p.netCooldown,
     huntCooldown: p.huntCooldown,
@@ -311,6 +315,7 @@ export function shareSnapshot(world: World, tick: number): SharedSnap {
     spawnProgress: s.spawnProgress,
     vigor: s.vigor,
     holy: s.holy,
+    companion: s.companion,
   }));
   return {
     tick,

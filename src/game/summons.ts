@@ -1,7 +1,7 @@
 // Âmes de l'Invocateur (GDD, « Système d'âmes ») : un yokai vaincu laisse son âme au sol quelques secondes ;
 // liée, elle se relève et combat aux côtés du héros, jusqu'à s'effacer ou se briser sous les coups des yokai.
 // Le Paladin, lui, relève un allié tombé (Relever) : une âme de lumière qui suit les mêmes règles.
-import type { SummonConfig } from './config';
+import type { CompanionStats, SummonConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, distance, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { EnemyKind, Pose } from './types';
@@ -38,13 +38,20 @@ export class Summon {
   rush: { target: number; t: number } | null = null;
   /** Le héros qui l'a liée ou relevée. */
   owner = 0;
+  /** Multiplicateurs propres à son yokai (ou à son rôle de compagnon) : dégâts, vitesse, cadence des coups. */
+  readonly damageFactor: number;
+  readonly speedFactor: number;
+  readonly rate: number;
   private cooldown = 0;
   private striking = 0;
   private moving = false;
   private rising = 0;
   private grace = 0;
 
-  /** `toughness` multiplie ses PV et sa durée (Les Douze Shikigami pour un kappa) ; `holy` : relevée par un Paladin. */
+  /**
+   * `toughness` multiplie ses PV et sa durée (Les Douze Shikigami pour un kappa) ; `holy` : relevée par un Paladin ;
+   * `companion` : le compagnon permanent de l'Invocateur, qui ne s'efface jamais avec le temps.
+   */
   constructor(
     readonly id: number,
     readonly kind: EnemyKind,
@@ -52,12 +59,21 @@ export class Summon {
     private readonly cfg: SummonConfig,
     toughness: number,
     readonly holy = false,
+    companion?: CompanionStats,
   ) {
-    this.life = cfg.life * toughness;
+    const k = companion ?? { damage: 1, speed: 1, hp: 1, rate: 1, ...cfg.kinds[kind] };
+    this.companion = Boolean(companion);
+    this.life = companion ? Infinity : cfg.life * toughness;
     this.maxLife = this.life;
-    this.hp = cfg.hp * (cfg.kinds[kind]?.hp ?? 1) * toughness;
+    this.hp = cfg.hp * k.hp * toughness;
     this.maxHp = this.hp;
+    this.damageFactor = k.damage;
+    this.speedFactor = k.speed;
+    this.rate = k.rate;
   }
+
+  /** Le compagnon permanent de l'Invocateur. */
+  readonly companion: boolean;
 
   get radius(): number {
     return this.cfg.radius;
@@ -74,6 +90,7 @@ export class Summon {
 
   /** De 1 (toute fraîche) à 0 (sur le point de s'effacer ou de se briser) : le rendu la fait pâlir. */
   get vigor(): number {
+    if (this.companion) return Math.max(0, this.hp / this.maxHp);
     return Math.max(0, Math.min(this.life / this.maxLife, this.hp / this.maxHp));
   }
 
@@ -125,7 +142,7 @@ export class Summon {
     this.knockback = scale(this.knockback, Math.exp(-10 * dt));
     if (this.rising < RISE_TIME) return;
 
-    let speed = cfg.speed * (cfg.kinds[this.kind]?.speed ?? 1) * (world.choir > 0 ? cfg.choir.speedFactor : 1);
+    let speed = cfg.speed * this.speedFactor * (world.choir > 0 ? cfg.choir.speedFactor : 1);
     let target: Enemy | undefined;
     if (this.rush) {
       this.rush.t -= dt;
@@ -145,7 +162,7 @@ export class Summon {
       else if (this.cooldown <= 0) {
         world.summonHit(this, target, this.rush ? cfg.recall.damageFactor : 1);
         this.rush = null;
-        this.cooldown = cfg.attackCooldown;
+        this.cooldown = cfg.attackCooldown / this.rate;
         this.striking = STRIKE_POSE;
       }
     } else {

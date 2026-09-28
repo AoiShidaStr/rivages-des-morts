@@ -18,6 +18,8 @@ export interface Hero {
 export interface ProgressState {
   version: 1;
   hero: Hero;
+  /** Invocateur : le yokai choisi comme compagnon permanent (celui par défaut de la classe s'il manque). */
+  companion?: string;
   oboles: number;
   xp: number;
   /** Nœuds appris dans l'arbre de compétences. */

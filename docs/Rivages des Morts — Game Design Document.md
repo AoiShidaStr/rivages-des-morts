@@ -54,20 +54,20 @@ Gilgamesh a volé les Tablettes du Destin, mais ce vol n'a été possible que pa
 
 ## Races
 
-La race est l'héritage mythologique du personnage : elle donne un passif et une apparence, et pousse vers un style de jeu sans l'imposer. Quatre races sont prévues au lancement.
+La race est l'héritage mythologique du personnage : elle donne des passifs et une apparence, et pousse vers un style de jeu sans l'imposer. Quatre races sont prévues au lancement. **Toute race va avec toute classe** : chaque race a des passifs communs, et une **affinité** qui change selon la classe du héros (le Demi-dieu, lui, choisit son parent divin).
 
-| Race | Mythologie | Passif 1 | Passif 2 | Style favorisé |
+| Race | Mythologie | Passifs communs | Affinité par classe | Style favorisé |
 | --- | --- | --- | --- | --- |
-| Demi-dieu | Grecque | Parent divin : Zeus (foudre), Arès (dégâts), Hermès (vitesse) ou Athéna (défense) | Sang divin : une fois par donjon, se relève avec la moitié de ses PV | Polyvalent |
-| Hanyō (mi-humain, mi-yokai) | Japonaise | Sang yokai : jauge qui déclenche une transformation plus puissante mais moins contrôlable | Instinct yokai : sous 30 % de PV, vitesse et régénération augmentent | Burst, prise de risque |
-| Oushebti (statuette funéraire animée) | Égyptienne | Serviteur funéraire : +1 invocation, invocations plus durables | Corps d'argile : une carapace absorbe un coup toutes les quelques secondes | Invocateur, résistant |
-| Einherjar (guerrier mort au combat) | Nordique | Rage du guerrier mort : plus il perd de PV, plus il frappe fort | Festin du Valhalla : chaque ennemi tué rend un peu de PV | Agressif |
+| Demi-dieu | Grecque | Égide divine : une fois par vague, passé sous 35 % de PV, intouchable 3 s et 30 % de PV rendus | Parent divin au choix : Zeus (foudre), Arès (+15 % de dégâts), Hermès (vitesse, esquive), Athéna (−15 % de dégâts subis) | Polyvalent |
+| Hanyō (mi-humain, mi-yokai) | Japonaise | Sang yokai : ses dégâts, de toutes les sources, remplissent une jauge qui le transforme 8 s (+35 % de dégâts, +15 % de vitesse, +10 % de dégâts subis). Instinct yokai : sous 30 % de PV, vitesse et régénération | Transformé : Guerrier, rage deux fois plus vite ; Invocateur, âmes plus fortes ; Lame, Pas de l'ombre deux fois plus vite ; Paladin, l'Aura brûle ; Rôdeur, arc bandé 50 % plus vite | Burst, prise de risque |
+| Oushebti (statuette funéraire animée) | Égyptienne | Corps d'argile : une carapace absorbe un coup toutes les 8 s | Quand la carapace éclate : Guerrier, +25 de rage ; Lame, une charge du Pas de l'ombre ; Paladin, garde pleine ; Rôdeur, statuette-leurre 3 s. Invocateur : +1 âme active, âmes plus durables | Résistant, serviteur |
+| Einherjar (guerrier mort au combat) | Nordique | Rage du guerrier mort : jusqu'à +35 % de dégâts près de la mort. Festin du Valhalla : 2,5 % des PV par ennemi tué | Sous la moitié des PV : Guerrier, la rage ne retombe plus ; Lame, esquive et Pas de l'ombre 50 % plus vite ; Paladin, garde deux fois plus vite ; Rôdeur, flèches qui transpercent. Invocateur : ses âmes partagent sa rage | Agressif, au bord de la mort |
 
 **Affinité d'île** : une race est un peu plus forte sur l'île de sa mythologie et débloque des dialogues propres avec certains dieux.
 
 **Races envisagées plus tard** : Nahual (aztèque, métamorphe), Sidhe (celtique, illusions).
 
-**En place** : les quatre races se choisissent à la création du héros, avec la classe (`src/data/skills.json`, bloc `races`). Le Demi-dieu choisit son parent : Zeus (un coup sur quatre appelle la foudre), Arès (+12 % de dégâts), Hermès (vitesse, esquive plus fréquente) ou Athéna (−12 % de dégâts subis). La transformation du Hanyō se déclenche seule quand la jauge est pleine (25 coups portés), en attendant une touche dédiée. Toutes les races ont encore la même apparence.
+**En place** : les quatre races se choisissent à la création du héros, avec la classe (`src/data/skills.json`, bloc `races` : `passives` pour tous, `affinities` par classe). L'écran de création montre l'affinité de la race avec la classe choisie. La transformation du Hanyō se déclenche seule quand la jauge est pleine (trois fois ses PV max en dégâts infligés), en attendant une touche dédiée. Le « Sang divin » du Demi-dieu (une seconde vie par descente) a été remplacé par l'Égide divine : une seconde vie écrasait les autres races en solo.
 
 ## Classes & multiclassage
 
@@ -77,8 +77,8 @@ Cinq classes au lancement, neutres culturellement : la race les habille. Un Guer
 | --- | --- | --- | --- |
 | Guerrier (Berserker) | Mêlée, rage | Blocage qui remplit la rage | La rage monte plus vite et Frénésie dure plus longtemps |
 | Lame (Assassin des ombres) | DPS mêlée, peu de PV | Dash à travers les ennemis, qui les marque | Les coups après une esquive sont critiques |
-| Paladin (Rempart solaire) | Tank / soutien | Bouclier levé, bloque de face | Le bouclier absorbe et soigne les alliés proches, invocations comprises |
-| Invocateur (Lieur d'âmes) | Contrôle par les âmes | Lier l'âme d'un ennemi vaincu | Plus d'invocations actives, et plus fortes |
+| Paladin (Rempart solaire) | Tank / soutien | Bouclier levé, arrête 85 % d'un coup de face tant que la garde tient | Le bouclier soigne les alliés proches, invocations comprises (moitié moins le Paladin) |
+| Invocateur (Lieur d'âmes) | Contrôle par les âmes, un compagnon choisi | Lier l'âme d'un ennemi vaincu | Plus d'invocations actives, et plus fortes |
 | Rôdeur (Chasseur) | DPS à distance, sans pièges | Tir chargé | Les tirs chargés traversent et marquent les ennemis |
 
 ### Kits des classes
@@ -94,6 +94,24 @@ Contrôles communs : clic gauche pour l'attaque de base, clic droit pour la sign
 | Rôdeur (Chasseur) | Tir chargé | Flèche-filet : immobilise | Marque du chasseur : la cible prend plus de dégâts | Recul : bond en arrière en tirant |
 
 La Marque du chasseur remplace la Mine spirituelle prévue au départ, pour garder le Rôdeur en DPS sans pièges.
+
+**Chaque classe se soigne à sa façon** (30 à 60 PV par minute au niveau 10, mesurés par le bot) :
+
+| Classe | Soin | Réglage |
+| --- | --- | --- |
+| Guerrier | La Frappe fracassante rend 4 % des PV max quand elle touche : dépenser sa rage soigne | `smash.heal` |
+| Invocateur | 5 % des dégâts de ses âmes (compagnon compris), versés par gorgées de 3 PV | `summon.leech` |
+| Lame | Festin de l'ombre : 4 PV par ennemi marqué abattu | `perks.markKillHeal` |
+| Paladin | Aura de lumière et bouclier (tag) : ses alliés reçoivent le soin entier, lui la moitié. L'Aura suit la puissance de l'arme | `paladin.aura`, `paladin.selfHeal` |
+| Rôdeur | Abattre la cible de la Marque du chasseur rend 6 % des PV max | `ranger.huntMark.killHeal` |
+
+**Paladin, tank-soutien** : son bouclier arrête 85 % d'un coup de face. Chaque coup bloqué use une **jauge de garde** : 100 points, 2,5 points par % des PV max que le coup aurait retirés, 12 au moins. Vide, la garde se brise 1,5 s. Elle remonte de 30 par seconde après 1 s sans rien bloquer (`paladin.guard`). Le HUD montre la jauge à la place de la vigueur de l'allié relevé.
+
+**Compagnon de l'Invocateur** : un yokai choisi dans l'arbre de compétences (bloc `companion` de la classe dans `skills.json`). Au choix : kappa (robuste), kodama (soigne), feu follet (brûle), Oublié (étourdit), kasa-obake (équilibré), araignée (frappe souvent), shikome, ikazuchi et ikusa.
+- Il se lève au début de chaque descente, suit l'Invocateur d'une vague à l'autre et se reforme 10 s après avoir été détruit.
+- Il répond au Rappel et au Chœur. Il ne compte pas dans les âmes actives, n'affaiblit pas l'Invocateur et ne se sacrifie pas.
+- Les neuf compagnons se valent à peu près au bot : 67 à 78 % de victoires au niveau 1, 91 à 98 % au niveau 20.
+- **Plus tard**, comme l'Osamodas de Wakfu : capturer ses compagnons au lieu de les choisir dans une liste.
 
 ### Arbres de compétences (V1)
 
@@ -152,6 +170,41 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 **Équilibrage** : un bot joue chaque classe sur les vagues du donjon, sans rendu, en ratant une partie des attaques annoncées comme un joueur moyen. Il a servi à régler les chiffres ci-dessus. Le Guerrier, qui gardait son blocage levé sans rien perdre, encaisse désormais une partie des coups ; la Lame, qui ne vivait que de ses esquives, gagne des PV, de la portée et un soin sur les ennemis marqués ; le Paladin tape un peu moins fort que le Guerrier, le Rôdeur un peu plus vite qu'avant. L'Invocateur, qui laissait ses âmes tuer et encaisser à sa place, a des âmes plus fragiles, moins nombreuses dans le temps et un peu moins fortes, et les yokai visent le héros avant elles.
 
 **Premier donjon (septembre 2026)** : le bot a appris à provoquer la charge du kappa plutôt que de tourner autour, et à se servir du fil de Jōren (esquiver derrière une souche quand la Jorōgumo tire). Sur des héros de niveau 1, arme de départ, sans talent, la force d'origine ne laissait passer que la Lame et le Paladin ; Guerrier, Invocateur et Rôdeur n'y gagnaient presque jamais, surtout contre la phase au plafond de la Jorōgumo. Réglage retenu : Rizières plus douces (voir « Difficulté à l'entrée »), Guerrier à 115 PV avec une garde à 90 %, Invocateur à 95 PV et grelots à 7 dégâts. Victoires du bot sur une descente complète : Paladin 97 %, Lame 93 %, Invocateur 37 %, Guerrier 37 %, Rôdeur 30 %. Le Paladin et la Lame restent nettement au-dessus : c'est le prochain chantier d'équilibrage.
+
+**Classes et races (septembre 2026)** : `npm run equilibrage` (`tools/equilibrage.mjs`) fait jouer au bot, sans navigateur, chaque classe avec chaque race et chaque parent divin, aux niveaux 1, 10 et 20.
+- Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau ; au niveau 10 et plus, il a ses talents.
+- L'outil affiche les victoires, la durée, les dégâts, les soins et les écarts, et signale ce qui sort des cibles.
+- Les cibles : au plus 15 points de victoires d'écart entre classes, au plus 10 entre races, et aucune combinaison sous 50 %.
+- Choix de conception, faits avec le joueur :
+  - Paladin tank-soutien ;
+  - un soin propre à chaque classe ;
+  - races jouables avec toutes les classes (passifs communs et affinités) ;
+  - premier donjon exigeant mais égal entre classes ;
+  - Lame inchangée ;
+  - plus de seconde vie pour le Demi-dieu ;
+  - un compagnon choisi pour l'Invocateur.
+- Réglage des classes :
+  - Guerrier à ×1,4 PV ;
+  - Rôdeur à ×1,25 PV ; sa Marque revient en 8 s, la Flèche-filet en 6 s, le Recul en 5 s ;
+  - Paladin à ×1,15 PV, bouclier à 85 % avec sa garde ;
+  - l'Aura soigne 3 PV/s multipliés par la puissance de l'arme ;
+  - le marteau fait 20 dégâts.
+
+Victoires du bot, 40 descentes par combinaison :
+
+| Niveau | Guerrier | Invocateur | Lame | Paladin | Rôdeur |
+| --- | --- | --- | --- | --- | --- |
+| 1, avant | 43 % | 41 % | 88 % | 100 % | 56 % |
+| 1, après | 79 % | 81 % | 87 % | 79 % | 75 % |
+| 20, avant | 82 % | 20 % | 100 % | 98 % | 88 % |
+| 20, après | 100 % | 99 % | 99 % | 97 % | 98 % |
+
+- **Par race au niveau 1**, moyenne des classes :
+  - avant : Einherjar 55 %, Oushebti 61 %, Hanyō 68 %, Demi-dieu 69 % ;
+  - après : 79 %, 87 %, 88 % et 77 %.
+- **Au niveau 10**, toutes les combinaisons gagnent 95 à 100 % des descentes, avant comme après.
+- Le premier donjon est donc devenu plus facile pour le Guerrier, l'Invocateur et le Rôdeur, qui rejoignent la Lame, et plus difficile pour le Paladin.
+- Reste à confirmer en jouant : le bot ne joue pas chaque classe aussi bien qu'un humain.
 
 **Apparence** : chaque combinaison de race et de classe a son héros en pixel art (`tools/pixel/heros.mjs`) : la race donne la tête, la peau et la tenue (casque viking, némès égyptien, laurier grec, cornes d'oni), la classe l'arme, la couleur de la cape et les gestes (arc bandé du Rôdeur, bouclier levé du Paladin). L'Einherjar guerrier garde sa planche peinte.
 

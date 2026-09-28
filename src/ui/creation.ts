@@ -1,4 +1,4 @@
-import { racePassives, type ItemDef, type SkillsDef } from '../game/loadout';
+import type { ItemDef, SkillsDef } from '../game/loadout';
 import type { Hero } from '../game/progress';
 import { keyName } from '../keys';
 import { heroImage, heroSprite } from '../render/heroes';
@@ -30,6 +30,7 @@ export class CreationScreen {
       if (!parents.length) delete hero.parent;
       const cls = skills.classes[hero.class];
       const parent = hero.parent ? race.parents?.[hero.parent] : undefined;
+      const affinity = race.affinities?.[hero.class];
       const unchanged = current !== undefined && hero.race === current.race && hero.parent === current.parent && hero.class === current.class;
 
       const raceCards = raceIds.map((id) => {
@@ -49,6 +50,10 @@ export class CreationScreen {
           h('span', { class: 'choice-style' }, r.style),
           ...r.passives.map((p) => h('small', { class: 'choice-line', title: p.description }, h('b', {}, p.name))),
           r.parents ? h('small', { class: 'choice-line' }, h('b', {}, 'Parent divin'), ' au choix') : null,
+          // L'affinité change avec la classe choisie : la race sert toutes les classes, chacune à sa façon.
+          r.affinities?.[hero.class]
+            ? h('small', { class: 'choice-line', title: r.affinities[hero.class].description }, `${cls.name} : `, h('b', {}, r.affinities[hero.class].name))
+            : null,
         );
       });
 
@@ -107,7 +112,8 @@ export class CreationScreen {
           'div',
           {},
           h('h3', {}, `${race.name}${parent ? `, enfant de ${parent.name}` : ''}`),
-          ...racePassives(skills, hero).map((p) => h('p', {}, h('b', {}, p.name), ` : ${p.description}`)),
+          ...[...(parent ? [parent] : []), ...race.passives].map((p) => h('p', {}, h('b', {}, p.name), ` : ${p.description}`)),
+          affinity ? h('p', {}, h('b', {}, affinity.name), ` (affinité avec la classe ${cls.name}) : ${affinity.description}`) : null,
         ),
         h(
           'div',

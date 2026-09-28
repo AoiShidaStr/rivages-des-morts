@@ -14,7 +14,7 @@ const RESOURCE: Record<Kit, { label: string; style: string }> = {
   guerrier: { label: 'Rage', style: '' },
   invocateur: { label: 'Âmes', style: 'souls' },
   lame: { label: 'Ombre', style: 'shadow' },
-  paladin: { label: 'Allié', style: 'light' },
+  paladin: { label: 'Garde', style: 'light' },
   rodeur: { label: 'Tir chargé', style: 'draw' },
 };
 
@@ -141,15 +141,16 @@ export class Hud {
     let ready = false;
     let label = RESOURCE[cfg.kit].label;
     if (cfg.kit === 'invocateur') {
+      // Les âmes liées, sans le compagnon (qui répond au Rappel et au Chœur, mais ne se sacrifie pas).
       const s = cfg.summon;
-      const count = mine.length;
-      const none = count === 0;
+      const count = mine.filter((m) => !m.companion).length;
+      const none = mine.length === 0;
       fill = count / Math.max(1, s.max);
       ready = world.soulInReach;
       label = `Âmes ${count} / ${s.max}`;
       views = [
         { cooldown: player.recallCooldown / s.recall.cooldown, locked: none },
-        { cooldown: player.sacrificeCooldown / s.sacrifice.cooldown, locked: none },
+        { cooldown: player.sacrificeCooldown / s.sacrifice.cooldown, locked: count === 0 },
         { cooldown: player.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && player.choir <= 0, active: player.choir > 0 },
       ];
     } else if (cfg.kit === 'lame') {
@@ -166,12 +167,11 @@ export class Hud {
         { cooldown: player.danceCooldown / b.dance.cooldown, locked: false },
       ];
     } else if (cfg.kit === 'paladin') {
-      // Vigueur de l'allié relevé ; la barre luit quand Relever a quelqu'un à relever.
+      // Jauge de garde : chaque coup bloqué l'use ; vide, la garde se brise un moment.
       const p = cfg.paladin;
-      const ally = mine.find((s) => s.holy);
-      fill = ally?.vigor ?? 0;
-      ready = world.graveInReach;
-      label = ally ? `Allié relevé${mine.length > 1 ? ` ×${mine.length}` : ''}` : 'Aucun allié';
+      fill = player.guardBroken > 0 ? 0 : player.guardLeft / p.guard.max;
+      ready = fill >= 1;
+      label = player.guardBroken > 0 ? 'Garde brisée' : 'Garde';
       views = [
         { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },
