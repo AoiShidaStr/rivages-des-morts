@@ -56,11 +56,11 @@ Tout ce que décrivaient les anciens tableaux de cette page est fait et dans le 
 
 Les prompts prêts à coller, avec l'image à joindre et le nom de fichier, sont dans `public/sprites/sprites/Prompts remplis.md` (dossier non versionné). Le montage des planches est décrit dans [Planches peintes](Planches%20peintes.md). Les descriptions ci-dessous sont celles qu'ils reprennent.
 
-Les personnages humanoïdes vont vers un pantin articulé façon Wakfu (prototype sur la branche `claude/prompts-refonte-5fdb43`, voir `docs/Pantin.md`) : une fiche et une planche de morceaux au lieu de planches d'animation. En attendant, les planches d'animation des ennemis humanoïdes sont en pause.
+Le pantin articulé façon Wakfu et le pixel art sont abandonnés. Les héros passent par Nano Banana 2 (poses clés) puis Kling (mouvements) : voir [Prompts des héros](Prompts%20h%C3%A9ros.md). Les ennemis humanoïdes pourront suivre la même méthode.
 
 ## À faire : Palais d'Izanami
 
-Shikome, guerrier du Yomi et Izanami : la fiche seulement, leurs animations attendent le pantin. L'ikazuchi et les pêchers se font entièrement.
+Shikome, guerrier du Yomi et Izanami : la fiche d'abord, puis leurs animations par la méthode des héros. L'ikazuchi et les pêchers se font entièrement.
 
 | Asset | Description |
 | --- | --- |
@@ -70,25 +70,6 @@ Shikome, guerrier du Yomi et Izanami : la fiche seulement, leurs animations atte
 | Izanami, voilée | `Izanami, queen of the dead, veiled form: a tall pale woman in a white burial kimono crossed right over left, a white triangular headband, very long straight black hair hiding her face, the hem fraying into thin white mist` |
 | Izanami, vrai visage | La même, retouchée : `her body rotten by the Yomi, violet-grey skin, the white kimono torn and stained dark, burning red eyes between the strands of hair, eight small crackling thunder gods clinging to her body` |
 | Pêcher (mûr, puis nu) | `a small old peach tree growing from a crack in dark violet stone, twisted dark trunk, a few pale pink blossoms, three big ripe golden-pink peaches` ; la version nue est une retouche sans les pêches |
-
-## À faire : classes et races (après le pantin)
-
-Avec le pantin, la classe donne la tenue, la race donne la tête et la peau, et l'arme vient de l'icône de l'objet équipé. Chacune demande une fiche (retouche de la référence du héros guerrier, pour garder le même personnage) et une planche de morceaux sur la grille du pantin : la tenue entière pour une classe, la tête et la main pour une race.
-
-| Classe | Tenue et arme de la fiche |
-| --- | --- |
-| Invocateur | `a wide-sleeved white and indigo onmyoji robe over his armor, paper ofuda talismans tucked into his belt, a short dark wooden staff topped with a cluster of small golden bells and white zigzag paper streamers` |
-| Lame | `a dark close-fitting shinobi outfit, a dark cloth scarf over his mouth and nose, wrapped forearms and shins, two blackened iron kunai daggers in a reverse grip tied together by a long red cord` |
-| Paladin | `a red lacquered chest plate with a golden sun emblem, round shoulder guards, a string of big prayer beads across his chest, a naginata and a small round wooden shield painted with a red sun` |
-| Rôdeur | `a short straw raincoat (mino) over his shoulders, wrapped leggings, a leather quiver of white-feathered arrows, a tall asymmetric yumi longbow of lacquered bamboo` |
-
-L'Einherjar est le héros actuel. Les trois autres races sont des retouches de sa fiche, même pose et même nodachi.
-
-| Race | Changement |
-| --- | --- |
-| Oushebti | `an animated Egyptian funerary statuette: a body of glazed blue-green faience clay with fine cracks, black and gold painted details, a striped blue and gold nemes headdress, calm painted almond eyes, hieroglyphs down the chest` |
-| Demi-dieu | `a Greek demigod: bronze cuirass over a white chiton, a short red cape, a crested bronze helmet, sandals with greaves, golden eyes` |
-| Hanyō | `half human and half yokai: dark lacquered samurai armor, a white fox mask pushed to the side of his head, two small horns, long silver hair, one clawed hand, one red eye` |
 
 ## À faire : icônes des nouveaux objets
 
