@@ -7,8 +7,11 @@
 //   - <nom>.json : le découpage au format « Array » d'Aseprite, un tag par posture,
 //     plus `meta.anchor` (position des pieds dans une case) et `meta.bodyHeight`.
 //
-// Usage : npm run planches               → toutes les entrées de tools/planches.json
+// Les héros par race et par classe s'y ajoutent, lus dans ~/Pictures/game visual/heros (voir planches-heros.mjs).
+//
+// Usage : npm run planches               → toutes les entrées de tools/planches.json et tous les héros
 //         npm run planches -- heros      → seulement « heros »
+//         npm run planches -- heros-demi-dieu-lame   → seulement ce héros
 //         npm run planches -- --apercu dossier   → écrit aussi une bande par animation, avec les repères
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -16,6 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { referenceHeight, registerOnFirst, scaleFrame, splitFrames } from './grille.mjs';
+import { heroPlanches } from './planches-heros.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(projectDir, 'tools', 'planches.json'), 'utf8'));
@@ -32,7 +36,7 @@ const MAX_SHEET_WIDTH = 4096;
 const CELL_PADDING = 8;
 
 await mkdir(outDir, { recursive: true });
-for (const planche of config.planches) {
+for (const planche of [...config.planches, ...(await heroPlanches(sourceDir))]) {
   if (only.length > 0 && !only.includes(planche.name)) continue;
   const frames = [];
   const tags = [];
@@ -46,7 +50,10 @@ for (const planche of config.planches) {
     }
     const options = { ...config.defaults, ...planche, ...anim };
     const found = await splitFrames(input, options);
-    const picked = (anim.frames ?? found.map((_, i) => i)).map((i) => found[i]);
+    // `part` : la première ou la seconde moitié des images (élan puis coup d'une même planche d'attaque).
+    const half = Math.floor(found.length / 2);
+    const all = anim.part === 'first' ? found.slice(0, half) : anim.part === 'second' ? found.slice(half) : found;
+    const picked = anim.frames ? anim.frames.map((i) => found[i]) : all;
     if (options.anchor === 'box') registerOnFirst(picked);
     const scale = planche.bodyHeight / referenceHeight(found, picked, anim.ref);
     const from = frames.length;
@@ -54,7 +61,7 @@ for (const planche of config.planches) {
       frames.push({ ...scaleFrame(frame, scale), duration: anim.durations?.[i] ?? anim.duration ?? 100, tag: anim.tag });
     });
     tags.push({ name: anim.tag, from, to: frames.length - 1, direction: 'forward', ...(anim.once ? { repeat: '1' } : {}) });
-    console.log(`${planche.name.padEnd(16)} ${anim.tag.padEnd(9)} ${picked.length}/${found.length} images, échelle ${scale.toFixed(3)}`);
+    console.log(`${planche.name.padEnd(26)} ${anim.tag.padEnd(9)} ${picked.length}/${found.length} images, échelle ${scale.toFixed(3)}`);
   }
   if (missing && frames.length === 0) continue;
   await writeSheet(planche, frames, tags);

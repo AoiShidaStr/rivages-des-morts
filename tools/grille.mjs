@@ -5,7 +5,8 @@ import { alphaMask, components } from './decoupe.mjs';
 
 /**
  * Détoure la planche source et renvoie ses images dans l'ordre de lecture.
- * Les images sont rangées en grille (`layout` : nombre d'images par ligne, deux lignes égales par défaut).
+ * Les images sont rangées en grille (`layout` : nombre d'images par ligne ; avec `count`, deux lignes égales ;
+ * sans l'un ni l'autre, la grille est lue sur la planche, voir `detectLayout`).
  * La lame d'une image passe souvent au-dessus de la cape de la voisine : aucune coupe droite ne les
  * sépare. Entre deux images, on coupe donc le long d'un chemin qui serpente dans le fond (voir `seam`).
  */
@@ -13,7 +14,13 @@ export async function splitFrames(input, options) {
   const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width: w, height: h } = info;
   const alpha = alphaMask(data, w, h, options);
-  const layout = options.layout ?? (options.count % 2 === 0 && options.count > 2 ? [options.count / 2, options.count / 2] : [options.count]);
+  const layout =
+    options.layout ??
+    (options.count === undefined
+      ? detectLayout(alpha, w, h)
+      : options.count % 2 === 0 && options.count > 2
+        ? [options.count / 2, options.count / 2]
+        : [options.count]);
 
   const rowCuts = cuts(profile(alpha, w, h, { x0: 0, x1: w, y0: 0, y1: h }, 'rows'), layout.length);
   const frames = [];
@@ -30,6 +37,44 @@ export async function splitFrames(input, options) {
     }
   });
   return frames;
+}
+
+/**
+ * Nombre de poses par ligne, lu sur la planche. Les pieds d'une ligne descendent souvent au niveau des armes
+ * levées de la suivante, et une lame passe parfois chez la voisine : on ne cherche pas des bandes vides, mais
+ * les creux du profil (peu de sujet), entre des bosses (les poses).
+ */
+export function detectLayout(alpha, w, h) {
+  const rows = humps(profile(alpha, w, h, { x0: 0, x1: w, y0: 0, y1: h }, 'rows'), 0.2);
+  return rows.map(([y0, y1]) => humps(profile(alpha, w, h, { x0: 0, x1: w, y0, y1 }, 'columns'), 0.15).length);
+}
+
+/**
+ * Bosses d'un profil : plages où le profil lissé dépasse `threshold` fois son maximum. Une bosse beaucoup plus
+ * légère que la plus grosse (flèche en vol, tête d'un bâton, bout de cape) n'est pas une pose.
+ */
+function humps({ values, offset }, threshold) {
+  const radius = Math.max(2, Math.round(values.length * 0.008));
+  const prefix = new Float64Array(values.length + 1);
+  values.forEach((v, k) => (prefix[k + 1] = prefix[k] + v));
+  const smooth = Array.from(values, (_, k) => {
+    const a = Math.max(0, k - radius);
+    const b = Math.min(values.length, k + radius + 1);
+    return (prefix[b] - prefix[a]) / (b - a);
+  });
+  const limit = Math.max(...smooth) * threshold;
+  const found = [];
+  let start = -1;
+  for (let k = 0; k <= smooth.length; k++) {
+    const above = k < smooth.length && smooth[k] > limit;
+    if (above && start < 0) start = k;
+    if (!above && start >= 0) {
+      found.push({ from: offset + start, to: offset + k, mass: prefix[k] - prefix[start] });
+      start = -1;
+    }
+  }
+  const largest = Math.max(...found.map((f) => f.mass));
+  return found.filter((f) => f.mass >= largest * 0.3).map((f) => [f.from, f.to]);
 }
 
 /** Positions régulières des coupes entre `n` images, entre le premier et le dernier pixel de sujet. */
