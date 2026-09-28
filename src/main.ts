@@ -10,6 +10,7 @@ import type { GameConfig } from './game/config';
 import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
+import { loadKeyboardLayout } from './keys';
 import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { IslandRenderer } from './render/islandRenderer';
@@ -28,6 +29,8 @@ const devWave = params.has('vague') ? Math.max(0, Number(params.get('vague')) - 
 /** `?vague=1&niveau=40` : même chose, au niveau de donjon 40 ; `&donjon=palais` : dans le Palais d'Izanami. */
 const devLevel = params.has('niveau') ? Number(params.get('niveau')) || 1 : null;
 const devDungeon = params.get('donjon') ?? 'rizieres';
+/** `?coop=2` ou `?coop=3` : un ou deux alliés joués par l'ordinateur descendent avec le héros (test de la coop sans réseau). */
+const devCoop = Math.max(1, Math.min(3, Number(params.get('coop')) || 1));
 
 /** Renvoie le manifeste des sprites avec les planches d'animation appropriées (peintes par défaut, `?pixel=1` pour pixel art). */
 function spriteManifest(base: SpriteManifest): SpriteManifest {
@@ -41,6 +44,8 @@ function element<T extends HTMLElement>(id: string): T {
 }
 
 async function start(): Promise<void> {
+  // Avant toute interface : les touches s'affichent selon le clavier du joueur.
+  await loadKeyboardLayout();
   const canvas = element<HTMLCanvasElement>('game');
   const overlay = element('overlay');
   const engine = new Engine(canvas, true, { stencil: false }, true);
@@ -67,6 +72,8 @@ async function start(): Promise<void> {
     devWave,
     devLevel,
     devDungeon,
+    devCoop,
+    network: params.get('reseau') === 'local' ? 'local' : 'trystero',
   });
   app.start();
 

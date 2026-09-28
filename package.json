@@ -21,7 +21,8 @@
     "doc-heros": "node tools/doc-heros.mjs"
   },
   "dependencies": {
-    "@babylonjs/core": "^9.28.0"
+    "@babylonjs/core": "^9.28.0",
+    "trystero": "^0.25.4"
   },
   "devDependencies": {
     "sharp": "^0.35.4",

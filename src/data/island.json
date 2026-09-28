@@ -2,7 +2,7 @@
   "name": "Yomotsu Hirasaka",
   "about": "Positions en coordonnées d'écran : u vers la droite, v vers le haut (1 unité ≈ la largeur d'un pas).",
   "spawn": { "u": -11, "v": -12.3 },
-  "dungeonExit": { "u": -8.2, "v": 9.2 },
+  "dungeonExit": { "u": -10.6, "v": -12.6 },
   "walkable": [
     { "u": -10, "v": -12, "r": 4.5 },
     { "u": -12.6, "v": -15.2, "r": 1.4 },

@@ -52,7 +52,10 @@ export type GameEvent =
   | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number }
   | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean }
   /** `blocked` : ce qui a traversé la garde du Guerrier. */
-  | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean }
+  | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean; hero: number }
+  /** Coop : un héros tombe à terre ; un allié qui reste à côté le relève. */
+  | { type: 'heroDown'; hero: number; pos: Vec2 }
+  | { type: 'heroRevived'; hero: number; pos: Vec2 }
   | { type: 'guard'; pos: Vec2; rage: number }
   | { type: 'parry'; id: number; pos: Vec2 }
   | { type: 'stun'; id: number; pos: Vec2; reason: StunReason }

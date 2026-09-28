@@ -10,7 +10,7 @@ import itemsJson from './data/items.json';
 import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
 import type { GameConfig } from './game/config';
-import type { DifficultyData } from './game/difficulty';
+import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { UpgradeRules } from './game/forge';
 import type { IslandData, ScreenPoint } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
@@ -19,8 +19,8 @@ import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot }
 import { withHeroSprites } from './render/heroes';
 import type { SpriteManifest } from './render/renderer';
 
-/** Une réplique : [locuteur, texte]. */
-export type Line = [string, string];
+/** Une réplique : [locuteur, texte], et parfois ses conditions (une race, une classe…) : sinon, elle est sautée. */
+export type Line = [string, string] | [string, string, Condition[]];
 
 export interface Choice {
   text: string;
@@ -34,6 +34,11 @@ export interface Variant {
   /** « ! » : quelque chose de nouveau ; « ? » : une quête à rendre. */
   marker?: string;
   lines: Line[];
+  /**
+   * Bavardage : après `lines`, une seule de ces répliques, à tour de rôle d'une visite à l'autre
+   * (parmi celles dont les conditions sont remplies).
+   */
+  pool?: { if?: Condition[]; lines: Line[] }[];
   choices?: Choice[];
   then?: Effect[];
 }
@@ -96,8 +101,10 @@ export interface DungeonDef {
   firstVictory: { if: Condition[]; then: Effect[] };
   /** Boutique de fin tirée au hasard après la victoire. */
   shop: string;
-  /** Point de retour sur l'île (par défaut, devant le torii noir). */
+  /** Point de retour sur l'île (par défaut, le ponton de Charon). */
   exit?: ScreenPoint;
+  /** Force des yokai et du boss au niveau 1, si elle diffère de celle de difficulty.json. */
+  strength?: EnemyStrength;
   style: DungeonStyle;
   arena: ArenaConfig;
 }

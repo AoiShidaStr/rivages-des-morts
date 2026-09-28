@@ -5,6 +5,7 @@ import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgra
 import { buildLoadout, canLearn, canWield, heroClass, heroRace, itemLevel, levelProgress, racePassives, type Bonus, type BonusKind, type ItemDef, type Loadout } from '../game/loadout';
 import type { RolledOffer } from '../game/loot';
 import type { Progress, Slot } from '../game/progress';
+import { keyName } from '../keys';
 import { h, icon, obole, type Child } from './dom';
 
 /** Nombre à la française : « 1,35 ». */
@@ -905,7 +906,7 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       'div',
       { class: 'passives' },
       ...racePassives(skills, state.hero).map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
-      ...cls.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, a.key), ` ${a.name}`), h('small', {}, a.description))),
+      ...cls.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, keyName(a.key)), ` ${a.name}`), h('small', {}, a.description))),
     );
 
     host.show(
@@ -985,7 +986,7 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, dungeon: Dunge
   slider.addEventListener('input', () => set(Number(slider.value)));
 
   const update = () => {
-    const d = difficultyFor(data, level);
+    const d = difficultyFor(data, level, 1, dungeon.strength);
     const r = rewardsFor(data, level);
     const curses = activeCurses(data, level);
     const next = nextCurse(data, level);

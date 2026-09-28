@@ -10,14 +10,34 @@ Action-RPG de donjon en temps réel, jouable dans le navigateur. Tu incarnes une
 
 Il faut un ordinateur avec **clavier et souris** et un navigateur récent (Chrome, Firefox ou Edge). Le jeu ne se joue pas sur téléphone.
 
-La partie est sauvegardée automatiquement dans le navigateur. Au retour, choisis **Continuer** sur l'écran titre.
+Chaque personnage est sauvegardé automatiquement dans le navigateur (six au plus). Au retour, choisis **Continuer** sur l'écran titre, ou **Personnages** pour en reprendre un autre, en supprimer un, ou exporter sa sauvegarde dans un fichier (copie de secours, autre ordinateur) et l'importer plus tard.
 
 ## Comment jouer
 
-1. **Nouvelle partie** : choisis ta race et ta classe, puis Charon, le passeur, te dépose sur l'île.
+1. **Nouveau personnage** : choisis ta race et ta classe, puis Charon, le passeur, te dépose sur l'île.
 2. **Explore l'île** : parle aux habitants avec <kbd>E</kbd>. Un **!** au-dessus d'un personnage veut dire qu'il a quelque chose pour toi. Ta quête en cours s'affiche en haut à droite (<kbd>J</kbd> pour toutes les voir).
 3. **Entre dans le donjon** : le torii noir, au nord-ouest de l'île, mène aux Rizières noyées. Six vagues de yokai t'attendent, puis la Jorōgumo, une araignée géante en trois phases. À l'entrée, choisis le niveau du donjon : les yokai y sont plus forts que toi, et ils se renforcent plus vite que toi d'un niveau à l'autre. Une victoire ouvre les niveaux suivants jusqu'au prochain multiple de 5 (gagne au niveau 1 et tu peux tenter directement le niveau 5).
 4. **Reviens plus fort** : tu gardes ton butin même si tu meurs. Ouvre tes coffres sur la barque de Charon, achète et forge de l'équipement puis équipe-le (<kbd>I</kbd>), dépense tes points de compétence (<kbd>K</kbd>), puis retente ta chance.
+5. **Change de race ou de classe** : le moine du Rocher t'aide à retrouver une autre vie, gratuitement. Tu gardes ton équipement et ta progression ; tes points de compétence te sont rendus.
+
+### Jouer à plusieurs (coop en ligne)
+
+Jusqu'à **trois joueurs**, chacun avec son héros. C'est gratuit : les navigateurs se relient directement, sans compte ni serveur.
+
+1. Sur l'écran titre, choisis **Coop en ligne**. Sur l'île, tu peux aussi passer par <kbd>Échap</kbd>, puis **Coop en ligne**.
+2. **Créer une partie** : tu es l'hôte. Un code de quatre caractères s'affiche, donne-le à tes amis. Coche **Partie publique** pour que ta partie apparaisse aussi dans la liste des autres joueurs.
+3. **Rejoindre** : tape le code d'un ami, ou choisis une partie dans la liste des **parties publiques**. Clique ensuite sur **Je suis prêt**.
+4. L'hôte choisit le donjon et son niveau, puis clique sur **Descendre ensemble** quand tout le monde est prêt.
+
+Pendant la descente :
+- Chacun garde son butin, ses oboles et son expérience. Une victoire ouvre les niveaux suivants pour tous.
+- Les yokai ont plus de PV à plusieurs, et chaque vague compte un yokai de plus par joueur.
+- Un héros à 0 PV tombe **à terre**. Reste 4 s à côté de lui pour le relever, ou utilise Relever du Paladin. La descente échoue seulement quand tout le monde est à terre.
+- Le combat tourne chez l'hôte. Il continue même si l'hôte passe sur un autre onglet ou une autre fenêtre. Si l'hôte quitte, la descente s'arrête, mais chacun garde ce qu'il a ramassé.
+- Le **ping** de chacun s'affiche à côté de son nom, sous ta barre de vie. Il passe en orange au-delà de 150 ms.
+- Ton héros répond tout de suite à tes déplacements, même quand tu n'es pas l'hôte. Les coups, les esquives et les compétences partent chez l'hôte : leur retard dépend du ping.
+- Pour une partie fluide, l'hôte doit être le joueur qui a la meilleure connexion, idéalement en câble plutôt qu'en Wi-Fi. La puissance de l'ordinateur compte peu. Chaque ami coûte environ 15 Ko/s d'envoi à l'hôte.
+- Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas.
 
 ### Races et classes
 

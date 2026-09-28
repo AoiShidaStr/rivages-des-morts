@@ -53,6 +53,7 @@ export interface IslandZones {
 export interface IslandData {
   name: string;
   spawn: ScreenPoint;
+  /** Retour de donjon : le ponton de Charon, pour ouvrir ses coffres sur la barque dès l'arrivée. */
   dungeonExit: ScreenPoint;
   walkable: Circle[];
   areas: Area[];

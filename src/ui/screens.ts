@@ -1,3 +1,4 @@
+import { keyName, moveKeys } from '../keys';
 import { h, icon, obole } from './dom';
 
 const FADE_MS = 450;
@@ -54,15 +55,15 @@ export class Screens {
       h(
         'div',
         { class: 'keys' },
-        h('kbd', {}, 'ZQSD'),
+        h('kbd', {}, moveKeys()),
         ' marcher · ',
-        h('kbd', {}, 'E'),
+        h('kbd', {}, keyName('E')),
         ' interagir · ',
-        h('kbd', {}, 'I'),
+        h('kbd', {}, keyName('I')),
         ' équipement · ',
-        h('kbd', {}, 'J'),
+        h('kbd', {}, keyName('J')),
         ' quêtes · ',
-        h('kbd', {}, 'K'),
+        h('kbd', {}, keyName('K')),
         ' compétences · ',
         h('kbd', {}, 'Échap'),
         ' menu',
@@ -113,9 +114,9 @@ export class Screens {
           h(
             'dl',
             {},
-            h('dt', {}, 'ZQSD'),
+            h('dt', {}, moveKeys()),
             h('dd', {}, 'se déplacer'),
-            h('dt', {}, 'E'),
+            h('dt', {}, keyName('E')),
             h('dd', {}, 'parler, fouiller (sur l’île)'),
             h('dt', {}, 'Souris'),
             h('dd', {}, 'viser (au combat)'),
@@ -123,8 +124,8 @@ export class Screens {
             h('dd', {}, ranged ? 'tirer une flèche' : 'frapper'),
             h('dt', {}, 'Espace'),
             h('dd', {}, 'esquiver'),
-            ...skills.flatMap(([key, label]) => [h('dt', {}, key), h('dd', {}, label)]),
-            h('dt', {}, 'I / J / K'),
+            ...skills.flatMap(([key, label]) => [h('dt', {}, keyName(key)), h('dd', {}, label)]),
+            h('dt', {}, ['I', 'J', 'K'].map(keyName).join(' / ')),
             h('dd', {}, 'équipement / quêtes / compétences'),
           ),
         ),
@@ -237,7 +238,7 @@ export class Screens {
         h('span', {}, `Niv. ${state.xp.level}`),
         h('span', { class: 'xp-bar' }, h('span', { class: 'xp-fill', style: `width:${Math.round(ratio * 100)}%` })),
       );
-      if (state.points) this.level.append(h('span', { class: 'points-badge', title: 'Points de compétence (touche K)' }, `+${state.points}`));
+      if (state.points) this.level.append(h('span', { class: 'points-badge', title: `Points de compétence (touche ${keyName('K')})` }, `+${state.points}`));
     }
     const tracker = state.quest ? `${state.quest.name}|${state.quest.objective}` : '';
     if (this.tracker.dataset.value !== tracker) {
@@ -250,7 +251,7 @@ export class Screens {
     const prompt = state.prompt ? `${state.prompt.verb} ${state.prompt.name}` : '';
     if (this.prompt.dataset.value !== prompt) {
       this.prompt.dataset.value = prompt;
-      this.prompt.replaceChildren(...(state.prompt ? [h('kbd', {}, 'E'), ` ${state.prompt.verb} · `, h('strong', {}, state.prompt.name)] : []));
+      this.prompt.replaceChildren(...(state.prompt ? [h('kbd', {}, keyName('E')), ` ${state.prompt.verb} · `, h('strong', {}, state.prompt.name)] : []));
       this.prompt.classList.toggle('visible', Boolean(state.prompt));
     }
   }

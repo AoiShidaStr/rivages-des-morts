@@ -143,13 +143,15 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 
 **En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes dans `src/data/items.json` : trois par classe au Yomi, sauf l'Invocateur qui en a deux (voir « Kit d'items du Yomi »).
 
-- **Guerrier** : sa garde n'arrête que les trois quarts d'un coup de face (le talent Garde du héros, chez Héraclès, la rend totale) ; bloquer rapporte 16 de rage. Nodachi 9 dégâts, Frappe fracassante 38, Frénésie qui accélère les coups de 28 %.
+- **Guerrier** : 115 PV ; sa garde arrête 90 % d'un coup de face (le talent Garde du héros, chez Héraclès, la rend totale) ; bloquer rapporte 16 de rage. Nodachi 9 dégâts, Frappe fracassante 38, Frénésie qui accélère les coups de 28 %.
 
 - **Lame** : 90 % des PV du Guerrier, une esquive plus longue qui revient plus vite. Le Pas de l'ombre (clic droit, 2,5 s) traverse les ennemis et marque chacun : le prochain coup d'arme sur lui est critique (×2), et abattre un ennemi marqué rend 4 PV (Festin de l'ombre). La Marque de mort rend tous les coups critiques 5 s. L'Écran de fumée laisse un nuage là où était la Lame : invisible 3 s, elle n'est plus visée, les yokai attaquent le nuage, et son premier coup depuis l'ombre est une embuscade critique. La Danse des lames saute d'ennemi en ennemi (5 au plus), invulnérable. Le tag rend critiques les coups qui suivent une esquive. La Jorōgumo n'est pas dupe de la fumée.
 - **Paladin** : le bouclier levé bloque de face comme la garde du Guerrier, mais arrête le coup en entier, sans rage ; il renverse la coupelle du kappa. L'Aura suit le héros 6 s et soigne 4 PV par seconde, âmes comprises. Le Marteau frappe à l'aller et au retour. Relever relève le dernier allié tombé à moins de 7 m depuis moins de 12 s (une âme brisée ou un yokai vaincu), qui combat 24 s en âme de lumière dorée ; les alliés relevés n'affaiblissent pas le Paladin. Le tag fait soigner les alliés proches à chaque coup bloqué.
 - **Rôdeur** : le clic gauche tire une flèche à la portée de l'arc (10 m pour le Yumi). Le tir chargé se bande en marchant lentement, jusqu'à ×3 ; une ligne de visée montre sa portée. La carapace du kappa arrête les flèches de face. La Marque du chasseur (+30 % de dégâts reçus) compte pour toutes les sources, âmes comprises. Le tag fait traverser et marquer les tirs chargés pleins.
 
 **Équilibrage** : un bot joue chaque classe sur les vagues du donjon, sans rendu, en ratant une partie des attaques annoncées comme un joueur moyen. Il a servi à régler les chiffres ci-dessus. Le Guerrier, qui gardait son blocage levé sans rien perdre, encaisse désormais une partie des coups ; la Lame, qui ne vivait que de ses esquives, gagne des PV, de la portée et un soin sur les ennemis marqués ; le Paladin tape un peu moins fort que le Guerrier, le Rôdeur un peu plus vite qu'avant. L'Invocateur, qui laissait ses âmes tuer et encaisser à sa place, a des âmes plus fragiles, moins nombreuses dans le temps et un peu moins fortes, et les yokai visent le héros avant elles.
+
+**Premier donjon (septembre 2026)** : le bot a appris à provoquer la charge du kappa plutôt que de tourner autour, et à se servir du fil de Jōren (esquiver derrière une souche quand la Jorōgumo tire). Sur des héros de niveau 1, arme de départ, sans talent, la force d'origine ne laissait passer que la Lame et le Paladin ; Guerrier, Invocateur et Rôdeur n'y gagnaient presque jamais, surtout contre la phase au plafond de la Jorōgumo. Réglage retenu : Rizières plus douces (voir « Difficulté à l'entrée »), Guerrier à 115 PV avec une garde à 90 %, Invocateur à 95 PV et grelots à 7 dégâts. Victoires du bot sur une descente complète : Paladin 97 %, Lame 93 %, Invocateur 37 %, Guerrier 37 %, Rôdeur 30 %. Le Paladin et la Lame restent nettement au-dessus : c'est le prochain chantier d'équilibrage.
 
 **Apparence** : chaque combinaison de race et de classe a son héros en pixel art (`tools/pixel/heros.mjs`) : la race donne la tête, la peau et la tenue (casque viking, némès égyptien, laurier grec, cornes d'oni), la classe l'arme, la couleur de la cape et les gestes (arc bandé du Rôdeur, bouclier levé du Paladin). L'Einherjar guerrier garde sa planche peinte.
 
@@ -306,27 +308,44 @@ flowchart LR
 
 **Règle des quêtes** : courtes et sans corvée. Pas de chaînes interminables ni d'allers-retours inutiles. Une quête se boucle en quelques minutes ou en un donjon.
 
+**Durée de vie sans nouveau contenu** : les quêtes s'étalent sur la progression au lieu de toutes s'ouvrir à l'arrivée, et les objectifs de fin de partie sont des paliers que le joueur franchit de toute façon (niveau de donjon, niveau de forge), jamais une collecte à part. Les PNJ changent de réplique d'une visite à l'autre (bavardages qui tournent, selon la progression) et saluent différemment chaque race et chaque classe : recommencer avec un autre héros fait découvrir d'autres répliques.
+
 **Donjons** : des parcours fixes, identiques à chaque passage, comme dans Waven. Aucune récompense entre les salles : chaque combat laisse des coffres, ouverts plus tard. Un boss clôt le donjon, suivi d'une boutique de fin à prix réduit.
 
 **Hub** : la barque de Charon. Marchand, forgeron et maître des classes y vivent, et elle s'agrandit avec la progression.
 
 ## Premier donjon : les Rizières noyées
 
-Le premier donjon du Yomi dure environ 10 minutes : 10 salles fixes, toujours dans le même ordre, jusqu'à la Jorōgumo. Un parcours fixe se conçoit et s'équilibre plus facilement, ce qui convient bien au prototype.
+Le premier donjon du Yomi dure 8 à 10 minutes : 7 salles fixes, toujours dans le même ordre, jusqu'à la Jorōgumo. Un parcours fixe se conçoit et s'équilibre plus facilement, ce qui convient bien au prototype. Il tient dans les 20 premières minutes de jeu (voir plus bas). Chaque salle affiche un indice propre à la classe du héros.
 
 | # | Salle | Contenu | Rôle |
 | --- | --- | --- | --- |
 | 1 | Combat | Hitodama (feux follets) | Apprendre déplacement et attaque |
 | 2 | Combat | Hitodama + kodama | Choisir ses cibles (le kodama soigne) |
-| 3 | Combat | Kappa | Apprendre à bloquer |
-| 4 | Événement | Une âme oubliée | Petit choix rapide, récompense, lore |
-| 5 | Élite | Kappa renforcé | Premier vrai défi |
-| 6 | Trésor | Coffre caché dans les rizières | Oboles et matériaux |
-| 7 | Combat | Kasa-obake | Ennemis imprévisibles |
-| 8 | Combat | Mélange de tous les yokai et Oubliés | Tester le build |
-| 9 | Sanctuaire | Autel en ruine | Soin avant le boss |
-| 10 | Boss | Jorōgumo | Fin du donjon |
-| 11 | Boutique de fin | Marchand du donjon | Récompense : achats à prix réduit |
+| 3 | Combat | Kappa | Apprendre à contourner ou bloquer |
+| 4 | Élite | Kappa renforcé | Premier vrai défi |
+| 5 | Combat | Kasa-obake | Esquiver ce qui tombe du ciel |
+| 6 | Combat | Mélange de tous les yokai et Oubliés | Tester le build |
+| 7 | Boss | Jorōgumo | Fin du donjon |
+| — | Boutique de fin | Marchand du donjon | Récompense : achats à prix réduit |
+
+Pas de salle d'événement, de trésor ni de sanctuaire pour l'instant : les secrets et les coffres cachés sont sur l'île, et le donjon reste un enchaînement de combats.
+
+### Les 20 premières minutes
+
+Du titre à la fin de la première descente : écran titre et création du héros (0 à 3 min), Charon et le village (3 à 8 min), les Rizières noyées (8 à 18 min), retour, coffres et forge (18 à 20 min). Choix arrêtés pour cette séquence :
+
+| Sujet | Choix | Pourquoi |
+| --- | --- | --- |
+| Difficulté | Très dur, mais passable avec toutes les classes : les Rizières ont leur propre force de départ (yokai ×1,2 PV et ×1,35 dégâts, Jorōgumo ×0,85 et ×0,9), le Palais garde celle de `difficulty.json` | Un jeu exigeant accroche mieux qu'un jeu trop simple, mais aucune classe ne doit rester bloquée au premier boss |
+| Île | Le joueur explore librement avant la première descente : tous les PNJ et leurs « ! » sont là dès l'arrivée | L'île fait partie de la découverte |
+| Retour de donjon | Tous les donjons ramènent au ponton de Charon | Les coffres s'ouvrent sur la barque, le hub : on les ouvre dès le retour, sans traverser l'île |
+| Butin | Tiré au sort, sauf à la première victoire contre la Jorōgumo : une arme de la classe du héros, tirée de sa table (Guerrier : katana de rōnin, Lame : crocs de la Jorōgumo, Paladin : miroir de Yata, Rôdeur : arc de soie, Invocateur : éventail de la Jorōgumo) | La première victoire se voit dans l'équipement ; ensuite, les tables de drop à la Warframe donnent leur sens au farming |
+| Création du héros | Chaque classe affiche sa difficulté (★ à ★★★) et son style en une ligne, sans présélection | Choisir en connaissance de cause, sans imposer de classe |
+| Son | Des bruitages d'abord (combat et interface), la musique plus tard, quand la direction artistique sera figée | Le retour de chaque coup compte plus que l'ambiance dans les premières minutes |
+| Retour de coup | Chiffre de dégâts et secousse à chaque coup porté ; micro-pause de 40 à 50 ms sur un critique ou une parade ; une attaque lancée passe avant la garde, et la garde interrompt la fin d'un coup | Chaque coup doit se sentir, même avec des graphismes provisoires |
+| Touches affichées | Les indices et les menus montrent la touche réelle du clavier du joueur (AZERTY, QWERTY…), AZERTY par défaut si le navigateur ne la donne pas | « A » en AZERTY est « Q » en QWERTY : un indice faux fait perdre un combat |
+| Chargement web | Au plus 15 Mo au premier lancement, avec un écran de chargement qui montre la progression ; le Palais et les héros non choisis se chargent à la demande, images en WebP | La version en ligne du portfolio doit démarrer vite |
 
 **Coffres** : chaque combat gagné laisse un coffre, dont le contenu suit les tables de drop. On les ouvre plus tard, sur la barque, comme dans Waven.
 
@@ -458,8 +477,13 @@ La zone s'appelle Yomotsu Hirasaka, la pente qui sépare les vivants du Yomi dan
 | Le nom du forgeron | Principale | Retrouver dans les rizières la plaque votive (ema) où Tetsu avait écrit son nom | Tetsu retrouve la mémoire, la forge s'ouvre |
 | La dame des rizières | Principale | Des âmes disparaissent dans les rizières : entrer dans le donjon et vaincre la Jorōgumo | Boutique de fin, suite de l'histoire |
 | Derrière le sceau | Principale | Le moine raconte qu'Izanami ronge le sceau ; dénouer la corde du Grand Rocher, descendre dans le Palais et affronter Izanami | Le Palais d'Izanami, son butin, le dernier mot du moine |
+| Le calme des rives | Principale | Après Izanami : Charon ne partira que si le fond du Yomi se tait. Vaincre la Jorōgumo et Izanami au niveau 10 | Oboles, XP, la barque prête pour la prochaine rive |
 | La lanterne de Yuki | Secondaire | Rapporter une braise de hitodama | Recette de la Lanterne-braise |
-| Le tanuki parmi les statues | Secondaire | Trouver lequel des Jizō est le tanuki déguisé | Un indice vers un secret et un coffre |
+| Les lanternes d'Obon | Secondaire | Après Izanami (tant qu'elle retient les morts, le chemin reste sombre) : allumer les quatre lanternes de pierre | Yuki retrouve sa mère et quitte l'île |
+| Le tanuki parmi les statues | Secondaire | Trouver lequel des Jizō est le tanuki déguisé | Un indice vers un secret et un coffre ; ensuite, ses indices désignent toujours le prochain secret à trouver |
+| La tasse ébréchée | Secondaire | Après la Jorōgumo : retrouver sur les kappa la tasse du mari d'Obaa | Le nom de Genzō, le Rokumonsen, −10 % chez Obaa |
+| Une lame qui se souvient | Secondaire | Au niveau 5 : faire forger une pièce jusqu'au niveau 10 | Soie de jorōgumo (le matériau des paliers suivants) |
+| La chronique des profondeurs | Secondaire | Après Izanami : à chaque nouvelle malédiction franchie (niveaux 10, 20, 30, 40, 60, 70, 100), la raconter au moine | Oboles et XP à chaque chapitre ; au niveau 100, la Pêche Ōkamuzumi |
 
 **Secrets**
 
@@ -482,7 +506,7 @@ Le build se construit avec l'équipement choisi avant chaque donjon, et tout ce 
 
 **Donjons dans la durée** : pour que les anciens donjons ne meurent pas, deux systèmes.
 
-- **Difficulté à l'entrée** (en place) : niveau de donjon choisi en entrant, de 1 à 100, comme dans Waven. Dès le niveau 1, les yokai sont plus forts que le héros (×1,4 PV, ×1,6 dégâts ; la Jorōgumo ×1,1 et ×1,2, pour qu'un premier boss reste à portée). Chaque niveau ajoute +8 % de PV et +9 % de dégâts, plus vite que le héros ne progresse (PV, dégâts, équipement) : à niveau égal, le donjon est toujours plus dur, et monter de niveau ne suffit jamais à l'écraser, et tous les 10 niveaux environ une malédiction du Yomi s'ajoute : Hâte des morts, Âmes d'élite, Feux follets vengeurs, Sève du Yomi, Écorce des kodama, Rancune des noyés, jusqu'au Regard d'Izanami au niveau 100. Les récompenses montent aussi (oboles, XP, butin rare, matériaux). Vaincre la Jorōgumo ouvre les niveaux jusqu'au prochain multiple de 5 (gagner au niveau 1 ouvre jusqu'au 5, au 5 jusqu'au 10) : on peut tenter un saut même sans être prêt. L'écran d'entrée prévient quand le niveau choisi dépasse celui du héros. Réglages dans `src/data/difficulty.json`.
+- **Difficulté à l'entrée** (en place) : niveau de donjon choisi en entrant, de 1 à 100, comme dans Waven. Dès le niveau 1, les yokai sont plus forts que le héros (×1,4 PV, ×1,6 dégâts ; le boss ×1,1 et ×1,2). Les Rizières noyées, premier donjon, partent plus bas (×1,2 et ×1,35 ; la Jorōgumo ×0,85 et ×0,9 : `strength` dans `dungeons.json`), pour que toutes les classes puissent la vaincre. Chaque niveau ajoute +8 % de PV et +9 % de dégâts, plus vite que le héros ne progresse (PV, dégâts, équipement) : à niveau égal, le donjon est toujours plus dur, et monter de niveau ne suffit jamais à l'écraser, et tous les 10 niveaux environ une malédiction du Yomi s'ajoute : Hâte des morts, Âmes d'élite, Feux follets vengeurs, Sève du Yomi, Écorce des kodama, Rancune des noyés, jusqu'au Regard d'Izanami au niveau 100. Les récompenses montent aussi (oboles, XP, butin rare, matériaux). Vaincre la Jorōgumo ouvre les niveaux jusqu'au prochain multiple de 5 (gagner au niveau 1 ouvre jusqu'au 5, au 5 jusqu'au 10) : on peut tenter un saut même sans être prêt. L'écran d'entrée prévient quand le niveau choisi dépasse celui du héros. Réglages dans `src/data/difficulty.json`.
 - **Rotation** : certains donjons sont mis en avant par période, avec des bonus (drops, matériaux). Une version plus poussée que celle de Waven.
 
 ### Ressources, monnaies & amélioration
@@ -543,7 +567,36 @@ Le jeu tourne dans le navigateur avec **Babylon.js** (JavaScript/TypeScript), po
 
 - **Moteur** : Babylon.js, avec sa physique (Havok), ses animations et son GUI intégrés.
 - **Données** : items, compétences et tags décrits en JSON, pour ajouter du contenu sans toucher au code du combat.
-- **Multi (plus tard)** : serveur Node, par exemple avec Colyseus. Solo et coop PvE d'abord, PvP peut-être plus tard. L'architecture doit séparer dès le départ la logique de jeu du rendu.
+- **Multi (en cours)** : coop PvE jusqu'à **3 joueurs**, en P2P gratuit. Le navigateur d'un joueur, l'hôte, fait tourner le combat. Les autres lui envoient leurs commandes et reçoivent l'état de la partie. La mise en relation passe par des relais publics (Trystero, WebRTC), sans serveur à payer. On rejoint une partie avec un code, ou depuis une liste de parties publiques. PvP peut-être plus tard.
+  - **En place (étape 1, sans réseau)** : le combat accepte 1 à 3 héros. Chacun a ses âmes, son Aura, sa fumée et ses projectiles. Les yokai choisissent leur cible parmi tous les héros et toutes les âmes.
+  - **Héros à terre** : un héros à 0 PV tombe à terre. Un allié qui reste 4 s à côté de lui le relève avec 30 % de PV, et Relever du Paladin le remet debout avec 50 %. La descente échoue quand tous sont à terre.
+  - **Difficulté selon le nombre de héros** (`party` dans `src/data/difficulty.json`) : PV des yokai ×1,8 à deux et ×2,8 à trois, PV du boss ×2,1 et ×3,3, et un yokai de plus par vague pour chaque héros en plus.
+  - **Test sans réseau** : `?coop=2` ou `?coop=3` ajoute des alliés joués par l'ordinateur (`src/game/bot.ts`).
+  - **En place (étapes 2 et 3, réseau et salons)** : on joue en coop depuis l'écran titre ou le menu de l'île (« Coop en ligne »).
+    - **Transport** (`src/net/transport.ts`) : Trystero relie les navigateurs en WebRTC ; la mise en relation passe par des relais Nostr publics. Deux canaux par paire de joueurs. Le canal sûr, celui de Trystero, porte le salon et les événements du combat : tout arrive, dans l'ordre. Le canal rapide, non ordonné et sans renvoi, porte les instantanés et les commandes : un paquet perdu est remplacé par le suivant, au lieu de bloquer ceux qui suivent. Pour les tests :
+      - `?reseau=local` relie les onglets d'un même navigateur ;
+      - `&ping=120&gigue=40&perte=2&debit=1000` y simule Internet : aller-retour en ms, écart aléatoire en ms, pertes en %, débit montant en kbit/s ;
+      - `?relais=ws://…` remplace les relais Nostr publics par un relais local.
+    - **Salon** (`src/net/session.ts`, `src/ui/coop.ts`) : l'hôte crée une partie avec un code de 4 caractères (ni 0, O, 1 ni I), publique ou non. Les autres la rejoignent par le code ou par la liste des parties publiques, où chaque hôte s'annonce toutes les 3 s. L'hôte choisit le donjon et le niveau parmi ceux qu'il a ouverts, puis lance la descente quand tous sont prêts. Après la descente, on revient au salon.
+    - **Combat** : l'hôte fait tourner le monde à 60 pas par seconde avec les commandes de chacun. Il continue quand son onglet est caché : un Worker (`src/background.ts`) prend le relais de l'animation.
+      - **Commandes** (`src/net/frames.ts`) : l'invité en envoie une par pas, numérotée. Ses appuis sont comptés depuis le début de la descente : aucun ne se perd, même quand un paquet se perd. Si un invité ne donne plus de nouvelles depuis 500 ms, son héros s'arrête.
+      - **Instantanés** (`src/net/protocol.ts`) : l'hôte en envoie 20 par seconde à chaque invité, sur le canal rapide. Un instantané fait moins d'1 Ko : les valeurs par défaut sont omises, les noms de champs sont remplacés par des codes courts, et chaque invité ne reçoit que ses propres recharges. Il porte aussi l'accusé de la dernière commande jouée. Les événements partent à part, sur le canal sûr.
+    - **Chez l'invité** (`src/net/mirror.ts`, `src/net/predict.ts`) :
+      - **Les autres** (héros, yokai, âmes, projectiles) sont interpolés dans le passé proche. Le retard s'ajuste à l'irrégularité des arrivées : de 4 à 30 pas, 6 à 7 sur un bon réseau. L'horloge accélère ou ralentit d'au plus 10 % pour suivre, sans saut. Faute d'instantané récent, les mouvements se prolongent 100 ms.
+      - **Son propre héros** est prédit. On part de sa position chez l'hôte et on rejoue les commandes pas encore jouées : marche, garde, arc bandé, toiles, souches, bords de l'arène. Les coups, les esquives et les compétences attendent l'hôte. Les écarts se résorbent en 60 ms (demi-vie).
+      - Le rendu et le HUD lisent une `WorldView` (`src/game/view.ts`), que le `World` de l'hôte et la copie de l'invité fournissent tous les deux.
+    - **Ping** : chaque invité mesure le sien chaque seconde et le transmet à l'hôte. Il s'affiche à côté du nom de chaque allié.
+    - **Butin séparé** : chacun tire son propre butin à partir des yokai vaincus, et garde ses oboles, son XP et ses coffres. Une victoire ouvre les niveaux pour chacun.
+    - **Départs** : un invité qui part laisse son héros à terre pour de bon. Si l'hôte part, la descente s'arrête pour tous, et chacun garde son butin. Les versions différentes du jeu ne se mélangent pas (`PROTOCOL`).
+  - **Mesures** (réseau simulé : 100 ms de ping, 30 ms de gigue, 2 % de pertes) :
+
+    | | Avant | Après |
+    | --- | --- | --- |
+    | Délai entre la touche et le premier mouvement affiché | ~390 ms | ~10 ms |
+    | Images où le héros de l'invité reste figé en marchant | 67 % | 0 % |
+    | Débit de l'hôte vers un invité | ~41 Ko/s | ~15 Ko/s |
+
+  - **Plus tard** : prédire aussi l'esquive, accepter une parade un peu tardive à cause du décalage, se reconnecter après une coupure, un relais TURN pour les réseaux qui bloquent le WebRTC, et l'île partagée.
 - **Cibles** : navigateurs desktop en priorité, mobile à évaluer.
 
 ### Créer la zone d'exploration du Yomi

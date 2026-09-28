@@ -7,6 +7,24 @@ const MOUSE_BUTTONS = [
   { bit: 2, button: 2 }, // droit
 ] as const;
 
+function isInteractiveUi(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest('#ui button, #ui .btn, #ui a, #ui input, #ui select, #ui [tabindex]');
+}
+
+/** Types de champs qui ne servent pas à écrire : leurs touches restent au jeu. */
+const NOT_TEXT = new Set(['checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'file', 'color', 'image']);
+
+/**
+ * Champ où l'on écrit (pseudo, code d'une partie en coop) : ses touches ne commandent pas le jeu, sinon
+ * taper un I ouvrirait l'équipement, et un Z ferait marcher le héros. Seule Échap garde son rôle.
+ */
+function isTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable || target instanceof HTMLTextAreaElement) return true;
+  return target instanceof HTMLInputElement && !NOT_TEXT.has(target.type);
+}
+
 /**
  * Clavier et souris. Les touches sont lues par position physique (`KeyboardEvent.code`) :
  * ZQSD sur un clavier AZERTY correspond à KeyW, KeyA, KeyS, KeyD, et la touche A à KeyQ.
@@ -24,6 +42,7 @@ export class Input {
 
   constructor(canvas: HTMLCanvasElement) {
     window.addEventListener('keydown', (e) => {
+      if (isTyping(e.target) && e.code !== 'Escape') return;
       if (CAPTURED_KEYS.has(e.code)) e.preventDefault();
       if (e.repeat) return;
       this.down.add(e.code);
@@ -33,6 +52,8 @@ export class Input {
     window.addEventListener('blur', () => {
       this.down.clear();
       this.buttons.clear();
+      this.clicks.clear();
+      this.pressed.clear();
     });
 
     const track = (e: PointerEvent) => {
@@ -40,28 +61,49 @@ export class Input {
       this.pointer.x = e.clientX - rect.left;
       this.pointer.y = e.clientY - rect.top;
     };
-    // Un second bouton pressé alors que le premier est tenu n'envoie pas de `pointerdown`,
-    // seulement un `pointermove` dont `buttons` change : on compare donc l'état des boutons à chaque événement.
+
+    // Un second bouton pressé alors que le premier est tenu n'envoie pas forcément de `pointerdown`,
+    // seulement un `pointermove` dont `buttons` change : on synchronise donc l'état à chaque événement.
     const syncButtons = (e: PointerEvent) => {
+      const onUi = isInteractiveUi(e.target);
       for (const { bit, button } of MOUSE_BUTTONS) {
         const held = (e.buttons & bit) !== 0;
-        if (held && !this.buttons.has(button) && e.target === canvas) this.clicks.add(button);
-        if (held && e.target === canvas) this.buttons.add(button);
-        else if (!held) this.buttons.delete(button);
+        if (held) {
+          if (!this.buttons.has(button) && !onUi) {
+            this.buttons.add(button);
+            this.clicks.add(button);
+          }
+        } else {
+          this.buttons.delete(button);
+        }
       }
     };
-    canvas.addEventListener('pointerdown', (e) => {
+
+    const onPointerDown = (e: PointerEvent) => {
       track(e);
       syncButtons(e);
-      canvas.setPointerCapture(e.pointerId);
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        // Ignorer si la capture de pointeur n'est pas acceptée par le navigateur
+      }
       canvas.focus();
+    };
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointerdown', (e) => {
+      if (!isInteractiveUi(e.target)) syncButtons(e);
     });
     window.addEventListener('pointermove', (e) => {
       track(e);
       syncButtons(e);
     });
     window.addEventListener('pointerup', syncButtons);
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    window.addEventListener('pointercancel', () => this.buttons.clear());
+    // Empêche le menu contextuel du navigateur de bloquer la parade au clic droit
+    window.addEventListener('contextmenu', (e) => {
+      if (!isInteractiveUi(e.target)) e.preventDefault();
+    });
   }
 
   /** Axe de déplacement à l'écran : x vers la droite, y vers le haut. */

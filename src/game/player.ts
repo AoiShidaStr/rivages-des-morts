@@ -2,9 +2,9 @@ import type { PlayerConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, lerp, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { InputFrame, Pose } from './types';
-import type { World } from './world';
+import type { Decoy, World } from './world';
 
-/** Durée pendant laquelle un clic reste en mémoire pour enchaîner les coups. */
+/** Durée pendant laquelle un clic, une esquive ou une compétence reste en mémoire, le temps que le coup en cours le permette. */
 const ATTACK_BUFFER = 0.2;
 
 type Action =
@@ -29,6 +29,15 @@ type Action =
  * Rôdeur : tire à l'arc, tir chargé (clic droit), Flèche-filet (A), Marque du chasseur (E), Recul (R).
  * Les talents, la race et les reliques arrivent par `cfg.perks`.
  */
+/** Vitesse de marche en plus : instinct (blessé) et transformation du Hanyō. */
+export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): number {
+  const perks = cfg.perks ?? {};
+  let factor = 1;
+  if (perks.yokaiInstinct && hp < cfg.maxHp * perks.yokaiInstinct.threshold) factor += perks.yokaiInstinct.speed;
+  if (perks.yokaiBlood && transformed > 0) factor += perks.yokaiBlood.speed;
+  return factor;
+}
+
 export class Player {
   pos: Vec2 = vec(0, 0);
   facing: Vec2 = vec(1, 0);
@@ -88,8 +97,27 @@ export class Player {
   private moving = false;
   private action: Action = { kind: 'free' };
   private attackBuffer = 0;
+  /** Esquive, Bond et Frappe fracassante demandés pendant l'engagement d'un coup : partent dès qu'on peut l'interrompre. */
+  private buffered = { dodge: 0, bond: 0, smash: 0 };
 
-  constructor(readonly cfg: PlayerConfig) {
+  /** Paladin : secondes d'Aura de lumière restantes, et ennemis déjà étourdis par celle-ci (Ama-no-Iwato). */
+  aura = 0;
+  auraTick = 0;
+  readonly auraStunned = new Set<number>();
+  /** Invocateur : secondes de Chœur spectral restantes. */
+  choir = 0;
+  /** Lame : nuage de l'Écran de fumée, que les yokai prennent pour le héros tant qu'il est invisible. */
+  smoke: Decoy | null = null;
+  /** Coop : secondes passées par un allié à le relever, tant que le héros est à terre. */
+  revive = 0;
+  /** Coop : son joueur a quitté la partie ; le héros reste à terre. */
+  gone = false;
+
+  /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
+  constructor(
+    readonly cfg: PlayerConfig,
+    readonly id = 0,
+  ) {
     this.hp = cfg.maxHp;
     this.dashCharges = cfg.blade.shadowDash.charges;
   }
@@ -177,11 +205,7 @@ export class Player {
 
   /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
   private speedFactor(): number {
-    const perks = this.cfg.perks ?? {};
-    let factor = 1;
-    if (perks.yokaiInstinct && this.hp < this.cfg.maxHp * perks.yokaiInstinct.threshold) factor += perks.yokaiInstinct.speed;
-    if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.speed;
-    return factor;
+    return walkFactor(this.cfg, this.hp, this.transformed);
   }
 
   heal(amount: number, world: World): void {
@@ -225,6 +249,12 @@ export class Player {
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
     this.rage = Math.max(0, this.rage - c.rageDecayPerSecond * dt);
     if (input.attackPressed) this.attackBuffer = ATTACK_BUFFER;
+    // Pendant l'engagement d'un coup, la demande attend qu'on puisse l'interrompre ; ensuite, elle s'efface vite.
+    const buffered = this.buffered;
+    if (this.canCancel()) for (const k of ['dodge', 'bond', 'smash'] as const) buffered[k] = Math.max(0, buffered[k] - dt);
+    if (input.dodgePressed) buffered.dodge = ATTACK_BUFFER;
+    if (input.skillEPressed) buffered.bond = ATTACK_BUFFER;
+    if (input.skillAPressed) buffered.smash = ATTACK_BUFFER;
     this.moving = false;
 
     // Instinct yokai : blessé, le Hanyō se régénère.
@@ -234,8 +264,16 @@ export class Player {
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     const warrior = c.kit === 'guerrier';
     if (warrior && input.skillRPressed && this.canFrenzy) this.startFrenzy(world);
-    if (input.dodgePressed && this.dodgeCooldown <= 0 && this.canCancel()) this.startDodge(input, world);
-    else if (warrior && input.skillEPressed && this.canBond && this.canCancel()) this.startBond(input.aimGround, world);
+    if (buffered.dodge > 0 && this.dodgeCooldown <= 0 && this.canCancel()) {
+      buffered.dodge = 0;
+      this.startDodge(input, world);
+    } else if (warrior && buffered.bond > 0 && this.canBond && this.canCancel()) {
+      buffered.bond = 0;
+      this.startBond(input.aimGround, world);
+    } else if (warrior && buffered.smash > 0 && this.canSmash && this.canCancel()) {
+      buffered.smash = 0;
+      this.startSmash(aimDir);
+    }
     if (c.kit === 'invocateur') this.commandSouls(input, world);
     else if (c.kit === 'lame') this.bladeSkills(input, aimDir, world);
     else if (c.kit === 'paladin') this.paladinSkills(input, aimDir, world);
@@ -388,7 +426,7 @@ export class Player {
       this.hp = this.cfg.maxHp * perks.divineBlood;
       world.emit({ type: 'divineBlood', pos: { ...this.pos } });
     }
-    world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked });
+    world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked, hero: this.id });
   }
 
   /** Ajoute de la rage (paliers du tag Guerrier compris) ; renvoie ce qui a été gagné. */
@@ -420,18 +458,21 @@ export class Player {
   private updateFree(dt: number, input: InputFrame, aimDir: Vec2, slow: number): void {
     const c = this.cfg;
     this.facing = aimDir;
+    // L'attaque d'abord : un clic la lance même garde levée ; un clic mémorisé ou le bouton tenu, seulement sans la garde.
+    // (Les compétences, elles, sont lancées avant, dans `update`, et interrompent la fin d'un coup.)
+    const wantsAttack = this.attackBuffer > 0 || input.attackHeld;
+    if (input.attackPressed || (wantsAttack && !input.signatureHeld)) {
+      this.blocking = false;
+      this.startAttack();
+      return;
+    }
+
     this.blocking = (c.kit === 'guerrier' || c.kit === 'paladin') && input.signatureHeld;
     if (c.kit === 'rodeur' && input.signatureHeld) {
       this.action = { kind: 'draw', t: 0 };
       return;
     }
-    if (c.kit === 'guerrier' && input.skillAPressed && this.canSmash) {
-      this.rage -= c.smash.rageCost;
-      this.blocking = false;
-      this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false };
-      return;
-    }
-    if (!this.blocking && (this.attackBuffer > 0 || input.attackHeld)) {
+    if (!this.blocking && wantsAttack) {
       this.startAttack();
       return;
     }
@@ -440,6 +481,14 @@ export class Player {
       this.pos = add(this.pos, scale(input.move, speed * dt));
       this.moving = true;
     }
+  }
+
+  /** Frappe fracassante du Guerrier, comme le Bond : depuis l'arrêt, ou en coupant la fin d'un coup. */
+  private startSmash(aimDir: Vec2): void {
+    this.facing = aimDir;
+    this.rage -= this.cfg.smash.rageCost;
+    this.blocking = false;
+    this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false };
   }
 
   private startAttack(): void {
@@ -487,14 +536,26 @@ export class Player {
       this.pos = add(this.pos, scale(a.dir, (c.lunge / time.active) * dt));
       world.strike(this.pos, a.dir, a.hit, a.crit);
     }
-    // Enchaînement : un clic mémorisé (ou le bouton maintenu) relance un coup à mi-récupération.
-    const wantsNext = this.attackBuffer > 0 || input.attackHeld;
+
+    // Passé l'engagement de l'arme et l'impact, lever la garde (clic droit) interrompt la fin du coup
+    const canInterrupt = a.t >= Math.max(time.commit, recoveryStart);
+    const wantsGuard = (this.cfg.kit === 'guerrier' || this.cfg.kit === 'paladin') && input.signatureHeld;
+    if (canInterrupt && wantsGuard) {
+      this.action = { kind: 'free' };
+      this.blocking = true;
+      this.facing = aimDir;
+      return;
+    }
+
+    // Enchaînement : un clic mémorisé (ou le bouton maintenu) relance un coup à mi-récupération,
+    // sauf si le joueur a demandé la parade
+    const wantsNext = (this.attackBuffer > 0 || input.attackHeld) && !input.signatureHeld;
     if (wantsNext && a.t >= recoveryStart + time.recovery / 2) {
       this.facing = aimDir;
       this.startAttack();
     } else if (a.t >= recoveryStart + time.recovery) {
       this.action = { kind: 'free' };
-    } else if (!wantsNext && a.t >= Math.max(time.commit, recoveryStart) && length(input.move) > 0.05) {
+    } else if (!wantsNext && canInterrupt && length(input.move) > 0.05) {
       // Passé l'engagement de l'arme, se déplacer interrompt la fin du coup. Jamais avant que le coup ne porte :
       // on frappe souvent en marchant ; la feinte, elle, passe par l'esquive.
       this.action = { kind: 'free' };

@@ -23,6 +23,11 @@ export interface DifficultyData {
   rewards: { obolesPerLevel: number; xpPerLevel: number; rareChancePerLevel: number; extraMaterialEvery: number };
   elite: { hp: number; damage: number };
   curses: CurseDef[];
+  /**
+   * Coop : PV des yokai (`hp`) et du boss (`bossHp`) selon le nombre de héros (1er élément : seul),
+   * et yokai en plus par vague pour chaque héros au-delà du premier.
+   */
+  party: { hp: number[]; bossHp: number[]; extraSpawns: number };
 }
 
 /** Ce que le combat doit savoir d'un niveau de donjon. */
@@ -35,6 +40,8 @@ export interface Difficulty {
   /** Valeur de chaque malédiction active (absente = inactive). */
   curses: Partial<Record<CurseId, number>>;
   elite: { hp: number; damage: number };
+  /** Coop : yokai en plus par vague pour chaque héros au-delà du premier. */
+  extraSpawns: number;
 }
 
 /** Multiplicateurs du butin : oboles, expérience, chance des objets rares, matériaux en plus par drop. */
@@ -67,17 +74,28 @@ export function nextCurse(data: DifficultyData, level: number): CurseDef | undef
   return data.curses.filter((c) => c.from > level).sort((a, b) => a.from - b.from)[0];
 }
 
-export function difficultyFor(data: DifficultyData, level: number): Difficulty {
+/** Force des yokai et du boss au niveau 1 d'un donjon, à la place de celle de difficulty.json (le premier donjon est plus doux). */
+export interface EnemyStrength {
+  base?: { hp: number; damage: number };
+  bossBase?: { hp: number; damage: number };
+}
+
+/** `heroes` : nombre de héros dans la partie (1 en solo, jusqu'à 3 en coop) ; `strength` : la force propre au donjon. */
+export function difficultyFor(data: DifficultyData, level: number, heroes = 1, strength: EnemyStrength = {}): Difficulty {
   const n = clampLevel(data, level) - 1;
   const curses: Difficulty['curses'] = {};
   for (const curse of activeCurses(data, n + 1)) curses[curse.id] = curse.value;
+  const party = (list: number[]) => list[Math.max(0, Math.min(list.length, heroes) - 1)] ?? 1;
+  const base = strength.base ?? data.enemy.base;
+  const bossBase = strength.bossBase ?? data.enemy.bossBase;
   return {
     level: n + 1,
-    hp: data.enemy.base.hp * (1 + data.enemy.hpPerLevel * n),
-    damage: data.enemy.base.damage * (1 + data.enemy.damagePerLevel * n),
+    hp: base.hp * (1 + data.enemy.hpPerLevel * n) * party(data.party.hp),
+    damage: base.damage * (1 + data.enemy.damagePerLevel * n),
+    extraSpawns: heroes > 1 ? data.party.extraSpawns : 0,
     boss: {
-      hp: data.enemy.bossBase.hp * (1 + data.enemy.hpPerLevel * n),
-      damage: data.enemy.bossBase.damage * (1 + data.enemy.damagePerLevel * n),
+      hp: bossBase.hp * (1 + data.enemy.hpPerLevel * n) * party(data.party.bossHp),
+      damage: bossBase.damage * (1 + data.enemy.damagePerLevel * n),
     },
     curses,
     elite: data.elite,

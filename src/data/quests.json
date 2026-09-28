@@ -1,5 +1,5 @@
 {
-  "about": "Objectifs : le premier dont les conditions (if) sont remplies s'affiche. {nom} affiche un compteur posé par les dialogues.",
+  "about": "Objectifs : le premier dont les conditions (if) sont remplies s'affiche. {nom} affiche un compteur posé par les dialogues, {record_<donjon>} la meilleure victoire (record_* : tous donjons), {forge_max} le plus haut niveau de forge.",
   "quests": {
     "passeur": {
       "name": "Le passeur",
@@ -33,6 +33,44 @@
       "objectives": [
         { "if": [{ "flag": "sceau_ouvert" }], "text": "Descendre sous le Grand Rocher, dans le Palais d'Izanami, et affronter la reine du Yomi." },
         { "text": "Dénouer la corde sacrée du Grand Rocher, au bout du chemin du moine." }
+      ]
+    },
+    "calme": {
+      "name": "Le calme des rives",
+      "type": "Principale",
+      "objectives": [
+        { "if": [{ "dungeon": ["rizieres", 10] }, { "dungeon": ["palais", 10] }], "text": "Retourner voir Charon, au ponton." },
+        { "if": [{ "dungeon": ["rizieres", 10] }], "text": "Vaincre Izanami au niveau 10 (record : {record_palais} / 10)." },
+        { "if": [{ "dungeon": ["palais", 10] }], "text": "Vaincre la Jorōgumo au niveau 10 (record : {record_rizieres} / 10)." },
+        { "text": "Vaincre la Jorōgumo et Izanami au niveau 10 (records : {record_rizieres} et {record_palais} / 10)." }
+      ]
+    },
+    "chronique": {
+      "name": "La chronique des profondeurs",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "dungeon": ["*", 10] }, { "notFlag": "chronique_10" }], "text": "Raconter au moine du Rocher le niveau 10 du Yomi." },
+        { "if": [{ "dungeon": ["*", 20] }, { "notFlag": "chronique_20" }], "text": "Raconter au moine du Rocher le niveau 20 du Yomi." },
+        { "if": [{ "dungeon": ["*", 30] }, { "notFlag": "chronique_30" }], "text": "Raconter au moine du Rocher le niveau 30 du Yomi." },
+        { "if": [{ "dungeon": ["*", 40] }, { "notFlag": "chronique_40" }], "text": "Raconter au moine du Rocher le niveau 40 du Yomi." },
+        { "if": [{ "dungeon": ["*", 60] }, { "notFlag": "chronique_60" }], "text": "Raconter au moine du Rocher le niveau 60 du Yomi." },
+        { "if": [{ "dungeon": ["*", 70] }, { "notFlag": "chronique_70" }], "text": "Raconter au moine du Rocher le niveau 70 du Yomi." },
+        { "if": [{ "dungeon": ["*", 100] }], "text": "Raconter au moine du Rocher le niveau 100 du Yomi." },
+        { "if": [{ "flag": "chronique_70" }], "text": "Vaincre un boss au niveau 100 (record : {record_*}), puis le raconter au moine." },
+        { "if": [{ "flag": "chronique_60" }], "text": "Vaincre un boss au niveau 70 (record : {record_*}), puis le raconter au moine." },
+        { "if": [{ "flag": "chronique_40" }], "text": "Vaincre un boss au niveau 60 (record : {record_*}), puis le raconter au moine." },
+        { "if": [{ "flag": "chronique_30" }], "text": "Vaincre un boss au niveau 40 (record : {record_*}), puis le raconter au moine." },
+        { "if": [{ "flag": "chronique_20" }], "text": "Vaincre un boss au niveau 30 (record : {record_*}), puis le raconter au moine." },
+        { "if": [{ "flag": "chronique_10" }], "text": "Vaincre un boss au niveau 20 (record : {record_*}), puis le raconter au moine." },
+        { "text": "Vaincre un boss au niveau 10 (record : {record_*}), puis le raconter au moine du Rocher." }
+      ]
+    },
+    "lame": {
+      "name": "Une lame qui se souvient",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "forged": 10 }], "text": "Retourner voir Tetsu à la forge." },
+        { "text": "Faire forger une pièce d'équipement jusqu'au niveau 10 ({forge_max} / 10)." }
       ]
     },
     "lanterne": {

@@ -1,5 +1,5 @@
 {
-  "about": "Les donjons du Yomi : nom, boss, textes de fin, effets de la victoire (onVictory à chaque fois, firstVictory la première), boutique de fin, point de retour sur l'île (exit) et décor de l'arène (style : teinte du sol, couleur de la brume, sprites posés autour). Les salles de combat sont dans dungeon.json (Rizières noyées) et dungeon-palais.json (Palais d'Izanami).",
+  "about": "Les donjons du Yomi : nom, boss, textes de fin, effets de la victoire (onVictory à chaque fois, firstVictory la première : la Jorōgumo y donne une arme de la classe du héros), boutique de fin, point de retour sur l'île (exit, sinon le ponton de Charon : island.json, dungeonExit) et décor de l'arène (style : teinte du sol, couleur de la brume, sprites posés autour). Les salles de combat sont dans dungeon.json (Rizières noyées) et dungeon-palais.json (Palais d'Izanami).",
   "rizieres": {
     "name": "Rizières noyées",
     "region": "Donjon du Yomi",
@@ -10,8 +10,23 @@
       "text": "La Jorōgumo est tombée. Les âmes égarées retrouvent peu à peu leur chemin."
     },
     "onVictory": [{ "completeQuest": "dame" }, { "set": "jorogumo_vaincue" }],
-    "firstVictory": { "if": [{ "notFlag": "jorogumo_vaincue" }], "then": [{ "xp": 120 }] },
+    "firstVictory": {
+      "if": [{ "notFlag": "jorogumo_vaincue" }],
+      "then": [
+        { "xp": 120 },
+        { "if": [{ "class": "guerrier" }], "give": "katana-ronin" },
+        { "if": [{ "class": "lame" }], "give": "crocs-jorogumo" },
+        { "if": [{ "class": "paladin" }], "give": "miroir-yata" },
+        { "if": [{ "class": "rodeur" }], "give": "arc-soie" },
+        { "if": [{ "class": "invocateur" }], "give": "eventail-jorogumo" }
+      ]
+    },
     "shop": "fin",
+    "strength": {
+      "about": "Premier donjon : très dur mais passable avec toutes les classes (réglé par descentes simulées, voir le GDD). Au-delà du niveau 1, la montée par niveau de difficulty.json s'applique.",
+      "base": { "hp": 1.2, "damage": 1.35 },
+      "bossBase": { "hp": 0.85, "damage": 0.9 }
+    },
     "style": {
       "ground": [1, 1, 1],
       "sky": "#c3cbcf",
@@ -41,7 +56,6 @@
       "then": [{ "xp": 250 }, { "toast": "Retourne voir le moine du Rocher : il voudra savoir." }]
     },
     "shop": "fin-palais",
-    "exit": { "u": 1.6, "v": 11.4 },
     "style": {
       "ground": [0.46, 0.38, 0.55],
       "sky": "#2e2733",

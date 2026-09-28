@@ -9,7 +9,7 @@
       "hints": {
         "guerrier": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Esquive sur le côté, ou pare le bond (clic droit) : elles restent sonnées.",
         "paladin": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Bouclier levé (clic droit), pare le bond : elles restent sonnées.",
-        "rodeur": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Recule (R) au moment où elles s'élancent."
+        "rodeur": "Les shikome se ramassent avant de bondir : le trait rouge montre où. Recule ({R}) au moment où elles s'élancent."
       },
       "spawns": [{ "kind": "shikome", "count": 3 }]
     },
@@ -18,7 +18,7 @@
       "hint": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Frappe-les pendant leur appel pour l'interrompre.",
       "hints": {
         "rodeur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Tes flèches les rattrapent même quand ils fuient.",
-        "invocateur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Envoie tes âmes sur eux (A) : ils fuient le héros, pas les âmes."
+        "invocateur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Envoie tes âmes sur eux ({A}) : ils fuient le héros, pas les âmes."
       },
       "spawns": [
         { "kind": "ikazuchi", "count": 2 },

@@ -1,11 +1,13 @@
 import type { Kit } from '../game/config';
-import { Izanami } from '../game/enemies';
 import type { ClassDef } from '../game/loadout';
 import type { GameEvent } from '../game/types';
-import type { World } from '../game/world';
+import type { WorldView } from '../game/view';
+import { keyName, moveKeys, withKeys } from '../keys';
 import { h } from '../ui/dom';
 
 const BANNER_TIME = 2.6;
+/** Au-delà de ce ping (ms), il s'affiche en couleur d'alerte. */
+const LAGGY = 150;
 const SKILL_KEYS = ['A', 'E', 'R'] as const;
 /** La barre sous les PV : rage du Guerrier, âmes de l'Invocateur, ombre de la Lame, allié du Paladin, arc du Rôdeur. */
 const RESOURCE: Record<Kit, { label: string; style: string }> = {
@@ -50,6 +52,11 @@ export class Hud {
   private readonly gaze: HTMLElement;
   private readonly gazeFill: HTMLElement;
   private readonly gazeLabel: HTMLElement;
+  /** Coop : une petite barre de PV par allié, sous celle du héros. */
+  private readonly allyList: HTMLElement;
+  private allyBars: { fill: HTMLElement; name: HTMLElement; label: string }[] = [];
+  /** Coop en ligne : ping de chaque allié, dans l'ordre des alliés (inconnu : rien d'affiché). */
+  pings: (number | undefined)[] = [];
   private bossTitle = 'Jorōgumo';
   private bannerTimer = 0;
 
@@ -81,31 +88,53 @@ export class Hud {
     this.gazeLabel = h('span', { class: 'gaze-label' }, 'Son regard');
     this.gaze = h('div', { class: 'gaze', title: 'Plus tu la regardes, plus elle encaisse ; jauge pleine, sa colère éclate.' }, h('span', { class: 'gaze-eye' }, '目'), h('div', { class: 'gaze-bar' }, this.gazeFill), this.gazeLabel);
     this.boss.append(this.gaze);
+    this.allyList = h('div', { class: 'allies' });
+    find('.bar.hp').after(this.allyList);
   }
 
-  /** Noms des compétences, barre et rappel des commandes selon la classe du héros. */
+  /** Coop : noms des autres héros, dans l'ordre (aucun en solo). */
+  setAllies(names: string[]): void {
+    this.pings = [];
+    this.allyBars = names.map((label) => ({ fill: h('div', { class: 'fill' }), name: h('span', { class: 'label' }, label), label }));
+    this.allyList.replaceChildren(...this.allyBars.map((bar) => h('div', { class: 'bar ally' }, bar.fill, bar.name)));
+  }
+
+  /** Noms des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur. */
   configure(cls: ClassDef): void {
     const name = (key: string) => cls.actives.find((a) => a.key === key)?.name ?? '';
-    for (const key of SKILL_KEYS) this.skills[key].name.textContent = name(key);
+    for (const key of SKILL_KEYS) {
+      this.skills[key].name.textContent = name(key);
+      this.skills[key].root.querySelector('kbd')!.textContent = keyName(key);
+    }
     for (const [kit, { style }] of Object.entries(RESOURCE)) {
       if (style) this.rageBar.classList.toggle(style, kit === cls.kit);
     }
     this.rageLabel.textContent = RESOURCE[cls.kit].label;
     const keys: [string, string][] = [
-      ['ZQSD', 'se déplacer'],
+      [moveKeys(), 'se déplacer'],
       ['Souris', 'viser'],
       ['Clic gauche', cls.kit === 'rodeur' ? 'tirer' : 'frapper'],
       ['Clic droit', name('Clic droit').toLowerCase()],
       ['Espace', 'esquiver'],
-      ...SKILL_KEYS.map((key): [string, string] => [key, name(key).toLowerCase()]),
+      ...SKILL_KEYS.map((key): [string, string] => [keyName(key), name(key).toLowerCase()]),
     ];
     this.controls.replaceChildren(...keys.flatMap(([key, label], i) => [i ? ' · ' : '', h('kbd', {}, key), ` ${label}`]));
   }
 
-  update(world: World, events: readonly GameEvent[], dt: number): void {
+  update(world: WorldView, events: readonly GameEvent[], dt: number): void {
     const player = world.player;
     const cfg = player.cfg;
     this.hpFill.style.width = `${(player.hp / cfg.maxHp) * 100}%`;
+    const others = world.players.filter((hero) => hero !== player);
+    this.allyBars.forEach((bar, i) => {
+      const hero = others[i];
+      if (!hero) return;
+      bar.fill.style.width = `${(Math.max(0, hero.hp) / hero.cfg.maxHp) * 100}%`;
+      const ping = this.pings[i];
+      bar.name.textContent = `${bar.label}${hero.dead ? ' · à terre' : ''}${ping ? ` · ${Math.round(ping)} ms` : ''}`;
+      bar.name.classList.toggle('lag', (ping ?? 0) > LAGGY);
+    });
+    const mine = world.summons.filter((s) => s.owner === player.id);
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
     let views: SkillView[];
     let fill = 0;
@@ -113,7 +142,7 @@ export class Hud {
     let label = RESOURCE[cfg.kit].label;
     if (cfg.kit === 'invocateur') {
       const s = cfg.summon;
-      const count = world.summons.length;
+      const count = mine.length;
       const none = count === 0;
       fill = count / Math.max(1, s.max);
       ready = world.soulInReach;
@@ -121,7 +150,7 @@ export class Hud {
       views = [
         { cooldown: player.recallCooldown / s.recall.cooldown, locked: none },
         { cooldown: player.sacrificeCooldown / s.sacrifice.cooldown, locked: none },
-        { cooldown: world.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && world.choir <= 0, active: world.choir > 0 },
+        { cooldown: player.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && player.choir <= 0, active: player.choir > 0 },
       ];
     } else if (cfg.kit === 'lame') {
       // Charges du Pas de l'ombre, la suivante se remplit ; invisible, la barre le dit.
@@ -139,12 +168,12 @@ export class Hud {
     } else if (cfg.kit === 'paladin') {
       // Vigueur de l'allié relevé ; la barre luit quand Relever a quelqu'un à relever.
       const p = cfg.paladin;
-      const ally = world.summons.find((s) => s.holy);
+      const ally = mine.find((s) => s.holy);
       fill = ally?.vigor ?? 0;
       ready = world.graveInReach;
-      label = ally ? `Allié relevé${world.summons.length > 1 ? ` ×${world.summons.length}` : ''}` : 'Aucun allié';
+      label = ally ? `Allié relevé${mine.length > 1 ? ` ×${mine.length}` : ''}` : 'Aucun allié';
       views = [
-        { cooldown: world.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: world.aura > 0 },
+        { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },
         { cooldown: player.raiseCooldown / p.raise.cooldown, locked: !world.graveInReach },
       ];
@@ -185,12 +214,13 @@ export class Hud {
     this.boss.classList.toggle('visible', Boolean(boss));
     if (boss) this.bossFill.style.width = `${(Math.max(0, boss.hp) / boss.maxHp) * 100}%`;
     // Izanami : la jauge de son regard, et l'alerte quand le héros la regarde.
-    const izanami = boss instanceof Izanami ? boss : null;
+    const izanami = boss?.kind === 'izanami' ? boss : null;
     this.gaze.classList.toggle('visible', izanami !== null);
     if (izanami) {
-      this.gazeFill.style.width = `${izanami.gaze * 100}%`;
-      this.gaze.classList.toggle('watched', izanami.watched);
-      this.gaze.classList.toggle('full', izanami.gaze > 0.75);
+      const gaze = izanami.gaze ?? 0;
+      this.gazeFill.style.width = `${gaze * 100}%`;
+      this.gaze.classList.toggle('watched', Boolean(izanami.watched));
+      this.gaze.classList.toggle('full', gaze > 0.75);
       const label = izanami.repelled ? 'Repoussée par la pêche !' : izanami.watched ? 'Elle te voit…' : 'Son regard';
       if (this.gazeLabel.textContent !== label) this.gazeLabel.textContent = label;
     }
@@ -216,7 +246,7 @@ export class Hud {
     this.bannerLabel.textContent = label;
     this.banner.classList.add('visible');
     this.bannerTimer = BANNER_TIME;
-    this.hint.textContent = hint ?? '';
+    this.hint.textContent = withKeys(hint ?? '');
     this.hint.classList.toggle('visible', Boolean(hint));
   }
 

@@ -56,6 +56,10 @@ export interface ClassDef {
   name: string;
   subtitle: string;
   role: string;
+  /** Difficulté de prise en main, de 1 à 3 étoiles, affichée à la création du héros. */
+  difficulty: number;
+  /** Le style de jeu en une phrase, pour choisir sa classe en connaissance de cause. */
+  playstyle: string;
   kit: Kit;
   /** Arme de départ. */
   weapon: string;
@@ -98,6 +102,9 @@ const ANY_CLASS = 'Tous';
 export const heroRace = (skills: SkillsDef, hero: Hero): RaceDef => skills.races[hero.race] ?? Object.values(skills.races)[0];
 export const heroClass = (skills: SkillsDef, hero: Hero): ClassDef => skills.classes[hero.class] ?? Object.values(skills.classes)[0];
 
+/** « Rôdeur Hanyō » : la classe puis la race, comme à la création. */
+export const heroLabel = (skills: SkillsDef, hero: Hero): string => `${heroClass(skills, hero).name} ${heroRace(skills, hero).name}`;
+
 /** Passifs de la race, parent divin compris. */
 export function racePassives(skills: SkillsDef, hero: Hero): Passive[] {
   const race = heroRace(skills, hero);
@@ -108,6 +115,13 @@ export function racePassives(skills: SkillsDef, hero: Hero): Passive[] {
 /** Une arme ne se manie que par sa classe (son tag, ou « Tous ») ; les autres pièces vont à tout le monde. */
 export function canWield(def: ItemDef, cls: ClassDef): boolean {
   return def.slot !== 'arme' || !def.tags?.length || def.tags.some((t) => t === cls.tag.name || t === ANY_CLASS);
+}
+
+/** Arme prise en changeant de classe : la plus forgée de celles qu'on possède pour elle, sinon son arme de départ. */
+export function classWeapon(items: Record<string, ItemDef>, state: ProgressState, cls: ClassDef): string {
+  const owned = state.items.filter((id) => items[id]?.slot === 'arme' && canWield(items[id], cls));
+  owned.sort((a, b) => itemLevel(state, b) - itemLevel(state, a));
+  return owned[0] ?? cls.weapon;
 }
 
 /** Niveau de forge d'un objet (1 tant qu'il n'a pas été amélioré). */
