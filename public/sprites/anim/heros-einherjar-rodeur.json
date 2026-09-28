@@ -8,57 +8,57 @@
     "w": 304,
     "h": 336
    },
-   "duration": 1000
+   "duration": 140
   },
   {
-   "filename": "move 1",
+   "filename": "idle 1",
    "frame": {
     "x": 304,
     "y": 0,
     "w": 304,
     "h": 336
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 2",
+   "filename": "idle 2",
    "frame": {
     "x": 608,
     "y": 0,
     "w": 304,
     "h": 336
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 3",
+   "filename": "idle 3",
    "frame": {
     "x": 912,
     "y": 0,
     "w": 304,
     "h": 336
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 4",
+   "filename": "idle 4",
    "frame": {
     "x": 1216,
     "y": 0,
     "w": 304,
     "h": 336
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 5",
+   "filename": "idle 5",
    "frame": {
     "x": 1520,
     "y": 0,
     "w": 304,
     "h": 336
    },
-   "duration": 80
+   "duration": 140
   },
   {
    "filename": "move 6",
@@ -91,7 +91,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 9",
+   "filename": "move 9",
    "frame": {
     "x": 2736,
     "y": 0,
@@ -101,7 +101,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 10",
+   "filename": "move 10",
    "frame": {
     "x": 3040,
     "y": 0,
@@ -111,7 +111,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 11",
+   "filename": "move 11",
    "frame": {
     "x": 3344,
     "y": 0,
@@ -121,124 +121,124 @@
    "duration": 80
   },
   {
-   "filename": "strike 12",
+   "filename": "move 12",
    "frame": {
     "x": 3648,
     "y": 0,
     "w": 304,
     "h": 336
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "strike 13",
+   "filename": "move 13",
    "frame": {
     "x": 0,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "strike 14",
+   "filename": "windup 14",
    "frame": {
     "x": 304,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "guard 15",
+   "filename": "windup 15",
    "frame": {
     "x": 608,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 70
+   "duration": 80
   },
   {
-   "filename": "guard 16",
+   "filename": "windup 16",
    "frame": {
     "x": 912,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 70
+   "duration": 80
   },
   {
-   "filename": "guard 17",
+   "filename": "strike 17",
    "frame": {
     "x": 1216,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 70
+   "duration": 60
   },
   {
-   "filename": "guard 18",
+   "filename": "strike 18",
    "frame": {
     "x": 1520,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 70
+   "duration": 60
   },
   {
-   "filename": "dash 19",
+   "filename": "strike 19",
    "frame": {
     "x": 1824,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 40
+   "duration": 60
   },
   {
-   "filename": "dash 20",
+   "filename": "guard 20",
    "frame": {
     "x": 2128,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 40
+   "duration": 70
   },
   {
-   "filename": "dash 21",
+   "filename": "guard 21",
    "frame": {
     "x": 2432,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 40
+   "duration": 70
   },
   {
-   "filename": "dash 22",
+   "filename": "guard 22",
    "frame": {
     "x": 2736,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 40
+   "duration": 70
   },
   {
-   "filename": "dash 23",
+   "filename": "guard 23",
    "frame": {
     "x": 3040,
     "y": 336,
     "w": 304,
     "h": 336
    },
-   "duration": 40
+   "duration": 70
   },
   {
    "filename": "dash 24",
@@ -269,6 +269,56 @@
     "h": 336
    },
    "duration": 40
+  },
+  {
+   "filename": "dash 27",
+   "frame": {
+    "x": 304,
+    "y": 672,
+    "w": 304,
+    "h": 336
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 28",
+   "frame": {
+    "x": 608,
+    "y": 672,
+    "w": 304,
+    "h": 336
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 29",
+   "frame": {
+    "x": 912,
+    "y": 672,
+    "w": 304,
+    "h": 336
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 30",
+   "frame": {
+    "x": 1216,
+    "y": 672,
+    "w": 304,
+    "h": 336
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 31",
+   "frame": {
+    "x": 1520,
+    "y": 672,
+    "w": 304,
+    "h": 336
+   },
+   "duration": 40
   }
  ],
  "meta": {
@@ -288,40 +338,40 @@
    {
     "name": "idle",
     "from": 0,
-    "to": 0,
+    "to": 5,
     "direction": "forward"
    },
    {
     "name": "move",
-    "from": 1,
-    "to": 8,
+    "from": 6,
+    "to": 13,
     "direction": "forward"
    },
    {
     "name": "windup",
-    "from": 9,
-    "to": 11,
+    "from": 14,
+    "to": 16,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "strike",
-    "from": 12,
-    "to": 14,
+    "from": 17,
+    "to": 19,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "guard",
-    "from": 15,
-    "to": 18,
+    "from": 20,
+    "to": 23,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "dash",
-    "from": 19,
-    "to": 26,
+    "from": 24,
+    "to": 31,
     "direction": "forward",
     "repeat": "1"
    }

@@ -8,77 +8,77 @@
     "w": 260,
     "h": 279
    },
-   "duration": 1000
+   "duration": 140
   },
   {
-   "filename": "move 1",
+   "filename": "idle 1",
    "frame": {
     "x": 260,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 2",
+   "filename": "idle 2",
    "frame": {
     "x": 520,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 3",
+   "filename": "idle 3",
    "frame": {
     "x": 780,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 4",
+   "filename": "idle 4",
    "frame": {
     "x": 1040,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 5",
+   "filename": "idle 5",
    "frame": {
     "x": 1300,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 6",
+   "filename": "idle 6",
    "frame": {
     "x": 1560,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
-   "filename": "move 7",
+   "filename": "idle 7",
    "frame": {
     "x": 1820,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 80
+   "duration": 140
   },
   {
    "filename": "move 8",
@@ -91,7 +91,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 9",
+   "filename": "move 9",
    "frame": {
     "x": 2340,
     "y": 0,
@@ -101,7 +101,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 10",
+   "filename": "move 10",
    "frame": {
     "x": 2600,
     "y": 0,
@@ -111,7 +111,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 11",
+   "filename": "move 11",
    "frame": {
     "x": 2860,
     "y": 0,
@@ -121,7 +121,7 @@
    "duration": 80
   },
   {
-   "filename": "windup 12",
+   "filename": "move 12",
    "frame": {
     "x": 3120,
     "y": 0,
@@ -131,109 +131,159 @@
    "duration": 80
   },
   {
-   "filename": "strike 13",
+   "filename": "move 13",
    "frame": {
     "x": 3380,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "strike 14",
+   "filename": "move 14",
    "frame": {
     "x": 3640,
     "y": 0,
     "w": 260,
     "h": 279
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "strike 15",
+   "filename": "move 15",
    "frame": {
     "x": 0,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "strike 16",
+   "filename": "windup 16",
    "frame": {
     "x": 260,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 60
+   "duration": 80
   },
   {
-   "filename": "dash 17",
+   "filename": "windup 17",
    "frame": {
     "x": 520,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 40
+   "duration": 80
   },
   {
-   "filename": "dash 18",
+   "filename": "windup 18",
    "frame": {
     "x": 780,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 40
+   "duration": 80
   },
   {
-   "filename": "dash 19",
+   "filename": "windup 19",
    "frame": {
     "x": 1040,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 40
+   "duration": 80
   },
   {
-   "filename": "dash 20",
+   "filename": "strike 20",
    "frame": {
     "x": 1300,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 40
+   "duration": 60
   },
   {
-   "filename": "dash 21",
+   "filename": "strike 21",
    "frame": {
     "x": 1560,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 40
+   "duration": 60
   },
   {
-   "filename": "dash 22",
+   "filename": "strike 22",
    "frame": {
     "x": 1820,
     "y": 279,
     "w": 260,
     "h": 279
    },
-   "duration": 40
+   "duration": 60
   },
   {
-   "filename": "dash 23",
+   "filename": "strike 23",
    "frame": {
     "x": 2080,
+    "y": 279,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 60
+  },
+  {
+   "filename": "guard 24",
+   "frame": {
+    "x": 2340,
+    "y": 279,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 70
+  },
+  {
+   "filename": "guard 25",
+   "frame": {
+    "x": 2600,
+    "y": 279,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 70
+  },
+  {
+   "filename": "guard 26",
+   "frame": {
+    "x": 2860,
+    "y": 279,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 70
+  },
+  {
+   "filename": "guard 27",
+   "frame": {
+    "x": 3120,
+    "y": 279,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 70
+  },
+  {
+   "filename": "dash 28",
+   "frame": {
+    "x": 3380,
     "y": 279,
     "w": 260,
     "h": 279
@@ -241,10 +291,70 @@
    "duration": 40
   },
   {
-   "filename": "dash 24",
+   "filename": "dash 29",
    "frame": {
-    "x": 2340,
+    "x": 3640,
     "y": 279,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 30",
+   "frame": {
+    "x": 0,
+    "y": 558,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 31",
+   "frame": {
+    "x": 260,
+    "y": 558,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 32",
+   "frame": {
+    "x": 520,
+    "y": 558,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 33",
+   "frame": {
+    "x": 780,
+    "y": 558,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 34",
+   "frame": {
+    "x": 1040,
+    "y": 558,
+    "w": 260,
+    "h": 279
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 35",
+   "frame": {
+    "x": 1300,
+    "y": 558,
     "w": 260,
     "h": 279
    },
@@ -256,7 +366,7 @@
   "image": "heros-demi-dieu-rodeur.webp",
   "size": {
    "w": 3900,
-   "h": 558
+   "h": 837
   },
   "smooth": true,
   "bodyHeight": 256,
@@ -268,33 +378,40 @@
    {
     "name": "idle",
     "from": 0,
-    "to": 0,
+    "to": 7,
     "direction": "forward"
    },
    {
     "name": "move",
-    "from": 1,
-    "to": 8,
+    "from": 8,
+    "to": 15,
     "direction": "forward"
    },
    {
     "name": "windup",
-    "from": 9,
-    "to": 12,
+    "from": 16,
+    "to": 19,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "strike",
-    "from": 13,
-    "to": 16,
+    "from": 20,
+    "to": 23,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "guard",
+    "from": 24,
+    "to": 27,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "dash",
-    "from": 17,
-    "to": 24,
+    "from": 28,
+    "to": 35,
     "direction": "forward",
     "repeat": "1"
    }

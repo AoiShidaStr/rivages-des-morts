@@ -239,6 +239,66 @@
     "h": 304
    },
    "duration": 70
+  },
+  {
+   "filename": "dash 24",
+   "frame": {
+    "x": 2724,
+    "y": 608,
+    "w": 454,
+    "h": 304
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 25",
+   "frame": {
+    "x": 3178,
+    "y": 608,
+    "w": 454,
+    "h": 304
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 26",
+   "frame": {
+    "x": 3632,
+    "y": 608,
+    "w": 454,
+    "h": 304
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 27",
+   "frame": {
+    "x": 0,
+    "y": 912,
+    "w": 454,
+    "h": 304
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 28",
+   "frame": {
+    "x": 454,
+    "y": 912,
+    "w": 454,
+    "h": 304
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 29",
+   "frame": {
+    "x": 908,
+    "y": 912,
+    "w": 454,
+    "h": 304
+   },
+   "duration": 40
   }
  ],
  "meta": {
@@ -246,7 +306,7 @@
   "image": "heros-demi-dieu-invocateur.webp",
   "size": {
    "w": 4086,
-   "h": 912
+   "h": 1216
   },
   "smooth": true,
   "bodyHeight": 256,
@@ -285,6 +345,13 @@
     "name": "guard",
     "from": 20,
     "to": 23,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "dash",
+    "from": 24,
+    "to": 29,
     "direction": "forward",
     "repeat": "1"
    }
