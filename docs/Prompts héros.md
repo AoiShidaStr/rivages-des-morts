@@ -695,4 +695,5 @@ DO NOT add anything that is not the character: no effects, no props, no ground, 
 - **`npm run kit-heros` :** prépare les dossiers des 20 héros (`npm run kit-heros -- <race>-<classe>` pour un seul). Il découpe les planches de poses clés déposées (`profil.jpg`, `face.jpg`) et ne touche jamais aux planches d'animation déposées (`planche.jpg`). Si les poses sont dans un autre ordre, `poses.json` dit laquelle joindre, par exemple `{ "profil": { "course": 3 } }`.
 - **`npm run poses -- <planche>` :** découpe une planche isolée dans `poses/<planche>/` ; `--grille 3x2` force le nombre de colonnes et de lignes si la détection se trompe.
 - **`npm run doc-heros` :** réécrit ce fichier depuis `tools/prompts-heros.mjs`.
-- **À écrire :** le montage des planches d'animation en planches de jeu, et l'affichage de la vue de face selon la direction du déplacement.
+- **`npm run planches` :** monte les planches d'animation de profil déposées (`profil/<animation>/planche.jpg`) en planche de jeu `anim/heros-<race>-<classe>`, dès que le héros a sa course (`npm run planches -- heros-<race>-<classe>` pour un seul). Sans attente, le héros se tient immobile dans sa pose de repos ; sans garde ni esquive, le jeu prend l'attente et la course.
+- **À écrire :** l'affichage de la vue de face selon la direction du déplacement.

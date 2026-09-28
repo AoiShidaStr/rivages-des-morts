@@ -139,6 +139,8 @@ heros/
 même chose avec prompt-face.txt pour face.jpg. Puis lancer npm run kit-heros (ou npm run kit-heros -- <race>-<classe>).
 Étape 2 : dans chaque dossier d'animation, joindre pose.png et coller prompt.txt, enregistrer sous planche.jpg.
 Les planches déposées ne sont jamais écrasées.
+Étape 3 : npm run planches -- heros-<race>-<classe> monte les planche.jpg de profil en planche de jeu
+(il faut au moins la course).
 
 L'Einherjar guerrier a déjà ses animations de profil dans le jeu : pour lui, seulement face.jpg.
 
