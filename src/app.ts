@@ -525,7 +525,7 @@ export class App {
     const dungeon = content.dungeons[id] ?? content.dungeons.rizieres;
     this.dungeon = dungeon;
     this.dungeonLevel = clampLevel(content.difficulty, level);
-    const difficulty = difficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length);
+    const difficulty = difficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length, dungeon.strength);
     const begin = () => {
       const world = new World({ ...config, ...dungeon.arena, player, allies: allies.map((a) => a.config), difficulty }, startWave);
       this.world = world;
@@ -748,7 +748,7 @@ export class App {
     await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${level} · ${start.heroes.length} héros`, () => {
       this.coopRun = start.run;
       if (session.isHost) {
-        const difficulty = difficultyFor(content.difficulty, level, configs.length);
+        const difficulty = difficultyFor(content.difficulty, level, configs.length, dungeon.strength);
         this.world = new World({ ...this.d.config, ...dungeon.arena, player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
         this.remote.clear();

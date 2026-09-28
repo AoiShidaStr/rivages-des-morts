@@ -111,8 +111,13 @@
       "playstyle": "Fonce, bloque, frappe fort : encaisser les coups remplit ta rage.",
       "kit": "guerrier",
       "weapon": "nodachi",
+      "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
+      "effects": [
+        { "op": "mul", "path": "maxHp", "value": 1.15 },
+        { "op": "set", "path": "block.reduction", "value": 0.9 }
+      ],
       "actives": [
-        { "key": "Clic droit", "name": "Blocage", "description": "Arrête les trois quarts d'un coup de face et remplit la rage." },
+        { "key": "Clic droit", "name": "Blocage", "description": "Arrête 90 % d'un coup de face et remplit la rage." },
         { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit." },
         { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
         { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
@@ -190,7 +195,7 @@
             {
               "id": "heracles-1",
               "name": "Garde du héros",
-              "description": "Ta garde arrête tout le coup, au lieu des trois quarts, et couvre un angle bien plus large (130° → 180°).",
+              "description": "Ta garde arrête tout le coup, au lieu de 90 %, et couvre un angle bien plus large (130° → 180°).",
               "effects": [
                 { "op": "set", "path": "block.reduction", "value": 1 },
                 { "op": "set", "path": "block.arcDeg", "value": 180 }
@@ -263,8 +268,8 @@
       "about": "Réglages de base de la classe, appliqués avant l’équipement : l’Invocateur frappe moins fort et a moins de PV que le Guerrier, ses âmes font le travail.",
       "effects": [
         { "op": "set", "path": "kit", "value": "invocateur" },
-        { "op": "mul", "path": "maxHp", "value": 0.85 },
-        { "op": "set", "path": "attack.damage", "value": 6 },
+        { "op": "mul", "path": "maxHp", "value": 0.95 },
+        { "op": "set", "path": "attack.damage", "value": 7 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
         { "op": "set", "path": "attack.knockback", "value": 2 }
       ],

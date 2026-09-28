@@ -96,7 +96,7 @@
       "tags": ["Invocateur"],
       "summary": "Arme de départ de l’Invocateur : le tintement frappe tout autour de toi, mais faiblement ; tes âmes frappent 10 % plus vite.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 6 },
+        { "op": "set", "path": "attack.damage", "value": 7 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 360 },

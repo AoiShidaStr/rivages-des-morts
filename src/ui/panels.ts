@@ -986,7 +986,7 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, dungeon: Dunge
   slider.addEventListener('input', () => set(Number(slider.value)));
 
   const update = () => {
-    const d = difficultyFor(data, level);
+    const d = difficultyFor(data, level, 1, dungeon.strength);
     const r = rewardsFor(data, level);
     const curses = activeCurses(data, level);
     const next = nextCurse(data, level);

@@ -55,6 +55,19 @@ export class Bot {
     };
     if (p.dead) return input;
 
+    // Fil de Jōren : tiré par la Jorōgumo (qui ne tire que le premier héros), on esquive derrière une souche
+    // pour que le fil s'y accroche.
+    const puller = p === w.player ? w.enemies.find((e) => e.boss && peek(e).state?.kind === 'pull') : undefined;
+    const pullState = puller && peek(puller).state;
+    if (puller && pullState && w.stumps.length && this.notices(pullState)) {
+      const stump = w.stumps.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b));
+      const spot = add(stump.pos, scale(normalize(sub(stump.pos, puller.pos)), stump.radius + p.radius + 0.5));
+      input.move = normalize(sub(spot, p.pos));
+      input.aim = add(p.pos, input.move);
+      if (p.dodgeCooldown <= 0) input.dodgePressed = true;
+      return input;
+    }
+
     // Un allié à terre passe avant tout, s'il n'y a pas de coup à éviter : on va le relever.
     const threats = this.threats();
     const downed = w.players.find((h) => h !== p && h.dead);
@@ -74,7 +87,10 @@ export class Bot {
     }
     const near = (r: number, from = p.pos) => foes.filter((e) => distance(e.pos, from) - e.radius <= r);
     const kodama = foes.find((e) => e.kind === 'kodama' && distance(e.pos, p.pos) < 9);
-    const target = kodama ?? foes.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b));
+    // Un kappa qu'on ne peut pas encore frapper dans le dos attend son tour, s'il y a d'autres yokai à frapper.
+    const exposed = (e: Enemy) => !e.kind.startsWith('kappa') || ['stunned', 'recover'].includes(peek(e).state?.kind ?? '');
+    const pool = foes.some(exposed) ? foes.filter(exposed) : foes;
+    const target = kodama ?? pool.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b));
     const gap = distance(p.pos, target.pos) - target.radius - p.radius;
     const toTarget = normalize(sub(target.pos, p.pos));
     input.aim = { ...target.pos };
@@ -157,8 +173,15 @@ export class Bot {
       if (gap <= range) input.attackHeld = true;
       return input;
     }
-    // Un kappa se prend de dos : on le contourne tant qu'il n'est pas sonné.
-    if (target.kind.startsWith('kappa') && peek(target).state?.kind !== 'stunned') {
+    // Un kappa se prend de dos. Il pivote plus vite qu'on ne le contourne : on reste en face pour provoquer sa charge,
+    // on l'évite (plus haut), puis on passe dans son dos pendant qu'il récupère.
+    const kappaState = peek(target).state?.kind;
+    if (target.kind.startsWith('kappa') && kappaState !== 'stunned' && kappaState !== 'recover') {
+      if (gap < 3) input.move = normalize(sub(p.pos, target.pos));
+      input.aim = { ...target.pos };
+      return input;
+    }
+    if (target.kind.startsWith('kappa') && kappaState === 'recover') {
       const behind = add(target.pos, scale(target.facing, -(target.radius + p.radius + 0.4)));
       if (distance(p.pos, behind) > 0.5) {
         const side = vec(-target.facing.z, target.facing.x);

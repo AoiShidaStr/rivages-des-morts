@@ -64,6 +64,8 @@ export interface Condition {
 }
 
 export interface Effect {
+  /** L'effet ne s'applique que si ces conditions sont remplies (l'arme de la classe du héros, par exemple). */
+  if?: Condition[];
   set?: string;
   unset?: string;
   add?: [string, number];
@@ -390,6 +392,7 @@ export class Progress {
 
   private applyOne(e: Effect, actions: Action[]): void {
     const { catalog, state } = this;
+    if (!this.check(e.if)) return;
     if (e.set) state.flags[e.set] = 1;
     if (e.unset) delete state.flags[e.unset];
     if (e.add) state.flags[e.add[0]] = this.flag(e.add[0]) + e.add[1];
