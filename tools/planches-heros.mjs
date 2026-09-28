@@ -3,8 +3,9 @@
 // (<race>-<classe>/profil/<animation>/planche.jpg), au moins la course.
 //
 // Chaque planche Nano Banana devient une posture du jeu. Le nombre d'images est lu sur la planche : Nano Banana
-// n'en dessine pas toujours autant que demandé.
-import { access, readdir } from 'node:fs/promises';
+// n'en dessine pas toujours autant que demandé. Un options.json à côté d'une planche ajoute des réglages de
+// tools/planches.json pour elle seule, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
+import { access, readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 /** Posture(s) du jeu tirées de chaque animation, avec la durée de chaque image (ms). */
@@ -42,7 +43,9 @@ export async function heroPlanches(sourceDir) {
 
     const animations = [];
     for (const [anim, source] of Object.entries(sources)) {
-      if (source) for (const a of ANIMATIONS[anim]) animations.push({ source, ...a });
+      if (!source) continue;
+      const options = JSON.parse((await readFile(path.join(sourceDir, path.dirname(source), 'options.json'), 'utf8').catch(() => null)) ?? '{}');
+      for (const a of ANIMATIONS[anim]) animations.push({ source, ...options, ...a });
     }
     // Sans attente, le héros se tient immobile : pose de repos de la planche de poses clés, sinon première image de l'attaque.
     if (!sources.attente) {
