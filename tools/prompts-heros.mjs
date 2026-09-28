@@ -125,22 +125,99 @@ export function facePrompt(cls) {
   ].join('\n');
 }
 
-/** Planche d'animation complète, l'image jointe étant la pose de départ (pose.png). */
+/**
+ * Planche d'animation complète, l'image jointe étant la pose de départ (pose.png). Nano Banana a tendance à
+ * recopier la pose jointe dans chaque case : chaque image est donc décrite une par une, avec ce qui doit
+ * bouger, et une liste de « DO NOT ».
+ */
 export function animationPrompt(cls, view, anim) {
   const c = CLASSES[cls];
   const sheets = {
-    attente: { frames: 6, grid: [3, 2], loop: true, motion: 'a calm idle breathing loop: the chest slowly rises and falls, the clothes and hair sway gently, a slight shift of weight, the weapon held as in the attached image' },
-    course: { frames: 8, grid: [4, 2], loop: true, motion: 'a full running cycle on the spot: for each leg the contact, down, passing and up positions, the arms swinging opposite to the legs, the clothes bouncing' },
-    attaque: { frames: 6, grid: [3, 2], loop: false, motion: `an attack. Frames 1 to 3, the wind-up: ${c.windup}. Frames 4 to 6, the strike: ${c.strike}` },
-    garde: { frames: 4, grid: [2, 2], loop: false, motion: `going from the idle stance of the attached image into a guard: the character ${c.guard}` },
-    esquive: { frames: 6, grid: [3, 2], loop: false, motion: `a dodge: the character ${c.dodge}` },
+    attente: {
+      name: 'an idle breathing loop, clearly visible like the idle animation of a fighting game',
+      grid: [3, 2],
+      loop: true,
+      frames: [
+        'neutral: exactly the pose of the attached image.',
+        'breathing in: the chest swells, the shoulders and head rise, the hair and cloth start to lift.',
+        'top of the breath: the shoulders and head at their HIGHEST, the chest fully expanded, the weapon raised slightly with the body, the knees straight.',
+        'breathing out: the shoulders drop, the knees start to bend, the hair and cloth swing the other way.',
+        'bottom of the breath: the shoulders and head at their LOWEST, the knees slightly bent, the head dipped a little, the weapon lowered slightly.',
+        'rising again, halfway between frame 5 and frame 1.',
+      ],
+      moves: 'Between frame 3 and frame 5, the top of the head moves down by about a quarter of the head height; the shoulders, hands, weapon, hair and cloth move with it. Put the moving parts at visibly different positions in each frame.',
+    },
+    course: {
+      name: 'a running cycle on the spot',
+      grid: [4, 2],
+      loop: true,
+      frames: [
+        'contact: the right leg reaches forward and the heel touches the ground, the left leg stretched behind, the left arm forward.',
+        'down: the right leg bends under the weight, the body at its lowest.',
+        'passing: the left leg swings forward past the right leg, the body rising.',
+        'up: pushing off the right foot, the body at its highest, both feet almost off the ground.',
+        'contact: the left leg reaches forward and the heel touches the ground, the right leg stretched behind, the right arm forward.',
+        'down: the left leg bends under the weight, the body at its lowest.',
+        'passing: the right leg swings forward past the left leg, the body rising.',
+        'up: pushing off the left foot, the body at its highest, both feet almost off the ground.',
+      ],
+      moves: 'The legs and arms are in a different position in every frame, the arms swinging opposite to the legs; the hair and cloth bounce with each step.',
+    },
+    attaque: {
+      name: 'an attack',
+      grid: [3, 2],
+      loop: false,
+      frames: [
+        'start: the pose of the attached image, the weight shifting back.',
+        `wind-up, halfway: ${c.windup}, halfway there.`,
+        `wind-up at its peak: ${c.windup}, fully, the body coiled like a spring.`,
+        `strike, the fastest moment: ${c.strike}, halfway there.`,
+        `strike at full extension: ${c.strike}.`,
+        'follow-through: the body recovers balance and starts to return toward the starting pose.',
+      ],
+      moves: 'The weapon and the arms are at a clearly different place in every frame, following one continuous path.',
+    },
+    garde: {
+      name: 'going into a guard',
+      grid: [2, 2],
+      loop: false,
+      frames: [
+        'start: the pose of the attached image.',
+        `starting to move: the character ${c.guard}, one third of the way.`,
+        'almost in guard, two thirds of the way.',
+        `full guard, braced and still: the character ${c.guard}.`,
+      ],
+      moves: 'The weapon, the arms and the stance change a little more in every frame.',
+    },
+    esquive: {
+      name: `a dodge: the character ${c.dodge}`,
+      grid: [3, 2],
+      loop: false,
+      frames: [
+        'anticipation: the character crouches slightly, loading the weight.',
+        'push-off: the dodge begins, the body launching.',
+        'mid-dodge: the body at full stretch, the fastest moment.',
+        'end of the movement: still in motion, about to land.',
+        'landing: the knees bend to absorb the impact.',
+        'recovery: back on balance, rising toward the starting pose.',
+      ],
+      moves: 'The body is at a clearly different place and shape in every frame.',
+    },
   };
   const s = sheets[anim];
   const facing = VIEWS[view].facing;
+  const count = s.frames.length;
   return [
-    `The attached image shows our game hero ${facing}. Draw a sprite animation sheet of this exact character: same face, body, outfit, colors, weapon and proportions, nothing added or removed, every frame ${facing}, exactly like the attached image.`,
-    `The animation: ${s.motion}.`,
-    `${s.frames} frames on a grid of ${s.grid[0]} columns and ${s.grid[1]} rows, read left to right, then top to bottom. Consecutive frames change only a little, like the in-between frames of a hand-drawn animation, so the motion is smooth when played at 10 frames per second.${s.loop ? ' The last frame leads smoothly back to the first: it is a seamless loop.' : ''}`,
+    `The attached image shows our game hero ${facing}. Draw a sprite animation sheet of this exact character performing ${s.name}: same face, body, outfit, colors, weapon and proportions, every frame ${facing}, exactly like the attached image.`,
+    `${count} frames on a grid of ${s.grid[0]} columns and ${s.grid[1]} rows, read left to right, then top to bottom:`,
+    ...s.frames.map((frame, i) => `Frame ${i + 1}, ${frame}`),
+    s.moves,
+    s.loop ? `It is a seamless loop: frame ${count} leads smoothly back to frame 1.` : 'It plays once, from frame 1 to the last frame.',
+    'DO NOT draw the same pose twice: every frame must be clearly different from the frames next to it, even if the motion looks exaggerated.',
+    'DO NOT simply copy the attached image into every frame.',
+    'DO NOT change the camera angle, the facing direction, the design, the colors or the weapon from one frame to the next.',
+    'DO NOT move the character across the sheet: each frame stays centered in its own cell.',
+    'DO NOT add anything that is not the character: no effects, no props, no ground, no text, no numbers, no frame labels, no grid lines.',
     style('frame'),
   ].join('\n');
 }
