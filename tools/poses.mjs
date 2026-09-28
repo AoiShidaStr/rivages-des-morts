@@ -1,4 +1,4 @@
-// Découpe des planches de poses clés (Nano Banana 2) en images séparées, prêtes pour Kling (voir coupe-poses.mjs).
+// Découpe des planches de poses clés (Nano Banana 2) en images séparées, à joindre aux prompts des animations (voir coupe-poses.mjs).
 //
 // Usage : npm run poses -- <planche ou dossier>...
 //         --grille 3x2    colonnes × lignes, si la détection automatique se trompe (figures qui se touchent)

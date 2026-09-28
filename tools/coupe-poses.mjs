@@ -1,9 +1,8 @@
-// Découpe d'une planche de poses clés (Nano Banana 2) en images séparées : partagé par `npm run poses`
+// Découpe d'une planche de poses clés (Nano Banana 2) en images séparées : partagée par `npm run poses`
 // et `npm run kit-heros`.
 //
 // Chaque pose est posée seule au centre d'une image carrée, sur le gris du fond de la planche. Toutes les poses
-// d'une planche gardent la même échelle, les pieds sur la même ligne et le corps sur le même axe : prises
-// comme image de début et image de fin d'une vidéo, elles ne font pas sauter le personnage.
+// d'une planche gardent la même échelle, les pieds sur la même ligne et le corps sur le même axe.
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
