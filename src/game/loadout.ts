@@ -15,13 +15,39 @@ export interface ConfigEffect {
   value: unknown;
 }
 
+/** Condition d'un effet d'objet : la classe du héros, sa race, son niveau (toutes les clés présentes doivent tenir). */
+export interface ItemCondition {
+  classes?: string[];
+  races?: string[];
+  minLevel?: number;
+}
+
+/** Effet d'objet qui ne vaut que sous condition : un objet hybride donne une chose au Guerrier, une autre au reste. */
+export interface ConditionalEffect {
+  if: ItemCondition;
+  /** Ce que fait l'effet, en une ligne (« Guerrier : +10 % de rage »). */
+  summary: string;
+  bonus?: Bonus;
+  effects?: ConfigEffect[];
+}
+
 export interface ItemDef {
   name: string;
   slot?: Slot;
   rarity: string;
+  /** Tags de classe (« Guerrier », « Tous ») : ils comptent pour les paliers de classe. */
   tags?: string[];
+  /**
+   * Classes qui peuvent le porter (identifiants de skills.json). Absent : une arme se manie par la classe de ses tags,
+   * toute autre pièce va à tout le monde.
+   */
+  classes?: string[];
+  /** Races qui peuvent le porter ; absent : toutes. */
+  races?: string[];
   bonus?: Bonus;
   effects?: ConfigEffect[];
+  /** Effets sous condition (classe, race, niveau). Les effets de combat (sous 30 % de PV…) passent par les perks. */
+  conditional?: ConditionalEffect[];
   /** Résumé lisible des effets (armes, reliques). */
   summary?: string;
   /** Passifs débloqués à certains niveaux de forge (armes). */
@@ -87,6 +113,8 @@ export interface ClassDef {
   /** Invocateur : les compagnons au choix. */
   companion?: CompanionDef;
   actives: { key: string; name: string; description: string }[];
+  /** Passifs de la classe (Dernier souffle du Guerrier), affichés avec les compétences. */
+  passives?: { name: string; description: string }[];
   tag: { name: string; tiers: { count: number; description: string; effects: ConfigEffect[] }[] };
   branches: { id: string; name: string; subtitle: string; lore: string; nodes: SkillNode[] }[];
 }
@@ -141,16 +169,36 @@ export function companionOf(def: CompanionDef, state: Pick<ProgressState, 'compa
 
 const pick = (k: CompanionKind) => ({ damage: k.damage, hp: k.hp, speed: k.speed, rate: k.rate });
 
-/** Une arme ne se manie que par sa classe (son tag, ou « Tous ») ; les autres pièces vont à tout le monde. */
-export function canWield(def: ItemDef, cls: ClassDef): boolean {
-  return def.slot !== 'arme' || !def.tags?.length || def.tags.some((t) => t === cls.tag.name || t === ANY_CLASS);
+/**
+ * Pourquoi ce héros ne peut pas porter cet objet, ou null s'il le peut. Une arme ne se manie que par sa classe (ses
+ * `classes`, sinon ses tags ou « Tous ») ; une pièce réservée (`classes`, `races`) ne va qu'aux héros cités.
+ */
+export function equipBlock(def: ItemDef, hero: Hero, skills: SkillsDef): string | null {
+  const cls = heroClass(skills, hero);
+  if (def.races?.length && !def.races.includes(hero.race)) {
+    return `Réservé ${def.races.length > 1 ? 'aux races' : 'à la race'} ${def.races.map((r) => skills.races[r]?.name ?? r).join(', ')}.`;
+  }
+  const classes = def.classes ?? (def.slot === 'arme' && def.tags?.length && !def.tags.includes(ANY_CLASS) ? undefined : null);
+  if (classes === null) return null;
+  const allowed = classes ? classes.includes(hero.class) : def.tags?.includes(cls.tag.name);
+  if (allowed) return null;
+  const names = classes ? classes.map((c) => skills.classes[c]?.name ?? c).join(', ') : def.tags?.join(', ');
+  return def.slot === 'arme' ? `Arme de ${names} : un ${cls.name} ne sait pas la manier.` : `Réservé : ${names}.`;
 }
 
-/** Arme prise en changeant de classe : la plus forgée de celles qu'on possède pour elle, sinon son arme de départ. */
-export function classWeapon(items: Record<string, ItemDef>, state: ProgressState, cls: ClassDef): string {
-  const owned = state.items.filter((id) => items[id]?.slot === 'arme' && canWield(items[id], cls));
+/** Vrai si l'effet sous condition vaut pour ce héros à ce niveau. */
+export function conditionMet(cond: ItemCondition, hero: Hero, level: number): boolean {
+  if (cond.classes && !cond.classes.includes(hero.class)) return false;
+  if (cond.races && !cond.races.includes(hero.race)) return false;
+  if (cond.minLevel !== undefined && level < cond.minLevel) return false;
+  return true;
+}
+
+/** Arme prise en changeant de race ou de classe : la plus forgée de celles qu'on possède pour lui, sinon son arme de départ. */
+export function classWeapon(items: Record<string, ItemDef>, state: ProgressState, hero: Hero, skills: SkillsDef): string {
+  const owned = state.items.filter((id) => items[id]?.slot === 'arme' && !equipBlock(items[id], hero, skills));
   owned.sort((a, b) => itemLevel(state, b) - itemLevel(state, a));
-  return owned[0] ?? cls.weapon;
+  return owned[0] ?? heroClass(skills, hero).weapon;
 }
 
 /** Niveau de forge d'un objet (1 tant qu'il n'a pas été amélioré). */
@@ -212,12 +260,16 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
 
   for (const id of Object.values(state.equipped)) {
     const item = id ? data.items[id] : undefined;
-    if (!id || !item || !canWield(item, cls)) continue;
+    if (!id || !item || equipBlock(item, state.hero, data.skills)) continue;
     const upgradable = isUpgradable(rules, item);
     const lvl = itemLevel(state, id);
-    const itemBonus = upgradable ? scaledBonus(rules, item.bonus, lvl) : (item.bonus ?? {});
-    for (const [key, value] of Object.entries(itemBonus) as [BonusKind, number][]) bonus[key] += value;
-    for (const effect of item.effects ?? []) applyEffect(config, effect);
+    const scaled = (b: Bonus | undefined) => (upgradable ? scaledBonus(rules, b, lvl) : (b ?? {}));
+    const active = (item.conditional ?? []).filter((c) => conditionMet(c.if, state.hero, level));
+    for (const b of [item.bonus, ...active.map((c) => c.bonus)]) {
+      for (const [key, value] of Object.entries(scaled(b)) as [BonusKind, number][]) bonus[key] += value;
+    }
+    for (const effect of [...(item.effects ?? []), ...active.flatMap((c) => c.effects ?? [])]) applyEffect(config, effect);
+
     // Paliers de forge : « Âme liée » donne le tag « Tous », « Forgé par Tetsu » fait compter l'objet double.
     const reached = upgradable ? reachedPaliers(rules, item, lvl) : [];
     paliers.push(...reached);

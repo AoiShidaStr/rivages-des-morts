@@ -190,7 +190,14 @@
       "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
       "effects": [
         { "op": "mul", "path": "maxHp", "value": 1.4 },
-        { "op": "set", "path": "block.reduction", "value": 0.9 }
+        { "op": "set", "path": "block.reduction", "value": 0.9 },
+        { "op": "set", "path": "perks.lastStand", "value": { "threshold": 0.3, "damage": 0.3, "lifesteal": 0.08 } }
+      ],
+      "passives": [
+        {
+          "name": "Dernier souffle",
+          "description": "Sous 30 % de tes PV, tu frappes 30 % plus fort et 8 % des dégâts que tu infliges te soignent. Rester bas est un risque qui paie."
+        }
       ],
       "actives": [
         { "key": "Clic droit", "name": "Blocage", "description": "Arrête 90 % d'un coup de face et remplit la rage." },
@@ -691,7 +698,7 @@
       "playstyle": "Bouclier levé, tu encaisses et tu soignes tes alliés mieux que toi-même : ménage ta garde.",
       "kit": "paladin",
       "weapon": "naginata-temple",
-      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 85 % d'un coup tant que sa garde tient (player.json, paladin.guard), et les alliés qu'il relève ne l'affaiblissent pas. Il ne reçoit que la moitié de ses propres soins (paladin.selfHeal) : c'est un soutien, pas un solitaire invincible.",
+      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 85 % d'un coup tant que sa garde tient (player.json, paladin.guard), et les alliés qu'il relève ne l'affaiblissent pas. La part de ses propres soins qu'il reçoit dépend de la taille de l'équipe (paladin.selfHeal : seul, deux, trois héros) : aux trois quarts en solo, où il n'a personne d'autre à soigner, à moitié à trois, où il soutient les autres.",
       "effects": [
         { "op": "set", "path": "kit", "value": "paladin" },
         { "op": "set", "path": "block.reduction", "value": 0.85 },
@@ -706,7 +713,7 @@
           "name": "Bouclier levé",
           "description": "Maintiens pour arrêter 85 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
         },
-        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et soigne chaque seconde tes alliés proches, âmes comprises (3 PV avec une arme de niveau 1, plus avec la forge), et moitié moins toi-même." },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et soigne chaque seconde tes alliés proches, âmes comprises (3 PV avec une arme de niveau 1, plus avec la forge). Toi-même, aux trois quarts en solo, un peu moins à deux, à moitié à trois." },
         { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
         {
           "key": "R",
@@ -719,7 +726,7 @@
         "tiers": [
           {
             "count": 2,
-            "description": "Chaque coup bloqué rend 3 PV à tes alliés proches, âmes comprises, et moitié moins à toi.",
+            "description": "Chaque coup bloqué rend 3 PV à tes alliés proches, âmes comprises, et à toi (moins en coop).",
             "effects": [{ "op": "set", "path": "perks.shieldHeal", "value": { "amount": 3, "radius": 3 } }]
           },
           {

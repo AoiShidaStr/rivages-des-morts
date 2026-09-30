@@ -486,7 +486,7 @@ export class App {
         content.skills,
         content.items,
         (hero) => {
-          const weapon = classWeapon(content.items, progress.state, heroClass(content.skills, hero));
+          const weapon = classWeapon(content.items, progress.state, hero, content.skills);
           progress.changeHero(hero, weapon);
           this.setHero();
           this.screens.toast(`Une autre vie te revient : ${heroLabel(content.skills, hero)}. Tes points de compétence te sont rendus.`, 'quest');

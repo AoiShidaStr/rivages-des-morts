@@ -44,14 +44,35 @@ Ce que ça montre :
 - **Guerrier** : proche de sa cible (82 % puis 69 % pour 75 %).
 - **Races** : le Hanyō est nettement au-dessus (sa transformation), surtout avec le Rôdeur.
 
+## Après la 0.1.0 (30 septembre 2026)
+
+Banc de DPS (part de la Lame, cible entre parenthèses) :
+
+| Classe | Niveau 30 | Niveau 50 |
+|---|---|---|
+| Guerrier | 82 % (75 %) | 69 % (75 %) |
+| Paladin | 61 % (60 %) | 52 % (60 %) |
+
+Victoires du bot au niveau 1 (donjon des Rizières, niveau 1, 24 descentes par combinaison ; avant → après) :
+
+| Guerrier | Invocateur | Lame | Paladin | Rôdeur |
+|---|---|---|---|---|
+| 74 → 88 % | 74 → 77 % | 88 → 90 % | 83 → 87 % | 75 → 71 % |
+
+À retenir :
+
+- Aux niveaux 30 et 50 avec tout l'équipement, presque toutes les classes gagnent à 100 % : le donjon à ton niveau ne départage plus les classes. C'est le chantier « scaling des ennemis » (0.2.0).
+- Au niveau 50, la Lame prend de l'avance sur le Guerrier et le Paladin : le palier de forge « Âme liée » donne à toutes ses pièces le tag « Tous ». Or la Lame, le Paladin et le Rôdeur n'ont presque aucune pièce d'armure à leur tag, contrairement au Guerrier. Les objets de classe de la 0.3.0 corrigeront cette asymétrie.
+- Le Rôdeur est faible au début (71 %) mais écrase tout en fin de partie (3 fois la Lame) : son nerf de la 0.2.0 doit viser la fin de progression.
+
 ## Grille de suivi
 
 | Élément | Problème | Direction | État |
 |---|---|---|---|
-| Guerrier | Risque élevé pour une récompense insuffisante | UP (passif de classe sous 30 % de PV) | À faire (0.1.0) |
-| Guerrier | Sustain insuffisant | UP | À faire (0.1.0) |
-| Paladin | Jeu solo moins intéressant | UP / adaptation | À faire (0.1.0) |
-| Paladin | Soins pensés pour la coop | Soin personnel selon la taille de l'équipe | À faire (0.1.0) |
+| Guerrier | Risque élevé pour une récompense insuffisante | UP (passif de classe sous 30 % de PV) | Fait (0.1.0) : Dernier souffle |
+| Guerrier | Sustain insuffisant | UP | Fait (0.1.0) : vol de vie sous 30 % de PV |
+| Paladin | Jeu solo moins intéressant | UP / adaptation | Fait (0.1.0) : armes avancées plus fortes |
+| Paladin | Soins pensés pour la coop | Soin personnel selon la taille de l'équipe | Fait (0.1.0) : 75 %, 60 %, 50 % |
 | Rôdeur | Tir chargé trop fort : 3 à 3,6 fois la Lame | Nerf ciblé : tir divisé + flèches déviées, cadence du tir plein | À faire (0.2.0) |
 | Invocateur | Trop fort en donjon, faible sur une cible | Nerf des âmes en vague, mesuré en donjon | À faire (0.2.0) |
 | Lame | Écran de fumée trop fort | Nerf ciblé | À faire (0.2.0) |

@@ -1,5 +1,5 @@
 {
-  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du héros (mêmes règles que skills.json : summon.* pour les âmes de l'Invocateur, blade.*, paladin.* et ranger.* pour la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes).",
+  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du héros (mêmes règles que skills.json : summon.* pour les âmes de l'Invocateur, blade.*, paladin.* et ranger.* pour la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks.",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -263,9 +263,9 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "summary": "Coups lourds (13 dégâts) en arc de 170°, presque impossibles à interrompre ; le Marteau lancé fait 50 % de dégâts en plus et étourdit 0,5 s.",
+      "summary": "Coups lourds (17 dégâts) en arc de 170°, presque impossibles à interrompre ; le Marteau lancé fait 50 % de dégâts en plus et étourdit 0,5 s.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 13 },
+        { "op": "set", "path": "attack.damage", "value": 17 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 170 },
@@ -291,7 +291,7 @@
       "tags": ["Paladin"],
       "summary": "Lance et miroir sacré : estoc droit (portée 2,4) ; les yokai baignés par ton Aura sont éblouis et font 30 % de dégâts en moins.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 10 },
+        { "op": "set", "path": "attack.damage", "value": 14 },
         { "op": "set", "path": "attack.range", "value": 2.4 },
         { "op": "set", "path": "attack.shape", "value": "line" },
         { "op": "set", "path": "attack.width", "value": 1.1 },

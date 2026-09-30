@@ -207,6 +207,7 @@ export class Player {
     const missing = 1 - this.hp / this.cfg.maxHp;
     let factor = 1 + (perks.einherjarRage ?? 0) * missing;
     if (perks.lowHpDamage && this.hp < this.cfg.maxHp / 2) factor += perks.lowHpDamage;
+    if (perks.lastStand && this.below(perks.lastStand.threshold)) factor += perks.lastStand.damage;
     if (perks.coupelle && this.coupelleFull) factor += perks.coupelle.bonus;
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
@@ -243,6 +244,9 @@ export class Player {
 
   /** Dégâts infligés par ce héros ou les siens (âmes, flèches, marteau…) : ils remplissent le sang yokai du Hanyō. */
   dealt(amount: number, world: World): void {
+    // Dernier souffle : sous le seuil, les dégâts infligés soignent, goutte à goutte.
+    const stand = this.cfg.perks?.lastStand;
+    if (stand && !this.dead && this.below(stand.threshold)) this.leech(amount * stand.lifesteal, world);
     const blood = this.cfg.perks?.yokaiBlood;
     if (!blood || this.transformed > 0 || this.dead) return;
     this.yokaiGauge += amount;

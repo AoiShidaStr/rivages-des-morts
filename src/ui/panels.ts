@@ -5,7 +5,7 @@ import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgra
 import {
   buildLoadout,
   canLearn,
-  canWield,
+  equipBlock,
   companionOf,
   heroClass,
   heroRace,
@@ -103,7 +103,13 @@ function effectText(def: ItemDef, level = 1): string {
   const upgradable = isUpgradable(rules, def);
   const bonus = upgradable ? scaledBonus(rules, def.bonus, level) : def.bonus;
   const paliers = upgradable ? reachedPaliers(rules, def, level).map((p) => p.name) : [];
-  return [def.summary, bonusText(bonus), ...paliers].filter(Boolean).join(' · ') || 'Aucun effet';
+  const conditional = (def.conditional ?? []).map((c) => c.summary);
+  return [def.summary, bonusText(bonus), ...conditional, ...paliers].filter(Boolean).join(' · ') || 'Aucun effet';
+}
+
+/** « Réservé à la race Hanyō. » : ce qui empêche le héros de porter l'objet, ou null. */
+function blockText(progress: Progress, def: ItemDef): string | null {
+  return equipBlock(def, progress.state.hero, content.skills);
 }
 
 /** « (niv. 12) » pour une pièce que la forge peut améliorer. */
@@ -294,6 +300,7 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled
             ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
           ),
           h('div', { class: 'item-meta' }, slot ? `${content.slots[slot]} · ${effectText(def, itemLevel(state, item))}` : 'Objet de quête'),
+          blockText(ctx.progress, def) ? h('div', { class: 'item-meta note danger' }, blockText(ctx.progress, def)) : null,
           delta.length ? h('div', { class: 'deltas' }, ...delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text))) : null,
         ),
         owned ? h('div') : h('div', { class: 'price' }, discount ? h('s', {}, String(price)) : null, obole(final)),
@@ -724,8 +731,9 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     const choices = ofSlot(current).map((id) => {
       const def = content.items[id];
       const equipped = state.equipped[current] === id;
-      // Une arme d'une autre classe se garde (multiclassage à venir) mais ne se manie pas.
-      if (!canWield(def, cls)) {
+      // Une arme d'une autre classe, une pièce réservée à une autre race, se gardent mais ne se portent pas.
+      const blocked = blockText(progress, def);
+      if (blocked) {
         return h(
           'button',
           { class: 'owned', disabled: true, title: def.description },
@@ -735,7 +743,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
             { class: 'owned-text' },
             h('strong', {}, def.name + levelTag(progress, id)),
             h('small', {}, effectText(def, itemLevel(state, id))),
-            h('small', { class: 'tags' }, `Arme de ${def.tags?.join(' · ')} : un ${cls.name} ne sait pas la manier.`),
+            h('small', { class: 'tags' }, blocked),
           ),
         );
       }
@@ -949,6 +957,7 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       { class: 'passives' },
       ...racePassives(skills, state.hero).map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
       ...cls.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, keyName(a.key)), ` ${a.name}`), h('small', {}, a.description))),
+      ...(cls.passives ?? []).map((p) => h('div', {}, h('strong', {}, h('kbd', {}, 'Passif'), ` ${p.name}`), h('small', {}, p.description))),
     );
 
     host.show(

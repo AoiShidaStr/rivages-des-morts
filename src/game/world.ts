@@ -909,7 +909,8 @@ export class World {
    */
   healAllies(center: Vec2, radius: number, amount: number, healer?: Player): void {
     for (const hero of this.standing) {
-      const share = hero === healer ? hero.cfg.paladin.selfHeal : 1;
+      const shares = hero.cfg.paladin.selfHeal;
+      const share = hero === healer ? (shares[Math.min(this.players.length, shares.length) - 1] ?? 1) : 1;
       if (distance(hero.pos, center) <= radius + hero.radius) hero.heal(amount * share, this);
     }
     for (const summon of this.summons) {

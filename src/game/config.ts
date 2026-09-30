@@ -153,10 +153,13 @@ export interface BladeConfig {
 
 /** Paladin : bouclier levé, aura de soin, marteau lancé, et un allié relevé. */
 export interface PaladinConfig {
-  /** A : zone qui soigne les alliés de `heal` PV par seconde (le Paladin lui-même, d'une part `selfHeal`). */
+  /**
+   * A : zone qui soigne les alliés de `heal` PV par seconde. Le Paladin lui-même n'en reçoit qu'une part, selon la
+   * taille de l'équipe (`selfHeal` : seul, à deux, à trois).
+   */
   aura: { cooldown: number; duration: number; radius: number; heal: number };
   /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
-  selfHeal: number;
+  selfHeal: number[];
   /**
    * Jauge de garde : chaque coup bloqué l'use de `cost` points par % des PV max du héros qu'il aurait retirés
    * (au moins `minCost`). Vide, la garde se brise pendant `breakTime` s. Elle remonte de `regen` par seconde
@@ -204,6 +207,11 @@ export interface Perks {
   frenzyHealOnKill?: number;
   /** Dégâts en plus sous la moitié des PV. */
   lowHpDamage?: number;
+  /**
+   * Dernier souffle (passif du Guerrier, et objets) : sous `threshold` de ses PV, le héros frappe plus fort (`damage`)
+   * et se soigne d'une part des dégâts qu'il inflige (`lifesteal`).
+   */
+  lastStand?: { threshold: number; damage: number; lifesteal: number };
   /** Une fois par descente, survit à un coup fatal. */
   bearSkin?: boolean;
   /** Einherjar : dégâts en plus selon les PV perdus (valeur à 0 PV). */

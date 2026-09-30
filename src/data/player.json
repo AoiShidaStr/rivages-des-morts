@@ -99,7 +99,7 @@
   },
   "paladin": {
     "aura": { "cooldown": 16, "duration": 6, "radius": 3, "heal": 3 },
-    "selfHeal": 0.5,
+    "selfHeal": [0.75, 0.6, 0.5],
     "guard": { "max": 100, "cost": 2.5, "minCost": 12, "regen": 30, "delay": 1, "breakTime": 1.5 },
     "hammer": { "cooldown": 5, "damage": 20, "range": 7, "speed": 15, "radius": 0.6, "knockback": 4 },
     "raise": { "cooldown": 20, "range": 7, "memory": 12 }
