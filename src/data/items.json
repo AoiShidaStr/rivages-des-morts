@@ -46,7 +46,7 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "summary": "Arc très large (200°), lent et lourd (15 dégâts) : un coup lancé va jusqu’au bout. La Frappe fracassante étourdit 0,8 s de plus.",
+      "summary": "Arc très large (200°), lent et lourd (15 dégâts) : un coup lancé va jusqu’au bout. La Frappe fracassante ralentit ensuite de 40 % pendant 2 s.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 15 },
         { "op": "set", "path": "attack.range", "value": 1.7 },
@@ -56,11 +56,11 @@
         { "op": "set", "path": "attack.windup", "value": 0.17 },
         { "op": "set", "path": "attack.recovery", "value": 0.36 },
         { "op": "set", "path": "attack.knockback", "value": 6 },
-        { "op": "add", "path": "smash.stun", "value": 0.8 }
+        { "op": "set", "path": "perks.smashSlow", "value": { "amount": 0.4, "duration": 2 } }
       ],
       "paliers": [
         { "level": 10, "name": "Poids de l'oni", "summary": "Recul des coups +2", "effects": [{ "op": "add", "path": "attack.knockback", "value": 2 }] },
-        { "level": 25, "name": "Fracas", "summary": "Frappe fracassante : étourdit 0,5 s de plus", "effects": [{ "op": "add", "path": "smash.stun", "value": 0.5 }] },
+        { "level": 25, "name": "Fracas", "summary": "Frappe fracassante : ralentit 1 s de plus", "effects": [{ "op": "add", "path": "perks.smashSlow.duration", "value": 1 }] },
         { "level": 50, "name": "Colère de l'oni", "summary": "Frappe fracassante : +50 % de dégâts", "effects": [{ "op": "mul", "path": "smash.damage", "value": 1.5 }] }
       ],
       "description": "Une massue de fer cloutée, arrachée à un kappa qui l'avait volée à un oni. Personne n'a osé la réclamer."
@@ -118,7 +118,7 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Invocateur"],
-      "summary": "Grand coup d’éventail (200°, portée 2,2). Les coups de tes âmes collent l’ennemi dans la soie : étourdi 0,5 s.",
+      "summary": "Grand coup d’éventail (200°, portée 2,2). Les coups de tes âmes collent l’ennemi dans la soie : ralenti de 40 % pendant 1 s.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 7 },
         { "op": "set", "path": "attack.range", "value": 2.2 },
@@ -128,10 +128,10 @@
         { "op": "set", "path": "attack.windup", "value": 0.08 },
         { "op": "set", "path": "attack.recovery", "value": 0.26 },
         { "op": "set", "path": "attack.knockback", "value": 3 },
-        { "op": "set", "path": "perks.summonStun", "value": 0.5 }
+        { "op": "set", "path": "perks.summonStun", "value": 1 }
       ],
       "paliers": [
-        { "level": 10, "name": "Fil tendu", "summary": "Étourdissement des âmes +0,3 s", "effects": [{ "op": "add", "path": "perks.summonStun", "value": 0.3 }] },
+        { "level": 10, "name": "Fil tendu", "summary": "Ralentissement des âmes +0,6 s", "effects": [{ "op": "add", "path": "perks.summonStun", "value": 0.6 }] },
         { "level": 25, "name": "Toile des âmes", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
         { "level": 50, "name": "Dame des rizières", "summary": "Tes âmes font 25 % de dégâts en plus", "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.25 }] }
       ],
@@ -180,7 +180,7 @@
       ],
       "paliers": [
         { "level": 10, "name": "Marteau lesté", "summary": "Marteau lancé : +25 % de dégâts", "effects": [{ "op": "mul", "path": "paladin.hammer.damage", "value": 1.25 }] },
-        { "level": 25, "name": "Marteau du juge", "summary": "Le Marteau lancé étourdit 0,6 s", "effects": [{ "op": "set", "path": "perks.hammerStun", "value": 0.6 }] },
+        { "level": 25, "name": "Marteau du juge", "summary": "Le Marteau lancé ralentit de 40 % pendant 1,2 s", "effects": [{ "op": "set", "path": "perks.hammerStun", "value": 1.2 }] },
         { "level": 50, "name": "Bouclier du sanctuaire", "summary": "Dégâts subis −10 %", "effects": [{ "op": "mul", "path": "damageTakenFactor", "value": 0.9 }] }
       ],
       "description": "La naginata d'un moine guerrier et un petit bouclier rond frappé du soleil du temple. Le marteau pend à la ceinture, pour les kappa têtus."
@@ -263,7 +263,7 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "summary": "Coups lourds (17 dégâts) en arc de 170°, presque impossibles à interrompre ; le Marteau lancé fait 50 % de dégâts en plus et étourdit 0,5 s.",
+      "summary": "Coups lourds (17 dégâts) en arc de 170°, presque impossibles à interrompre ; le Marteau lancé fait 50 % de dégâts en plus et ralentit de 40 % pendant 1 s.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 17 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
@@ -275,11 +275,11 @@
         { "op": "set", "path": "attack.knockback", "value": 6 },
         { "op": "set", "path": "attack.lunge", "value": 0.25 },
         { "op": "mul", "path": "paladin.hammer.damage", "value": 1.5 },
-        { "op": "set", "path": "perks.hammerStun", "value": 0.5 }
+        { "op": "set", "path": "perks.hammerStun", "value": 1 }
       ],
       "paliers": [
         { "level": 10, "name": "Fer lesté", "summary": "Recul des coups +2", "effects": [{ "op": "add", "path": "attack.knockback", "value": 2 }] },
-        { "level": 25, "name": "Glas", "summary": "Le Marteau étourdit 0,4 s de plus", "effects": [{ "op": "add", "path": "perks.hammerStun", "value": 0.4 }] },
+        { "level": 25, "name": "Glas", "summary": "Le Marteau ralentit 0,8 s de plus", "effects": [{ "op": "add", "path": "perks.hammerStun", "value": 0.8 }] },
         { "level": 50, "name": "Cloche du temple", "summary": "Marteau lancé : revient 1,5 s plus tôt", "effects": [{ "op": "add", "path": "paladin.hammer.cooldown", "value": -1.5 }] }
       ],
       "description": "Une barre de fer cloutée et une cloche de temple fendue en guise de bouclier. Chaque coup sonne comme l'appel à la prière."
@@ -338,7 +338,7 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Rôdeur"],
-      "summary": "Corde de soie d'araignée : un tir chargé plein ouvre un filet sur le premier ennemi touché.",
+      "summary": "Corde de soie d'araignée : un tir chargé plein ouvre une toile qui ralentit de 60 % pendant 2,5 s les ennemis autour de sa première proie.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 11 },
@@ -347,11 +347,11 @@
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
         { "op": "set", "path": "attack.lunge", "value": 0 },
-        { "op": "set", "path": "perks.chargedNet", "value": true }
+        { "op": "set", "path": "perks.chargedNet", "value": { "amount": 0.6, "duration": 2.5 } }
       ],
       "paliers": [
         { "level": 10, "name": "Soie tendue", "summary": "Tir chargé : se bande 15 % plus vite", "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.85 }] },
-        { "level": 25, "name": "Cocon", "summary": "Le filet immobilise 0,5 s de plus", "effects": [{ "op": "add", "path": "ranger.net.stun", "value": 0.5 }] },
+        { "level": 25, "name": "Cocon", "summary": "La toile ralentit 1 s de plus", "effects": [{ "op": "add", "path": "perks.chargedNet.duration", "value": 1 }] },
         { "level": 50, "name": "Toile du Yomi", "summary": "Marque du chasseur : +10 % de dégâts", "effects": [{ "op": "add", "path": "ranger.huntMark.bonus", "value": 0.1 }] }
       ],
       "description": "Une corde tressée de soie de jorōgumo sur un arc de bois noir. Elle colle encore un peu aux doigts."
@@ -586,8 +586,8 @@
       "slot": "relique",
       "rarity": "épique",
       "tags": ["Tous"],
-      "summary": "Chaque esquive laisse un fil : le premier ennemi qui le touche est immobilisé 2 s.",
-      "effects": [{ "op": "set", "path": "perks.joren", "value": { "stun": 2, "life": 8, "radius": 1 } }],
+      "summary": "Chaque esquive laisse un fil : le premier ennemi qui le touche est ralenti de 60 % pendant 3 s.",
+      "effects": [{ "op": "set", "path": "perks.joren", "value": { "stun": 3, "life": 8, "radius": 1 } }],
       "description": "Une bobine de soie argentée qui ne s'use jamais. Un fil flotte toujours dans l'air, prêt à s'accrocher."
     },
     "magatama-yasakani": {
@@ -711,7 +711,7 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Rôdeur"],
-      "summary": "Flèches (8 dégâts), portée 10,5 m ; un tir chargé plein appelle la foudre sur sa première proie : 12 dégâts autour, étourdit 0,3 s (au plus toutes les 2 s).",
+      "summary": "Flèches (8 dégâts), portée 10,5 m ; un tir chargé plein appelle la foudre sur sa première proie : 12 dégâts autour, ralentit de moitié 0,6 s (au plus toutes les 2 s).",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 8 },
         { "op": "set", "path": "attack.range", "value": 10.5 },
@@ -720,12 +720,12 @@
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
         { "op": "set", "path": "attack.lunge", "value": 0 },
-        { "op": "set", "path": "perks.chargedBolt", "value": { "damage": 12, "radius": 2, "stun": 0.3, "cooldown": 2 } }
+        { "op": "set", "path": "perks.chargedBolt", "value": { "damage": 12, "radius": 2, "stun": 0.6, "cooldown": 2 } }
       ],
       "paliers": [
         { "level": 10, "name": "Nuée d'orage", "summary": "Foudre : +0,5 m de rayon", "effects": [{ "op": "add", "path": "perks.chargedBolt.radius", "value": 0.5 }] },
         { "level": 25, "name": "Grondement", "summary": "Foudre : +6 dégâts", "effects": [{ "op": "add", "path": "perks.chargedBolt.damage", "value": 6 }] },
-        { "level": 50, "name": "Huit dieux du tonnerre", "summary": "Foudre : étourdit 0,3 s de plus", "effects": [{ "op": "add", "path": "perks.chargedBolt.stun", "value": 0.3 }] }
+        { "level": 50, "name": "Huit dieux du tonnerre", "summary": "Foudre : ralentit 0,6 s de plus", "effects": [{ "op": "add", "path": "perks.chargedBolt.stun", "value": 0.6 }] }
       ],
       "description": "Un arc noir tendu d'un nerf de foudre, arraché à l'un des huit dieux du tonnerre nés du corps d'Izanami. Il crépite quand on le bande."
     },
@@ -968,7 +968,7 @@
       "name": "Sōhei",
       "bonuses": [
         { "count": 2, "summary": "La garde remonte 25 % plus vite", "effects": [{ "op": "mul", "path": "paladin.guard.regen", "value": 1.25 }] },
-        { "count": 4, "summary": "Quand ta garde se brise, une onde de lumière repousse et étourdit 1 s les yokai autour de toi", "effects": [{ "op": "set", "path": "perks.guardBreakNova", "value": { "radius": 3, "stun": 1, "knockback": 7 } }] }
+        { "count": 4, "summary": "Quand ta garde se brise, une onde de lumière repousse les yokai autour de toi et les ralentit de moitié 2 s", "effects": [{ "op": "set", "path": "perks.guardBreakNova", "value": { "radius": 3, "stun": 2, "knockback": 7 } }] }
       ]
     },
     "eclaireur": {

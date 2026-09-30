@@ -201,7 +201,7 @@
       ],
       "actives": [
         { "key": "Clic droit", "name": "Blocage", "description": "Arrête 90 % d'un coup de face et remplit la rage." },
-        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit. Si elle touche, elle te rend 4 % de tes PV." },
+        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV." },
         { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
         { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
       ],
@@ -293,8 +293,8 @@
             {
               "id": "heracles-3",
               "name": "Chute du géant",
-              "description": "Le Bond étourdit les ennemis pendant 1,5 s à l'atterrissage.",
-              "effects": [{ "op": "set", "path": "bond.stun", "value": 1.5 }]
+              "description": "Le Bond ralentit de moitié les ennemis pendant 2,5 s à l'atterrissage.",
+              "effects": [{ "op": "set", "path": "bond.slow", "value": 2.5 }]
             },
             {
               "id": "heracles-4",
@@ -356,7 +356,7 @@
           "kappa": { "name": "Kappa", "description": "Lent et très robuste : il encaisse les coups à ta place.", "damage": 0.9, "hp": 1.8, "speed": 0.85, "rate": 1 },
           "kodama": { "name": "Kodama", "description": "Esprit d'arbre : chacun de ses coups te rend 2 PV.", "damage": 0.8, "hp": 1, "speed": 1, "rate": 1 },
           "hitodama": { "name": "Feu follet", "description": "Rapide et fragile ; ses flammes font 50 % de dégâts en plus.", "damage": 0.9, "hp": 0.7, "speed": 1.35, "rate": 1 },
-          "oublie": { "name": "Oublié", "description": "Guerrier sans nom : chacun de ses coups étourdit 0,5 s.", "damage": 1, "hp": 1.1, "speed": 1, "rate": 1 },
+          "oublie": { "name": "Oublié", "description": "Guerrier sans nom : chacun de ses coups ralentit de 40 % pendant 1 s.", "damage": 1, "hp": 1.1, "speed": 1, "rate": 1 },
           "kasaObake": { "name": "Kasa-obake", "description": "Ombrelle hantée, vive et équilibrée.", "damage": 1.2, "hp": 1.1, "speed": 1.1, "rate": 1 },
           "araignee": { "name": "Araignée", "description": "Frappe presque deux fois plus souvent, mais fragile.", "damage": 0.7, "hp": 0.7, "speed": 1.3, "rate": 1.7 },
           "shikome": { "name": "Shikome", "description": "Chasseresse des Enfers : rapide et mordante, mais fragile.", "damage": 1.35, "hp": 0.8, "speed": 1.3, "rate": 1 },
@@ -443,7 +443,7 @@
               "id": "seimei-4",
               "name": "Les Douze Shikigami",
               "ultimate": true,
-              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa a deux fois plus de PV et de durée, l'Oublié étourdit.",
+              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa a deux fois plus de PV et de durée, l'Oublié ralentit.",
               "effects": [{ "op": "set", "path": "perks.shikigami", "value": true }]
             }
           ]
@@ -463,8 +463,8 @@
             {
               "id": "orphee-2",
               "name": "Voix des morts",
-              "description": "Le Chœur spectral étourdit 1 s les ennemis proches.",
-              "effects": [{ "op": "set", "path": "perks.choirStun", "value": 1 }]
+              "description": "Le Chœur spectral ralentit de moitié les ennemis proches pendant 2 s.",
+              "effects": [{ "op": "set", "path": "perks.choirStun", "value": 2 }]
             },
             {
               "id": "orphee-3",
@@ -545,7 +545,7 @@
         {
           "key": "E",
           "name": "Écran de fumée",
-          "description": "Tu disparais 2,5 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique. Revient en 12 s."
+          "description": "Tu disparais 2,5 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique. Revient en 15 s."
         },
         {
           "key": "R",
@@ -634,8 +634,8 @@
             {
               "id": "loki-2",
               "name": "Poudre aux yeux",
-              "description": "L'Écran de fumée étourdit 1,2 s les ennemis tout proches.",
-              "effects": [{ "op": "set", "path": "perks.smokeStun", "value": 1.2 }]
+              "description": "L'Écran de fumée ralentit de 60 % les ennemis tout proches pendant 2,4 s.",
+              "effects": [{ "op": "set", "path": "perks.smokeStun", "value": 2.4 }]
             },
             {
               "id": "loki-3",
@@ -647,7 +647,7 @@
               "id": "loki-4",
               "name": "Métamorphe",
               "ultimate": true,
-              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s, jusqu'à 3 s de plus par Écran de fumée.",
+              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s, jusqu'à 6 s d'invisibilité en tout par Écran de fumée.",
               "effects": [{ "op": "set", "path": "perks.smokeKillExtend", "value": 1.5 }]
             }
           ]
@@ -706,6 +706,9 @@
         { "op": "mul", "path": "moveSpeed", "value": 0.95 },
         { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
         { "op": "set", "path": "summon.malus", "value": 0 }
+      ],
+      "passives": [
+        { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 6 % de tes PV rendus." }
       ],
       "actives": [
         {
@@ -776,8 +779,8 @@
               "id": "amaterasu-4",
               "name": "Ama-no-Iwato",
               "ultimate": true,
-              "description": "Tout yokai qui entre dans l'Aura est ébloui : étourdi 1,5 s, une fois par Aura.",
-              "effects": [{ "op": "set", "path": "perks.auraStun", "value": 1.5 }]
+              "description": "Tout yokai qui entre dans l'Aura est ébloui : ralenti de moitié 3 s, une fois par Aura.",
+              "effects": [{ "op": "set", "path": "perks.auraStun", "value": 3 }]
             }
           ]
         },
@@ -809,8 +812,8 @@
               "id": "tyr-4",
               "name": "Gleipnir",
               "ultimate": true,
-              "description": "Un coup bloqué entrave l'attaquant : il est étourdi 1,5 s.",
-              "effects": [{ "op": "set", "path": "perks.gleipnir", "value": 1.5 }]
+              "description": "Un coup bloqué entrave l'attaquant : il est ralenti de moitié 3 s.",
+              "effects": [{ "op": "set", "path": "perks.gleipnir", "value": 3 }]
             }
           ]
         },

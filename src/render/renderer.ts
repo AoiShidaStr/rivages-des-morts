@@ -1223,6 +1223,9 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 3, SPIRIT, 0.4));
         this.addShake(0.4);
         break;
+      case 'slow':
+        this.text(event.pos, 2, 'Ralenti', 'stun', 0.8);
+        break;
       case 'stun':
         if (event.reason === 'wall') this.text(event.pos, 2, 'Sonné !', 'stun');
         else if (event.reason === 'smash' || event.reason === 'bond') this.text(event.pos, 2, 'Étourdi', 'stun');

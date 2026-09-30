@@ -172,6 +172,10 @@
       "webLayInterval": 4
     },
     "ceiling": {
+      "groundTime": 5,
+      "pullsBeforeDrop": 2,
+      "healPerClimb": 0.1,
+      "healTotal": 0.5,
       "height": 3.2,
       "climbTime": 0.7,
       "driftSpeed": 1.5,
@@ -227,7 +231,9 @@
     "boltInterval": 3.4,
     "boltChannel": 0.6,
     "bolt": { "warning": 0.95, "radius": 1.25, "damage": 14, "knockback": 3, "fx": "lightning" },
-    "blinkCooldown": 3.5
+    "blinkCooldown": 5,
+    "blinkDistance": 4,
+    "blinkCharges": 2
   },
   "ikusa": {
     "maxHp": 80,

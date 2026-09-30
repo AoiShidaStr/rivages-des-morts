@@ -177,7 +177,8 @@ export class Hud {
       const p = cfg.paladin;
       fill = player.guardBroken > 0 ? 0 : player.guardLeft / p.guard.max;
       ready = fill >= 1;
-      label = player.guardBroken > 0 ? 'Garde brisée' : 'Garde';
+      const ferveur = Math.round((player.fervor / p.judgement.max) * 100);
+      label = player.guardBroken > 0 ? 'Garde brisée' : ferveur >= 100 ? 'Jugement prêt' : `Garde · Ferveur ${ferveur} %`;
       views = [
         { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },

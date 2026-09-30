@@ -89,6 +89,8 @@ export class Player {
   /** Paladin : jauge de garde, secondes de garde brisée, et secondes depuis le dernier coup bloqué. */
   guardLeft: number;
   guardBroken = 0;
+  /** Paladin : ferveur du Jugement, de 0 à `paladin.judgement.max`. */
+  fervor = 0;
   private guardRest = 0;
   /** Paladin : recharges de l'Aura, du Marteau et de Relever. */
   auraCooldown = 0;
@@ -451,6 +453,12 @@ export class Player {
     return inCone(this.facing, toward, degToRad(this.cfg.block.arcDeg / 2));
   }
 
+  /** Paladin : la ferveur monte, jusqu'au Jugement. */
+  gainFervor(amount: number): void {
+    if (this.cfg.kit !== 'paladin') return;
+    this.fervor = Math.min(this.cfg.paladin.judgement.max, this.fervor + amount);
+  }
+
   /**
    * Un coup a été bloqué. Guerrier : la rage monte. Paladin : le bouclier soigne les alliés proches (tag),
    * renvoie des dégâts (Riposte, Cloche du Grand Rocher) et entrave l'attaquant (Gleipnir). `amount` : la force du
@@ -476,6 +484,8 @@ export class Player {
       return;
     }
     world.emit({ type: 'guard', pos: { ...this.pos }, rage: 0 });
+    const judgement = this.cfg.paladin.judgement;
+    this.gainFervor(judgement.perBlock * (perfect ? 2 : 1));
     // La garde s'use selon la force du coup ; vide, elle se brise.
     const g = this.cfg.paladin.guard;
     this.guardRest = 0;
@@ -494,7 +504,7 @@ export class Player {
       attacker.receiveHit({ amount: perks.riposte * this.damageMultiplier(), from: this.pos, knockback: 4 }, world);
       if (attacker.dead) this.onKill();
     }
-    if (perks.gleipnir && !attacker.dead) attacker.stun(perks.gleipnir, 'daze', world);
+    if (perks.gleipnir && !attacker.dead) attacker.slow(0.5, perks.gleipnir, world);
   }
 
   /**
@@ -680,6 +690,12 @@ export class Player {
       a.swung = true;
       if (ranged) world.loose(a.dir);
       else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
+      // Jugement : la ferveur pleine, le coup libère l'onde sacrée devant le Paladin.
+      const judgement = this.cfg.paladin.judgement;
+      if (this.cfg.kit === 'paladin' && this.fervor >= judgement.max) {
+        this.fervor = 0;
+        world.judgement(add(this.pos, scale(a.dir, judgement.radius * 0.5)));
+      }
     }
     const recoveryStart = time.windup + time.active;
     if (!ranged && a.t >= time.windup && a.t < recoveryStart) {

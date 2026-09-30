@@ -68,8 +68,8 @@ export interface PlayerConfig {
     radius: number;
     knockback: number;
     cooldown: number;
-    /** Étourdissement à l'atterrissage (0 sans le talent d'Héraclès). */
-    stun: number;
+    /** Secondes de ralentissement à l'atterrissage (0 sans le talent d'Héraclès). */
+    slow: number;
   };
   /** R : on frappe plus vite, mais on encaisse plus. */
   frenzy: {
@@ -120,7 +120,9 @@ export interface SummonConfig {
   /** R : les âmes sont renforcées un moment. */
   choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
   /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort et encaisse mieux qu'un feu follet. */
-  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number }>>;
+  /** `range` : l'âme d'un yokai à distance garde son tir, et frappe de là (dégâts × `rangedFactor`). */
+  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number; range?: number }>>;
+  rangedFactor: number;
   /**
    * Compagnon permanent de l'Invocateur (choisi par le joueur) : son yokai, ses multiplicateurs de dégâts, de PV,
    * de vitesse et de cadence, et les secondes avant qu'il ne se reforme. Absent pour les autres classes.
@@ -135,6 +137,7 @@ export interface CompanionStats {
   hp: number;
   speed: number;
   rate: number;
+  range?: number;
 }
 
 /** Lame : frappe vite, marque ses proies et les achève en critiques. */
@@ -146,8 +149,8 @@ export interface BladeConfig {
   /** A : tous les coups sur la cible sont critiques un moment. */
   deathMark: { cooldown: number; duration: number; range: number };
   /** E : nuage de fumée ; le héros disparaît, les yokai attaquent le nuage. */
-  /** `maxExtension` : secondes que Métamorphe peut ajouter, au plus, à un même nuage. */
-  smoke: { cooldown: number; duration: number; radius: number; maxExtension: number };
+  /** `maxHidden` : invisibilité totale d'un nuage, prolongations de Métamorphe comprises. */
+  smoke: { cooldown: number; duration: number; radius: number; maxHidden: number };
   /** R : la Lame bondit d'ennemi en ennemi et frappe chacun. */
   dance: { cooldown: number; targets: number; range: number; damage: number; hop: number };
 }
@@ -161,6 +164,12 @@ export interface PaladinConfig {
   aura: { cooldown: number; duration: number; radius: number; heal: number };
   /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
   selfHeal: number[];
+  /**
+   * Jugement : chaque coup bloqué (`perBlock`, doublé en blocage parfait) et chaque coup d'arme porté (`perHit`)
+   * remplissent la ferveur ; pleine (`max`), le coup d'arme suivant libère une onde sacrée de `radius` m qui fait
+   * `damage` dégâts, ignore les carapaces et rend `heal` des PV max au Paladin.
+   */
+  judgement: { max: number; perBlock: number; perHit: number; radius: number; damage: number; heal: number };
   /**
    * Jauge de garde : chaque coup bloqué l'use de `cost` points par % des PV max du héros qu'il aurait retirés
    * (au moins `minCost`). Vide, la garde se brise pendant `breakTime` s. Elle remonte de `regen` par seconde
@@ -358,7 +367,10 @@ export interface Perks {
   /** Lune pleine : un tir chargé plein étourdit. */
   chargedStun?: number;
   /** Arc de soie : un tir chargé plein ouvre un filet sur le premier ennemi touché. */
-  chargedNet?: boolean;
+  /** Arc de soie : le tir chargé plein s'ouvre en soie qui ralentit (`amount` de la vitesse, `duration` s). */
+  chargedNet?: { amount: number; duration: number };
+  /** Après la Frappe, ralentissement des yokai touchés (objets du Guerrier). */
+  smashSlow?: { amount: number; duration: number };
   /** Carquois divin : un tir chargé plein part en plusieurs flèches. */
   splitShot?: number;
   /** Vent du nord : le Recul laisse un filet là où tu étais. */
@@ -533,6 +545,9 @@ export interface IkazuchiConfig extends EnemyBaseConfig {
   bolt: HazardConfig;
   /** Délai entre deux disparitions, quand le héros s'approche trop. */
   blinkCooldown: number;
+  /** Distance d'un éclair de fuite, et nombre d'éclairs par ikazuchi. */
+  blinkDistance: number;
+  blinkCharges: number;
 }
 
 /**
@@ -631,6 +646,13 @@ export interface JorogumoConfig extends EnemyBaseConfig {
     webLayInterval: number;
   };
   ceiling: {
+    /** Secondes au sol, après une chute, avant de remonter. */
+    groundTime: number;
+    /** Fils lancés sans succès avant de redescendre d'elle-même. */
+    pullsBeforeDrop: number;
+    /** Part des PV max qu'elle peut regagner au plafond : par montée, et sur tout le combat. */
+    healPerClimb: number;
+    healTotal: number;
     height: number;
     climbTime: number;
     driftSpeed: number;
