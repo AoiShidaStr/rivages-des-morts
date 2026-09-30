@@ -76,6 +76,8 @@ export class Player {
   danceCooldown = 0;
   /** Lame : secondes d'invisibilité (Écran de fumée) ; le premier coup porté invisible est une embuscade critique. */
   hidden = 0;
+  /** Métamorphe : secondes d'invisibilité déjà ajoutées à l'Écran de fumée en cours (plafonnées). */
+  smokeExtended = 0;
   private ambushReady = false;
   /** Lame (tag) : coups critiques encore dus après une esquive, et le temps qu'il reste pour les porter. */
   private critWindow = 0;
@@ -103,6 +105,8 @@ export class Player {
    * Le joueur les applique au pas suivant, puis les oublie si le boss ne les renouvelle pas.
    */
   tether: { pull: Vec2; moveFactor: number } | null = null;
+  /** Rôdeur : ralentissement juste après un tir chargé, qui remonte jusqu'à 1 (pleine vitesse). */
+  private shotSlow = 1;
   readonly mass = 1;
   private moving = false;
   private action: Action = { kind: 'free' };
@@ -217,7 +221,7 @@ export class Player {
 
   /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
   private speedFactor(): number {
-    return walkFactor(this.cfg, this.hp, this.transformed);
+    return walkFactor(this.cfg, this.hp, this.transformed) * this.shotSlow;
   }
 
   /** Soin goutte à goutte (âmes de l'Invocateur) : versé par petites gorgées, pour ne pas couvrir l'écran de chiffres. */
@@ -244,7 +248,7 @@ export class Player {
 
   /** Dégâts infligés par ce héros ou les siens (âmes, flèches, marteau…) : ils remplissent le sang yokai du Hanyō. */
   dealt(amount: number, world: World): void {
-    // Dernier souffle : sous le seuil, les dégâts infligés soignent, goutte à goutte.
+    // Au bord du gouffre : sous le seuil, les dégâts infligés soignent, goutte à goutte.
     const stand = this.cfg.perks?.lastStand;
     if (stand && !this.dead && this.below(stand.threshold)) this.leech(amount * stand.lifesteal, world);
     const blood = this.cfg.perks?.yokaiBlood;
@@ -693,6 +697,7 @@ export class Player {
   }
 
   private tickKitCooldowns(dt: number): void {
+    this.shotSlow = Math.min(1, this.shotSlow + dt / Math.max(0.01, this.cfg.ranger.charged.recover));
     const tick = (value: number) => Math.max(0, value - dt);
     this.deathMarkCooldown = tick(this.deathMarkCooldown);
     this.smokeCooldown = tick(this.smokeCooldown);
@@ -725,6 +730,7 @@ export class Player {
       world.smokeScreen();
       this.smokeCooldown = b.smoke.cooldown;
       this.hidden = b.smoke.duration;
+      this.smokeExtended = 0;
       this.ambushReady = true;
     }
     if (input.skillRPressed && this.danceCooldown <= 0 && this.canCancel()) {
@@ -811,13 +817,17 @@ export class Player {
     // Hanyō rôdeur : transformé, l'arc se bande plus vite.
     a.t += dt * (c.perks?.yokaiDraw && this.transformed > 0 ? c.perks.yokaiDraw : 1);
     this.facing = aimDir;
+    const charged = c.ranger.charged;
+    const drawSlow = charged.moveFactor + (charged.fullMoveFactor - charged.moveFactor) * this.drawProgress;
     if (!input.signatureHeld) {
       world.loose(aimDir, this.drawProgress);
       this.action = { kind: 'free' };
+      // Le pas reste lourd juste après le tir, puis revient peu à peu (tickKitCooldowns).
+      this.shotSlow = drawSlow;
       return;
     }
     if (length(input.move) > 0.05) {
-      const speed = c.moveSpeed * slow * this.speedFactor() * c.ranger.charged.moveFactor;
+      const speed = c.moveSpeed * slow * walkFactor(c, this.hp, this.transformed) * drawSlow;
       this.pos = add(this.pos, scale(input.move, speed * dt));
       this.moving = true;
     }

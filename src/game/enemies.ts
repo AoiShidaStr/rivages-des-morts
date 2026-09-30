@@ -72,6 +72,11 @@ export abstract class Enemy {
   readonly marks: Record<MarkKind, number> = { shadow: 0, death: 0, hunt: 0 };
   /** Dégâts reçus en plus sous la Marque du chasseur. */
   huntBonus = 0;
+  /**
+   * Secondes pendant lesquelles filets, fils et soie ne peuvent plus l'immobiliser : la durée de l'immobilisation en
+   * cours, puis un temps de répit (World.immobilize). On ne bloque plus un yokai à l'infini.
+   */
+  bindImmunity = 0;
 
   constructor(
     readonly id: number,
@@ -163,6 +168,7 @@ export abstract class Enemy {
     }
     this.sinceHurt += dt;
     for (const kind of MARK_KINDS) this.marks[kind] = Math.max(0, this.marks[kind] - dt);
+    this.bindImmunity = Math.max(0, this.bindImmunity - dt);
     this.focusTimer -= dt;
     if (this.focusTimer <= 0 || !world.isFoe(this.focus)) {
       this.focus = world.pickFoe(this.pos);

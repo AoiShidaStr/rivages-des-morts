@@ -146,7 +146,8 @@ export interface BladeConfig {
   /** A : tous les coups sur la cible sont critiques un moment. */
   deathMark: { cooldown: number; duration: number; range: number };
   /** E : nuage de fumée ; le héros disparaît, les yokai attaquent le nuage. */
-  smoke: { cooldown: number; duration: number; radius: number };
+  /** `maxExtension` : secondes que Métamorphe peut ajouter, au plus, à un même nuage. */
+  smoke: { cooldown: number; duration: number; radius: number; maxExtension: number };
   /** R : la Lame bondit d'ennemi en ennemi et frappe chacun. */
   dance: { cooldown: number; targets: number; range: number; damage: number; hop: number };
 }
@@ -179,8 +180,19 @@ export interface RangerConfig {
   /**
    * Clic droit maintenu : la flèche se charge, de `minFactor` à `maxFactor` fois les dégâts, selon la charge.
    * Une flèche lâchée aussitôt ne fait presque rien : on ne peut pas mitrailler au clic droit en marchant.
+   * Plus l'arc est bandé, plus on marche lentement (de `moveFactor` à `fullMoveFactor`) ; après le tir, la vitesse
+   * revient en `recover` secondes. L'esquive interrompt le tir.
    */
-  charged: { time: number; minFactor: number; maxFactor: number; moveFactor: number; rangeFactor: number; speedFactor: number };
+  charged: {
+    time: number;
+    minFactor: number;
+    maxFactor: number;
+    moveFactor: number;
+    fullMoveFactor: number;
+    recover: number;
+    rangeFactor: number;
+    speedFactor: number;
+  };
   /** A : flèche qui immobilise les ennemis autour de l'impact. */
   net: { cooldown: number; stun: number; radius: number; range: number };
   /** E : la cible prend plus de dégâts, de toutes les sources ; l'abattre rend `killHeal` des PV max. */
@@ -208,7 +220,7 @@ export interface Perks {
   /** Dégâts en plus sous la moitié des PV. */
   lowHpDamage?: number;
   /**
-   * Dernier souffle (passif du Guerrier, et objets) : sous `threshold` de ses PV, le héros frappe plus fort (`damage`)
+   * Au bord du gouffre (passif du Guerrier, et objets) : sous `threshold` de ses PV, le héros frappe plus fort (`damage`)
    * et se soigne d'une part des dégâts qu'il inflige (`lifesteal`).
    */
   lastStand?: { threshold: number; damage: number; lifesteal: number };

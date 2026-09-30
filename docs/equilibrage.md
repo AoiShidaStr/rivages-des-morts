@@ -65,17 +65,46 @@ Victoires du bot au niveau 1 (donjon des Rizières, niveau 1, 24 descentes par c
 - Au niveau 50, la Lame prend de l'avance sur le Guerrier et le Paladin : le palier de forge « Âme liée » donne à toutes ses pièces le tag « Tous ». Or la Lame, le Paladin et le Rôdeur n'ont presque aucune pièce d'armure à leur tag, contrairement au Guerrier. Les objets de classe de la 0.3.0 corrigeront cette asymétrie.
 - Le Rôdeur est faible au début (71 %) mais écrase tout en fin de partie (3 fois la Lame) : son nerf de la 0.2.0 doit viser la fin de progression.
 
+## Après la 0.2.0 (30 septembre 2026)
+
+Banc de DPS, équipement complet (part de la Lame ; avant la 0.2.0 entre parenthèses) :
+
+| Classe | Niveau 30 | Niveau 50 | Cible |
+|---|---|---|---|
+| Lame | 100 % | 100 % | 100 % |
+| Rôdeur | 105 % (303 %) | 98 % (362 %) | 95 % |
+| Guerrier | 82 % | 69 % | 75 % |
+| Paladin | 62 % | 52 % | 60 % |
+| Invocateur | 45 % | 42 % | 75 % |
+
+Victoires du bot en donjon, équipement complet (niveaux 30 et 50 : donjon au niveau du héros) :
+
+| Classe | Niveau 1 | Niveau 30 | Niveau 50 |
+|---|---|---|---|
+| Guerrier | 89 à 95 % | 98 % | 80 à 85 % |
+| Invocateur | 76 à 93 % | 100 % (72 s, contre 55 s avant) | 96 à 100 % |
+| Lame | 82 à 93 % | 96 % | 95 à 98 % |
+| Paladin | 88 à 89 % | 100 % | 100 % |
+| Rôdeur | 73 à 82 % | 88 % | 71 à 76 % |
+
+Les mesures du niveau 1 varient d'environ 10 points d'un lancement à l'autre : ne pas régler sur un seul lancement.
+
+À retenir :
+
+- **Invocateur** : au banc de DPS (une seule cible, sans âmes à lier), il reste loin de sa cible de 75 %. En donjon, où ses âmes font sa force, il reste le plus rapide. Pour qu'il soit à 75 % contre une seule cible sans devenir trop fort en vague, il faudrait déplacer sa puissance des âmes vers son compagnon ou ses propres coups : c'est une décision de design à prendre.
+- **Niveau 50** : le Guerrier et le Rôdeur décrochent (80 % et 75 % environ, contre 95 à 100 % pour les autres). Piste : les objets de classe de la 0.3.0.
+
 ## Grille de suivi
 
 | Élément | Problème | Direction | État |
 |---|---|---|---|
-| Guerrier | Risque élevé pour une récompense insuffisante | UP (passif de classe sous 30 % de PV) | Fait (0.1.0) : Dernier souffle |
+| Guerrier | Risque élevé pour une récompense insuffisante | UP (passif de classe sous 30 % de PV) | Fait (0.1.0) : Au bord du gouffre |
 | Guerrier | Sustain insuffisant | UP | Fait (0.1.0) : vol de vie sous 30 % de PV |
 | Paladin | Jeu solo moins intéressant | UP / adaptation | Fait (0.1.0) : armes avancées plus fortes |
 | Paladin | Soins pensés pour la coop | Soin personnel selon la taille de l'équipe | Fait (0.1.0) : 75 %, 60 %, 50 % |
-| Rôdeur | Tir chargé trop fort : 3 à 3,6 fois la Lame | Nerf ciblé : tir divisé + flèches déviées, cadence du tir plein | À faire (0.2.0) |
-| Invocateur | Trop fort en donjon, faible sur une cible | Nerf des âmes en vague, mesuré en donjon | À faire (0.2.0) |
-| Lame | Écran de fumée trop fort | Nerf ciblé | À faire (0.2.0) |
-| Fil de Jōren et Arc de soie | Immobilisation infinie | Plus d'immobilisation permanente | À faire (0.2.0) |
-| Katana de rônin | Plus fun à jouer | Plus de portée ou de largeur | À faire (0.2.0) |
-| Ennemis | Les UP des joueurs peuvent réduire la difficulté | Scaling à ajuster | À faire (0.2.0) |
+| Rôdeur | Tir chargé trop fort : 3 à 3,6 fois la Lame | Nerf ciblé : tir divisé + flèches déviées, cadence du tir plein | Fait (0.2.0) : 98 à 105 % de la Lame |
+| Invocateur | Trop fort en donjon, faible sur une cible | Nerf des âmes en vague, mesuré en donjon | En partie (0.2.0) : paliers réduits ; reste une décision de design |
+| Lame | Écran de fumée trop fort | Nerf ciblé | Fait (0.2.0) : 2,5 s, 12 s, Métamorphe plafonné |
+| Fil de Jōren et Arc de soie | Immobilisation infinie | Plus d'immobilisation permanente | Fait (0.2.0) : 3 s de répit après chaque immobilisation |
+| Katana de rônin | Plus fun à jouer | Plus de portée ou de largeur | Fait (0.2.0) : estoc de 2,6 × 1,5 m |
+| Ennemis | Les UP des joueurs peuvent réduire la difficulté | Scaling à ajuster | Fait (0.2.0) : +9 % PV, +10 % dégâts par niveau |

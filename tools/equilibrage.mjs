@@ -37,6 +37,8 @@ const FULL = {
   rodeur: { arme: 'arc-soie', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
 };
 const STUFF = option('stuff', 'typique');
+/** `--arme katana-ronin` : l'arme du héros testé, à la place de celle de son équipement. */
+const WEAPON = option('arme', '');
 /**
  * `--mode dps` (`npm run dps`) : banc de DPS. Chaque héros frappe pendant `--duree` secondes un kodama immobile et
  * inoffensif dont les PV remontent sans cesse (`--pv` : ses PV de base, pour les effets qui en dépendent). Toutes les
@@ -75,8 +77,9 @@ async function worker() {
   const base = { ...dungeon.arena, player: player.default, enemies: enemies.default };
 
   /** Réglages d'un héros de cette classe et de cette race, équipé et formé pour ce niveau. */
-  const heroConfig = (cls, race, parent, level) => {
+  const heroConfig = (cls, race, parent, level, weapon = '') => {
     const equipped = STUFF === 'complet' && level >= 5 ? { ...FULL[cls] } : { arme: content.skills.classes[cls].weapon, ...(level >= 5 ? GEAR : {}) };
+    if (weapon) equipped.arme = weapon;
     const items = Object.values(equipped);
     const [a, b, c] = TREE[cls];
     const talents = level >= 10 ? [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`) : [];
@@ -102,7 +105,7 @@ async function worker() {
   /** Banc de DPS : le kodama ne bouge pas, ne soigne pas, ne recule pas, et ses PV remontent à chaque pas. */
   const dummyEnemies = { ...base.enemies, kodama: { ...base.enemies.kodama, maxHp: DUMMY_HP, speed: 0, knockbackFactor: 0, healInterval: 1e9 } };
   const dps = (job, runs) => {
-    const cfg = heroConfig(job.cls, job.race, job.parent, job.level);
+    const cfg = heroConfig(job.cls, job.race, job.parent, job.level, WEAPON);
     const results = [];
     for (let r = 0; r < runs; r++) {
       const world = new World(
@@ -128,7 +131,7 @@ async function worker() {
 
   parentPort.on('message', ({ job, runs }) => {
     if (MODE === 'dps') return dps(job, runs);
-    const cfg = heroConfig(job.cls, job.race, job.parent, job.level);
+    const cfg = heroConfig(job.cls, job.race, job.parent, job.level, WEAPON);
     const allyClasses = (ALLIES.length ? ALLIES : CLASSES.filter((c) => c !== job.cls)).slice(0, PLAYERS - 1);
     const allies = allyClasses.map((cls) => heroConfig(cls, 'einherjar', undefined, job.level));
     const out = [];

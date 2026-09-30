@@ -113,7 +113,7 @@ export interface ClassDef {
   /** Invocateur : les compagnons au choix. */
   companion?: CompanionDef;
   actives: { key: string; name: string; description: string }[];
-  /** Passifs de la classe (Dernier souffle du Guerrier), affichés avec les compétences. */
+  /** Passifs de la classe (Au bord du gouffre du Guerrier), affichés avec les compétences. */
   passives?: { name: string; description: string }[];
   tag: { name: string; tiers: { count: number; description: string; effects: ConfigEffect[] }[] };
   branches: { id: string; name: string; subtitle: string; lore: string; nodes: SkillNode[] }[];

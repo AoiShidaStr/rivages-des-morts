@@ -172,8 +172,8 @@
         },
         "rodeur": {
           "name": "Œil du tengu",
-          "description": "Transformé, tu bandes ton arc 50 % plus vite.",
-          "effects": [{ "op": "set", "path": "perks.yokaiDraw", "value": 1.5 }]
+          "description": "Transformé, tu bandes ton arc 30 % plus vite.",
+          "effects": [{ "op": "set", "path": "perks.yokaiDraw", "value": 1.3 }]
         }
       }
     }
@@ -191,12 +191,12 @@
       "effects": [
         { "op": "mul", "path": "maxHp", "value": 1.4 },
         { "op": "set", "path": "block.reduction", "value": 0.9 },
-        { "op": "set", "path": "perks.lastStand", "value": { "threshold": 0.3, "damage": 0.3, "lifesteal": 0.08 } }
+        { "op": "set", "path": "perks.lastStand", "value": { "threshold": 0.3, "damage": 0.3, "lifesteal": 0.1 } }
       ],
       "passives": [
         {
-          "name": "Dernier souffle",
-          "description": "Sous 30 % de tes PV, tu frappes 30 % plus fort et 8 % des dégâts que tu infliges te soignent. Rester bas est un risque qui paie."
+          "name": "Au bord du gouffre",
+          "description": "Sous 30 % de tes PV, tu frappes 30 % plus fort et 10 % des dégâts que tu infliges te soignent. Rester bas est un risque qui paie."
         }
       ],
       "actives": [
@@ -392,18 +392,18 @@
           },
           {
             "count": 4,
-            "description": "Tes âmes font 40 % de dégâts en plus ; +1 âme active.",
+            "description": "Tes âmes font 30 % de dégâts en plus ; +1 âme active.",
             "effects": [
-              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.4 },
+              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.3 },
               { "op": "add", "path": "summon.max", "value": 1 }
             ]
           },
           {
             "count": 6,
-            "description": "Tes âmes font 60 % de dégâts en plus ; +2 âmes actives.",
+            "description": "Tes âmes font 40 % de dégâts en plus ; +1 âme active.",
             "effects": [
-              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.6 },
-              { "op": "add", "path": "summon.max", "value": 2 }
+              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.4 },
+              { "op": "add", "path": "summon.max", "value": 1 }
             ]
           }
         ]
@@ -545,7 +545,7 @@
         {
           "key": "E",
           "name": "Écran de fumée",
-          "description": "Tu disparais 3 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique."
+          "description": "Tu disparais 2,5 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique. Revient en 12 s."
         },
         {
           "key": "R",
@@ -647,7 +647,7 @@
               "id": "loki-4",
               "name": "Métamorphe",
               "ultimate": true,
-              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s.",
+              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s, jusqu'à 3 s de plus par Écran de fumée.",
               "effects": [{ "op": "set", "path": "perks.smokeKillExtend", "value": 1.5 }]
             }
           ]
@@ -869,7 +869,7 @@
         {
           "key": "Clic droit",
           "name": "Tir chargé",
-          "description": "Maintiens pour bander l'arc en marchant lentement, relâche pour tirer : de 0,2 fois les dégâts si tu lâches aussitôt à 3 fois une fois bandé à fond, plus loin et plus vite."
+          "description": "Maintiens pour bander l'arc, relâche pour tirer : de 0,2 fois les dégâts si tu lâches aussitôt à 3 fois une fois bandé à fond, plus loin et plus vite. Plus l'arc est bandé, plus tu marches lentement, et ton pas reste lourd un instant après le tir. L'esquive interrompt le tir."
         },
         {
           "key": "A",
@@ -879,7 +879,7 @@
         {
           "key": "E",
           "name": "Marque du chasseur",
-          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 6 % de tes PV. Revient en 8 s."
+          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 8 % de tes PV. Revient en 8 s."
         },
         { "key": "R", "name": "Recul", "description": "Bond en arrière, loin de la souris, en tirant trois flèches vers elle. Invulnérable pendant le saut." }
       ],
@@ -901,11 +901,11 @@
           },
           {
             "count": 6,
-            "description": "Un tir chargé plein traverse, marque pendant 5 s et fait 30 % de dégâts en plus.",
+            "description": "Un tir chargé plein traverse, marque pendant 5 s et fait 10 % de dégâts en plus.",
             "effects": [
               { "op": "set", "path": "perks.chargedPierce", "value": true },
               { "op": "set", "path": "perks.chargedMark", "value": 5 },
-              { "op": "set", "path": "perks.chargedDamage", "value": 1.3 }
+              { "op": "set", "path": "perks.chargedDamage", "value": 1.1 }
             ]
           }
         ]

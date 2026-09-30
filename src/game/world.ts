@@ -20,7 +20,7 @@ import {
 } from './math';
 import { Player } from './player';
 import { Summon, type Soul } from './summons';
-import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome } from './types';
+import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome, StunReason } from './types';
 
 /** Pause entre deux vagues, en secondes. */
 const WAVE_PAUSE = 1.5;
@@ -41,6 +41,8 @@ const REVIVE_HP = 0.3;
 const BOSS_KINDS = new Set<EnemyKind>(['jorogumo', 'izanami']);
 /** Secondes avant qu'un boss ne se choisisse une autre proie parmi les héros. */
 const PREY_TIME = 2;
+/** Répit après une immobilisation (filet, fil de Jōren, soie) : le yokai ne peut plus être immobilisé pendant ce temps. */
+const IMMOBILIZE_RESPITE = 3;
 
 /** Commandes d'un héros sans joueur (entrée manquante) : il reste immobile. */
 function idleInput(hero: Player): InputFrame {
@@ -667,7 +669,7 @@ export class World {
     if (target.dead) player.onKill();
     else {
       const stun = Math.max(perks.summonStun ?? 0, trait === 'oublie' ? 0.5 : 0);
-      if (stun) target.stun(stun, 'snare', this);
+      if (stun) this.immobilize(target, stun, 'snare');
     }
     if (trait === 'kodama') player.heal(2, this);
     // L'Invocateur récupère une part des dégâts de ses âmes.
@@ -849,8 +851,14 @@ export class World {
       // Curée : abattre la proie marquée recharge la Marque du chasseur. Et le Rôdeur se soigne sur sa proie.
       if (perks.markRefund && enemy.marks.hunt > 0) player.huntCooldown = 0;
       if (player.cfg.kit === 'rodeur' && enemy.marks.hunt > 0) player.heal(player.cfg.maxHp * player.cfg.ranger.huntMark.killHeal, this);
-      // Métamorphe : chaque ennemi tué pendant l'invisibilité la prolonge.
-      if (perks.smokeKillExtend && player.hidden > 0) player.hidden += perks.smokeKillExtend;
+      // Métamorphe : chaque ennemi tué pendant l'invisibilité la prolonge, jusqu'à `maxExtension` s par nuage.
+      if (perks.smokeKillExtend && player.hidden > 0) {
+        const extra = Math.min(perks.smokeKillExtend, player.cfg.blade.smoke.maxExtension - player.smokeExtended);
+        if (extra > 0) {
+          player.hidden += extra;
+          player.smokeExtended += extra;
+        }
+      }
     }
   }
 
@@ -991,6 +999,9 @@ export class World {
     const full = charge !== undefined && k >= 1;
     const power = charge === undefined ? 1 : mix(ranger.charged.minFactor, ranger.charged.maxFactor, k) * (perks.chargedDamage ?? 1);
     const count = full && perks.splitShot ? perks.splitShot : 1;
+    // Les flèches d'un tir divisé partagent leurs cibles : chacune touche un ennemi différent, même déviées vers la
+    // même marque (Kami de la victoire).
+    const hit = new Set<number>();
     for (let i = 0; i < count; i++) {
       const angle = angleOf(dir) + degToRad(10) * (i - (count - 1) / 2);
       this.launch('arrow', fromAngle(angle), {
@@ -1002,6 +1013,7 @@ export class World {
         // Einherjar rôdeur : près de la mort, toutes les flèches transpercent.
         pierce: (full && Boolean(perks.chargedPierce)) || (perks.lowHpPierce !== undefined && player.hp < player.cfg.maxHp * perks.lowHpPierce),
         full,
+        hit,
       });
     }
     if (full) this.emit({ type: 'loose', pos: { ...player.pos }, full });
@@ -1028,8 +1040,19 @@ export class World {
     this.emit({ type: 'netBurst', pos: { ...pos }, radius: cfg.radius });
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, pos) > cfg.radius + enemy.radius) continue;
-      enemy.stun(enemy.boss ? cfg.stun / 2 : cfg.stun, 'net', this);
+      this.immobilize(enemy, enemy.boss ? cfg.stun / 2 : cfg.stun, 'net');
     }
+  }
+
+  /**
+   * Immobilisation par un filet, un fil de Jōren, la soie des âmes ou un tir étourdissant : après elle, le yokai y
+   * échappe pendant `IMMOBILIZE_RESPITE` secondes. Renvoie faux s'il y échappe encore.
+   */
+  immobilize(enemy: Enemy, duration: number, reason: StunReason): boolean {
+    if (enemy.bindImmunity > 0) return false;
+    enemy.stun(duration, reason, this);
+    enemy.bindImmunity = duration + IMMOBILIZE_RESPITE;
+    return true;
   }
 
   /** E : Marque du chasseur sur l'ennemi le plus proche de la souris, à portée. Faux s'il n'y a personne. */
@@ -1049,7 +1072,7 @@ export class World {
   private launch(
     kind: Projectile['kind'],
     dir: Vec2,
-    p: Pick<Projectile, 'speed' | 'range' | 'damage' | 'knockback' | 'radius' | 'pierce'> & { full?: boolean },
+    p: Pick<Projectile, 'speed' | 'range' | 'damage' | 'knockback' | 'radius' | 'pierce'> & { full?: boolean; hit?: Set<number> },
   ): void {
     this.projectiles.push({
       id: this.nextFxId--,
@@ -1125,7 +1148,7 @@ export class World {
         if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos);
         if (p.full && !enemy.dead) {
           if (perks.chargedMark) this.hunt(enemy, perks.chargedMark);
-          if (perks.chargedStun) enemy.stun(perks.chargedStun, 'daze', this);
+          if (perks.chargedStun) this.immobilize(enemy, perks.chargedStun, 'daze');
         }
         return p.pierce;
     }
@@ -1148,8 +1171,9 @@ export class World {
   private updateSnares(dt: number): void {
     this.snares = this.snares.filter((snare) => {
       snare.life -= dt;
-      const caught = this.enemies.find((e) => e.targetable && distance(e.pos, snare.pos) <= snare.radius + e.radius);
-      if (caught) caught.stun(snare.stun, 'snare', this);
+      // Un yokai encore protégé par son répit passe le fil sans le déclencher.
+      const caught = this.enemies.find((e) => e.targetable && e.bindImmunity <= 0 && distance(e.pos, snare.pos) <= snare.radius + e.radius);
+      if (caught) this.immobilize(caught, snare.stun, 'snare');
       if (caught || snare.life <= 0) {
         this.emit({ type: 'snareEnd', id: snare.id });
         return false;
