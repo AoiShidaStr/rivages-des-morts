@@ -12,6 +12,8 @@ import {
   itemLevel,
   levelProgress,
   racePassives,
+  raceNames,
+  setPieces,
   type Bonus,
   type BonusKind,
   type ItemDef,
@@ -110,6 +112,12 @@ function effectText(def: ItemDef, level = 1): string {
 /** « Réservé à la race Hanyō. » : ce qui empêche le héros de porter l'objet, ou null. */
 function blockText(progress: Progress, def: ItemDef): string | null {
   return equipBlock(def, progress.state.hero, content.skills);
+}
+
+/** Étiquettes d'un objet : ses tags de classe, la race à qui il est réservé, sa panoplie. */
+function itemTags(def: ItemDef): string[] {
+  const set = def.set ? content.sets[def.set] : undefined;
+  return [...(def.tags ?? []), ...(def.races?.length ? [raceNames(content.skills, def)] : []), ...(set ? [`Panoplie ${set.name}`] : [])];
 }
 
 /** « (niv. 12) » pour une pièce que la forge peut améliorer. */
@@ -297,7 +305,7 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled
             { class: 'item-head' },
             h('strong', { title: def.description }, def.name),
             h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
-            ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
+            ...itemTags(def).map((t) => h('span', { class: 'tag' }, t)),
           ),
           h('div', { class: 'item-meta' }, slot ? `${content.slots[slot]} · ${effectText(def, itemLevel(state, item))}` : 'Objet de quête'),
           blockText(ctx.progress, def) ? h('div', { class: 'item-meta note danger' }, blockText(ctx.progress, def)) : null,
@@ -624,7 +632,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
               { class: 'item-head' },
               h('strong', { title: def.description }, def.name),
               h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
-              ...(def.tags ?? []).map((t) => h('span', { class: 'tag' }, t)),
+              ...itemTags(def).map((t) => h('span', { class: 'tag' }, t)),
             ),
             h('div', { class: 'item-meta' }, `${content.slots[def.slot as Slot]} · ${effectText(def)}`),
           ),
@@ -683,6 +691,11 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
   add(Math.round((after.bonus.oboles - before.bonus.oboles) * 100), ' %', 'oboles');
   const tag = heroClass(content.skills, ctx.progress.state.hero).tag.name;
   add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${tag}`);
+  // Panoplies : une pièce ôtée peut faire perdre un bonus.
+  for (const set of new Set([...Object.keys(before.sets), ...Object.keys(after.sets)])) {
+    const diff = (after.sets[set] ?? 0) - (before.sets[set] ?? 0);
+    add(diff, '', `pièce${Math.abs(diff) > 1 ? 's' : ''} ${content.sets[set]?.name ?? set} (${after.sets[set] ?? 0} / ${setPieces(content.items, set).length})`);
+  }
   if (a.kit === 'invocateur') {
     add(b.summon.max - a.summon.max, '', `âme${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''} active${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''}`);
     add(Math.round(b.summon.damage) - Math.round(a.summon.damage), '', 'dégâts des âmes');
@@ -764,12 +777,27 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           { class: 'owned-text' },
           h('strong', {}, def.name + levelTag(progress, id)),
           h('small', {}, effectText(def, itemLevel(state, id))),
-          def.tags?.length ? h('small', { class: 'tags' }, def.tags.join(' · ')) : null,
+          itemTags(def).length ? h('small', { class: 'tags' }, itemTags(def).join(' · ')) : null,
           equipped
             ? null
             : h('span', { class: 'deltas' }, ...(delta.length ? delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text)) : [h('span', { class: 'delta' }, 'Mêmes caractéristiques')])),
         ),
         equipped ? h('span', { class: 'badge' }, 'Équipé') : null,
+      );
+    });
+
+    // Panoplies dont on possède au moins une pièce : pièces portées et bonus atteints.
+    const setIds = Object.keys(content.sets).filter((set) => setPieces(content.items, set).some((id) => progress.has(id)));
+    const setLines = setIds.map((set) => {
+      const def = content.sets[set];
+      const pieces = setPieces(content.items, set);
+      const worn = loadout.sets[set] ?? 0;
+      return h(
+        'div',
+        { class: 'set' },
+        h('strong', {}, `${def.name} · ${worn} / ${pieces.length}`),
+        h('small', { class: 'set-pieces' }, pieces.map((id) => `${content.items[id].name}${progress.has(id) ? '' : ' (manque)'}`).join(' · ')),
+        ...def.bonuses.map((b) => h('div', { class: `tier${worn >= b.count ? ' active' : ''}` }, h('b', {}, `(${b.count})`), ` ${b.summary}`)),
       );
     });
 
@@ -826,6 +854,15 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           h('div', { class: 'slots' }, ...slotButtons),
           fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${cfg.attack.damage} dégâts`, stats),
           fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
+          setLines.length
+            ? fold(
+                'inv-sets',
+                false,
+                'Panoplies',
+                setIds.map((set) => `${loadout.sets[set] ?? 0} / ${setPieces(content.items, set).length}`).join(' · '),
+                h('div', { class: 'tag-tiers sets' }, ...setLines),
+              )
+            : null,
           fold(
             'inv-materials',
             false,

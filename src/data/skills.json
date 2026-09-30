@@ -103,7 +103,7 @@
       "passives": [
         {
           "name": "Égide divine",
-          "description": "Une fois par vague, quand tu passes sous 25 % de PV, tu es intouchable 2 s et tu récupères 10 % de tes PV.",
+          "description": "Une fois par vague, quand tu passes sous 35 % de PV, tu es intouchable 3 s et tu récupères 30 % de tes PV.",
           "effects": [{ "op": "set", "path": "perks.divineAegis", "value": { "threshold": 0.35, "invulnerable": 3, "heal": 0.3 } }]
         }
       ],

@@ -10,7 +10,7 @@ import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 3;
+export const PROTOCOL = 4;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -161,6 +161,7 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   canSmash: false,
   ...COOLDOWNS,
   guardLeft: 100,
+  barrier: 0,
   soulNear: false,
   graveNear: false,
   hammerOut: false,
@@ -179,7 +180,7 @@ const FIELDS = [
   ...['id', 'pos', 'facing', 'radius', 'pose', 'hp', 'kind', 'sprite', 'maxHp', 'altitude', 'spawnProgress', 'elite', 'mark', 'dead', 'boss', 'prey'],
   ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'holy', 'dir', 'full', 'ripe', 'age', 'burning', 'companion'],
   ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'choir', 'smoke', 'cloud', 'drawProgress', 'rage', 'canSmash'],
-  ...['dashCharges', 'soulNear', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS)],
+  ...['dashCharges', 'soulNear', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier'],
 ];
 const CODE = new Map(FIELDS.map((name, i) => [name, i.toString(36)]));
 const NAME = new Map(FIELDS.map((name, i) => [i.toString(36), name]));
@@ -262,6 +263,7 @@ function heroSnaps(world: World): HeroSnap[] {
     hammerCooldown: p.hammerCooldown,
     guardLeft: p.guardLeft,
     guardBroken: p.guardBroken,
+    barrier: p.barrier,
     raiseCooldown: p.raiseCooldown,
     netCooldown: p.netCooldown,
     huntCooldown: p.huntCooldown,
