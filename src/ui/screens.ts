@@ -74,7 +74,8 @@ export class Screens {
 
   // --- Écran titre ------------------------------------------------------------
 
-  showTitle(options: MenuOption[]): void {
+  /** `version` : dernière version publiée (les Nouveautés), rappelée en bas de l'écran. */
+  showTitle(options: MenuOption[], version = ''): void {
     this.title.replaceChildren(
       h(
         'div',
@@ -83,7 +84,7 @@ export class Screens {
         h('h1', {}, 'Rivages des Morts'),
         h('p', { class: 'tagline' }, 'Les au-delà se sont effondrés. Les âmes ne trouvent plus leur chemin.'),
         this.menu(options),
-        h('p', { class: 'footnote' }, 'Prototype · île du Yomi · graphismes provisoires'),
+        h('p', { class: 'footnote' }, `Prototype${version ? ` · version ${version}` : ''} · île du Yomi · graphismes provisoires`),
       ),
     );
     this.title.classList.add('visible');

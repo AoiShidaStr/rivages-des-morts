@@ -75,6 +75,7 @@ Les touches sont pensées pour un clavier AZERTY. Sur un clavier QWERTY, elles r
 | <kbd>J</kbd> | quêtes |
 | <kbd>K</kbd> | compétences |
 | <kbd>Échap</kbd> | menu (et rappel des commandes) |
+| <kbd>M</kbd> | couper ou remettre la musique (partout, volume dans **Options**) |
 
 **Au combat**, pour toutes les classes : <kbd>Z</kbd> <kbd>Q</kbd> <kbd>S</kbd> <kbd>D</kbd> pour se déplacer, la souris pour viser, clic gauche pour frapper (maintenir pour enchaîner ; le Rôdeur tire une flèche), <kbd>Espace</kbd> pour esquiver, <kbd>Échap</kbd> pour la pause. Le clic droit et <kbd>A</kbd> <kbd>E</kbd> <kbd>R</kbd> changent selon la classe :
 
