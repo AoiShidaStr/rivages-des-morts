@@ -143,9 +143,16 @@ export class Bot {
       if (mine.length >= Math.min(crowd, c.summon.max) && p.sacrificeCooldown <= 0 && near(c.summon.sacrifice.radius, mine[0].pos).length >= crowd) input.skillEPressed = true;
       if (mine.length && p.choirCooldown <= 0) input.skillRPressed = true;
     } else if (kit === 'lame') {
-      if (p.dashCharges > 0 && (target.kind !== 'kodama' || this.greedy) && gap > 1.2 && gap < c.blade.shadowDash.distance - 1.5) {
+      // Au banc de DPS, la Lame joue comme un bon joueur : elle traverse sa cible dès qu'elle a une charge (marque et
+      // critique), puis revient au contact d'une esquive, qui ouvre elle aussi ses critiques.
+      const through = this.greedy ? gap < c.blade.shadowDash.distance - 1.5 : gap > 1.2 && gap < c.blade.shadowDash.distance - 1.5;
+      if (p.dashCharges > 0 && (target.kind !== 'kodama' || this.greedy) && through) {
         input.signaturePressed = true;
         input.aim = add(target.pos, scale(toTarget, 2));
+      } else if (this.greedy && c.perks?.dodgeCrit && p.dodgeCooldown <= 0 && gap > 1.5) {
+        input.move = toTarget;
+        input.dodgePressed = true;
+        return input;
       }
       if (p.deathMarkCooldown <= 0 && target.maxHp >= 30) input.skillAPressed = true;
       if (p.smokeCooldown <= 0 && (hpRatio < 0.5 || near(3).length >= 3 || this.greedy)) input.skillEPressed = true;

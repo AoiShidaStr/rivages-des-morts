@@ -262,7 +262,8 @@ async function main() {
   await Promise.all(
     Array.from({ length: threads }, () =>
       new Promise((resolve, reject) => {
-        const w = new Worker(fileURLToPath(import.meta.url));
+        // Les fils ne reçoivent pas les options de la ligne de commande d'eux-mêmes : on les leur passe.
+        const w = new Worker(fileURLToPath(import.meta.url), { argv: process.argv.slice(2) });
         const next = () => {
           const job = jobs.shift();
           if (job) w.postMessage({ job, runs });
