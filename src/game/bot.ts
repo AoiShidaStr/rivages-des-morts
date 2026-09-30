@@ -32,6 +32,11 @@ export class Bot {
   constructor(
     private readonly world: World,
     private readonly hero: Player,
+    /**
+     * Banc de DPS (`npm run dps`) : chaque compétence qui fait des dégâts part dès qu'elle est prête, même contre une
+     * seule cible, pour mesurer les dégâts maximaux de la classe.
+     */
+    private readonly greedy = false,
   ) {}
 
   /** Les commandes du héros pour ce pas. */
@@ -123,7 +128,8 @@ export class Bot {
     if (kit === 'guerrier') {
       if (p.canSmash && near(c.smash.offset + c.smash.radius * 0.8).length >= 1) input.skillAPressed = true;
       else if (p.canBond && gap > 2.5 && gap < c.bond.range) input.skillEPressed = true;
-      if (p.canFrenzy && (near(4).length >= 2 || target.boss)) input.skillRPressed = true;
+      else if (this.greedy && p.canBond) input.skillEPressed = true;
+      if (p.canFrenzy && (near(4).length >= 2 || target.boss || this.greedy)) input.skillRPressed = true;
     } else if (kit === 'invocateur') {
       const soul = w.souls.find((s) => distance(s.pos, p.pos) <= c.summon.bindRange);
       if (soul && w.time - this.lastBind > 0.3) {
@@ -133,19 +139,20 @@ export class Bot {
         return input;
       }
       if (mine.length && p.recallCooldown <= 0) input.skillAPressed = true;
-      if (mine.length >= Math.min(2, c.summon.max) && p.sacrificeCooldown <= 0 && near(c.summon.sacrifice.radius, mine[0].pos).length >= 2) input.skillEPressed = true;
+      const crowd = this.greedy ? 1 : 2;
+      if (mine.length >= Math.min(crowd, c.summon.max) && p.sacrificeCooldown <= 0 && near(c.summon.sacrifice.radius, mine[0].pos).length >= crowd) input.skillEPressed = true;
       if (mine.length && p.choirCooldown <= 0) input.skillRPressed = true;
     } else if (kit === 'lame') {
-      if (p.dashCharges > 0 && target.kind !== 'kodama' && gap > 1.2 && gap < c.blade.shadowDash.distance - 1.5) {
+      if (p.dashCharges > 0 && (target.kind !== 'kodama' || this.greedy) && gap > 1.2 && gap < c.blade.shadowDash.distance - 1.5) {
         input.signaturePressed = true;
         input.aim = add(target.pos, scale(toTarget, 2));
       }
       if (p.deathMarkCooldown <= 0 && target.maxHp >= 30) input.skillAPressed = true;
-      if (p.smokeCooldown <= 0 && (hpRatio < 0.5 || near(3).length >= 3)) input.skillEPressed = true;
-      if (p.danceCooldown <= 0 && near(c.blade.dance.range).length >= 2) input.skillRPressed = true;
+      if (p.smokeCooldown <= 0 && (hpRatio < 0.5 || near(3).length >= 3 || this.greedy)) input.skillEPressed = true;
+      if (p.danceCooldown <= 0 && near(c.blade.dance.range).length >= (this.greedy ? 1 : 2)) input.skillRPressed = true;
     } else if (kit === 'paladin') {
       const hurt = w.players.some((h) => !h.dead && h.hp < h.cfg.maxHp * 0.75 && distance(h.pos, p.pos) < c.paladin.aura.radius);
-      if (p.auraCooldown <= 0 && (hurt || mine.some((s) => s.hp < s.maxHp * 0.6))) input.skillAPressed = true;
+      if (p.auraCooldown <= 0 && (hurt || this.greedy || mine.some((s) => s.hp < s.maxHp * 0.6))) input.skillAPressed = true;
       if (p.hammerCooldown <= 0 && !w.hammerOutOf(p) && gap < c.paladin.hammer.range) input.skillEPressed = true;
       if (p.raiseCooldown <= 0 && w.graveNear(p)) input.skillRPressed = true;
     } else if (kit === 'rodeur') {
