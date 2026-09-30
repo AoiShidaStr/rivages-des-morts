@@ -570,6 +570,8 @@ export class App {
         const mine = this.screens.paused ? idleFrame(world.player.pos) : this.readCombatInput(world);
         if (online) {
           const now = performance.now();
+          // Blocage parfait : la garde d'un invité arrive en retard d'un demi-aller-retour, sa fenêtre s'élargit d'autant.
+          for (const hero of world.players.slice(1)) hero.latency = (this.remote.get(hero.id)?.ping ?? 0) / 2000;
           world.update(STEP, [mine, ...world.players.slice(1).map((hero) => this.remote.get(hero.id)?.frame(hero.pos, now) ?? idleFrame(hero.pos))]);
           this.hostTick++;
         } else {
@@ -590,7 +592,7 @@ export class App {
       // Micro-pause d'impact, seul : en ligne, figer un joueur le décalerait des autres.
       if (online) continue;
       if (event.type === 'enemyHit' && event.crit) this.hitstop = 0.045;
-      else if (event.type === 'parry') this.hitstop = 0.05;
+      else if (event.type === 'parry' || event.type === 'perfectGuard') this.hitstop = 0.05;
       else if (event.type === 'smash') this.hitstop = 0.04;
     }
     dungeonRenderer.sync(world, events, dt);

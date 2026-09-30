@@ -355,6 +355,40 @@ export interface Perks {
   markRefund?: boolean;
   /** Kami de la victoire : tes flèches s'infléchissent vers la cible marquée. */
   homing?: boolean;
+
+  // --- Objets du Yomi (0.3.0) ---
+  /** Masque de hannya : sous `threshold` des PV, `damage` de dégâts en plus, et chaque coup porté rend `lifesteal` des PV max. */
+  hannya?: { threshold: number; damage: number; lifesteal: number };
+  /** Gourde de saké d'oni : un blocage parfait donne `rage` ; une Frappe lancée à rage pleine soigne `smashHeal` fois plus. */
+  gourde?: { rage: number; smashHeal: number };
+  /** Nodachi de l'Ikusa : coups plus rapides selon les PV perdus, jusqu'à `bonus` sous `threshold` des PV. */
+  lowHpAttackSpeed?: { threshold: number; bonus: number };
+  /** Cloche du Grand Rocher : un coup bloqué renvoie cette part de ses dégâts à l'attaquant. */
+  guardReflect?: number;
+  /** Encensoir du moine : les PV rendus par l'Aura renforcent le prochain Marteau (`perHp` dégât par PV, au plus `max` fois ses dégâts). */
+  censer?: { perHp: number; max: number };
+  /** Tabi du messager : après un Recul, le prochain tir part chargé à fond. */
+  leapCharge?: boolean;
+  /** Arc d'Ikazuchi : un tir chargé plein appelle la foudre à l'impact, au plus une fois toutes les `cooldown` s. */
+  chargedBolt?: { damage: number; radius: number; stun: number; cooldown: number };
+  /** Tsuba ébréchée : chaque coup critique retire ces secondes à la recharge de la Marque de mort. */
+  critMarkRefund?: number;
+  /** Mino de paille : part des dégâts des projectiles et des zones qui est arrêtée. */
+  hazardWard?: number;
+  /** Yomotsu-hegui : dégâts et vitesse en plus, mais les soins reçus sont multipliés par `healing`. */
+  yomotsu?: { damage: number; speed: number; healing: number };
+  /** Gohei du sanctuaire : les effets du parent divin sont renforcés de ce facteur. */
+  parentBoost?: number;
+  /** Dogū aux yeux clos : la carapace d'argile absorbe ce nombre de coups avant de se reformer. */
+  clayCharges?: number;
+  /** Panoplies : PV max multipliés. */
+  maxHpFactor?: number;
+  /** Lamelles d'os de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
+  dashShield?: { amount: number; duration: number };
+  /** Sōhei : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
+  guardBreakNova?: { radius: number; stun: number; knockback: number };
+  /** Éclaireur du Yomi : la cible de la Marque du chasseur fait cette part de dégâts en moins. */
+  huntMarkWeaken?: number;
 }
 
 export interface EnemyBaseConfig {

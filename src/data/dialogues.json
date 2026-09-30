@@ -248,6 +248,7 @@
           { "lines": [["tetsu", "Je ne forge pas plus loin que ce que tu es. Une lame suit son porteur : grandis, et elle grandira."]] },
           { "lines": [["tetsu", "Une pièce montée au niveau 25 compte double pour ton art. Au 50, elle compte pour tous. Le métal a de la mémoire."]] },
           { "if": [{ "flag": "sceau_ouvert" }, { "notHas": "do-yomi" }], "lines": [["tetsu", "Des os du Yomi et de la foudre figée… Rapporte-m'en, et je te fais un Dō que même Izanami n'entamerait pas."]] },
+          { "lines": [["tetsu", "Un casque et une cuirasse, je te les forge. Le reste de la panoplie, les soldats du Palais le portent encore. Va le leur prendre : ensemble, les pièces se souviennent de ce qu'elles étaient."]] },
           { "lines": [["tetsu", "Les doublons que tu rapportes, je les fonds. Rien de ce qui a été forgé ne se perd."]] }
         ],
         "choices": [

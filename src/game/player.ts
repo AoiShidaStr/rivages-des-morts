@@ -12,7 +12,8 @@ type Action =
   /** `crit` : multiplicateur de critique du coup (1 : coup normal). */
   | { kind: 'attack'; t: number; dir: Vec2; hit: Set<number>; swung: boolean; crit: number }
   | { kind: 'dodge'; t: number; dir: Vec2 }
-  | { kind: 'smash'; t: number; dir: Vec2; landed: boolean }
+  /** `full` : lancée à rage pleine (Gourde de saké d'oni). */
+  | { kind: 'smash'; t: number; dir: Vec2; landed: boolean; full: boolean }
   | { kind: 'bond'; t: number; from: Vec2; to: Vec2 }
   | { kind: 'shadowDash'; t: number; dir: Vec2; marked: Set<number> }
   /** Danse des lames : `index` est la cible en cours ; chaque pas dure `blade.dance.hop`. */
@@ -31,6 +32,8 @@ type Action =
  */
 /** Soin des âmes versé dès qu'il atteint ces PV. */
 const LEECH_SIP = 3;
+/** Blocage parfait : garde levée moins de ce temps avant le coup (plus le retard réseau d'un invité). */
+const PERFECT_GUARD = 0.2;
 
 /** Vitesse de marche en plus : instinct (blessé) et transformation du Hanyō. */
 export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): number {
@@ -38,6 +41,7 @@ export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): 
   let factor = 1;
   if (perks.yokaiInstinct && hp < cfg.maxHp * perks.yokaiInstinct.threshold) factor += perks.yokaiInstinct.speed;
   if (perks.yokaiBlood && transformed > 0) factor += perks.yokaiBlood.speed;
+  if (perks.yomotsu) factor += perks.yomotsu.speed;
   return factor;
 }
 
@@ -122,6 +126,20 @@ export class Player {
   revive = 0;
   /** Coop : son joueur a quitté la partie ; le héros reste à terre. */
   gone = false;
+  /** Secondes depuis que la garde est levée (blocage parfait), et retard réseau du joueur (un invité, en coop). */
+  private guardHeld = 0;
+  latency = 0;
+  /** Bouclier temporaire (panoplie de la Lame) : PV absorbés avant les vrais, et secondes restantes. */
+  barrier = 0;
+  private barrierTime = 0;
+  /** Dogū aux yeux clos : coups que la carapace d'argile peut encore absorber avant d'éclater. */
+  private clayLeft: number;
+  /** Encensoir du moine : dégâts ajoutés au prochain Marteau par les soins de l'Aura. */
+  censer = 0;
+  /** Tabi du messager : le Recul a préparé un tir chargé à fond. */
+  private leapPrimed = false;
+  /** Arc d'Ikazuchi : secondes avant que la foudre puisse retomber. */
+  boltCooldown = 0;
 
   /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
   constructor(
@@ -131,6 +149,7 @@ export class Player {
     this.guardLeft = cfg.paladin.guard.max;
     this.hp = cfg.maxHp;
     this.dashCharges = cfg.blade.shadowDash.charges;
+    this.clayLeft = cfg.perks?.clayCharges ?? 1;
   }
 
   get radius(): number {
@@ -211,6 +230,8 @@ export class Player {
     if (perks.coupelle && this.coupelleFull) factor += perks.coupelle.bonus;
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
+    if (perks.hannya && this.below(perks.hannya.threshold)) factor += perks.hannya.damage;
+    if (perks.yomotsu) factor += perks.yomotsu.damage;
     // Chaque âme active affaiblit l'Invocateur (GDD : pas de limite stricte, un malus par invocation).
     return factor * Math.max(0.2, 1 - this.cfg.summon.malus * this.summonCount);
   }
@@ -228,11 +249,18 @@ export class Player {
     this.leechPool = 0;
   }
 
-  heal(amount: number, world: World): void {
-    const gained = Math.min(amount, this.cfg.maxHp - this.hp);
-    if (gained <= 0) return;
+  /** Part des soins reçus (Yomotsu-hegui : la nourriture du Yomi retient chez les morts). */
+  get healFactor(): number {
+    return this.cfg.perks?.yomotsu?.healing ?? 1;
+  }
+
+  /** Soigne le héros ; renvoie les PV rendus. */
+  heal(amount: number, world: World): number {
+    const gained = Math.min(amount * this.healFactor, this.cfg.maxHp - this.hp);
+    if (gained <= 0) return 0;
     this.hp += gained;
     world.emit({ type: 'heal', id: 0, pos: { ...this.pos }, amount: gained });
+    return gained;
   }
 
   /** Un coup d'arme vient de porter : renvoie les dégâts de la foudre du fils de Zeus quand c'est son tour (0 sinon). */
@@ -261,8 +289,8 @@ export class Player {
     this.aegisUsed = false;
   }
 
-  /** Sous cette part de ses PV (affinités de l'Einherjar). */
-  private below(threshold: number): boolean {
+  /** Sous cette part de ses PV (affinités de l'Einherjar, Masque de hannya). */
+  below(threshold: number): boolean {
     return this.hp < this.cfg.maxHp * threshold;
   }
 
@@ -287,6 +315,8 @@ export class Player {
     this.choirCooldown = Math.max(0, this.choirCooldown - dt);
     this.clayCooldown = Math.max(0, this.clayCooldown - dt);
     this.transformed = Math.max(0, this.transformed - dt);
+    this.barrierTime = Math.max(0, this.barrierTime - dt);
+    if (this.barrierTime <= 0) this.barrier = 0;
     this.tickKitCooldowns(dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
@@ -305,7 +335,7 @@ export class Player {
 
     // Instinct yokai : blessé, le Hanyō se régénère.
     const instinct = c.perks?.yokaiInstinct;
-    if (instinct && this.hp > 0 && this.hp < c.maxHp * instinct.threshold) this.hp = Math.min(c.maxHp, this.hp + instinct.regen * dt);
+    if (instinct && this.hp > 0 && this.hp < c.maxHp * instinct.threshold) this.hp = Math.min(c.maxHp, this.hp + instinct.regen * this.healFactor * dt);
 
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     const warrior = c.kit === 'guerrier';
@@ -348,7 +378,7 @@ export class Player {
         a.t += dt;
         if (!a.landed && a.t >= c.smash.windup) {
           a.landed = true;
-          world.smash(add(this.pos, scale(a.dir, c.smash.offset)));
+          world.smash(add(this.pos, scale(a.dir, c.smash.offset)), a.full);
         }
         if (a.t >= c.smash.windup + c.smash.recovery) this.action = { kind: 'free' };
         break;
@@ -387,6 +417,7 @@ export class Player {
       }
     }
 
+    this.guardHeld = this.blocking ? this.guardHeld + dt : 0;
     if (tether && this.action.kind !== 'bond' && this.action.kind !== 'leap') this.pos = add(this.pos, scale(tether.pull, dt));
     this.pos = add(this.pos, scale(this.knockback, dt));
     this.knockback = scale(this.knockback, Math.exp(-10 * dt));
@@ -418,29 +449,40 @@ export class Player {
 
   /**
    * Un coup a été bloqué. Guerrier : la rage monte. Paladin : le bouclier soigne les alliés proches (tag),
-   * renvoie des dégâts (Riposte) et entrave l'attaquant (Gleipnir).
+   * renvoie des dégâts (Riposte, Cloche du Grand Rocher) et entrave l'attaquant (Gleipnir). `amount` : la force du
+   * coup ; `parried` : un assaut arrêté net (bond de shikome, poursuite d'Izanami), dont rien ne passe.
    */
-  guard(world: World, attacker?: Enemy, amount = 0): void {
+  guard(world: World, attacker?: Enemy, amount = 0, parried = false): void {
+    const perks = this.cfg.perks ?? {};
+    // Blocage parfait : la garde levée juste avant le coup. En coop, la fenêtre s'élargit du retard de l'invité.
+    const perfect = this.guardHeld <= PERFECT_GUARD + this.latency;
+    if (perfect) world.emit({ type: 'perfectGuard', pos: { ...this.pos }, hero: this.id });
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
-    const chip = amount * (1 - this.cfg.block.reduction);
+    const chip = parried ? 0 : amount * (1 - this.cfg.block.reduction);
     if (chip > 0) this.loseHp(chip * this.damageTakenFactor(), world, true);
+    if (attacker && !attacker.dead && perks.guardReflect && amount > 0) {
+      attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2 }, world);
+      if (attacker.dead) this.onKill();
+    }
     if (this.cfg.kit !== 'paladin') {
-      const gain = this.cfg.block.rageOnGuard * (1 + (this.cfg.perks?.guardRageFactor ?? 0));
+      let gain = this.cfg.block.rageOnGuard * (1 + (perks.guardRageFactor ?? 0));
+      if (perfect && perks.gourde) gain += perks.gourde.rage;
       const gained = this.gainRage(gain);
       world.emit({ type: 'guard', pos: { ...this.pos }, rage: Math.round(gained) });
       return;
     }
-    const perks = this.cfg.perks ?? {};
     world.emit({ type: 'guard', pos: { ...this.pos }, rage: 0 });
     // La garde s'use selon la force du coup ; vide, elle se brise.
     const g = this.cfg.paladin.guard;
     this.guardRest = 0;
-    this.guardLeft -= Math.max(g.minCost, (g.cost * 100 * amount) / this.cfg.maxHp);
+    this.guardLeft -= Math.max(g.minCost, (g.cost * 100 * (parried ? 0 : amount)) / this.cfg.maxHp);
     if (this.guardLeft <= 0) {
       this.guardLeft = 0;
       this.guardBroken = g.breakTime;
       this.blocking = false;
       world.emit({ type: 'guardBreak', pos: { ...this.pos } });
+      // Sōhei : la garde qui se brise libère une onde de lumière.
+      if (perks.guardBreakNova) world.guardNova(this.pos, perks.guardBreakNova);
     }
     if (perks.shieldHeal) world.healAllies(this.pos, perks.shieldHeal.radius, perks.shieldHeal.amount, this);
     if (!attacker || attacker.dead) return;
@@ -451,16 +493,21 @@ export class Player {
     if (perks.gleipnir && !attacker.dead) attacker.stun(perks.gleipnir, 'daze', world);
   }
 
-  /** Renvoie faux si le joueur est invulnérable (esquive ou coup tout juste reçu). */
-  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean {
+  /**
+   * Renvoie faux si le joueur est invulnérable (esquive ou coup tout juste reçu). `falling` : un coup qui tombe du ciel
+   * (foudre, pluie de fils, toile lancée, kasa-obake qui retombe), que le Mino de paille amortit.
+   */
+  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling = false): boolean {
     const kind = this.action.kind;
     if (this.invulnerable > 0 || kind === 'bond' || kind === 'dance' || kind === 'leap') return false;
     const perks = this.cfg.perks ?? {};
-    // Corps d'argile : la carapace de l'Oushebti absorbe le coup entier, puis se reforme.
+    // Corps d'argile : la carapace de l'Oushebti absorbe le coup entier (deux avec le Dogū), puis se reforme.
     if (perks.clayShell && this.clayCooldown <= 0) {
-      this.clayCooldown = perks.clayShell;
       this.invulnerable = this.cfg.invulnerableAfterHit;
       world.emit({ type: 'clayShell', pos: { ...this.pos } });
+      if (--this.clayLeft > 0) return true;
+      this.clayLeft = perks.clayCharges ?? 1;
+      this.clayCooldown = perks.clayShell;
       // Affinités de l'Oushebti : l'argile qui éclate nourrit la rage, rend l'ombre, remplit la garde, ou reste en leurre.
       if (perks.clayRage) this.gainRage(perks.clayRage);
       if (perks.clayDash) this.refundDash();
@@ -471,7 +518,7 @@ export class Player {
       if (perks.clayDecoy) world.clayDecoy(this, perks.clayDecoy);
       return true;
     }
-    this.loseHp(amount * this.damageTakenFactor(), world, false);
+    this.loseHp(amount * this.damageTakenFactor() * (falling ? 1 - (perks.hazardWard ?? 0) : 1), world, false);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
     this.invulnerable = this.cfg.invulnerableAfterHit;
     this.knockback = scale(pushDir, knockback);
@@ -492,6 +539,11 @@ export class Player {
   /** Retire des PV ; Peau d'ours empêche une fois de tomber, l'Égide divine protège au bord de la mort. `blocked` : à travers la garde. */
   private loseHp(taken: number, world: World, blocked: boolean): void {
     const perks = this.cfg.perks ?? {};
+    // Le bouclier temporaire encaisse d'abord.
+    const absorbed = Math.min(this.barrier, taken);
+    this.barrier -= absorbed;
+    taken -= absorbed;
+    if (taken <= 0) return;
     this.hp = Math.max(0, this.hp - taken);
     if (this.hp <= 0 && perks.bearSkin && !this.bearSkinUsed) {
       // Peau d'ours : une fois par descente, le Berserkir refuse de tomber.
@@ -505,7 +557,7 @@ export class Player {
       // Égide divine : une fois par vague, le Demi-dieu au bord de la mort devient intouchable un instant.
       this.aegisUsed = true;
       this.invulnerable = Math.max(this.invulnerable, aegis.invulnerable);
-      this.hp = Math.min(this.cfg.maxHp, this.hp + this.cfg.maxHp * aegis.heal);
+      this.hp = Math.min(this.cfg.maxHp, this.hp + this.cfg.maxHp * aegis.heal * this.healFactor);
       world.emit({ type: 'divineAegis', pos: { ...this.pos } });
     }
     world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked, hero: this.id });
@@ -527,16 +579,22 @@ export class Player {
     const perks = this.cfg.perks ?? {};
     let heal = (perks.valhallaHeal ?? 0) + this.cfg.maxHp * (perks.valhallaShare ?? 0);
     if (this.frenzy > 0) heal += perks.frenzyHealOnKill ?? 0;
-    this.hp = Math.min(this.cfg.maxHp, this.hp + heal);
+    this.hp = Math.min(this.cfg.maxHp, this.hp + heal * this.healFactor);
     const cut = perks.cooldownOnKill ?? 0;
     this.bondCooldown = Math.max(0, this.bondCooldown - cut);
     this.frenzyCooldown = Math.max(0, this.frenzyCooldown - cut);
   }
 
-  /** Temps d'un coup d'arme, raccourcis pendant la Frénésie. */
+  /** Temps d'un coup d'arme, raccourcis pendant la Frénésie, et blessé avec le Nodachi de l'Ikusa. */
   private timing(): { windup: number; active: number; recovery: number; commit: number } {
     const a = this.cfg.attack;
-    const f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
+    let f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
+    const hurried = this.cfg.perks?.lowHpAttackSpeed;
+    if (hurried) {
+      // De 0 à pleine vitesse entre tous ses PV et le seuil : +30 % de vitesse, ce sont des coups 1,3 fois plus courts.
+      const k = Math.max(0, Math.min(1, (1 - this.hp / this.cfg.maxHp) / (1 - hurried.threshold)));
+      f /= 1 + hurried.bonus * k;
+    }
     return { windup: a.windup * f, active: a.active * f, recovery: a.recovery * f, commit: a.commit * f };
   }
 
@@ -554,7 +612,9 @@ export class Player {
 
     this.blocking = this.canGuard && input.signatureHeld;
     if (c.kit === 'rodeur' && input.signatureHeld) {
-      this.action = { kind: 'draw', t: 0 };
+      // Tabi du messager : après un Recul, l'arc part bandé à fond.
+      this.action = { kind: 'draw', t: this.leapPrimed ? c.ranger.charged.time : 0 };
+      this.leapPrimed = false;
       return;
     }
     if (!this.blocking && wantsAttack) {
@@ -571,9 +631,10 @@ export class Player {
   /** Frappe fracassante du Guerrier, comme le Bond : depuis l'arrêt, ou en coupant la fin d'un coup. */
   private startSmash(aimDir: Vec2): void {
     this.facing = aimDir;
+    const full = this.rage >= this.cfg.rageMax - 0.5;
     this.rage -= this.cfg.smash.rageCost;
     this.blocking = false;
-    this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false };
+    this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false, full };
   }
 
   private startAttack(): void {
@@ -695,6 +756,7 @@ export class Player {
   private tickKitCooldowns(dt: number): void {
     const tick = (value: number) => Math.max(0, value - dt);
     this.deathMarkCooldown = tick(this.deathMarkCooldown);
+    this.boltCooldown = tick(this.boltCooldown);
     this.smokeCooldown = tick(this.smokeCooldown);
     this.danceCooldown = tick(this.danceCooldown);
     this.hidden = tick(this.hidden);
@@ -750,6 +812,12 @@ export class Player {
     this.facing = dir;
     this.action = { kind: 'shadowDash', t: 0, dir, marked: new Set() };
     this.invulnerable = Math.max(this.invulnerable, dash.duration + 0.05);
+    // Lamelles d'os de shikome : un bouclier au sortir de l'ombre.
+    const shield = this.cfg.perks?.dashShield;
+    if (shield) {
+      this.barrier = Math.max(this.barrier, this.cfg.maxHp * shield.amount);
+      this.barrierTime = shield.duration;
+    }
     this.openCritWindow();
     const to = add(this.pos, scale(dir, dash.distance));
     world.clampToArena(to, this.radius);
@@ -831,6 +899,7 @@ export class Player {
     if (this.cfg.perks?.leapNet) world.netBurst(this.pos);
     world.volley(aimDir);
     this.leapCooldown = leap.cooldown;
+    if (this.cfg.perks?.leapCharge) this.leapPrimed = true;
     this.blocking = false;
     this.facing = aimDir;
     this.action = { kind: 'leap', t: 0, from: { ...this.pos }, to };
