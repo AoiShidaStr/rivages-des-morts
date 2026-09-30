@@ -6,6 +6,7 @@
 //   npm run equilibrage -- --classes invocateur --compagnon kodama
 //   npm run equilibrage -- --niveaux 30,50 --stuff complet            fin de progression, meilleur équipement
 //   npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3    en coop : deux alliés joués par le bot
+//   npm run equilibrage -- --classes lame --objets menpo-shikome,do-lamelles-os   le héros testé porte ces objets
 //
 // Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau (`--stuff complet` : le meilleur
 // équipement de sa classe, arme épique et relique comprises) ; au niveau 10 et plus, il a ses 9 points de talents
@@ -37,8 +38,8 @@ const FULL = {
   rodeur: { arme: 'arc-soie', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
 };
 const STUFF = option('stuff', 'typique');
-/** `--arme katana-ronin` : l'arme du héros testé, à la place de celle de son équipement. */
-const WEAPON = option('arme', '');
+/** `--objets a,b` : objets portés en plus par le héros testé (pas ses alliés), chacun à la place de celui de son emplacement. */
+const OBJECTS = option('objets', '').split(',').filter(Boolean);
 /**
  * `--mode dps` (`npm run dps`) : banc de DPS. Chaque héros frappe pendant `--duree` secondes un kodama immobile et
  * inoffensif dont les PV remontent sans cesse (`--pv` : ses PV de base, pour les effets qui en dépendent). Toutes les
@@ -77,9 +78,13 @@ async function worker() {
   const base = { ...dungeon.arena, player: player.default, enemies: enemies.default };
 
   /** Réglages d'un héros de cette classe et de cette race, équipé et formé pour ce niveau. */
-  const heroConfig = (cls, race, parent, level, weapon = '') => {
+  const heroConfig = (cls, race, parent, level, tested = true) => {
     const equipped = STUFF === 'complet' && level >= 5 ? { ...FULL[cls] } : { arme: content.skills.classes[cls].weapon, ...(level >= 5 ? GEAR : {}) };
-    if (weapon) equipped.arme = weapon;
+    for (const id of tested ? OBJECTS : []) {
+      const slot = content.items[id]?.slot;
+      if (!slot) throw new Error(`Objet inconnu ou sans emplacement : ${id}`);
+      equipped[slot] = id;
+    }
     const items = Object.values(equipped);
     const [a, b, c] = TREE[cls];
     const talents = level >= 10 ? [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`) : [];
@@ -105,7 +110,7 @@ async function worker() {
   /** Banc de DPS : le kodama ne bouge pas, ne soigne pas, ne recule pas, et ses PV remontent à chaque pas. */
   const dummyEnemies = { ...base.enemies, kodama: { ...base.enemies.kodama, maxHp: DUMMY_HP, speed: 0, knockbackFactor: 0, healInterval: 1e9 } };
   const dps = (job, runs) => {
-    const cfg = heroConfig(job.cls, job.race, job.parent, job.level, WEAPON);
+    const cfg = heroConfig(job.cls, job.race, job.parent, job.level);
     const results = [];
     for (let r = 0; r < runs; r++) {
       const world = new World(
@@ -131,9 +136,9 @@ async function worker() {
 
   parentPort.on('message', ({ job, runs }) => {
     if (MODE === 'dps') return dps(job, runs);
-    const cfg = heroConfig(job.cls, job.race, job.parent, job.level, WEAPON);
+    const cfg = heroConfig(job.cls, job.race, job.parent, job.level);
     const allyClasses = (ALLIES.length ? ALLIES : CLASSES.filter((c) => c !== job.cls)).slice(0, PLAYERS - 1);
-    const allies = allyClasses.map((cls) => heroConfig(cls, 'einherjar', undefined, job.level));
+    const allies = allyClasses.map((cls) => heroConfig(cls, 'einherjar', undefined, job.level, false));
     const out = [];
     for (let r = 0; r < runs; r++) {
       const world = new World({ ...base, player: cfg, allies, difficulty: difficultyFor(content.difficulty, job.level, PLAYERS, dungeon.strength) }, 0);
@@ -288,7 +293,7 @@ async function main() {
     console.log(`# Banc de DPS : kodama immobile, ${DURATION} s, équipement ${STUFF}, ${runs} essais par combinaison`);
     console.log(dpsReport(rows, levels));
   } else {
-    console.log(`# Équilibrage : ${DUNGEON}, équipement ${STUFF}, ${PLAYERS} joueur${PLAYERS > 1 ? 's' : ''}, ${runs} descentes par combinaison`);
+    console.log(`# Équilibrage : ${DUNGEON}, équipement ${STUFF}${OBJECTS.length ? ` + ${OBJECTS.join(', ')}` : ''}, ${PLAYERS} joueur${PLAYERS > 1 ? 's' : ''}, ${runs} descentes par combinaison`);
     console.log(report(rows, levels));
   }
 

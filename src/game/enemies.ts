@@ -218,12 +218,12 @@ export abstract class Enemy {
   protected power(amount: number, world: World): number {
     const rancune = world.curse('rancune');
     const angry = rancune && this.hp < this.maxHp * 0.3 ? 1 + rancune : 1;
-    return amount * this.might * angry * (1 - world.dazzle(this.pos));
+    return amount * this.might * angry * (1 - world.dazzle(this.pos, this.marks.hunt > 0));
   }
 
-  /** Tout coup porté au héros ou à une âme passe par ici. */
-  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World): boolean {
-    return foe.takeHit(this.power(amount, world), dir, knockback, world);
+  /** Tout coup porté au héros ou à une âme passe par ici ; `falling` : il tombe du ciel (Mino de paille). */
+  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World, falling = false): boolean {
+    return foe.takeHit(this.power(amount, world), dir, knockback, world, falling);
   }
 
   /** Coup paré : la garde du Guerrier en laisse passer une part, le bouclier du Paladin rien. */
@@ -245,11 +245,11 @@ export abstract class Enemy {
     }
   }
 
-  /** Coup en cercle (chute, morsure) : touche le héros et les âmes dans le rayon. */
-  protected strikeAround(center: Vec2, radius: number, damage: number, knockback: number, world: World): void {
+  /** Coup en cercle (chute, morsure) : touche le héros et les âmes dans le rayon. `falling` : il tombe du ciel. */
+  protected strikeAround(center: Vec2, radius: number, damage: number, knockback: number, world: World, falling = false): void {
     for (const foe of world.foes()) {
       const offset = sub(foe.pos, center);
-      if (length(offset) <= radius + foe.radius) this.hitFoe(foe, damage, normalize(offset), knockback, world);
+      if (length(offset) <= radius + foe.radius) this.hitFoe(foe, damage, normalize(offset), knockback, world, falling);
     }
   }
 
@@ -716,7 +716,7 @@ export class KasaObake extends Enemy {
     this.height = 0;
     this.pos = { ...target };
     world.emit({ type: 'land', id: this.id, pos: { ...target }, radius: cfg.landRadius });
-    this.strikeAround(target, cfg.landRadius, cfg.landDamage, cfg.landKnockback, world);
+    this.strikeAround(target, cfg.landRadius, cfg.landDamage, cfg.landKnockback, world, true);
     this.state = { kind: 'recover', t: cfg.landRecover };
   }
 
@@ -1358,7 +1358,7 @@ export class Shikome extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        foe.guard(world, this);
+        foe.guard(world, this, this.power(cfg.lungeDamage, world), true);
         world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });
         this.knockback = scale(state.dir, -6);
         this.stun(cfg.parryStun, 'parry', world);
@@ -1825,7 +1825,7 @@ export class Izanami extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        foe.guard(world, this);
+        foe.guard(world, this, this.power(cfg.lungeDamage, world), true);
         foe.knockback = scale(state.dir, 6);
         this.endLunge(world);
         return;

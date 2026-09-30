@@ -13,7 +13,7 @@ import type { GameConfig } from './game/config';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { UpgradeRules } from './game/forge';
 import type { IslandData, ScreenPoint } from './game/island';
-import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
+import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SetDef, type SkillsDef } from './game/loadout';
 import type { DuplicateRules, ShopOffer } from './game/loot';
 import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
 import { withHeroSprites } from './render/heroes';
@@ -134,6 +134,8 @@ export const content = {
   speakers: dialoguesJson.speakers as Record<string, SpeakerDef>,
   dialogues: dialoguesJson.dialogues as unknown as Record<string, Variant[]>,
   items: itemsJson.items as unknown as Record<string, ItemDef>,
+  // Panoplies : la clé « about » n'est qu'une note pour qui édite le fichier.
+  sets: Object.fromEntries(Object.entries(itemsJson.sets).filter(([id]) => id !== 'about')) as unknown as Record<string, SetDef>,
   materials: itemsJson.materials as Record<string, string>,
   slots: itemsJson.slots as Record<Slot, string>,
   bonuses: itemsJson.bonuses as Record<BonusKind, string>,

@@ -121,12 +121,13 @@ export class Summon {
     return true;
   }
 
-  /** Soin (Aura de lumière, bouclier du Paladin). */
-  heal(amount: number, world: World): void {
+  /** Soin (Aura de lumière, bouclier du Paladin) ; renvoie les PV rendus. */
+  heal(amount: number, world: World): number {
     const gained = Math.min(amount, this.maxHp - this.hp);
-    if (gained <= 0 || this.gone) return;
+    if (gained <= 0 || this.gone) return 0;
     this.hp += gained;
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
+    return gained;
   }
 
   update(dt: number, world: World): void {

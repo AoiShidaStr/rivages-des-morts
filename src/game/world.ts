@@ -69,10 +69,13 @@ export interface Foe {
   knockback: Vec2;
   /** Seul le héros bloque (Guerrier, Paladin), et seulement de face. */
   isGuarding(from: Vec2): boolean;
-  /** Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin), `amount` : la force du coup. */
-  guard(world: World, attacker?: Enemy, amount?: number): void;
-  /** Faux si le coup n'a pas porté (esquive, invulnérabilité). */
-  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean;
+  /**
+   * Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin), `amount` : la force du coup,
+   * `parried` : un assaut arrêté net, dont rien ne passe.
+   */
+  guard(world: World, attacker?: Enemy, amount?: number, parried?: boolean): void;
+  /** Faux si le coup n'a pas porté (esquive, invulnérabilité). `falling` : il tombe du ciel (Mino de paille). */
+  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling?: boolean): boolean;
 }
 
 interface Body {
@@ -361,11 +364,16 @@ export class World {
     return best;
   }
 
-  /** Miroir de Yata : part des dégâts qu'un yokai perd tant qu'il se tient dans l'Aura du Paladin. */
-  dazzle(pos: Vec2): number {
+  /**
+   * Part des dégâts qu'un yokai perd : baigné par l'Aura du Paladin (Miroir de Yata), ou sous la Marque du chasseur
+   * d'un Rôdeur (panoplie de l'Éclaireur du Yomi).
+   */
+  dazzle(pos: Vec2, hunted = false): number {
     let best = 0;
     for (const hero of this.players) {
-      const weaken = hero.cfg.perks?.auraWeaken;
+      const perks = hero.cfg.perks;
+      if (hunted && perks?.huntMarkWeaken) best = Math.max(best, perks.huntMarkWeaken);
+      const weaken = perks?.auraWeaken;
       if (!weaken || hero.aura <= 0) continue;
       if (distance(pos, hero.pos) <= hero.cfg.paladin.aura.radius) best = Math.max(best, weaken);
     }
@@ -510,6 +518,10 @@ export class World {
     if (execute && enemy.hp < enemy.maxHp * execute.threshold) amount *= 1 + execute.bonus;
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
+    // Tsuba ébréchée : chaque critique rapproche la prochaine Marque de mort.
+    if (factor > 1 && perks.critMarkRefund) player.deathMarkCooldown = Math.max(0, player.deathMarkCooldown - perks.critMarkRefund);
+    // Masque de hannya : au bord de la mort, chaque coup porté soigne.
+    if (perks.hannya && player.below(perks.hannya.threshold)) player.leech(player.cfg.maxHp * perks.hannya.lifesteal, this);
     // La marque d'ombre part au premier coup ; sur un ennemi abattu, elle reste pour Marée d'ombre.
     if (!enemy.dead) enemy.marks.shadow = 0;
     const rage = player.cfg.attack.rageOnHit * (perks.hitRageFactor ?? 1);
@@ -531,8 +543,8 @@ export class World {
     return shielded;
   }
 
-  /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. */
-  smash(center: Vec2): void {
+  /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. `full` : lancée à rage pleine. */
+  smash(center: Vec2, full = false): void {
     const smash = this.player.cfg.smash;
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     this.shakePeaches(center, smash.radius);
@@ -545,8 +557,9 @@ export class World {
       else this.player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
-    // Le Guerrier se soigne en dépensant sa rage, pourvu que la Frappe porte.
-    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal, this);
+    // Le Guerrier se soigne en dépensant sa rage, pourvu que la Frappe porte ; deux fois plus à rage pleine avec la Gourde.
+    const gourde = full ? (this.player.cfg.perks?.gourde?.smashHeal ?? 1) : 1;
+    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal * gourde, this);
   }
 
   /** Atterrissage du Bond : dégâts de zone autour du héros, étourdissement avec le talent d'Héraclès. */
@@ -901,7 +914,10 @@ export class World {
     // Un soin par seconde, le premier dès l'activation : six pour une Aura de 6 s.
     if (player.auraTick > 0 || player.aura <= 0) return;
     player.auraTick = 1;
-    this.healAllies(player.pos, cfg.radius, cfg.heal, player);
+    const healed = this.healAllies(player.pos, cfg.radius, cfg.heal, player);
+    // Encensoir du moine : les PV rendus renforcent le prochain Marteau.
+    const censer = perks.censer;
+    if (censer) player.censer = Math.min(player.censer + healed * censer.perHp, player.cfg.paladin.hammer.damage * censer.max);
     // Chaleur (talent) ; Hanyō paladin transformé : l'Aura brûle aussi.
     const burn = (perks.auraBurn ?? 0) + (player.transformed > 0 ? (perks.yokaiAuraBurn ?? 0) : 0);
     if (!burn) return;
@@ -915,14 +931,26 @@ export class World {
    * Soigne les héros debout et les âmes alliées autour de `center` (Aura, bouclier du Paladin). Le Paladin qui soigne
    * (`healer`) n'en reçoit qu'une part : il soigne mieux les autres que lui-même.
    */
-  healAllies(center: Vec2, radius: number, amount: number, healer?: Player): void {
+  healAllies(center: Vec2, radius: number, amount: number, healer?: Player): number {
+    let healed = 0;
     for (const hero of this.standing) {
       const shares = hero.cfg.paladin.selfHeal;
       const share = hero === healer ? (shares[Math.min(this.players.length, shares.length) - 1] ?? 1) : 1;
-      if (distance(hero.pos, center) <= radius + hero.radius) hero.heal(amount * share, this);
+      if (distance(hero.pos, center) <= radius + hero.radius) healed += hero.heal(amount * share, this);
     }
     for (const summon of this.summons) {
-      if (distance(summon.pos, center) <= radius + summon.radius) summon.heal(amount, this);
+      if (distance(summon.pos, center) <= radius + summon.radius) healed += summon.heal(amount, this);
+    }
+    return healed;
+  }
+
+  /** Sōhei : la garde brisée du Paladin libère une onde qui repousse et étourdit les yokai autour de lui. */
+  guardNova(center: Vec2, cfg: { radius: number; stun: number; knockback: number }): void {
+    this.emit({ type: 'guardNova', pos: { ...center }, radius: cfg.radius });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      enemy.knockback = add(enemy.knockback, scale(normalize(sub(enemy.pos, center)), cfg.knockback));
+      enemy.stun(cfg.stun, 'daze', this);
     }
   }
 
@@ -939,7 +967,10 @@ export class World {
   throwHammer(dir: Vec2): boolean {
     if (this.hammerOut) return false;
     const cfg = this.player.cfg.paladin.hammer;
-    this.launch('hammer', dir, { speed: cfg.speed, range: cfg.range, damage: cfg.damage, knockback: cfg.knockback, radius: cfg.radius, pierce: true });
+    // Encensoir du moine : le marteau emporte les soins de l'Aura.
+    const damage = cfg.damage + this.player.censer;
+    this.player.censer = 0;
+    this.launch('hammer', dir, { speed: cfg.speed, range: cfg.range, damage, knockback: cfg.knockback, radius: cfg.radius, pierce: true });
     return true;
   }
 
@@ -1146,11 +1177,26 @@ export class World {
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);
         // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
         if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos);
+        // Arc d'Ikazuchi : la foudre tombe sur la première proie d'un tir plein, au plus une fois par recharge.
+        if (p.full && perks.chargedBolt && p.hit.size === 1 && player.boltCooldown <= 0) this.chargedBolt(enemy.pos, perks.chargedBolt);
         if (p.full && !enemy.dead) {
           if (perks.chargedMark) this.hunt(enemy, perks.chargedMark);
           if (perks.chargedStun) this.immobilize(enemy, perks.chargedStun, 'daze');
         }
         return p.pierce;
+    }
+  }
+
+  /** Arc d'Ikazuchi : un éclair frappe autour de l'impact et étourdit un instant. */
+  private chargedBolt(center: Vec2, cfg: { damage: number; radius: number; stun: number; cooldown: number }): void {
+    const player = this.player;
+    player.boltCooldown = cfg.cooldown;
+    this.emit({ type: 'lightning', pos: { ...center } });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+      else enemy.stun(cfg.stun, 'daze', this);
     }
   }
 
@@ -1322,7 +1368,7 @@ export class World {
       // Les chutes viennent des boss et de leurs serviteurs : elles suivent leur puissance, et frappent aussi les âmes.
       for (const foe of this.foes()) {
         const offset = sub(foe.pos, h.pos);
-        if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this);
+        if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this, true);
       }
       if (h.leavesWeb) this.addWeb(h.pos);
       return false;

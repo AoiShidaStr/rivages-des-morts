@@ -60,6 +60,15 @@ Chaque classe a aussi sa façon de se soigner :
 
 Chaque race et chaque classe a son apparence en pixel art : casque viking, némès égyptien, laurier grec ou cornes d'oni, avec l'arme et la cape de la classe.
 
+### Équipement
+
+Sept emplacements : l'arme, quatre pièces d'armure, une amulette et une relique. Chaque pièce qui porte le tag de ta classe te rapproche des paliers de classe (2, 4 et 6 pièces).
+
+- **Panoplies** : la Lame (os de shikome), le Paladin (sōhei) et le Rôdeur (éclaireur du Yomi) ont chacun une panoplie de quatre pièces, avec un bonus à 2 et un autre à 4 pièces. Le casque et le plastron se forgent chez Tetsu, les jambières et les bottes tombent au Palais d'Izanami.
+- **Objets de race** : une amulette par race, lâchée par la Jorōgumo ou Izanami, seulement pour un héros de cette race. Elle renforce ou détourne ton passif de race.
+- **Objets à risque** : par exemple le Yomotsu-hegui, la nourriture du Yomi, qui donne beaucoup de dégâts mais divise tes soins par deux.
+- **Blocage parfait** : lève ta garde juste avant le coup (Guerrier, Paladin). « Parfait ! » s'affiche ; certains objets en tirent un bonus.
+
 ### Commandes
 
 Les touches sont pensées pour un clavier AZERTY. Sur un clavier QWERTY, elles restent à la même place : <kbd>WASD</kbd> pour marcher et <kbd>Q</kbd> à la place de <kbd>A</kbd>.

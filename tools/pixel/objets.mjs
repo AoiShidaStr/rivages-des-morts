@@ -586,6 +586,337 @@ export const ICONS = {
     px(c, [[11, 15], [12, 14], [12, 16]], '#fff0d0');
   },
 
+  // --- Objets du Yomi (0.3.0) ---------------------------------------------------
+  'masque-hannya'(c) {
+    // Masque de hannya : cornes, sourcils froncés, yeux d'or, grand sourire de crocs.
+    poly(c, [[7, 9], [3, 1], [10, 6]], '#e8dcc0');
+    poly(c, [[25, 9], [29, 1], [22, 6]], '#d2c4a4');
+    c.ellipse(16, 16, 11, 13, ['#b89a6a', '#e8dcc0', '#fff6e0']);
+    c.line([7, 11], [13, 13], 0.6, '#2b1d1c');
+    c.line([25, 11], [19, 13], 0.6, '#2b1d1c');
+    c.rect(10, 14, 3, 2, '#f0c040');
+    c.rect(19, 14, 3, 2, '#f0c040');
+    px(c, [[11, 14], [20, 14]], '#1d1a1c');
+    poly(c, [[8, 20], [24, 20], [21, 27], [11, 27]], '#6a1a1a');
+    for (let x = 9; x <= 23; x += 2) c.set(x, 20, '#fff6e0');
+    px(c, [[11, 21], [21, 21], [12, 26], [20, 26]], '#fff6e0');
+    px(c, [[6, 18], [26, 18], [7, 22], [25, 22]], '#c8412f');
+  },
+  'gourde-sake-oni'(c) {
+    // Calebasse laquée de rouge, deux bulbes, bouchon de bois et cordon.
+    c.ellipse(16, 22, 9, 8, ['#7a1a14', '#b3322a', '#e0554a']);
+    c.ellipse(16, 10, 6, 5, ['#7a1a14', '#b3322a', '#e0554a']);
+    c.rect(13, 14, 7, 2, '#d9b45a');
+    c.rect(14, 3, 5, 3, '#8a6d4a');
+    c.line([20, 15], [27, 20], 0, '#d9b45a');
+    c.line([27, 20], [26, 27], 0, '#d9b45a');
+    px(c, [[12, 19], [11, 21], [13, 8]], '#f7a898');
+    px(c, [[16, 22], [15, 24], [17, 24]], '#f0c040');
+  },
+  'nodachi-ikusa'(c) {
+    // Grand sabre noir-bleu ébréché, poignée d'os, cordon rouge d'un soldat du Yomi.
+    for (let i = 0; i <= 20; i++) {
+      c.set(10 + i, 21 - i, '#9aa8c0');
+      c.set(11 + i, 21 - i, '#4a5468');
+      c.set(11 + i, 22 - i, '#2b3040');
+    }
+    px(c, [[18, 13], [24, 7], [27, 4]], [0, 0, 0, 0]);
+    c.disc(9, 23, 1.8, '#3a3840');
+    for (let i = 0; i <= 6; i++) {
+      c.set(7 - i, 25 + i, i % 2 ? '#d8d0bd' : '#b8b0a0');
+      c.set(8 - i, 25 + i, '#8a8478');
+    }
+    c.line([8, 24], [12, 29], 0, '#c8412f');
+  },
+  'cloche-grand-rocher'(c) {
+    // Cloche de bronze à anneau, bord évasé, battant, et une petite corde sacrée.
+    c.disc(16, 4, 2, '#8a6a2a');
+    c.disc(16, 4, 0.8, [0, 0, 0, 0]);
+    poly(c, [[11, 7], [21, 7], [24, 22], [27, 25], [5, 25], [8, 22]], '#b08a3a');
+    poly(c, [[17, 7], [21, 7], [24, 22], [27, 25], [18, 25]], '#8a6a2a');
+    c.line([12, 9], [9, 23], 0, '#e0c070');
+    c.rect(6, 16, 20, 2, '#6b4a2a');
+    for (let x = 8; x < 25; x += 4) poly(c, [[x, 18], [x + 2, 18], [x + 1, 21]], '#efe6cf');
+    c.disc(16, 27, 1.6, '#6b4a2a');
+  },
+  'encensoir-moine'(c) {
+    // Brûle-encens de bronze suspendu à trois chaînes, fumée qui monte.
+    for (const x of [9, 16, 23]) c.line([16, 2], [x, 13], 0, '#8a8478');
+    c.ellipse(16, 20, 9, 7, ['#6b4a1c', '#9a7430', '#d0a860']);
+    c.ellipse(16, 14, 9, 2, ['#4a3414', '#6b4a1c', '#8a6a2a']);
+    for (let x = 10; x <= 22; x += 3) c.set(x, 19, '#3a2410');
+    c.rect(11, 26, 2, 3, '#6b4a1c');
+    c.rect(20, 26, 2, 3, '#6b4a1c');
+    for (let i = 0; i < 9; i++) c.set(26 + Math.round(Math.sin(i) * 1.5), 12 - i, i % 2 ? '#cfd6de' : '#aeb8c4');
+  },
+  'shimenawa-tressee'(c) {
+    // Corde de paille torsadée en baudrier, avec les éclairs de papier blanc (shide).
+    for (let i = 0; i <= 26; i++) {
+      const x = 3 + i;
+      const y = 6 + Math.round(i * 0.7);
+      c.disc(x, y, 2.5, i % 4 < 2 ? '#c9a860' : '#9c7a40');
+    }
+    for (let i = 0; i <= 26; i += 2) c.set(3 + i, 5 + Math.round(i * 0.7), '#e0c887');
+    for (const [x, y] of [[8, 10], [16, 15], [24, 21]]) {
+      c.line([x, y + 3], [x + 2, y + 6], 0, '#ffffff');
+      c.line([x + 2, y + 6], [x, y + 8], 0, '#ffffff');
+      c.line([x, y + 8], [x + 2, y + 11], 0, '#ffffff');
+      c.line([x + 1, y + 3], [x + 3, y + 6], 0, '#d8dde2');
+    }
+  },
+  'tabi-messager'(c) {
+    // Tabi indigo au gros orteil séparé, lacets clairs, une plume au talon.
+    for (const [ox, oy] of [[3, 4], [16, 7]]) {
+      poly(c, [[ox + 2, oy], [ox + 9, oy], [ox + 9, oy + 14], [ox + 12, oy + 18], [ox + 12, oy + 22], [ox, oy + 22], [ox + 1, oy + 14]], '#2f4a7a');
+      poly(c, [[ox + 7, oy], [ox + 9, oy], [ox + 9, oy + 14], [ox + 12, oy + 18], [ox + 12, oy + 22], [ox + 8, oy + 22]], '#223a60');
+      c.line([ox + 8, oy + 18], [ox + 8, oy + 22], 0, '#16284a');
+      for (let y = oy + 3; y < oy + 13; y += 3) c.set(ox + 8, y, '#d8d0bd');
+    }
+    poly(c, [[1, 20], [5, 13], [6, 15]], '#efe6cf');
+    c.line([2, 19], [5, 14], 0, '#b8b0a0');
+  },
+  'arc-ikazuchi'(c) {
+    // Arc noir, corde de foudre jaune qui crépite.
+    let prev = [10, 2];
+    for (let i = 1; i <= 20; i++) {
+      const t = i / 20;
+      const pt = [10 + Math.sin(t * Math.PI) * 12, 2 + t * 28];
+      c.line(prev, pt, 0.6, i % 5 === 0 ? '#3a3a58' : '#1f1f30');
+      prev = pt;
+    }
+    for (let y = 2; y <= 30; y++) c.set(10 + (Math.floor(y / 3) % 2 ? 1 : -1) * (y % 3 === 1 ? 1 : 0), y, '#ffe066');
+    px(c, [[12, 8], [8, 14], [12, 20], [8, 25]], '#fffbe0');
+    c.rect(20, 14, 3, 4, '#5a6aa8');
+    px(c, [[26, 5], [27, 6], [26, 7], [27, 8]], '#ffe066');
+  },
+  'tabi-shinobi'(c) {
+    // Tabi noirs de shinobi, semelle souple, bande de tissu sombre.
+    for (const [ox, oy] of [[3, 4], [16, 7]]) {
+      poly(c, [[ox + 2, oy], [ox + 9, oy], [ox + 9, oy + 14], [ox + 12, oy + 18], [ox + 12, oy + 22], [ox, oy + 22], [ox + 1, oy + 14]], '#2b2a30');
+      poly(c, [[ox + 7, oy], [ox + 9, oy], [ox + 9, oy + 14], [ox + 12, oy + 18], [ox + 12, oy + 22], [ox + 8, oy + 22]], '#1c1b20');
+      c.line([ox + 8, oy + 18], [ox + 8, oy + 22], 0, '#0f0e12');
+      c.rect(ox + 1, oy + 4, 9, 2, '#46444e');
+      c.rect(ox, oy + 21, 13, 1, '#5a5866');
+    }
+  },
+  'tsuba-ebrechee'(c) {
+    // Garde de sabre ronde en fer, fente de la lame au centre, un éclat manquant ; cordon noué.
+    c.line([16, 1], [16, 5], 0, '#c8412f');
+    c.ellipse(16, 17, 12, 12, ['#3a3c44', '#5a5f6a', '#8a909b']);
+    c.ellipse(16, 17, 9, 9, ['#4a4d55', '#686c76', '#8a909b']);
+    poly(c, [[14, 12], [18, 12], [17, 22], [15, 22]], '#1d1a1c');
+    c.disc(10, 17, 1.2, '#1d1a1c');
+    c.disc(22, 17, 1.2, '#1d1a1c');
+    poly(c, [[24, 6], [29, 10], [26, 12]], [0, 0, 0, 0]);
+    px(c, [[23, 9], [25, 12], [26, 11]], '#aab0ba');
+  },
+  'mino-paille'(c) {
+    // Cape de paille en couches, nouée au cou.
+    for (let row = 0; row < 4; row++) {
+      const y = 6 + row * 6;
+      const w = 7 + row * 3;
+      poly(c, [[16 - w, y], [16 + w, y], [17 + w, y + 8], [15 - w, y + 8]], row % 2 ? '#b08a48' : '#c9a860');
+      for (let x = 16 - w; x <= 16 + w; x += 2) c.line([x, y + 1], [x + (x < 16 ? -1 : 1), y + 7], 0, row % 2 ? '#8a6a34' : '#9c7a40');
+    }
+    c.rect(11, 3, 11, 3, '#6b4a2a');
+    c.line([16, 6], [16, 9], 0, '#c8412f');
+  },
+  'yomotsu-hegui'(c) {
+    // Bol noir de riz du Yomi, vapeur violette qui monte.
+    c.ellipse(16, 21, 11, 7, ['#141218', '#26242b', '#3e3b46']);
+    c.ellipse(16, 17, 11, 3, ['#d8d0e8', '#efeaf8', '#ffffff']);
+    for (const [x, y] of [[10, 17], [14, 16], [19, 17], [22, 16], [16, 18]]) c.set(x, y, '#b8b0cc');
+    c.rect(12, 27, 9, 2, '#26242b');
+    for (let i = 0; i < 10; i++) {
+      c.set(12 + Math.round(Math.sin(i * 0.8) * 1.5), 13 - i, '#9a6ad0');
+      c.set(20 + Math.round(Math.cos(i * 0.8) * 1.5), 12 - i, '#7a4ab0');
+    }
+    px(c, [[24, 20], [25, 22]], '#c8412f');
+  },
+  'gohei-sanctuaire'(c) {
+    // Bâton de bois et bandes de papier blanc en zigzag, comme des éclairs.
+    c.line([6, 30], [22, 6], 0.6, '#8a6a4a');
+    c.line([7, 30], [23, 6], 0, '#b08a60');
+    c.rect(20, 5, 5, 3, '#6b4a2a');
+    for (const [side, x0] of [[-1, 20], [1, 24]]) {
+      let x = x0;
+      let y = 8;
+      for (let k = 0; k < 4; k++) {
+        c.rect(x - 1, y, 3, 4, '#ffffff');
+        c.set(x + side, y + 3, '#d8dde2');
+        x += side * 2;
+        y += 4;
+      }
+    }
+    px(c, [[27, 3], [28, 4], [29, 3]], '#ffe066');
+  },
+  'corne-oni'(c) {
+    // Corne rouge recourbée, cassée net à la base ; des veines sombres.
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const x = 8 + t * 16 + Math.sin(t * Math.PI) * 3;
+      const y = 28 - t * 24;
+      c.disc(x, y, 4.5 * (1 - t) + 0.6, i < 3 ? '#e8dcc0' : i % 5 === 0 ? '#8e1f1a' : '#c8412f');
+    }
+    for (let i = 4; i < 18; i += 3) c.set(10 + i * 0.8, 26 - i * 1.2, '#f07860');
+    poly(c, [[3, 29], [13, 27], [11, 31], [5, 31]], '#b8a67c');
+    px(c, [[6, 29], [9, 29]], '#6d5238');
+  },
+  'dogu-yeux-clos'(c) {
+    // Statuette dogū en argile : grands yeux fermés (deux fentes), corps trapu décoré de spirales.
+    c.ellipse(16, 9, 8, 6, ['#8a5a34', '#b07a48', '#d09a68']);
+    c.ellipse(11, 9, 3, 3, ['#9a6a40', '#c08a58', '#e0b080']);
+    c.ellipse(21, 9, 3, 3, ['#9a6a40', '#c08a58', '#e0b080']);
+    c.line([9, 9], [13, 9], 0, '#3a2412');
+    c.line([19, 9], [23, 9], 0, '#3a2412');
+    poly(c, [[10, 15], [22, 15], [25, 26], [7, 26]], '#b07a48');
+    poly(c, [[18, 15], [22, 15], [25, 26], [18, 26]], '#8a5a34');
+    c.line([6, 17], [3, 22], 1, '#b07a48');
+    c.line([26, 17], [29, 22], 1, '#8a5a34');
+    for (const [x, y] of [[13, 19], [19, 19], [16, 23]]) {
+      c.disc(x, y, 1.5, '#8a5a34');
+      c.set(x, y, '#d09a68');
+    }
+    c.rect(9, 26, 5, 4, '#9a6a40');
+    c.rect(18, 26, 5, 4, '#8a5a34');
+  },
+  'tsuba-ronin-mort'(c) {
+    // Garde de sabre carrée aux coins arrondis, dorure usée, cordon rouge du rōnin.
+    poly(c, [[7, 6], [25, 6], [28, 9], [28, 25], [25, 28], [7, 28], [4, 25], [4, 9]], '#8a6a2a');
+    poly(c, [[8, 8], [24, 8], [26, 10], [26, 24], [24, 26], [8, 26], [6, 24], [6, 10]], '#c9a24a');
+    c.line([8, 9], [23, 9], 0, '#f0d27a');
+    poly(c, [[14, 12], [18, 12], [17, 22], [15, 22]], '#1d1a1c');
+    for (const [x, y] of [[9, 12], [23, 12], [9, 22], [23, 22]]) c.set(x, y, '#6b4a1c');
+    c.line([4, 17], [1, 24], 0, '#c8412f');
+    c.line([1, 24], [4, 30], 0, '#9b2f22');
+  },
+  'menpo-shikome'(c) {
+    // Demi-masque de combat en os : nez, joues, et la mâchoire aux dents de shikome.
+    c.line([1, 9], [7, 11], 0, '#3a3840');
+    c.line([31, 9], [25, 11], 0, '#3a3840');
+    poly(c, [[7, 8], [14, 6], [16, 11], [18, 6], [25, 8], [26, 16], [22, 25], [16, 28], [10, 25], [6, 16]], '#e8e0cc');
+    poly(c, [[18, 6], [25, 8], [26, 16], [22, 25], [16, 28], [16, 11]], '#cfc6b0');
+    poly(c, [[9, 17], [23, 17], [21, 22], [11, 22]], '#3a1a1c');
+    for (let x = 10; x <= 22; x += 2) {
+      c.set(x, 17, '#fff6e0');
+      c.set(x + 1, 21, '#fff6e0');
+    }
+    px(c, [[8, 12], [24, 12], [16, 8]], '#8a8070');
+  },
+  'do-lamelles-os'(c) {
+    // Cuirasse de lamelles d'os pâle, liserés noirs, laçage rouge.
+    poly(c, [[5, 6], [12, 4], [14, 8], [18, 8], [20, 4], [27, 6], [27, 13], [25, 28], [7, 28], [5, 13]], '#e8e0cc');
+    poly(c, [[18, 8], [20, 4], [27, 6], [27, 13], [25, 28], [18, 28]], '#cfc6b0');
+    for (let y = 11; y <= 25; y += 4) {
+      c.line([6, y], [26, y], 0, '#26242b');
+      c.line([6, y + 1], [26, y + 1], 0, '#b8ad94');
+    }
+    for (let x = 9; x <= 23; x += 4) for (let y = 9; y <= 26; y += 4) c.set(x, y, '#c8412f');
+    c.line([12, 4], [7, 6], 0, '#26242b');
+    c.line([20, 4], [25, 6], 0, '#26242b');
+  },
+  'haidate-shikome'(c) {
+    // Tassettes d'os : deux pans de plaques pâles, ceinture noire.
+    c.rect(4, 4, 24, 3, '#26242b');
+    for (const ox of [4, 17]) {
+      poly(c, [[ox, 7], [ox + 11, 7], [ox + 12, 28], [ox - 1, 28]], '#d8d0bd');
+      for (let y = 10; y < 28; y += 3) c.line([ox, y], [ox + 11, y], 0, y % 2 ? '#b8ad94' : '#efe6cf');
+      for (let y = 9; y < 27; y += 6) c.set(ox + 5, y, '#c8412f');
+    }
+  },
+  'waraji-meute'(c) {
+    // Sandales de paille sombre, renforcées de petites phalanges blanches.
+    for (const ox of [4, 17]) {
+      c.ellipse(ox + 5, 17, 5, 12, ['#6b5028', '#8a6a38', '#a8864e']);
+      for (let y = 7; y < 28; y += 2) c.line([ox + 1, y], [ox + 9, y], 0, y % 4 === 1 ? '#7a5c30' : '#9a7a44');
+      for (const y of [9, 14, 19, 24]) c.rect(ox + 1, y, 2, 1, '#efe6cf');
+      c.line([ox + 1, 10], [ox + 9, 16], 0, '#26242b');
+      c.line([ox + 9, 10], [ox + 1, 16], 0, '#26242b');
+    }
+  },
+  'zukin-sohei'(c) {
+    // Capuche blanche de moine-soldat, nouée sous les yeux ; bande de visage sombre.
+    c.ellipse(16, 13, 11, 10, ['#b8b2a4', '#e8e2d4', '#faf7f0']);
+    poly(c, [[5, 13], [27, 13], [29, 29], [3, 29]], '#e8e2d4');
+    poly(c, [[18, 13], [27, 13], [29, 29], [18, 29]], '#d2cbbb');
+    c.rect(8, 13, 16, 4, '#3a2b20');
+    px(c, [[12, 14], [19, 14]], '#f0d27a');
+    c.line([7, 20], [25, 20], 0, '#b8b2a4');
+    c.line([24, 19], [28, 25], 0, '#c8412f');
+  },
+  'kesa-sohei'(c) {
+    // Étole de moine en patchwork safran, portée en travers d'une cuirasse sombre.
+    poly(c, [[5, 6], [12, 4], [20, 4], [27, 6], [27, 13], [25, 28], [7, 28], [5, 13]], '#3a3c44');
+    poly(c, [[20, 4], [27, 6], [27, 13], [25, 28], [19, 28]], '#2b2d33');
+    poly(c, [[7, 4], [13, 4], [27, 24], [26, 29], [20, 29], [5, 9]], '#d0892a');
+    for (const [x, y] of [[10, 8], [15, 13], [20, 19]]) c.line([x - 2, y + 3], [x + 3, y - 1], 0, '#9a5a14');
+    c.line([8, 5], [25, 27], 0, '#f0b050');
+    c.disc(9, 7, 1.2, '#efe6cf');
+  },
+  'haidate-temple'(c) {
+    // Jambières de fer frappées d'un petit soleil doré.
+    c.rect(4, 4, 24, 3, '#6b4a2a');
+    for (const ox of [4, 17]) {
+      poly(c, [[ox, 7], [ox + 11, 7], [ox + 12, 28], [ox - 1, 28]], '#5a5f6a');
+      poly(c, [[ox + 7, 7], [ox + 11, 7], [ox + 12, 28], [ox + 7, 28]], '#454a54');
+      for (let y = 12; y < 28; y += 5) c.line([ox, y], [ox + 11, y], 0, '#8a909b');
+      c.disc(ox + 5, 17, 2, '#e0b040');
+      c.set(ox + 5, 17, '#fff2b8');
+    }
+  },
+  'geta-temple'(c) {
+    // Geta à une seule dent (ippon-ba), bois laqué noir, lanière blanche.
+    for (const [ox, oy] of [[4, 3], [17, 6]]) {
+      c.rect(ox + 4, oy + 21, 3, 4, '#3a2412');
+      c.rect(ox, oy + 19, 11, 2, '#26242b');
+      poly(c, [[ox + 1, oy + 1], [ox + 10, oy + 1], [ox + 11, oy + 3], [ox + 11, oy + 19], [ox, oy + 19], [ox, oy + 3]], '#3a3840');
+      c.rect(ox + 9, oy + 3, 2, 16, '#26242b');
+      c.line([ox + 5, oy + 4], [ox + 1, oy + 11], 0, '#efe6cf');
+      c.line([ox + 5, oy + 4], [ox + 9, oy + 11], 0, '#efe6cf');
+      c.set(ox + 5, oy + 4, '#ffffff');
+    }
+  },
+  'jingasa-laque'(c) {
+    // Chapeau plat de fantassin laqué de noir, emblème doré, cordons.
+    poly(c, [[16, 9], [30, 20], [2, 20]], '#26242b');
+    poly(c, [[16, 9], [30, 20], [18, 20]], '#1a191e');
+    c.line([16, 9], [6, 17], 0, '#4a4852');
+    c.ellipse(16, 20, 14, 2, ['#141218', '#26242b', '#3e3b46']);
+    c.disc(16, 15, 2, '#d9b45a');
+    c.set(16, 15, '#26242b');
+    cord(c, 11, 21, 14, 29, '#efe6cf');
+    cord(c, 21, 21, 18, 29, '#efe6cf');
+  },
+  'do-cuir-noir'(c) {
+    // Cuirasse de cuir bouilli noir, coutures claires, boucles de bronze.
+    poly(c, [[5, 6], [12, 4], [14, 8], [18, 8], [20, 4], [27, 6], [27, 13], [25, 28], [7, 28], [5, 13]], '#3a2e2a');
+    poly(c, [[18, 8], [20, 4], [27, 6], [27, 13], [25, 28], [18, 28]], '#2b221f');
+    c.line([16, 9], [16, 27], 0, '#8a7a6a');
+    for (let y = 11; y < 27; y += 3) px(c, [[15, y], [17, y]], '#b8a890');
+    c.rect(5, 18, 22, 2, '#5a4030');
+    c.rect(14, 17, 4, 4, '#c9a24a');
+    c.line([12, 4], [7, 6], 0, '#6b5040');
+  },
+  'kyahan-eclaireur'(c) {
+    // Bandes de toile serrées autour des mollets, liens noués.
+    for (const ox of [5, 18]) {
+      poly(c, [[ox, 4], [ox + 9, 4], [ox + 8, 28], [ox + 1, 28]], '#6d6a58');
+      for (let y = 6; y < 28; y += 3) c.line([ox, y], [ox + 9, y + 2], 0, '#8a8670');
+      c.line([ox + 9, 9], [ox + 12, 12], 0, '#3a3024');
+      c.line([ox + 9, 21], [ox + 12, 24], 0, '#3a3024');
+    }
+  },
+  'waraji-eclaireur'(c) {
+    // Sandales de paille tressée serré, cordons de cuir noir.
+    for (const ox of [4, 17]) {
+      c.ellipse(ox + 5, 17, 5, 12, ['#7a6438', '#9a8048', '#b89c60']);
+      for (let y = 7; y < 28; y += 2) c.line([ox + 1, y], [ox + 9, y], 0, y % 4 === 1 ? '#86703e' : '#a88c52');
+      c.line([ox + 1, 10], [ox + 9, 16], 0, '#2b221f');
+      c.line([ox + 9, 10], [ox + 1, 16], 0, '#2b221f');
+      c.set(ox + 5, 6, '#2b221f');
+    }
+  },
+
   // --- Objets de quête ------------------------------------------------------------
   'ema-tetsu'(c) {
     // Plaque votive en bois, cordon rouge, nom du forgeron griffonné (illisible) et un marteau.

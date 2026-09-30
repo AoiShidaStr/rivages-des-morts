@@ -159,7 +159,7 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 | Skadi, chasseresse des neiges (contrôle) | Filet plus long | **Skis** : Recul plus long et plus fréquent | Filet plus large et plus fréquent | **Vent du nord** : le Recul laisse un filet derrière soi |
 | Hachiman, dieu de l'arc (traque) | Marque du chasseur plus longue | Marque plus forte (+50 %) | **Curée** : abattre la cible marquée recharge la Marque | **Flèche du kami** : les flèches s'infléchissent vers les cibles marquées |
 
-**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes dans `src/data/items.json` : trois par classe au Yomi, sauf l'Invocateur qui en a deux (voir « Kit d'items du Yomi »).
+**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes dans `src/data/items.json` : cinq pour le Guerrier et le Rôdeur au Yomi, quatre pour la Lame, trois pour le Paladin, deux pour l'Invocateur (voir « Kit d'items du Yomi »).
 
 - **Guerrier** : 115 PV ; sa garde arrête 90 % d'un coup de face (le talent Garde du héros, chez Héraclès, la rend totale) ; bloquer rapporte 16 de rage. Nodachi 9 dégâts, Frappe fracassante 38, Frénésie qui accélère les coups de 28 %.
 
@@ -242,7 +242,9 @@ Sept emplacements seulement, pour ne pas noyer le joueur : l'arme, cinq pièces 
 
 **Tags** : chaque pièce porte au moins un tag de classe. Avec 7 emplacements plus les compétences, atteindre le palier 6 d'une classe demande d'y consacrer presque tout l'équipement, alors que deux paliers 2 ou 4 s'obtiennent facilement en build hybride.
 
-**Idée optionnelle** : des panoplies par île (armure du Yomi, de l'Hadès…) qui donnent un bonus quand on en porte plusieurs pièces.
+**Panoplies** (en place au Yomi, 0.3.0) : quatre pièces d'armure d'une même panoplie (casque, plastron, jambières, bottes) donnent un bonus à 2 pièces et un autre à 4, en plus de leur tag de classe. Chaque île pourra avoir les siennes. Réglages dans `items.json` : le champ `set` de chaque pièce et le bloc `sets`.
+
+**Objets de race** (en place, 0.3.0) : une amulette réservée à une race (champ `races`), qui renforce ou détourne son passif commun. Les autres races ne peuvent pas la porter, et elle ne tombe que pour un héros de sa race.
 
 **Rangs**
 
@@ -323,6 +325,46 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 | Fil de Jōren | Épique | Tous | Une esquive laisse un fil : le premier ennemi qui le touche est immobilisé | Jorōgumo |
 | Magatama de Yasakani | Légendaire | Invocateur | +1 invocation active | Jorōgumo (très rare) |
 
+### Nouveaux items du Yomi (0.3.0)
+
+Conçus à partir du plan de mise à jour : des items de build pour chaque classe, du confort, du risque, un objet par race, et une panoplie défensive pour les classes qui n'avaient aucune pièce d'armure à leur tag (Lame, Rôdeur) ou une seule (Paladin). Tout vient du Yomi. L'Invocateur a déjà assez d'items : il n'en reçoit pas.
+
+**Items de build, de confort et à risque**
+
+| Item | Emplacement | Rareté | Tag | Catégorie | Effet | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+| Masque de hannya | Casque | Rare | Guerrier | Build faibles PV | Sous 30 % des PV : +20 % de dégâts, et chaque coup porté rend 1 % des PV max | Oubliés (4 %) |
+| Gourde de saké d'oni | Amulette | Rare | Guerrier | Build garde et rage | Blocage parfait : +15 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois plus (8 %) | Kappa renforcé (15 %) |
+| Nodachi de l'Ikusa | Arme | Épique | Guerrier | Build faibles PV | Coups plus rapides selon les PV perdus : jusqu'à +30 % sous 30 % des PV. Paliers : portée (10), Frénésie +2 s (25), +40 % (50) | Izanami (20 %), guerriers du Yomi (2 %) |
+| Cloche du Grand Rocher | Amulette | Rare | Paladin | Tank offensif | Un coup bloqué renvoie 40 % de ses dégâts à l'attaquant | Forge (écailles, braises) |
+| Encensoir du moine | Amulette | Rare | Paladin | Du soin aux dégâts | Chaque PV rendu par l'Aura ajoute 1 dégât au prochain Marteau lancé (au plus le double de ses dégâts) | Boutique du Palais |
+| Shimenawa tressée | Plastron | Rare | Paladin | Tank pur | Garde +30 points, qui remonte 50 % plus vite ; −8 % de vitesse | Guerriers du Yomi (5 %) |
+| Tabi du messager | Bottes | Rare | Rôdeur | Mobilité | Après un Recul, le prochain tir part chargé à fond | Kasa-obake (5 %) |
+| Arc d'Ikazuchi | Arme | Épique | Rôdeur | Tir chargé | Un tir chargé plein appelle la foudre sur sa première proie : 12 dégâts autour (2 m), étourdit 0,3 s, au plus toutes les 2 s (pas d'étourdissement en boucle). Paliers : rayon (10), dégâts (25), étourdissement (50) | Izanami (20 %), ikazuchi (3 %) |
+| Tabi de shinobi | Bottes | Rare | Lame | Mobilité | Pas de l'ombre : une charge de plus, qui revient 15 % plus vite | Oubliés (4 %) |
+| Tsuba ébréchée | Amulette | Rare | Lame | Critique | Chaque coup critique retire 0,5 s à la recharge de la Marque de mort | Boutique de fin des Rizières |
+| Mino de paille | Plastron | Commune | — | Confort | −20 % de dégâts de ce qui tombe du ciel : foudre, pluie de fils, toiles lancées, kasa-obake qui retombent | Obaa (50 oboles) |
+| Yomotsu-hegui | Relique | Épique | Tous | Risque | La nourriture du Yomi : +25 % de dégâts et +10 % de vitesse, mais tous les soins reçus sont réduits de moitié | Izanami (10 %) |
+
+**Amulettes de race**
+
+| Item | Race | Effet | Source |
+| --- | --- | --- | --- |
+| Gohei du sanctuaire | Demi-dieu | Le parent divin est renforcé de 50 % : foudre de Zeus à 18 dégâts, Arès +22,5 %, Hermès plus vif, Athéna −22,5 % de dégâts subis | Jorōgumo (12 %) |
+| Corne d'oni brisée | Hanyō | Item à risque : la jauge de sang yokai se remplit 30 % plus vite, mais transformé, on subit 20 % de dégâts en plus au lieu de 10 % | Izanami (12 %) |
+| Dogū aux yeux clos | Oushebti | La carapace d'argile absorbe deux coups avant d'éclater, mais se reforme en 12 s au lieu de 8 | Jorōgumo (12 %) |
+| Tsuba du rōnin mort | Einherjar | La Rage du guerrier mort monte jusqu'à +50 % de dégâts au lieu de +35 % | Izanami (12 %) |
+
+**Panoplies défensives** : des PV et de l'armure, calés sur les pièces du Guerrier. Le casque et le plastron se forgent chez Tetsu dès le début, avec les matériaux des Rizières ; les jambières et les bottes tombent au Palais (5 %).
+
+| Panoplie | Classe | Pièces | 2 pièces | 4 pièces | Drops du Palais |
+| --- | --- | --- | --- | --- | --- |
+| Lamelles d'os de shikome | Lame | Menpō de shikome, Dō de lamelles d'os, Haidate de shikome, Waraji de la meute | +15 % de PV max | Après un Pas de l'ombre, un bouclier de 8 % des PV max pendant 2 s | Shikome |
+| Sōhei (moine-soldat) | Paladin | Zukin de sōhei, Kesa de sōhei, Haidate du temple, Geta du temple | La garde remonte 25 % plus vite | Quand la garde se brise, une onde de lumière repousse et étourdit 1 s autour du Paladin | Ikazuchi |
+| Éclaireur du Yomi | Rôdeur | Jingasa laqué, Dō de cuir noir, Kyahan d'éclaireur, Waraji de l'éclaireur | +15 % de PV max | La cible de la Marque du chasseur fait 25 % de dégâts en moins | Guerriers du Yomi |
+
+Les Tabi du messager, les Tabi de shinobi et la Shimenawa prennent la place d'une pièce de panoplie : il faut choisir entre l'effet de build et le bonus à 4 pièces. L'inventaire montre la panoplie de chaque pièce, les bonus atteints, et ce qu'on perd en ôtant une pièce.
+
 ## Combat
 
 Le combat mélange arme au corps à corps, parade/esquive et invocations, en vue isométrique et en temps réel.
@@ -332,6 +374,7 @@ Le combat mélange arme au corps à corps, parade/esquive et invocations, en vue
   - **Engagement** : le temps pendant lequel un coup lancé ne s'annule pas. Ensuite, se déplacer ou esquiver interrompt la fin du coup. Les kunai se feintent à l'esquive dès l'élan, le katana se dégage dès que le coup porte, le nodachi peu après, et le kanabō va toujours jusqu'au bout. Réglages dans `items.json` (`attack.shape`, `attack.arcDeg`, `attack.commit`).
   - **Visée** : la souris vise à hauteur de poitrine, là où volent les flèches et où l'on voit le corps des ennemis : pointer un yokai, c'est le viser. En vue isométrique, le sol sous le curseur est 1,3 m derrière ce corps (la visée au sol faisait rater les tirs sur les côtés). Seul le Bond du Guerrier vise le sol, là où il retombe. Le Rôdeur a un trait de visée discret qui part de sa poitrine et passe sous le curseur.
 - **Parade** : sa forme dépend de la classe (blocage et rage pour le Guerrier, bouclier levé pour le Paladin). Le clic droit porte la mécanique signature de chaque classe.
+  - **Blocage parfait** (en place, 0.3.0) : une garde levée moins de 0,2 s avant le coup. « Parfait ! », un éclair autour du bouclier et une micro-pause le signalent. En coop, la fenêtre d'un invité s'élargit de la moitié de son ping. Seule la Gourde de saké d'oni en tire un bonus pour l'instant ; l'Égide pourra s'en servir plus tard.
 - **Esquive** : dash court avec invulnérabilité brève.
 - **Compétences** : 2 à 4 emplacements, volontairement simples (une touche, un effet clair).
 - **Invocations** : des âmes combattent aux côtés du joueur. Leur origine dépend de la classe (ennemis liés, pactes, anciens porteurs).

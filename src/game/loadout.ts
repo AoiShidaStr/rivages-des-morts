@@ -42,7 +42,7 @@ export interface ItemDef {
    * toute autre pièce va à tout le monde.
    */
   classes?: string[];
-  /** Races qui peuvent le porter ; absent : toutes. */
+  /** Races qui peuvent le porter ; absent : toutes. Les effets d'un objet de race s'ajoutent aux passifs de la race. */
   races?: string[];
   bonus?: Bonus;
   effects?: ConfigEffect[];
@@ -52,7 +52,15 @@ export interface ItemDef {
   summary?: string;
   /** Passifs débloqués à certains niveaux de forge (armes). */
   paliers?: Palier[];
+  /** Pièce d'une panoplie (clé de `sets` dans items.json). */
+  set?: string;
   description: string;
+}
+
+/** Panoplie : porter plusieurs de ses pièces donne des bonus, comme les paliers de tags. */
+export interface SetDef {
+  name: string;
+  bonuses: { count: number; summary: string; effects: ConfigEffect[] }[];
 }
 
 export interface SkillNode {
@@ -129,6 +137,7 @@ export interface SkillsDef {
 
 export interface LoadoutData {
   items: Record<string, ItemDef>;
+  sets?: Record<string, SetDef>;
   upgrade: UpgradeRules;
   skills: SkillsDef;
 }
@@ -142,6 +151,8 @@ export interface Loadout {
   tagCount: number;
   /** Palier de tag atteint (index dans les paliers du tag de la classe), ou -1. */
   tier: number;
+  /** Pièces portées de chaque panoplie. */
+  sets: Record<string, number>;
 }
 
 /** PV max offerts par la bénédiction des six Jizō. */
@@ -192,6 +203,30 @@ export function conditionMet(cond: ItemCondition, hero: Hero, level: number): bo
   if (cond.races && !cond.races.includes(hero.race)) return false;
   if (cond.minLevel !== undefined && level < cond.minLevel) return false;
   return true;
+}
+
+/** « aux Hanyō » : à qui un objet de race est réservé. */
+export function raceNames(skills: SkillsDef, def: ItemDef): string {
+  return (def.races ?? []).map((id) => skills.races[id]?.name ?? id).join(' et ');
+}
+
+/** Les pièces d'une panoplie, dans l'ordre des emplacements. */
+export function setPieces(items: Record<string, ItemDef>, set: string): string[] {
+  return Object.keys(items).filter((id) => items[id].set === set);
+}
+
+/**
+ * Parent divin renforcé (Gohei du sanctuaire) : l'écart qu'apporte l'effet grandit de `boost`. Appliqué par-dessus
+ * l'effet d'origine : un réglage fixé est remplacé (seuls les dégâts d'un objet grandissent, pas sa fréquence), une
+ * multiplication est complétée, une addition s'ajoute encore.
+ */
+function boostEffect(effect: ConfigEffect, boost: number): ConfigEffect {
+  const v = effect.value;
+  if (effect.op === 'mul') return { ...effect, value: (1 + (Number(v) - 1) * boost) / Number(v) };
+  if (effect.op === 'add') return { ...effect, value: Number(v) * (boost - 1) };
+  if (typeof v === 'number') return { ...effect, value: v * boost };
+  if (v && typeof v === 'object' && 'damage' in v) return { ...effect, value: { ...v, damage: Number(v.damage) * boost } };
+  return effect;
 }
 
 /** Arme prise en changeant de race ou de classe : la plus forgée de celles qu'on possède pour lui, sinon son arme de départ. */
@@ -257,6 +292,9 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   const className = cls.tag.name;
   const rules = data.upgrade;
   const paliers: Palier[] = [];
+  const sets: Record<string, number> = {};
+  /** Effets des objets de race : ils modifient les passifs de la race, donc passent après eux. */
+  const raceEffects: ConfigEffect[] = [];
 
   for (const id of Object.values(state.equipped)) {
     const item = id ? data.items[id] : undefined;
@@ -268,8 +306,14 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     for (const b of [item.bonus, ...active.map((c) => c.bonus)]) {
       for (const [key, value] of Object.entries(scaled(b)) as [BonusKind, number][]) bonus[key] += value;
     }
-    for (const effect of [...(item.effects ?? []), ...active.flatMap((c) => c.effects ?? [])]) applyEffect(config, effect);
-
+    // Un objet de race, ou un effet réservé à une race, modifie les passifs de la race : il passe après eux.
+    if (item.races?.length) raceEffects.push(...(item.effects ?? []));
+    else for (const effect of item.effects ?? []) applyEffect(config, effect);
+    for (const c of active) {
+      if (item.races?.length || c.if.races?.length) raceEffects.push(...(c.effects ?? []));
+      else for (const effect of c.effects ?? []) applyEffect(config, effect);
+    }
+    if (item.set) sets[item.set] = (sets[item.set] ?? 0) + 1;
     // Paliers de forge : « Âme liée » donne le tag « Tous », « Forgé par Tetsu » fait compter l'objet double.
     const reached = upgradable ? reachedPaliers(rules, item, lvl) : [];
     paliers.push(...reached);
@@ -296,6 +340,10 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   bonus.maxHp += (level - 1) * data.skills.levels.hpPerLevel;
 
   for (const passive of racePassives(data.skills, state.hero)) for (const effect of passive.effects) applyEffect(config, effect);
+  for (const effect of raceEffects) applyEffect(config, effect);
+  const boost = config.perks?.parentBoost;
+  const parent = state.hero.parent ? heroRace(data.skills, state.hero).parents?.[state.hero.parent] : undefined;
+  if (boost && parent) for (const effect of parent.effects) applyEffect(config, boostEffect(effect, boost));
   for (const branch of cls.branches) {
     for (const node of branch.nodes) if (state.talents.includes(node.id)) for (const effect of node.effects) applyEffect(config, effect);
   }
@@ -304,8 +352,12 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     if (tagCount >= t.count) tier = i;
   });
   if (tier >= 0) for (const effect of cls.tag.tiers[tier].effects) applyEffect(config, effect);
+  for (const [id, count] of Object.entries(sets)) {
+    for (const reached of data.sets?.[id]?.bonuses ?? []) if (count >= reached.count) for (const effect of reached.effects) applyEffect(config, effect);
+  }
 
   config.maxHp += bonus.maxHp;
+  config.maxHp *= config.perks?.maxHpFactor ?? 1;
   config.moveSpeed *= 1 + bonus.speed;
   config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
   config.attack.damage = Math.round(config.attack.damage + bonus.damage);
@@ -316,8 +368,9 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     if (value) perks[key] = value * power;
   }
   if (perks.shieldHeal) perks.shieldHeal = { ...perks.shieldHeal, amount: perks.shieldHeal.amount * power };
+  if (perks.chargedBolt) perks.chargedBolt = { ...perks.chargedBolt, damage: perks.chargedBolt.damage * power };
   config.dodge.distance *= 1 + bonus.dodge;
-  return { config, level, bonus, tagCount, tier };
+  return { config, level, bonus, tagCount, tier, sets };
 }
 
 function applyEffect(target: object, effect: ConfigEffect): void {
