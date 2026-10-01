@@ -525,8 +525,6 @@ export class World {
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
     // Tsuba ébréchée : chaque critique rapproche la prochaine Marque de mort.
     if (factor > 1 && perks.critMarkRefund) player.deathMarkCooldown = Math.max(0, player.deathMarkCooldown - perks.critMarkRefund);
-    // Masque de hannya : au bord de la mort, chaque coup porté soigne.
-    if (perks.hannya && player.below(perks.hannya.threshold)) player.leech(player.cfg.maxHp * perks.hannya.lifesteal, this);
     // La marque d'ombre part au premier coup ; sur un ennemi abattu, elle reste pour Marée d'ombre.
     if (!enemy.dead) enemy.marks.shadow = 0;
     const rage = player.cfg.attack.rageOnHit * (perks.hitRageFactor ?? 1);

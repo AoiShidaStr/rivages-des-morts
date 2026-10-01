@@ -381,8 +381,8 @@ export interface Perks {
   homing?: boolean;
 
   // --- Objets du Yomi (0.3.0) ---
-  /** Masque de hannya : sous `threshold` des PV, `damage` de dégâts en plus, et chaque coup porté rend `lifesteal` des PV max. */
-  hannya?: { threshold: number; damage: number; lifesteal: number };
+  /** Masque de hannya : « Au bord du gouffre » (passif du Guerrier) se déclenche dès ce seuil de PV. */
+  hannya?: { threshold: number };
   /** Gourde de saké d'oni : un blocage parfait donne `rage` ; une Frappe lancée à rage pleine soigne `smashHeal` fois plus. */
   gourde?: { rage: number; smashHeal: number };
   /** Nodachi de l'Ikusa : coups plus rapides selon les PV perdus, jusqu'à `bonus` sous `threshold` des PV. */
