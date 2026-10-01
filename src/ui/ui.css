@@ -157,6 +157,13 @@ body:not([data-mode='dungeon']) #hud {
   padding: 11px 18px;
 }
 
+.title-record {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
 .footnote {
   margin-top: 28px;
   font-size: 12px;
@@ -1043,6 +1050,14 @@ body:not([data-mode='dungeon']) #hud {
 
 .result-level {
   margin: -4px 0 6px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.loot-title {
+  margin: 4px 0 2px;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2241,4 +2256,13 @@ body:not([data-mode='dungeon']) #hud {
 .coop-status.ready {
   background: var(--moss);
   color: #fff;
+}
+
+/* Donjon infini : les règles à l'entrée. */
+ul.rules {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
 }

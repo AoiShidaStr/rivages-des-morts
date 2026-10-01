@@ -75,7 +75,8 @@ export class Screens {
   // --- Écran titre ------------------------------------------------------------
 
   /** `version` : dernière version publiée (les Nouveautés), rappelée en bas de l'écran. */
-  showTitle(options: MenuOption[], version = ''): void {
+  /** `record` : le record du donjon infini, tous personnages confondus (« Palier 27 · Lame hanyō »). */
+  showTitle(options: MenuOption[], version = '', record = ''): void {
     this.title.replaceChildren(
       h(
         'div',
@@ -84,6 +85,7 @@ export class Screens {
         h('h1', {}, 'Rivages des Morts'),
         h('p', { class: 'tagline' }, 'Les au-delà se sont effondrés. Les âmes ne trouvent plus leur chemin.'),
         this.menu(options),
+        record ? h('p', { class: 'title-record' }, record) : null,
         h('p', { class: 'footnote' }, `Prototype${version ? ` · version ${version}` : ''} · île du Yomi · graphismes provisoires`),
       ),
     );
@@ -153,6 +155,10 @@ export class Screens {
       materials: (string | Node)[];
       chests: number;
       unlocked?: number;
+      /** Donjon infini : la ligne sous le titre (« Palier 10 franchi »), le texte de la défaite, et un titre au-dessus du butin. */
+      subtitle?: string;
+      defeat?: { title: string; text: string };
+      lootTitle?: string;
     },
     options: MenuOption[],
   ): void {
@@ -161,14 +167,15 @@ export class Screens {
         'div',
         { class: `result-card ${victory ? 'victory' : 'defeat'}` },
         h('div', { class: 'title-seal' }, victory ? '勝' : '魂'),
-        h('h1', {}, victory ? loot.victory.title : 'Ton âme vacille…'),
-        h('div', { class: 'result-level' }, `${loot.place} · niveau ${loot.level}`),
+        h('h1', {}, victory ? loot.victory.title : (loot.defeat?.title ?? 'Ton âme vacille…')),
+        h('div', { class: 'result-level' }, loot.subtitle ?? `${loot.place} · niveau ${loot.level}`),
         loot.unlocked ? h('div', { class: 'result-unlock' }, `Niveau ${loot.unlocked} débloqué`) : null,
         h(
           'p',
           { class: 'tagline' },
-          victory ? loot.victory.text : 'Tu te réveilles sur la rive. Tu gardes ce que tu as ramassé, mais le donjon est à recommencer.',
+          victory ? loot.victory.text : (loot.defeat?.text ?? 'Tu te réveilles sur la rive. Tu gardes ce que tu as ramassé, mais le donjon est à recommencer.'),
         ),
+        loot.lootTitle ? h('h3', { class: 'loot-title' }, loot.lootTitle) : null,
         h(
           'ul',
           { class: 'loot' },

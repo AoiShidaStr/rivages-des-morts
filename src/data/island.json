@@ -83,6 +83,7 @@
     { "id": "jizo-6", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -7.2, "v": 5.4, "solid": 0.3 },
     { "id": "ema", "name": "Plaque votive", "verb": "Examiner", "sprite": "ema", "u": 11.6, "v": -10.4, "solid": 0.3, "if": [{ "quest": "forgeron", "is": "active" }, { "notFlag": "ema_trouvee" }] },
     { "id": "coffre-pont", "name": "Coffre caché", "verb": "Ouvrir", "sprite": "coffre", "u": 3.3, "v": -6.1, "if": [{ "notFlag": "coffre_pont" }] },
+    { "id": "faille-cascade", "name": "Faille derrière la cascade", "verb": "Entrer", "u": 14.4, "v": 6.9, "reach": 1.6, "if": [{ "level": 50 }] },
     { "id": "coffre-cascade", "name": "Coffre moussu", "verb": "Ouvrir", "sprite": "coffre", "u": 15.3, "v": 8.3, "if": [{ "notFlag": "coffre_cascade" }] },
     { "id": "moine", "name": "Le moine du Rocher", "sprite": "moine", "u": -0.4, "v": 11.6, "solid": 0.4 },
     {

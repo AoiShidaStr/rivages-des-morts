@@ -31,6 +31,9 @@ interface SkillView {
   active?: boolean;
 }
 
+/** Nom affiché sur la barre de chaque boss. */
+const BOSS_TITLES: Record<string, string> = { jorogumo: 'Jorōgumo', izanami: 'Izanami' };
+
 /** Interface de combat en HTML par-dessus le canvas : barres, compétences, annonces de vague et du boss. */
 export class Hud {
   private readonly hpFill: HTMLElement;
@@ -59,6 +62,7 @@ export class Hud {
   /** Coop en ligne : ping de chaque allié, dans l'ordre des alliés (inconnu : rien d'affiché). */
   pings: (number | undefined)[] = [];
   private bossTitle = 'Jorōgumo';
+  private bossKind = '';
   private bannerTimer = 0;
 
   constructor(root: HTMLElement) {
@@ -217,7 +221,14 @@ export class Hud {
       slot.cooldown.style.transform = `scaleX(${view.cooldown})`;
     });
 
-    const boss = world.enemies.find((e) => e.boss);
+    // Deux boss à la fois (donjon infini) : la barre suit celui qui est le plus entamé.
+    const bosses = world.enemies.filter((e) => e.boss && e.hp > 0);
+    const boss = bosses.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] ?? world.enemies.find((e) => e.boss);
+    if (boss && BOSS_TITLES[boss.kind] && this.bossKind !== boss.kind) {
+      this.bossKind = boss.kind;
+      this.bossTitle = BOSS_TITLES[boss.kind] ?? this.bossTitle;
+      this.bossName.textContent = `${this.bossTitle} · niv. ${world.cfg.difficulty?.level ?? 1}`;
+    }
     this.boss.classList.toggle('visible', Boolean(boss));
     if (boss) this.bossFill.style.width = `${(Math.max(0, boss.hp) / boss.maxHp) * 100}%`;
     // Izanami : la jauge de son regard, et l'alerte quand le héros la regarde.
@@ -235,7 +246,7 @@ export class Hud {
     for (const event of events) {
       if (event.type === 'wave') {
         const level = world.cfg.difficulty?.level ?? 1;
-        this.announce(`Niveau ${level} · Vague ${event.index + 1} / ${event.total}`, event.label, event.hint);
+        this.announce(event.step ?? `Niveau ${level} · Vague ${event.index + 1} / ${event.total}`, event.label, event.hint);
       } else if (event.type === 'bossPhase') {
         this.bossName.textContent = `${this.bossTitle} · niv. ${world.cfg.difficulty?.level ?? 1} · ${event.label}`;
         this.announce(`Phase ${event.phase} / 3`, event.label, event.hint);
@@ -263,6 +274,7 @@ export class Hud {
     this.banner.classList.remove('visible');
     this.bannerTimer = 0;
     this.bossTitle = boss;
+    this.bossKind = '';
     this.bossName.textContent = `${boss} · niv. ${level}`;
   }
 }

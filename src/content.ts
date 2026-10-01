@@ -4,6 +4,7 @@ import difficultyJson from './data/difficulty.json';
 import rizieresJson from './data/dungeon.json';
 import palaisJson from './data/dungeon-palais.json';
 import dungeonsJson from './data/dungeons.json';
+import endlessJson from './data/donjon-infini.json';
 import islandJson from './data/island.json';
 import islandSpritesJson from './data/islandSprites.json';
 import itemsJson from './data/items.json';
@@ -11,6 +12,7 @@ import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
 import type { GameConfig } from './game/config';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
+import type { ArenaSource, EndlessData } from './game/infini';
 import type { UpgradeRules } from './game/forge';
 import type { IslandData, ScreenPoint } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SetDef, type SkillsDef } from './game/loadout';
@@ -153,7 +155,20 @@ export const content = {
     palais: dungeon('palais', palaisJson as unknown as ArenaConfig),
   } as Record<string, DungeonDef>,
   triggers: questsJson.triggers as unknown as Catalog['triggers'],
+  /** Le Yomi sans fond (donjon infini), qui tire ses blocs des donjons ci-dessus. */
+  endless: endlessJson as unknown as EndlessData,
 };
+
+/** Les donjons, tels que le donjon infini y puise ses vagues. */
+export const endlessArenas: Record<string, ArenaSource> = Object.fromEntries(
+  Object.values(content.dungeons).map((d) => [d.id, { id: d.id, waves: d.arena.waves, strength: d.strength }]),
+);
+
+/** Identifiant du donjon infini (dans les actions, la coop et les records). */
+export const ENDLESS = 'infini';
+/** Drapeau du meilleur palier franchi par ce personnage, et celui posé en trouvant le passage. */
+export const ENDLESS_RECORD = 'infini_record';
+export const ENDLESS_FOUND = 'infini_decouvert';
 
 export type Content = typeof content;
 

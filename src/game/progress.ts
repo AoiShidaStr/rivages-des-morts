@@ -122,6 +122,8 @@ export interface CharacterSummary {
   level: number;
   oboles: number;
   savedAt: number;
+  /** Meilleur palier franchi dans le donjon infini (0 s'il n'y est jamais descendu). */
+  endless: number;
 }
 
 /** Fichier d'export : la sauvegarde, marquée pour qu'on reconnaisse un fichier du jeu à l'import. */
@@ -178,7 +180,7 @@ export class Progress {
     return this.store.list().flatMap(({ id, savedAt }) => {
       const state = this.readSlot(id);
       if (!state) return [];
-      return [{ id, hero: state.hero, level: this.catalog.levelFor(state.xp), oboles: state.oboles, savedAt }];
+      return [{ id, hero: state.hero, level: this.catalog.levelFor(state.xp), oboles: state.oboles, savedAt, endless: state.flags.infini_record ?? 0 }];
     });
   }
 

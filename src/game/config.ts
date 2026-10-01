@@ -720,6 +720,10 @@ export interface WaveConfig {
   stumps?: { x: number; z: number }[];
   /** Pêchers d'Izanagi placés dans l'arène pour cette vague (arène d'Izanami). */
   peaches?: { x: number; z: number }[];
+  /** Donjon infini : l'annonce de la vague (« Palier 7 · Niveau 60 »), son palier et sa propre difficulté. */
+  step?: string;
+  palier?: number;
+  difficulty?: Difficulty;
 }
 
 export interface GameConfig {
