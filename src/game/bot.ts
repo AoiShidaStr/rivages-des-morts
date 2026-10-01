@@ -1,7 +1,7 @@
 // Allié joué par l'ordinateur : il pilote un héros comme le ferait un joueur moyen. Il sert à tester la coop
 // sans réseau (`?coop=2`, `?coop=3`) et à régler la difficulté selon le nombre de héros.
 import type { Enemy } from './enemies';
-import { add, angleOf, degToRad, distance, fromAngle, inCone, length, normalize, scale, sub, vec, type Vec2 } from './math';
+import { add, angleOf, degToRad, distance, fromAngle, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { Player } from './player';
 import type { InputFrame } from './types';
 import type { World } from './world';
@@ -23,13 +23,28 @@ interface Peek {
 
 const peek = (enemy: Enemy) => enemy as unknown as Peek;
 
+/** Ce que le bot lit d'Izanami : la jauge de son regard, et vrai pendant qu'une pêche la repousse. */
+interface IzanamiPeek {
+  gaze: number;
+  repelled: boolean;
+}
+
+/** Angle entre la visée et Izanami : au-delà du cône de son regard (25°), assez près pour que l'arme la touche. */
+const AVERT = degToRad(34);
+/** Jauge du regard à laquelle on détourne les yeux pour de bon, et celle à laquelle on peut la viser de nouveau. */
+const GAZE_HIGH = 0.6;
+const GAZE_LOW = 0.15;
+
+/** `dir` tourné de `angle` radians. */
+const turn = (dir: Vec2, angle: number): Vec2 => fromAngle(angleOf(dir) + angle);
+
 type Threat = { type: 'melee'; src: Vec2 } | { type: 'charge'; src: Vec2; dir: Vec2 } | { type: 'land'; at: Vec2 };
 
 export class Bot {
   private readonly seen = new WeakMap<object, boolean>();
   private lastBind = -9;
-  /** Izanami : le bot détourne les yeux tant que la jauge du regard n'est pas retombée. */
-  private lookingAway = false;
+  /** Face à Izanami : vrai tant qu'on détourne les yeux pour laisser retomber son regard. */
+  private averting = false;
 
   constructor(
     private readonly world: World,
@@ -43,60 +58,6 @@ export class Bot {
 
   /** Les commandes du héros pour ce pas. */
   input(): InputFrame {
-    const input = this.decide();
-    this.izanami(input);
-    return input;
-  }
-
-  /**
-   * Izanami (Palais), comme le GDD l'apprend au joueur : une pêche mûre la repousse et l'expose, et il faut la frapper
-   * sans la regarder (le bord d'un arc large la touche sans viser droit sur elle ; un estoc ou un arc tire par salves).
-   */
-  private izanami(input: InputFrame): void {
-    const w = this.world;
-    const p = this.hero;
-    const her = p.dead ? undefined : w.enemies.find((e) => e.kind === 'izanami' && e.targetable);
-    if (!her) return;
-    const state = peek(her).state as { kind: string; repelled?: boolean } | undefined;
-    // Repoussée par une pêche, elle est sans défense : on frappe de face.
-    if (state?.kind === 'stunned' && state.repelled) {
-      this.lookingAway = false;
-      return;
-    }
-    // Une pêche mûre : on va secouer le pêcher, sauf s'il faut esquiver un coup.
-    const ripe = w.peaches.filter((t) => t.ripe);
-    if (ripe.length && !input.dodgePressed && !(input.signatureHeld && p.cfg.kit !== 'rodeur')) {
-      const tree = ripe.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b));
-      const gap = distance(tree.pos, p.pos) - tree.radius - p.radius;
-      const reach = p.cfg.kit === 'rodeur' ? p.cfg.attack.range - 1 : p.cfg.attack.range * 0.7;
-      input.move = gap > reach ? normalize(sub(tree.pos, p.pos)) : vec();
-      input.aim = { ...tree.pos };
-      input.aimGround = { ...tree.pos };
-      input.signatureHeld = false;
-      input.attackHeld = gap <= reach + 0.5;
-      return;
-    }
-    const toHer = sub(her.pos, p.pos);
-    const aimDir = normalize(sub(input.aim, p.pos), p.facing);
-    if (!inCone(aimDir, normalize(toHer), degToRad(30))) return;
-    // Arc large : on vise 40° à côté d'elle, le bord du coup la touche quand même.
-    const a = p.cfg.attack;
-    if (p.cfg.kit !== 'rodeur' && a.shape !== 'line' && a.arcDeg / 2 >= 50) {
-      input.aim = add(p.pos, scale(fromAngle(angleOf(toHer) + degToRad(40)), length(toHer)));
-      return;
-    }
-    // Estoc ou flèches : on frappe par salves, et on détourne les yeux quand la jauge monte.
-    const gaze = (her as unknown as { gaze: number }).gaze;
-    if (gaze > 0.5) this.lookingAway = true;
-    else if (gaze < 0.1) this.lookingAway = false;
-    if (!this.lookingAway) return;
-    input.aim = sub(p.pos, toHer);
-    input.aimGround = { ...input.aim };
-    input.attackHeld = false;
-    input.attackPressed = false;
-  }
-
-  private decide(): InputFrame {
     const w = this.world;
     const p = this.hero;
     const c = p.cfg;
@@ -151,7 +112,10 @@ export class Bot {
     // Un kappa qu'on ne peut pas encore frapper dans le dos attend son tour, s'il y a d'autres yokai à frapper.
     const exposed = (e: Enemy) => !e.kind.startsWith('kappa') || ['stunned', 'recover'].includes(peek(e).state?.kind ?? '');
     const pool = foes.some(exposed) ? foes.filter(exposed) : foes;
-    const target = kodama ?? pool.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b));
+    const izanami = foes.find((e) => e.kind === 'izanami');
+    const her = izanami ? (izanami as unknown as IzanamiPeek) : null;
+    // Izanami repoussée par une pêche : c'est le moment de frapper, avant tout le reste.
+    const target = (her?.repelled ? izanami : undefined) ?? kodama ?? pool.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b));
     const gap = distance(p.pos, target.pos) - target.radius - p.radius;
     const toTarget = normalize(sub(target.pos, p.pos));
     input.aim = { ...target.pos };
@@ -176,6 +140,45 @@ export class Bot {
       input.move = hit.type === 'charge' ? vec(-hit.dir.z, hit.dir.x) : normalize(sub(p.pos, hit.src));
       if (p.dodgeCooldown <= 0) input.dodgePressed = true;
       if (kit !== 'rodeur' || p.dodgeCooldown > 0) return input;
+    }
+
+    // Izanami : une pêche cueillie sur un pêcher mûr la repousse et l'expose. On va frapper l'arbre (ou on lui tire
+    // dessus), sauf si elle est déjà repoussée.
+    if (izanami && her && !her.repelled && p === w.player) {
+      const ripe = w.peaches.filter((t) => t.ripe);
+      const tree = ripe.length ? ripe.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b)) : null;
+      if (tree) {
+        const toTree = sub(tree.pos, p.pos);
+        const reach = kit === 'rodeur' ? c.attack.range * 0.8 : c.attack.range * 0.7;
+        input.aim = { ...tree.pos };
+        input.aimGround = { ...tree.pos };
+        if (length(toTree) - tree.radius > reach) input.move = normalize(toTree);
+        else input.attackPressed = true;
+        return input;
+      }
+    }
+    // Son regard : la viser en face la renforce et, la jauge pleine, déchaîne sa colère. Les armes larges et les
+    // estocs portés de tout près la touchent en visant à côté ; sinon, on détourne les yeux le temps que la jauge retombe.
+    const facingHer = target === izanami && her !== null && !her.repelled && p === w.player;
+    if (facingHer && her) {
+      if (her.gaze > GAZE_HIGH) this.averting = true;
+      else if (her.gaze < GAZE_LOW) this.averting = false;
+      const wide = c.attack.shape !== 'line' && c.attack.arcDeg >= 80;
+      const side = turn(toTarget, AVERT);
+      if (kit !== 'rodeur' && (wide || gap < 0.6)) {
+        input.aim = add(p.pos, scale(side, Math.max(1, gap + target.radius)));
+        input.aimGround = { ...input.aim };
+        if (gap > (wide ? c.attack.range * 0.6 : 0.4)) input.move = toTarget;
+        if (gap <= (wide ? c.attack.range * 0.85 : 0.6)) input.attackHeld = true;
+        return input;
+      }
+      if (this.averting) {
+        // On détourne les yeux : on recule en visant ailleurs, et on frappe ce qui passe.
+        input.aim = add(p.pos, scale(turn(toTarget, Math.PI / 2), 3));
+        input.aimGround = { ...input.aim };
+        input.move = gap < 4 ? normalize(sub(p.pos, target.pos)) : vec();
+        return input;
+      }
     }
 
     // Compétences.
@@ -296,6 +299,16 @@ export class Bot {
         windup = m.windup;
         range = m.range + enemy.radius;
       }
+      if (s.kind === 'melee' && enemy.kind === 'izanami') {
+        const m = e.phase === 1 ? cfg.veiled.embrace : cfg.revealed.grasp;
+        windup = m.windup;
+        range = m.range + enemy.radius;
+      }
+      // Colère d'Izanami : un cercle autour d'elle, annoncé quelques instants avant.
+      if (s.kind === 'wrath' && enemy.kind === 'izanami') {
+        const wrath = cfg.gaze.wrath;
+        if (wrath.warning - s.t < REACT + 0.4 && distance(enemy.pos, p.pos) < wrath.radius + p.radius + 0.5 && this.notices(s)) out.push({ type: 'land', at: enemy.pos });
+      }
       if (windup !== null && windup - s.t < REACT && distance(enemy.pos, p.pos) < range + p.radius + 0.7 && this.notices(s)) {
         out.push({ type: 'melee', src: enemy.pos });
       }
@@ -304,7 +317,7 @@ export class Bot {
         const rel = sub(p.pos, enemy.pos);
         const along = rel.x * s.dir.x + rel.z * s.dir.z;
         const across = Math.abs(rel.x * s.dir.z - rel.z * s.dir.x);
-        const total = s.duration ?? (enemy.kind === 'jorogumo' ? cfg.spider.telegraph : 0.7);
+        const total = s.duration ?? (enemy.kind === 'jorogumo' ? cfg.spider.telegraph : enemy.kind === 'izanami' ? cfg.pursuit.telegraph : 0.7);
         const remain = s.kind === 'telegraph' ? total - s.t : 0;
         if (along > -0.5 && along < 9 && across < enemy.radius + p.radius + 0.5 && remain < REACT + 0.1 && this.notices(s)) {
           out.push({ type: 'charge', src: enemy.pos, dir: s.dir });

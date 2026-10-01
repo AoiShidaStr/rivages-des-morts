@@ -98,7 +98,7 @@ Les mesures du niveau 1 varient d'environ 10 points d'un lancement à l'autre : 
 
 Chaque objet est comparé à la même classe sans lui : 16 descentes par race, soit 112 par classe (16 par classe pour les amulettes de race, 64 pour le Gohei). Le héros porte l'équipement typique forgé à son niveau ; l'objet testé **remplace** la pièce de son emplacement. Le résultat mesure donc l'effet de l'objet moins ce que la pièce remplacée apportait : c'est le choix qu'a vraiment le joueur. Écart de bruit : environ 5 points par classe, 12 points pour une amulette de race.
 
-**Le bot connaît maintenant Izanami** : il frappe sans la regarder (le bord d'un arc large, ou par salves avec un estoc ou un arc) et fait tomber les pêches mûres. Avant, toutes les classes atteignaient Izanami et mouraient devant elle : le Palais semblait injouable (0 à 6 % de victoires), alors que c'était le bot. À la force actuelle du Palais, qui ne change pas :
+**Bot formé à Izanami** (première version, celle de la PR #23 ; la version de `main`, plus complète, la remplace et donne des chiffres voisins, voir « Palais d'Izanami » plus bas) : il frappe sans la regarder (le bord d'un arc large, ou par salves avec un estoc ou un arc) et fait tomber les pêches mûres. Avant, toutes les classes atteignaient Izanami et mouraient devant elle : le Palais semblait injouable (0 à 6 % de victoires), alors que c'était le bot. À la force actuelle du Palais, qui ne change pas :
 
 | Classe | Palais niv. 1 | Palais niv. 10 | Palais niv. 20 |
 |---|---|---|---|
@@ -149,7 +149,7 @@ Second passage, après les réglages (amulettes à 20 PV, Yomotsu-hegui +35 %, l
 | Yomotsu-hegui | Guerrier / Invocateur / Paladin | −21 à −23 points | −12 à −27 points : le risque reste lourd pour les classes qui vivent de leurs soins |
 | Yomotsu-hegui | Lame / Rôdeur | −3 à +5 points | +3 points, dégâts/s +23 à +30 % |
 
-Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 30 à 36 %, niveau 20 de 8 à 18 %. Il reste la classe la plus faible du Palais ; la panoplie de l'Éclaireur le monte à 58 % au niveau 10.
+Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 30 à 36 %, niveau 20 de 8 à 18 %. Avec le bot de `main` (comparaison A/B, Rôdeur seul, 16 descentes par race, équipement typique) : niveau 1 de 21 à 32 %, niveau 10 de 79 à 90 %, niveau 20 de 43 à 59 %. Il reste la classe la plus faible du Palais ; la panoplie de l'Éclaireur le monte à 58 % au niveau 10.
 
 ## Grille de suivi
 
@@ -168,3 +168,21 @@ Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 
 | Objets du Yomi | Styles de jeu par classe, sans objet strictement meilleur | Réglages mesurés au bot | En cours (PR #23) : Tsuba, Arc d'Ikazuchi, Encensoir, Gohei, Masque de hannya |
 | Forge | Pièces qui ne gagnaient rien en montant de niveau | Chaque pièce a des PV | Fait (PR #23) |
 | Palais | Rôdeur et Paladin (niv. 20) faibles contre Izanami | À décider | Mesuré (PR #23) |
+
+## Palais d'Izanami (1er octobre 2026, bot formé à Izanami)
+
+Avant, le bot mourait toujours sur Izanami (0 % à tous les niveaux) : il la regardait en face et ignorait les pêches. Il vise maintenant à côté d'elle (au-delà du cône de son regard), détourne les yeux quand la jauge monte, fuit sa colère, esquive son étreinte et son bond, et frappe les pêchers mûrs pour la repousser.
+
+`npm run equilibrage -- --donjon palais --niveaux 1,30,50 --stuff complet --parties 6` (victoires) :
+
+| Classe | Niveau 1 | Niveau 30 | Niveau 50 |
+|---|---|---|---|
+| Guerrier | 90 % | 71 % | 52 % |
+| Invocateur | 93 % | 95 % | 93 % |
+| Lame | 74 % | 64 % | 45 % |
+| Paladin | 100 % | 95 % | 88 % |
+| Rôdeur | 14 % | 36 % | 5 % |
+
+Le Rôdeur et la Lame (les moins de PV au contact des shikome et d'Izanami) décrochent ; à confirmer en jouant, le bot du Rôdeur pouvant être en cause.
+
+Donjon infini, héros niveau 50 (`--donjon infini --palier N`) : paliers 6 à 10 (Palais, niveau 60 puis 70) 0 à 67 % ; paliers 21 à 25 (niveau 90 puis 100) 0 %, le bot meurt avant le double boss.
