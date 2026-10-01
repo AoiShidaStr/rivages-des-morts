@@ -193,6 +193,30 @@
       "anchor": "box",
       "bodyHeight": 256,
       "animations": [{ "tag": "idle", "source": "decor_ile_lanterne-allumee.jpg", "count": 6, "duration": 120 }]
+    },
+    {
+      "name": "izanami",
+      "bodyHeight": 240,
+      "animations": [
+        { "tag": "idle", "source": "2d/boss-2D/Izanami-forme-humaine-idle.jpg", "layout": [4, 4, 4, 4], "refHeight": 224, "duration": 120 },
+        { "tag": "move", "source": "2d/boss-2D/Izanami-forme-humaine-move.jpg", "layout": [4, 4, 4, 4], "refHeight": 224, "duration": 70 },
+        { "tag": "windup", "source": "2d/boss-2D/Izanami-forme-humaine-windup.jpg", "layout": [4, 4, 4, 4], "refHeight": 224, "duration": 45, "once": true },
+        { "tag": "strike", "source": "2d/boss-2D/Izanami-forme-humaine-stike.jpg", "layout": [4, 4, 4, 4], "frames": [2, 3, 4, 5, 6, 7], "refHeight": 224, "duration": 25, "once": true },
+        { "tag": "stunned", "source": "2d/boss-2D/Izanami-forme-humaine-hit.jpg", "layout": [4, 4, 4, 4], "refHeight": 224, "duration": 90 },
+        { "tag": "channel", "source": "2d/boss-2D/Izanami-forme-humaine-special.jpg", "layout": [4, 4, 4, 4], "refHeight": 224, "duration": 80 }
+      ]
+    },
+    {
+      "name": "izanami-revelee",
+      "bodyHeight": 240,
+      "animations": [
+        { "tag": "idle", "source": "2d/boss-2D/Izanami-eveille-idle.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 120 },
+        { "tag": "move", "source": "2d/boss-2D/Izanami-eveille-move.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 70 },
+        { "tag": "windup", "source": "2d/boss-2D/Izanami-eveille-windup.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 45, "once": true },
+        { "tag": "strike", "source": "2d/boss-2D/Izanami-eveille-stike.jpg", "layout": [4, 4, 4, 4], "frames": [2, 3, 4, 5, 6, 7], "refHeight": 243, "duration": 25, "once": true },
+        { "tag": "stunned", "source": "2d/boss-2D/Izanami-eveille-hit.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 90 },
+        { "tag": "dash", "source": "2d/boss-2D/Izanami-eveille-special.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 50 }
+      ]
     }
   ]
 }

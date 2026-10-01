@@ -19,6 +19,7 @@
     "poses": "node tools/poses.mjs",
     "kit-heros": "node tools/kit-heros.mjs",
     "doc-heros": "node tools/doc-heros.mjs",
+    "prompts-2d": "node tools/prompts-2d.mjs",
     "equilibrage": "node tools/equilibrage.mjs"
   },
   "dependencies": {
