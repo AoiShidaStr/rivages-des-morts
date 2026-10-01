@@ -20,7 +20,7 @@ import {
 } from './math';
 import { Player } from './player';
 import { Summon, type Soul } from './summons';
-import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome } from './types';
+import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome, StunReason } from './types';
 
 /** Pause entre deux vagues, en secondes. */
 const WAVE_PAUSE = 1.5;
@@ -41,6 +41,12 @@ const REVIVE_HP = 0.3;
 const BOSS_KINDS = new Set<EnemyKind>(['jorogumo', 'izanami']);
 /** Secondes avant qu'un boss ne se choisisse une autre proie parmi les héros. */
 const PREY_TIME = 2;
+/** Répit après une immobilisation (filet, fil de Jōren, soie) : le yokai ne peut plus être immobilisé pendant ce temps. */
+const IMMOBILIZE_RESPITE = 3;
+/** Étourdissement le plus long de la Frappe du Guerrier, le seul héros qui étourdit (hors filet du Rôdeur). */
+const SMASH_STUN_MAX = 0.8;
+/** Part de la vitesse que perdent les yokai frappés par le Bond (talent d'Héraclès). */
+const BOND_SLOW = 0.5;
 
 /** Commandes d'un héros sans joueur (entrée manquante) : il reste immobile. */
 function idleInput(hero: Player): InputFrame {
@@ -67,10 +73,13 @@ export interface Foe {
   knockback: Vec2;
   /** Seul le héros bloque (Guerrier, Paladin), et seulement de face. */
   isGuarding(from: Vec2): boolean;
-  /** Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin), `amount` : la force du coup. */
-  guard(world: World, attacker?: Enemy, amount?: number): void;
-  /** Faux si le coup n'a pas porté (esquive, invulnérabilité). */
-  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World): boolean;
+  /**
+   * Coup bloqué ; `attacker` : le yokai qui l'a porté (riposte du Paladin), `amount` : la force du coup,
+   * `parried` : un assaut arrêté net, dont rien ne passe.
+   */
+  guard(world: World, attacker?: Enemy, amount?: number, parried?: boolean): void;
+  /** Faux si le coup n'a pas porté (esquive, invulnérabilité). `falling` : il tombe du ciel (Mino de paille). */
+  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling?: boolean): boolean;
 }
 
 interface Body {
@@ -359,11 +368,16 @@ export class World {
     return best;
   }
 
-  /** Miroir de Yata : part des dégâts qu'un yokai perd tant qu'il se tient dans l'Aura du Paladin. */
-  dazzle(pos: Vec2): number {
+  /**
+   * Part des dégâts qu'un yokai perd : baigné par l'Aura du Paladin (Miroir de Yata), ou sous la Marque du chasseur
+   * d'un Rôdeur (panoplie de l'Éclaireur du Yomi).
+   */
+  dazzle(pos: Vec2, hunted = false): number {
     let best = 0;
     for (const hero of this.players) {
-      const weaken = hero.cfg.perks?.auraWeaken;
+      const perks = hero.cfg.perks;
+      if (hunted && perks?.huntMarkWeaken) best = Math.max(best, perks.huntMarkWeaken);
+      const weaken = perks?.auraWeaken;
       if (!weaken || hero.aura <= 0) continue;
       if (distance(pos, hero.pos) <= hero.cfg.paladin.aura.radius) best = Math.max(best, weaken);
     }
@@ -507,7 +521,12 @@ export class World {
     const execute = perks.execute;
     if (execute && enemy.hp < enemy.maxHp * execute.threshold) amount *= 1 + execute.bonus;
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
+    if (!shielded) player.gainFervor(player.cfg.paladin.judgement.perHit);
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
+    // Tsuba ébréchée : chaque critique rapproche la prochaine Marque de mort.
+    if (factor > 1 && perks.critMarkRefund) player.deathMarkCooldown = Math.max(0, player.deathMarkCooldown - perks.critMarkRefund);
+    // Masque de hannya : au bord de la mort, chaque coup porté soigne.
+    if (perks.hannya && player.below(perks.hannya.threshold)) player.leech(player.cfg.maxHp * perks.hannya.lifesteal, this);
     // La marque d'ombre part au premier coup ; sur un ennemi abattu, elle reste pour Marée d'ombre.
     if (!enemy.dead) enemy.marks.shadow = 0;
     const rage = player.cfg.attack.rageOnHit * (perks.hitRageFactor ?? 1);
@@ -529,8 +548,8 @@ export class World {
     return shielded;
   }
 
-  /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. */
-  smash(center: Vec2): void {
+  /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. `full` : lancée à rage pleine. */
+  smash(center: Vec2, full = false): void {
     const smash = this.player.cfg.smash;
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     this.shakePeaches(center, smash.radius);
@@ -539,12 +558,18 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
       struck = true;
       enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback: smash.knockback, ignoreShell: true }, this);
-      if (!enemy.dead) enemy.stun(smash.stun, 'smash', this);
+      if (!enemy.dead) {
+        // Seul étourdissement des héros, et il reste bref ; les objets ajoutent un ralentissement qui le suit.
+        enemy.stun(Math.min(SMASH_STUN_MAX, smash.stun), 'smash', this);
+        const trail = this.player.cfg.perks?.smashSlow;
+        if (trail) enemy.slow(trail.amount, trail.duration, this);
+      }
       else this.player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
-    // Le Guerrier se soigne en dépensant sa rage, pourvu que la Frappe porte.
-    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal, this);
+    // Le Guerrier se soigne en dépensant sa rage, pourvu que la Frappe porte ; deux fois plus à rage pleine avec la Gourde.
+    const gourde = full ? (this.player.cfg.perks?.gourde?.smashHeal ?? 1) : 1;
+    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal * gourde, this);
   }
 
   /** Atterrissage du Bond : dégâts de zone autour du héros, étourdissement avec le talent d'Héraclès. */
@@ -556,7 +581,7 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > bond.radius) continue;
       enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback }, this);
       if (enemy.dead) this.player.onKill();
-      else if (bond.stun > 0) enemy.stun(bond.stun, 'bond', this);
+      else if (bond.slow > 0) enemy.slow(BOND_SLOW, bond.slow, this);
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
   }
@@ -643,14 +668,14 @@ export class World {
     if (perks.choirHeal) player.heal(perks.choirHeal, this);
     if (perks.choirStun) {
       for (const enemy of this.enemies) {
-        if (enemy.targetable && distance(enemy.pos, player.pos) <= cfg.radius + enemy.radius) enemy.stun(perks.choirStun, 'bond', this);
+        if (enemy.targetable && distance(enemy.pos, player.pos) <= cfg.radius + enemy.radius) enemy.slow(0.5, perks.choirStun, this);
       }
     }
     return true;
   }
 
   /** Coup d'une âme liée ; `factor` vaut plus de 1 pendant un Rappel. */
-  summonHit(summon: Summon, target: Enemy, factor: number): void {
+  summonHit(summon: Summon, target: Enemy, factor: number, ranged = false): void {
     const player = this.player;
     const cfg = player.cfg.summon;
     const perks = player.cfg.perks ?? {};
@@ -662,12 +687,13 @@ export class World {
     const fury = perks.soulsFury ? 1 + (perks.einherjarRage ?? 0) * (1 - player.hp / player.cfg.maxHp) : 1;
     const blood = perks.yokaiSouls && player.transformed > 0 ? 1 + (perks.yokaiBlood?.damage ?? 0) : 1;
     const amount = cfg.damage * summon.damageFactor * fire * factor * choir * fury * blood * (perks.summonDamageFactor ?? 1);
-    this.emit({ type: 'swing', pos: { ...summon.pos }, dir: summon.facing, range: cfg.attackRange + summon.radius, arcDeg: 90 });
+    if (ranged) this.emit({ type: 'lightning', pos: { ...target.pos } });
+    else this.emit({ type: 'swing', pos: { ...summon.pos }, dir: summon.facing, range: cfg.attackRange + summon.radius, arcDeg: 90 });
     target.receiveHit({ amount, from: summon.pos, knockback: cfg.knockback }, this);
     if (target.dead) player.onKill();
     else {
-      const stun = Math.max(perks.summonStun ?? 0, trait === 'oublie' ? 0.5 : 0);
-      if (stun) target.stun(stun, 'snare', this);
+      const stun = Math.max(perks.summonStun ?? 0, trait === 'oublie' ? 1 : 0);
+      if (stun) target.slow(0.4, stun, this);
     }
     if (trait === 'kodama') player.heal(2, this);
     // L'Invocateur récupère une part des dégâts de ses âmes.
@@ -790,7 +816,7 @@ export class World {
     const stun = player.cfg.perks?.smokeStun;
     if (!stun) return;
     for (const enemy of this.enemies) {
-      if (enemy.targetable && distance(enemy.pos, player.pos) <= cfg.radius + enemy.radius) enemy.stun(stun, 'daze', this);
+      if (enemy.targetable && distance(enemy.pos, player.pos) <= cfg.radius + enemy.radius) enemy.slow(0.6, stun, this);
     }
   }
 
@@ -849,8 +875,14 @@ export class World {
       // Curée : abattre la proie marquée recharge la Marque du chasseur. Et le Rôdeur se soigne sur sa proie.
       if (perks.markRefund && enemy.marks.hunt > 0) player.huntCooldown = 0;
       if (player.cfg.kit === 'rodeur' && enemy.marks.hunt > 0) player.heal(player.cfg.maxHp * player.cfg.ranger.huntMark.killHeal, this);
-      // Métamorphe : chaque ennemi tué pendant l'invisibilité la prolonge.
-      if (perks.smokeKillExtend && player.hidden > 0) player.hidden += perks.smokeKillExtend;
+      // Métamorphe : chaque ennemi tué pendant l'invisibilité la prolonge, jusqu'à `maxHidden` s d'invisibilité en tout par nuage.
+      if (perks.smokeKillExtend && player.hidden > 0) {
+        const extra = Math.min(perks.smokeKillExtend, player.cfg.blade.smoke.maxHidden - player.cfg.blade.smoke.duration - player.smokeExtended);
+        if (extra > 0) {
+          player.hidden += extra;
+          player.smokeExtended += extra;
+        }
+      }
     }
   }
 
@@ -886,14 +918,17 @@ export class World {
     if (perks.auraStun) {
       for (const enemy of inside.filter((e) => !player.auraStunned.has(e.id))) {
         player.auraStunned.add(enemy.id);
-        enemy.stun(perks.auraStun, 'daze', this);
+        enemy.slow(0.5, perks.auraStun, this);
       }
     }
     player.auraTick -= dt;
     // Un soin par seconde, le premier dès l'activation : six pour une Aura de 6 s.
     if (player.auraTick > 0 || player.aura <= 0) return;
     player.auraTick = 1;
-    this.healAllies(player.pos, cfg.radius, cfg.heal, player);
+    const healed = this.healAllies(player.pos, cfg.radius, cfg.heal, player);
+    // Encensoir du moine : les PV rendus renforcent le prochain Marteau.
+    const censer = perks.censer;
+    if (censer) player.censer = Math.min(player.censer + healed * censer.perHp, player.cfg.paladin.hammer.damage * censer.max);
     // Chaleur (talent) ; Hanyō paladin transformé : l'Aura brûle aussi.
     const burn = (perks.auraBurn ?? 0) + (player.transformed > 0 ? (perks.yokaiAuraBurn ?? 0) : 0);
     if (!burn) return;
@@ -907,14 +942,41 @@ export class World {
    * Soigne les héros debout et les âmes alliées autour de `center` (Aura, bouclier du Paladin). Le Paladin qui soigne
    * (`healer`) n'en reçoit qu'une part : il soigne mieux les autres que lui-même.
    */
-  healAllies(center: Vec2, radius: number, amount: number, healer?: Player): void {
+  healAllies(center: Vec2, radius: number, amount: number, healer?: Player): number {
+    let healed = 0;
     for (const hero of this.standing) {
-      const share = hero === healer ? hero.cfg.paladin.selfHeal : 1;
-      if (distance(hero.pos, center) <= radius + hero.radius) hero.heal(amount * share, this);
+      const shares = hero.cfg.paladin.selfHeal;
+      const share = hero === healer ? (shares[Math.min(this.players.length, shares.length) - 1] ?? 1) : 1;
+      if (distance(hero.pos, center) <= radius + hero.radius) healed += hero.heal(amount * share, this);
     }
     for (const summon of this.summons) {
-      if (distance(summon.pos, center) <= radius + summon.radius) summon.heal(amount, this);
+      if (distance(summon.pos, center) <= radius + summon.radius) healed += summon.heal(amount, this);
     }
+    return healed;
+  }
+
+  /** Sōhei : la garde brisée du Paladin libère une onde qui repousse et étourdit les yokai autour de lui. */
+  guardNova(center: Vec2, cfg: { radius: number; stun: number; knockback: number }): void {
+    this.emit({ type: 'guardNova', pos: { ...center }, radius: cfg.radius });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      enemy.knockback = add(enemy.knockback, scale(normalize(sub(enemy.pos, center)), cfg.knockback));
+      enemy.slow(0.5, cfg.stun, this);
+    }
+  }
+
+  /** Jugement du Paladin : une onde sacrée qui frappe autour de `center`, ignore les carapaces et le soigne. */
+  judgement(center: Vec2): void {
+    const player = this.player;
+    const cfg = player.cfg.paladin.judgement;
+    this.emit({ type: 'guardNova', pos: { ...center }, radius: cfg.radius });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 5, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+      if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
+    }
+    player.heal(player.cfg.maxHp * cfg.heal, this);
   }
 
   /** Le marteau du Paladin est en vol : on ne peut pas le relancer. */
@@ -930,7 +992,10 @@ export class World {
   throwHammer(dir: Vec2): boolean {
     if (this.hammerOut) return false;
     const cfg = this.player.cfg.paladin.hammer;
-    this.launch('hammer', dir, { speed: cfg.speed, range: cfg.range, damage: cfg.damage, knockback: cfg.knockback, radius: cfg.radius, pierce: true });
+    // Encensoir du moine : le marteau emporte les soins de l'Aura.
+    const damage = cfg.damage + this.player.censer;
+    this.player.censer = 0;
+    this.launch('hammer', dir, { speed: cfg.speed, range: cfg.range, damage, knockback: cfg.knockback, radius: cfg.radius, pierce: true });
     return true;
   }
 
@@ -990,6 +1055,9 @@ export class World {
     const full = charge !== undefined && k >= 1;
     const power = charge === undefined ? 1 : mix(ranger.charged.minFactor, ranger.charged.maxFactor, k) * (perks.chargedDamage ?? 1);
     const count = full && perks.splitShot ? perks.splitShot : 1;
+    // Les flèches d'un tir divisé partagent leurs cibles : chacune touche un ennemi différent, même déviées vers la
+    // même marque (Kami de la victoire).
+    const hit = new Set<number>();
     for (let i = 0; i < count; i++) {
       const angle = angleOf(dir) + degToRad(10) * (i - (count - 1) / 2);
       this.launch('arrow', fromAngle(angle), {
@@ -1001,6 +1069,7 @@ export class World {
         // Einherjar rôdeur : près de la mort, toutes les flèches transpercent.
         pierce: (full && Boolean(perks.chargedPierce)) || (perks.lowHpPierce !== undefined && player.hp < player.cfg.maxHp * perks.lowHpPierce),
         full,
+        hit,
       });
     }
     if (full) this.emit({ type: 'loose', pos: { ...player.pos }, full });
@@ -1022,13 +1091,26 @@ export class World {
   }
 
   /** Le filet s'ouvre : les ennemis autour sont immobilisés, un boss deux fois moins longtemps. */
-  netBurst(pos: Vec2): void {
+  netBurst(pos: Vec2, silk?: { amount: number; duration: number }): void {
     const cfg = this.player.cfg.ranger.net;
     this.emit({ type: 'netBurst', pos: { ...pos }, radius: cfg.radius });
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, pos) > cfg.radius + enemy.radius) continue;
-      enemy.stun(enemy.boss ? cfg.stun / 2 : cfg.stun, 'net', this);
+      // La soie de l'Arc de soie ne fait que ralentir : seul le filet du Rôdeur immobilise.
+      if (silk) enemy.slow(silk.amount, silk.duration, this);
+      else this.immobilize(enemy, enemy.boss ? cfg.stun / 2 : cfg.stun, 'net');
     }
+  }
+
+  /**
+   * Immobilisation par un filet, un fil de Jōren, la soie des âmes ou un tir étourdissant : après elle, le yokai y
+   * échappe pendant `IMMOBILIZE_RESPITE` secondes. Renvoie faux s'il y échappe encore.
+   */
+  immobilize(enemy: Enemy, duration: number, reason: StunReason): boolean {
+    if (enemy.bindImmunity > 0) return false;
+    enemy.stun(duration, reason, this);
+    enemy.bindImmunity = duration + IMMOBILIZE_RESPITE;
+    return true;
   }
 
   /** E : Marque du chasseur sur l'ennemi le plus proche de la souris, à portée. Faux s'il n'y a personne. */
@@ -1048,7 +1130,7 @@ export class World {
   private launch(
     kind: Projectile['kind'],
     dir: Vec2,
-    p: Pick<Projectile, 'speed' | 'range' | 'damage' | 'knockback' | 'radius' | 'pierce'> & { full?: boolean },
+    p: Pick<Projectile, 'speed' | 'range' | 'damage' | 'knockback' | 'radius' | 'pierce'> & { full?: boolean; hit?: Set<number> },
   ): void {
     this.projectiles.push({
       id: this.nextFxId--,
@@ -1115,18 +1197,33 @@ export class World {
       case 'hammer':
         enemy.receiveHit({ amount: p.damage * player.damageMultiplier(), from, knockback: p.knockback }, this);
         if (enemy.dead) player.onKill();
-        else if (perks.hammerStun) enemy.stun(perks.hammerStun, 'daze', this);
+        else if (perks.hammerStun) enemy.slow(0.4, perks.hammerStun, this);
         if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
         return true;
       case 'arrow':
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);
         // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
-        if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos);
+        if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos, perks.chargedNet);
+        // Arc d'Ikazuchi : la foudre tombe sur la première proie d'un tir plein, au plus une fois par recharge.
+        if (p.full && perks.chargedBolt && p.hit.size === 1 && player.boltCooldown <= 0) this.chargedBolt(enemy.pos, perks.chargedBolt);
         if (p.full && !enemy.dead) {
           if (perks.chargedMark) this.hunt(enemy, perks.chargedMark);
-          if (perks.chargedStun) enemy.stun(perks.chargedStun, 'daze', this);
+          if (perks.chargedStun) this.immobilize(enemy, perks.chargedStun, 'daze');
         }
         return p.pierce;
+    }
+  }
+
+  /** Arc d'Ikazuchi : un éclair frappe autour de l'impact et étourdit un instant. */
+  private chargedBolt(center: Vec2, cfg: { damage: number; radius: number; stun: number; cooldown: number }): void {
+    const player = this.player;
+    player.boltCooldown = cfg.cooldown;
+    this.emit({ type: 'lightning', pos: { ...center } });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+      else enemy.slow(0.5, cfg.stun, this);
     }
   }
 
@@ -1147,8 +1244,9 @@ export class World {
   private updateSnares(dt: number): void {
     this.snares = this.snares.filter((snare) => {
       snare.life -= dt;
-      const caught = this.enemies.find((e) => e.targetable && distance(e.pos, snare.pos) <= snare.radius + e.radius);
-      if (caught) caught.stun(snare.stun, 'snare', this);
+      // Un yokai encore protégé par son répit passe le fil sans le déclencher.
+      const caught = this.enemies.find((e) => e.targetable && e.bindImmunity <= 0 && distance(e.pos, snare.pos) <= snare.radius + e.radius);
+      if (caught) caught.slow(0.6, snare.stun, this);
       if (caught || snare.life <= 0) {
         this.emit({ type: 'snareEnd', id: snare.id });
         return false;
@@ -1297,7 +1395,7 @@ export class World {
       // Les chutes viennent des boss et de leurs serviteurs : elles suivent leur puissance, et frappent aussi les âmes.
       for (const foe of this.foes()) {
         const offset = sub(foe.pos, h.pos);
-        if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this);
+        if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this, true);
       }
       if (h.leavesWeb) this.addWeb(h.pos);
       return false;
@@ -1421,7 +1519,7 @@ export class World {
     const rate = this.curse('seve');
     if (!rate) return;
     for (const enemy of this.enemies) {
-      if (enemy.active && enemy.wounded && enemy.sinceHurt > SAP_DELAY) enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.maxHp * rate * dt);
+      if (enemy.active && enemy.wounded && enemy.sinceHurt > SAP_DELAY) enemy.regen(enemy.maxHp * rate * dt);
     }
   }
 

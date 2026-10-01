@@ -222,6 +222,8 @@ export class MirrorWorld implements WorldView {
       hammerCooldown: 0,
       guardLeft: cfg.paladin.guard.max,
       guardBroken: 0,
+      fervor: 0,
+      barrier: 0,
       raiseCooldown: 0,
       netCooldown: 0,
       huntCooldown: 0,

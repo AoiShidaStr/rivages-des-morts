@@ -1223,6 +1223,9 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 3, SPIRIT, 0.4));
         this.addShake(0.4);
         break;
+      case 'slow':
+        this.text(event.pos, 2, 'Ralenti', 'stun', 0.8);
+        break;
       case 'stun':
         if (event.reason === 'wall') this.text(event.pos, 2, 'Sonné !', 'stun');
         else if (event.reason === 'smash' || event.reason === 'bond') this.text(event.pos, 2, 'Étourdi', 'stun');
@@ -1406,6 +1409,17 @@ export class Renderer {
       case 'guardBreak':
         this.text(event.pos, 2.3, 'Garde brisée', 'hurt', 1.2);
         this.addShake(0.35);
+        break;
+      case 'perfectGuard':
+        // Blocage parfait : un éclair blanc autour du bouclier, et un mot au-dessus du texte de la garde.
+        this.text(event.pos, 2.8, 'Parfait !', 'parry', 1);
+        this.addFx(this.ringFx(event.pos, 2.2, DIVINE, 0.25));
+        if (event.hero === this.localId) this.addShake(0.3);
+        break;
+      case 'guardNova':
+        this.text(event.pos, 2.6, 'Onde de lumière', 'light', 1.2);
+        this.addFx(this.ringFx(event.pos, event.radius * 2.4, DIVINE, 0.5));
+        this.addShake(0.4);
         break;
       case 'divineAegis':
         this.text(event.pos, 2.5, 'Égide divine !', 'parry', 1.6);

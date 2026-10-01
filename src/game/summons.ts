@@ -42,6 +42,8 @@ export class Summon {
   readonly damageFactor: number;
   readonly speedFactor: number;
   readonly rate: number;
+  /** Portée de tir d'une âme de yokai à distance ; absente, l'âme frappe au contact. */
+  readonly range: number | undefined;
   private cooldown = 0;
   private striking = 0;
   private moving = false;
@@ -70,6 +72,7 @@ export class Summon {
     this.damageFactor = k.damage;
     this.speedFactor = k.speed;
     this.rate = k.rate;
+    this.range = k.range ?? (companion ? cfg.kinds[companion.kind]?.range : undefined);
   }
 
   /** Le compagnon permanent de l'Invocateur. */
@@ -121,12 +124,13 @@ export class Summon {
     return true;
   }
 
-  /** Soin (Aura de lumière, bouclier du Paladin). */
-  heal(amount: number, world: World): void {
+  /** Soin (Aura de lumière, bouclier du Paladin) ; renvoie les PV rendus. */
+  heal(amount: number, world: World): number {
     const gained = Math.min(amount, this.maxHp - this.hp);
-    if (gained <= 0 || this.gone) return;
+    if (gained <= 0 || this.gone) return 0;
     this.hp += gained;
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
+    return gained;
   }
 
   update(dt: number, world: World): void {
@@ -158,9 +162,13 @@ export class Summon {
       const toTarget = sub(target.pos, this.pos);
       this.facing = normalize(toTarget, this.facing);
       const gap = length(toTarget) - target.radius - this.radius;
-      if (gap > cfg.attackRange) this.step(this.facing, speed, dt);
-      else if (this.cooldown <= 0) {
-        world.summonHit(this, target, this.rush ? cfg.recall.damageFactor : 1);
+      // Une âme à distance tire de loin et recule si l'ennemi la serre de trop près (sauf pendant un Rappel).
+      const reach = this.range && !this.rush ? this.range : cfg.attackRange;
+      if (gap > reach) this.step(this.facing, speed, dt);
+      else if (this.range && !this.rush && gap < this.range * 0.4) this.step(scale(this.facing, -1), speed * 0.8, dt);
+      if (gap <= reach && this.cooldown <= 0) {
+        const ranged = Boolean(this.range) && !this.rush;
+        world.summonHit(this, target, (this.rush ? cfg.recall.damageFactor : 1) * (ranged ? cfg.rangedFactor : 1), ranged);
         this.rush = null;
         this.cooldown = cfg.attackCooldown / this.rate;
         this.striking = STRIKE_POSE;

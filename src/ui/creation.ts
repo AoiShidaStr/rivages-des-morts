@@ -121,6 +121,7 @@ export class CreationScreen {
           h('h3', {}, `${cls.name} · ${cls.subtitle}`),
           h('p', { class: 'class-playstyle' }, stars(cls.difficulty), ' ', cls.playstyle),
           ...cls.actives.map((a) => h('p', {}, h('kbd', {}, keyName(a.key)), ' ', h('b', {}, a.name), ` : ${a.description}`)),
+          ...(cls.passives ?? []).map((p) => h('p', {}, h('kbd', {}, 'Passif'), ' ', h('b', {}, p.name), ` : ${p.description}`)),
         ),
       );
 

@@ -103,7 +103,7 @@
       "passives": [
         {
           "name": "Égide divine",
-          "description": "Une fois par vague, quand tu passes sous 25 % de PV, tu es intouchable 2 s et tu récupères 10 % de tes PV.",
+          "description": "Une fois par vague, quand tu passes sous 35 % de PV, tu es intouchable 3 s et tu récupères 30 % de tes PV.",
           "effects": [{ "op": "set", "path": "perks.divineAegis", "value": { "threshold": 0.35, "invulnerable": 3, "heal": 0.3 } }]
         }
       ],
@@ -172,8 +172,8 @@
         },
         "rodeur": {
           "name": "Œil du tengu",
-          "description": "Transformé, tu bandes ton arc 50 % plus vite.",
-          "effects": [{ "op": "set", "path": "perks.yokaiDraw", "value": 1.5 }]
+          "description": "Transformé, tu bandes ton arc 30 % plus vite.",
+          "effects": [{ "op": "set", "path": "perks.yokaiDraw", "value": 1.3 }]
         }
       }
     }
@@ -190,11 +190,18 @@
       "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
       "effects": [
         { "op": "mul", "path": "maxHp", "value": 1.4 },
-        { "op": "set", "path": "block.reduction", "value": 0.9 }
+        { "op": "set", "path": "block.reduction", "value": 0.9 },
+        { "op": "set", "path": "perks.lastStand", "value": { "threshold": 0.3, "damage": 0.3, "lifesteal": 0.1 } }
+      ],
+      "passives": [
+        {
+          "name": "Au bord du gouffre",
+          "description": "Sous 30 % de tes PV, tu frappes 30 % plus fort et 10 % des dégâts que tu infliges te soignent. Rester bas est un risque qui paie."
+        }
       ],
       "actives": [
         { "key": "Clic droit", "name": "Blocage", "description": "Arrête 90 % d'un coup de face et remplit la rage." },
-        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit. Si elle touche, elle te rend 4 % de tes PV." },
+        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV." },
         { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
         { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
       ],
@@ -286,8 +293,8 @@
             {
               "id": "heracles-3",
               "name": "Chute du géant",
-              "description": "Le Bond étourdit les ennemis pendant 1,5 s à l'atterrissage.",
-              "effects": [{ "op": "set", "path": "bond.stun", "value": 1.5 }]
+              "description": "Le Bond ralentit de moitié les ennemis pendant 2,5 s à l'atterrissage.",
+              "effects": [{ "op": "set", "path": "bond.slow", "value": 2.5 }]
             },
             {
               "id": "heracles-4",
@@ -349,7 +356,7 @@
           "kappa": { "name": "Kappa", "description": "Lent et très robuste : il encaisse les coups à ta place.", "damage": 0.9, "hp": 1.8, "speed": 0.85, "rate": 1 },
           "kodama": { "name": "Kodama", "description": "Esprit d'arbre : chacun de ses coups te rend 2 PV.", "damage": 0.8, "hp": 1, "speed": 1, "rate": 1 },
           "hitodama": { "name": "Feu follet", "description": "Rapide et fragile ; ses flammes font 50 % de dégâts en plus.", "damage": 0.9, "hp": 0.7, "speed": 1.35, "rate": 1 },
-          "oublie": { "name": "Oublié", "description": "Guerrier sans nom : chacun de ses coups étourdit 0,5 s.", "damage": 1, "hp": 1.1, "speed": 1, "rate": 1 },
+          "oublie": { "name": "Oublié", "description": "Guerrier sans nom : chacun de ses coups ralentit de 40 % pendant 1 s.", "damage": 1, "hp": 1.1, "speed": 1, "rate": 1 },
           "kasaObake": { "name": "Kasa-obake", "description": "Ombrelle hantée, vive et équilibrée.", "damage": 1.2, "hp": 1.1, "speed": 1.1, "rate": 1 },
           "araignee": { "name": "Araignée", "description": "Frappe presque deux fois plus souvent, mais fragile.", "damage": 0.7, "hp": 0.7, "speed": 1.3, "rate": 1.7 },
           "shikome": { "name": "Shikome", "description": "Chasseresse des Enfers : rapide et mordante, mais fragile.", "damage": 1.35, "hp": 0.8, "speed": 1.3, "rate": 1 },
@@ -385,18 +392,18 @@
           },
           {
             "count": 4,
-            "description": "Tes âmes font 40 % de dégâts en plus ; +1 âme active.",
+            "description": "Tes âmes font 30 % de dégâts en plus ; +1 âme active.",
             "effects": [
-              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.4 },
+              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.3 },
               { "op": "add", "path": "summon.max", "value": 1 }
             ]
           },
           {
             "count": 6,
-            "description": "Tes âmes font 60 % de dégâts en plus ; +2 âmes actives.",
+            "description": "Tes âmes font 40 % de dégâts en plus ; +1 âme active.",
             "effects": [
-              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.6 },
-              { "op": "add", "path": "summon.max", "value": 2 }
+              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.4 },
+              { "op": "add", "path": "summon.max", "value": 1 }
             ]
           }
         ]
@@ -436,7 +443,7 @@
               "id": "seimei-4",
               "name": "Les Douze Shikigami",
               "ultimate": true,
-              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa a deux fois plus de PV et de durée, l'Oublié étourdit.",
+              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa a deux fois plus de PV et de durée, l'Oublié ralentit.",
               "effects": [{ "op": "set", "path": "perks.shikigami", "value": true }]
             }
           ]
@@ -456,8 +463,8 @@
             {
               "id": "orphee-2",
               "name": "Voix des morts",
-              "description": "Le Chœur spectral étourdit 1 s les ennemis proches.",
-              "effects": [{ "op": "set", "path": "perks.choirStun", "value": 1 }]
+              "description": "Le Chœur spectral ralentit de moitié les ennemis proches pendant 2 s.",
+              "effects": [{ "op": "set", "path": "perks.choirStun", "value": 2 }]
             },
             {
               "id": "orphee-3",
@@ -538,7 +545,7 @@
         {
           "key": "E",
           "name": "Écran de fumée",
-          "description": "Tu disparais 3 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique."
+          "description": "Tu disparais 2,5 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique. Revient en 15 s."
         },
         {
           "key": "R",
@@ -627,8 +634,8 @@
             {
               "id": "loki-2",
               "name": "Poudre aux yeux",
-              "description": "L'Écran de fumée étourdit 1,2 s les ennemis tout proches.",
-              "effects": [{ "op": "set", "path": "perks.smokeStun", "value": 1.2 }]
+              "description": "L'Écran de fumée ralentit de 60 % les ennemis tout proches pendant 2,4 s.",
+              "effects": [{ "op": "set", "path": "perks.smokeStun", "value": 2.4 }]
             },
             {
               "id": "loki-3",
@@ -640,7 +647,7 @@
               "id": "loki-4",
               "name": "Métamorphe",
               "ultimate": true,
-              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s.",
+              "description": "Chaque ennemi tué pendant que tu es invisible prolonge l'invisibilité de 1,5 s, jusqu'à 6 s d'invisibilité en tout par Écran de fumée.",
               "effects": [{ "op": "set", "path": "perks.smokeKillExtend", "value": 1.5 }]
             }
           ]
@@ -691,7 +698,7 @@
       "playstyle": "Bouclier levé, tu encaisses et tu soignes tes alliés mieux que toi-même : ménage ta garde.",
       "kit": "paladin",
       "weapon": "naginata-temple",
-      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 85 % d'un coup tant que sa garde tient (player.json, paladin.guard), et les alliés qu'il relève ne l'affaiblissent pas. Il ne reçoit que la moitié de ses propres soins (paladin.selfHeal) : c'est un soutien, pas un solitaire invincible.",
+      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 85 % d'un coup tant que sa garde tient (player.json, paladin.guard), et les alliés qu'il relève ne l'affaiblissent pas. La part de ses propres soins qu'il reçoit dépend de la taille de l'équipe (paladin.selfHeal : seul, deux, trois héros) : aux trois quarts en solo, où il n'a personne d'autre à soigner, à moitié à trois, où il soutient les autres.",
       "effects": [
         { "op": "set", "path": "kit", "value": "paladin" },
         { "op": "set", "path": "block.reduction", "value": 0.85 },
@@ -700,13 +707,16 @@
         { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
         { "op": "set", "path": "summon.malus", "value": 0 }
       ],
+      "passives": [
+        { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 6 % de tes PV rendus." }
+      ],
       "actives": [
         {
           "key": "Clic droit",
           "name": "Bouclier levé",
           "description": "Maintiens pour arrêter 85 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
         },
-        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et soigne chaque seconde tes alliés proches, âmes comprises (3 PV avec une arme de niveau 1, plus avec la forge), et moitié moins toi-même." },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et soigne chaque seconde tes alliés proches, âmes comprises (3 PV avec une arme de niveau 1, plus avec la forge). Toi-même, aux trois quarts en solo, un peu moins à deux, à moitié à trois." },
         { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
         {
           "key": "R",
@@ -719,7 +729,7 @@
         "tiers": [
           {
             "count": 2,
-            "description": "Chaque coup bloqué rend 3 PV à tes alliés proches, âmes comprises, et moitié moins à toi.",
+            "description": "Chaque coup bloqué rend 3 PV à tes alliés proches, âmes comprises, et à toi (moins en coop).",
             "effects": [{ "op": "set", "path": "perks.shieldHeal", "value": { "amount": 3, "radius": 3 } }]
           },
           {
@@ -769,8 +779,8 @@
               "id": "amaterasu-4",
               "name": "Ama-no-Iwato",
               "ultimate": true,
-              "description": "Tout yokai qui entre dans l'Aura est ébloui : étourdi 1,5 s, une fois par Aura.",
-              "effects": [{ "op": "set", "path": "perks.auraStun", "value": 1.5 }]
+              "description": "Tout yokai qui entre dans l'Aura est ébloui : ralenti de moitié 3 s, une fois par Aura.",
+              "effects": [{ "op": "set", "path": "perks.auraStun", "value": 3 }]
             }
           ]
         },
@@ -802,8 +812,8 @@
               "id": "tyr-4",
               "name": "Gleipnir",
               "ultimate": true,
-              "description": "Un coup bloqué entrave l'attaquant : il est étourdi 1,5 s.",
-              "effects": [{ "op": "set", "path": "perks.gleipnir", "value": 1.5 }]
+              "description": "Un coup bloqué entrave l'attaquant : il est ralenti de moitié 3 s.",
+              "effects": [{ "op": "set", "path": "perks.gleipnir", "value": 3 }]
             }
           ]
         },
@@ -862,7 +872,7 @@
         {
           "key": "Clic droit",
           "name": "Tir chargé",
-          "description": "Maintiens pour bander l'arc en marchant lentement, relâche pour tirer : de 0,2 fois les dégâts si tu lâches aussitôt à 3 fois une fois bandé à fond, plus loin et plus vite."
+          "description": "Maintiens pour bander l'arc, relâche pour tirer : de 0,2 fois les dégâts si tu lâches aussitôt à 3 fois une fois bandé à fond, plus loin et plus vite. Plus l'arc est bandé, plus tu marches lentement, et ton pas reste lourd un instant après le tir. L'esquive interrompt le tir."
         },
         {
           "key": "A",
@@ -872,7 +882,7 @@
         {
           "key": "E",
           "name": "Marque du chasseur",
-          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 6 % de tes PV. Revient en 8 s."
+          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 8 % de tes PV. Revient en 8 s."
         },
         { "key": "R", "name": "Recul", "description": "Bond en arrière, loin de la souris, en tirant trois flèches vers elle. Invulnérable pendant le saut." }
       ],
@@ -894,11 +904,11 @@
           },
           {
             "count": 6,
-            "description": "Un tir chargé plein traverse, marque pendant 5 s et fait 30 % de dégâts en plus.",
+            "description": "Un tir chargé plein traverse, marque pendant 5 s et fait 10 % de dégâts en plus.",
             "effects": [
               { "op": "set", "path": "perks.chargedPierce", "value": true },
               { "op": "set", "path": "perks.chargedMark", "value": 5 },
-              { "op": "set", "path": "perks.chargedDamage", "value": 1.3 }
+              { "op": "set", "path": "perks.chargedDamage", "value": 1.1 }
             ]
           }
         ]

@@ -68,8 +68,8 @@ export interface PlayerConfig {
     radius: number;
     knockback: number;
     cooldown: number;
-    /** Étourdissement à l'atterrissage (0 sans le talent d'Héraclès). */
-    stun: number;
+    /** Secondes de ralentissement à l'atterrissage (0 sans le talent d'Héraclès). */
+    slow: number;
   };
   /** R : on frappe plus vite, mais on encaisse plus. */
   frenzy: {
@@ -120,7 +120,9 @@ export interface SummonConfig {
   /** R : les âmes sont renforcées un moment. */
   choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
   /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort et encaisse mieux qu'un feu follet. */
-  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number }>>;
+  /** `range` : l'âme d'un yokai à distance garde son tir, et frappe de là (dégâts × `rangedFactor`). */
+  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number; range?: number }>>;
+  rangedFactor: number;
   /**
    * Compagnon permanent de l'Invocateur (choisi par le joueur) : son yokai, ses multiplicateurs de dégâts, de PV,
    * de vitesse et de cadence, et les secondes avant qu'il ne se reforme. Absent pour les autres classes.
@@ -135,6 +137,7 @@ export interface CompanionStats {
   hp: number;
   speed: number;
   rate: number;
+  range?: number;
 }
 
 /** Lame : frappe vite, marque ses proies et les achève en critiques. */
@@ -146,17 +149,27 @@ export interface BladeConfig {
   /** A : tous les coups sur la cible sont critiques un moment. */
   deathMark: { cooldown: number; duration: number; range: number };
   /** E : nuage de fumée ; le héros disparaît, les yokai attaquent le nuage. */
-  smoke: { cooldown: number; duration: number; radius: number };
+  /** `maxHidden` : invisibilité totale d'un nuage, prolongations de Métamorphe comprises. */
+  smoke: { cooldown: number; duration: number; radius: number; maxHidden: number };
   /** R : la Lame bondit d'ennemi en ennemi et frappe chacun. */
   dance: { cooldown: number; targets: number; range: number; damage: number; hop: number };
 }
 
 /** Paladin : bouclier levé, aura de soin, marteau lancé, et un allié relevé. */
 export interface PaladinConfig {
-  /** A : zone qui soigne les alliés de `heal` PV par seconde (le Paladin lui-même, d'une part `selfHeal`). */
+  /**
+   * A : zone qui soigne les alliés de `heal` PV par seconde. Le Paladin lui-même n'en reçoit qu'une part, selon la
+   * taille de l'équipe (`selfHeal` : seul, à deux, à trois).
+   */
   aura: { cooldown: number; duration: number; radius: number; heal: number };
   /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
-  selfHeal: number;
+  selfHeal: number[];
+  /**
+   * Jugement : chaque coup bloqué (`perBlock`, doublé en blocage parfait) et chaque coup d'arme porté (`perHit`)
+   * remplissent la ferveur ; pleine (`max`), le coup d'arme suivant libère une onde sacrée de `radius` m qui fait
+   * `damage` dégâts, ignore les carapaces et rend `heal` des PV max au Paladin.
+   */
+  judgement: { max: number; perBlock: number; perHit: number; radius: number; damage: number; heal: number };
   /**
    * Jauge de garde : chaque coup bloqué l'use de `cost` points par % des PV max du héros qu'il aurait retirés
    * (au moins `minCost`). Vide, la garde se brise pendant `breakTime` s. Elle remonte de `regen` par seconde
@@ -176,8 +189,19 @@ export interface RangerConfig {
   /**
    * Clic droit maintenu : la flèche se charge, de `minFactor` à `maxFactor` fois les dégâts, selon la charge.
    * Une flèche lâchée aussitôt ne fait presque rien : on ne peut pas mitrailler au clic droit en marchant.
+   * Plus l'arc est bandé, plus on marche lentement (de `moveFactor` à `fullMoveFactor`) ; après le tir, la vitesse
+   * revient en `recover` secondes. L'esquive interrompt le tir.
    */
-  charged: { time: number; minFactor: number; maxFactor: number; moveFactor: number; rangeFactor: number; speedFactor: number };
+  charged: {
+    time: number;
+    minFactor: number;
+    maxFactor: number;
+    moveFactor: number;
+    fullMoveFactor: number;
+    recover: number;
+    rangeFactor: number;
+    speedFactor: number;
+  };
   /** A : flèche qui immobilise les ennemis autour de l'impact. */
   net: { cooldown: number; stun: number; radius: number; range: number };
   /** E : la cible prend plus de dégâts, de toutes les sources ; l'abattre rend `killHeal` des PV max. */
@@ -204,6 +228,11 @@ export interface Perks {
   frenzyHealOnKill?: number;
   /** Dégâts en plus sous la moitié des PV. */
   lowHpDamage?: number;
+  /**
+   * Au bord du gouffre (passif du Guerrier, et objets) : sous `threshold` de ses PV, le héros frappe plus fort (`damage`)
+   * et se soigne d'une part des dégâts qu'il inflige (`lifesteal`).
+   */
+  lastStand?: { threshold: number; damage: number; lifesteal: number };
   /** Une fois par descente, survit à un coup fatal. */
   bearSkin?: boolean;
   /** Einherjar : dégâts en plus selon les PV perdus (valeur à 0 PV). */
@@ -338,7 +367,10 @@ export interface Perks {
   /** Lune pleine : un tir chargé plein étourdit. */
   chargedStun?: number;
   /** Arc de soie : un tir chargé plein ouvre un filet sur le premier ennemi touché. */
-  chargedNet?: boolean;
+  /** Arc de soie : le tir chargé plein s'ouvre en soie qui ralentit (`amount` de la vitesse, `duration` s). */
+  chargedNet?: { amount: number; duration: number };
+  /** Après la Frappe, ralentissement des yokai touchés (objets du Guerrier). */
+  smashSlow?: { amount: number; duration: number };
   /** Carquois divin : un tir chargé plein part en plusieurs flèches. */
   splitShot?: number;
   /** Vent du nord : le Recul laisse un filet là où tu étais. */
@@ -347,6 +379,40 @@ export interface Perks {
   markRefund?: boolean;
   /** Kami de la victoire : tes flèches s'infléchissent vers la cible marquée. */
   homing?: boolean;
+
+  // --- Objets du Yomi (0.3.0) ---
+  /** Masque de hannya : sous `threshold` des PV, `damage` de dégâts en plus, et chaque coup porté rend `lifesteal` des PV max. */
+  hannya?: { threshold: number; damage: number; lifesteal: number };
+  /** Gourde de saké d'oni : un blocage parfait donne `rage` ; une Frappe lancée à rage pleine soigne `smashHeal` fois plus. */
+  gourde?: { rage: number; smashHeal: number };
+  /** Nodachi de l'Ikusa : coups plus rapides selon les PV perdus, jusqu'à `bonus` sous `threshold` des PV. */
+  lowHpAttackSpeed?: { threshold: number; bonus: number };
+  /** Cloche du Grand Rocher : un coup bloqué renvoie cette part de ses dégâts à l'attaquant. */
+  guardReflect?: number;
+  /** Encensoir du moine : les PV rendus par l'Aura renforcent le prochain Marteau (`perHp` dégât par PV, au plus `max` fois ses dégâts). */
+  censer?: { perHp: number; max: number };
+  /** Tabi du messager : après un Recul, le prochain tir part chargé à fond. */
+  leapCharge?: boolean;
+  /** Arc d'Ikazuchi : un tir chargé plein appelle la foudre à l'impact, au plus une fois toutes les `cooldown` s. */
+  chargedBolt?: { damage: number; radius: number; stun: number; cooldown: number };
+  /** Tsuba ébréchée : chaque coup critique retire ces secondes à la recharge de la Marque de mort. */
+  critMarkRefund?: number;
+  /** Mino de paille : part des dégâts des projectiles et des zones qui est arrêtée. */
+  hazardWard?: number;
+  /** Yomotsu-hegui : dégâts et vitesse en plus, mais les soins reçus sont multipliés par `healing`. */
+  yomotsu?: { damage: number; speed: number; healing: number };
+  /** Gohei du sanctuaire : les effets du parent divin sont renforcés de ce facteur. */
+  parentBoost?: number;
+  /** Dogū aux yeux clos : la carapace d'argile absorbe ce nombre de coups avant de se reformer. */
+  clayCharges?: number;
+  /** Panoplies : PV max multipliés. */
+  maxHpFactor?: number;
+  /** Lamelles d'os de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
+  dashShield?: { amount: number; duration: number };
+  /** Sōhei : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
+  guardBreakNova?: { radius: number; stun: number; knockback: number };
+  /** Éclaireur du Yomi : la cible de la Marque du chasseur fait cette part de dégâts en moins. */
+  huntMarkWeaken?: number;
 }
 
 export interface EnemyBaseConfig {
@@ -479,6 +545,9 @@ export interface IkazuchiConfig extends EnemyBaseConfig {
   bolt: HazardConfig;
   /** Délai entre deux disparitions, quand le héros s'approche trop. */
   blinkCooldown: number;
+  /** Distance d'un éclair de fuite, et nombre d'éclairs par ikazuchi. */
+  blinkDistance: number;
+  blinkCharges: number;
 }
 
 /**
@@ -577,6 +646,13 @@ export interface JorogumoConfig extends EnemyBaseConfig {
     webLayInterval: number;
   };
   ceiling: {
+    /** Secondes au sol, après une chute, avant de remonter. */
+    groundTime: number;
+    /** Fils lancés sans succès avant de redescendre d'elle-même. */
+    pullsBeforeDrop: number;
+    /** Part des PV max qu'elle peut regagner au plafond : par montée, et sur tout le combat. */
+    healPerClimb: number;
+    healTotal: number;
     height: number;
     climbTime: number;
     driftSpeed: number;

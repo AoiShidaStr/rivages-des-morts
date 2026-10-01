@@ -4,9 +4,14 @@
 //   npm run equilibrage                                  niveaux 1, 10 et 20, 12 descentes par combinaison
 //   npm run equilibrage -- --niveaux 10 --parties 20 --classes paladin,rodeur --donjon palais --json resultats.json
 //   npm run equilibrage -- --classes invocateur --compagnon kodama
+//   npm run equilibrage -- --niveaux 30,50 --stuff complet            fin de progression, meilleur équipement
+//   npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3    en coop : deux alliés joués par le bot
+//   npm run equilibrage -- --classes lame --objets menpo-shikome,do-lamelles-os   le héros testé porte ces objets
 //
-// Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau ; au niveau 10 et plus, il a ses 9 points
-// de talents (deux branches pleines et un nœud). Le donjon est au niveau du héros.
+// Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau (`--stuff complet` : le meilleur
+// équipement de sa classe, arme épique et relique comprises) ; au niveau 10 et plus, il a ses 9 points de talents
+// (deux branches pleines et un nœud). Le donjon est au niveau du héros. Avec `--joueurs 2` ou `3`, les alliés sont
+// d'autres classes (`--allies lame,rodeur` pour les choisir), au même niveau et avec le même équipement.
 import os from 'node:os';
 import { writeFileSync } from 'node:fs';
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
@@ -24,6 +29,29 @@ const RACES = [['einherjar'], ['oushebti'], ['demi-dieu', 'zeus'], ['demi-dieu',
 /** Les branches de talents prises par le bot : les deux premières pleines, un nœud de la troisième. */
 const TREE = { guerrier: ['susanoo', 'heracles', 'berserkir'], invocateur: ['seimei', 'orphee', 'anubis'], lame: ['tsukuyomi', 'thanatos', 'loki'], paladin: ['tyr', 'amaterasu', 'osiris'], rodeur: ['artemis', 'hachiman', 'skadi'] };
 const GEAR = { casque: 'chapeau-paille', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'magatama-fele' };
+/** `--stuff complet` : le meilleur équipement de chaque classe, forgé au niveau du héros (arme comprise). */
+const FULL = {
+  guerrier: { arme: 'totsuka-tsurugi', casque: 'kabuto-fendu', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'peche-okamuzumi', relique: 'coupelle-kappa' },
+  invocateur: { arme: 'eventail-jorogumo', casque: 'voile-izanami', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'magatama-fele', relique: 'magatama-yasakani' },
+  lame: { arme: 'kaiken-izanami', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
+  paladin: { arme: 'miroir-yata', casque: 'chapeau-paille', plastron: 'do-yomi', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
+  rodeur: { arme: 'arc-soie', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
+};
+const STUFF = option('stuff', 'typique');
+/** `--objets a,b` : objets portés en plus par le héros testé (pas ses alliés), chacun à la place de celui de son emplacement. */
+const OBJECTS = option('objets', '').split(',').filter(Boolean);
+/**
+ * `--mode dps` (`npm run dps`) : banc de DPS. Chaque héros frappe pendant `--duree` secondes un kodama immobile et
+ * inoffensif dont les PV remontent sans cesse (`--pv` : ses PV de base, pour les effets qui en dépendent). Toutes les
+ * compétences qui font des dégâts partent dès qu'elles sont prêtes. Cible (GDD, plan de mise à jour) : en dégâts
+ * par seconde, Lame 100 %, Rôdeur 95 %, Guerrier et Invocateur 75 %, Paladin 60 %.
+ */
+const MODE = option('mode', 'survie');
+const DPS_TARGET = { lame: 1, rodeur: 1 / 1.05, guerrier: 0.75, invocateur: 0.75, paladin: 0.6 };
+const DURATION = Number(option('duree', '60'));
+const DUMMY_HP = Number(option('pv', '750'));
+const PLAYERS = Math.max(1, Math.min(3, Number(option('joueurs', '1'))));
+const ALLIES = option('allies', '').split(',').filter(Boolean);
 /** Compagnon de l'Invocateur (`--compagnon kodama`), celui par défaut de la classe sinon. */
 const COMPANION = option('compagnon', '');
 /** Le donjon joué (`--donjon palais`), les Rizières noyées par défaut. */
@@ -49,41 +77,81 @@ async function worker() {
   const dungeon = content.dungeons[DUNGEON] ?? content.dungeons.rizieres;
   const base = { ...dungeon.arena, player: player.default, enemies: enemies.default };
 
-  parentPort.on('message', ({ job, runs }) => {
-    const weapon = content.skills.classes[job.cls].weapon;
-    const gear = job.level >= 5 ? GEAR : {};
-    const items = [weapon, ...Object.values(gear)];
-    const [a, b, c] = TREE[job.cls];
-    const talents = job.level >= 10 ? [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`) : [];
+  /** Réglages d'un héros de cette classe et de cette race, équipé et formé pour ce niveau. */
+  const heroConfig = (cls, race, parent, level, tested = true) => {
+    const equipped = STUFF === 'complet' && level >= 5 ? { ...FULL[cls] } : { arme: content.skills.classes[cls].weapon, ...(level >= 5 ? GEAR : {}) };
+    for (const id of tested ? OBJECTS : []) {
+      const slot = content.items[id]?.slot;
+      if (!slot) throw new Error(`Objet inconnu ou sans emplacement : ${id}`);
+      equipped[slot] = id;
+    }
+    const items = Object.values(equipped);
+    const [a, b, c] = TREE[cls];
+    const talents = level >= 10 ? [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`) : [];
     const state = {
       version: 1,
-      hero: { race: job.race, class: job.cls, ...(job.parent ? { parent: job.parent } : {}) },
-      ...(COMPANION ? { companion: COMPANION } : {}),
+      hero: { race, class: cls, ...(parent ? { parent } : {}) },
+      ...(COMPANION && cls === 'invocateur' ? { companion: COMPANION } : {}),
       oboles: 0,
       xp: 0,
       talents,
       items,
-      equipped: { arme: weapon, ...gear },
-      itemLevels: Object.fromEntries(items.map((id) => [id, job.level])),
+      equipped,
+      itemLevels: Object.fromEntries(items.map((id) => [id, level])),
       dungeons: {},
       materials: {},
       flags: {},
       quests: {},
       chests: 0,
     };
-    const cfg = buildLoadout(base.player, state, content, job.level).config;
+    return buildLoadout(base.player, state, content, level).config;
+  };
+
+  /** Banc de DPS : le kodama ne bouge pas, ne soigne pas, ne recule pas, et ses PV remontent à chaque pas. */
+  const dummyEnemies = { ...base.enemies, kodama: { ...base.enemies.kodama, maxHp: DUMMY_HP, speed: 0, knockbackFactor: 0, healInterval: 1e9 } };
+  const dps = (job, runs) => {
+    const cfg = heroConfig(job.cls, job.race, job.parent, job.level);
+    const results = [];
+    for (let r = 0; r < runs; r++) {
+      const world = new World(
+        { ...base, enemies: dummyEnemies, player: cfg, waves: [{ label: 'Banc de DPS', spawns: [{ kind: 'kodama', count: 1 }] }], difficulty: difficultyFor(content.difficulty, job.level, 1, dungeon.strength) },
+        0,
+      );
+      const bot = new Bot(world, world.players[0], true);
+      let t = 0;
+      let dealt = 0;
+      while (t < DURATION + 30) {
+        world.update(1 / 60, bot.input());
+        const dummy = world.enemies[0];
+        if (dummy) dummy.hp = dummy.maxHp;
+        for (const e of world.drainEvents()) if (e.type === 'enemyHit' && dummy) dealt += e.amount;
+        // Le chrono part quand le kodama est là.
+        if (dummy?.active) t += 1 / 60;
+        if (t >= DURATION) break;
+      }
+      results.push(dealt / DURATION);
+    }
+    parentPort.postMessage({ ...job, dps: results.reduce((a, b) => a + b, 0) / results.length });
+  };
+
+  parentPort.on('message', ({ job, runs }) => {
+    if (MODE === 'dps') return dps(job, runs);
+    const cfg = heroConfig(job.cls, job.race, job.parent, job.level);
+    const allyClasses = (ALLIES.length ? ALLIES : CLASSES.filter((c) => c !== job.cls)).slice(0, PLAYERS - 1);
+    const allies = allyClasses.map((cls) => heroConfig(cls, 'einherjar', undefined, job.level, false));
     const out = [];
     for (let r = 0; r < runs; r++) {
-      const world = new World({ ...base, player: cfg, difficulty: difficultyFor(content.difficulty, job.level, 1, dungeon.strength) }, 0);
-      const bot = new Bot(world, world.players[0]);
+      const world = new World({ ...base, player: cfg, allies, difficulty: difficultyFor(content.difficulty, job.level, PLAYERS, dungeon.strength) }, 0);
+      const bots = world.players.map((hero) => new Bot(world, hero));
       let t = 0;
       let taken = 0;
       let healed = 0;
       let dealt = 0;
       while (world.state === 'playing' && t < 600) {
-        world.update(1 / 60, bot.input());
+        const inputs = bots.map((bot) => bot.input());
+        world.update(1 / 60, PLAYERS > 1 ? inputs : inputs[0]);
         for (const e of world.drainEvents()) {
-          if (e.type === 'playerHit') taken += e.amount;
+          if (e.type === 'playerHit' && (e.hero ?? 0) === 0) taken += e.amount;
           else if (e.type === 'heal' && e.id === 0) healed += e.amount;
           else if (e.type === 'enemyHit') dealt += e.amount;
         }
@@ -156,7 +224,39 @@ function report(rows, levels) {
   return lines.join('\n');
 }
 
+/** Dégâts par seconde de chaque classe, comparés à la Lame et à la cible du plan (écart toléré : 5 points). */
+function dpsReport(rows, levels) {
+  const lines = [];
+  const avg = (list) => list.reduce((s, r) => s + r.dps, 0) / list.length;
+  const alerts = [];
+  for (const level of levels) {
+    const at = rows.filter((r) => r.level === level);
+    lines.push(`\n## Niveau ${level}\n`);
+    lines.push(`| Race | ${CLASSES.join(' | ')} |`);
+    lines.push(`|---|${CLASSES.map(() => '---').join('|')}|`);
+    for (const [race, parent] of RACES) {
+      const row = at.filter((r) => r.race === race && (r.parent ?? undefined) === parent);
+      if (row.length) lines.push(`| ${key(row[0])} | ${CLASSES.map((cls) => row.find((r) => r.cls === cls)).map((r) => (r ? r.dps.toFixed(1) : '-')).join(' | ')} |`);
+    }
+    const lame = avg(at.filter((r) => r.cls === 'lame'));
+    lines.push('');
+    lines.push('| Classe | DPS moyen | Part de la Lame | Cible | Écart |');
+    lines.push('|---|---|---|---|---|');
+    for (const cls of CLASSES) {
+      const list = at.filter((r) => r.cls === cls);
+      if (!list.length) continue;
+      const share = lame ? avg(list) / lame : 0;
+      const gap = share - DPS_TARGET[cls];
+      lines.push(`| ${cls} | ${avg(list).toFixed(1)} | ${pct(share)} | ${pct(DPS_TARGET[cls])} | ${gap >= 0 ? '+' : ''}${Math.round(gap * 100)} pts |`);
+      if (Math.abs(gap) > 0.05) alerts.push(`niveau ${level} : ${cls} à ${pct(share).trim()} de la Lame (cible ${pct(DPS_TARGET[cls]).trim()})`);
+    }
+  }
+  lines.push(alerts.length ? `\nHors des cibles (±5 points) :\n${alerts.map((a) => `- ${a}`).join('\n')}` : '\nToutes les cibles sont tenues.');
+  return lines.join('\n');
+}
+
 async function main() {
+
   const levels = option('niveaux', '1,10,20').split(',').map(Number);
   const runs = Number(option('parties', '12'));
   const classes = option('classes', CLASSES.join(',')).split(',');
@@ -170,7 +270,8 @@ async function main() {
   await Promise.all(
     Array.from({ length: threads }, () =>
       new Promise((resolve, reject) => {
-        const w = new Worker(fileURLToPath(import.meta.url));
+        // Les fils ne reçoivent pas les options de la ligne de commande d'eux-mêmes : on les leur passe.
+        const w = new Worker(fileURLToPath(import.meta.url), { argv: process.argv.slice(2) });
         const next = () => {
           const job = jobs.shift();
           if (job) w.postMessage({ job, runs });
@@ -188,7 +289,14 @@ async function main() {
     ),
   );
   process.stderr.write(`\r${total} combinaisons, ${runs} descentes chacune, en ${Math.round((Date.now() - started) / 1000)} s\n`);
-  console.log(report(rows, levels));
+  if (MODE === 'dps') {
+    console.log(`# Banc de DPS : kodama immobile, ${DURATION} s, équipement ${STUFF}, ${runs} essais par combinaison`);
+    console.log(dpsReport(rows, levels));
+  } else {
+    console.log(`# Équilibrage : ${DUNGEON}, équipement ${STUFF}${OBJECTS.length ? ` + ${OBJECTS.join(', ')}` : ''}, ${PLAYERS} joueur${PLAYERS > 1 ? 's' : ''}, ${runs} descentes par combinaison`);
+    console.log(report(rows, levels));
+  }
+
   const json = option('json', '');
   if (json) writeFileSync(json, JSON.stringify(rows, null, 1));
 }

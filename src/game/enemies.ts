@@ -72,6 +72,17 @@ export abstract class Enemy {
   readonly marks: Record<MarkKind, number> = { shadow: 0, death: 0, hunt: 0 };
   /** Dégâts reçus en plus sous la Marque du chasseur. */
   huntBonus = 0;
+  /**
+   * Secondes pendant lesquelles filets, fils et soie ne peuvent plus l'immobiliser : la durée de l'immobilisation en
+   * cours, puis un temps de répit (World.immobilize). On ne bloque plus un yokai à l'infini.
+   */
+  bindImmunity = 0;
+  /**
+   * Ralentissement : part de la vitesse perdue (0 à 1) et secondes restantes. Il freine les déplacements, charges
+   * comprises, sans jamais interrompre une attaque : l'esquive garde tout son sens.
+   */
+  slowAmount = 0;
+  slowTime = 0;
 
   constructor(
     readonly id: number,
@@ -163,6 +174,7 @@ export abstract class Enemy {
     }
     this.sinceHurt += dt;
     for (const kind of MARK_KINDS) this.marks[kind] = Math.max(0, this.marks[kind] - dt);
+    this.bindImmunity = Math.max(0, this.bindImmunity - dt);
     this.focusTimer -= dt;
     if (this.focusTimer <= 0 || !world.isFoe(this.focus)) {
       this.focus = world.pickFoe(this.pos);
@@ -170,7 +182,13 @@ export abstract class Enemy {
     }
     // Étourdissement par défaut (feux follets…) : l'ennemi reste figé, seul le recul le déplace.
     if (this.frozen > 0) this.frozen = Math.max(0, this.frozen - dt);
-    else this.think(dt, world);
+    else {
+      const before = { ...this.pos };
+      this.think(dt, world);
+      if (this.slowTime > 0) this.pos = add(before, scale(sub(this.pos, before), 1 - this.slowAmount));
+    }
+    this.slowTime = Math.max(0, this.slowTime - dt);
+    if (this.slowTime <= 0) this.slowAmount = 0;
     this.pos = add(this.pos, scale(this.knockback, dt));
     this.knockback = scale(this.knockback, Math.exp(-8 * dt));
     world.clampToArena(this.pos, this.radius);
@@ -194,7 +212,7 @@ export abstract class Enemy {
 
   /** Soin (kodama) : proportionnel aux PV renforcés, pour garder le même effet à tous les niveaux. */
   heal(amount: number, world: World): void {
-    const gained = Math.min(amount * this.vigor, this.maxHp - this.hp);
+    const gained = this.limitHeal(Math.min(amount * this.vigor, this.maxHp - this.hp));
     if (gained <= 0) return;
     this.hp += gained;
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
@@ -212,12 +230,12 @@ export abstract class Enemy {
   protected power(amount: number, world: World): number {
     const rancune = world.curse('rancune');
     const angry = rancune && this.hp < this.maxHp * 0.3 ? 1 + rancune : 1;
-    return amount * this.might * angry * (1 - world.dazzle(this.pos));
+    return amount * this.might * angry * (1 - world.dazzle(this.pos, this.marks.hunt > 0));
   }
 
-  /** Tout coup porté au héros ou à une âme passe par ici. */
-  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World): boolean {
-    return foe.takeHit(this.power(amount, world), dir, knockback, world);
+  /** Tout coup porté au héros ou à une âme passe par ici ; `falling` : il tombe du ciel (Mino de paille). */
+  protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World, falling = false): boolean {
+    return foe.takeHit(this.power(amount, world), dir, knockback, world, falling);
   }
 
   /** Coup paré : la garde du Guerrier en laisse passer une part, le bouclier du Paladin rien. */
@@ -239,11 +257,11 @@ export abstract class Enemy {
     }
   }
 
-  /** Coup en cercle (chute, morsure) : touche le héros et les âmes dans le rayon. */
-  protected strikeAround(center: Vec2, radius: number, damage: number, knockback: number, world: World): void {
+  /** Coup en cercle (chute, morsure) : touche le héros et les âmes dans le rayon. `falling` : il tombe du ciel. */
+  protected strikeAround(center: Vec2, radius: number, damage: number, knockback: number, world: World, falling = false): void {
     for (const foe of world.foes()) {
       const offset = sub(foe.pos, center);
-      if (length(offset) <= radius + foe.radius) this.hitFoe(foe, damage, normalize(offset), knockback, world);
+      if (length(offset) <= radius + foe.radius) this.hitFoe(foe, damage, normalize(offset), knockback, world, falling);
     }
   }
 
@@ -255,10 +273,28 @@ export abstract class Enemy {
   /** Secondes d'immobilisation, pour les ennemis sans étourdissement propre. */
   protected frozen = 0;
 
+  /** Ralentit l'ennemi : le plus fort des ralentissements en cours l'emporte, le plus long aussi. */
+  slow(amount: number, duration: number, world: World): void {
+    const fresh = this.slowTime <= 0;
+    this.slowAmount = Math.max(this.slowAmount, Math.min(0.9, amount));
+    this.slowTime = Math.max(this.slowTime, duration);
+    if (fresh) world.emit({ type: 'slow', id: this.id, pos: { ...this.pos } });
+  }
+
   /** Par défaut, l'ennemi est figé. Kappa, Oublié, kodama… ont leur propre état étourdi. */
   stun(duration: number, reason: StunReason, world: World): void {
     this.frozen = Math.max(this.frozen, duration);
     world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  /** Régénération (« Sève du Yomi ») : comme un soin, sans effet à l'écran. */
+  regen(amount: number): void {
+    this.hp += this.limitHeal(Math.min(amount, this.maxHp - this.hp));
+  }
+
+  /** Part d'un soin que l'ennemi reçoit vraiment ; un boss peut la plafonner. */
+  protected limitHeal(amount: number): number {
+    return amount;
   }
 
   protected abstract think(dt: number, world: World): void;
@@ -710,7 +746,7 @@ export class KasaObake extends Enemy {
     this.height = 0;
     this.pos = { ...target };
     world.emit({ type: 'land', id: this.id, pos: { ...target }, radius: cfg.landRadius });
-    this.strikeAround(target, cfg.landRadius, cfg.landDamage, cfg.landKnockback, world);
+    this.strikeAround(target, cfg.landRadius, cfg.landDamage, cfg.landKnockback, world, true);
     this.state = { kind: 'recover', t: cfg.landRecover };
   }
 
@@ -861,6 +897,11 @@ export class Jorogumo extends Enemy {
   private pullTimer = 0;
   private hitodamaTimer = 2;
   private drift: Vec2;
+  /** Phase 3 : secondes au sol avant de remonter, fils lancés depuis la dernière montée, PV regagnés au plafond. */
+  private groundTimer = 0;
+  private pulls = 0;
+  private climbHealed = 0;
+  private totalHealed = 0;
 
   constructor(
     id: number,
@@ -969,6 +1010,10 @@ export class Jorogumo extends Enemy {
       case 'walk':
         if (this.phase === 1) this.walkHuman(dt, world);
         else this.walkSpider(dt, world);
+        if (this.phase === 3 && this.state.kind === 'walk') {
+          this.groundTimer -= dt;
+          if (this.groundTimer <= 0) this.climb();
+        }
         break;
       case 'melee':
         state.t += dt;
@@ -986,7 +1031,7 @@ export class Jorogumo extends Enemy {
       case 'transform':
         state.t += dt;
         if (state.t < this.cfg.transformTime) break;
-        if (this.phase === 3) this.state = { kind: 'climb', t: 0 };
+        if (this.phase === 3) this.climb();
         else this.state = { kind: 'walk' };
         break;
       case 'telegraph':
@@ -1005,7 +1050,11 @@ export class Jorogumo extends Enemy {
       case 'stunned':
       case 'grounded':
         state.t -= dt;
-        if (state.t <= 0) this.state = this.phase === 3 ? { kind: 'climb', t: 0 } : { kind: 'walk' };
+        if (state.t <= 0) {
+          // Redescendue, elle reste un moment au sol avant de remonter : c'est là qu'on la frappe.
+          this.state = { kind: 'walk' };
+          if (this.phase === 3) this.groundTimer = this.cfg.ceiling.groundTime;
+        }
         break;
       case 'climb': {
         state.t += dt;
@@ -1177,6 +1226,23 @@ export class Jorogumo extends Enemy {
     this.state = { kind: 'recover', t: this.cfg.spider.recover };
   }
 
+  private climb(): void {
+    this.state = { kind: 'climb', t: 0 };
+    this.pulls = 0;
+    this.climbHealed = 0;
+  }
+
+  /** Au plafond, elle regagne au plus `healPerClimb` de ses PV par montée, et `healTotal` sur tout le combat. */
+  protected limitHeal(amount: number): number {
+    const aloft = ['climb', 'ceiling', 'aim', 'pull'].includes(this.state.kind);
+    if (!aloft || amount <= 0) return amount;
+    const cfg = this.cfg.ceiling;
+    const allowed = Math.max(0, Math.min(amount, this.maxHp * cfg.healPerClimb - this.climbHealed, this.maxHp * cfg.healTotal - this.totalHealed));
+    this.climbHealed += allowed;
+    this.totalHealed += allowed;
+    return allowed;
+  }
+
   private updateCeiling(dt: number, world: World): void {
     const cfg = this.cfg.ceiling;
     const toDrift = sub(this.drift, this.pos);
@@ -1219,8 +1285,11 @@ export class Jorogumo extends Enemy {
       return;
     }
     if (state.t >= cfg.pullMaxTime) {
-      this.state = { kind: 'ceiling' };
       this.pullTimer = cfg.pullInterval;
+      // Après quelques fils manqués, elle redescend d'elle-même.
+      this.pulls++;
+      if (this.pulls >= cfg.pullsBeforeDrop) this.state = { kind: 'drop', t: 0, from: { ...this.pos }, to: { ...this.pos }, snag: false };
+      else this.state = { kind: 'ceiling' };
       return;
     }
     player.tether = { pull: scale(normalize(toBoss), cfg.pullSpeed), moveFactor: cfg.tetheredMoveFactor };
@@ -1352,7 +1421,7 @@ export class Shikome extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        foe.guard(world, this);
+        foe.guard(world, this, this.power(cfg.lungeDamage, world), true);
         world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });
         this.knockback = scale(state.dir, -6);
         this.stun(cfg.parryStun, 'parry', world);
@@ -1383,6 +1452,8 @@ export class Ikazuchi extends Enemy {
   private state: IkazuchiState = { kind: 'drift' };
   private boltTimer: number;
   private blinkTimer = 0;
+  /** Éclairs déjà utilisés pour fuir : passé `blinkCharges`, il reste à portée de lame. */
+  private blinks = 0;
   private readonly orbit = Math.random() < 0.5 ? -1 : 1;
 
   constructor(
@@ -1442,10 +1513,12 @@ export class Ikazuchi extends Enemy {
         this.boltTimer = cfg.boltInterval * (0.85 + Math.random() * 0.3);
         return;
       case 'drift': {
-        // Trop près : il disparaît dans un éclair et reparaît au bord de l'arène.
-        if (dist < cfg.fleeDistance && this.blinkTimer <= 0) {
+        // Trop près : il disparaît dans un éclair et reparaît quelques pas plus loin, un nombre limité de fois.
+        if (dist < cfg.fleeDistance && this.blinkTimer <= 0 && this.blinks < cfg.blinkCharges) {
           world.emit({ type: 'lightning', pos: { ...this.pos } });
-          this.pos = world.edgePoint();
+          this.pos = add(this.pos, scale(normalize(sub(this.pos, foe.pos), this.facing), cfg.blinkDistance));
+          world.clampToArena(this.pos, this.radius);
+          this.blinks++;
           world.emit({ type: 'lightning', pos: { ...this.pos } });
           this.blinkTimer = cfg.blinkCooldown;
           return;
@@ -1819,7 +1892,7 @@ export class Izanami extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        foe.guard(world, this);
+        foe.guard(world, this, this.power(cfg.lungeDamage, world), true);
         foe.knockback = scale(state.dir, 6);
         this.endLunge(world);
         return;

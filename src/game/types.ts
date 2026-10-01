@@ -59,8 +59,13 @@ export type GameEvent =
   | { type: 'guard'; pos: Vec2; rage: number }
   /** La garde du Paladin se brise : sa jauge est vide. */
   | { type: 'guardBreak'; pos: Vec2 }
+  /** Garde levée juste avant le coup. */
+  | { type: 'perfectGuard'; pos: Vec2; hero: number }
+  /** Sōhei : la garde brisée libère une onde de lumière. */
+  | { type: 'guardNova'; pos: Vec2; radius: number }
   | { type: 'parry'; id: number; pos: Vec2 }
   | { type: 'stun'; id: number; pos: Vec2; reason: StunReason }
+  | { type: 'slow'; id: number; pos: Vec2 }
   | { type: 'telegraph'; id: number; from: Vec2; dir: Vec2; length: number; width: number; duration: number }
   | { type: 'chargeEnd'; id: number }
   | { type: 'channel'; id: number; pos: Vec2; radius: number; duration: number }

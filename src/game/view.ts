@@ -43,6 +43,10 @@ export interface HeroView {
   /** Paladin : jauge de garde, et secondes de garde brisée. */
   readonly guardLeft: number;
   readonly guardBroken: number;
+  /** Paladin : ferveur du Jugement. */
+  readonly fervor: number;
+  /** Bouclier temporaire (panoplie de la Lame), en PV. */
+  readonly barrier: number;
   readonly raiseCooldown: number;
   readonly netCooldown: number;
   readonly huntCooldown: number;

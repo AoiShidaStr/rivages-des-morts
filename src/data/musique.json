@@ -1,0 +1,11 @@
+{
+  "about": "Musique de chaque moment du jeu (fichiers de public/audio). Deux moments qui partagent un fichier l'enchaînent sans coupure (le menu puis l'île). null : silence, en attendant une piste.",
+  "tracks": {
+    "menu": "audio/menu.m4a",
+    "ile": "audio/menu.m4a",
+    "combat": null,
+    "boss": null
+  },
+  "fadeSeconds": 1.2,
+  "defaultVolume": 0.5
+}

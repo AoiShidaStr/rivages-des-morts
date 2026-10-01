@@ -1070,6 +1070,21 @@ body:not([data-mode='dungeon']) #hud {
   font-weight: 600;
 }
 
+/* Panoplies : une carte par panoplie, ses pièces et ses bonus */
+.tag-tiers.sets {
+  gap: 10px;
+}
+
+.tag-tiers .set {
+  display: grid;
+  gap: 3px;
+}
+
+.tag-tiers .set-pieces {
+  color: #8a8f90;
+  font-size: 12px;
+}
+
 .skills-header {
   display: flex;
   justify-content: space-between;
@@ -1952,6 +1967,63 @@ body:not([data-mode='dungeon']) #hud {
     grid-column: 1 / -1;
     justify-content: flex-start;
   }
+}
+
+/* --- Nouveautés et options ------------------------------------------------------------ */
+
+.patch-note {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(29, 34, 38, 0.18);
+  border-radius: 3px;
+}
+
+.patch-note summary {
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 18px;
+}
+
+.patch-note summary strong {
+  font-weight: 400;
+  color: var(--vermilion-dark);
+}
+
+.patch-note summary small {
+  margin-left: 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.patch-body h3 {
+  margin: 14px 0 6px;
+}
+
+.patch-body ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 4px;
+}
+
+.patch-body p {
+  margin: 8px 0;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.option-row input[type='range'] {
+  flex: 1;
+  max-width: 320px;
+}
+
+.volume-value {
+  min-width: 70px;
 }
 
 /* --- Icônes des objets ------------------------------------------------------------ */

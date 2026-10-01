@@ -34,6 +34,7 @@ interface SkillView {
 /** Interface de combat en HTML par-dessus le canvas : barres, compétences, annonces de vague et du boss. */
 export class Hud {
   private readonly hpFill: HTMLElement;
+  private readonly barrierFill: HTMLElement;
   /** Barre de ressource de la classe (voir `RESOURCE`). */
   private readonly rageBar: HTMLElement;
   private readonly rageFill: HTMLElement;
@@ -67,6 +68,7 @@ export class Hud {
       return el;
     };
     this.hpFill = find('.bar.hp .fill');
+    this.barrierFill = find('.bar.hp .barrier');
     this.rageBar = find('.bar.rage');
     this.rageFill = find('.bar.rage .fill');
     this.rageLabel = find('.bar.rage .label');
@@ -125,6 +127,10 @@ export class Hud {
     const player = world.player;
     const cfg = player.cfg;
     this.hpFill.style.width = `${(player.hp / cfg.maxHp) * 100}%`;
+    // Le bouclier prolonge la barre après les PV (sans dépasser le bout).
+    const shield = Math.min(player.barrier, cfg.maxHp - Math.min(player.hp, cfg.maxHp * 0.9));
+    this.barrierFill.style.left = `${(Math.min(player.hp, cfg.maxHp * 0.9) / cfg.maxHp) * 100}%`;
+    this.barrierFill.style.width = `${(Math.max(0, shield) / cfg.maxHp) * 100}%`;
     const others = world.players.filter((hero) => hero !== player);
     this.allyBars.forEach((bar, i) => {
       const hero = others[i];
@@ -171,7 +177,8 @@ export class Hud {
       const p = cfg.paladin;
       fill = player.guardBroken > 0 ? 0 : player.guardLeft / p.guard.max;
       ready = fill >= 1;
-      label = player.guardBroken > 0 ? 'Garde brisée' : 'Garde';
+      const ferveur = Math.round((player.fervor / p.judgement.max) * 100);
+      label = player.guardBroken > 0 ? 'Garde brisée' : ferveur >= 100 ? 'Jugement prêt' : `Garde · Ferveur ${ferveur} %`;
       views = [
         { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },

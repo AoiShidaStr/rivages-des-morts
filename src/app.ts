@@ -1,4 +1,5 @@
 import type { Engine } from '@babylonjs/core';
+import { Music } from './audio/music';
 import { whileHidden } from './background';
 import { content, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
@@ -40,6 +41,8 @@ import {
   type UiContext,
 } from './ui/panels';
 import { openCoopMenu, openLobby } from './ui/coop';
+import { openOptions } from './ui/options';
+import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
 import { Screens, type MenuOption } from './ui/screens';
 
 type Mode = 'title' | 'island' | 'dungeon' | 'result';
@@ -139,6 +142,7 @@ export class App {
   private hitstop = 0;
   private readonly dialogue: DialogueBox;
   private readonly panels: PanelHost;
+  private readonly music = new Music();
   private readonly screens: Screens;
   private readonly creation: CreationScreen;
   private readonly ui: UiContext;
@@ -225,9 +229,12 @@ export class App {
       case 'island':
         this.updateIsland(dt);
         break;
-      case 'dungeon':
+      case 'dungeon': {
         this.updateDungeon(dt);
+        const view = this.world ?? this.mirror;
+        this.music.play(view?.enemies.some((e) => e.boss) ? 'boss' : 'combat');
         break;
+      }
       case 'result':
         if (this.world ?? this.mirror) this.d.dungeonRenderer.sync((this.world ?? this.mirror) as WorldView, [], dt);
         this.d.dungeonRenderer.render();
@@ -246,6 +253,10 @@ export class App {
       if (key('ArrowDown') || key('KeyS')) this.dialogue.move(1);
       for (let n = 1; n <= 9; n++) if (key(`Digit${n}`) || key(`Numpad${n}`)) this.dialogue.pick(n - 1);
       return;
+    }
+    if (key('KeyM')) {
+      this.music.setMuted(!this.music.settings.muted);
+      this.screens.toast(this.music.settings.muted ? 'Musique coupée (M)' : 'Musique remise (M)');
     }
     if (this.panels.open) {
       if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK')) this.panels.close();
@@ -282,7 +293,9 @@ export class App {
     if (last) options.push({ label: 'Coop en ligne', action: () => this.play(last.id, () => this.openCoop()) });
     options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
-    this.screens.showTitle(options);
+    options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music) });
+    this.screens.showTitle(options, latestVersion);
   }
 
   /** Les personnages sauvegardés : en reprendre un, en créer, exporter, importer, supprimer. */
@@ -473,7 +486,7 @@ export class App {
         content.skills,
         content.items,
         (hero) => {
-          const weapon = classWeapon(content.items, progress.state, heroClass(content.skills, hero));
+          const weapon = classWeapon(content.items, progress.state, hero, content.skills);
           progress.changeHero(hero, weapon);
           this.setHero();
           this.screens.toast(`Une autre vie te revient : ${heroLabel(content.skills, hero)}. Tes points de compétence te sont rendus.`, 'quest');
@@ -557,6 +570,8 @@ export class App {
         const mine = this.screens.paused ? idleFrame(world.player.pos) : this.readCombatInput(world);
         if (online) {
           const now = performance.now();
+          // Blocage parfait : la garde d'un invité arrive en retard d'un demi-aller-retour, sa fenêtre s'élargit d'autant.
+          for (const hero of world.players.slice(1)) hero.latency = (this.remote.get(hero.id)?.ping ?? 0) / 2000;
           world.update(STEP, [mine, ...world.players.slice(1).map((hero) => this.remote.get(hero.id)?.frame(hero.pos, now) ?? idleFrame(hero.pos))]);
           this.hostTick++;
         } else {
@@ -577,7 +592,7 @@ export class App {
       // Micro-pause d'impact, seul : en ligne, figer un joueur le décalerait des autres.
       if (online) continue;
       if (event.type === 'enemyHit' && event.crit) this.hitstop = 0.045;
-      else if (event.type === 'parry') this.hitstop = 0.05;
+      else if (event.type === 'parry' || event.type === 'perfectGuard') this.hitstop = 0.05;
       else if (event.type === 'smash') this.hitstop = 0.04;
     }
     dungeonRenderer.sync(world, events, dt);
@@ -1009,6 +1024,7 @@ export class App {
         },
       });
     }
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music) });
     options.push({
       label: 'Menu principal',
       action: () => {
@@ -1037,6 +1053,8 @@ export class App {
 
   private setMode(mode: Mode): void {
     this.mode = mode;
+    if (mode === 'title') this.music.play('menu');
+    else if (mode === 'island') this.music.play('ile');
     document.body.dataset.mode = mode;
     this.screens.showIslandHud(mode === 'island');
   }
