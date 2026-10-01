@@ -333,16 +333,16 @@ Conçus à partir du plan de mise à jour : des items de build pour chaque class
 
 | Item | Emplacement | Rareté | Tag | Catégorie | Effet | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| Masque de hannya | Casque | Rare | Guerrier | Build faibles PV | Sous 30 % des PV : +20 % de dégâts, et chaque coup porté rend 1 % des PV max | Oubliés (4 %) |
+| Masque de hannya | Casque | Rare | Guerrier | Build faibles PV | « Au bord du gouffre » (passif du Guerrier) se déclenche dès 50 % des PV au lieu de 30 % : on frappe plus fort et on se soigne plus tôt | Oubliés (4 %) |
 | Gourde de saké d'oni | Amulette | Rare | Guerrier | Build garde et rage | Blocage parfait : +15 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois plus (8 %) | Kappa renforcé (15 %) |
 | Nodachi de l'Ikusa | Arme | Épique | Guerrier | Build faibles PV | Coups plus rapides selon les PV perdus : jusqu'à +30 % sous 30 % des PV. Paliers : portée (10), Frénésie +2 s (25), +40 % (50) | Izanami (20 %), guerriers du Yomi (2 %) |
 | Cloche du Grand Rocher | Amulette | Rare | Paladin | Tank offensif | Un coup bloqué renvoie 40 % de ses dégâts à l'attaquant | Forge (écailles, braises) |
-| Encensoir du moine | Amulette | Rare | Paladin | Du soin aux dégâts | Chaque PV rendu par l'Aura ajoute 1 dégât au prochain Marteau lancé (au plus le double de ses dégâts) | Boutique du Palais |
+| Encensoir du moine | Amulette | Rare | Paladin | Du soin aux dégâts | Chaque PV rendu par l'Aura ajoute 2 dégâts au prochain Marteau lancé (au plus le double de ses dégâts) | Boutique du Palais |
 | Shimenawa tressée | Plastron | Rare | Paladin | Tank pur | Garde +30 points, qui remonte 50 % plus vite ; −8 % de vitesse | Guerriers du Yomi (5 %) |
 | Tabi du messager | Bottes | Rare | Rôdeur | Mobilité | Après un Recul, le prochain tir part chargé à fond | Kasa-obake (5 %) |
-| Arc d'Ikazuchi | Arme | Épique | Rôdeur | Tir chargé | Un tir chargé plein appelle la foudre sur sa première proie : 12 dégâts autour (2 m), étourdit 0,3 s, au plus toutes les 2 s (pas d'étourdissement en boucle). Paliers : rayon (10), dégâts (25), étourdissement (50) | Izanami (20 %), ikazuchi (3 %) |
+| Arc d'Ikazuchi | Arme | Épique | Rôdeur | Tir chargé | Un tir chargé plein appelle la foudre sur sa première proie : 18 dégâts autour (2 m), ralentit de moitié 0,6 s, au plus toutes les 1,5 s. Paliers : rayon (10), dégâts (25), ralentissement (50) | Izanami (20 %), ikazuchi (3 %) |
 | Tabi de shinobi | Bottes | Rare | Lame | Mobilité | Pas de l'ombre : une charge de plus, qui revient 15 % plus vite | Oubliés (4 %) |
-| Tsuba ébréchée | Amulette | Rare | Lame | Critique | Chaque coup critique retire 0,5 s à la recharge de la Marque de mort | Boutique de fin des Rizières |
+| Tsuba ébréchée | Amulette | Rare | Lame | Critique | Chaque coup critique retire 0,3 s à la recharge de la Marque de mort | Boutique de fin des Rizières |
 | Mino de paille | Plastron | Commune | — | Confort | −20 % de dégâts de ce qui tombe du ciel : foudre, pluie de fils, toiles lancées, kasa-obake qui retombent | Obaa (50 oboles) |
 | Yomotsu-hegui | Relique | Épique | Tous | Risque | La nourriture du Yomi : +25 % de dégâts et +10 % de vitesse, mais tous les soins reçus sont réduits de moitié | Izanami (10 %) |
 
@@ -350,7 +350,7 @@ Conçus à partir du plan de mise à jour : des items de build pour chaque class
 
 | Item | Race | Effet | Source |
 | --- | --- | --- | --- |
-| Gohei du sanctuaire | Demi-dieu | Le parent divin est renforcé de 50 % : foudre de Zeus à 18 dégâts, Arès +22,5 %, Hermès plus vif, Athéna −22,5 % de dégâts subis | Jorōgumo (12 %) |
+| Gohei du sanctuaire | Demi-dieu | Le parent divin compte double : foudre de Zeus à 24 dégâts, Arès +30 %, Hermès encore plus vif, Athéna −30 % de dégâts subis | Jorōgumo (12 %) |
 | Corne d'oni brisée | Hanyō | Item à risque : la jauge de sang yokai se remplit 30 % plus vite, mais transformé, on subit 20 % de dégâts en plus au lieu de 10 % | Izanami (12 %) |
 | Dogū aux yeux clos | Oushebti | La carapace d'argile absorbe deux coups avant d'éclater, mais se reforme en 12 s au lieu de 8 | Jorōgumo (12 %) |
 | Tsuba du rōnin mort | Einherjar | La Rage du guerrier mort monte jusqu'à +50 % de dégâts au lieu de +35 % | Izanami (12 %) |

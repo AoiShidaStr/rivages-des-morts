@@ -232,11 +232,10 @@ export class Player {
     const missing = 1 - this.hp / this.cfg.maxHp;
     let factor = 1 + (perks.einherjarRage ?? 0) * missing;
     if (perks.lowHpDamage && this.hp < this.cfg.maxHp / 2) factor += perks.lowHpDamage;
-    if (perks.lastStand && this.below(perks.lastStand.threshold)) factor += perks.lastStand.damage;
+    if (perks.lastStand && this.below(this.standThreshold)) factor += perks.lastStand.damage;
     if (perks.coupelle && this.coupelleFull) factor += perks.coupelle.bonus;
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
-    if (perks.hannya && this.below(perks.hannya.threshold)) factor += perks.hannya.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
     // Chaque âme active affaiblit l'Invocateur (GDD : pas de limite stricte, un malus par invocation).
     return factor * Math.max(0.2, 1 - this.cfg.summon.malus * this.summonCount);
@@ -280,7 +279,7 @@ export class Player {
   dealt(amount: number, world: World): void {
     // Au bord du gouffre : sous le seuil, les dégâts infligés soignent, goutte à goutte.
     const stand = this.cfg.perks?.lastStand;
-    if (stand && !this.dead && this.below(stand.threshold)) this.leech(amount * stand.lifesteal, world);
+    if (stand && !this.dead && this.below(this.standThreshold)) this.leech(amount * stand.lifesteal, world);
     const blood = this.cfg.perks?.yokaiBlood;
     if (!blood || this.transformed > 0 || this.dead) return;
     this.yokaiGauge += amount;
@@ -295,8 +294,14 @@ export class Player {
     this.aegisUsed = false;
   }
 
-  /** Sous cette part de ses PV (affinités de l'Einherjar, Masque de hannya). */
-  below(threshold: number): boolean {
+  /** Seuil d'« Au bord du gouffre » : le Masque de hannya le relève (le passif se déclenche plus tôt). */
+  private get standThreshold(): number {
+    const perks = this.cfg.perks ?? {};
+    return Math.max(perks.lastStand?.threshold ?? 0, perks.hannya?.threshold ?? 0);
+  }
+
+  /** Sous cette part de ses PV (affinités de l'Einherjar). */
+  private below(threshold: number): boolean {
     return this.hp < this.cfg.maxHp * threshold;
   }
 
