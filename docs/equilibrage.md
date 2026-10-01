@@ -138,6 +138,19 @@ Victoires au Palais niveau 20, avant → avec l'objet (après les réglages de l
 
 Amulettes de race : leurs effets jouent, mais elles donnent 10 PV quand le Magatama fêlé, l'amulette typique, en donne 20. Le Gohei, le Dogū et la Tsuba du rōnin restent dans le bruit ; la Corne d'oni coûte des victoires au Paladin (niv. 10 : 63 → 44 %) et à l'Invocateur (niv. 20 : 75 → 50 %), ce qui va avec un objet à risque.
 
+Second passage, après les réglages (amulettes à 20 PV, Yomotsu-hegui +35 %, la Marque du chasseur aveugle Izanami) ; Palais niveau 20, avant → avec l'objet :
+
+| Objet | Classe | Avant les réglages | Après |
+|---|---|---|---|
+| Cloche du Grand Rocher | Paladin | 33 → 27 % | 28 → 39 % |
+| Encensoir du moine | Paladin | 33 → 20 % | 28 → 32 % |
+| Gourde de saké d'oni | Guerrier | 93 → 84 % | 96 → 96 % (PV restants 63 → 68 %) |
+| Tsuba ébréchée | Lame | 88 → 88 % | 87 → 97 % |
+| Yomotsu-hegui | Guerrier / Invocateur / Paladin | −21 à −23 points | −12 à −27 points : le risque reste lourd pour les classes qui vivent de leurs soins |
+| Yomotsu-hegui | Lame / Rôdeur | −3 à +5 points | +3 points, dégâts/s +23 à +30 % |
+
+Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 30 à 36 %, niveau 20 de 8 à 18 %. Il reste la classe la plus faible du Palais ; la panoplie de l'Éclaireur le monte à 58 % au niveau 10.
+
 ## Grille de suivi
 
 | Élément | Problème | Direction | État |
