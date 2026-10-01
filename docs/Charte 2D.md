@@ -102,7 +102,7 @@ Vitesses de lecture conseillées : attente 120 ms par image, course 45 ms, attaq
 2. **Planches de profil** : pour chaque animation, joindre la fiche de profil et coller le prompt.
 3. **Plus tard, face et dos** : générer la fiche de la vue à partir de la fiche de profil, puis les planches de cette vue.
 4. **Rangement** : `~/Pictures/game visual/2d/<personnage>/<vue>-<animation>.png`.
-5. **Import** : ajouter le personnage dans `tools/planches.json` (une entrée par animation, `"layout": [4, 4, 4, 4]`, et le même `"refHeight"` partout : la hauteur en pixels du personnage debout dans la source, pour qu'il garde la même taille dans toutes ses animations), lancer `npm run planches -- <nom>`, puis pointer `src/data/sprites.json` vers `anim/<nom>.json`. Voir les entrées `izanami` et `izanami-revelee`. Les images fixes (décor) passent par `tools/sprites.json` et `npm run sprites`.
+5. **Import** : ajouter le personnage dans `tools/planches.json` (une entrée par animation, `"layout": [4, 4, 4, 4]`, et le même `"refHeight"` partout : la hauteur en pixels du personnage debout dans la source, pour qu'il garde la même taille dans toutes ses animations), lancer `npm run planches -- <nom>`, puis pointer `src/data/sprites.json` vers `anim/<nom>.json`. Voir les entrées `izanami` et `izanami-revelee`. Si Gemini ajoute un bandeau de titre sur fond sombre, l’option `"crop": [x0, y0, x1, y1]` (fractions de l’image) le coupe avant le détourage (voir `ikusa`, marche) ; un texte sur le fond gris s’efface avec `erase`. Les images fixes (décor) passent par `tools/sprites.json` et `npm run sprites`.
 
 Pour un nouveau personnage ou une nouvelle race, ajouter son bloc dans `tools/prompts-2d.mjs` (`ENEMIES`, `BOSSES`, `RACES`, `OUTFITS` ou `CLASSES`, puis `LOTS`) et relancer `npm run prompts-2d`.
 
@@ -113,7 +113,7 @@ Les tenues propres à chaque race multiplient par 4 le nombre de planches de hé
 | Lot | Contenu | Fichier | Prompts |
 | --- | --- | --- | --- |
 | ~~1. Izanami~~ **fait** | les deux formes du boss (voilée, vrai visage) et le pêcher de son arène (2 états) : dans le jeu depuis octobre 2026 | [`01-izanami.md`](prompts-2d/01-izanami.md) | 18 |
-| **2. Yokai du Palais** | shikome, ikazuchi, ikusa, encore en pixel art | [`02-yokai-du-palais.md`](prompts-2d/02-yokai-du-palais.md) | 23 |
+| ~~2. Yokai du Palais~~ **fait** | shikome, ikazuchi, ikusa : dans le jeu depuis octobre 2026 | [`02-yokai-du-palais.md`](prompts-2d/02-yokai-du-palais.md) | 23 |
 | **3. Héros du Yomi** | les 5 classes avec la race Hanyō (tenues japonaises), 8 animations de profil. Commencer par le Guerrier | `03-heros-<classe>.md` | 45 (9 par classe) |
 | 4. Yokai des Rizières | hitodama, kodama, kappa, kappa renforcé, kasa-obake, Oublié, petite araignée : déjà peints, à refaire pour l'harmonie | [`04-yokai-des-rizieres.md`](prompts-2d/04-yokai-des-rizieres.md) | 53 |
 | 5. Jorōgumo | le premier boss, déjà peint, à refaire avec Izanami comme référence | [`05-jorogumo.md`](prompts-2d/05-jorogumo.md) | 16 |

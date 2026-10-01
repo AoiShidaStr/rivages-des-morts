@@ -685,8 +685,8 @@ const LOTS = [
   },
   {
     file: '02-yokai-du-palais.md',
-    title: 'Lot 2 : yokai du Palais d\'Izanami (encore en pixel art)',
-    intro: 'Shikome, ikazuchi et ikusa : les trois yokai du Palais, dessinés pour l\'instant en pixel art.',
+    title: 'Lot 2 : yokai du Palais d\'Izanami (fait, dans le jeu)',
+    intro: 'Shikome, ikazuchi et ikusa : les trois yokai du Palais.',
     chars: [creature('shikome', ENEMIES.shikome, 'enemy'), creature('ikazuchi', ENEMIES.ikazuchi, 'enemy'), creature('ikusa', ENEMIES.ikusa, 'enemy')],
   },
   ...Object.entries(CLASSES).map(([ck, cls], i) => ({

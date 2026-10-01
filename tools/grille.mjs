@@ -11,7 +11,15 @@ import { alphaMask, components } from './decoupe.mjs';
  * sépare. Entre deux images, on coupe donc le long d'un chemin qui serpente dans le fond (voir `seam`).
  */
 export async function splitFrames(input, options) {
-  const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  // `crop` : [x0, y0, x1, y1] en fractions de l’image, pour retirer avant le détourage un bandeau que Nano Banana a ajouté
+  // (titre sur fond sombre) : il fausserait la couleur du fond, lue sur les bords.
+  const image = sharp(input).removeAlpha();
+  if (options.crop) {
+    const { width, height } = await image.metadata();
+    const [x0, y0, x1, y1] = options.crop;
+    image.extract({ left: Math.round(x0 * width), top: Math.round(y0 * height), width: Math.round((x1 - x0) * width), height: Math.round((y1 - y0) * height) });
+  }
+  const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
   const { width: w, height: h } = info;
   const alpha = alphaMask(data, w, h, options);
   const layout =

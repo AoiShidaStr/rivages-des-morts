@@ -1,6 +1,6 @@
-# Lot 2 : yokai du Palais d'Izanami (encore en pixel art)
+# Lot 2 : yokai du Palais d'Izanami (fait, dans le jeu)
 
-Shikome, ikazuchi et ikusa : les trois yokai du Palais, dessinés pour l'instant en pixel art.
+Shikome, ikazuchi et ikusa : les trois yokai du Palais.
 
 **Format de toutes les planches : image carrée 1 024 × 1 024 px, 16 images en grille 4 × 4 (cases de 256 px)**, fond gris uni (magenta pour l'Oublié). **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
 

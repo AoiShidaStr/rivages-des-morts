@@ -1,4 +1,4 @@
-# Lot 2 : yokai du Palais d'Izanami (encore en pixel art) : face et dos (plus tard)
+# Lot 2 : yokai du Palais d'Izanami (fait, dans le jeu) : face et dos (plus tard)
 
 À faire **après** validation des planches de profil. Chaque fiche de face ou de dos se génère à partir de la **fiche de profil** jointe.
 

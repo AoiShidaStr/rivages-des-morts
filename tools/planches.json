@@ -217,6 +217,39 @@
         { "tag": "stunned", "source": "2d/boss-2D/Izanami-eveille-hit.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 90 },
         { "tag": "dash", "source": "2d/boss-2D/Izanami-eveille-special.jpg", "layout": [4, 4, 4, 4], "refHeight": 243, "duration": 50 }
       ]
+    },
+    {
+      "name": "shikome",
+      "bodyHeight": 200,
+      "animations": [
+        { "tag": "idle", "source": "2d/enemies-2D/Yomotsu-shikome-idle.jpg", "layout": [4, 4, 4, 4], "refHeight": 242, "duration": 110 },
+        { "tag": "move", "source": "2d/enemies-2D/Yomotsu-shikome-move.jpg", "layout": [4, 4, 4, 4], "refHeight": 242, "duration": 55 },
+        { "tag": "windup", "source": "2d/enemies-2D/Yomotsu-shikome-windup.jpg", "layout": [4, 4, 4, 4], "refHeight": 242, "duration": 45, "once": true },
+        { "tag": "dash", "source": "2d/enemies-2D/Yomotsu-shikome-strike.jpg", "layout": [4, 4, 4, 4], "frames": [2, 3, 4, 5], "refHeight": 242, "duration": 70, "once": true },
+        { "tag": "strike", "source": "2d/enemies-2D/Yomotsu-shikome-strike.jpg", "layout": [4, 4, 4, 4], "frames": [6, 7, 8, 9], "refHeight": 242, "duration": 40, "once": true },
+        { "tag": "stunned", "source": "2d/enemies-2D/Yomotsu-shikome-stunned.jpg", "layout": [4, 4, 4, 4], "refHeight": 242, "duration": 90 }
+      ]
+    },
+    {
+      "name": "ikazuchi",
+      "bodyHeight": 200,
+      "animations": [
+        { "tag": "idle", "source": "2d/enemies-2D/Ikazuchi-idle.jpg", "layout": [4, 4, 4, 4], "refHeight": 208, "duration": 110 },
+        { "tag": "move", "source": "2d/enemies-2D/Ikazuchi-move.jpg", "layout": [4, 4, 4, 4], "refHeight": 208, "duration": 70 },
+        { "tag": "channel", "source": "2d/enemies-2D/Ikazuchi-windup.jpg", "layout": [4, 4, 4, 4], "frames": [8, 9, 10, 11, 12, 13, 14, 15], "refHeight": 208, "duration": 70 },
+        { "tag": "stunned", "source": "2d/enemies-2D/Ikazuchi-hit.jpg", "layout": [4, 4, 4, 4], "refHeight": 208, "duration": 80 }
+      ]
+    },
+    {
+      "name": "ikusa",
+      "bodyHeight": 220,
+      "animations": [
+        { "tag": "idle", "source": "2d/enemies-2D/guerrier-du-yomi-idle.jpg", "layout": [4, 4, 4, 4], "refHeight": 251, "duration": 120 },
+        { "tag": "move", "source": "2d/enemies-2D/guerrier-du-yomi-move.jpg", "layout": [4, 4, 4, 4], "refHeight": 251, "duration": 70, "crop": [0, 0.065, 1, 0.94] },
+        { "tag": "windup", "source": "2d/enemies-2D/guerrier-du-yomi-windup.jpg", "layout": [4, 4, 4, 4], "refHeight": 251, "duration": 60, "once": true },
+        { "tag": "strike", "source": "2d/enemies-2D/guerrier-du-yomi-strike.jpg", "layout": [4, 4, 4, 4], "frames": [2, 3, 4, 5, 6, 7], "refHeight": 251, "duration": 25, "once": true },
+        { "tag": "stunned", "source": "2d/enemies-2D/guerrier-du-yomi-hit.jpg", "layout": [4, 4, 4, 4], "refHeight": 251, "duration": 90 }
+      ]
     }
   ]
 }
