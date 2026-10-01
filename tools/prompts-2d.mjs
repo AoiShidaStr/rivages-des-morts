@@ -4,7 +4,7 @@
 //   chacun : la fiche de profil de chaque personnage, puis ses planches de profil ;
 //   plus-tard/            les fiches et planches de face et de dos, et les fiches des autres races.
 // Une planche = une animation = 16 images en grille 4 × 4 de cases carrées, dans une image carrée
-// (à 2 048 px, chaque case fait 512 px natifs).
+// (1 024 × 1 024 px : chaque case fait 256 px, la résolution retenue pour le jeu).
 // Les prompts sont en anglais : Nano Banana les suit mieux ainsi.
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -16,7 +16,7 @@ const OUT = new URL('../docs/prompts-2d/', import.meta.url);
 
 const LOOK =
   'Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), ' +
-  'a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), ' +
+  'a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), ' +
   'two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, ' +
   'character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. ' +
   'No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. ' +
@@ -517,7 +517,7 @@ function animationPrompt({ intro, beats, anim, bg, label }) {
   checkBeats(beats, label);
   const lines = [
     intro,
-    'Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).',
+    'Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).',
     'The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.',
   ];
   for (const [from, to, text] of beats) lines.push(`${frameRange(from, to)}: ${text}.`);
@@ -678,8 +678,8 @@ function pecherPrompts() {
 const LOTS = [
   {
     file: '01-izanami.md',
-    title: 'Lot 1 : Izanami (boss, encore en pixel art)',
-    intro: 'Les deux formes d\'Izanami, le boss du Palais. Pour un boss, demander si possible la **4K** (cases de 1 024 px natifs) ; sinon l\'import agrandira les cases de 512 à 768 px. Le pêcher de son arène (décor, encore un dessin provisoire) est à la fin.',
+    title: 'Lot 1 : Izanami (fait, dans le jeu)',
+    intro: 'Les deux formes d\'Izanami, le boss du Palais. Le pêcher de son arène (décor, 2 états) est à la fin.',
     chars: [creature('izanami', BOSSES.izanami, 'boss'), creature('izanamiRevelee', BOSSES.izanamiRevelee, 'boss')],
     extra: () => ['## Pêcher de l\'arène (image fixe, 2 états)', '', ...pecherPrompts().flatMap((p) => [`### ${p.title}`, '', `**Enregistrer :** \`2d/${p.id}/${p.id}.png\``, '', fence(p.prompt)])].join('\n'),
   },
@@ -705,7 +705,7 @@ const LOTS = [
   {
     file: '05-jorogumo.md',
     title: 'Lot 5 : Jorōgumo (boss déjà peint, à refaire pour l\'harmonie)',
-    intro: 'Le premier boss a déjà ses planches peintes. À refaire en dernier avec Izanami comme référence de style. Pour un boss, demander si possible la 4K.',
+    intro: 'Le premier boss a déjà ses planches peintes. À refaire en dernier avec Izanami comme référence de style.',
     chars: [creature('jorogumo', BOSSES.jorogumo, 'boss'), creature('jorogumoAraignee', BOSSES.jorogumoAraignee, 'boss')],
   },
 ];
@@ -725,7 +725,7 @@ const count = (text) => (text.match(/^```text/gm) ?? []).length;
 
 for (const lot of LOTS) {
   // Maintenant : fiche de profil + 8 (héros) ou 6-7 (créatures) planches de profil.
-  const body = [`# ${lot.title}`, '', lot.intro, '', '**Format de toutes les planches : image carrée 1:1, 16 images en grille 4 × 4**, fond gris uni (magenta pour l\'Oublié). ' + REGLAGES, ''];
+  const body = [`# ${lot.title}`, '', lot.intro, '', '**Format de toutes les planches : image carrée 1 024 × 1 024 px, 16 images en grille 4 × 4 (cases de 256 px)**, fond gris uni (magenta pour l\'Oublié). ' + REGLAGES, ''];
   for (const ch of lot.chars) body.push(characterSection(ch, NOW, false));
   if (lot.extra) body.push(lot.extra());
   const text = body.join('\n');

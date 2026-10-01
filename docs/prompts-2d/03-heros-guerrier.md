@@ -2,7 +2,7 @@
 
 Phase 1 : les tenues du Yomi, avec la race Hanyō. Les autres races viendront plus tard.
 
-**Format de toutes les planches : image carrée 1:1, 16 images en grille 4 × 4**, fond gris uni (magenta pour l'Oublié). **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
+**Format de toutes les planches : image carrée 1 024 × 1 024 px, 16 images en grille 4 × 4 (cases de 256 px)**, fond gris uni (magenta pour l'Oublié). **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
 
 ## Hanyō Guerrier
 
@@ -15,7 +15,7 @@ Character reference sheet for a 2D action RPG in which dead souls from every myt
 Chibi proportions: the character is 3 heads tall, with a big head, broad shoulders, large stable feet, and hands, weapon and class accessories oversized (about 1.3 to 1.5 times normal). Strong readable silhouette from far away. All twenty heroes of the game share exactly the same total height.
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -26,7 +26,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a slow idle breathing loop: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: the neutral ready pose of the reference figure, then the chest begins to swell.
 Frames 3 to 4: breathing in: the chest expands, the shoulders and the head rise slowly.
@@ -44,7 +44,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -55,7 +55,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a running cycle on the spot: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: contact: the right leg reaches forward and the heel touches the ground, the left leg stretched behind, the left arm forward; the nodachi carried high on the shoulder with one hand, the other arm swinging, the body leaning forward.
 Frames 3 to 4: down: the right leg bends under the weight, the body at its lowest; the nodachi carried high on the shoulder with one hand, the other arm swinging, the body leaning forward.
@@ -73,7 +73,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -84,7 +84,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a single attack: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: the ready pose of the reference figure; the weight shifts back onto the rear foot.
 Frames 3 to 4: wind-up: the nodachi is raised high above the head in both hands, the body coiled, on its way.
@@ -101,7 +101,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -112,7 +112,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing going into a defensive guard and holding it: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: the ready pose of the reference figure.
 Frames 3 to 4: starting to move: the nodachi is held upright in front of the body, braced, feet planted wide, one third of the way.
@@ -127,7 +127,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -138,7 +138,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a quick dodge: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: anticipation: the character crouches slightly, loading the weight.
 Frames 3 to 4: push-off: the dodge begins, the body launching.
@@ -154,7 +154,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -165,7 +165,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing being hit and recovering: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: hit: the head snaps back, the torso recoils, the eyes squeezed shut.
 Frames 3 to 5: maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held.
@@ -180,7 +180,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -191,7 +191,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a death animation: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 2: the fatal hit: the head snaps back, the body recoils.
 Frames 3 to 5: staggers backward, the grip on the weapon loosening.
@@ -207,7 +207,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -218,7 +218,7 @@ No effects of any kind: no magic, no glow, no light rays, no motion trails or bl
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a class skill pose: same face, proportions, outfit, colors, nodachi, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image at the highest resolution available (at least 2048 px). The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
+Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
 The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
 Frames 1 to 3: gathering: the body coils, the eyes focused; the nodachi is lifted overhead in both hands while the character inhales deeply and the stance widens.
 Frames 4 to 7: peak tension held with a slight tremble, everything ready to be released.
@@ -233,7 +233,7 @@ DO NOT draw the same pose twice in a row: every frame must be clearly different 
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 2 to 3 px when the character is 512 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```

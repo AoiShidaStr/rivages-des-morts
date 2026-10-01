@@ -9,7 +9,7 @@ Ce que la charte 3D garde comme valeur : la lumière froide, la règle « rouge 
 ## 1. Rendu : peint, contour encre, deux tons
 
 - Formes lisses peintes, léger dégradé (plus clair en haut, plus sombre en bas), plus quelques plis simples.
-- **Contour encre bleu-noir fin** sur la silhouette extérieure seulement (2 à 3 px pour un personnage de 512 px).
+- **Contour encre bleu-noir fin** sur la silhouette extérieure seulement (1 à 2 px pour un personnage d'environ 200 px).
 - **Deux tons** de lumière : la couleur de base et une ombre **teintée bleu-violet**, jamais noire.
 - Lumière froide et douce venant du **haut-gauche**, identique sur toutes les îles : le sprite garde le même éclairage et la même ombre bleu-violet partout, c'est le décor de chaque île qui porte sa palette (brume du Yomi, or de la Duat…). Personnages plus saturés et plus clairs que le décor.
 - Métal peint : un seul reflet blanc net. Pas de photo, pas de bruit, pas de texture fine, pas d'aspect « rendu 3D ».
@@ -44,20 +44,19 @@ Les 20 tenues (une par race × classe) sont écrites dans `OUTFITS`, en tête de
 
 - **Héros : 3 têtes de haut, tous exactement de la même taille** (les 20 combinaisons). Grosse tête, épaules larges, grands pieds, mains / armes / accessoires ×1,3 à ×1,5.
 - **Ennemis** : l'esprit chibi de la charte 3D, mais la forme propre à chaque créature. Chacun est dessiné **à pleine hauteur dans sa case** : c'est le jeu qui le met à l'échelle d'après sa hauteur (hitodama petit, kappa plus grand, héros 1,8 m). On ne dessine donc pas le hitodama plus petit dans l'image.
-- **Boss** : case plus grande (768 px), proportions libres, tête et point faible toujours lisibles.
+- **Boss** : même planche et même case que les autres, proportions libres, tête et point faible toujours lisibles. C'est le jeu qui les affiche plus grands (Izanami : 2,6 m).
 
 | | Case finale | Personnage debout | Pieds (ligne de base) |
 | --- | --- | --- | --- |
-| Héros, ennemis | 512 × 512 | ≈ 400 px (78 %) | à 456 px du haut (89 %) |
-| Boss | 768 × 768 | ≈ 600 px | à 684 px du haut |
+| Tous (héros, ennemis, boss) | 256 × 256 | ≈ 200 px (78 %) | à 228 px du haut (89 %) |
 
 Les marges servent aux armes, cheveux et gestes larges. Les poses à plat (mort) gardent la même échelle : le personnage ne grossit jamais.
 
 ## 4. Planches : 16 images, un seul format
 
-Une planche = une animation = **16 images** en grille **4 colonnes × 4 lignes**, lues de gauche à droite puis de haut en bas, dans **une image carrée 1:1**. À 2 048 px de côté, chaque case fait **512 × 512 px natifs** : c'est exactement la case finale des héros et des ennemis, sans agrandissement. Pour un boss, demander si possible la 4K (cases de 1 024 px, réduites à 768) ; en 2K, l'import agrandit les cases de 512 à 768, ce qui adoucit un peu l'image.
+Une planche = une animation = **16 images** en grille **4 colonnes × 4 lignes**, lues de gauche à droite puis de haut en bas, dans **une image carrée 1:1 de 1 024 × 1 024 px** (la taille que rend Gemini par défaut). Chaque case fait donc **256 × 256 px** : c'est la résolution retenue pour tout le jeu, validée en jeu avec Izanami (octobre 2026). Inutile de demander la 2K ou la 4K.
 
-Il n'y a plus de format paysage ni de boss en deux moitiés : toutes les animations, de tous les personnages, ont la même mise en page. (L'abandon des 32 images allège le travail de génération, la dérive du modèle et la mémoire vidéo : une planche de 16 cases de 512 px pèse environ 17 Mo décompressée, contre 33 Mo.)
+Il n'y a plus de format paysage ni de boss en deux moitiés : toutes les animations, de tous les personnages, ont la même mise en page. (L'abandon des 32 images allège le travail de génération, la dérive du modèle et la mémoire vidéo : une planche de 16 cases de 256 px pèse environ 4 Mo décompressée.)
 
 ## 5. Fond et détourage
 
@@ -103,7 +102,7 @@ Vitesses de lecture conseillées : attente 120 ms par image, course 45 ms, attaq
 2. **Planches de profil** : pour chaque animation, joindre la fiche de profil et coller le prompt.
 3. **Plus tard, face et dos** : générer la fiche de la vue à partir de la fiche de profil, puis les planches de cette vue.
 4. **Rangement** : `~/Pictures/game visual/2d/<personnage>/<vue>-<animation>.png`.
-5. **Import** : un outil à écrire (voir 10) qui découpe, détoure, aligne sur la ligne de base, met à l'échelle, et écrit `public/sprites/anim/…` avec ses `frameTags`.
+5. **Import** : ajouter le personnage dans `tools/planches.json` (une entrée par animation, `"layout": [4, 4, 4, 4]`, et le même `"refHeight"` partout : la hauteur en pixels du personnage debout dans la source, pour qu'il garde la même taille dans toutes ses animations), lancer `npm run planches -- <nom>`, puis pointer `src/data/sprites.json` vers `anim/<nom>.json`. Voir les entrées `izanami` et `izanami-revelee`. Les images fixes (décor) passent par `tools/sprites.json` et `npm run sprites`.
 
 Pour un nouveau personnage ou une nouvelle race, ajouter son bloc dans `tools/prompts-2d.mjs` (`ENEMIES`, `BOSSES`, `RACES`, `OUTFITS` ou `CLASSES`, puis `LOTS`) et relancer `npm run prompts-2d`.
 
@@ -113,7 +112,7 @@ Les tenues propres à chaque race multiplient par 4 le nombre de planches de hé
 
 | Lot | Contenu | Fichier | Prompts |
 | --- | --- | --- | --- |
-| **1. Izanami** | les deux formes du boss (voilée, vrai visage) encore en pixel art, et le pêcher de son arène (décor provisoire, 2 états) | [`01-izanami.md`](prompts-2d/01-izanami.md) | 18 |
+| ~~1. Izanami~~ **fait** | les deux formes du boss (voilée, vrai visage) et le pêcher de son arène (2 états) : dans le jeu depuis octobre 2026 | [`01-izanami.md`](prompts-2d/01-izanami.md) | 18 |
 | **2. Yokai du Palais** | shikome, ikazuchi, ikusa, encore en pixel art | [`02-yokai-du-palais.md`](prompts-2d/02-yokai-du-palais.md) | 23 |
 | **3. Héros du Yomi** | les 5 classes avec la race Hanyō (tenues japonaises), 8 animations de profil. Commencer par le Guerrier | `03-heros-<classe>.md` | 45 (9 par classe) |
 | 4. Yokai des Rizières | hitodama, kodama, kappa, kappa renforcé, kasa-obake, Oublié, petite araignée : déjà peints, à refaire pour l'harmonie | [`04-yokai-des-rizieres.md`](prompts-2d/04-yokai-des-rizieres.md) | 53 |
@@ -129,8 +128,8 @@ Tant que les autres races ne sont pas faites, leurs héros doivent afficher, dan
 
 ## 10. Points d'attention
 
-- **Mémoire vidéo** : une planche de 16 images de 512 × 512 pèse environ 17 Mo décompressée. Un héros a 8 planches de profil (≈ 135 Mo) : il faut charger **l'animation à la demande** (comme `setHero` le fait déjà) et ne garder que les planches de la vue et de l'état courants. L'import devra aussi pouvoir réduire les cases (384 px suffisent si le héros fait 150-200 px à l'écran).
+- **Mémoire vidéo** : une planche de 16 images de 256 × 256 pèse environ 4 Mo décompressée, soit une trentaine de Mo pour les 8 animations de profil d'un héros. Le chargement à la demande des héros (`setHero`) reste utile quand la face et le dos arriveront.
 - **Cohérence** : sur 16 images, Nano Banana dérive moins que sur 32, mais peut encore changer la taille de la tête ou déplacer l'arme. Si une planche dérive, relancer avec la même fiche.
-- **Test d'abord** : générer **une fiche et une planche** (Izanami, `profil-attente`) et les regarder avant d'en faire d'autres. Ce premier test règle les prompts, et vérifie que Gemini rend bien une image carrée d'au moins 2 048 px.
-- **Outil d'import** : à écrire après la première planche testée. Il devra gérer la grille 4 × 4, le fond magenta, la ligne de base à 89 %, le miroir, la réduction des cases et l'agrandissement des boss.
+- **Test d'abord** (pour chaque nouveau personnage) : générer **une fiche et une planche** et les regarder avant d'en faire d'autres. Ce premier test règle les prompts, et vérifie que Gemini rend bien une image carrée de 1 024 px.
+- **Import** : `npm run planches` gère déjà la grille 4 × 4 (`layout`), la ligne de base et l'échelle commune (`refHeight`). Restent à faire : le fond magenta de l'Oublié, et le repli des autres races sur la série du Yomi.
 - **PNJ** (Charon, le moine, Obaa-Kiku, Tanuki, Tetsu, Yuki) : pas encore couverts ; même principe, une fiche et une attente suffisent en général.
