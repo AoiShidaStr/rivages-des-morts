@@ -490,7 +490,7 @@
       "name": "Hakama de soie",
       "slot": "jambieres",
       "rarity": "peu commune",
-      "bonus": { "speed": 0.08 },
+      "bonus": { "maxHp": 4, "speed": 0.08 },
       "description": "Un hakama noir brodé de fils d'araignée argentés. Léger comme la brume."
     },
     "suneate-ecailles": {
@@ -505,7 +505,7 @@
       "name": "Geta du kasa-obake",
       "slot": "bottes",
       "rarity": "peu commune",
-      "bonus": { "dodge": 0.25 },
+      "bonus": { "maxHp": 4, "dodge": 0.25 },
       "description": "De hautes sandales de bois, enveloppées de papier huilé. On bondit plus loin avec."
     },
     "waraji-pelerin": {
@@ -545,15 +545,15 @@
       "name": "Rokumonsen",
       "slot": "amulette",
       "rarity": "rare",
-      "bonus": { "oboles": 0.2 },
+      "bonus": { "maxHp": 6, "oboles": 0.2 },
       "description": "Les six pièces qu'on glissait aux morts pour traverser la rivière Sanzu. Le péage de Charon, version japonaise."
     },
     "talisman-douteux": {
       "name": "Talisman douteux",
       "slot": "amulette",
       "rarity": "commune",
-      "bonus": {},
-      "description": "Le tanuki jure qu'il porte chance. Aucun effet mesurable."
+      "bonus": { "maxHp": 1 },
+      "description": "Le tanuki jure qu'il porte chance. Effet à peine mesurable."
     },
     "dent-kappa": {
       "name": "Dent de kappa (probablement)",
@@ -699,7 +699,7 @@
       "slot": "bottes",
       "rarity": "rare",
       "tags": ["Rôdeur"],
-      "bonus": { "speed": 0.04 },
+      "bonus": { "maxHp": 5, "speed": 0.04 },
       "summary": "Après un Recul, ton prochain tir part chargé à fond.",
       "effects": [
         { "op": "set", "path": "perks.leapCharge", "value": true }
@@ -734,7 +734,7 @@
       "slot": "bottes",
       "rarity": "rare",
       "tags": ["Lame"],
-      "bonus": { "dodge": 0.1 },
+      "bonus": { "maxHp": 5, "dodge": 0.1 },
       "summary": "Pas de l'ombre : une charge de plus, qui revient 15 % plus vite.",
       "effects": [
         { "op": "add", "path": "blade.shadowDash.charges", "value": 1 },
@@ -931,7 +931,7 @@
       "rarity": "peu commune",
       "tags": ["Rôdeur"],
       "set": "eclaireur",
-      "bonus": { "speed": 0.04, "dodge": 0.1 },
+      "bonus": { "maxHp": 5, "speed": 0.04, "dodge": 0.1 },
       "description": "Des sandales de paille tressée serré. Les éclaireurs du Yomi les usent en une nuit, et en retressent une paire le matin."
     },
     "ema-tetsu": {
