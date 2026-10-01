@@ -882,7 +882,7 @@
         {
           "key": "E",
           "name": "Marque du chasseur",
-          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 8 % de tes PV. Revient en 8 s."
+          "description": "Pendant 6 s, l'ennemi le plus proche de la souris prend 30 % de dégâts en plus, de toutes les sources. L'abattre te rend 8 % de tes PV. Revient en 8 s. Marquée, Izanami ne sent plus ton regard."
         },
         { "key": "R", "name": "Recul", "description": "Bond en arrière, loin de la souris, en tirant trois flèches vers elle. Invulnérable pendant le saut." }
       ],

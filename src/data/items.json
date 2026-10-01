@@ -626,7 +626,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "bonus": { "maxHp": 10 },
+      "bonus": { "maxHp": 20 },
       "summary": "Blocage parfait (garde levée juste avant le coup) : +15 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois plus.",
       "effects": [
         { "op": "set", "path": "perks.gourde", "value": { "rage": 15, "smashHeal": 2 } }
@@ -662,7 +662,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "bonus": { "maxHp": 10 },
+      "bonus": { "maxHp": 20 },
       "summary": "Un coup bloqué renvoie 40 % de ses dégâts à l'attaquant.",
       "effects": [
         { "op": "set", "path": "perks.guardReflect", "value": 0.4 }
@@ -674,7 +674,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "bonus": { "maxHp": 8 },
+      "bonus": { "maxHp": 20 },
       "summary": "Chaque PV rendu par ton Aura ajoute 2 dégâts à ton prochain Marteau lancé (au plus le double de ses dégâts).",
       "effects": [
         { "op": "set", "path": "perks.censer", "value": { "perHp": 2, "max": 1 } }
@@ -747,7 +747,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Lame"],
-      "bonus": { "damage": 2 },
+      "bonus": { "maxHp": 12, "damage": 2 },
       "summary": "Chaque coup critique retire 0,3 s à la recharge de la Marque de mort.",
       "effects": [
         { "op": "set", "path": "perks.critMarkRefund", "value": 0.3 }
@@ -770,9 +770,9 @@
       "slot": "relique",
       "rarity": "épique",
       "tags": ["Tous"],
-      "summary": "+25 % de dégâts et +10 % de vitesse, mais tous les soins que tu reçois sont réduits de moitié.",
+      "summary": "+35 % de dégâts et +10 % de vitesse, mais tous les soins que tu reçois sont réduits de moitié.",
       "effects": [
-        { "op": "set", "path": "perks.yomotsu", "value": { "damage": 0.25, "speed": 0.1, "healing": 0.5 } }
+        { "op": "set", "path": "perks.yomotsu", "value": { "damage": 0.35, "speed": 0.1, "healing": 0.5 } }
       ],
       "description": "Un bol de riz cuit au foyer du Yomi. Izanami en mangea, et ne put jamais revenir chez les vivants. Il rend fort ; il rend mort."
     },
@@ -781,7 +781,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["demi-dieu"],
-      "bonus": { "maxHp": 10 },
+      "bonus": { "maxHp": 20 },
       "summary": "Ton parent divin compte double : foudre de Zeus à 24 dégâts, Arès +30 % de dégâts, Hermès encore plus vif, Athéna −30 % de dégâts subis.",
       "effects": [
         { "op": "set", "path": "perks.parentBoost", "value": 2 }
@@ -793,7 +793,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["hanyo"],
-      "bonus": { "damage": 2 },
+      "bonus": { "maxHp": 12, "damage": 2 },
       "summary": "Ta jauge de sang yokai se remplit 30 % plus vite, mais transformé, tu subis 10 % de dégâts en plus (20 % au total).",
       "effects": [
         { "op": "mul", "path": "perks.yokaiBlood.fill", "value": 0.77 },
@@ -806,7 +806,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["oushebti"],
-      "bonus": { "maxHp": 10 },
+      "bonus": { "maxHp": 20 },
       "summary": "Ta carapace d'argile absorbe deux coups avant d'éclater, mais se reforme en 12 s au lieu de 8.",
       "effects": [
         { "op": "set", "path": "perks.clayCharges", "value": 2 },
@@ -819,7 +819,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["einherjar"],
-      "bonus": { "maxHp": 5, "damage": 1 },
+      "bonus": { "maxHp": 16, "damage": 1 },
       "summary": "La Rage du guerrier mort monte jusqu'à +50 % de dégâts au lieu de +35 %.",
       "effects": [
         { "op": "set", "path": "perks.einherjarRage", "value": 0.5 }

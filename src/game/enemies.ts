@@ -1731,12 +1731,15 @@ export class Izanami extends Enemy {
     }
   }
 
-  /** Le héros la regarde s'il vise vers elle (dans le cône `coneDeg`), d'assez près. */
+  /**
+   * Le héros la regarde s'il vise vers elle (dans le cône `coneDeg`), d'assez près. Sous la Marque du chasseur, elle
+   * ne sent plus les regards : c'est la parade du Rôdeur, qui doit viser pour tirer.
+   */
   private updateGaze(dt: number, world: World): void {
     const cfg = this.cfg.gaze;
     const player = world.player;
     const toHer = sub(this.pos, player.pos);
-    const busy = this.state.kind === 'transform' || this.state.kind === 'wrath' || this.repelled;
+    const busy = this.state.kind === 'transform' || this.state.kind === 'wrath' || this.repelled || this.marks.hunt > 0;
     this.watched = !busy && player.hidden <= 0 && length(toHer) <= cfg.range && inCone(player.facing, normalize(toHer), degToRad(cfg.coneDeg / 2));
     const rise = cfg.rise * (this.phase === 3 ? this.cfg.pursuit.gazeFactor : 1);
     this.gaze = this.watched ? Math.min(1, this.gaze + rise * dt) : Math.max(0, this.gaze - cfg.fall * dt);

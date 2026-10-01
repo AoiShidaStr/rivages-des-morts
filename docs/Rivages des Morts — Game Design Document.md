@@ -344,7 +344,9 @@ Conçus à partir du plan de mise à jour : des items de build pour chaque class
 | Tabi de shinobi | Bottes | Rare | Lame | Mobilité | Pas de l'ombre : une charge de plus, qui revient 15 % plus vite | Oubliés (4 %) |
 | Tsuba ébréchée | Amulette | Rare | Lame | Critique | Chaque coup critique retire 0,3 s à la recharge de la Marque de mort | Boutique de fin des Rizières |
 | Mino de paille | Plastron | Commune | — | Confort | −20 % de dégâts de ce qui tombe du ciel : foudre, pluie de fils, toiles lancées, kasa-obake qui retombent | Obaa (50 oboles) |
-| Yomotsu-hegui | Relique | Épique | Tous | Risque | La nourriture du Yomi : +25 % de dégâts et +10 % de vitesse, mais tous les soins reçus sont réduits de moitié | Izanami (10 %) |
+| Yomotsu-hegui | Relique | Épique | Tous | Risque | La nourriture du Yomi : +35 % de dégâts et +10 % de vitesse, mais tous les soins reçus sont réduits de moitié | Izanami (10 %) |
+
+Les amulettes de build et de race donnent environ 20 PV, comme le Magatama fêlé : leur effet est un choix, pas une perte de PV (réglage d'octobre 2026).
 
 **Amulettes de race**
 
@@ -533,7 +535,7 @@ Tout vient du mythe d'Izanagi (Kojiki) : les furies qu'Izanami lança à ses tro
 2. **Son vrai visage** (sous 65 %) : le corps rongé, les huit dieux du tonnerre crépitent sur elle. La foudre tombe sur le héros et autour, elle disparaît et reparaît, des ikazuchi la rejoignent.
 3. **La poursuite** (sous 32 %) : elle traque le héros et bondit sur lui ; elle ne subit plus que 30 % des dégâts.
 
-**Son regard** (tout le combat) : la regarder, c'est viser vers elle. Sous le regard, une jauge monte : elle encaisse de mieux en mieux (jusqu'à −70 % de dégâts), puis, pleine, sa colère éclate en zone et appelle des renforts. Il faut frapper en visant à côté d'elle : le bord d'un arc large la touche sans la regarder, alors qu'un estoc (katana, kaiken) oblige à la regarder ; le Rôdeur tire par courtes salves, les âmes de l'Invocateur, elles, peuvent la regarder. Parer oblige à lui faire face : c'est un choix.
+**Son regard** (tout le combat) : la regarder, c'est viser vers elle. Sous le regard, une jauge monte : elle encaisse de mieux en mieux (jusqu'à −70 % de dégâts), puis, pleine, sa colère éclate en zone et appelle des renforts. Il faut frapper en visant à côté d'elle : le bord d'un arc large la touche sans la regarder, alors qu'un estoc (katana, kaiken) oblige à la regarder ; le Rôdeur tire par courtes salves, ou pose sa Marque du chasseur : marquée, elle ne sent plus aucun regard (réglage d'octobre 2026, le Rôdeur perdait presque toujours contre elle) ; les âmes de l'Invocateur, elles, peuvent la regarder. Parer oblige à lui faire face : c'est un choix.
 
 **Faiblesse : les trois pêches** : fuyant le Yomi, Izanagi lança trois pêches, et l'armée des morts recula. Trois pêchers poussent dans l'arène ; frapper un pêcher mûr fait tomber sa pêche, qui file repousser Izanami : elle reste sans défense 4,5 s et subit 60 % de dégâts en plus. Le pêcher refleurit en 14 s. Le moine raconte l'histoire avant la descente, et l'annonce de la troisième phase la rappelle, sans dire comment s'en servir.
 

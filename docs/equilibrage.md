@@ -94,6 +94,50 @@ Les mesures du niveau 1 varient d'environ 10 points d'un lancement à l'autre : 
 - **Invocateur** : au banc de DPS (une seule cible, sans âmes à lier), il reste loin de sa cible de 75 %. En donjon, où ses âmes font sa force, il reste le plus rapide. Pour qu'il soit à 75 % contre une seule cible sans devenir trop fort en vague, il faudrait déplacer sa puissance des âmes vers son compagnon ou ses propres coups : c'est une décision de design à prendre.
 - **Niveau 50** : le Guerrier et le Rôdeur décrochent (80 % et 75 % environ, contre 95 à 100 % pour les autres). Piste : les objets de classe de la 0.3.0.
 
+## Objets du Yomi (0.3.0), 1er octobre 2026
+
+Chaque objet est comparé à la même classe sans lui : 16 descentes par race, soit 112 par classe (16 par classe pour les amulettes de race, 64 pour le Gohei). Le héros porte l'équipement typique forgé à son niveau ; l'objet testé **remplace** la pièce de son emplacement. Le résultat mesure donc l'effet de l'objet moins ce que la pièce remplacée apportait : c'est le choix qu'a vraiment le joueur. Écart de bruit : environ 5 points par classe, 12 points pour une amulette de race.
+
+**Le bot connaît maintenant Izanami** : il frappe sans la regarder (le bord d'un arc large, ou par salves avec un estoc ou un arc) et fait tomber les pêches mûres. Avant, toutes les classes atteignaient Izanami et mouraient devant elle : le Palais semblait injouable (0 à 6 % de victoires), alors que c'était le bot. À la force actuelle du Palais, qui ne change pas :
+
+| Classe | Palais niv. 1 | Palais niv. 10 | Palais niv. 20 |
+|---|---|---|---|
+| Guerrier | 90 % | 100 % | 93 % |
+| Invocateur | 79 % | 100 % | 88 % |
+| Lame | 64 % | 98 % | 88 % |
+| Paladin | 90 % | 93 % | 33 % |
+| Rôdeur | 17 % | 30 % | 8 % |
+
+Le Rôdeur (contre Izanami : il doit viser pour tirer, donc la regarder) et le Paladin au niveau 20 sont les points faibles du Palais.
+
+Banc de DPS, niveau 30, équipement complet : Nodachi de l'Ikusa 191 contre 195 pour le Totsuka (même puissance, autre style) ; Arc d'Ikazuchi 234 contre 235 pour l'Arc de soie, après son renfort (212 avant).
+
+Victoires au Palais niveau 20, avant → avec l'objet (après les réglages de la PR #23) :
+
+| Objet | Classe | Palais niv. 20 | Ce que l'objet change |
+|---|---|---|---|
+| Masque de hannya | Guerrier | 93 → 96 % | PV restants 63 → 72 % |
+| Nodachi de l'Ikusa | Guerrier | 93 → 95 % | dégâts/s +9 % |
+| Gourde de saké d'oni | Guerrier | 93 → 84 % | le bot ne fait pas de blocage parfait : sa rage n'est pas mesurée |
+| Les trois ensemble | Guerrier | 93 → 100 % | build « au bord du gouffre » |
+| Os de shikome, 4 pièces | Lame | 88 → 98 % | PV restants 41 → 60 % ; le plus fort des nouveaux objets |
+| Os de shikome, 2 pièces | Lame | 88 → 96 % | |
+| Tabi de shinobi | Lame | 88 → 93 % | |
+| Tsuba ébréchée | Lame | 88 → 88 % | dégâts/s +16 % |
+| Sōhei, 4 pièces | Paladin | 33 → 56 % | dégâts subis −20 % ; aide la classe la plus faible au niveau 20 |
+| Sōhei, 2 pièces | Paladin | 33 → 41 % | |
+| Shimenawa tressée | Paladin | 33 → 30 % | remplace la Carapace de kappa (−15 % de dégâts subis) |
+| Cloche du Grand Rocher | Paladin | 33 → 27 % | remplace le Magatama fêlé (+20 PV) |
+| Encensoir du moine | Paladin | 33 → 20 % | idem |
+| Éclaireur du Yomi, 4 pièces | Rôdeur | 8 → 18 % | |
+| Tabi du messager | Rôdeur | 8 → 9 % | dégâts/s +6 % |
+| Arc d'Ikazuchi | Rôdeur | 8 → 6 % | |
+| Mino de paille | toutes | −5 à −21 points | objet commun qui remplace la Carapace de kappa : normal qu'il soit en dessous |
+| Yomotsu-hegui | Guerrier, Invocateur, Paladin | −21 à −23 points | trop coûteux pour les classes qui vivent de leurs soins |
+| Yomotsu-hegui | Lame, Rôdeur | −3 à +5 points | dégâts/s +15 à +20 % |
+
+Amulettes de race : leurs effets jouent, mais elles donnent 10 PV quand le Magatama fêlé, l'amulette typique, en donne 20. Le Gohei, le Dogū et la Tsuba du rōnin restent dans le bruit ; la Corne d'oni coûte des victoires au Paladin (niv. 10 : 63 → 44 %) et à l'Invocateur (niv. 20 : 75 → 50 %), ce qui va avec un objet à risque.
+
 ## Grille de suivi
 
 | Élément | Problème | Direction | État |
@@ -108,3 +152,6 @@ Les mesures du niveau 1 varient d'environ 10 points d'un lancement à l'autre : 
 | Fil de Jōren et Arc de soie | Immobilisation infinie | Plus d'immobilisation permanente | Fait (0.2.0) : 3 s de répit après chaque immobilisation |
 | Katana de rônin | Plus fun à jouer | Plus de portée ou de largeur | Fait (0.2.0) : estoc de 2,6 × 1,5 m |
 | Ennemis | Les UP des joueurs peuvent réduire la difficulté | Scaling à ajuster | Fait (0.2.0) : +9 % PV, +10 % dégâts par niveau |
+| Objets du Yomi | Styles de jeu par classe, sans objet strictement meilleur | Réglages mesurés au bot | En cours (PR #23) : Tsuba, Arc d'Ikazuchi, Encensoir, Gohei, Masque de hannya |
+| Forge | Pièces qui ne gagnaient rien en montant de niveau | Chaque pièce a des PV | Fait (PR #23) |
+| Palais | Rôdeur et Paladin (niv. 20) faibles contre Izanami | À décider | Mesuré (PR #23) |
