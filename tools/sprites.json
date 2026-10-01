@@ -45,6 +45,8 @@
     { "name": "heros-rodeur", "source": "heros_rodeur.jpg" },
     { "name": "heros-oushebti", "source": "heros_oushebti.jpg" },
     { "name": "heros-demi-dieu", "source": "heros_demi-dieu.jpg" },
-    { "name": "heros-hanyo", "source": "heros_hanyo.jpg" }
+    { "name": "heros-hanyo", "source": "heros_hanyo.jpg" },
+    { "name": "pecher", "source": "2d/boss-2D/pecher.jpg" },
+    { "name": "pecher-nu", "source": "2d/boss-2D/pecher-nu.jpg" }
   ]
 }

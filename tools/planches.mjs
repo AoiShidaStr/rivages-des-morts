@@ -55,7 +55,8 @@ for (const planche of [...config.planches, ...(await heroPlanches(sourceDir))]) 
     const all = anim.part === 'first' ? found.slice(0, half) : anim.part === 'second' ? found.slice(half) : found;
     const picked = anim.frames ? anim.frames.map((i) => found[i]) : all;
     if (options.anchor === 'box') registerOnFirst(picked);
-    const scale = planche.bodyHeight / referenceHeight(found, picked, anim.ref);
+    // `refHeight` : hauteur du corps debout dans la source, en pixels, quand aucune image de la planche n'est debout (vol, bond).
+    const scale = planche.bodyHeight / (anim.refHeight ?? referenceHeight(found, picked, anim.ref));
     const from = frames.length;
     picked.forEach((frame, i) => {
       frames.push({ ...scaleFrame(frame, scale), duration: anim.durations?.[i] ?? anim.duration ?? 100, tag: anim.tag });
