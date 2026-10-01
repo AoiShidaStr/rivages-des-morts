@@ -299,6 +299,18 @@ Chaque nouvel item doit être testé sur :
 
 # 0.4.0, DJ infini
 
+## Décisions du 1er octobre 2026 (livré en 0.4.0)
+
+- **Déblocage** : héros au niveau 50. L'entrée est cachée derrière la cascade, en haut à droite de l'île.
+- **Structure** : des blocs de 5 paliers dans une même arène, Rizières puis Palais en alternance. 4 vagues tirées parmi celles du donjon, puis son boss.
+- **Niveau** : 50 au départ, +10 tous les 5 paliers. Au palier 25 (niveau 100), Izanami et la Jorōgumo ensemble ; ensuite, les deux à chaque boss.
+- **Modificateurs** : seulement après le palier 25 (élites III, Marée des morts, Hâte IV, Rancune II, Chair du Yomi, puis l'Abîme tous les 5 paliers).
+- **Mort** : encaisser ou risquer. À la fin de chaque bloc, on encaisse et on remonte, ou on continue ; tomber fait perdre tout le butin en jeu.
+- **Récompenses** : à partir du palier 10, un objet rare, épique ou légendaire à chaque bloc franchi.
+- **Coop** : oui. L'hôte choisit d'encaisser ou de continuer ; un invité peut encaisser et partir.
+- **Record** : meilleur palier par personnage, et record de tous les personnages sur l'écran titre.
+- Règles chiffrées : `src/data/donjon-infini.json`. Tests : `npm run equilibrage -- --donjon infini --palier 21 --niveaux 50 --stuff complet`.
+
 ## Déblocage
 
 Une fois le jeu terminé :

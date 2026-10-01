@@ -787,6 +787,27 @@
         "lines": [["narrateur", "Le rocher est silencieux. Pour l'instant."]]
       }
     ],
+    "faille-cascade": [
+      {
+        "if": [{ "notFlag": "infini_decouvert" }],
+        "lines": [
+          ["narrateur", "Derrière le rideau d'eau, la roche s'ouvre sur une faille. Un souffle froid en monte, et des voix, très loin en dessous."],
+          ["narrateur", "Ce passage ne mène à aucun donjon connu. Il descend, simplement. Sans fond."]
+        ],
+        "then": [{ "set": "infini_decouvert" }],
+        "choices": [
+          { "text": "Descendre dans le Yomi sans fond", "then": [{ "enterDungeon": "infini" }] },
+          { "text": "Pas encore" }
+        ]
+      },
+      {
+        "lines": [["narrateur", "La faille derrière la cascade. Le souffle froid ne s'arrête jamais."]],
+        "choices": [
+          { "text": "Descendre dans le Yomi sans fond", "then": [{ "enterDungeon": "infini" }] },
+          { "text": "Pas encore" }
+        ]
+      }
+    ],
     "portail": [
       {
         "lines": [["narrateur", "Un torii noir se dresse devant les rizières noyées. Sous la brume, l'eau est rouge."]],

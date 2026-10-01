@@ -75,7 +75,7 @@ export function openCharacters(host: PanelHost, ctx: UiContext, actions: Charact
         { class: 'character-body' },
         h('strong', {}, heroLabel(content.skills, c.hero)),
         parent ? h('small', {}, `Enfant de ${parent}`) : null,
-        h('small', {}, `Niveau ${c.level} · `, obole(c.oboles), ` · joué le ${playedOn(c.savedAt)}`),
+        h('small', {}, `Niveau ${c.level} · `, obole(c.oboles), `${c.endless ? ` · Yomi sans fond : palier ${c.endless}` : ''} · joué le ${playedOn(c.savedAt)}`),
       ),
       h('div', { class: 'character-actions' }, ...buttons),
     );

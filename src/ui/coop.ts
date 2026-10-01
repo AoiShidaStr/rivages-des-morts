@@ -1,6 +1,6 @@
 // Coop en ligne : créer une partie, la rejoindre avec un code ou depuis la liste des parties publiques, puis le
 // salon où l'on attend ses amis avant de descendre ensemble.
-import { content } from '../content';
+import { ENDLESS, ENDLESS_FOUND, content } from '../content';
 import { clampLevel } from '../game/difficulty';
 import { heroLabel } from '../game/loadout';
 import type { Progress } from '../game/progress';
@@ -44,11 +44,16 @@ function savePseudo(name: string): void {
 
 const className = (cls: string) => content.skills.classes[cls]?.name ?? cls;
 const raceName = (race: string) => content.skills.races[race]?.name ?? race;
-const dungeonName = (id: string) => content.dungeons[id]?.name ?? id;
+const dungeonName = (id: string) => (id === ENDLESS ? content.endless.name : (content.dungeons[id]?.name ?? id));
 
-/** Donjons que ce héros peut proposer : les Rizières, et le Palais une fois le sceau du Grand Rocher dénoué. */
+/**
+ * Donjons que ce héros peut proposer : les Rizières, le Palais une fois le sceau du Grand Rocher dénoué, et le Yomi
+ * sans fond une fois la faille de la cascade trouvée, au niveau voulu.
+ */
 export function openDungeons(progress: Progress): string[] {
-  return Object.keys(content.dungeons).filter((id) => id !== 'palais' || progress.check([{ flag: 'sceau_ouvert' }]));
+  const dungeons = Object.keys(content.dungeons).filter((id) => id !== 'palais' || progress.check([{ flag: 'sceau_ouvert' }]));
+  const endless = progress.check([{ flag: ENDLESS_FOUND }, { level: content.endless.unlockLevel }]);
+  return endless ? [...dungeons, ENDLESS] : dungeons;
 }
 
 /** Premier écran : pseudo, créer une partie, rejoindre avec un code ou depuis la liste publique. */
@@ -160,8 +165,24 @@ export function openLobby(
     const settings: HTMLElement[] = [];
     if (session.isHost) {
       const dungeons = openDungeons(progress);
-      const unlocked = clampLevel(content.difficulty, progress.dungeon(lobby.dungeon).unlocked);
+      const endless = lobby.dungeon === ENDLESS;
+      const unlocked = endless ? 1 : clampLevel(content.difficulty, progress.dungeon(lobby.dungeon).unlocked);
       const set = (level: number) => session.choose(lobby.dungeon, Math.max(1, Math.min(unlocked, level)));
+      // Le Yomi sans fond commence toujours au palier 1 : pas de niveau à choisir.
+      const picker = endless
+        ? [h('p', { class: 'note' }, `Depuis le palier 1 (niveau ${content.endless.baseLevel}). À la fin de chaque bloc de ${content.endless.palierStep} paliers, l’hôte choisit d’encaisser ou de continuer ; si l’équipe tombe, chacun perd le butin en jeu.`)]
+        : [
+            h(
+              'div',
+              { class: 'level-picker' },
+              h('button', { class: 'btn small', onclick: () => set(lobby.level - content.difficulty.unlockStep) }, `−${content.difficulty.unlockStep}`),
+              h('button', { class: 'btn small', onclick: () => set(lobby.level - 1) }, '−'),
+              h('strong', { class: 'level-value' }, `Niveau ${lobby.level}`),
+              h('button', { class: 'btn small', onclick: () => set(lobby.level + 1) }, '+'),
+              h('button', { class: 'btn small', onclick: () => set(lobby.level + content.difficulty.unlockStep) }, `+${content.difficulty.unlockStep}`),
+            ),
+            h('p', { class: 'note' }, `Niveaux ouverts pour toi : 1 à ${unlocked}. Chacun garde son butin ; une victoire ouvre les niveaux suivants pour tous.`),
+          ];
       settings.push(
         h(
           'div',
@@ -169,21 +190,15 @@ export function openLobby(
           ...dungeons.map((id) =>
             h(
               'button',
-              { class: `btn small${id === lobby.dungeon ? ' primary' : ''}`, onclick: () => session.choose(id, Math.min(lobby.level, progress.dungeon(id).unlocked)) },
+              {
+                class: `btn small${id === lobby.dungeon ? ' primary' : ''}`,
+                onclick: () => session.choose(id, id === ENDLESS ? 1 : Math.min(lobby.level, progress.dungeon(id).unlocked)),
+              },
               dungeonName(id),
             ),
           ),
         ),
-        h(
-          'div',
-          { class: 'level-picker' },
-          h('button', { class: 'btn small', onclick: () => set(lobby.level - content.difficulty.unlockStep) }, `−${content.difficulty.unlockStep}`),
-          h('button', { class: 'btn small', onclick: () => set(lobby.level - 1) }, '−'),
-          h('strong', { class: 'level-value' }, `Niveau ${lobby.level}`),
-          h('button', { class: 'btn small', onclick: () => set(lobby.level + 1) }, '+'),
-          h('button', { class: 'btn small', onclick: () => set(lobby.level + content.difficulty.unlockStep) }, `+${content.difficulty.unlockStep}`),
-        ),
-        h('p', { class: 'note' }, `Niveaux ouverts pour toi : 1 à ${unlocked}. Chacun garde son butin ; une victoire ouvre les niveaux suivants pour tous.`),
+        ...picker,
         h(
           'label',
           { class: 'coop-check' },
@@ -192,7 +207,8 @@ export function openLobby(
         ),
       );
     } else {
-      settings.push(h('p', { class: 'note' }, `${dungeonName(lobby.dungeon)}, niveau ${lobby.level} : c’est l’hôte qui choisit.`));
+      const where = lobby.dungeon === ENDLESS ? `${dungeonName(lobby.dungeon)}, palier ${lobby.level}` : `${dungeonName(lobby.dungeon)}, niveau ${lobby.level}`;
+      settings.push(h('p', { class: 'note' }, `${where} : c’est l’hôte qui choisit.`));
     }
 
     const waiting = session.isHost && !session.allReady;

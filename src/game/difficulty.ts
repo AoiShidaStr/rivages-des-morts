@@ -42,6 +42,8 @@ export interface Difficulty {
   elite: { hp: number; damage: number };
   /** Coop : yokai en plus par vague pour chaque héros au-delà du premier. */
   extraSpawns: number;
+  /** Donjon infini (Marée des morts) : yokai en plus par vague, même en solo. */
+  soloExtra?: number;
 }
 
 /** Multiplicateurs du butin : oboles, expérience, chance des objets rares, matériaux en plus par drop. */

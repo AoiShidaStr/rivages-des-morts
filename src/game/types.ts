@@ -48,7 +48,7 @@ export interface InputFrame {
 
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
 export type GameEvent =
-  | { type: 'wave'; index: number; total: number; label: string; hint?: string }
+  | { type: 'wave'; index: number; total: number; label: string; hint?: string; step?: string; palier?: number }
   | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number }
   | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean }
   /** `blocked` : ce qui a traversé la garde du Guerrier. */

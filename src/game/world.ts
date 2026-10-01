@@ -1440,7 +1440,8 @@ export class World {
 
   /** Quand le boss tombe, ses araignées et les feux follets de l'arène se dissipent avec lui. */
   private clearBossMinions(): void {
-    if (!this.enemies.some((e) => e.boss && e.dead)) return;
+    // Avec deux boss (donjon infini), il faut les abattre tous les deux.
+    if (!this.enemies.some((e) => e.boss && e.dead) || this.enemies.some((e) => e.boss && !e.dead)) return;
     for (const enemy of this.enemies) {
       if (enemy.dead) continue;
       enemy.hp = 0;
@@ -1465,6 +1466,8 @@ export class World {
     this.waveIndex++;
     this.waveTimer = WAVE_PAUSE;
     const wave = waves[this.waveIndex];
+    // Donjon infini : chaque palier a son niveau et ses modificateurs.
+    if (wave.difficulty) this.cfg.difficulty = wave.difficulty;
     this.stumps = (wave.stumps ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
     this.peaches = (wave.peaches ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.peachRadius, ripe: true, regrow: 0 }));
     this.webs = [];
@@ -1476,7 +1479,7 @@ export class World {
       }
     }
     // Coop : des yokai en plus pour chaque héros au-delà du premier (jamais un boss en plus).
-    const extra = (this.cfg.difficulty?.extraSpawns ?? 0) * (this.players.length - 1);
+    const extra = (this.cfg.difficulty?.extraSpawns ?? 0) * (this.players.length - 1) + (this.cfg.difficulty?.soloExtra ?? 0);
     const common = wave.spawns.filter((sp) => !BOSS_KINDS.has(sp.kind));
     for (let i = 0; i < extra && common.length; i++) {
       this.enemies.push(this.createEnemy(common[i % common.length].kind, this.spawnPoint()));
@@ -1490,7 +1493,7 @@ export class World {
     }
     const hint = wave.hints?.[this.player.cfg.kit] ?? wave.hint;
     for (const hero of this.players) hero.newWave();
-    this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint });
+    this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint, step: wave.step, palier: wave.palier });
   }
 
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {

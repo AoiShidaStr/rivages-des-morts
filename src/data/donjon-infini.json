@@ -1,0 +1,36 @@
+{
+  "about": "Le Yomi sans fond (donjon infini, 0.4.0) : caché derrière la cascade, ouvert au niveau 50. On le descend par blocs de 5 paliers dans une même arène, Rizières puis Palais, en alternance : 4 vagues tirées parmi celles du donjon, puis son boss au 5e palier. À partir de doubleBossFrom, la Jorōgumo et Izanami attendent ensemble. Niveau des yokai : baseLevel, +levelStep tous les palierStep paliers (palier 25 : niveau 100), plafonné à maxLevel. Au-delà du plafond, un modificateur s'ajoute tous les 5 paliers (modifiers, puis beyond qui se répète). À la fin de chaque bloc, on encaisse le butin et on remonte, ou on continue : mourir fait tout perdre. Récompense : à partir du palier itemsFrom, un objet tiré selon la rareté du palier atteint, à chaque fin de bloc.",
+  "name": "Le Yomi sans fond",
+  "region": "Derrière la cascade",
+  "unlockLevel": 50,
+  "baseLevel": 50,
+  "levelStep": 10,
+  "palierStep": 5,
+  "maxLevel": 100,
+  "arenas": ["rizieres", "palais"],
+  "wavesPerBloc": 4,
+  "doubleBossFrom": 25,
+  "modifiers": [
+    { "from": 30, "name": "Âmes d'élite III", "description": "Trois élites par vague.", "curses": { "elites": 3 } },
+    { "from": 35, "name": "Marée des morts", "description": "Deux yokai de plus à chaque vague.", "extraSpawns": 2 },
+    { "from": 40, "name": "Hâte des morts IV", "description": "Les yokai agissent 40 % plus vite.", "curses": { "hate": 0.4 } },
+    { "from": 45, "name": "Rancune des noyés II", "description": "Sous 30 % de leurs PV, les yokai font 70 % de dégâts en plus.", "curses": { "rancune": 0.7 } },
+    { "from": 50, "name": "Chair du Yomi", "description": "Les yokai ont 25 % de PV et 15 % de dégâts en plus.", "hp": 1.25, "damage": 1.15 }
+  ],
+  "beyond": { "name": "Abîme", "description": "Encore 15 % de PV et 10 % de dégâts en plus pour les yokai.", "hp": 1.15, "damage": 1.1 },
+  "rewards": {
+    "itemsFrom": 10,
+    "rarity": [
+      { "from": 10, "weights": { "rare": 70, "épique": 25, "légendaire": 5 } },
+      { "from": 20, "weights": { "rare": 40, "épique": 45, "légendaire": 15 } },
+      { "from": 30, "weights": { "rare": 20, "épique": 50, "légendaire": 30 } },
+      { "from": 40, "weights": { "rare": 5, "épique": 45, "légendaire": 50 } }
+    ]
+  },
+  "victory": {
+    "title": "Tu remontes du Yomi sans fond",
+    "text": "La cascade se referme derrière toi. Ce que tu as arraché aux profondeurs est à toi."
+  },
+  "exit": { "u": 13.8, "v": 5.8 },
+  "defeat": "Le Yomi sans fond garde ce que tu n'as pas encaissé."
+}

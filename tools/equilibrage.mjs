@@ -56,6 +56,8 @@ const ALLIES = option('allies', '').split(',').filter(Boolean);
 const COMPANION = option('compagnon', '');
 /** Le donjon joué (`--donjon palais`), les Rizières noyées par défaut. */
 const DUNGEON = option('donjon', 'rizieres');
+// Donjon infini (`--donjon infini`) : le bloc qui contient ce palier (le héros garde le niveau de `--niveaux`).
+const PALIER = Number(option('palier', '1'));
 /** Cibles de l'équilibrage (GDD) : écart de victoires entre classes et entre races, pire combinaison. */
 const TARGETS = { classSpread: 0.15, raceSpread: 0.1, worst: 0.5 };
 
@@ -65,7 +67,7 @@ async function worker() {
   const { createServer } = await import('vite');
   const server = await createServer({ root: ROOT, server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom', logLevel: 'error' });
   const load = (path) => server.ssrLoadModule(path);
-  const [{ World }, { Bot }, { buildLoadout }, { content }, { difficultyFor }, player, enemies] = await Promise.all([
+  const [{ World }, { Bot }, { buildLoadout }, { content, endlessArenas }, { difficultyFor }, player, enemies, infini] = await Promise.all([
     load('/src/game/world.ts'),
     load('/src/game/bot.ts'),
     load('/src/game/loadout.ts'),
@@ -73,8 +75,11 @@ async function worker() {
     load('/src/game/difficulty.ts'),
     load('/src/data/player.json'),
     load('/src/data/enemies.json'),
+    load('/src/game/infini.ts'),
   ]);
-  const dungeon = content.dungeons[DUNGEON] ?? content.dungeons.rizieres;
+  const endless = DUNGEON === 'infini';
+  const bloc = infini.blocOf(content.endless, PALIER);
+  const dungeon = endless ? content.dungeons[infini.arenaOf(content.endless, bloc)] : (content.dungeons[DUNGEON] ?? content.dungeons.rizieres);
   const base = { ...dungeon.arena, player: player.default, enemies: enemies.default };
 
   /** Réglages d'un héros de cette classe et de cette race, équipé et formé pour ce niveau. */
@@ -141,23 +146,27 @@ async function worker() {
     const allies = allyClasses.map((cls) => heroConfig(cls, 'einherjar', undefined, job.level, false));
     const out = [];
     for (let r = 0; r < runs; r++) {
-      const world = new World({ ...base, player: cfg, allies, difficulty: difficultyFor(content.difficulty, job.level, PLAYERS, dungeon.strength) }, 0);
+      const waves = endless ? infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, PLAYERS) : null;
+      const difficulty = waves ? waves[0].difficulty : difficultyFor(content.difficulty, job.level, PLAYERS, dungeon.strength);
+      const world = new World({ ...base, ...(waves ? { waves } : {}), player: cfg, allies, difficulty }, 0);
       const bots = world.players.map((hero) => new Bot(world, hero));
       let t = 0;
       let taken = 0;
       let healed = 0;
       let dealt = 0;
-      while (world.state === 'playing' && t < 600) {
+      let reached = 0;
+      while (world.state === 'playing' && t < (endless ? 900 : 600)) {
         const inputs = bots.map((bot) => bot.input());
         world.update(1 / 60, PLAYERS > 1 ? inputs : inputs[0]);
         for (const e of world.drainEvents()) {
           if (e.type === 'playerHit' && (e.hero ?? 0) === 0) taken += e.amount;
           else if (e.type === 'heal' && e.id === 0) healed += e.amount;
           else if (e.type === 'enemyHit') dealt += e.amount;
+          else if (e.type === 'wave') reached++;
         }
         t += 1 / 60;
       }
-      out.push({ won: world.state === 'victory', t, taken, healed, dealt, hpLeft: Math.max(0, world.players[0].hp) / cfg.maxHp });
+      out.push({ waves: reached, won: world.state === 'victory', t, taken, healed, dealt, hpLeft: Math.max(0, world.players[0].hp) / cfg.maxHp });
     }
     const n = out.length;
     const mean = (f) => out.reduce((s, x) => s + f(x), 0) / n;
@@ -166,6 +175,7 @@ async function worker() {
       maxHp: Math.round(cfg.maxHp),
       win: mean((x) => (x.won ? 1 : 0)),
       time: mean((x) => x.t),
+      waves: mean((x) => x.waves),
       dps: mean((x) => x.dealt / x.t),
       takenPerMin: mean((x) => (x.taken / x.t) * 60),
       healPerMin: mean((x) => (x.healed / x.t) * 60),
@@ -197,14 +207,14 @@ function report(rows, levels) {
       out(`| ${key(row[0])} | ${cells.join(' | ')} | ${pct(avg(row, (r) => r.win))} |`);
     }
     out('');
-    out('| Classe | Victoires | Durée | Dégâts/s | Dégâts subis/min | Soins/min | PV restants | PV max |');
-    out('|---|---|---|---|---|---|---|---|');
+    out('| Classe | Victoires | Vagues atteintes | Durée | Dégâts/s | Dégâts subis/min | Soins/min | PV restants | PV max |');
+    out('|---|---|---|---|---|---|---|---|---|');
     const classWins = [];
     for (const cls of CLASSES) {
       const list = at.filter((r) => r.cls === cls);
       if (!list.length) continue;
       classWins.push(avg(list, (r) => r.win));
-      out(`| ${cls} | ${pct(avg(list, (r) => r.win))} | ${Math.round(avg(list, (r) => r.time))} s | ${avg(list, (r) => r.dps).toFixed(1)} | ${Math.round(avg(list, (r) => r.takenPerMin))} | ${Math.round(avg(list, (r) => r.healPerMin))} | ${pct(avg(list, (r) => r.hpLeft))} | ${list[0].maxHp} |`);
+      out(`| ${cls} | ${pct(avg(list, (r) => r.win))} | ${avg(list, (r) => r.waves).toFixed(1)} | ${Math.round(avg(list, (r) => r.time))} s | ${avg(list, (r) => r.dps).toFixed(1)} | ${Math.round(avg(list, (r) => r.takenPerMin))} | ${Math.round(avg(list, (r) => r.healPerMin))} | ${pct(avg(list, (r) => r.hpLeft))} | ${list[0].maxHp} |`);
     }
     // Races : le Demi-dieu compte une fois, en moyenne sur ses parents.
     const raceWins = [...new Set(RACES.map(([race]) => race))]

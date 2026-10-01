@@ -1,10 +1,11 @@
 import type { Engine } from '@babylonjs/core';
 import { Music } from './audio/music';
 import { whileHidden } from './background';
-import { content, portraitUrl, type DungeonDef, type Line } from './content';
+import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
-import { toWorld, type Interactable, type Island } from './game/island';
+import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, rollEndlessItem, submitGlobalRecord } from './game/infini';
+import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
 import { buildLoadout, classWeapon, heroClass, heroLabel, levelProgress, type Loadout } from './game/loadout';
@@ -41,6 +42,7 @@ import {
   type UiContext,
 } from './ui/panels';
 import { openCoopMenu, openLobby } from './ui/coop';
+import { openEndlessEntry } from './ui/infini';
 import { openOptions } from './ui/options';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
 import { Screens, type MenuOption } from './ui/screens';
@@ -137,6 +139,13 @@ export class App {
   /** Donjon en cours, et son niveau (choisi à l'entrée). */
   private dungeon: DungeonDef = content.dungeons.rizieres;
   private dungeonLevel = 1;
+  /**
+   * Donjon infini en cours : le bloc joué, le dernier palier franchi, et vrai à la fin d'un bloc tant qu'on n'a pas
+   * choisi d'encaisser ou de continuer. Le butin de `run` court de bloc en bloc tant qu'il n'est pas encaissé.
+   */
+  private endless: { bloc: number; cleared: number; awaiting: boolean } | null = null;
+  /** Où l'on reparaît sur l'île en remontant (devant la cascade, après le donjon infini). */
+  private exitAt: ScreenPoint | null = null;
   private outcome: Outcome | null = null;
   /** Micro-pause d'impact (hitstop) sur les coups critiques et parades majeures pour le game feel. */
   private hitstop = 0;
@@ -161,7 +170,8 @@ export class App {
   }
 
   start(): void {
-    if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
+    if (this.d.devWave !== null && this.d.devDungeon === ENDLESS) void this.descendEndless(blocOf(content.endless, this.d.devLevel ?? 1));
+    else if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
     this.d.engine.runRenderLoop(() => this.frame());
     // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
@@ -295,7 +305,8 @@ export class App {
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
     options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
     options.push({ label: 'Options', action: () => openOptions(this.panels, this.music) });
-    this.screens.showTitle(options, latestVersion);
+    const record = globalRecord();
+    this.screens.showTitle(options, latestVersion, record ? `Record du ${content.endless.name} : palier ${record.palier} (${record.hero})` : '');
   }
 
   /** Les personnages sauvegardés : en reprendre un, en créer, exporter, importer, supprimer. */
@@ -468,6 +479,10 @@ export class App {
         case 'dungeon': {
           // Le joueur choisit le niveau du donjon avant d'y entrer.
           const id = action.id;
+          if (id === ENDLESS) {
+            openEndlessEntry(this.panels, this.ui, () => void this.descendEndless(0));
+            break;
+          }
           openDungeonEntry(this.panels, this.ui, content.dungeons[id], (level) => void this.descend(id, level));
           break;
         }
@@ -531,12 +546,43 @@ export class App {
     this.busy = false;
   }
 
+  /** Le Yomi sans fond : un bloc de 5 paliers ; `bloc` > 0 quand on continue, le butin en jeu restant le même. */
+  private async descendEndless(bloc: number): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    const data = content.endless;
+    const keep = bloc > 0 && this.endless !== null;
+    const cleared = keep && this.endless ? this.endless.cleared : 0;
+    const player = this.loadout().config;
+    const allies = this.botAllies();
+    const dungeon = content.dungeons[arenaOf(data, bloc)];
+    const waves = blocWaves(data, content.difficulty, bloc, endlessArenas, 1 + allies.length);
+    const first = firstPalier(data, bloc);
+    await this.screens.transition(data.name, this.endlessSubtitle(bloc, 1 + allies.length), () => {
+      const world = new World({ ...this.d.config, ...dungeon.arena, waves, player, allies: allies.map((a) => a.config), difficulty: waves[0].difficulty });
+      this.world = world;
+      this.mirror = null;
+      this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
+      this.prepareDungeon(dungeon, levelAt(data, first), allies, keep);
+      this.endless = { bloc, cleared, awaiting: false };
+    });
+    this.busy = false;
+  }
+
+  /** « Paliers 6 à 10 · niveau 60 », sous le nom du donjon infini. */
+  private endlessSubtitle(bloc: number, heroes: number): string {
+    const data = content.endless;
+    const first = firstPalier(data, bloc);
+    return `Paliers ${first} à ${first + data.palierStep - 1} · niveau ${levelAt(data, first)}${heroes > 1 ? ` · ${heroes} héros` : ''}`;
+  }
+
   private async enterDungeon(id: string, startWave: number, withTransition: boolean, level: number): Promise<void> {
     const { config } = this.d;
     const player = this.loadout().config;
     const allies = this.botAllies();
     const dungeon = content.dungeons[id] ?? content.dungeons.rizieres;
     this.dungeon = dungeon;
+    this.endless = null;
     this.dungeonLevel = clampLevel(content.difficulty, level);
     const difficulty = difficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length, dungeon.strength);
     const begin = () => {
@@ -703,7 +749,8 @@ export class App {
   private joinSession(session: CoopSession): void {
     this.coop = session;
     session.handlers = {
-      lobby: () => {
+      lobby: (lobby) => {
+        if (!session.isHost && !lobby.inGame && this.endless?.awaiting) this.bankEndless();
         if (this.lobbyOpen) this.refreshLobby?.();
       },
       start: (start) => void this.startCoop(start),
@@ -756,15 +803,24 @@ export class App {
       return;
     }
     this.busy = true;
-    const dungeon = content.dungeons[start.dungeon] ?? content.dungeons.rizieres;
-    const level = clampLevel(content.difficulty, start.level);
+    // Donjon infini : `start.level` est le premier palier du bloc ; on garde le butin en jeu d'un bloc à l'autre.
+    const data = content.endless;
+    const endless = start.dungeon === ENDLESS;
+    const bloc = endless ? blocOf(data, start.level) : 0;
+    const keep = endless && bloc > 0 && this.endless !== null;
+    const cleared = keep && this.endless ? this.endless.cleared : 0;
+    const dungeon = endless ? content.dungeons[arenaOf(data, bloc)] : (content.dungeons[start.dungeon] ?? content.dungeons.rizieres);
+    const level = endless ? levelAt(data, start.level) : clampLevel(content.difficulty, start.level);
     const configs = start.heroes.map((hero) => hero.config);
     const others = start.heroes.filter((_, seat) => seat !== start.seat);
-    await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${level} · ${start.heroes.length} héros`, () => {
+    const title = endless ? data.name : dungeon.name;
+    const subtitle = endless ? this.endlessSubtitle(bloc, start.heroes.length) : `${dungeon.region} · niveau ${level} · ${start.heroes.length} héros`;
+    await this.screens.transition(title, subtitle, () => {
       this.coopRun = start.run;
       if (session.isHost) {
-        const difficulty = difficultyFor(content.difficulty, level, configs.length, dungeon.strength);
-        this.world = new World({ ...this.d.config, ...dungeon.arena, player: configs[0], allies: configs.slice(1), difficulty });
+        const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length) : null;
+        const difficulty = waves ? waves[0].difficulty : difficultyFor(content.difficulty, level, configs.length, dungeon.strength);
+        this.world = new World({ ...this.d.config, ...dungeon.arena, ...(waves ? { waves } : {}), player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
         this.remote.clear();
         for (let seat = 1; seat < configs.length; seat++) this.remote.set(seat, new RemoteInput(start.run));
@@ -779,13 +835,14 @@ export class App {
         this.inbox = [];
       }
       this.bots = [];
-      this.prepareDungeon(dungeon, level, others);
+      this.prepareDungeon(dungeon, level, others, keep);
+      this.endless = endless ? { bloc, cleared, awaiting: false } : null;
     });
     this.busy = false;
   }
 
   /** Remet l'affichage à neuf pour une descente : décor, héros, alliés, HUD. */
-  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[]): void {
+  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[], keepLoot = false): void {
     const { dungeonRenderer, hud, islandRenderer } = this.d;
     this.screens.hideResult();
     this.panels.close();
@@ -798,7 +855,7 @@ export class App {
     dungeonRenderer.setStyle(dungeon.style);
     hud.reset(level, dungeon.boss);
     hud.configure(heroClass(content.skills, this.d.progress.state.hero));
-    this.run = emptyLoot();
+    if (!keepLoot) this.run = emptyLoot();
     this.outcome = null;
     this.accumulator = 0;
     this.hitstop = 0;
@@ -850,8 +907,14 @@ export class App {
 
   /** Butin de la descente : tout est gardé, même en cas de défaite (GDD). Il grandit avec le niveau du donjon. */
   private track(event: GameEvent): void {
-    if (event.type === 'wave') this.run.waves++;
-    else if (event.type === 'end') this.outcome = event.outcome;
+    if (event.type === 'wave') {
+      this.run.waves++;
+      // Donjon infini : la vague d'un palier, c'est le palier d'avant franchi.
+      if (this.endless && event.palier) {
+        this.dungeonLevel = levelAt(content.endless, event.palier);
+        this.recordEndless(event.palier - 1);
+      }
+    } else if (event.type === 'end') this.outcome = event.outcome;
     else if (event.type === 'death') {
       const drop = content.drops[event.kind];
       if (!drop) return;
@@ -865,36 +928,63 @@ export class App {
       // Un objet déjà possédé est fondu en ressources plutôt que perdu.
       for (const entry of drop.items ?? []) {
         if (!this.d.progress.check(entry.if) || Math.random() >= Math.min(1, entry.chance * rewards.rareChance)) continue;
-        const def = content.items[entry.item];
-        if (!def) continue;
-        if (!this.d.progress.has(entry.item) && !this.run.items.includes(entry.item)) {
-          this.run.items.push(entry.item);
-          this.screens.toast(`Butin rare : ${def.name}`, 'loot', entry.item);
-        } else if (def.slot) {
-          const s = salvage(content.duplicates, content.upgrade, def);
-          this.run.duplicates.push(entry.item);
-          this.run.oboles += s.oboles;
-          if (s.material) this.run.materials[s.material] = (this.run.materials[s.material] ?? 0) + s.count;
-          this.screens.toast(`Doublon : ${def.name}, fondu en ressources`, 'loot', entry.item);
-        }
+        this.gainRunItem(entry.item);
       }
     }
   }
 
-  private finishDungeon(outcome: Outcome): void {
+  /** Un objet rejoint le butin de la descente ; déjà possédé, il est fondu en ressources plutôt que perdu. */
+  private gainRunItem(id: string, label = 'Butin rare'): void {
+    const def = content.items[id];
+    if (!def) return;
+    if (!this.d.progress.has(id) && !this.run.items.includes(id)) {
+      this.run.items.push(id);
+      this.screens.toast(`${label} : ${def.name}`, 'loot', id);
+    } else if (def.slot) {
+      const s = salvage(content.duplicates, content.upgrade, def);
+      this.run.duplicates.push(id);
+      this.run.oboles += s.oboles;
+      if (s.material) this.run.materials[s.material] = (this.run.materials[s.material] ?? 0) + s.count;
+      this.screens.toast(`Doublon : ${def.name}, fondu en ressources`, 'loot', id);
+    }
+  }
+
+  /** Ce que rapporte le butin de la descente : chaque combat gagné laisse un coffre (pas la vague perdue). */
+  private runTotals(victory: boolean): { oboles: number; xp: number; chests: number; materials: (string | Node)[] } {
+    return {
+      chests: Math.max(0, this.run.waves - (victory ? 0 : 1)),
+      oboles: Math.round(this.run.oboles * (1 + this.loadout().bonus.oboles)),
+      xp: Math.round(this.run.xp),
+      materials: [
+        ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
+        ...this.duplicateLines(),
+        ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
+      ],
+    };
+  }
+
+  /** Le butin de la descente rejoint la progression ; renvoie les actions de l'expérience gagnée. */
+  private grantRun(victory: boolean): Action[] {
     const { progress } = this.d;
-    this.outcome = null;
-    this.setMode('result');
-    const victory = outcome === 'victory';
-    // Chaque combat gagné laisse un coffre ; en cas de défaite, la dernière vague n'est pas gagnée.
-    const chests = Math.max(0, this.run.waves - (victory ? 0 : 1));
-    const oboles = Math.round(this.run.oboles * (1 + this.loadout().bonus.oboles));
-    const xp = Math.round(this.run.xp);
+    const { oboles, xp, chests } = this.runTotals(victory);
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(this.run.materials)) progress.gainMaterial(id, amount);
     for (const item of this.run.items) progress.acquire(item, content.items[item]?.slot);
     progress.state.chests += chests;
-    const actions: Action[] = progress.gainXp(xp);
+    return progress.gainXp(xp);
+  }
+
+  private finishDungeon(outcome: Outcome): void {
+    if (this.endless) {
+      this.finishEndless(outcome);
+      return;
+    }
+    const { progress } = this.d;
+    this.outcome = null;
+    this.setMode('result');
+    const victory = outcome === 'victory';
+    const totals = this.runTotals(victory);
+    const actions = this.grantRun(victory);
     let unlocked: number | undefined;
     const dungeon = this.dungeon;
     if (victory) {
@@ -935,18 +1025,159 @@ export class App {
         victory: dungeon.victory,
         level: this.dungeonLevel,
         unlocked,
-        oboles,
-        xp,
-        chests,
-        materials: [
-          ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
-          ...this.duplicateLines(),
-          ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
-        ],
+        ...totals,
       },
       options,
     );
     void this.runActions(actions);
+  }
+
+  // --- Donjon infini -----------------------------------------------------------------
+
+  /**
+   * Fin d'un bloc du Yomi sans fond. Gagné : l'objet du palier rejoint le butin, puis on choisit d'encaisser ou de
+   * continuer (en coop, c'est l'hôte qui choisit ; un invité peut encaisser et partir). Perdu : tout le butin en jeu.
+   */
+  private finishEndless(outcome: Outcome): void {
+    const endless = this.endless;
+    if (!endless) return;
+    const data = content.endless;
+    const { progress } = this.d;
+    this.outcome = null;
+    this.setMode('result');
+    const session = this.coop;
+    const last = firstPalier(data, endless.bloc) + data.palierStep - 1;
+
+    if (outcome === 'victory') {
+      const record = this.recordEndless(last);
+      const item = rollEndlessItem(data, last, content.items, progress.state.hero, content.skills, (id) => progress.has(id) || this.run.items.includes(id));
+      if (item) this.gainRunItem(item, `Palier ${last}`);
+      endless.awaiting = true;
+      const next = endless.bloc + 1;
+      const nextFirst = firstPalier(data, next);
+      const nextLast = nextFirst + data.palierStep - 1;
+      const guest = session !== null && !session.isHost;
+      const options: MenuOption[] = guest
+        ? [
+            {
+              label: 'Encaisser et quitter la coop',
+              action: () => {
+                session.leave();
+                this.bankEndless();
+              },
+            },
+          ]
+        : [
+            { label: 'Encaisser et remonter', action: () => this.bankEndless() },
+            { label: `Continuer : paliers ${nextFirst} à ${nextLast}`, primary: true, action: () => this.continueEndless(next) },
+          ];
+      const levels = levelAt(data, nextLast) > levelAt(data, nextFirst) ? `niveau ${levelAt(data, nextFirst)}, puis ${levelAt(data, nextLast)} au boss` : `niveau ${levelAt(data, nextFirst)}`;
+      this.screens.showResult(
+        true,
+        {
+          place: data.name,
+          level: levelAt(data, last),
+          subtitle: `${data.name} · palier ${last}${record ? ' · nouveau record !' : ''}`,
+          victory: {
+            title: `Palier ${last} franchi`,
+            text: guest
+              ? 'L’hôte choisit : continuer plus bas ou encaisser. Tu peux aussi encaisser tout de suite et quitter la coop.'
+              : `Encaisse ton butin et remonte, ou continue plus bas (${levels}). Si tu tombes, tu perds tout ce qui n’est pas encaissé.`,
+          },
+          lootTitle: 'Butin en jeu, pas encore encaissé',
+          ...this.runTotals(true),
+        },
+        options,
+      );
+      return;
+    }
+
+    // Tombé : le Yomi garde tout ce qui n'a pas été encaissé.
+    const totals = this.runTotals(false);
+    this.endless = null;
+    this.exitAt = data.exit;
+    if (session?.isHost) session.backToLobby();
+    const best = progress.state.flags[ENDLESS_RECORD] ?? 0;
+    this.screens.showResult(
+      false,
+      {
+        place: data.name,
+        level: this.dungeonLevel,
+        subtitle: `Tombé au palier ${endless.cleared + 1} · ton record : palier ${best}`,
+        victory: data.victory,
+        defeat: { title: 'Le Yomi te garde', text: data.defeat },
+        lootTitle: 'Butin perdu',
+        ...totals,
+      },
+      this.afterEndlessOptions(),
+    );
+  }
+
+  /** Encaisser : le butin en jeu rejoint la progression, et l'on remonte. */
+  private bankEndless(): void {
+    const endless = this.endless;
+    if (!endless) return;
+    const data = content.endless;
+    const totals = this.runTotals(true);
+    const actions = this.grantRun(true);
+    this.d.progress.save();
+    this.endless = null;
+    this.exitAt = data.exit;
+    const session = this.coop;
+    if (session?.isHost) session.backToLobby();
+    this.screens.showResult(
+      true,
+      {
+        place: data.name,
+        level: this.dungeonLevel,
+        subtitle: `${data.name} · encaissé au palier ${endless.cleared}`,
+        victory: data.victory,
+        ...totals,
+      },
+      this.afterEndlessOptions(),
+    );
+    void this.runActions(actions);
+  }
+
+  /** Continuer plus bas : en solo, le bloc suivant ; en coop, l'hôte relance tout le monde. */
+  private continueEndless(bloc: number): void {
+    const session = this.coop;
+    if (!session) {
+      void this.descendEndless(bloc);
+      return;
+    }
+    if (!session.isHost) return;
+    session.choose(ENDLESS, firstPalier(content.endless, bloc));
+    void this.startCoop(session.start(this.member()));
+  }
+
+  private afterEndlessOptions(): MenuOption[] {
+    const session = this.coop;
+    if (!session) return [{ label: 'Retourner sur l’île', primary: true, action: () => void this.returnToIsland() }];
+    return [
+      {
+        label: 'Quitter la coop',
+        action: () => {
+          session.leave();
+          void this.returnToIsland();
+        },
+      },
+      { label: 'Retour au salon', primary: true, action: () => void this.returnToIsland().then(() => this.showLobby()) },
+    ];
+  }
+
+  /** Retient le palier franchi : record du personnage, et record de tous les personnages. Vrai si le premier est battu. */
+  private recordEndless(palier: number): boolean {
+    const endless = this.endless;
+    if (!endless || palier <= endless.cleared) return false;
+    endless.cleared = palier;
+    const { progress } = this.d;
+    const best = progress.state.flags[ENDLESS_RECORD] ?? 0;
+    submitGlobalRecord(palier, `${heroLabel(content.skills, progress.state.hero)}, niv. ${progress.level}`);
+    if (palier <= best) return false;
+    progress.state.flags[ENDLESS_RECORD] = palier;
+    progress.save();
+    return true;
   }
 
   /** « Doublon fondu : Katana de rōnin ×2 (+80 oboles, +6 Écaille de kappa) », un par objet. */
@@ -992,7 +1223,8 @@ export class App {
       this.panels.close();
       this.world = null;
       this.mirror = null;
-      island.placeAt(this.dungeon.exit ?? content.island.dungeonExit);
+      island.placeAt(this.exitAt ?? this.dungeon.exit ?? content.island.dungeonExit);
+      this.exitAt = null;
       this.setHero();
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
