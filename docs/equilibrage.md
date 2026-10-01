@@ -108,3 +108,21 @@ Les mesures du niveau 1 varient d'environ 10 points d'un lancement à l'autre : 
 | Fil de Jōren et Arc de soie | Immobilisation infinie | Plus d'immobilisation permanente | Fait (0.2.0) : 3 s de répit après chaque immobilisation |
 | Katana de rônin | Plus fun à jouer | Plus de portée ou de largeur | Fait (0.2.0) : estoc de 2,6 × 1,5 m |
 | Ennemis | Les UP des joueurs peuvent réduire la difficulté | Scaling à ajuster | Fait (0.2.0) : +9 % PV, +10 % dégâts par niveau |
+
+## Palais d'Izanami (1er octobre 2026, bot formé à Izanami)
+
+Avant, le bot mourait toujours sur Izanami (0 % à tous les niveaux) : il la regardait en face et ignorait les pêches. Il vise maintenant à côté d'elle (au-delà du cône de son regard), détourne les yeux quand la jauge monte, fuit sa colère, esquive son étreinte et son bond, et frappe les pêchers mûrs pour la repousser.
+
+`npm run equilibrage -- --donjon palais --niveaux 1,30,50 --stuff complet --parties 6` (victoires) :
+
+| Classe | Niveau 1 | Niveau 30 | Niveau 50 |
+|---|---|---|---|
+| Guerrier | 90 % | 71 % | 52 % |
+| Invocateur | 93 % | 95 % | 93 % |
+| Lame | 74 % | 64 % | 45 % |
+| Paladin | 100 % | 95 % | 88 % |
+| Rôdeur | 14 % | 36 % | 5 % |
+
+Le Rôdeur et la Lame (les moins de PV au contact des shikome et d'Izanami) décrochent ; à confirmer en jouant, le bot du Rôdeur pouvant être en cause.
+
+Donjon infini, héros niveau 50 (`--donjon infini --palier N`) : paliers 6 à 10 (Palais, niveau 60 puis 70) 0 à 67 % ; paliers 21 à 25 (niveau 90 puis 100) 0 %, le bot meurt avant le double boss.
