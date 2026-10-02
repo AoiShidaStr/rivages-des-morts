@@ -2251,3 +2251,22 @@ ul.rules {
   gap: 4px;
   font-size: 14px;
 }
+
+/* Rayons de l'inventaire et de la forge : Ma classe, les autres classes, Universels, Raciaux. */
+.tabs.shelves {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.inventory-shelf .shelf-sections {
+  display: grid;
+  gap: 6px;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.inventory-shelf .fold.current > summary .fold-title {
+  color: var(--gold);
+}

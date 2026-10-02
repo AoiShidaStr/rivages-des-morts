@@ -37,6 +37,8 @@ export class Input {
   readonly pointer = { x: 0, y: 0 };
   private readonly down = new Set<string>();
   private readonly pressed = new Set<string>();
+  /** Caractères tapés (`e.key`), pour les raccourcis qui suivent la lettre et non la place de la touche (M en AZERTY). */
+  private readonly typed = new Set<string>();
   private readonly buttons = new Set<number>();
   private readonly clicks = new Set<number>();
 
@@ -47,6 +49,7 @@ export class Input {
       if (e.repeat) return;
       this.down.add(e.code);
       this.pressed.add(e.code);
+      if (e.key.length === 1) this.typed.add(e.key.toLowerCase());
     });
     window.addEventListener('keyup', (e) => this.down.delete(e.code));
     window.addEventListener('blur', () => {
@@ -54,6 +57,7 @@ export class Input {
       this.buttons.clear();
       this.clicks.clear();
       this.pressed.clear();
+      this.typed.clear();
     });
 
     const track = (e: PointerEvent) => {
@@ -123,6 +127,11 @@ export class Input {
     return this.pressed.delete(code);
   }
 
+  /** Vrai si la lettre `char` vient d'être tapée, où qu'elle soit sur le clavier (QWERTY, AZERTY…). */
+  consumeTyped(char: string): boolean {
+    return this.typed.delete(char);
+  }
+
   consumeClick(button: number): boolean {
     return this.clicks.delete(button);
   }
@@ -130,6 +139,7 @@ export class Input {
   /** Oublie les appuis que personne n'a consommés, pour qu'ils ne se déclenchent pas plus tard par surprise. */
   flush(): void {
     this.pressed.clear();
+    this.typed.clear();
     this.clicks.clear();
   }
 }

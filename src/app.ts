@@ -264,7 +264,8 @@ export class App {
       for (let n = 1; n <= 9; n++) if (key(`Digit${n}`) || key(`Numpad${n}`)) this.dialogue.pick(n - 1);
       return;
     }
-    if (key('KeyM')) {
+    // La lettre M, où qu'elle soit : en AZERTY, la touche « KeyM » est la virgule.
+    if (input.consumeTyped('m')) {
       this.music.setMuted(!this.music.settings.muted);
       this.screens.toast(this.music.settings.muted ? 'Musique coupée (M)' : 'Musique remise (M)');
     }
