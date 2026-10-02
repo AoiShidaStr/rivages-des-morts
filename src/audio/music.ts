@@ -5,10 +5,13 @@ import data from '../data/musique.json';
 
 export type Moment = keyof typeof data.tracks;
 
+/** Réglages du son, gardés dans le navigateur : la musique, et les effets sonores (src/audio/sfx.ts). */
 export interface MusicSettings {
   /** De 0 à 1. */
   volume: number;
   muted: boolean;
+  sfxVolume: number;
+  sfxMuted: boolean;
 }
 
 const SETTINGS_KEY = 'rivages-des-morts:audio';
@@ -59,6 +62,26 @@ export class Music {
   setMuted(muted: boolean): void {
     this.settings.muted = muted;
     this.changed();
+  }
+
+  setSfxVolume(volume: number): void {
+    this.settings.sfxVolume = Math.max(0, Math.min(1, volume));
+    this.settings.sfxMuted = false;
+    this.changed();
+  }
+
+  setSfxMuted(muted: boolean): void {
+    this.settings.sfxMuted = muted;
+    this.changed();
+  }
+
+  /** Touche M : coupe tout le son (musique et effets), ou le remet s'il était tout coupé. Renvoie vrai si coupé. */
+  toggleAll(): boolean {
+    const mute = !(this.settings.muted && this.settings.sfxMuted);
+    this.settings.muted = mute;
+    this.settings.sfxMuted = mute;
+    this.changed();
+    return mute;
   }
 
   private changed(): void {
@@ -119,13 +142,15 @@ export class Music {
 }
 
 function loadSettings(): MusicSettings {
-  const fallback: MusicSettings = { volume: data.defaultVolume, muted: false };
+  const fallback: MusicSettings = { volume: data.defaultVolume, muted: false, sfxVolume: data.defaultSfxVolume, sfxMuted: false };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     const saved = raw ? (JSON.parse(raw) as Partial<MusicSettings>) : {};
     return {
       volume: typeof saved.volume === 'number' ? Math.max(0, Math.min(1, saved.volume)) : fallback.volume,
       muted: saved.muted === true,
+      sfxVolume: typeof saved.sfxVolume === 'number' ? Math.max(0, Math.min(1, saved.sfxVolume)) : fallback.sfxVolume,
+      sfxMuted: saved.sfxMuted === true,
     };
   } catch {
     return fallback;
