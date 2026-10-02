@@ -484,6 +484,8 @@ export class Player {
     if (this.cfg.kit !== 'paladin') {
       let gain = this.cfg.block.rageOnGuard * (1 + (perks.guardRageFactor ?? 0));
       if (perfect && perks.gourde) gain += perks.gourde.rage;
+      // Écaille de Ryūjin : chaque coup arrêté rend un peu de vie.
+      if (perks.blockHeal && amount > 0) this.heal(this.cfg.maxHp * perks.blockHeal, world);
       const gained = this.gainRage(gain);
       world.emit({ type: 'guard', pos: { ...this.pos }, rage: Math.round(gained) });
       return;

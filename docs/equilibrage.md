@@ -8,7 +8,11 @@ Grille de suivi du plan de mise à jour (docs/plan-mise-a-jour-rivages-des-morts
 npm run dps -- --niveaux 30,50 --stuff complet                   banc de DPS (kodama immobile aux PV infinis)
 npm run equilibrage -- --niveaux 30,50 --stuff complet           victoires et survie en donjon
 npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3  coop à 3, alliés joués par le bot
+npm run equilibrage -- --mode kits --donjon palais --niveaux 30,50  les 3 styles de chaque classe : survie, DPS, victoires
+npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans objet contre un donjon plus bas
 ```
+
+`--stuff survie`, `dps` ou `equilibre` : un des trois styles de jeu de la classe (tableau `KITS` de `tools/equilibrage.mjs`, et GDD, « Styles de jeu par l'équipement »). `--stuff nu` : l'arme de départ jamais forgée, rien d'autre.
 
 `--stuff complet` : le meilleur équipement de chaque classe, forgé au niveau du héros, avec ses 9 points de talents.
 
@@ -151,6 +155,45 @@ Second passage, après les réglages (amulettes à 20 PV, Yomotsu-hegui +35 %, l
 
 Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 30 à 36 %, niveau 20 de 8 à 18 %. Avec le bot de `main` (comparaison A/B, Rôdeur seul, 16 descentes par race, équipement typique) : niveau 1 de 21 à 32 %, niveau 10 de 79 à 90 %, niveau 20 de 43 à 59 %. Il reste la classe la plus faible du Palais ; la panoplie de l'Éclaireur le monte à 58 % au niveau 10.
 
+## Styles de jeu et poids de l'équipement (0.8.0), 2 octobre 2026
+
+**Puissance.** Sur main, le niveau du héros ne donnait que des PV (+4 par niveau) : tous les dégâts venaient de la forge de l'arme (+6 % par niveau), et les pièces apportaient peu (+1 dégât, +4 PV). Désormais, le niveau donne +1 % de dégâts et +3 PV par niveau ; l'arme forgée +3,3 % par niveau ; une pièce +9 % de ses PV et +1 % de ses dégâts (en %) et de son armure par niveau. Forgé au niveau du héros, l'équipement double à peu près ses dégâts et ses PV effectifs (×1,8 à ×3,4 selon le style au niveau 50). À niveau égal, la courbe ne bouge pas : équipement typique, Rizières, niveau 30 de 78 à 100 % de victoires et niveau 50 de 72 à 100 %, comme sur main.
+
+**Test de référence** : héros niveau 50 sans objet (arme de départ jamais forgée, 9 points de talents) contre les Rizières niveau 30, 7 races, 8 descentes chacune : Guerrier 5 %, Invocateur 0 %, Lame 0 %, Paladin 2 %, Rôdeur 14 % de victoires. Il échoue. Avec un partage exact moitié niveau, moitié équipement (+2 % de dégâts et +5,5 PV par niveau), il gagnait encore 28 à 67 % : l'équipement pèse donc un peu plus de la moitié.
+
+**Styles de jeu** : trois par classe (survie, équilibre, dégâts), mesurés sur trois critères. *Survie* : PV perdus par minute en donjon, soins déduits, en part des PV max (plus bas, mieux c'est). *DPS* : banc de DPS. *Équilibre* : victoires. Palais d'Izanami à niveau égal, races Einherjar, Oushebti et Hanyō, 8 descentes chacune. L'Invocateur attend sa refonte en Sorcier.
+
+| Classe | Style | Survie : pertes nettes / min (niv. 30 · 50) | DPS au banc (niv. 30 · 50) | Victoires (niv. 30 · 50) |
+|---|---|---|---|---|
+| Guerrier | Survie | 42 % · 42 % | 139 · 214 | 100 % · 100 % |
+| Guerrier | Équilibre | 50 % · 56 % | 166 · 261 | 96 % · 96 % |
+| Guerrier | Dégâts | 90 % · 146 % | 216 · 345 | 96 % · 71 % |
+| Lame | Survie | 15 % · 14 % | 141 · 218 | 100 % · 100 % |
+| Lame | Équilibre | 48 % · 43 % | 238 · 371 | 92 % · 96 % |
+| Lame | Dégâts | 126 % · 126 % | 316 · 536 | 92 % · 92 % |
+| Paladin | Survie | 22 % · 27 % | 152 · 235 | 100 % · 96 % |
+| Paladin | Équilibre | 30 % · 47 % | 157 · 244 | 96 % · 83 % |
+| Paladin | Dégâts | 73 % · 100 % | 211 · 375 | 67 % · 63 % |
+| Rôdeur | Survie | 32 % · 47 % | 254 · 416 | 79 % · 58 % |
+| Rôdeur | Équilibre | 54 % · 65 % | 339 · 553 | 71 % · 58 % |
+| Rôdeur | Dégâts | 51 % · 57 % | 375 · 552 | 83 % · 83 % |
+
+Chaque classe s'étage dans l'ordre : le style survie perd le moins de PV, le style dégâts frappe le plus fort, et le style équilibre se place entre les deux. Le style dégâts est le style à risque : 63 à 96 % de victoires au Palais. Aux Rizières, les douze styles gagnent au moins 83 % des descentes à tous les niveaux (le Rôdeur survie au niveau 50 ; tous les autres au moins 89 %). Seule exception, le Rôdeur au Palais : son style équilibre ne se distingue pas du style dégâts au niveau 50, parce que tuer vite reste sa meilleure défense et que le bot se sert mal du Recul et des filets.
+
+Réglages trouvés en mesurant :
+- **Armes.** Au Palais, l'arme pesait plus que les pièces. Le Totsuka (engagement 0,36 s) faisait perdre deux fois plus de PV que le Katana, pour le même DPS : il passe à 0,26 s. Le Tetsubō (0,45 s) laissait le Paladin à 29 % de victoires contre 75 à 96 % avec le Miroir de Yata : il passe à 0,26 s et gagne +25 de garde (son bouclier-cloche).
+- **Yomotsu-hegui** dans un style dégâts : Paladin 0 % de victoires au Palais niveau 30, Guerrier 33 % au niveau 50. Les soins divisés par deux tuent les classes qui vivent de leurs soins. Les styles dégâts prennent donc une relique de classe ; Yomotsu-hegui reste un choix à risque.
+- **Retouches d'objets** :
+  - Cloche du Grand Rocher : renvoi de 40 à 30 %. Elle faisait mieux survivre que les pièces de survie.
+  - Shimenawa : +40 de garde, −5 % de vitesse, 6 % d'armure.
+  - Geta du temple : Marteau 1 s plus tôt au lieu de 2 s, qui donnaient au Paladin le DPS de la Lame.
+  - Jingasa : tir chargé 15 % plus rapide au lieu de 20 %.
+  - Dō de cuir noir : la cible marquée fait 35 % de dégâts en moins.
+  - Plume de Yatagarasu : abattre la proie marquée rend 15 % des PV max.
+  - Écaille de Ryūjin : 3 % des PV max par coup bloqué.
+  - Encre de Shinigami : chaque yokai abattu rend 3 % des PV max (Lame dégâts au Palais niveau 50 : de 38 à 92 % de victoires).
+- **DPS au banc des styles dégâts, niveau 50** : Lame 536, Rôdeur 552 (103 %), Paladin 375 (70 %), Guerrier 345 (64 %). C'est proche des cibles du plan (95 %, 60 %, 75 %).
+
 ## Grille de suivi
 
 | Élément | Problème | Direction | État |
@@ -165,9 +208,12 @@ Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 
 | Fil de Jōren et Arc de soie | Immobilisation infinie | Plus d'immobilisation permanente | Fait (0.2.0) : 3 s de répit après chaque immobilisation |
 | Katana de rônin | Plus fun à jouer | Plus de portée ou de largeur | Fait (0.2.0) : estoc de 2,6 × 1,5 m |
 | Ennemis | Les UP des joueurs peuvent réduire la difficulté | Scaling à ajuster | Fait (0.2.0) : +9 % PV, +10 % dégâts par niveau |
-| Objets du Yomi | Styles de jeu par classe, sans objet strictement meilleur | Réglages mesurés au bot | En cours (PR #23) : Tsuba, Arc d'Ikazuchi, Encensoir, Gohei, Masque de hannya |
+| Objets du Yomi | Styles de jeu par classe, sans objet strictement meilleur | Réglages mesurés au bot | Fait (PR #23, puis 0.8.0) |
 | Forge | Pièces qui ne gagnaient rien en montant de niveau | Chaque pièce a des PV | Fait (PR #23) |
 | Palais | Rôdeur et Paladin (niv. 20) faibles contre Izanami | À décider | Mesuré (PR #23) |
+| Équipement | Les pièces pesaient peu, tout passait par la forge de l'arme | Objets forts : la moitié de la puissance | Fait (0.8.0) : niveau +1 %/+3 PV, arme +3,3 %, pièces en % ; un héros niveau 50 sans objet échoue au donjon 30 |
+| Styles de jeu | Les panoplies imposaient un style | Trois styles par classe qui se mélangent | Fait (0.8.0) : survie, équilibre, dégâts, mesurés au Palais |
+| Rôdeur | Flèche du kami peu utile | Autre ultime | Fait (0.8.0) : Coup de grâce |
 
 ## Palais d'Izanami (1er octobre 2026, bot formé à Izanami)
 

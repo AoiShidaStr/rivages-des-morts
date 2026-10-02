@@ -18,6 +18,7 @@ export interface UpgradeRules {
   slots: Slot[];
   /** Part de dégâts en plus par niveau d'arme. */
   weaponPerLevel: number;
+  /** Croissance des PV, des dégâts (déjà en %) et de l'armure d'une pièce, par niveau, en part de sa valeur de base. */
   hpPerLevel: number;
   damagePerLevel: number;
   armorPerLevel: number;
@@ -58,8 +59,8 @@ export function scaledBonus(rules: UpgradeRules, bonus: Bonus | undefined, level
   const out: Bonus = {};
   for (const [key, value] of Object.entries(bonus ?? {}) as [BonusKind, number][]) {
     const scaled = value * (factor[key] ?? 1);
-    // PV et dégâts restent des nombres ronds ; les pourcentages gardent leur précision.
-    out[key] = key === 'maxHp' || key === 'damage' ? Math.round(scaled) : scaled;
+    // Les PV restent un nombre rond ; les pourcentages gardent leur précision.
+    out[key] = key === 'maxHp' ? Math.round(scaled) : scaled;
   }
   return out;
 }

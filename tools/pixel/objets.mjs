@@ -917,6 +917,91 @@ export const ICONS = {
     }
   },
 
+  // --- Styles de jeu par l'équipement (0.8.0) --------------------------------------
+  'ecaille-ryujin'(c) {
+    // Grande écaille de dragon des mers, bleu-vert nacré, stries en éventail et reflet d'écume.
+    poly(c, [[16, 2], [27, 10], [28, 20], [16, 30], [4, 20], [5, 10]], '#1f5a5e');
+    poly(c, [[16, 4], [25, 11], [26, 19], [16, 27], [6, 19], [7, 11]], '#2f8a88');
+    for (const x of [10, 13, 16, 19, 22]) c.line([16, 27], [x, 7 + Math.abs(x - 16) / 2], 0, '#24706e');
+    c.line([9, 12], [13, 8], 0, '#9fe0d4');
+    px(c, [[8, 15], [10, 11], [21, 9]], '#e8fff8');
+    c.line([6, 21], [16, 29], 0, '#174448');
+  },
+  'kemuri-dama'(c) {
+    // Bombe de fumée en argile, mèche allumée, volutes grises.
+    c.ellipse(14, 21, 9, 9, ['#5a3a24', '#8a5a36', '#b8845a']);
+    c.rect(12, 10, 5, 3, '#c8b890');
+    c.line([15, 10], [19, 6], 0, '#8a7a5a');
+    px(c, [[19, 5], [20, 5], [20, 4]], '#ffb040');
+    c.set(21, 4, '#fff0a0');
+    for (const [x, y, r] of [[23, 8, 2.5], [26, 5, 2], [28, 9, 1.6], [24, 13, 1.6]]) c.disc(x, y, r, '#b8c0c8');
+    px(c, [[22, 7], [25, 4]], '#e0e6ea');
+    px(c, [[9, 17], [10, 16], [8, 19]], '#d8a878');
+    c.line([6, 23], [22, 23], 0, '#4a2e1c');
+  },
+  'encre-shinigami'(c) {
+    // Encrier noir à reflet violet, pinceau planté dedans, goutte qui perle.
+    c.ellipse(16, 23, 11, 6, ['#121016', '#26222e', '#4a4058']);
+    c.ellipse(16, 19, 9, 2, ['#060508', '#0e0c12', '#3a2e48']);
+    c.line([20, 18], [27, 2], 0.6, '#8a6a3a');
+    c.line([20, 18], [27, 2], 0, '#c09a5a');
+    poly(c, [[18, 17], [21, 17], [20, 21]], '#0e0c12');
+    c.disc(9, 29, 1.2, '#26222e');
+    px(c, [[10, 21], [12, 22]], '#7a6890');
+    px(c, [[24, 9], [25, 6]], '#e0c890');
+  },
+  'eboshi-amaterasu'(c) {
+    // Haut bonnet laqué de vermillon, cordon blanc, soleil d'or sur le front.
+    poly(c, [[9, 28], [23, 28], [24, 12], [19, 3], [12, 5], [8, 14]], '#9a2418');
+    poly(c, [[17, 4], [19, 3], [24, 12], [23, 28], [18, 28]], '#701810');
+    c.line([10, 8], [9, 22], 0, '#d0503c');
+    c.disc(15, 17, 3.2, '#f0c040');
+    for (let a = 0; a < 8; a++) c.set(15 + Math.round(Math.cos((a * Math.PI) / 4) * 5), 17 + Math.round(Math.sin((a * Math.PI) / 4) * 5), '#f8dc78');
+    c.rect(8, 27, 17, 2, '#efe6cf');
+    c.line([10, 29], [7, 31], 0, '#efe6cf');
+    c.line([22, 29], [25, 31], 0, '#efe6cf');
+  },
+  'tambour-temple'(c) {
+    // Taiko de cérémonie : fût de bois laqué, peau tendue, clous de fer, tomoe sur la peau.
+    c.ellipse(16, 22, 13, 6, ['#4a2414', '#7a3a1c', '#a85a2a']);
+    c.rect(3, 12, 27, 10, '#7a3a1c');
+    c.rect(24, 12, 6, 10, '#5a2a14');
+    c.ellipse(16, 12, 13, 6, ['#b8a07a', '#e8d8b0', '#fff6dc']);
+    for (let x = 5; x <= 27; x += 4) c.set(x, 17, '#2b2a30');
+    c.disc(14, 12, 1.6, '#b3322a');
+    c.disc(18, 11, 1.2, '#2f4a7a');
+    c.disc(16, 14, 1.2, '#2b2a30');
+    c.line([25, 2], [20, 9], 0.6, '#8a6a3a');
+    c.disc(20, 9, 1.4, '#c09a5a');
+  },
+  'plume-yatagarasu'(c) {
+    // Longue plume noire du corbeau à trois pattes, reflets bleu nuit et pointe dorée.
+    c.line([6, 29], [24, 4], 0, '#c09a5a');
+    for (let i = 0; i <= 18; i++) {
+      const x = 8 + i;
+      const y = 26 - Math.round(i * 1.25);
+      const w = Math.min(i, 18 - i, 5);
+      c.line([x - w, y - w * 0.3], [x, y], 0, i % 3 ? '#1c1b26' : '#2c3058');
+      c.line([x, y], [x + w * 0.4, y + w], 0, i % 3 ? '#26243a' : '#3a4478');
+    }
+    px(c, [[24, 4], [25, 3], [23, 5]], '#f0c040');
+    px(c, [[12, 19], [16, 14], [19, 10]], '#5a6aa8');
+  },
+  'fleches-hahaya'(c) {
+    // Carquois de laque noire à liseré d'or, trois flèches célestes aux pointes de lumière.
+    for (const [x, tip] of [[11, 3], [16, 1], [21, 4]]) {
+      c.line([x, tip + 4], [x, 18], 0, '#d9c48a');
+      poly(c, [[x - 1, tip + 4], [x + 1, tip + 4], [x, tip]], '#fff6c0');
+      c.set(x, tip + 1, '#ffffff');
+      px(c, [[x - 1, 15], [x + 1, 15], [x - 1, 16], [x + 1, 16]], '#e8e0f0');
+    }
+    poly(c, [[8, 15], [24, 15], [22, 30], [10, 30]], '#1f1c24');
+    poly(c, [[19, 15], [24, 15], [22, 30], [18, 30]], '#14121a');
+    c.rect(8, 15, 17, 2, '#c09a3a');
+    c.rect(9, 27, 14, 1, '#c09a3a');
+    px(c, [[12, 20], [13, 22], [12, 24]], '#3a3448');
+  },
+
   // --- Objets de quête ------------------------------------------------------------
   'ema-tetsu'(c) {
     // Plaque votive en bois, cordon rouge, nom du forgeron griffonné (illisible) et un marteau.

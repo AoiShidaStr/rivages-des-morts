@@ -64,7 +64,8 @@ Chaque race et chaque classe a son apparence en pixel art : casque viking, ném�
 
 Sept emplacements : l'arme, quatre pièces d'armure, une amulette et une relique. Chaque pièce qui porte le tag de ta classe te rapproche des paliers de classe (2, 4 et 6 pièces).
 
-- **Panoplies** : la Lame (os de shikome), le Paladin (sōhei) et le Rôdeur (éclaireur du Yomi) ont chacun une panoplie de quatre pièces, avec un bonus à 2 et un autre à 4 pièces. Le casque et le plastron se forgent chez Tetsu, les jambières et les bottes tombent au Palais d'Izanami.
+- **L'équipement fait la moitié de ta puissance** : forgé à ton niveau, il double à peu près tes dégâts et tes PV effectifs. Un héros niveau 50 sans objet échoue au donjon niveau 30. L'inventaire montre ce que ton équipement t'apporte.
+- **Trois styles par classe** : survie, dégâts, ou l'équilibre des deux. Pas de panoplie : chaque pièce a son propre effet, et tu mélanges les pièces de plusieurs styles comme tu veux.
 - **Objets de race** : une amulette par race, lâchée par la Jorōgumo ou Izanami, seulement pour un héros de cette race. Elle renforce ou détourne ton passif de race.
 - **Objets à risque** : par exemple le Yomotsu-hegui, la nourriture du Yomi, qui donne beaucoup de dégâts mais divise tes soins par deux.
 - **Blocage parfait** : lève ta garde juste avant le coup (Guerrier, Paladin). « Parfait ! » s'affiche ; certains objets en tirent un bonus.

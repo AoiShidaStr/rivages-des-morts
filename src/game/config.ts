@@ -377,8 +377,8 @@ export interface Perks {
   leapNet?: boolean;
   /** Curée : tuer une cible marquée recharge la Marque du chasseur. */
   markRefund?: boolean;
-  /** Kami de la victoire : tes flèches s'infléchissent vers la cible marquée. */
-  homing?: boolean;
+  /** Coup de grâce : la cible marquée, sous `threshold` de ses PV, prend des coups critiques (× `factor`). */
+  coupDeGrace?: { threshold: number; factor: number };
 
   // --- Objets du Yomi (0.3.0) ---
   /** Masque de hannya : « Au bord du gouffre » (passif du Guerrier) se déclenche dès ce seuil de PV. */
@@ -405,14 +405,24 @@ export interface Perks {
   parentBoost?: number;
   /** Dogū aux yeux clos : la carapace d'argile absorbe ce nombre de coups avant de se reformer. */
   clayCharges?: number;
-  /** Panoplies : PV max multipliés. */
+  /** Dō de lamelles d'os : PV max multipliés. */
   maxHpFactor?: number;
-  /** Lamelles d'os de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
+  /** Haidate de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
   dashShield?: { amount: number; duration: number };
-  /** Sōhei : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
+  /** Haidate du temple : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
   guardBreakNova?: { radius: number; stun: number; knockback: number };
-  /** Éclaireur du Yomi : la cible de la Marque du chasseur fait cette part de dégâts en moins. */
+  /** Dō de cuir noir : la cible de la Marque du chasseur fait cette part de dégâts en moins. */
   huntMarkWeaken?: number;
+
+  // --- Styles de jeu par l'équipement (0.8.0) ---
+  /** Écaille de Ryūjin : chaque coup bloqué rend cette part des PV max (Guerrier). */
+  blockHeal?: number;
+  /** Kemuri-dama : l'Écran de fumée rend cette part des PV max. */
+  smokeHeal?: number;
+  /** Encre de Shinigami : tout coup sur un yokai sous cette part de ses PV est critique. */
+  finisher?: number;
+  /** Flèches d'Ame-no-Hahaya : toutes les flèches transpercent. */
+  arrowPierce?: boolean;
 }
 
 export interface EnemyBaseConfig {

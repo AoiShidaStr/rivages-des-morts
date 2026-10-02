@@ -13,7 +13,6 @@ import {
   levelProgress,
   racePassives,
   raceNames,
-  setPieces,
   type Bonus,
   type BonusKind,
   type ItemDef,
@@ -93,7 +92,7 @@ export class PanelHost {
 
 export function bonusText(bonus: Bonus | undefined): string {
   const parts = (Object.entries(bonus ?? {}) as [BonusKind, number][]).map(([key, value]) => {
-    const label = key === 'maxHp' || key === 'damage' ? content.bonuses[key] : content.bonuses[key].toLowerCase();
+    const label = key === 'maxHp' ? content.bonuses[key] : content.bonuses[key].toLowerCase();
     return `${bonusValue(key, value)} ${label}`;
   });
   return parts.join(' · ');
@@ -114,10 +113,9 @@ function blockText(progress: Progress, def: ItemDef): string | null {
   return equipBlock(def, progress.state.hero, content.skills);
 }
 
-/** Étiquettes d'un objet : ses tags de classe, la race à qui il est réservé, sa panoplie. */
+/** Étiquettes d'un objet : ses tags de classe, la race à qui il est réservé. */
 function itemTags(def: ItemDef): string[] {
-  const set = def.set ? content.sets[def.set] : undefined;
-  return [...(def.tags ?? []), ...(def.races?.length ? [raceNames(content.skills, def)] : []), ...(set ? [`Panoplie ${set.name}`] : [])];
+  return [...(def.tags ?? []), ...(def.races?.length ? [raceNames(content.skills, def)] : [])];
 }
 
 /** « (niv. 12) » pour une pièce que la forge peut améliorer. */
@@ -157,9 +155,10 @@ function acquire(ctx: UiContext, item: string): void {
 
 /** « +3 », « −18 % » : la valeur d'un bonus seule, pour les comparaisons. */
 function bonusValue(key: BonusKind, value: number): string {
+  const sign = (n: number) => (n < 0 ? `−${-n}` : `+${n}`);
   if (key === 'armor') return `−${Math.round(value * 100)} %`;
-  if (key === 'speed' || key === 'dodge' || key === 'oboles') return `+${Math.round(value * 100)} %`;
-  return `+${value}`;
+  if (key === 'maxHp') return sign(value);
+  return `${sign(Math.round(value * 100))} %`;
 }
 
 /** Ce que le joueur a choisi dans les fenêtres, gardé d'une ouverture à l'autre. */
@@ -691,11 +690,6 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
   add(Math.round((after.bonus.oboles - before.bonus.oboles) * 100), ' %', 'oboles');
   const tag = heroClass(content.skills, ctx.progress.state.hero).tag.name;
   add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${tag}`);
-  // Panoplies : une pièce ôtée peut faire perdre un bonus.
-  for (const set of new Set([...Object.keys(before.sets), ...Object.keys(after.sets)])) {
-    const diff = (after.sets[set] ?? 0) - (before.sets[set] ?? 0);
-    add(diff, '', `pièce${Math.abs(diff) > 1 ? 's' : ''} ${content.sets[set]?.name ?? set} (${after.sets[set] ?? 0} / ${setPieces(content.items, set).length})`);
-  }
   if (a.kit === 'invocateur') {
     add(b.summon.max - a.summon.max, '', `âme${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''} active${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''}`);
     add(Math.round(b.summon.damage) - Math.round(a.summon.damage), '', 'dégâts des âmes');
@@ -786,21 +780,6 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       );
     });
 
-    // Panoplies dont on possède au moins une pièce : pièces portées et bonus atteints.
-    const setIds = Object.keys(content.sets).filter((set) => setPieces(content.items, set).some((id) => progress.has(id)));
-    const setLines = setIds.map((set) => {
-      const def = content.sets[set];
-      const pieces = setPieces(content.items, set);
-      const worn = loadout.sets[set] ?? 0;
-      return h(
-        'div',
-        { class: 'set' },
-        h('strong', {}, `${def.name} · ${worn} / ${pieces.length}`),
-        h('small', { class: 'set-pieces' }, pieces.map((id) => `${content.items[id].name}${progress.has(id) ? '' : ' (manque)'}`).join(' · ')),
-        ...def.bonuses.map((b) => h('div', { class: `tier${worn >= b.count ? ' active' : ''}` }, h('b', {}, `(${b.count})`), ` ${b.summary}`)),
-      );
-    });
-
     const tiers = cls.tag.tiers;
     const tagLine = h(
       'div',
@@ -808,15 +787,23 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       ...tiers.map((t, i) => h('div', { class: `tier${i <= loadout.tier ? ' active' : ''}` }, h('b', {}, `(${t.count})`), ` ${t.description}`)),
     );
 
+    // Ce que l'équipement apporte (la moitié de la puissance du héros, GDD) : le même héros sans objet a son arme de
+    // départ jamais forgée. Dégâts : forge de l'arme et dégâts des pièces ; PV : PV et armure.
+    const bare = buildLoadout(ctx.basePlayer, { ...state, equipped: { arme: cls.weapon }, itemLevels: {} }, content, progress.level).config;
+    const weapon = state.equipped.arme;
+    const gearDamage = (weapon ? weaponPower(content.upgrade, itemLevel(state, weapon)) : 1) * (1 + loadout.bonus.damage);
+    const effective = (c: PlayerConfig) => c.maxHp / (c.damageTakenFactor ?? 1);
     const stats = h(
       'dl',
       { class: 'stats' },
       h('dt', {}, 'Niveau'),
       h('dd', {}, String(loadout.level)),
+      h('dt', {}, 'Équipement'),
+      h('dd', {}, `dégâts ×${fr(gearDamage, 1)} · PV effectifs ×${fr(effective(cfg) / effective(bare), 1)}`),
       h('dt', {}, 'PV max'),
       h('dd', {}, String(Math.round(cfg.maxHp))),
       h('dt', {}, 'Dégâts par coup'),
-      h('dd', {}, String(cfg.attack.damage)),
+      h('dd', {}, String(Math.round(cfg.attack.damage))),
       h('dt', {}, 'Vitesse'),
       h('dd', {}, `${Math.round((cfg.moveSpeed / ctx.basePlayer.moveSpeed) * 100)} %`),
       h('dt', {}, 'Esquive'),
@@ -852,17 +839,8 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           { class: 'col' },
           h('h3', {}, 'Porté'),
           h('div', { class: 'slots' }, ...slotButtons),
-          fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${cfg.attack.damage} dégâts`, stats),
+          fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${Math.round(cfg.attack.damage)} dégâts`, stats),
           fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
-          setLines.length
-            ? fold(
-                'inv-sets',
-                false,
-                'Panoplies',
-                setIds.map((set) => `${loadout.sets[set] ?? 0} / ${setPieces(content.items, set).length}`).join(' · '),
-                h('div', { class: 'tag-tiers sets' }, ...setLines),
-              )
-            : null,
           fold(
             'inv-materials',
             false,

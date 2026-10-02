@@ -12,7 +12,6 @@ import {
   inCone,
   length,
   normalize,
-  rotateTowards,
   scale,
   sub,
   vec,
@@ -514,8 +513,12 @@ export class World {
   private weaponHit(enemy: Enemy, base: number, from: Vec2, knockback: number, crit: number): boolean {
     const player = this.player;
     const perks = player.cfg.perks ?? {};
-    const marked = enemy.marks.death > 0 || enemy.marks.shadow > 0;
-    const factor = marked ? Math.max(crit, player.cfg.blade.critFactor) : crit;
+    // Une marque de la Lame, ou un yokai à l'agonie avec l'Encre de Shinigami, rend le coup critique.
+    const marked = enemy.marks.death > 0 || enemy.marks.shadow > 0 || enemy.hp < enemy.maxHp * (perks.finisher ?? 0);
+    let factor = marked ? Math.max(crit, player.cfg.blade.critFactor) : crit;
+    // Coup de grâce (Hachiman) : la proie marquée du Rôdeur, à bout de forces, prend des critiques.
+    const grace = perks.coupDeGrace;
+    if (grace && enemy.marks.hunt > 0 && enemy.hp < enemy.maxHp * grace.threshold) factor = Math.max(factor, grace.factor);
     // « Écorce des kodama » : seuls les coups d'arme sont amoindris.
     let amount = base * factor * player.damageMultiplier() * (1 - this.curse('ecorce'));
     const execute = perks.execute;
@@ -810,6 +813,9 @@ export class World {
     const cfg = player.cfg.blade.smoke;
     player.smoke = new Decoy({ ...player.pos }, cfg.radius);
     this.emit({ type: 'smoke', pos: { ...player.pos }, radius: cfg.radius });
+    // Kemuri-dama : la fumée rend un peu de vie.
+    const heal = player.cfg.perks?.smokeHeal;
+    if (heal) player.heal(player.cfg.maxHp * heal, this);
     // Poudre aux yeux : la fumée étourdit ceux qui étaient tout près.
     const stun = player.cfg.perks?.smokeStun;
     if (!stun) return;
@@ -1053,8 +1059,7 @@ export class World {
     const full = charge !== undefined && k >= 1;
     const power = charge === undefined ? 1 : mix(ranger.charged.minFactor, ranger.charged.maxFactor, k) * (perks.chargedDamage ?? 1);
     const count = full && perks.splitShot ? perks.splitShot : 1;
-    // Les flèches d'un tir divisé partagent leurs cibles : chacune touche un ennemi différent, même déviées vers la
-    // même marque (Kami de la victoire).
+    // Les flèches d'un tir divisé partagent leurs cibles : chacune touche un ennemi différent.
     const hit = new Set<number>();
     for (let i = 0; i < count; i++) {
       const angle = angleOf(dir) + degToRad(10) * (i - (count - 1) / 2);
@@ -1065,7 +1070,7 @@ export class World {
         knockback: attack.knockback * (full ? 2 : 1),
         radius: ranger.arrow.radius,
         // Einherjar rôdeur : près de la mort, toutes les flèches transpercent.
-        pierce: (full && Boolean(perks.chargedPierce)) || (perks.lowHpPierce !== undefined && player.hp < player.cfg.maxHp * perks.lowHpPierce),
+        pierce: Boolean(perks.arrowPierce) || (full && Boolean(perks.chargedPierce)) || (perks.lowHpPierce !== undefined && player.hp < player.cfg.maxHp * perks.lowHpPierce),
         full,
         hit,
       });
@@ -1150,14 +1155,11 @@ export class World {
   /** Fait voler un projectile d'un pas ; renvoie faux quand il disparaît. */
   private moveProjectile(p: Projectile, dt: number): boolean {
     const player = this.player;
-    const homing = player.cfg.perks?.homing;
     {
       if (p.returning) {
         // Le marteau revient dans la main du héros, où qu'il soit.
         p.dir = normalize(sub(player.pos, p.pos), p.dir);
         if (distance(p.pos, player.pos) < player.radius + p.radius) return false;
-      } else if (homing && p.kind === 'arrow') {
-        this.home(p, dt);
       }
       const step = p.speed * dt;
       p.pos = add(p.pos, scale(p.dir, step));
@@ -1223,13 +1225,6 @@ export class World {
       if (enemy.dead) player.onKill();
       else enemy.slow(0.5, cfg.stun, this);
     }
-  }
-
-  /** Kami de la victoire : une flèche s'infléchit vers la proie marquée qu'elle a devant elle. */
-  private home(p: Projectile, dt: number): void {
-    const ahead = (e: Enemy) => inCone(p.dir, normalize(sub(e.pos, p.pos)), degToRad(60));
-    const prey = closest(this.enemies.filter((e) => e.targetable && e.marks.hunt > 0 && !p.hit.has(e.id) && ahead(e)), p.pos);
-    if (prey) p.dir = rotateTowards(p.dir, normalize(sub(prey.pos, p.pos)), 8 * dt);
   }
 
   /** Pose un fil de Jōren (relique) là où le héros commence son esquive. */

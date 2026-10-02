@@ -1085,21 +1085,6 @@ body:not([data-mode='dungeon']) #hud {
   font-weight: 600;
 }
 
-/* Panoplies : une carte par panoplie, ses pièces et ses bonus */
-.tag-tiers.sets {
-  gap: 10px;
-}
-
-.tag-tiers .set {
-  display: grid;
-  gap: 3px;
-}
-
-.tag-tiers .set-pieces {
-  color: #8a8f90;
-  font-size: 12px;
-}
-
 .skills-header {
   display: flex;
   justify-content: space-between;
