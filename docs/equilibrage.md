@@ -8,21 +8,25 @@ Grille de suivi du plan de mise à jour (docs/plan-mise-a-jour-rivages-des-morts
 npm run dps -- --niveaux 30,50 --stuff complet                   banc de DPS (kodama immobile aux PV infinis)
 npm run equilibrage -- --niveaux 30,50 --stuff complet           victoires et survie en donjon
 npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3  coop à 3, alliés joués par le bot
+npm run equilibrage -- --mode kits --donjon palais --niveaux 30,50  les 3 styles de chaque classe : survie, DPS, victoires
+npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans objet contre un donjon plus bas
 ```
+
+`--stuff survie`, `dps` ou `equilibre` : un des trois styles de jeu de la classe (tableau `KITS` de `tools/equilibrage.mjs`, et GDD, « Styles de jeu par l'équipement »). `--stuff nu` : l'arme de départ jamais forgée, rien d'autre.
 
 `--stuff complet` : le meilleur équipement de chaque classe, forgé au niveau du héros, avec ses 9 points de talents.
 
 | Classe | Arme | Casque | Plastron | Jambières | Bottes | Amulette | Relique |
 |---|---|---|---|---|---|---|---|
 | Guerrier | Totsuka-no-tsurugi | Kabuto fendu | Carapace de kappa | Suneate d'écailles | Waraji du pèlerin | Pêche d'Ōkamuzumi | Coupelle du kappa |
-| Invocateur | Éventail de la Jorōgumo | Voile d'Izanami | Shiroshōzoku | Hakama de soie | Geta du kasa | Magatama fêlé | Magatama Yasakani |
+| Sorcier | Éventail de la Jorōgumo | Voile d'Izanami | Shiroshōzoku | Hakama de soie | Geta du kasa | Magatama fêlé | Magatama Yasakani |
 | Lame | Kaiken d'Izanami | Chapeau de paille | Shiroshōzoku | Hakama de soie | Geta du kasa | Pêche d'Ōkamuzumi | Fil de Jōren |
 | Paladin | Miroir Yata | Chapeau de paille | Dō du Yomi | Hakama de soie | Geta du kasa | Pêche d'Ōkamuzumi | Fil de Jōren |
 | Rôdeur | Arc de soie | Chapeau de paille | Shiroshōzoku | Hakama de soie | Geta du kasa | Pêche d'Ōkamuzumi | Fil de Jōren |
 
 ## Cible du banc de DPS
 
-Lame 100 %, Rôdeur 95 %, Guerrier 75 %, Invocateur 75 %, Paladin 60 % (en part des dégâts de la Lame, écart toléré : 5 points).
+Sorcier 115 % (le premier DPS du jeu, 0.8.0), Lame 100 %, Rôdeur 95 %, Guerrier 75 %, Paladin 60 % (en part des dégâts de la Lame, écart toléré : 5 points). L'Invocateur, remplacé par le Sorcier, visait 75 %.
 
 ## Mesure de référence, 30 septembre 2026 (avant la 0.1.0)
 
@@ -151,6 +155,104 @@ Second passage, après les réglages (amulettes à 20 PV, Yomotsu-hegui +35 %, l
 
 Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 30 à 36 %, niveau 20 de 8 à 18 %. Avec le bot de `main` (comparaison A/B, Rôdeur seul, 16 descentes par race, équipement typique) : niveau 1 de 21 à 32 %, niveau 10 de 79 à 90 %, niveau 20 de 43 à 59 %. Il reste la classe la plus faible du Palais ; la panoplie de l'Éclaireur le monte à 58 % au niveau 10.
 
+## Styles de jeu et poids de l'équipement (0.8.0), 2 octobre 2026
+
+**Puissance.** Sur main, le niveau du héros ne donnait que des PV (+4 par niveau) : tous les dégâts venaient de la forge de l'arme (+6 % par niveau), et les pièces apportaient peu (+1 dégât, +4 PV). Désormais, le niveau donne +1 % de dégâts et +3 PV par niveau ; l'arme forgée +3,3 % par niveau ; une pièce +9 % de ses PV et +1 % de ses dégâts (en %) et de son armure par niveau. Forgé au niveau du héros, l'équipement double à peu près ses dégâts et ses PV effectifs (×1,8 à ×3,4 selon le style au niveau 50). À niveau égal, la courbe ne bouge pas : équipement typique, Rizières, niveau 30 de 78 à 100 % de victoires et niveau 50 de 72 à 100 %, comme sur main.
+
+**Test de référence** : héros niveau 50 sans objet (arme de départ jamais forgée, 9 points de talents) contre les Rizières niveau 30, 7 races, 8 descentes chacune : Guerrier 5 %, Invocateur 0 %, Lame 0 %, Paladin 2 %, Rôdeur 14 % de victoires. Il échoue. Avec un partage exact moitié niveau, moitié équipement (+2 % de dégâts et +5,5 PV par niveau), il gagnait encore 28 à 67 % : l'équipement pèse donc un peu plus de la moitié.
+
+**Styles de jeu** : trois par classe (survie, équilibre, dégâts), mesurés sur trois critères. *Survie* : PV perdus par minute en donjon, soins déduits, en part des PV max (plus bas, mieux c'est). *DPS* : banc de DPS. *Équilibre* : victoires. Palais d'Izanami à niveau égal, races Einherjar, Oushebti et Hanyō, 8 descentes chacune. Le Sorcier, arrivé ensuite, a sa section plus bas.
+
+| Classe | Style | Survie : pertes nettes / min (niv. 30 · 50) | DPS au banc (niv. 30 · 50) | Victoires (niv. 30 · 50) |
+|---|---|---|---|---|
+| Guerrier | Survie | 42 % · 42 % | 139 · 214 | 100 % · 100 % |
+| Guerrier | Équilibre | 50 % · 56 % | 166 · 261 | 96 % · 96 % |
+| Guerrier | Dégâts | 90 % · 146 % | 216 · 345 | 96 % · 71 % |
+| Lame | Survie | 15 % · 14 % | 141 · 218 | 100 % · 100 % |
+| Lame | Équilibre | 48 % · 43 % | 238 · 371 | 92 % · 96 % |
+| Lame | Dégâts | 126 % · 126 % | 316 · 536 | 92 % · 92 % |
+| Paladin | Survie | 22 % · 27 % | 152 · 235 | 100 % · 96 % |
+| Paladin | Équilibre | 30 % · 47 % | 157 · 244 | 96 % · 83 % |
+| Paladin | Dégâts | 73 % · 100 % | 211 · 375 | 67 % · 63 % |
+| Rôdeur | Survie | 32 % · 47 % | 254 · 416 | 79 % · 58 % |
+| Rôdeur | Équilibre | 54 % · 65 % | 339 · 553 | 71 % · 58 % |
+| Rôdeur | Dégâts | 51 % · 57 % | 375 · 552 | 83 % · 83 % |
+
+Chaque classe s'étage dans l'ordre : le style survie perd le moins de PV, le style dégâts frappe le plus fort, et le style équilibre se place entre les deux. Le style dégâts est le style à risque : 63 à 96 % de victoires au Palais. Aux Rizières, les douze styles gagnent au moins 83 % des descentes à tous les niveaux (le Rôdeur survie au niveau 50 ; tous les autres au moins 89 %). Seule exception, le Rôdeur au Palais : son style équilibre ne se distingue pas du style dégâts au niveau 50, parce que tuer vite reste sa meilleure défense et que le bot se sert mal du Recul et des filets.
+
+Réglages trouvés en mesurant :
+- **Armes.** Au Palais, l'arme pesait plus que les pièces. Le Totsuka (engagement 0,36 s) faisait perdre deux fois plus de PV que le Katana, pour le même DPS : il passe à 0,26 s. Le Tetsubō (0,45 s) laissait le Paladin à 29 % de victoires contre 75 à 96 % avec le Miroir de Yata : il passe à 0,26 s et gagne +25 de garde (son bouclier-cloche).
+- **Yomotsu-hegui** dans un style dégâts : Paladin 0 % de victoires au Palais niveau 30, Guerrier 33 % au niveau 50. Les soins divisés par deux tuent les classes qui vivent de leurs soins. Les styles dégâts prennent donc une relique de classe ; Yomotsu-hegui reste un choix à risque.
+- **Retouches d'objets** :
+  - Cloche du Grand Rocher : renvoi de 40 à 30 %. Elle faisait mieux survivre que les pièces de survie.
+  - Shimenawa : +40 de garde, −5 % de vitesse, 6 % d'armure.
+  - Geta du temple : Marteau 1 s plus tôt au lieu de 2 s, qui donnaient au Paladin le DPS de la Lame.
+  - Jingasa : tir chargé 15 % plus rapide au lieu de 20 %.
+  - Dō de cuir noir : la cible marquée fait 35 % de dégâts en moins.
+  - Plume de Yatagarasu : abattre la proie marquée rend 15 % des PV max.
+  - Écaille de Ryūjin : 3 % des PV max par coup bloqué.
+  - Encre de Shinigami : chaque yokai abattu rend 3 % des PV max (Lame dégâts au Palais niveau 50 : de 38 à 92 % de victoires).
+- **DPS au banc des styles dégâts, niveau 50** : Lame 536, Rôdeur 552 (103 %), Paladin 375 (70 %), Guerrier 345 (64 %). C'est proche des cibles du plan (95 %, 60 %, 75 %).
+
+## Le Sorcier (0.8.0), 2 octobre 2026
+
+Le Sorcier remplace l'Invocateur. Trois cibles : le premier DPS du jeu à tous les niveaux, la pire survie, et l'échec sans équipement comme les autres classes.
+
+**Sans équipement.** Héros niveau 50 sans objet contre les Rizières niveau 30 (7 races, 12 à 36 descentes chacune). Avec la croissance commune, le Sorcier gagnait encore 69 à 76 % des descentes : ses boules de feu gratuites et guidées, ses sceaux et son bouclier le tiennent à distance des yokai (175 dégâts subis par minute, contre 400 à 900 pour les autres). Leviers essayés, un par un :
+
+| Levier | Victoires |
+|---|---|
+| Aucun (croissance commune) | 69 à 76 % |
+| Bouclier de flammes à 20 % des PV au lieu de 40 % | 54 % |
+| Sceau 24 au lieu de 34, météore 100 au lieu de 140 | 65 % |
+| Mana 60, +6 par seconde | 50 % |
+| Le niveau ne donne aucun dégât | 31 % |
+| Le niveau ne donne aucun dégât, +2 PV par niveau au lieu de 3 | 17 à 22 % |
+
+Le bouclier et le mana changent peu : ses boules de feu, gratuites, font l'essentiel de ses dégâts. Retenu : la croissance propre au Sorcier (`growth` de sa classe dans `skills.json`). Son niveau ne lui donne aucun dégât et 2 PV au lieu de 3 ; sa forge d'arme monte de 7,5 % par niveau au lieu de 3,3 %, ce qui lui rend sa puissance une fois équipé. Résultat, mesure finale à 24 descentes par race : Guerrier 5 %, Sorcier 22 %, Lame 0 %, Paladin 5 %, Rôdeur 10 %. Le Sorcier reste un peu au-dessus des autres, mais il échoue presque toujours.
+
+**Premier DPS.** Banc de DPS des styles dégâts (7 races, 4 descentes) :
+
+| Classe | Niveau 10 | Niveau 30 | Niveau 50 |
+|---|---|---|---|
+| Sorcier | 188 | 399 | 595 |
+| Rôdeur | 164 | 336 | 521 |
+| Lame | 161 | 311 | 521 |
+| Paladin | 114 | 207 | 367 |
+| Guerrier | 111 | 213 | 339 |
+
+Le Sorcier fait 115 %, 119 % et 114 % de la meilleure autre classe. Au niveau 1 (grelots), il fait 110 % de la Lame. En donjon, ses sceaux et son météore creusent l'écart. Dégâts par seconde, Rizières en équipement typique aux niveaux 1, 10 et 20 : 26,5, 57,6 et 90,5 pour le Sorcier, contre 22,0, 41,2 et 59,0 au mieux pour les autres. Au Palais en équipement complet, aux niveaux 10, 30 et 50 : 85, 185 et 292, contre 78, 165 et 276 pour la Lame, deuxième.
+
+**Pire survie.** Il a le moins de PV (234, 389 et 543 aux niveaux 10, 30 et 50) et aucun soin. Victoires au Palais en équipement complet (12 descentes par race) :
+
+| Classe | Niveau 10 | Niveau 30 | Niveau 50 |
+|---|---|---|---|
+| Guerrier | 100 % | 100 % | 100 % |
+| Sorcier | 67 % | 46 % | 30 % |
+| Lame | 100 % | 95 % | 95 % |
+| Paladin | 100 % | 100 % | 99 % |
+| Rôdeur | 96 % | 60 % | 40 % |
+
+Aux Rizières, il gagne 100 % des descentes à tous les niveaux : 1, 10 et 20 en équipement typique, 30 et 50 en équipement complet.
+
+**Styles de jeu** (Palais, 7 races, 24 descentes) :
+
+| Style | Survie : pertes nettes / min (niv. 10 · 30 · 50) | DPS au banc | Victoires |
+|---|---|---|---|
+| Survie : rempart de flammes | 69 % · 72 % · 83 % | 161 · 301 · 466 | 61 % · 54 % · 47 % |
+| Équilibre : feu follet | 79 % · 81 % · 93 % | 187 · 358 · 527 | 61 % · 47 % · 38 % |
+| Dégâts : pluie de feu | 81 % · 81 % · 94 % | 188 · 397 · 591 | 65 % · 57 % · 48 % |
+
+L'ordre est tenu sur les deux critères, mais pour le Sorcier, tuer vite reste la meilleure défense : le style équilibre survit à peine mieux que le style dégâts. C'est la même limite que pour le Rôdeur. Avant les retouches ci-dessous, le style équilibre faisait moins bien que le style dégâts sur les deux critères.
+
+Réglages trouvés en mesurant :
+- **Talents.** Avec ses talents, le Sorcier faisait 334 % de la Lame au banc. Après réglage : Flammes vives +10 % ; une 4e boule de feu par salve, mais −20 % de dégâts pour chacune ; Sol brûlant à 4 dégâts par seconde ; écho de Seiman à 30 % de la force du sceau.
+- **Palais.** Au début, le Sorcier ne gagnait que 4 à 44 % de ses descentes au Palais. Le bot vise maintenant à côté d'Izanami, et fuit en Fuite de feu quand un coup est annoncé et que son esquive recharge. Le bouclier passe à 40 % des PV, recharge 10 s, avec une poussée à l'allumage. La Fuite recharge en 5 s.
+- **Pinceau de Seimei.** Ses sceaux lient les yokai (−60 % de vitesse pendant 2 s) au lieu d'être 20 % plus larges. Ses boules de feu font 3,75 dégâts.
+- **Masque d'Oublié.** Après la Fuite, les yokai oublient le Sorcier 1,5 s et frappent la flamme restée en arrière. Le bot se sert de la Fuite plus tôt quand elle revient vite.
+- **Geta de braise.** Un peu d'esquive en plus (0,15).
+- **Yomotsu-hegui** réduit aussi les boucliers de moitié. Sans cela, il ne coûtait rien au Sorcier, qui n'a pas de soin.
+
 ## Grille de suivi
 
 | Élément | Problème | Direction | État |
@@ -160,14 +262,18 @@ Rôdeur au Palais avec la Marque du chasseur qui aveugle Izanami : niveau 10 de 
 | Paladin | Jeu solo moins intéressant | UP / adaptation | Fait (0.1.0) : armes avancées plus fortes |
 | Paladin | Soins pensés pour la coop | Soin personnel selon la taille de l'équipe | Fait (0.1.0) : 75 %, 60 %, 50 % |
 | Rôdeur | Tir chargé trop fort : 3 à 3,6 fois la Lame | Nerf ciblé : tir divisé + flèches déviées, cadence du tir plein | Fait (0.2.0) : 98 à 105 % de la Lame |
-| Invocateur | Trop fort en donjon, faible sur une cible | Nerf des âmes en vague, mesuré en donjon | En partie (0.2.0) : paliers réduits ; reste une décision de design |
+| Invocateur | Trop fort en donjon, faible sur une cible | Nerf des âmes en vague, mesuré en donjon | Clos (0.8.0) : remplacé par le Sorcier |
 | Lame | Écran de fumée trop fort | Nerf ciblé | Fait (0.2.0) : 2,5 s, 12 s, Métamorphe plafonné |
 | Fil de Jōren et Arc de soie | Immobilisation infinie | Plus d'immobilisation permanente | Fait (0.2.0) : 3 s de répit après chaque immobilisation |
 | Katana de rônin | Plus fun à jouer | Plus de portée ou de largeur | Fait (0.2.0) : estoc de 2,6 × 1,5 m |
 | Ennemis | Les UP des joueurs peuvent réduire la difficulté | Scaling à ajuster | Fait (0.2.0) : +9 % PV, +10 % dégâts par niveau |
-| Objets du Yomi | Styles de jeu par classe, sans objet strictement meilleur | Réglages mesurés au bot | En cours (PR #23) : Tsuba, Arc d'Ikazuchi, Encensoir, Gohei, Masque de hannya |
+| Objets du Yomi | Styles de jeu par classe, sans objet strictement meilleur | Réglages mesurés au bot | Fait (PR #23, puis 0.8.0) |
 | Forge | Pièces qui ne gagnaient rien en montant de niveau | Chaque pièce a des PV | Fait (PR #23) |
 | Palais | Rôdeur et Paladin (niv. 20) faibles contre Izanami | À décider | Mesuré (PR #23) |
+| Équipement | Les pièces pesaient peu, tout passait par la forge de l'arme | Objets forts : la moitié de la puissance | Fait (0.8.0) : niveau +1 %/+3 PV, arme +3,3 %, pièces en % ; un héros niveau 50 sans objet échoue au donjon 30 |
+| Styles de jeu | Les panoplies imposaient un style | Trois styles par classe qui se mélangent | Fait (0.8.0) : survie, équilibre, dégâts, mesurés au Palais |
+| Rôdeur | Flèche du kami peu utile | Autre ultime | Fait (0.8.0) : Coup de grâce |
+| Invocateur | Gameplay pas assez amusant | Refonte en Sorcier : premier DPS, pire survie | Fait (0.8.0) : voir « Le Sorcier » |
 
 ## Palais d'Izanami (1er octobre 2026, bot formé à Izanami)
 

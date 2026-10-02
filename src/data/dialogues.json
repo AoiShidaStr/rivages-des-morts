@@ -212,7 +212,7 @@
           ["forgeron", "Tetsu. Tetsu… Oui. C'est mon nom."],
           ["tetsu", "Mes mains s'en souviennent. Merci, âme sans nom. La forge est ouverte : apporte-moi des oboles et des écailles de kappa, et je rendrai tes lames dignes du Yomi."],
           ["tetsu", "À commencer par ton nodachi : il a plus d'entailles que de tranchant.", [{ "class": "guerrier" }]],
-          ["tetsu", "Des grelots d'onmyōji… Je ne forge pas les clochettes, d'habitude. Pour toi, je ferai une exception.", [{ "class": "invocateur" }]],
+          ["tetsu", "Des grelots d'onmyōji qui crachent du feu… Garde-les loin de ma réserve de charbon. Pour toi, je les forgerai quand même.", [{ "class": "sorcier" }]],
           ["tetsu", "Des kunai jumeaux. Petites lames, gros entretien. Je m'en occupe.", [{ "class": "lame" }]],
           ["tetsu", "Une naginata de temple. Les moines savaient choisir leur acier. Moi, je sais le garder vivant.", [{ "class": "paladin" }]],
           ["tetsu", "Un yumi de bambou ? Je ne travaille pas le bambou… mais les pointes, les renforts et la corde, oui.", [{ "class": "rodeur" }]]

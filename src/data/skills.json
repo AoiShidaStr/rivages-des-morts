@@ -1,11 +1,12 @@
 {
-  "about": "Races et classes du héros. Chaque effet modifie les réglages du personnage (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux, summon.* pour les invocations, blade.*, paladin.* et ranger.* pour les compétences de la Lame, du Paladin et du Rôdeur).",
+  "about": "Races et classes du héros. Chaque effet modifie les réglages du personnage (src/data/player.json) : « op » vaut set, add ou mul, « path » est le chemin du réglage (perks.* pour les effets spéciaux, sorcier.*, blade.*, paladin.* et ranger.* pour les compétences du Sorcier, de la Lame, du Paladin et du Rôdeur, summon.* pour les alliés que relève le Paladin).",
   "levels": {
-    "about": "Un point de talent par niveau, de pointsFrom à pointsUntil : 9 points pour 12 nœuds, il faut choisir (GDD). Au-delà, chaque niveau donne des PV et relève le plafond de la forge.",
+    "about": "Un point de talent par niveau, de pointsFrom à pointsUntil : 9 points pour 12 nœuds, il faut choisir (GDD). Chaque niveau donne des PV (hpPerLevel) et des dégâts (damagePerLevel, en part des dégâts de base) et relève le plafond de la forge : le niveau fait la moitié de la puissance du héros, l'équipement l'autre moitié.",
     "max": 50,
     "xpBase": 25,
     "xpPerLevel": 25,
-    "hpPerLevel": 4,
+    "hpPerLevel": 3,
+    "damagePerLevel": 0.01,
     "pointsFrom": 2,
     "pointsUntil": 10
   },
@@ -32,10 +33,10 @@
           "description": "Sous la moitié de tes PV, ta rage ne retombe plus et monte 30 % plus vite.",
           "effects": [{ "op": "set", "path": "perks.lowHpRage", "value": { "threshold": 0.5, "gain": 1.3 } }]
         },
-        "invocateur": {
-          "name": "Chœur des Einherjar",
-          "description": "Tes âmes partagent ta Rage du guerrier mort : elles frappent plus fort quand tu es blessé.",
-          "effects": [{ "op": "set", "path": "perks.soulsFury", "value": true }]
+        "sorcier": {
+          "name": "Brasier des morts",
+          "description": "Ta Rage du guerrier mort nourrit aussi ton mana : il remonte jusqu'à 60 % plus vite quand tu es presque mort.",
+          "effects": [{ "op": "set", "path": "perks.manaRage", "value": 0.6 }]
         },
         "lame": {
           "name": "Dernier assaut",
@@ -71,13 +72,10 @@
           "description": "Quand ta carapace absorbe un coup, tu gagnes 25 de rage.",
           "effects": [{ "op": "set", "path": "perks.clayRage", "value": 25 }]
         },
-        "invocateur": {
-          "name": "Serviteur funéraire",
-          "description": "+1 âme active, et des âmes 30 % plus durables.",
-          "effects": [
-            { "op": "add", "path": "summon.max", "value": 1 },
-            { "op": "mul", "path": "summon.life", "value": 1.3 }
-          ]
+        "sorcier": {
+          "name": "Argile ignifugée",
+          "description": "Quand ta carapace absorbe un coup, tu récupères 30 mana.",
+          "effects": [{ "op": "set", "path": "perks.clayMana", "value": 30 }]
         },
         "lame": {
           "name": "Argile fuyante",
@@ -155,10 +153,10 @@
           "description": "Transformé, ta rage monte deux fois plus vite.",
           "effects": [{ "op": "set", "path": "perks.yokaiRage", "value": 2 }]
         },
-        "invocateur": {
-          "name": "Cortège yokai",
-          "description": "Transformé, tes âmes frappent 35 % plus fort, comme toi.",
-          "effects": [{ "op": "set", "path": "perks.yokaiSouls", "value": true }]
+        "sorcier": {
+          "name": "Feu follet intérieur",
+          "description": "Transformé, tes sorts reviennent deux fois plus vite.",
+          "effects": [{ "op": "set", "path": "perks.yokaiSpells", "value": 2 }]
         },
         "lame": {
           "name": "Pas du renard",
@@ -340,180 +338,181 @@
         }
       ]
     },
-    "invocateur": {
-      "name": "Invocateur",
-      "subtitle": "Lieur d’âmes",
-      "role": "Contrôle par les âmes",
+    "sorcier": {
+      "name": "Sorcier",
+      "subtitle": "Onmyōji du feu",
+      "role": "DPS à distance, très fragile",
       "difficulty": 3,
-      "playstyle": "Un yokai compagnon, choisi, te suit partout ; lie en plus les âmes des yokai vaincus et laisse-les se battre pour toi.",
-      "kit": "invocateur",
+      "playstyle": "Les plus gros dégâts du jeu et la pire survie : tes boules de feu suivent leur cible, tes sceaux et ton météore rasent les groupes, et ton mana décide de tout.",
+      "kit": "sorcier",
       "weapon": "grelots-onmyoji",
-      "companion": {
-        "about": "Compagnon permanent de l'Invocateur, choisi dans l'arbre de compétences : présent dès le début de la descente, il reste d'une vague à l'autre, ne compte pas dans les âmes actives et n'affaiblit pas le héros. Détruit, il se reforme après `respawn` s. Ses PV et ses dégâts sont ceux d'une âme liée (summon.hp, summon.damage) multipliés par les siens ; `rate` : cadence de ses coups. Feu follet, kodama et Oublié gardent leur trait (Les Douze Shikigami). Plus tard : capturer ses compagnons, comme l'Osamodas de Wakfu.",
-        "default": "kappa",
-        "respawn": 10,
-        "kinds": {
-          "kappa": { "name": "Kappa", "description": "Lent et très robuste : il encaisse les coups à ta place.", "damage": 0.9, "hp": 1.8, "speed": 0.85, "rate": 1 },
-          "kodama": { "name": "Kodama", "description": "Esprit d'arbre : chacun de ses coups te rend 2 PV.", "damage": 0.8, "hp": 1, "speed": 1, "rate": 1 },
-          "hitodama": { "name": "Feu follet", "description": "Rapide et fragile ; ses flammes font 50 % de dégâts en plus.", "damage": 0.9, "hp": 0.7, "speed": 1.35, "rate": 1 },
-          "oublie": { "name": "Oublié", "description": "Guerrier sans nom : chacun de ses coups ralentit de 40 % pendant 1 s.", "damage": 1, "hp": 1.1, "speed": 1, "rate": 1 },
-          "kasaObake": { "name": "Kasa-obake", "description": "Ombrelle hantée, vive et équilibrée.", "damage": 1.2, "hp": 1.1, "speed": 1.1, "rate": 1 },
-          "araignee": { "name": "Araignée", "description": "Frappe presque deux fois plus souvent, mais fragile.", "damage": 0.7, "hp": 0.7, "speed": 1.3, "rate": 1.7 },
-          "shikome": { "name": "Shikome", "description": "Chasseresse des Enfers : rapide et mordante, mais fragile.", "damage": 1.35, "hp": 0.8, "speed": 1.3, "rate": 1 },
-          "ikazuchi": { "name": "Ikazuchi", "description": "Éclair vivant : vif, il frappe souvent.", "damage": 1.1, "hp": 0.8, "speed": 1.2, "rate": 1.3 },
-          "ikusa": { "name": "Ikusa", "description": "Soldat en armure : solide et puissant, mais lent.", "damage": 1.2, "hp": 1.4, "speed": 0.9, "rate": 1 }
-        }
-      },
-      "about": "Réglages de base de la classe, appliqués avant l’équipement : l’Invocateur frappe moins fort et a moins de PV que le Guerrier, ses âmes font le travail.",
+      "growth": { "damagePerLevel": 0, "hpPerLevel": 2, "weaponPerLevel": 0.075 },
+      "about": "Réglages de base de la classe, appliqués avant l’équipement : le Sorcier a le moins de PV du jeu. Son clic gauche lance des boules de feu (attack.damage chacune, portée attack.range) ; ses sorts et son mana sont dans player.json (sorcier). Sa croissance (growth) lui est propre : son niveau ne lui donne aucun dégât, toute sa puissance vient de la forge de son catalyseur, et il gagne moins de PV par niveau. Sans équipement, il ne vaut guère mieux qu'au niveau 1.",
       "effects": [
-        { "op": "set", "path": "kit", "value": "invocateur" },
-        { "op": "mul", "path": "maxHp", "value": 0.95 },
-        { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.knockback", "value": 2 }
+        { "op": "set", "path": "kit", "value": "sorcier" },
+        { "op": "mul", "path": "maxHp", "value": 0.8 },
+        { "op": "set", "path": "attack.damage", "value": 4 },
+        { "op": "set", "path": "attack.range", "value": 10 },
+        { "op": "set", "path": "attack.windup", "value": 0.12 },
+        { "op": "set", "path": "attack.active", "value": 0.05 },
+        { "op": "set", "path": "attack.recovery", "value": 0.34 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
+        { "op": "set", "path": "attack.lunge", "value": 0 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 }
       ],
       "actives": [
         {
           "key": "Clic droit",
-          "name": "Lier",
-          "description": "Lie l’âme d’un ennemi vaincu depuis peu (le halo bleu au sol, visé à la souris) : elle se relève et combat pour toi 24 s. Chaque âme active réduit tes propres dégâts de 10 %. Tu récupères 5 % des dégâts de tes âmes, compagnon compris."
+          "name": "Sceau",
+          "description": "Trace un sceau sous la souris (9 m au plus) : il explose au bout d’1 s, gros dégâts en zone, carapaces ignorées. 18 mana, revient en 2,5 s."
         },
-        { "key": "A", "name": "Rappel", "description": "Tes âmes foncent sur l’ennemi le plus proche de la souris et frappent 60 % plus fort." },
-        { "key": "E", "name": "Sacrifice", "description": "Ta plus vieille âme explose : gros dégâts autour d’elle." },
-        { "key": "R", "name": "Chœur spectral", "description": "Pendant 6 s, tes âmes frappent 40 % plus fort et vont 20 % plus vite." }
+        { "key": "A", "name": "Bouclier de flammes", "description": "Un bouclier absorbe 40 % de tes PV max pendant 5 s, repousse les yokai proches et brûle ceux qui le touchent. 30 mana, revient en 10 s." },
+        {
+          "key": "E",
+          "name": "Fuite de feu",
+          "description": "Tu bondis de 4,5 m dans le sens de ta marche, intouchable, en laissant une traînée qui brûle 3 s. 15 mana, revient en 5 s."
+        },
+        {
+          "key": "R",
+          "name": "Grand météore",
+          "description": "Un météore s’écrase sous la souris au bout de 2 s : dégâts énormes et projection dans un grand rayon. 50 mana, revient en 18 s."
+        }
+      ],
+      "passives": [
+        {
+          "name": "Mana",
+          "description": "Tes sorts coûtent du mana : 100 au départ, +10 par seconde. Le clic gauche lance une salve de 3 boules de feu guidées vers le yokai le plus proche de la souris, sans rien coûter."
+        }
       ],
       "tag": {
-        "name": "Invocateur",
+        "name": "Sorcier",
         "tiers": [
           {
             "count": 2,
-            "description": "Tes âmes font 20 % de dégâts en plus.",
-            "effects": [{ "op": "set", "path": "perks.summonDamageFactor", "value": 1.2 }]
+            "description": "Tes sorts coûtent 10 % de mana en moins.",
+            "effects": [{ "op": "mul", "path": "perks.manaCost", "value": 0.9 }]
           },
           {
             "count": 4,
-            "description": "Tes âmes font 30 % de dégâts en plus ; +1 âme active.",
+            "description": "Tes sorts coûtent 20 % de mana en moins ; chaque yokai pris dans un sceau te rend 2 mana.",
             "effects": [
-              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.3 },
-              { "op": "add", "path": "summon.max", "value": 1 }
+              { "op": "mul", "path": "perks.manaCost", "value": 0.8 },
+              { "op": "set", "path": "perks.sealMana", "value": 2 }
             ]
           },
           {
             "count": 6,
-            "description": "Tes âmes font 40 % de dégâts en plus ; +1 âme active.",
+            "description": "Tes sorts coûtent 30 % de mana en moins ; chaque yokai pris dans un sceau te rend 4 mana.",
             "effects": [
-              { "op": "set", "path": "perks.summonDamageFactor", "value": 1.4 },
-              { "op": "add", "path": "summon.max", "value": 1 }
+              { "op": "mul", "path": "perks.manaCost", "value": 0.7 },
+              { "op": "set", "path": "perks.sealMana", "value": 4 }
             ]
           }
         ]
       },
       "branches": [
         {
+          "id": "kagutsuchi",
+          "name": "Kagutsuchi",
+          "subtitle": "Le dieu du feu · embrasement",
+          "lore": "En naissant, il brûla sa mère Izanami, qui en mourut et descendit au Yomi. Tout le feu du monde vient de lui.",
+          "nodes": [
+            {
+              "id": "kagutsuchi-1",
+              "name": "Flammes vives",
+              "description": "Tes boules de feu font 10 % de dégâts en plus.",
+              "effects": [{ "op": "mul", "path": "attack.damage", "value": 1.1 }]
+            },
+            {
+              "id": "kagutsuchi-2",
+              "name": "Quatrième flamme",
+              "description": "Chaque salve lance une boule de feu de plus ; chacune fait 20 % de dégâts en moins.",
+              "effects": [
+                { "op": "add", "path": "sorcier.fireball.count", "value": 1 },
+                { "op": "mul", "path": "attack.damage", "value": 0.8 }
+              ]
+            },
+            {
+              "id": "kagutsuchi-3",
+              "name": "Sol brûlant",
+              "description": "Le sceau qui explose laisse le sol en feu 3 s : 4 dégâts par seconde.",
+              "effects": [{ "op": "set", "path": "perks.sealBurn", "value": { "burn": 4, "life": 3 } }]
+            },
+            {
+              "id": "kagutsuchi-4",
+              "name": "Naissance du feu",
+              "ultimate": true,
+              "description": "Chaque yokai qui tombe près de toi libère 3 boules de feu vers ses voisins.",
+              "effects": [{ "op": "set", "path": "perks.killBurst", "value": 3 }]
+            }
+          ]
+        },
+        {
           "id": "seimei",
           "name": "Abe no Seimei",
-          "subtitle": "Le grand onmyōji · armée",
-          "lore": "Le plus célèbre des onmyōji commandait douze shikigami, des esprits liés à son service.",
+          "subtitle": "Le grand onmyōji · sceaux",
+          "lore": "Le plus célèbre des onmyōji traçait une étoile à cinq branches, le seiman, que nul démon ne pouvait franchir.",
           "nodes": [
             {
               "id": "seimei-1",
-              "name": "Shikigami tenaces",
-              "description": "Tes âmes ont 40 % de PV en plus et restent 40 % plus longtemps.",
-              "effects": [
-                { "op": "mul", "path": "summon.life", "value": 1.4 },
-                { "op": "mul", "path": "summon.hp", "value": 1.4 }
-              ]
+              "name": "Sceau élargi",
+              "description": "Le sceau couvre 25 % de rayon en plus.",
+              "effects": [{ "op": "mul", "path": "sorcier.seal.radius", "value": 1.25 }]
             },
             {
               "id": "seimei-2",
-              "name": "Douzième esprit",
-              "description": "+1 âme active (le malus par âme s’applique).",
-              "effects": [{ "op": "add", "path": "summon.max", "value": 1 }]
+              "name": "Tracé rapide",
+              "description": "Le sceau explose au bout de 0,6 s au lieu d’1 s.",
+              "effects": [{ "op": "add", "path": "sorcier.seal.delay", "value": -0.4 }]
             },
             {
               "id": "seimei-3",
-              "name": "Ordre pressant",
-              "description": "Rappel : les âmes foncent 30 % plus vite et le Rappel revient 2 s plus tôt.",
-              "effects": [
-                { "op": "mul", "path": "summon.recall.speed", "value": 1.3 },
-                { "op": "add", "path": "summon.recall.cooldown", "value": -2 }
-              ]
+              "name": "Pinceau léger",
+              "description": "Le sceau coûte 40 % de mana en moins.",
+              "effects": [{ "op": "mul", "path": "sorcier.seal.cost", "value": 0.6 }]
             },
             {
               "id": "seimei-4",
-              "name": "Les Douze Shikigami",
+              "name": "Seiman",
               "ultimate": true,
-              "description": "Chaque âme garde un trait de son yokai : le kodama te soigne à chaque coup, le feu follet brûle plus fort, le kappa a deux fois plus de PV et de durée, l'Oublié ralentit.",
-              "effects": [{ "op": "set", "path": "perks.shikigami", "value": true }]
+              "description": "Le sceau explose une seconde fois, 1 s après la première, à 30 % de sa force.",
+              "effects": [{ "op": "set", "path": "perks.sealEcho", "value": { "delay": 1, "damage": 0.3 } }]
             }
           ]
         },
         {
-          "id": "orphee",
-          "name": "Orphée",
-          "subtitle": "Le chanteur des Enfers · soutien",
-          "lore": "Son chant charma Hadès lui-même et ouvrit les portes des Enfers.",
+          "id": "promethee",
+          "name": "Prométhée",
+          "subtitle": "Le voleur de feu · endurance",
+          "lore": "Il vola le feu aux dieux pour le donner aux hommes. Enchaîné à un rocher, il voyait chaque jour son foie dévoré, et chaque nuit repousser.",
           "nodes": [
             {
-              "id": "orphee-1",
-              "name": "Chant apaisant",
-              "description": "Le Chœur spectral te rend 15 PV.",
-              "effects": [{ "op": "set", "path": "perks.choirHeal", "value": 15 }]
-            },
-            {
-              "id": "orphee-2",
-              "name": "Voix des morts",
-              "description": "Le Chœur spectral ralentit de moitié les ennemis proches pendant 2 s.",
-              "effects": [{ "op": "set", "path": "perks.choirStun", "value": 2 }]
-            },
-            {
-              "id": "orphee-3",
-              "name": "Main tendue",
-              "description": "Lier porte 2 m plus loin et une âme reste liable 4 s de plus.",
+              "id": "promethee-1",
+              "name": "Feu volé",
+              "description": "+30 mana max, et le mana remonte de 2 de plus par seconde.",
               "effects": [
-                { "op": "add", "path": "summon.bindRange", "value": 2 },
-                { "op": "add", "path": "summon.soulLife", "value": 4 }
+                { "op": "add", "path": "sorcier.mana.max", "value": 30 },
+                { "op": "add", "path": "sorcier.mana.regen", "value": 2 }
               ]
             },
             {
-              "id": "orphee-4",
-              "name": "Chant des Enfers",
+              "id": "promethee-2",
+              "name": "Flamme rendue",
+              "description": "Le Bouclier de flammes te rend 30 mana quand il se dissipe ou se brise.",
+              "effects": [{ "op": "set", "path": "perks.wardMana", "value": 30 }]
+            },
+            {
+              "id": "promethee-3",
+              "name": "Foie immortel",
+              "description": "La Fuite de feu te rend 10 % de tes PV max.",
+              "effects": [{ "op": "set", "path": "perks.flightHeal", "value": 0.1 }]
+            },
+            {
+              "id": "promethee-4",
+              "name": "Feu inextinguible",
               "ultimate": true,
-              "description": "Un ennemi sous 20 % de PV (hors boss) peut être lié sans être tué.",
-              "effects": [{ "op": "set", "path": "perks.underworldSong", "value": 0.2 }]
-            }
-          ]
-        },
-        {
-          "id": "anubis",
-          "name": "Anubis",
-          "subtitle": "Le gardien de la pesée · sacrifice",
-          "lore": "Le dieu chacal pèse le cœur des morts contre la plume de Maât.",
-          "nodes": [
-            {
-              "id": "anubis-1",
-              "name": "Offrande",
-              "description": "Le Sacrifice fait 50 % de dégâts en plus.",
-              "effects": [{ "op": "mul", "path": "summon.sacrifice.damage", "value": 1.5 }]
-            },
-            {
-              "id": "anubis-2",
-              "name": "Cœur pesé",
-              "description": "Le Sacrifice te rend 12 PV.",
-              "effects": [{ "op": "set", "path": "perks.sacrificeHeal", "value": 12 }]
-            },
-            {
-              "id": "anubis-3",
-              "name": "Retour du ka",
-              "description": "Une âme sacrifiée laisse son âme au sol : tu peux la lier à nouveau.",
-              "effects": [{ "op": "set", "path": "perks.sacrificeSoul", "value": true }]
-            },
-            {
-              "id": "anubis-4",
-              "name": "Le Jugement",
-              "ultimate": true,
-              "description": "Le Sacrifice inflige en plus 15 % des PV max de chaque ennemi touché (5 % pour un boss).",
-              "effects": [{ "op": "set", "path": "perks.judgement", "value": 0.15 }]
+              "description": "Sous 30 % de tes PV, tes sorts ne coûtent plus de mana.",
+              "effects": [{ "op": "set", "path": "perks.freeSpells", "value": 0.3 }]
             }
           ]
         }
@@ -704,8 +703,7 @@
         { "op": "set", "path": "block.reduction", "value": 0.85 },
         { "op": "mul", "path": "maxHp", "value": 1.15 },
         { "op": "mul", "path": "moveSpeed", "value": 0.95 },
-        { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
-        { "op": "set", "path": "summon.malus", "value": 0 }
+        { "op": "set", "path": "blockMoveFactor", "value": 0.45 }
       ],
       "passives": [
         { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 6 % de tes PV rendus." }
@@ -1012,10 +1010,10 @@
             },
             {
               "id": "hachiman-4",
-              "name": "Flèche du kami",
+              "name": "Coup de grâce",
               "ultimate": true,
-              "description": "Tes flèches s'infléchissent d'elles-mêmes vers les cibles marquées.",
-              "effects": [{ "op": "set", "path": "perks.homing", "value": true }]
+              "description": "Sous 30 % de ses PV, la cible marquée prend des coups critiques : tes flèches lui font deux fois plus mal.",
+              "effects": [{ "op": "set", "path": "perks.coupDeGrace", "value": { "threshold": 0.3, "factor": 2 } }]
             }
           ]
         }

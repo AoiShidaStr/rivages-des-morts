@@ -3,7 +3,6 @@
 import type { Kit, PlayerConfig } from './config';
 import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type Palier, type UpgradeRules } from './forge';
 import type { Hero, ProgressState, Slot } from './progress';
-import type { EnemyKind } from './types';
 
 export type BonusKind = 'maxHp' | 'damage' | 'speed' | 'dodge' | 'armor' | 'oboles';
 export type Bonus = Partial<Record<BonusKind, number>>;
@@ -52,15 +51,7 @@ export interface ItemDef {
   summary?: string;
   /** Passifs débloqués à certains niveaux de forge (armes). */
   paliers?: Palier[];
-  /** Pièce d'une panoplie (clé de `sets` dans items.json). */
-  set?: string;
   description: string;
-}
-
-/** Panoplie : porter plusieurs de ses pièces donne des bonus, comme les paliers de tags. */
-export interface SetDef {
-  name: string;
-  bonuses: { count: number; summary: string; effects: ConfigEffect[] }[];
 }
 
 export interface SkillNode {
@@ -89,22 +80,6 @@ export interface RaceDef {
   affinities?: Record<string, Passive>;
 }
 
-/** Un yokai que l'Invocateur peut prendre pour compagnon. */
-export interface CompanionKind {
-  name: string;
-  description: string;
-  damage: number;
-  hp: number;
-  speed: number;
-  rate: number;
-}
-
-export interface CompanionDef {
-  default: string;
-  respawn: number;
-  kinds: Record<string, CompanionKind>;
-}
-
 export interface ClassDef {
   name: string;
   subtitle: string;
@@ -118,8 +93,11 @@ export interface ClassDef {
   weapon: string;
   /** Réglages de base de la classe, appliqués avant l'équipement. */
   effects?: ConfigEffect[];
-  /** Invocateur : les compagnons au choix. */
-  companion?: CompanionDef;
+  /**
+   * Croissance propre à la classe, à la place des valeurs communes : dégâts et PV par niveau du héros (`levels`), puissance
+   * par niveau de forge de l'arme (`forge.upgrade`). Le Sorcier tire ses dégâts de son catalyseur, pas de son niveau.
+   */
+  growth?: { damagePerLevel?: number; hpPerLevel?: number; weaponPerLevel?: number };
   actives: { key: string; name: string; description: string }[];
   /** Passifs de la classe (Au bord du gouffre du Guerrier), affichés avec les compétences. */
   passives?: { name: string; description: string }[];
@@ -128,7 +106,8 @@ export interface ClassDef {
 }
 
 export interface SkillsDef {
-  levels: { max: number; xpBase: number; xpPerLevel: number; hpPerLevel: number; pointsFrom: number; pointsUntil: number };
+  /** `hpPerLevel` et `damagePerLevel` : ce que le niveau du héros apporte seul, la moitié de sa puissance (l'équipement fait l'autre). */
+  levels: { max: number; xpBase: number; xpPerLevel: number; hpPerLevel: number; damagePerLevel: number; pointsFrom: number; pointsUntil: number };
   races: Record<string, RaceDef>;
   classes: Record<string, ClassDef>;
   /** Classes prévues par le GDD, montrées à la création sans être jouables. */
@@ -137,7 +116,6 @@ export interface SkillsDef {
 
 export interface LoadoutData {
   items: Record<string, ItemDef>;
-  sets?: Record<string, SetDef>;
   upgrade: UpgradeRules;
   skills: SkillsDef;
 }
@@ -151,8 +129,6 @@ export interface Loadout {
   tagCount: number;
   /** Palier de tag atteint (index dans les paliers du tag de la classe), ou -1. */
   tier: number;
-  /** Pièces portées de chaque panoplie. */
-  sets: Record<string, number>;
 }
 
 /** PV max offerts par la bénédiction des six Jizō. */
@@ -172,13 +148,6 @@ export function racePassives(skills: SkillsDef, hero: Hero): Passive[] {
   const affinity = race.affinities?.[hero.class];
   return [...(parent ? [parent] : []), ...race.passives, ...(affinity ? [affinity] : [])];
 }
-
-/** Le compagnon choisi, s'il existe encore, sinon celui par défaut de la classe. */
-export function companionOf(def: CompanionDef, state: Pick<ProgressState, 'companion'>): string {
-  return state.companion && def.kinds[state.companion] ? state.companion : def.default;
-}
-
-const pick = (k: CompanionKind) => ({ damage: k.damage, hp: k.hp, speed: k.speed, rate: k.rate });
 
 /**
  * Pourquoi ce héros ne peut pas porter cet objet, ou null s'il le peut. Une arme ne se manie que par sa classe (ses
@@ -208,11 +177,6 @@ export function conditionMet(cond: ItemCondition, hero: Hero, level: number): bo
 /** « aux Hanyō » : à qui un objet de race est réservé. */
 export function raceNames(skills: SkillsDef, def: ItemDef): string {
   return (def.races ?? []).map((id) => skills.races[id]?.name ?? id).join(' et ');
-}
-
-/** Les pièces d'une panoplie, dans l'ordre des emplacements. */
-export function setPieces(items: Record<string, ItemDef>, set: string): string[] {
-  return Object.keys(items).filter((id) => items[id].set === set);
 }
 
 /**
@@ -279,20 +243,21 @@ export function canLearn(skills: SkillsDef, state: ProgressState, nodeId: string
   return false;
 }
 
+/** Règles de forge de la classe : la puissance par niveau d'arme peut lui être propre (`growth.weaponPerLevel`). */
+export function classUpgrade(rules: UpgradeRules, cls: ClassDef): UpgradeRules {
+  const weaponPerLevel = cls.growth?.weaponPerLevel;
+  return weaponPerLevel === undefined ? rules : { ...rules, weaponPerLevel };
+}
+
 export function buildLoadout(base: PlayerConfig, state: ProgressState, data: LoadoutData, level: number): Loadout {
   const config = structuredClone(base);
   const cls = heroClass(data.skills, state.hero);
   for (const effect of cls.effects ?? []) applyEffect(config, effect);
-  if (cls.companion) {
-    const kind = companionOf(cls.companion, state);
-    config.summon.companion = { kind: kind as EnemyKind, respawn: cls.companion.respawn, ...pick(cls.companion.kinds[kind]) };
-  }
   const bonus: Required<Bonus> = { maxHp: 0, damage: 0, speed: 0, dodge: 0, armor: 0, oboles: 0 };
   let tagCount = 0;
   const className = cls.tag.name;
   const rules = data.upgrade;
   const paliers: Palier[] = [];
-  const sets: Record<string, number> = {};
   /** Effets des objets de race : ils modifient les passifs de la race, donc passent après eux. */
   const raceEffects: ConfigEffect[] = [];
 
@@ -313,7 +278,6 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
       if (item.races?.length || c.if.races?.length) raceEffects.push(...(c.effects ?? []));
       else for (const effect of c.effects ?? []) applyEffect(config, effect);
     }
-    if (item.set) sets[item.set] = (sets[item.set] ?? 0) + 1;
     // Paliers de forge : « Âme liée » donne le tag « Tous », « Forgé par Tetsu » fait compter l'objet double.
     const reached = upgradable ? reachedPaliers(rules, item, lvl) : [];
     paliers.push(...reached);
@@ -321,23 +285,31 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     if (tagged) tagCount += reached.some((p) => p.id === 'double') ? 2 : 1;
   }
 
-  // Arme : ses effets fixent les dégâts de base ; son niveau multiplie tous les dégâts du héros, âmes comprises.
+  // Puissance : le niveau du héros et celui de son arme multiplient chacun ses dégâts (moitié héros, moitié équipement) ;
+  // les dégâts en % des pièces s'y ajoutent. Les soins suivent la puissance sans les pièces.
   const weaponId = state.equipped.arme;
-  const power = weaponId ? weaponPower(rules, itemLevel(state, weaponId)) : 1;
-  config.attack.damage *= power;
-  config.smash.damage *= power;
-  config.bond.damage *= power;
-  config.summon.damage *= power;
+  const growth = { ...data.skills.levels, ...cls.growth };
+  const power = (weaponId ? weaponPower(classUpgrade(rules, cls), itemLevel(state, weaponId)) : 1) * (1 + growth.damagePerLevel * (level - 1));
+  const damage = power * (1 + bonus.damage);
+  config.attack.damage *= damage;
+  config.smash.damage *= damage;
+  config.bond.damage *= damage;
+  config.summon.damage *= damage;
   config.summon.hp *= power;
-  config.summon.sacrifice.damage *= power;
-  config.blade.dance.damage *= power;
-  config.paladin.hammer.damage *= power;
-  // Les soins du Paladin suivent aussi son arme : ils gardent leur poids quand les PV montent avec les niveaux.
+  config.blade.dance.damage *= damage;
+  config.paladin.hammer.damage *= damage;
+  config.paladin.judgement.damage *= damage;
+  const sorcier = config.sorcier;
+  sorcier.seal.damage *= damage;
+  sorcier.meteor.damage *= damage;
+  sorcier.ward.burn *= damage;
+  sorcier.flight.burn *= damage;
+  // Les soins du Paladin suivent aussi sa puissance : ils gardent leur poids quand les PV montent avec les niveaux.
   config.paladin.aura.heal *= power;
   for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 
   if (state.flags.benediction_jizo) bonus.maxHp += JIZO_BLESSING;
-  bonus.maxHp += (level - 1) * data.skills.levels.hpPerLevel;
+  bonus.maxHp += (level - 1) * growth.hpPerLevel;
 
   for (const passive of racePassives(data.skills, state.hero)) for (const effect of passive.effects) applyEffect(config, effect);
   for (const effect of raceEffects) applyEffect(config, effect);
@@ -352,25 +324,22 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     if (tagCount >= t.count) tier = i;
   });
   if (tier >= 0) for (const effect of cls.tag.tiers[tier].effects) applyEffect(config, effect);
-  for (const [id, count] of Object.entries(sets)) {
-    for (const reached of data.sets?.[id]?.bonuses ?? []) if (count >= reached.count) for (const effect of reached.effects) applyEffect(config, effect);
-  }
 
   config.maxHp += bonus.maxHp;
   config.maxHp *= config.perks?.maxHpFactor ?? 1;
   config.moveSpeed *= 1 + bonus.speed;
   config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
-  config.attack.damage = Math.round(config.attack.damage + bonus.damage);
-  // Les dégâts fixes des talents (foudre de Susanoo, Croissant, Riposte, Chaleur) suivent la puissance de l'arme.
+  // Les dégâts fixes des talents et des objets (foudre de Susanoo, Croissant, Riposte, Chaleur) suivent la puissance.
   const perks = config.perks ?? {};
   for (const key of ['storm', 'dashDamage', 'riposte', 'auraBurn', 'yokaiAuraBurn'] as const) {
     const value = perks[key];
-    if (value) perks[key] = value * power;
+    if (value) perks[key] = value * damage;
   }
   if (perks.shieldHeal) perks.shieldHeal = { ...perks.shieldHeal, amount: perks.shieldHeal.amount * power };
-  if (perks.chargedBolt) perks.chargedBolt = { ...perks.chargedBolt, damage: perks.chargedBolt.damage * power };
+  if (perks.chargedBolt) perks.chargedBolt = { ...perks.chargedBolt, damage: perks.chargedBolt.damage * damage };
+  if (perks.sealBurn) perks.sealBurn = { ...perks.sealBurn, burn: perks.sealBurn.burn * damage };
   config.dodge.distance *= 1 + bonus.dodge;
-  return { config, level, bonus, tagCount, tier, sets };
+  return { config, level, bonus, tagCount, tier };
 }
 
 function applyEffect(target: object, effect: ConfigEffect): void {

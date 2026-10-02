@@ -10,7 +10,7 @@ import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 4;
+export const PROTOCOL = 5;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -70,7 +70,7 @@ export interface Announce {
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 /** Un héros dans un instantané : tout ce que l'affichage lit, sauf ses réglages (connus depuis le départ). */
-export type HeroSnap = Omit<Mutable<HeroView>, 'cfg'> & { soulNear: boolean; graveNear: boolean; hammerOut: boolean };
+export type HeroSnap = Omit<Mutable<HeroView>, 'cfg'> & { graveNear: boolean; hammerOut: boolean };
 
 export interface Snapshot {
   /** Numéro de la descente : un paquet d'une descente précédente, arrivé en retard, est ignoré. */
@@ -125,9 +125,10 @@ const COOLDOWNS = {
   dodgeCooldown: 0,
   bondCooldown: 0,
   frenzyCooldown: 0,
-  recallCooldown: 0,
-  sacrificeCooldown: 0,
-  choirCooldown: 0,
+  sealCooldown: 0,
+  wardCooldown: 0,
+  flightCooldown: 0,
+  meteorCooldown: 0,
   dashRecharge: 0,
   deathMarkCooldown: 0,
   smokeCooldown: 0,
@@ -143,7 +144,7 @@ const COOLDOWNS = {
 } as const;
 
 /** Champs du héros que seul son joueur reçoit. */
-const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'dashCharges', 'guardLeft', 'rage', 'canSmash', 'drawProgress', 'soulNear', 'graveNear', 'hammerOut'];
+const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'dashCharges', 'guardLeft', 'rage', 'canSmash', 'drawProgress', 'mana', 'graveNear', 'hammerOut'];
 
 const HERO_DEFAULTS: Partial<HeroSnap> = {
   pose: 'idle',
@@ -155,7 +156,8 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   transformed: 0,
   hidden: 0,
   aura: 0,
-  choir: 0,
+  ward: 0,
+  mana: 0,
   smoke: null,
   drawProgress: 0,
   rage: 0,
@@ -163,12 +165,11 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   ...COOLDOWNS,
   guardLeft: 100,
   barrier: 0,
-  soulNear: false,
   graveNear: false,
   hammerOut: false,
 };
 const ENEMY_DEFAULTS: Partial<EnemyView> = { pose: 'idle', altitude: 0, spawnProgress: 1, elite: false, mark: null, dead: false, boss: false };
-const SUMMON_DEFAULTS: Partial<SummonView> = { pose: 'idle', spawnProgress: 1, vigor: 1, holy: false, companion: false };
+const SUMMON_DEFAULTS: Partial<SummonView> = { pose: 'idle', spawnProgress: 1, vigor: 1 };
 const PROJECTILE_DEFAULTS: Partial<ProjectileView> = { full: false };
 const WEB_DEFAULTS: Partial<WebView> = { burning: null };
 const NO_DEFAULTS = {};
@@ -179,9 +180,9 @@ const VECTORS = new Set(['pos', 'facing', 'dir', 'to']);
 /** Champs des instantanés, dans un ordre fixe : leur rang donne leur code. Un champ absent de la liste garde son nom. */
 const FIELDS = [
   ...['id', 'pos', 'facing', 'radius', 'pose', 'hp', 'kind', 'sprite', 'maxHp', 'altitude', 'spawnProgress', 'elite', 'mark', 'dead', 'boss', 'prey'],
-  ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'holy', 'dir', 'full', 'ripe', 'age', 'burning', 'companion'],
-  ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'choir', 'smoke', 'cloud', 'drawProgress', 'rage', 'canSmash'],
-  ...['dashCharges', 'soulNear', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier'],
+  ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'dir', 'full', 'ripe', 'age', 'burning'],
+  ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'ward', 'smoke', 'cloud', 'drawProgress', 'rage', 'canSmash'],
+  ...['dashCharges', 'mana', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier'],
 ];
 const CODE = new Map(FIELDS.map((name, i) => [name, i.toString(36)]));
 const NAME = new Map(FIELDS.map((name, i) => [i.toString(36), name]));
@@ -244,7 +245,8 @@ function heroSnaps(world: World): HeroSnap[] {
     transformed: p.transformed,
     hidden: p.hidden,
     aura: p.aura,
-    choir: p.choir,
+    ward: p.ward,
+    mana: p.mana,
     smoke: p.smoke ? { pos: p.smoke.pos, cloud: p.smoke.cloud } : null,
     drawProgress: p.drawProgress,
     rage: p.rage,
@@ -252,9 +254,10 @@ function heroSnaps(world: World): HeroSnap[] {
     dodgeCooldown: p.dodgeCooldown,
     bondCooldown: p.bondCooldown,
     frenzyCooldown: p.frenzyCooldown,
-    recallCooldown: p.recallCooldown,
-    sacrificeCooldown: p.sacrificeCooldown,
-    choirCooldown: p.choirCooldown,
+    sealCooldown: p.sealCooldown,
+    wardCooldown: p.wardCooldown,
+    flightCooldown: p.flightCooldown,
+    meteorCooldown: p.meteorCooldown,
     dashCharges: p.dashCharges,
     dashRecharge: p.dashRecharge,
     deathMarkCooldown: p.deathMarkCooldown,
@@ -270,7 +273,6 @@ function heroSnaps(world: World): HeroSnap[] {
     netCooldown: p.netCooldown,
     huntCooldown: p.huntCooldown,
     leapCooldown: p.leapCooldown,
-    soulNear: world.soulNear(p),
     graveNear: world.graveNear(p),
     hammerOut: world.hammerOutOf(p),
   }));
@@ -318,8 +320,6 @@ export function shareSnapshot(world: World, tick: number): SharedSnap {
     pose: s.pose,
     spawnProgress: s.spawnProgress,
     vigor: s.vigor,
-    holy: s.holy,
-    companion: s.companion,
   }));
   return {
     tick,

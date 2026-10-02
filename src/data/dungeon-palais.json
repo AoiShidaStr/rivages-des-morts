@@ -18,7 +18,7 @@
       "hint": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Frappe-les pendant leur appel pour l'interrompre.",
       "hints": {
         "rodeur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Tes flèches les rattrapent même quand ils fuient.",
-        "invocateur": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Envoie tes âmes sur eux ({A}) : ils fuient le héros, pas les âmes."
+        "sorcier": "Les ikazuchi appellent la foudre là où tu te tiens : sors des cercles. Ils fuient, mais tes boules de feu les suivent."
       },
       "spawns": [
         { "kind": "ikazuchi", "count": 2 },
@@ -65,7 +65,7 @@
       "hint": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Vise à côté d'elle : le bord de ton coup la touchera quand même.",
       "hints": {
         "rodeur": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Tu dois viser pour tirer : tire par courtes salves, puis détourne les yeux.",
-        "invocateur": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Tes âmes, elles, peuvent la regarder : laisse-les frapper et vise ailleurs.",
+        "sorcier": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Vise à côté d'elle : tes boules de feu la trouvent quand même. Garde {R} pour quand une pêche l'a repoussée.",
         "lame": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Frappe-la de côté, puis esquive : tes coups s'annulent à tout moment.",
         "guerrier": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Vise à côté d'elle : le bord de ton arc la touchera. Un estoc, lui, oblige à la regarder : frappe vite, puis détourne les yeux.",
         "paladin": "Ne la regarde pas : sous ton regard, elle se renforce, puis sa colère éclate. Ta naginata frappe large : vise à côté d'elle. Parer oblige à lui faire face : pare peu."

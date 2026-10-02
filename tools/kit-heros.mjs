@@ -119,7 +119,7 @@ function readme() {
   return `Animations des héros, dessinées par Nano Banana 2 (Gemini) : un dossier par héros, un dossier par animation.
 
 heros/
-  <race>-<classe>/            par exemple demi-dieu-invocateur
+  <race>-<classe>/            par exemple demi-dieu-sorcier
     fiche.jpg                 l'image du héros, à joindre aux deux prompts suivants
     prompt-profil.txt         étape 1 : planche de 6 poses clés de profil
     prompt-face.txt           étape 1 : planche de 4 poses clés de face

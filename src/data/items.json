@@ -1,5 +1,5 @@
 {
-  "about": "bonus : effets simples (maxHp, damage, speed, dodge, armor, oboles). effects : réglages du héros (mêmes règles que skills.json : summon.* pour les âmes de l'Invocateur, blade.*, paladin.* et ranger.* pour la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks.",
+  "about": "bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : sorcier.*, blade.*, paladin.* et ranger.* pour le Sorcier, la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks.",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -93,49 +93,67 @@
       "name": "Grelots d'onmyōji",
       "slot": "arme",
       "rarity": "commune",
-      "tags": ["Invocateur"],
-      "summary": "Arme de départ de l’Invocateur : le tintement frappe tout autour de toi, mais faiblement ; tes âmes frappent 10 % plus vite.",
+      "tags": ["Sorcier"],
+      "summary": "Arme de départ du Sorcier : chaque tintement lance une salve de boules de feu guidées (4 dégâts chacune), portée 10 m.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.shape", "value": "arc" },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
-        { "op": "set", "path": "attack.commit", "value": 0.17 },
-        { "op": "set", "path": "attack.windup", "value": 0.07 },
-        { "op": "set", "path": "attack.recovery", "value": 0.22 },
-        { "op": "set", "path": "attack.knockback", "value": 2 },
-        { "op": "mul", "path": "summon.attackCooldown", "value": 0.9 }
+        { "op": "set", "path": "attack.damage", "value": 4 },
+        { "op": "set", "path": "attack.range", "value": 10 },
+        { "op": "set", "path": "attack.windup", "value": 0.12 },
+        { "op": "set", "path": "attack.recovery", "value": 0.34 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 }
       ],
       "paliers": [
-        { "level": 10, "name": "Tintement", "summary": "Tes âmes courent 15 % plus vite", "effects": [{ "op": "mul", "path": "summon.speed", "value": 1.15 }] },
-        { "level": 25, "name": "Carillon", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
-        { "level": 50, "name": "Clochette sacrée", "summary": "Tes âmes restent 50 % plus longtemps", "effects": [{ "op": "mul", "path": "summon.life", "value": 1.5 }] }
+        { "level": 10, "name": "Tintement", "summary": "Le mana remonte de 2 de plus par seconde", "effects": [{ "op": "add", "path": "sorcier.mana.regen", "value": 2 }] },
+        { "level": 25, "name": "Carillon", "summary": "Une boule de feu de plus par salve", "effects": [{ "op": "add", "path": "sorcier.fireball.count", "value": 1 }] },
+        { "level": 50, "name": "Clochette sacrée", "summary": "+25 mana max", "effects": [{ "op": "add", "path": "sorcier.mana.max", "value": 25 }] }
       ],
-      "description": "Un bâton à grelots d'onmyōji. Leur tintement appelle les âmes égarées, qui viennent se ranger derrière toi."
+      "description": "Un bâton à grelots d'onmyōji. À chaque tintement, une gerbe de feux de renard s'en échappe et file vers ce que tu désignes."
     },
     "eventail-jorogumo": {
       "name": "Éventail de la Jorōgumo",
       "slot": "arme",
       "rarity": "épique",
-      "tags": ["Invocateur"],
-      "summary": "Grand coup d’éventail (200°, portée 2,2). Les coups de tes âmes collent l’ennemi dans la soie : ralenti de 40 % pendant 1 s.",
+      "tags": ["Sorcier"],
+      "summary": "Boules de feu plus lourdes (5 dégâts), portée 10,5 m ; elles collent dans la soie : ralenti de 30 % pendant 1 s.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 2.2 },
-        { "op": "set", "path": "attack.shape", "value": "arc" },
-        { "op": "set", "path": "attack.arcDeg", "value": 200 },
-        { "op": "set", "path": "attack.commit", "value": 0.18 },
-        { "op": "set", "path": "attack.windup", "value": 0.08 },
-        { "op": "set", "path": "attack.recovery", "value": 0.26 },
-        { "op": "set", "path": "attack.knockback", "value": 3 },
-        { "op": "set", "path": "perks.summonStun", "value": 1 }
+        { "op": "set", "path": "attack.damage", "value": 5 },
+        { "op": "set", "path": "attack.range", "value": 10.5 },
+        { "op": "set", "path": "attack.windup", "value": 0.12 },
+        { "op": "set", "path": "attack.recovery", "value": 0.36 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 },
+        { "op": "set", "path": "perks.fireballSlow", "value": { "amount": 0.3, "duration": 1 } }
       ],
       "paliers": [
-        { "level": 10, "name": "Fil tendu", "summary": "Ralentissement des âmes +0,6 s", "effects": [{ "op": "add", "path": "perks.summonStun", "value": 0.6 }] },
-        { "level": 25, "name": "Toile des âmes", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
-        { "level": 50, "name": "Dame des rizières", "summary": "Tes âmes font 25 % de dégâts en plus", "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.25 }] }
+        { "level": 10, "name": "Fil tendu", "summary": "Ralentissement des boules de feu : +0,5 s", "effects": [{ "op": "add", "path": "perks.fireballSlow.duration", "value": 0.5 }] },
+        { "level": 25, "name": "Toile embrasée", "summary": "Le sceau coûte 4 mana de moins", "effects": [{ "op": "add", "path": "sorcier.seal.cost", "value": -4 }] },
+        { "level": 50, "name": "Dame des rizières", "summary": "Le météore frappe 20 % plus fort", "effects": [{ "op": "mul", "path": "sorcier.meteor.damage", "value": 1.2 }] }
       ],
       "description": "L'éventail de soie de la Jorōgumo. Quand on l'agite, on entend encore des fils se tendre."
+    },
+    "pinceau-seimei": {
+      "name": "Pinceau de Seimei",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "summary": "Boules de feu légères (3,75 dégâts) mais vives ; tes sceaux reviennent 0,5 s plus tôt et lient les yokai qu'ils frappent : ralentis de 60 % pendant 2 s.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 3.75 },
+        { "op": "set", "path": "attack.range", "value": 9.5 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.28 },
+        { "op": "set", "path": "attack.commit", "value": 0.1 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 },
+        { "op": "add", "path": "sorcier.seal.cooldown", "value": -0.5 },
+        { "op": "set", "path": "perks.sealSlow", "value": { "amount": 0.6, "duration": 2 } }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Encre de cinabre", "summary": "Le sceau frappe 10 % plus fort", "effects": [{ "op": "mul", "path": "sorcier.seal.damage", "value": 1.1 }] },
+        { "level": 25, "name": "Trait sûr", "summary": "Le sceau explose 0,2 s plus tôt", "effects": [{ "op": "add", "path": "sorcier.seal.delay", "value": -0.2 }] },
+        { "level": 50, "name": "Étoile de Seimei", "summary": "Chaque yokai pris dans un sceau te rend 2 mana", "effects": [{ "op": "add", "path": "perks.sealMana", "value": 2 }] }
+      ],
+      "description": "Le pinceau dont Abe no Seimei traçait ses sceaux. L'encre de cinabre n'a jamais séché."
     },
     "kunai-jumeaux": {
       "name": "Kunai jumeaux",
@@ -263,19 +281,20 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "summary": "Coups lourds (17 dégâts) en arc de 170°, presque impossibles à interrompre ; le Marteau lancé fait 50 % de dégâts en plus et ralentit de 40 % pendant 1 s.",
+      "summary": "Coups lourds (17 dégâts) en arc de 170° ; le bouclier-cloche ajoute 25 points de garde ; le Marteau lancé fait 50 % de dégâts en plus et ralentit de 40 % pendant 1 s.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 17 },
         { "op": "set", "path": "attack.range", "value": 1.9 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 170 },
-        { "op": "set", "path": "attack.commit", "value": 0.45 },
+        { "op": "set", "path": "attack.commit", "value": 0.26 },
         { "op": "set", "path": "attack.windup", "value": 0.14 },
-        { "op": "set", "path": "attack.recovery", "value": 0.4 },
+        { "op": "set", "path": "attack.recovery", "value": 0.3 },
         { "op": "set", "path": "attack.knockback", "value": 6 },
         { "op": "set", "path": "attack.lunge", "value": 0.25 },
         { "op": "mul", "path": "paladin.hammer.damage", "value": 1.5 },
-        { "op": "set", "path": "perks.hammerStun", "value": 1 }
+        { "op": "set", "path": "perks.hammerStun", "value": 1 },
+        { "op": "add", "path": "paladin.guard.max", "value": 25 }
       ],
       "paliers": [
         { "level": 10, "name": "Fer lesté", "summary": "Recul des coups +2", "effects": [{ "op": "add", "path": "attack.knockback", "value": 2 }] },
@@ -367,9 +386,9 @@
         { "op": "set", "path": "attack.range", "value": 2 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 170 },
-        { "op": "set", "path": "attack.commit", "value": 0.36 },
+        { "op": "set", "path": "attack.commit", "value": 0.26 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
-        { "op": "set", "path": "attack.recovery", "value": 0.3 },
+        { "op": "set", "path": "attack.recovery", "value": 0.26 },
         { "op": "set", "path": "attack.knockback", "value": 4 },
         { "op": "add", "path": "perks.storm", "value": 10 }
       ],
@@ -432,7 +451,7 @@
       "name": "Chapeau de paille",
       "slot": "casque",
       "rarity": "commune",
-      "bonus": { "maxHp": 10 },
+      "bonus": { "maxHp": 12 },
       "description": "Un chapeau conique en paille tressée. Il ne protège pas grand-chose, mais il rassure."
     },
     "kabuto-fendu": {
@@ -440,34 +459,42 @@
       "slot": "casque",
       "rarity": "peu commune",
       "tags": ["Guerrier"],
-      "bonus": { "maxHp": 6, "damage": 1 },
+      "bonus": { "maxHp": 8, "damage": 0.06 },
+      "summary": "La Frappe fracassante coûte 10 de rage en moins.",
+      "effects": [{ "op": "add", "path": "smash.rageCost", "value": -10 }],
       "description": "Le casque fendu d'un guerrier dont plus personne ne se souvient. Il tient encore."
     },
     "masque-oublie": {
       "name": "Masque d'Oublié",
       "slot": "casque",
       "rarity": "rare",
-      "tags": ["Invocateur"],
-      "bonus": { "damage": 2 },
-      "effects": [{ "op": "set", "path": "perks.summonTaunt", "value": true }],
-      "summary": "Les yokai s'en prennent d'abord à tes âmes.",
-      "description": "Un masque blanc sans visage. Le porter fait un peu oublier la peur."
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 6, "damage": 0.08 },
+      "summary": "La Fuite de feu revient 2 s plus tôt ; après elle, les yokai t'oublient 1,5 s et s'en prennent à la flamme restée en arrière.",
+      "effects": [
+        { "op": "add", "path": "sorcier.flight.cooldown", "value": -2 },
+        { "op": "set", "path": "perks.flightDecoy", "value": 1.5 }
+      ],
+      "description": "Un masque blanc sans visage. Qui le porte, on l'oublie un peu."
     },
     "voile-izanami": {
       "name": "Voile d'Izanami",
       "slot": "casque",
       "rarity": "rare",
-      "tags": ["Invocateur"],
-      "bonus": { "maxHp": 10 },
-      "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.15 }],
-      "summary": "Tes âmes frappent 15 % plus fort.",
-      "description": "Le voile blanc qui cachait le visage d'Izanami. Les âmes égarées le suivent comme on suit une reine."
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 12 },
+      "summary": "Ton météore s'écrase 0,6 s plus tôt et frappe 20 % plus fort.",
+      "effects": [
+        { "op": "add", "path": "sorcier.meteor.delay", "value": -0.6 },
+        { "op": "mul", "path": "sorcier.meteor.damage", "value": 1.2 }
+      ],
+      "description": "Le voile blanc qui cachait le visage d'Izanami. Celle que le feu a tuée en a gardé la mémoire."
     },
     "shiroshozoku": {
       "name": "Shiroshōzoku",
       "slot": "plastron",
       "rarity": "commune",
-      "bonus": { "maxHp": 15 },
+      "bonus": { "maxHp": 18, "armor": 0.04 },
       "description": "Le kimono blanc dont on vêt les morts, croisé droite sur gauche, à l'envers des vivants."
     },
     "carapace-kappa": {
@@ -475,7 +502,7 @@
       "slot": "plastron",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "bonus": { "armor": 0.15 },
+      "bonus": { "maxHp": 18, "armor": 0.1 },
       "description": "Une carapace taillée en plastron. Les coups glissent dessus."
     },
     "do-yomi": {
@@ -490,7 +517,7 @@
       "name": "Hakama de soie",
       "slot": "jambieres",
       "rarity": "peu commune",
-      "bonus": { "maxHp": 4, "speed": 0.08 },
+      "bonus": { "maxHp": 8, "speed": 0.08 },
       "description": "Un hakama noir brodé de fils d'araignée argentés. Léger comme la brume."
     },
     "suneate-ecailles": {
@@ -498,14 +525,16 @@
       "slot": "jambieres",
       "rarity": "peu commune",
       "tags": ["Guerrier"],
-      "bonus": { "armor": 0.08 },
+      "bonus": { "maxHp": 10, "armor": 0.06 },
+      "summary": "Garde levée, tu avances 50 % plus vite.",
+      "effects": [{ "op": "mul", "path": "blockMoveFactor", "value": 1.5 }],
       "description": "Des jambières d'écailles de kappa, cousues au papier huilé par Tetsu."
     },
     "geta-kasa": {
       "name": "Geta du kasa-obake",
       "slot": "bottes",
       "rarity": "peu commune",
-      "bonus": { "maxHp": 4, "dodge": 0.25 },
+      "bonus": { "maxHp": 6, "dodge": 0.25 },
       "description": "De hautes sandales de bois, enveloppées de papier huilé. On bondit plus loin avec."
     },
     "waraji-pelerin": {
@@ -513,7 +542,9 @@
       "slot": "bottes",
       "rarity": "commune",
       "tags": ["Guerrier"],
-      "bonus": { "speed": 0.05, "maxHp": 5 },
+      "bonus": { "maxHp": 8, "speed": 0.05 },
+      "summary": "Le Bond coûte 10 de rage en moins.",
+      "effects": [{ "op": "add", "path": "bond.rageCost", "value": -10 }],
       "description": "Des sandales de paille de pèlerin. Pour une fois, le tanuki n'a pas menti."
     },
     "lanterne-braise": {
@@ -521,18 +552,30 @@
       "slot": "amulette",
       "rarity": "commune",
       "tags": ["Guerrier"],
-      "bonus": { "damage": 3 },
+      "bonus": { "maxHp": 6, "damage": 0.12 },
+      "summary": "La Frénésie dure 2 s de plus.",
+      "effects": [{ "op": "add", "path": "frenzy.duration", "value": 2 }],
       "description": "Une petite lanterne où brûle la braise d'un feu follet. Tes coups brûlent un peu."
     },
     "magatama-fele": {
       "name": "Magatama fêlé",
       "slot": "amulette",
       "rarity": "rare",
-      "tags": ["Invocateur"],
+      "tags": ["Sorcier"],
       "bonus": { "maxHp": 20 },
-      "effects": [{ "op": "mul", "path": "summon.life", "value": 1.25 }],
-      "summary": "Tes âmes restent 25 % plus longtemps.",
+      "summary": "+25 mana max.",
+      "effects": [{ "op": "add", "path": "sorcier.mana.max", "value": 25 }],
       "description": "Un magatama de jade fêlé, qui luit encore faiblement."
+    },
+    "ofuda-kagutsuchi": {
+      "name": "Ofuda de Kagutsuchi",
+      "slot": "amulette",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 6, "damage": 0.1 },
+      "summary": "Chaque salve lance une boule de feu de plus.",
+      "effects": [{ "op": "add", "path": "sorcier.fireball.count", "value": 1 }],
+      "description": "Un talisman de papier au nom du dieu du feu. Il roussit déjà sur les bords."
     },
     "omamori-temple": {
       "name": "Omamori du temple",
@@ -545,7 +588,7 @@
       "name": "Rokumonsen",
       "slot": "amulette",
       "rarity": "rare",
-      "bonus": { "maxHp": 6, "oboles": 0.2 },
+      "bonus": { "maxHp": 8, "oboles": 0.2 },
       "description": "Les six pièces qu'on glissait aux morts pour traverser la rivière Sanzu. Le péage de Charon, version japonaise."
     },
     "talisman-douteux": {
@@ -559,7 +602,7 @@
       "name": "Dent de kappa (probablement)",
       "slot": "amulette",
       "rarity": "peu commune",
-      "bonus": { "damage": 1 },
+      "bonus": { "maxHp": 4, "damage": 0.06 },
       "description": "Les kappa n'ont pas de dents. Le tanuki assure que si."
     },
     "peche-okamuzumi": {
@@ -567,9 +610,9 @@
       "slot": "amulette",
       "rarity": "légendaire",
       "tags": ["Tous"],
-      "bonus": { "maxHp": 25 },
-      "effects": [{ "op": "add", "path": "perks.valhallaHeal", "value": 2 }],
-      "summary": "Chaque yokai vaincu te rend 2 PV.",
+      "bonus": { "maxHp": 30 },
+      "summary": "Chaque yokai vaincu te rend 2 % de tes PV max.",
+      "effects": [{ "op": "add", "path": "perks.valhallaShare", "value": 0.02 }],
       "description": "La dernière des trois pêches d'Izanagi. Il la nomma Ōkamuzumi et lui demanda de secourir les vivants comme elle l'avait secouru. Elle n'a jamais pourri."
     },
     "coupelle-kappa": {
@@ -580,6 +623,15 @@
       "summary": "Tant que tu n'es pas touché, +25 % de dégâts. Un coup reçu vide la coupelle 5 s.",
       "effects": [{ "op": "set", "path": "perks.coupelle", "value": { "bonus": 0.25, "emptyTime": 5 } }],
       "description": "La coupelle d'eau d'un vieux kappa. L'eau n'en déborde jamais, tant qu'on garde son calme."
+    },
+    "ecaille-ryujin": {
+      "name": "Écaille de Ryūjin",
+      "slot": "relique",
+      "rarity": "rare",
+      "tags": ["Guerrier"],
+      "summary": "Chaque coup bloqué te rend 3 % de tes PV max.",
+      "effects": [{ "op": "set", "path": "perks.blockHeal", "value": 0.03 }],
+      "description": "Une écaille du roi-dragon des mers, large comme une main. Les vagues s'y brisent sans jamais l'user."
     },
     "fil-joren": {
       "name": "Fil de Jōren",
@@ -594,10 +646,10 @@
       "name": "Magatama de Yasakani",
       "slot": "relique",
       "rarity": "légendaire",
-      "tags": ["Invocateur"],
+      "tags": ["Sorcier"],
       "bonus": { "maxHp": 20 },
-      "effects": [{ "op": "add", "path": "summon.max", "value": 1 }],
-      "summary": "+1 âme active. Sa lueur apaise : +20 PV max.",
+      "summary": "Tes sorts coûtent 25 % de mana en moins. Sa lueur apaise : +20 PV max.",
+      "effects": [{ "op": "mul", "path": "perks.manaCost", "value": 0.75 }],
       "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?"
     },
     "peigne-izanagi": {
@@ -614,11 +666,9 @@
       "slot": "casque",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "bonus": { "maxHp": 4, "damage": 1 },
+      "bonus": { "maxHp": 6, "damage": 0.08 },
       "summary": "Au bord du gouffre se déclenche dès 50 % de tes PV au lieu de 30 % : tu frappes plus fort et tu te soignes plus tôt, sans attendre d'être au bord de la mort.",
-      "effects": [
-        { "op": "set", "path": "perks.hannya", "value": { "threshold": 0.5 } }
-      ],
+      "effects": [{ "op": "set", "path": "perks.hannya", "value": { "threshold": 0.5 } }],
       "description": "Le masque cornu d'une femme que la jalousie a changée en démon. Celui qui le porte n'a plus peur de rien, surtout pas de mourir."
     },
     "gourde-sake-oni": {
@@ -626,11 +676,9 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "bonus": { "maxHp": 20 },
-      "summary": "Blocage parfait (garde levée juste avant le coup) : +15 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois plus.",
-      "effects": [
-        { "op": "set", "path": "perks.gourde", "value": { "rage": 15, "smashHeal": 2 } }
-      ],
+      "bonus": { "maxHp": 15 },
+      "summary": "Blocage parfait (garde levée juste avant le coup) : +20 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois et demie plus.",
+      "effects": [{ "op": "set", "path": "perks.gourde", "value": { "rage": 20, "smashHeal": 2.5 } }],
       "description": "Une calebasse laquée de rouge, pleine d'un saké d'oni qui ne se vide jamais. Le kappa qui la gardait était ivre depuis trois siècles."
     },
     "nodachi-ikusa": {
@@ -662,11 +710,9 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "bonus": { "maxHp": 20 },
-      "summary": "Un coup bloqué renvoie 40 % de ses dégâts à l'attaquant.",
-      "effects": [
-        { "op": "set", "path": "perks.guardReflect", "value": 0.4 }
-      ],
+      "bonus": { "maxHp": 15 },
+      "summary": "Un coup bloqué renvoie 30 % de ses dégâts à l'attaquant.",
+      "effects": [{ "op": "set", "path": "perks.guardReflect", "value": 0.3 }],
       "description": "Une petite cloche de bronze que Tetsu a coulée avec les écailles d'un kappa. Chaque coup qu'elle reçoit, elle le rend en sonnant."
     },
     "encensoir-moine": {
@@ -674,22 +720,43 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "bonus": { "maxHp": 20 },
+      "bonus": { "maxHp": 15 },
       "summary": "Chaque PV rendu par ton Aura ajoute 2 dégâts à ton prochain Marteau lancé (au plus le double de ses dégâts).",
-      "effects": [
-        { "op": "set", "path": "perks.censer", "value": { "perHp": 2, "max": 1 } }
-      ],
+      "effects": [{ "op": "set", "path": "perks.censer", "value": { "perHp": 2, "max": 1 } }],
       "description": "L'encensoir du moine du Rocher. La fumée qui soigne les vivants brûle les morts : il suffit de la lancer assez fort."
+    },
+    "eboshi-amaterasu": {
+      "name": "Eboshi d'Amaterasu",
+      "slot": "casque",
+      "rarity": "rare",
+      "tags": ["Paladin"],
+      "bonus": { "maxHp": 6, "damage": 0.08 },
+      "summary": "Ton Aura brûle les yokai : 6 dégâts par seconde.",
+      "effects": [{ "op": "add", "path": "perks.auraBurn", "value": 6 }],
+      "description": "Un haut bonnet de prêtre laqué de vermillon. Il garde la chaleur du soleil sorti de sa grotte."
+    },
+    "tambour-temple": {
+      "name": "Tambour du temple",
+      "slot": "relique",
+      "rarity": "rare",
+      "tags": ["Paladin"],
+      "summary": "Le Jugement se remplit 50 % plus vite et frappe 30 % plus fort.",
+      "effects": [
+        { "op": "mul", "path": "paladin.judgement.perBlock", "value": 1.5 },
+        { "op": "mul", "path": "paladin.judgement.perHit", "value": 1.5 },
+        { "op": "mul", "path": "paladin.judgement.damage", "value": 1.3 }
+      ],
+      "description": "Un petit taiko de cérémonie. Chaque coup porté le fait gronder un peu plus, jusqu'à ce que le temple réponde."
     },
     "shimenawa-tressee": {
       "name": "Shimenawa tressée",
       "slot": "plastron",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "bonus": { "maxHp": 12, "speed": -0.08 },
-      "summary": "Garde : +30 points, qui remontent 50 % plus vite. Tu marches 8 % moins vite.",
+      "bonus": { "maxHp": 20, "armor": 0.06, "speed": -0.05 },
+      "summary": "Garde : +40 points, qui remontent 50 % plus vite. Tu marches 5 % moins vite.",
       "effects": [
-        { "op": "add", "path": "paladin.guard.max", "value": 30 },
+        { "op": "add", "path": "paladin.guard.max", "value": 40 },
         { "op": "mul", "path": "paladin.guard.regen", "value": 1.5 }
       ],
       "description": "Une corde sacrée de paille de riz, comme celle qui ceint le Grand Rocher, tressée en baudrier. Lourde, mais rien ne la dénoue."
@@ -699,12 +766,33 @@
       "slot": "bottes",
       "rarity": "rare",
       "tags": ["Rôdeur"],
-      "bonus": { "maxHp": 5, "speed": 0.04 },
+      "bonus": { "maxHp": 6, "speed": 0.04 },
       "summary": "Après un Recul, ton prochain tir part chargé à fond.",
-      "effects": [
-        { "op": "set", "path": "perks.leapCharge", "value": true }
-      ],
+      "effects": [{ "op": "set", "path": "perks.leapCharge", "value": true }],
       "description": "Les chaussettes fendues d'un messager des morts. Il courait si vite qu'il bandait son arc en retombant."
+    },
+    "plume-yatagarasu": {
+      "name": "Plume de Yatagarasu",
+      "slot": "amulette",
+      "rarity": "rare",
+      "tags": ["Rôdeur"],
+      "bonus": { "maxHp": 15 },
+      "summary": "Abattre la cible marquée te rend 15 % de PV max de plus, et la Marque du chasseur dure 2 s de plus.",
+      "effects": [
+        { "op": "add", "path": "ranger.huntMark.killHeal", "value": 0.15 },
+        { "op": "add", "path": "ranger.huntMark.duration", "value": 2 }
+      ],
+      "description": "Une plume du corbeau à trois pattes qui guida le premier empereur. Elle tourne d'elle-même vers la proie."
+    },
+    "fleches-hahaya": {
+      "name": "Flèches d'Ame-no-Hahaya",
+      "slot": "relique",
+      "rarity": "épique",
+      "tags": ["Rôdeur"],
+      "bonus": { "damage": 0.1 },
+      "summary": "Toutes tes flèches transpercent les yokai.",
+      "effects": [{ "op": "set", "path": "perks.arrowPierce", "value": true }],
+      "description": "Les flèches célestes que les dieux confièrent au premier archer descendu sur terre. Rien ne les arrête, pas même ce qu'elles touchent."
     },
     "arc-ikazuchi": {
       "name": "Arc d'Ikazuchi",
@@ -734,7 +822,7 @@
       "slot": "bottes",
       "rarity": "rare",
       "tags": ["Lame"],
-      "bonus": { "maxHp": 5, "dodge": 0.1 },
+      "bonus": { "maxHp": 6, "dodge": 0.1 },
       "summary": "Pas de l'ombre : une charge de plus, qui revient 15 % plus vite.",
       "effects": [
         { "op": "add", "path": "blade.shadowDash.charges", "value": 1 },
@@ -747,22 +835,43 @@
       "slot": "amulette",
       "rarity": "rare",
       "tags": ["Lame"],
-      "bonus": { "maxHp": 12, "damage": 2 },
+      "bonus": { "maxHp": 8, "damage": 0.08 },
       "summary": "Chaque coup critique retire 0,3 s à la recharge de la Marque de mort.",
-      "effects": [
-        { "op": "set", "path": "perks.critMarkRefund", "value": 0.3 }
-      ],
+      "effects": [{ "op": "set", "path": "perks.critMarkRefund", "value": 0.3 }],
       "description": "La garde d'un sabre disparu, portée en pendentif. Elle a arrêté tant de lames qu'elle sait où elles vont frapper."
+    },
+    "kemuri-dama": {
+      "name": "Kemuri-dama",
+      "slot": "amulette",
+      "rarity": "rare",
+      "tags": ["Lame"],
+      "bonus": { "maxHp": 12 },
+      "summary": "L'Écran de fumée revient 4 s plus tôt et te rend 8 % de tes PV max.",
+      "effects": [
+        { "op": "add", "path": "blade.smoke.cooldown", "value": -4 },
+        { "op": "set", "path": "perks.smokeHeal", "value": 0.08 }
+      ],
+      "description": "Une bombe de fumée d'argile, scellée à la cire. Les shinobi du Yomi en gardent toujours une contre la peau."
+    },
+    "encre-shinigami": {
+      "name": "Encre de Shinigami",
+      "slot": "relique",
+      "rarity": "épique",
+      "tags": ["Lame"],
+      "summary": "Tes coups sur un yokai sous 30 % de ses PV sont toujours critiques, et chaque yokai abattu te rend 3 % de tes PV max.",
+      "effects": [
+        { "op": "set", "path": "perks.finisher", "value": 0.3 },
+        { "op": "add", "path": "perks.valhallaShare", "value": 0.03 }
+      ],
+      "description": "Un encrier noir où le dieu de la mort trempe son pinceau. Les noms qu'il écrit ne s'effacent pas."
     },
     "mino-paille": {
       "name": "Mino de paille",
       "slot": "plastron",
       "rarity": "commune",
-      "bonus": { "maxHp": 10 },
+      "bonus": { "maxHp": 14 },
       "summary": "Ce qui tombe du ciel te fait 20 % de dégâts en moins : foudre, pluie de fils, toiles lancées, kasa-obake qui retombent.",
-      "effects": [
-        { "op": "set", "path": "perks.hazardWard", "value": 0.2 }
-      ],
+      "effects": [{ "op": "set", "path": "perks.hazardWard", "value": 0.2 }],
       "description": "Une cape de paille de riz contre la pluie, comme en portaient les paysans des rizières. Obaa jure que rien ne la traverse."
     },
     "yomotsu-hegui": {
@@ -770,7 +879,7 @@
       "slot": "relique",
       "rarity": "épique",
       "tags": ["Tous"],
-      "summary": "+35 % de dégâts et +10 % de vitesse, mais tous les soins que tu reçois sont réduits de moitié.",
+      "summary": "+35 % de dégâts et +10 % de vitesse, mais tous les soins et boucliers que tu reçois sont réduits de moitié.",
       "effects": [
         { "op": "set", "path": "perks.yomotsu", "value": { "damage": 0.35, "speed": 0.1, "healing": 0.5 } }
       ],
@@ -781,11 +890,9 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["demi-dieu"],
-      "bonus": { "maxHp": 20 },
+      "bonus": { "maxHp": 15 },
       "summary": "Ton parent divin compte double : foudre de Zeus à 24 dégâts, Arès +30 % de dégâts, Hermès encore plus vif, Athéna −30 % de dégâts subis.",
-      "effects": [
-        { "op": "set", "path": "perks.parentBoost", "value": 2 }
-      ],
+      "effects": [{ "op": "set", "path": "perks.parentBoost", "value": 2 }],
       "description": "Un bâton rituel orné de bandes de papier en éclair. Les dieux d'ici ne connaissent pas ton père ; lui, les entend."
     },
     "corne-oni": {
@@ -793,7 +900,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["hanyo"],
-      "bonus": { "maxHp": 12, "damage": 2 },
+      "bonus": { "maxHp": 12, "damage": 0.05 },
       "summary": "Ta jauge de sang yokai se remplit 30 % plus vite, mais transformé, tu subis 10 % de dégâts en plus (20 % au total).",
       "effects": [
         { "op": "mul", "path": "perks.yokaiBlood.fill", "value": 0.77 },
@@ -806,7 +913,7 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["oushebti"],
-      "bonus": { "maxHp": 20 },
+      "bonus": { "maxHp": 15 },
       "summary": "Ta carapace d'argile absorbe deux coups avant d'éclater, mais se reforme en 12 s au lieu de 8.",
       "effects": [
         { "op": "set", "path": "perks.clayCharges", "value": 2 },
@@ -819,11 +926,9 @@
       "slot": "amulette",
       "rarity": "rare",
       "races": ["einherjar"],
-      "bonus": { "maxHp": 16, "damage": 1 },
+      "bonus": { "maxHp": 12, "damage": 0.04 },
       "summary": "La Rage du guerrier mort monte jusqu'à +50 % de dégâts au lieu de +35 %.",
-      "effects": [
-        { "op": "set", "path": "perks.einherjarRage", "value": 0.5 }
-      ],
+      "effects": [{ "op": "set", "path": "perks.einherjarRage", "value": 0.5 }],
       "description": "La garde du sabre d'un rōnin tombé sans maître. Au Valhalla comme au Yomi, on reconnaît ceux qui sont morts en combattant."
     },
     "menpo-shikome": {
@@ -831,8 +936,9 @@
       "slot": "casque",
       "rarity": "peu commune",
       "tags": ["Lame"],
-      "set": "os-shikome",
-      "bonus": { "maxHp": 6, "damage": 1 },
+      "bonus": { "maxHp": 6, "damage": 0.08 },
+      "summary": "Tes coups critiques font +0,25.",
+      "effects": [{ "op": "add", "path": "blade.critFactor", "value": 0.25 }],
       "description": "Un demi-masque de combat taillé dans une mâchoire de shikome. Les dents sont restées."
     },
     "do-lamelles-os": {
@@ -840,17 +946,32 @@
       "slot": "plastron",
       "rarity": "rare",
       "tags": ["Lame"],
-      "set": "os-shikome",
-      "bonus": { "maxHp": 10, "armor": 0.06 },
+      "bonus": { "maxHp": 20, "armor": 0.06 },
+      "summary": "+10 % de PV max.",
+      "effects": [{ "op": "mul", "path": "perks.maxHpFactor", "value": 1.1 }],
       "description": "Des lamelles d'os laquées de noir, lacées de soie rouge. Légères comme une ombre, dures comme une rancune."
+    },
+    "haori-ignifuge": {
+      "name": "Haori ignifugé",
+      "slot": "plastron",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 20, "armor": 0.06 },
+      "summary": "Ton Bouclier de flammes absorbe 50 % de plus et brûle 50 % plus fort.",
+      "effects": [
+        { "op": "mul", "path": "sorcier.ward.shield", "value": 1.5 },
+        { "op": "mul", "path": "sorcier.ward.burn", "value": 1.5 }
+      ],
+      "description": "Une veste d'onmyōji doublée de papier huilé et cousue de fils d'amiante. Elle sent le roussi, jamais le brûlé."
     },
     "haidate-shikome": {
       "name": "Haidate de shikome",
       "slot": "jambieres",
       "rarity": "peu commune",
       "tags": ["Lame"],
-      "set": "os-shikome",
-      "bonus": { "speed": 0.05, "armor": 0.03 },
+      "bonus": { "maxHp": 10, "armor": 0.04 },
+      "summary": "Après un Pas de l'ombre, un bouclier de 10 % de tes PV max pendant 2 s.",
+      "effects": [{ "op": "set", "path": "perks.dashShield", "value": { "amount": 0.1, "duration": 2 } }],
       "description": "Des tassettes d'os qui cliquettent à peine. Les shikome courent vite ; leurs os aussi."
     },
     "waraji-meute": {
@@ -858,17 +979,35 @@
       "slot": "bottes",
       "rarity": "peu commune",
       "tags": ["Lame"],
-      "set": "os-shikome",
-      "bonus": { "dodge": 0.15, "maxHp": 4 },
+      "bonus": { "maxHp": 6, "dodge": 0.15 },
+      "summary": "Danse des lames : 2 cibles de plus, et elle revient 3 s plus tôt.",
+      "effects": [
+        { "op": "add", "path": "blade.dance.targets", "value": 2 },
+        { "op": "add", "path": "blade.dance.cooldown", "value": -3 }
+      ],
       "description": "Des sandales de paille renforcées de phalanges. La meute des furies les porte pour bondir sans glisser."
+    },
+    "geta-braise": {
+      "name": "Geta de braise",
+      "slot": "bottes",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 6, "dodge": 0.15, "speed": 0.05 },
+      "summary": "La Fuite de feu porte 30 % plus loin, et sa traînée brûle deux fois plus longtemps.",
+      "effects": [
+        { "op": "mul", "path": "sorcier.flight.distance", "value": 1.3 },
+        { "op": "mul", "path": "sorcier.flight.trailLife", "value": 2 }
+      ],
+      "description": "Des socques de bois noirci. Chaque pas laisse une braise que le vent du Yomi n'éteint pas."
     },
     "zukin-sohei": {
       "name": "Zukin de sōhei",
       "slot": "casque",
       "rarity": "peu commune",
       "tags": ["Paladin"],
-      "set": "sohei",
-      "bonus": { "maxHp": 10, "armor": 0.03 },
+      "bonus": { "maxHp": 12, "armor": 0.04 },
+      "summary": "Ta garde remonte 25 % plus vite.",
+      "effects": [{ "op": "mul", "path": "paladin.guard.regen", "value": 1.25 }],
       "description": "La capuche blanche des moines-soldats, nouée sous les yeux. Le moine du Rocher en portait une, il y a longtemps."
     },
     "kesa-sohei": {
@@ -876,8 +1015,9 @@
       "slot": "plastron",
       "rarity": "rare",
       "tags": ["Paladin"],
-      "set": "sohei",
-      "bonus": { "maxHp": 15, "armor": 0.08 },
+      "bonus": { "maxHp": 20, "armor": 0.1 },
+      "summary": "Ta garde s'use 25 % moins vite.",
+      "effects": [{ "op": "mul", "path": "paladin.guard.cost", "value": 0.75 }],
       "description": "Une étole de moine cousue sur une cuirasse de temple. On y prie et on s'y abrite, souvent en même temps."
     },
     "haidate-temple": {
@@ -885,8 +1025,11 @@
       "slot": "jambieres",
       "rarity": "peu commune",
       "tags": ["Paladin"],
-      "set": "sohei",
-      "bonus": { "armor": 0.06 },
+      "bonus": { "maxHp": 10, "armor": 0.06 },
+      "summary": "Quand ta garde se brise, une onde de lumière repousse les yokai autour de toi et les ralentit de moitié 2 s.",
+      "effects": [
+        { "op": "set", "path": "perks.guardBreakNova", "value": { "radius": 3, "stun": 2, "knockback": 7 } }
+      ],
       "description": "Des jambières de fer frappées du soleil du temple, noircies par la foudre des ikazuchi."
     },
     "geta-temple": {
@@ -894,8 +1037,9 @@
       "slot": "bottes",
       "rarity": "peu commune",
       "tags": ["Paladin"],
-      "set": "sohei",
-      "bonus": { "maxHp": 6, "armor": 0.03 },
+      "bonus": { "maxHp": 8, "armor": 0.04 },
+      "summary": "Le Marteau lancé revient 1 s plus tôt.",
+      "effects": [{ "op": "add", "path": "paladin.hammer.cooldown", "value": -1 }],
       "description": "De hautes sandales à une seule dent, pour garder l'équilibre sous les coups. Un moine en a perdu une en fuyant la foudre."
     },
     "jingasa-laque": {
@@ -903,8 +1047,9 @@
       "slot": "casque",
       "rarity": "peu commune",
       "tags": ["Rôdeur"],
-      "set": "eclaireur",
-      "bonus": { "maxHp": 8 },
+      "bonus": { "maxHp": 6, "damage": 0.08 },
+      "summary": "Le tir chargé se bande 15 % plus vite.",
+      "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.85 }],
       "description": "Le chapeau plat des fantassins, laqué de noir. Il cache les yeux ; les yokai ne voient pas qui les vise."
     },
     "do-cuir-noir": {
@@ -912,8 +1057,9 @@
       "slot": "plastron",
       "rarity": "rare",
       "tags": ["Rôdeur"],
-      "set": "eclaireur",
-      "bonus": { "maxHp": 10, "armor": 0.06 },
+      "bonus": { "maxHp": 20, "armor": 0.06 },
+      "summary": "La cible de ta Marque du chasseur fait 35 % de dégâts en moins.",
+      "effects": [{ "op": "set", "path": "perks.huntMarkWeaken", "value": 0.35 }],
       "description": "Une cuirasse de cuir bouilli des éclaireurs de l'armée du Yomi. Elle sent la fumée et la pluie."
     },
     "kyahan-eclaireur": {
@@ -921,8 +1067,9 @@
       "slot": "jambieres",
       "rarity": "peu commune",
       "tags": ["Rôdeur"],
-      "set": "eclaireur",
-      "bonus": { "speed": 0.05, "maxHp": 4 },
+      "bonus": { "maxHp": 10, "speed": 0.05 },
+      "summary": "Le Recul revient 2 s plus tôt.",
+      "effects": [{ "op": "add", "path": "ranger.leap.cooldown", "value": -2 }],
       "description": "Des bandes de toile serrées autour des mollets, pour marcher des jours sans s'arrêter."
     },
     "waraji-eclaireur": {
@@ -930,8 +1077,12 @@
       "slot": "bottes",
       "rarity": "peu commune",
       "tags": ["Rôdeur"],
-      "set": "eclaireur",
-      "bonus": { "maxHp": 5, "speed": 0.04, "dodge": 0.1 },
+      "bonus": { "maxHp": 8, "speed": 0.04, "dodge": 0.1 },
+      "summary": "La Flèche-filet revient 3 s plus tôt et s'ouvre 30 % plus large.",
+      "effects": [
+        { "op": "add", "path": "ranger.net.cooldown", "value": -3 },
+        { "op": "mul", "path": "ranger.net.radius", "value": 1.3 }
+      ],
       "description": "Des sandales de paille tressée serré. Les éclaireurs du Yomi les usent en une nuit, et en retressent une paire le matin."
     },
     "ema-tetsu": {
@@ -953,30 +1104,6 @@
       "name": "Tablette d'argile fêlée",
       "rarity": "quête",
       "description": "Un fragment de tablette couvert d'écriture cunéiforme. Il est tiède, comme s'il battait encore."
-    }
-  },
-  "sets": {
-    "about": "Panoplies : porter plusieurs pièces d'une panoplie (le champ set des objets) donne ses bonus, en plus des tags de classe.",
-    "os-shikome": {
-      "name": "Lamelles d'os de shikome",
-      "bonuses": [
-        { "count": 2, "summary": "+15 % de PV max", "effects": [{ "op": "mul", "path": "perks.maxHpFactor", "value": 1.15 }] },
-        { "count": 4, "summary": "Après un Pas de l'ombre, un bouclier de 8 % de tes PV max pendant 2 s", "effects": [{ "op": "set", "path": "perks.dashShield", "value": { "amount": 0.08, "duration": 2 } }] }
-      ]
-    },
-    "sohei": {
-      "name": "Sōhei",
-      "bonuses": [
-        { "count": 2, "summary": "La garde remonte 25 % plus vite", "effects": [{ "op": "mul", "path": "paladin.guard.regen", "value": 1.25 }] },
-        { "count": 4, "summary": "Quand ta garde se brise, une onde de lumière repousse les yokai autour de toi et les ralentit de moitié 2 s", "effects": [{ "op": "set", "path": "perks.guardBreakNova", "value": { "radius": 3, "stun": 2, "knockback": 7 } }] }
-      ]
-    },
-    "eclaireur": {
-      "name": "Éclaireur du Yomi",
-      "bonuses": [
-        { "count": 2, "summary": "+15 % de PV max", "effects": [{ "op": "mul", "path": "perks.maxHpFactor", "value": 1.15 }] },
-        { "count": 4, "summary": "La cible de ta Marque du chasseur fait 25 % de dégâts en moins", "effects": [{ "op": "set", "path": "perks.huntMarkWeaken", "value": 0.25 }] }
-      ]
     }
   },
   "materials": {
@@ -1010,7 +1137,8 @@
         { "item": "tetsubo-cloche", "chance": 0.25 },
         { "item": "coupelle-kappa", "chance": 0.15 },
         { "item": "tasse-ebrechee", "chance": 0.6, "if": [{ "quest": "tasse", "is": "active" }, { "notHas": "tasse-ebrechee" }] },
-        { "item": "gourde-sake-oni", "chance": 0.15 }
+        { "item": "gourde-sake-oni", "chance": 0.15 },
+        { "item": "ecaille-ryujin", "chance": 0.12 }
       ]
     },
     "kasaObake": {
@@ -1020,7 +1148,8 @@
       "chance": 0.6,
       "items": [
         { "item": "hankyu", "chance": 0.06 },
-        { "item": "tabi-messager", "chance": 0.05 }
+        { "item": "tabi-messager", "chance": 0.05 },
+        { "item": "geta-braise", "chance": 0.05 }
       ]
     },
     "oublie": {
@@ -1032,7 +1161,8 @@
         { "item": "kabuto-fendu", "chance": 0.06 },
         { "item": "kusarigama", "chance": 0.04 },
         { "item": "masque-hannya", "chance": 0.04 },
-        { "item": "tabi-shinobi", "chance": 0.04 }
+        { "item": "tabi-shinobi", "chance": 0.04 },
+        { "item": "pinceau-seimei", "chance": 0.04 }
       ]
     },
     "araignee": { "oboles": 1, "xp": 1 },
@@ -1061,7 +1191,8 @@
       "chance": 0.35,
       "items": [
         { "item": "haidate-shikome", "chance": 0.05 },
-        { "item": "waraji-meute", "chance": 0.05 }
+        { "item": "waraji-meute", "chance": 0.05 },
+        { "item": "kemuri-dama", "chance": 0.04 }
       ]
     },
     "ikazuchi": {
@@ -1072,7 +1203,9 @@
       "items": [
         { "item": "arc-ikazuchi", "chance": 0.03 },
         { "item": "haidate-temple", "chance": 0.05 },
-        { "item": "geta-temple", "chance": 0.05 }
+        { "item": "geta-temple", "chance": 0.05 },
+        { "item": "eboshi-amaterasu", "chance": 0.04 },
+        { "item": "ofuda-kagutsuchi", "chance": 0.04 }
       ]
     },
     "ikusa": {
@@ -1085,7 +1218,8 @@
         { "item": "nodachi-ikusa", "chance": 0.02 },
         { "item": "shimenawa-tressee", "chance": 0.05 },
         { "item": "kyahan-eclaireur", "chance": 0.05 },
-        { "item": "waraji-eclaireur", "chance": 0.05 }
+        { "item": "waraji-eclaireur", "chance": 0.05 },
+        { "item": "plume-yatagarasu", "chance": 0.04 }
       ]
     },
     "izanami": {
@@ -1104,6 +1238,8 @@
         { "item": "nodachi-ikusa", "chance": 0.2 },
         { "item": "arc-ikazuchi", "chance": 0.2 },
         { "item": "yomotsu-hegui", "chance": 0.1 },
+        { "item": "encre-shinigami", "chance": 0.1 },
+        { "item": "fleches-hahaya", "chance": 0.1 },
         { "item": "corne-oni", "chance": 0.12, "if": [{ "race": "hanyo" }] },
         { "item": "tsuba-ronin-mort", "chance": 0.12, "if": [{ "race": "einherjar" }] }
       ]
@@ -1152,6 +1288,8 @@
         { "item": "miroir-yata", "price": 180, "weight": 1 },
         { "item": "arc-soie", "price": 180, "weight": 1 },
         { "item": "tsuba-ebrechee", "price": 110, "weight": 2 },
+        { "item": "ecaille-ryujin", "price": 140, "weight": 1 },
+        { "item": "ofuda-kagutsuchi", "price": 110, "weight": 2 },
         { "material": "soie", "count": 2, "price": 45, "weight": 2 },
         { "material": "ecaille", "count": 5, "price": 30, "weight": 3 },
         { "material": "masque", "count": 4, "price": 30, "weight": 3 },
@@ -1172,6 +1310,8 @@
         { "item": "voile-izanami", "price": 170, "weight": 1 },
         { "item": "peigne-izanagi", "price": 190, "weight": 1 },
         { "item": "encensoir-moine", "price": 150, "weight": 2 },
+        { "item": "tambour-temple", "price": 160, "weight": 1 },
+        { "item": "fleches-hahaya", "price": 190, "weight": 1 },
         { "material": "os", "count": 5, "price": 35, "weight": 3 },
         { "material": "foudre", "count": 3, "price": 40, "weight": 3 },
         { "material": "soie", "count": 2, "price": 45, "weight": 2 },
@@ -1181,12 +1321,12 @@
   },
   "forge": {
     "upgrade": {
-      "about": "Amélioration chez Tetsu, plafonnée au niveau du joueur (GDD). Coût du niveau n au niveau n+1 : base × n^exposant oboles, (1 + n ÷ materialEvery) matériaux de l'emplacement, et à partir de bossMaterial.from un matériau du boss. Le niveau de l'arme multiplie tous ses dégâts (coup, Frappe fracassante, Bond, foudre) ; celui d'une pièce multiplie ses PV, dégâts et armure. Vitesse, esquive et oboles ne montent pas : les paliers ouvrent des options plutôt que des stats brutes.",
+      "about": "Amélioration chez Tetsu, plafonnée au niveau du joueur (GDD). Coût du niveau n au niveau n+1 : base × n^exposant oboles, (1 + n ÷ materialEvery) matériaux de l'emplacement, et à partir de bossMaterial.from un matériau du boss. Le niveau de l'arme multiplie tous ses dégâts (coup, Frappe fracassante, Bond, foudre), comme le niveau du héros (skills.json, levels.damagePerLevel) ; celui d'une pièce multiplie ses PV, ses dégâts (en %) et son armure. Vitesse, esquive et oboles ne montent pas : les paliers ouvrent des options plutôt que des stats brutes. Équipement complet forgé au niveau du héros : à peu près deux fois ses dégâts et ses PV effectifs sans objet (la moitié de sa puissance).",
       "maxLevel": 50,
       "slots": ["arme", "casque", "plastron", "jambieres", "bottes", "amulette"],
-      "weaponPerLevel": 0.06,
-      "hpPerLevel": 0.1,
-      "damagePerLevel": 0.06,
+      "weaponPerLevel": 0.033,
+      "hpPerLevel": 0.09,
+      "damagePerLevel": 0.01,
       "armorPerLevel": 0.01,
       "armorCap": 0.6,
       "oboles": { "base": 8, "exponent": 1.2 },
@@ -1215,7 +1355,9 @@
       { "item": "zukin-sohei", "oboles": 35, "materials": { "papier": 2, "seve": 1 } },
       { "item": "kesa-sohei", "oboles": 50, "materials": { "papier": 3, "seve": 2 } },
       { "item": "jingasa-laque", "oboles": 35, "materials": { "papier": 2, "braise": 1 } },
-      { "item": "do-cuir-noir", "oboles": 50, "materials": { "ecaille": 2, "papier": 2 } }
+      { "item": "do-cuir-noir", "oboles": 50, "materials": { "ecaille": 2, "papier": 2 } },
+      { "item": "pinceau-seimei", "oboles": 60, "materials": { "papier": 4, "masque": 2 } },
+      { "item": "haori-ignifuge", "oboles": 50, "materials": { "braise": 3, "papier": 2 } }
     ]
   }
 }

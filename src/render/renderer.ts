@@ -31,6 +31,7 @@ import {
   drawCrescent,
   drawGround,
   drawHammer,
+  drawSeal,
   drawHeroPlaceholder,
   drawJorogumo,
   drawJizo,
@@ -98,10 +99,8 @@ interface Snapshot {
   aura?: boolean;
   /** Ennemi d'élite (niveau de donjon élevé). */
   elite?: boolean;
-  /** Âme liée de l'Invocateur : bleue et translucide, elle pâlit avec sa vigueur (de 1 à 0). */
+  /** Allié relevé par le Paladin : doré et translucide, il pâlit avec sa vigueur (de 1 à 0). */
   spirit?: number;
-  /** Âme relevée par le Paladin : dorée plutôt que bleue. */
-  holy?: boolean;
   /** Marque de la Lame ou du Rôdeur : un anneau tourne sous l'ennemi. */
   mark?: MarkKind | null;
   /** Lame invisible : on ne voit plus qu'une ombre. */
@@ -200,13 +199,14 @@ const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
 const DUST = new Color3(0.86, 0.78, 0.6);
 const SILK = new Color3(0.93, 0.95, 0.98);
 const FIRE = new Color3(1, 0.55, 0.2);
+/** Sceau du Sorcier : rouge vermillon des ofuda. */
+const SEAL = new Color3(1, 0.35, 0.25);
 const FRENZY_TINT = new Color3(1, 0.7, 0.6);
 const ELITE_TINT = new Color3(1, 0.62, 0.38);
 const ELITE_SCALE = 1.22;
 const GLARE_TINT = new Color3(1, 0.42, 0.48);
 const PEACH = new Color3(1, 0.72, 0.62);
 const STORM = new Color3(0.8, 0.9, 1);
-const SPIRIT_TINT = new Color3(0.55, 0.95, 1.1);
 const CLAY = new Color3(0.78, 0.55, 0.35);
 const DIVINE = new Color3(1, 0.86, 0.45);
 const HOLY_TINT = new Color3(1.15, 1, 0.6);
@@ -316,7 +316,7 @@ export class Renderer {
   private time = 0;
   private readonly sprites = new Map<string, SpriteEntry>();
   private readonly fxTextures: Record<
-    'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'arrow' | 'hammer',
+    'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'arrow' | 'hammer' | 'seal',
     BaseTexture
   >;
   private readonly views = new Map<number, EntityView>();
@@ -327,13 +327,16 @@ export class Renderer {
   private readonly channels = new Map<number, Fx>();
   private readonly landings = new Map<number, Fx>();
   private readonly snares = new Map<number, Fx>();
-  /** Halos des âmes au sol, en attente d'être liées. */
-  private readonly souls = new Map<number, Fx>();
-  /** Flèches et marteau en vol. */
+  /** Sorcier : sceaux et météores annoncés au sol, braises de la Fuite de feu et du Sol brûlant. */
+  private readonly blasts = new Map<number, Fx>();
+  private readonly embers = new Map<number, Fx>();
+  /** Flèches, marteau et boules de feu en vol. */
   private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  /** Bouclier de flammes du Sorcier, un par héros. */
+  private readonly wardDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   private readonly smokeDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   /** Coop : les autres héros, leur planche et l'étiquette à leur nom. */
   private allies: { sprite: string; name: string; label: HTMLElement }[] = [];
@@ -412,6 +415,7 @@ export class Renderer {
       streak: this.canvasTexture('streak', drawStreak()),
       arrow: this.canvasTexture('arrow', drawArrow()),
       hammer: this.canvasTexture('hammer', drawHammer()),
+      seal: this.canvasTexture('seal', drawSeal()),
     };
     this.threads = this.createThreads();
   }
@@ -549,9 +553,7 @@ export class Renderer {
         altitude: 0,
         spawn: summon.spawnProgress,
         blink: false,
-        aura: (world.players[summon.owner]?.choir ?? 0) > 0,
         spirit: summon.vigor,
-        holy: summon.holy,
       }, dt);
     }
     for (const [id, view] of this.views) {
@@ -565,6 +567,7 @@ export class Renderer {
     this.syncAttackGuide(world);
     this.syncProjectiles(world.projectiles, dt);
     this.syncAura(world);
+    this.syncWard(world);
     this.syncSmoke(world);
     this.syncAim(world);
     this.syncStumps(world.stumps);
@@ -597,10 +600,11 @@ export class Renderer {
     this.channels.clear();
     this.landings.clear();
     this.snares.clear();
-    this.souls.clear();
+    this.blasts.clear();
+    this.embers.clear();
     for (const view of this.projectiles.values()) this.disposeFx(view);
     this.projectiles.clear();
-    for (const decal of [...this.auraDecals.values(), ...this.smokeDecals.values()]) decal.mesh.isVisible = false;
+    for (const decal of [...this.auraDecals.values(), ...this.wardDecals.values(), ...this.smokeDecals.values()]) decal.mesh.isVisible = false;
     this.setAllies([]);
     if (this.aimDecal) this.aimDecal.mesh.isVisible = false;
     if (this.attackGuide) this.attackGuide.mesh.isVisible = false;
@@ -702,10 +706,9 @@ export class Renderer {
     if (s.elite && tint === WHITE) tint = Color3.Lerp(WHITE, ELITE_TINT, 0.65 + 0.35 * Math.sin(t * 5));
     // Izanami regardée : elle rougeoie à mesure que sa colère monte.
     if (s.glare && tint === WHITE) tint = Color3.Lerp(WHITE, GLARE_TINT, s.glare * (0.8 + 0.2 * Math.sin(t * 12)));
-    // Âme liée : toujours bleue, plus vive pendant le Chœur, de plus en plus pâle avant de s'effacer.
+    // Allié relevé : doré, de plus en plus pâle avant de s'effacer.
     if (s.spirit !== undefined) {
-      const base = s.holy ? HOLY_TINT : SPIRIT_TINT;
-      tint = s.aura ? Color3.Lerp(base, WHITE, 0.3 + 0.3 * Math.sin(t * 10)) : base;
+      tint = HOLY_TINT;
       alpha *= 0.35 + 0.4 * s.spirit;
     }
     // Invisible (Écran de fumée) : une silhouette sombre, à peine visible.
@@ -839,7 +842,7 @@ export class Renderer {
 
   // --- Classes : projectiles, aura, fumée ------------------------------------
 
-  /** Flèches et marteau : un décalque qui vole à hauteur de poitrine, dans le sens de sa course. */
+  /** Flèches, marteau et boules de feu : un décalque qui vole à hauteur de poitrine, dans le sens de sa course. */
   private syncProjectiles(projectiles: readonly ProjectileView[], dt: number): void {
     const seen = new Set<number>();
     for (const p of projectiles) {
@@ -847,9 +850,11 @@ export class Renderer {
       let view = this.projectiles.get(p.id);
       if (!view) {
         const hammer = p.kind === 'hammer';
-        const texture = hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : this.fxTextures.arrow;
-        const [width, depth] = hammer ? [1.2, 1.2] : p.kind === 'net' ? [0.8, 0.8] : [1.1, 0.22];
-        view = this.createDecal(`projectile-${p.id}`, texture, width * (p.full ? 1.3 : 1), depth, p.full ? DRAW : WHITE, 1, PROJECTILE_HEIGHT);
+        const fire = p.kind === 'fireball';
+        const texture = hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : fire ? this.fxTextures.shadow : this.fxTextures.arrow;
+        const [width, depth] = hammer ? [1.2, 1.2] : p.kind === 'net' ? [0.8, 0.8] : fire ? [0.75, 0.75] : [1.1, 0.22];
+        const color = fire ? FIRE : p.full ? DRAW : WHITE;
+        view = this.createDecal(`projectile-${p.id}`, texture, width * (p.full ? 1.3 : 1), depth, color, 1, PROJECTILE_HEIGHT);
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
       }
@@ -939,6 +944,27 @@ export class Renderer {
       mesh.scaling.setAll(radius * (1 + 0.03 * Math.sin(this.time * 4)));
       // Elle pâlit pendant sa dernière seconde.
       material.setFloat('alpha', 0.55 * Math.min(1, hero.aura) + 0.15 * Math.sin(this.time * 6));
+    }
+  }
+
+  /** Bouclier de flammes du Sorcier : un anneau de feu qui suit le héros tant qu'il tient, et vacille. */
+  private syncWard(world: WorldView): void {
+    for (const hero of world.players) {
+      const active = hero.ward > 0 && !hero.dead;
+      let decal = this.wardDecals.get(hero.id);
+      if (!active && !decal) continue;
+      if (!decal) {
+        decal = this.createDecal(`ward-${hero.id}`, this.fxTextures.ring, 2, 2, FIRE, 0.8, 0.03);
+        decal.mesh.alphaIndex = DECAL_ORDER + 1;
+        this.wardDecals.set(hero.id, decal);
+      }
+      const { mesh, material } = decal;
+      mesh.isVisible = active;
+      if (!active) continue;
+      mesh.position.x = hero.pos.x;
+      mesh.position.z = hero.pos.z;
+      mesh.scaling.setAll(hero.cfg.sorcier.ward.radius * (1 + 0.06 * Math.sin(this.time * 11)));
+      material.setFloat('alpha', 0.6 * Math.min(1, hero.ward * 2) + 0.2 * Math.sin(this.time * 17));
     }
   }
 
@@ -1431,40 +1457,82 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 3, RAGE, 0.5));
         this.addShake(0.4);
         break;
-      case 'soulSet': {
-        // Le halo d'une âme au sol respire doucement tant qu'on peut la lier.
+      case 'blast': {
+        // Sceau : le seiman se trace et s'éclaire jusqu'à l'explosion. Météore : un cercle de feu qui se resserre.
+        const duration = event.delay;
+        const seal = event.kind === 'seal';
         const fx = this.addFx({
-          ...this.ringFx(event.pos, 1.4, SPIRIT, 60),
-          y: 0.024,
+          texture: seal ? this.fxTextures.seal : this.fxTextures.ring,
+          pos: event.pos,
+          dir: { x: 1, z: 0 },
+          width: event.radius * 2,
+          depth: event.radius * 2,
+          color: seal ? SEAL : FIRE,
+          life: duration + 1,
+          y: 0.026,
           update: (_k, f) => {
-            f.mesh.scaling.setAll(0.85 + 0.15 * Math.sin(f.age * 5));
-            f.material.setFloat('alpha', Math.min(0.85, f.age * 4) * (0.6 + 0.3 * Math.sin(f.age * 5)));
+            const ramp = Math.min(1, f.age / Math.max(0.01, duration));
+            if (seal) f.mesh.rotation.y = f.age * 1.5;
+            else f.mesh.scaling.setAll(1.5 - 0.5 * ramp);
+            f.material.setFloat('alpha', 0.35 + 0.65 * ramp);
           },
         });
-        this.souls.set(event.id, fx);
+        this.blasts.set(event.id, fx);
+        if (!seal) this.text(event.pos, 2.6, 'Météore !', 'rage', 1.2);
         break;
       }
-      case 'soulEnd':
-        this.endTracked(this.souls, event.id);
+      case 'blastEnd': {
+        this.endTracked(this.blasts, event.id);
+        const meteor = event.kind === 'meteor';
+        this.addFx(this.ringFx(event.pos, event.radius * 2.2, FIRE, meteor ? 0.6 : 0.35));
+        this.addFx(this.ringFx(event.pos, event.radius * (meteor ? 2.8 : 1.6), meteor ? DUST : SEAL, meteor ? 0.7 : 0.3));
+        this.addShake(meteor ? 0.9 : 0.25);
         break;
-      case 'bind':
-        this.text(event.pos, 2, 'Âme liée', 'parry');
-        this.addFx(this.ringFx(event.pos, 2.4, SPIRIT, 0.45));
+      }
+      case 'ember': {
+        const life = event.life;
+        const fx = this.addFx({
+          texture: this.fxTextures.shadow,
+          pos: event.pos,
+          dir: { x: 1, z: 0 },
+          width: event.radius * 2,
+          depth: event.radius * 2,
+          color: FIRE,
+          life: life + 1,
+          y: 0.024,
+          update: (_k, f) => f.material.setFloat('alpha', Math.min(0.75, f.age * 6, (life - f.age) * 1.5) * (0.75 + 0.25 * Math.sin(f.age * 13))),
+        });
+        this.embers.set(event.id, fx);
         break;
-      case 'bindFail':
-        this.text(event.pos, 2.3, 'Aucune âme à portée', 'stun', 0.8);
+      }
+      case 'emberEnd':
+        this.endTracked(this.embers, event.id);
         break;
-      case 'recall':
-        this.addFx(this.ringFx(event.pos, 2, SPIRIT, 0.3));
+      case 'ward':
+        this.text(event.pos, 2.4, 'Bouclier de flammes', 'rage', 1.1);
+        this.addFx(this.ringFx(event.pos, event.radius * 2.4, FIRE, 0.4));
         break;
-      case 'sacrifice':
-        this.addFx(this.ringFx(event.pos, event.radius * 2, SPIRIT, 0.4));
-        this.addFx(this.ringFx(event.pos, event.radius * 2.6, SHADOW_STRIKE, 0.5));
-        this.addShake(0.6);
+      case 'wardEnd':
+        this.addFx(this.ringFx(event.pos, 2, FIRE, 0.3));
         break;
-      case 'choir':
-        this.text(event.pos, 2.3, 'Chœur spectral', 'parry', 1.2);
-        this.addFx(this.ringFx(event.pos, event.radius * 2, SPIRIT, 0.6));
+      case 'flight': {
+        const dir = { x: event.to.x - event.from.x, z: event.to.z - event.from.z };
+        const len = Math.hypot(dir.x, dir.z);
+        if (len < 0.1) break;
+        this.addFx({
+          texture: this.fxTextures.streak,
+          pos: { x: (event.from.x + event.to.x) / 2, z: (event.from.z + event.to.z) / 2 },
+          dir,
+          width: len,
+          depth: 0.9,
+          color: FIRE,
+          life: 0.35,
+          update: (k, fx) => fx.material.setFloat('alpha', 0.85 * (1 - k)),
+        });
+        break;
+      }
+      case 'noMana':
+        this.text(event.pos, 2.3, 'Pas assez de mana', 'stun', 0.7);
         break;
       case 'summonHit': {
         const view = this.views.get(event.id);

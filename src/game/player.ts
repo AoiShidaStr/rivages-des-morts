@@ -9,8 +9,8 @@ const ATTACK_BUFFER = 0.2;
 
 type Action =
   | { kind: 'free' }
-  /** `crit` : multiplicateur de critique du coup (1 : coup normal). */
-  | { kind: 'attack'; t: number; dir: Vec2; hit: Set<number>; swung: boolean; crit: number }
+  /** `crit` : multiplicateur de critique du coup (1 : coup normal) ; `aim` : le point visé au clic (boules de feu). */
+  | { kind: 'attack'; t: number; dir: Vec2; hit: Set<number>; swung: boolean; crit: number; aim: Vec2 }
   | { kind: 'dodge'; t: number; dir: Vec2 }
   /** `full` : lancée à rage pleine (Gourde de saké d'oni). */
   | { kind: 'smash'; t: number; dir: Vec2; landed: boolean; full: boolean }
@@ -19,12 +19,15 @@ type Action =
   /** Danse des lames : `index` est la cible en cours ; chaque pas dure `blade.dance.hop`. */
   | { kind: 'dance'; t: number; targets: number[]; index: number }
   | { kind: 'draw'; t: number }
-  | { kind: 'leap'; t: number; from: Vec2; to: Vec2 };
+  | { kind: 'leap'; t: number; from: Vec2; to: Vec2 }
+  /** Fuite de feu du Sorcier : `embers` braises déjà semées sur la traînée. */
+  | { kind: 'flight'; t: number; dir: Vec2; embers: number };
 
 /**
  * Le héros : il frappe à l'arme et esquive, quelle que soit sa classe.
  * Guerrier (`cfg.kit`) : bloque pour remplir sa rage, et la dépense en Frappe fracassante (A), Bond (E) et Frénésie (R).
- * Invocateur : lie les âmes des vaincus (clic droit) et les commande : Rappel (A), Sacrifice (E), Chœur spectral (R).
+ * Sorcier : boules de feu guidées (clic gauche) et sorts payés en mana : sceau (clic droit), Bouclier de flammes (A),
+ * Fuite de feu (E), grand météore (R).
  * Lame : traverse les ennemis en les marquant (clic droit) : Marque de mort (A), Écran de fumée (E), Danse des lames (R).
  * Paladin : bouclier levé (clic droit), Aura de lumière (A), Marteau lancé (E), Relever (R).
  * Rôdeur : tire à l'arc, tir chargé (clic droit), Flèche-filet (A), Marque du chasseur (E), Recul (R).
@@ -61,12 +64,15 @@ export class Player {
   /** Secondes pendant lesquelles la Coupelle du kappa reste vide après un coup reçu. */
   coupelleEmpty = 0;
   private bearSkinUsed = false;
-  /** Invocateur : recharges du Rappel, du Sacrifice et du Chœur spectral. */
-  recallCooldown = 0;
-  sacrificeCooldown = 0;
-  choirCooldown = 0;
-  /** Âmes liées actives, tenu à jour par le monde : chacune affaiblit l'Invocateur. */
-  summonCount = 0;
+  /** Sorcier : mana, recharges du sceau, du Bouclier de flammes, de la Fuite de feu et du météore. */
+  mana: number;
+  sealCooldown = 0;
+  wardCooldown = 0;
+  flightCooldown = 0;
+  meteorCooldown = 0;
+  /** Sorcier : secondes de Bouclier de flammes restantes (il brûle tant qu'il tient), et prochaine brûlure. */
+  ward = 0;
+  wardTick = 0;
   /** Oushebti : secondes avant que la carapace d'argile ne se reforme (0 : elle est prête). */
   clayCooldown = 0;
   /** Hanyō : jauge de sang yokai (en dégâts infligés) et secondes de transformation restantes. */
@@ -102,7 +108,7 @@ export class Player {
   leapCooldown = 0;
   /** Demi-dieu : l'Égide divine a déjà servi pendant cette vague. */
   private aegisUsed = false;
-  /** Soin des âmes pas encore versé (voir `leech`). */
+  /** Vol de vie pas encore versé (voir `leech`). */
   private leechPool = 0;
   /** Coups d'arme portés pendant la descente (foudre du fils de Zeus). */
   private hits = 0;
@@ -124,8 +130,6 @@ export class Player {
   aura = 0;
   auraTick = 0;
   readonly auraStunned = new Set<number>();
-  /** Invocateur : secondes de Chœur spectral restantes. */
-  choir = 0;
   /** Lame : nuage de l'Écran de fumée, que les yokai prennent pour le héros tant qu'il est invisible. */
   smoke: Decoy | null = null;
   /** Coop : secondes passées par un allié à le relever, tant que le héros est à terre. */
@@ -135,7 +139,7 @@ export class Player {
   /** Secondes depuis que la garde est levée (blocage parfait), et retard réseau du joueur (un invité, en coop). */
   private guardHeld = 0;
   latency = 0;
-  /** Bouclier temporaire (panoplie de la Lame) : PV absorbés avant les vrais, et secondes restantes. */
+  /** Bouclier temporaire (Haidate de shikome, Bouclier de flammes) : PV absorbés avant les vrais, et secondes restantes. */
   barrier = 0;
   private barrierTime = 0;
   /** Dogū aux yeux clos : coups que la carapace d'argile peut encore absorber avant d'éclater. */
@@ -156,6 +160,7 @@ export class Player {
     this.hp = cfg.maxHp;
     this.dashCharges = cfg.blade.shadowDash.charges;
     this.clayLeft = cfg.perks?.clayCharges ?? 1;
+    this.mana = cfg.sorcier.mana.max;
   }
 
   get radius(): number {
@@ -166,10 +171,10 @@ export class Player {
     return this.hp <= 0;
   }
 
-  /** Esquive, bond, Pas de l'ombre, Danse, Recul : le héros traverse les ennemis. */
+  /** Esquive, bond, Pas de l'ombre, Danse, Recul, Fuite de feu : le héros traverse les ennemis. */
   get dodging(): boolean {
     const kind = this.action.kind;
-    return kind === 'dodge' || kind === 'bond' || kind === 'shadowDash' || kind === 'dance' || kind === 'leap';
+    return kind === 'dodge' || kind === 'bond' || kind === 'shadowDash' || kind === 'dance' || kind === 'leap' || kind === 'flight';
   }
 
   get canSmash(): boolean {
@@ -212,6 +217,7 @@ export class Player {
         return a.t < this.cfg.smash.windup ? 'windup' : 'strike';
       case 'dodge':
       case 'shadowDash':
+      case 'flight':
         return 'dash';
       case 'dance':
         return 'strike';
@@ -226,7 +232,7 @@ export class Player {
     }
   }
 
-  /** Multiplicateur des dégâts infligés : race, talents, Coupelle du kappa, âmes liées. */
+  /** Multiplicateur des dégâts infligés : race, talents, Coupelle du kappa, objets. */
   damageMultiplier(): number {
     const perks = this.cfg.perks ?? {};
     const missing = 1 - this.hp / this.cfg.maxHp;
@@ -237,8 +243,7 @@ export class Player {
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
-    // Chaque âme active affaiblit l'Invocateur (GDD : pas de limite stricte, un malus par invocation).
-    return factor * Math.max(0.2, 1 - this.cfg.summon.malus * this.summonCount);
+    return factor;
   }
 
   /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
@@ -246,7 +251,7 @@ export class Player {
     return walkFactor(this.cfg, this.hp, this.transformed) * this.shotSlow;
   }
 
-  /** Soin goutte à goutte (âmes de l'Invocateur) : versé par petites gorgées, pour ne pas couvrir l'écran de chiffres. */
+  /** Soin goutte à goutte (vol de vie du Guerrier au bord du gouffre) : versé par petites gorgées, pour ne pas couvrir l'écran de chiffres. */
   leech(amount: number, world: World): void {
     this.leechPool += amount;
     if (this.leechPool < LEECH_SIP) return;
@@ -254,7 +259,7 @@ export class Player {
     this.leechPool = 0;
   }
 
-  /** Part des soins reçus (Yomotsu-hegui : la nourriture du Yomi retient chez les morts). */
+  /** Part des soins et des boucliers reçus (Yomotsu-hegui : la nourriture du Yomi retient chez les morts). */
   get healFactor(): number {
     return this.cfg.perks?.yomotsu?.healing ?? 1;
   }
@@ -321,9 +326,6 @@ export class Player {
     this.frenzyCooldown = Math.max(0, this.frenzyCooldown - dt);
     this.frenzy = Math.max(0, this.frenzy - dt);
     this.coupelleEmpty = Math.max(0, this.coupelleEmpty - dt);
-    this.recallCooldown = Math.max(0, this.recallCooldown - dt);
-    this.sacrificeCooldown = Math.max(0, this.sacrificeCooldown - dt);
-    this.choirCooldown = Math.max(0, this.choirCooldown - dt);
     this.clayCooldown = Math.max(0, this.clayCooldown - dt);
     this.transformed = Math.max(0, this.transformed - dt);
     this.barrierTime = Math.max(0, this.barrierTime - dt);
@@ -361,7 +363,7 @@ export class Player {
       buffered.smash = 0;
       this.startSmash(aimDir);
     }
-    if (c.kit === 'invocateur') this.commandSouls(input, world);
+    if (c.kit === 'sorcier') this.sorcererSkills(input, aimDir, world);
     else if (c.kit === 'lame') this.bladeSkills(input, aimDir, world);
     else if (c.kit === 'paladin') this.paladinSkills(input, aimDir, world);
     else if (c.kit === 'rodeur') this.rangerSkills(input, aimDir, world);
@@ -426,6 +428,9 @@ export class Player {
         if (k >= 1) this.action = { kind: 'free' };
         break;
       }
+      case 'flight':
+        this.updateFlight(dt, a, world);
+        break;
     }
 
     this.guardHeld = this.blocking ? this.guardHeld + dt : 0;
@@ -484,6 +489,8 @@ export class Player {
     if (this.cfg.kit !== 'paladin') {
       let gain = this.cfg.block.rageOnGuard * (1 + (perks.guardRageFactor ?? 0));
       if (perfect && perks.gourde) gain += perks.gourde.rage;
+      // Écaille de Ryūjin : chaque coup arrêté rend un peu de vie.
+      if (perks.blockHeal && amount > 0) this.heal(this.cfg.maxHp * perks.blockHeal, world);
       const gained = this.gainRage(gain);
       world.emit({ type: 'guard', pos: { ...this.pos }, rage: Math.round(gained) });
       return;
@@ -529,6 +536,7 @@ export class Player {
       this.clayCooldown = perks.clayShell;
       // Affinités de l'Oushebti : l'argile qui éclate nourrit la rage, rend l'ombre, remplit la garde, ou reste en leurre.
       if (perks.clayRage) this.gainRage(perks.clayRage);
+      if (perks.clayMana) this.gainMana(perks.clayMana);
       if (perks.clayDash) this.refundDash();
       if (perks.clayGuard) {
         this.guardLeft = this.cfg.paladin.guard.max;
@@ -625,7 +633,7 @@ export class Player {
     const wantsAttack = this.attackBuffer > 0 || input.attackHeld;
     if (input.attackPressed || (wantsAttack && !input.signatureHeld)) {
       this.blocking = false;
-      this.startAttack();
+      this.startAttack(input.aim);
       return;
     }
 
@@ -637,7 +645,7 @@ export class Player {
       return;
     }
     if (!this.blocking && wantsAttack) {
-      this.startAttack();
+      this.startAttack(input.aim);
       return;
     }
     if (length(input.move) > 0.05) {
@@ -656,10 +664,10 @@ export class Player {
     this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false, full };
   }
 
-  private startAttack(): void {
+  private startAttack(aim: Vec2): void {
     this.attackBuffer = 0;
     this.blocking = false;
-    this.action = { kind: 'attack', t: 0, dir: { ...this.facing }, hit: new Set(), swung: false, crit: this.nextCrit() };
+    this.action = { kind: 'attack', t: 0, dir: { ...this.facing }, hit: new Set(), swung: false, crit: this.nextCrit(), aim: { ...aim } };
   }
 
   /**
@@ -689,11 +697,12 @@ export class Player {
     const c = this.cfg.attack;
     const time = this.timing();
     a.t += dt;
-    // Le Rôdeur tire une flèche au lieu de frapper.
-    const ranged = this.cfg.kit === 'rodeur';
+    // Le Rôdeur tire une flèche au lieu de frapper ; le Sorcier, une salve de boules de feu.
+    const ranged = this.cfg.kit === 'rodeur' || this.cfg.kit === 'sorcier';
     if (!a.swung && a.t >= time.windup) {
       a.swung = true;
-      if (ranged) world.loose(a.dir);
+      if (this.cfg.kit === 'sorcier') world.fireSalvo(a.dir, a.aim);
+      else if (ranged) world.loose(a.dir);
       else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
       // Jugement : la ferveur pleine, le coup libère l'onde sacrée devant le Paladin.
       const judgement = this.cfg.paladin.judgement;
@@ -723,7 +732,7 @@ export class Player {
     const wantsNext = (this.attackBuffer > 0 || input.attackHeld) && !input.signatureHeld;
     if (wantsNext && a.t >= recoveryStart + time.recovery / 2) {
       this.facing = aimDir;
-      this.startAttack();
+      this.startAttack(input.aim);
     } else if (a.t >= recoveryStart + time.recovery) {
       this.action = { kind: 'free' };
     } else if (!wantsNext && canInterrupt && length(input.move) > 0.05) {
@@ -769,18 +778,104 @@ export class Player {
     if (distance(this.pos, target) < 0.1) this.action.t = b.duration * 0.5;
   }
 
-  /** Invocateur : Lier (clic droit), Rappel (A), Sacrifice (E), Chœur spectral (R). */
-  private commandSouls(input: InputFrame, world: World): void {
-    const s = this.cfg.summon;
-    if (input.signaturePressed && this.canCancel()) world.bind(input.aim);
-    if (input.skillAPressed && this.recallCooldown <= 0 && world.recall(input.aim)) this.recallCooldown = s.recall.cooldown;
-    if (input.skillEPressed && this.sacrificeCooldown <= 0 && world.sacrifice()) this.sacrificeCooldown = s.sacrifice.cooldown;
-    if (input.skillRPressed && this.choirCooldown <= 0 && world.chorus()) this.choirCooldown = s.choir.cooldown;
+  // --- Sorcier ---------------------------------------------------------------
+
+  /** Sceau (clic droit), Bouclier de flammes (A), Fuite de feu (E), grand météore (R) : chacun coûte du mana. */
+  private sorcererSkills(input: InputFrame, aimDir: Vec2, world: World): void {
+    const s = this.cfg.sorcier;
+    if (input.signaturePressed && this.sealCooldown <= 0 && this.canCancel() && this.spend(s.seal.cost, world)) {
+      this.sealCooldown = s.seal.cooldown;
+      this.facing = aimDir;
+      world.castSeal(input.aimGround);
+    }
+    if (input.skillAPressed && this.wardCooldown <= 0 && this.spend(s.ward.cost, world)) {
+      this.wardCooldown = s.ward.cooldown;
+      world.raiseWard();
+    }
+    if (input.skillEPressed && this.flightCooldown <= 0 && this.canCancel() && this.spend(s.flight.cost, world)) {
+      this.flightCooldown = s.flight.cooldown;
+      this.startFlight(input, world);
+    }
+    if (input.skillRPressed && this.meteorCooldown <= 0 && this.spend(s.meteor.cost, world)) {
+      this.meteorCooldown = s.meteor.cooldown;
+      this.facing = aimDir;
+      world.castMeteor(input.aimGround);
+    }
+  }
+
+  /** Coût d'un sort en mana : réduit par le tag Sorcier et le Magatama de Yasakani ; gratuit avec Feu inextinguible. */
+  spellCost(cost: number): number {
+    const perks = this.cfg.perks ?? {};
+    if (perks.freeSpells && this.below(perks.freeSpells)) return 0;
+    return cost * (perks.manaCost ?? 1);
+  }
+
+  /** Paie un sort ; faux (et un mot au-dessus du héros) s'il manque du mana. */
+  private spend(cost: number, world: World): boolean {
+    const price = this.spellCost(cost);
+    if (this.mana < price) {
+      world.emit({ type: 'noMana', pos: { ...this.pos } });
+      return false;
+    }
+    this.mana -= price;
+    return true;
+  }
+
+  gainMana(amount: number): void {
+    this.mana = Math.min(this.cfg.sorcier.mana.max, this.mana + amount);
+  }
+
+  /** Bouclier qui absorbe `amount` PV pendant `duration` s (Bouclier de flammes, Haidate de shikome). */
+  shield(amount: number, duration: number): void {
+    this.barrier = Math.max(this.barrier, amount * this.healFactor);
+    this.barrierTime = Math.max(this.barrierTime, duration);
+  }
+
+  /** Fuite de feu : un bond dans la direction de la marche (vers la souris à l'arrêt), invulnérable, qui sème des braises. */
+  private startFlight(input: InputFrame, world: World): void {
+    const f = this.cfg.sorcier.flight;
+    const dir = normalize(length(input.move) > 0.1 ? input.move : this.facing, this.facing);
+    this.blocking = false;
+    this.action = { kind: 'flight', t: 0, dir, embers: 0 };
+    this.invulnerable = Math.max(this.invulnerable, f.duration + 0.1);
+    const heal = this.cfg.perks?.flightHeal;
+    if (heal) this.heal(this.cfg.maxHp * heal, world);
+    const decoy = this.cfg.perks?.flightDecoy;
+    if (decoy) world.clayDecoy(this, decoy);
+    const to = add(this.pos, scale(dir, f.distance));
+    world.clampToArena(to, this.radius);
+    world.emit({ type: 'flight', from: { ...this.pos }, to });
+  }
+
+  /** La Fuite de feu avance, et laisse une braise à chaque pas de sa traînée (cinq en tout). */
+  private updateFlight(dt: number, a: Extract<Action, { kind: 'flight' }>, world: World): void {
+    const f = this.cfg.sorcier.flight;
+    const drops = 5;
+    while (a.embers < drops && a.t >= (f.duration * a.embers) / (drops - 1)) {
+      world.addEmber(this.pos, f.trailRadius, f.burn, f.trailLife);
+      a.embers++;
+    }
+    a.t += dt;
+    this.pos = add(this.pos, scale(a.dir, (f.distance / f.duration) * dt));
+    world.clampToArena(this.pos, this.radius);
+    if (a.t < f.duration) return;
+    if (a.embers < drops) world.addEmber(this.pos, f.trailRadius, f.burn, f.trailLife);
+    this.action = { kind: 'free' };
   }
 
   private tickKitCooldowns(dt: number): void {
     this.shotSlow = Math.min(1, this.shotSlow + dt / Math.max(0.01, this.cfg.ranger.charged.recover));
     const tick = (value: number) => Math.max(0, value - dt);
+    // Sorcier : le mana remonte (plus vite blessé, pour l'Einherjar) ; transformé, le Hanyō relance ses sorts plus vite.
+    const perks = this.cfg.perks ?? {};
+    const mana = this.cfg.sorcier.mana;
+    const rage = 1 + (perks.manaRage ?? 0) * (1 - this.hp / this.cfg.maxHp);
+    this.mana = Math.min(mana.max, this.mana + mana.regen * rage * dt);
+    const spells = (value: number) => Math.max(0, value - dt * (perks.yokaiSpells && this.transformed > 0 ? perks.yokaiSpells : 1));
+    this.sealCooldown = spells(this.sealCooldown);
+    this.wardCooldown = spells(this.wardCooldown);
+    this.flightCooldown = spells(this.flightCooldown);
+    this.meteorCooldown = spells(this.meteorCooldown);
     this.deathMarkCooldown = tick(this.deathMarkCooldown);
     this.boltCooldown = tick(this.boltCooldown);
     this.smokeCooldown = tick(this.smokeCooldown);
@@ -839,12 +934,9 @@ export class Player {
     this.facing = dir;
     this.action = { kind: 'shadowDash', t: 0, dir, marked: new Set() };
     this.invulnerable = Math.max(this.invulnerable, dash.duration + 0.05);
-    // Lamelles d'os de shikome : un bouclier au sortir de l'ombre.
+    // Haidate de shikome : un bouclier au sortir de l'ombre.
     const shield = this.cfg.perks?.dashShield;
-    if (shield) {
-      this.barrier = Math.max(this.barrier, this.cfg.maxHp * shield.amount);
-      this.barrierTime = shield.duration;
-    }
+    if (shield) this.shield(this.cfg.maxHp * shield.amount, shield.duration);
     this.openCritWindow();
     const to = add(this.pos, scale(dir, dash.distance));
     world.clampToArena(to, this.radius);

@@ -9,10 +9,10 @@ const BANNER_TIME = 2.6;
 /** Au-delà de ce ping (ms), il s'affiche en couleur d'alerte. */
 const LAGGY = 150;
 const SKILL_KEYS = ['A', 'E', 'R'] as const;
-/** La barre sous les PV : rage du Guerrier, âmes de l'Invocateur, ombre de la Lame, allié du Paladin, arc du Rôdeur. */
+/** La barre sous les PV : rage du Guerrier, mana du Sorcier, ombre de la Lame, garde du Paladin, arc du Rôdeur. */
 const RESOURCE: Record<Kit, { label: string; style: string }> = {
   guerrier: { label: 'Rage', style: '' },
-  invocateur: { label: 'Âmes', style: 'souls' },
+  sorcier: { label: 'Mana', style: 'mana' },
   lame: { label: 'Ombre', style: 'shadow' },
   paladin: { label: 'Garde', style: 'light' },
   rodeur: { label: 'Tir chargé', style: 'draw' },
@@ -119,7 +119,7 @@ export class Hud {
     const keys: [string, string][] = [
       [moveKeys(), 'se déplacer'],
       ['Souris', 'viser'],
-      ['Clic gauche', cls.kit === 'rodeur' ? 'tirer' : 'frapper'],
+      ['Clic gauche', cls.kit === 'rodeur' ? 'tirer' : cls.kit === 'sorcier' ? 'boules de feu' : 'frapper'],
       ['Clic droit', name('Clic droit').toLowerCase()],
       ['Espace', 'esquiver'],
       ...SKILL_KEYS.map((key): [string, string] => [keyName(key), name(key).toLowerCase()]),
@@ -144,24 +144,23 @@ export class Hud {
       bar.name.textContent = `${bar.label}${hero.dead ? ' · à terre' : ''}${ping ? ` · ${Math.round(ping)} ms` : ''}`;
       bar.name.classList.toggle('lag', (ping ?? 0) > LAGGY);
     });
-    const mine = world.summons.filter((s) => s.owner === player.id);
     this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
     let views: SkillView[];
     let fill = 0;
     let ready = false;
     let label = RESOURCE[cfg.kit].label;
-    if (cfg.kit === 'invocateur') {
-      // Les âmes liées, sans le compagnon (qui répond au Rappel et au Chœur, mais ne se sacrifie pas).
-      const s = cfg.summon;
-      const count = mine.filter((m) => !m.companion).length;
-      const none = mine.length === 0;
-      fill = count / Math.max(1, s.max);
-      ready = world.soulInReach;
-      label = `Âmes ${count} / ${s.max}`;
+    if (cfg.kit === 'sorcier') {
+      // Le mana ; la barre brille quand le sceau (clic droit) est prêt. Un sort trop cher est grisé.
+      const s = cfg.sorcier;
+      const perks = cfg.perks ?? {};
+      const cost = (base: number) => base * (perks.freeSpells && player.hp < cfg.maxHp * perks.freeSpells ? 0 : (perks.manaCost ?? 1));
+      fill = player.mana / s.mana.max;
+      ready = player.sealCooldown <= 0 && player.mana >= cost(s.seal.cost);
+      label = `Mana ${Math.floor(player.mana)} / ${Math.round(s.mana.max)}`;
       views = [
-        { cooldown: player.recallCooldown / s.recall.cooldown, locked: none },
-        { cooldown: player.sacrificeCooldown / s.sacrifice.cooldown, locked: count === 0 },
-        { cooldown: player.choir > 0 ? 0 : player.choirCooldown / s.choir.cooldown, locked: none && player.choir <= 0, active: player.choir > 0 },
+        { cooldown: player.ward > 0 ? 0 : player.wardCooldown / s.ward.cooldown, locked: player.mana < cost(s.ward.cost), active: player.ward > 0 },
+        { cooldown: player.flightCooldown / s.flight.cooldown, locked: player.mana < cost(s.flight.cost) },
+        { cooldown: player.meteorCooldown / s.meteor.cooldown, locked: player.mana < cost(s.meteor.cost) },
       ];
     } else if (cfg.kit === 'lame') {
       // Charges du Pas de l'ombre, la suivante se remplit ; invisible, la barre le dit.

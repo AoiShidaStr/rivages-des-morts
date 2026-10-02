@@ -59,9 +59,9 @@ La race est l'héritage mythologique du personnage : elle donne des passifs et u
 | Race | Mythologie | Passifs communs | Affinité par classe | Style favorisé |
 | --- | --- | --- | --- | --- |
 | Demi-dieu | Grecque | Égide divine : une fois par vague, passé sous 35 % de PV, intouchable 3 s et 30 % de PV rendus | Parent divin au choix : Zeus (foudre), Arès (+15 % de dégâts), Hermès (vitesse, esquive), Athéna (−15 % de dégâts subis) | Polyvalent |
-| Hanyō (mi-humain, mi-yokai) | Japonaise | Sang yokai : ses dégâts, de toutes les sources, remplissent une jauge qui le transforme 8 s (+35 % de dégâts, +15 % de vitesse, +10 % de dégâts subis). Instinct yokai : sous 30 % de PV, vitesse et régénération | Transformé : Guerrier, rage deux fois plus vite ; Invocateur, âmes plus fortes ; Lame, Pas de l'ombre deux fois plus vite ; Paladin, l'Aura brûle ; Rôdeur, arc bandé 50 % plus vite | Burst, prise de risque |
-| Oushebti (statuette funéraire animée) | Égyptienne | Corps d'argile : une carapace absorbe un coup toutes les 8 s | Quand la carapace éclate : Guerrier, +25 de rage ; Lame, une charge du Pas de l'ombre ; Paladin, garde pleine ; Rôdeur, statuette-leurre 3 s. Invocateur : +1 âme active, âmes plus durables | Résistant, serviteur |
-| Einherjar (guerrier mort au combat) | Nordique | Rage du guerrier mort : jusqu'à +35 % de dégâts près de la mort. Festin du Valhalla : 2,5 % des PV par ennemi tué | Sous la moitié des PV : Guerrier, la rage ne retombe plus ; Lame, esquive et Pas de l'ombre 50 % plus vite ; Paladin, garde deux fois plus vite ; Rôdeur, flèches qui transpercent. Invocateur : ses âmes partagent sa rage | Agressif, au bord de la mort |
+| Hanyō (mi-humain, mi-yokai) | Japonaise | Sang yokai : ses dégâts, de toutes les sources, remplissent une jauge qui le transforme 8 s (+35 % de dégâts, +15 % de vitesse, +10 % de dégâts subis). Instinct yokai : sous 30 % de PV, vitesse et régénération | Transformé : Guerrier, rage deux fois plus vite ; Sorcier, sorts qui reviennent deux fois plus vite ; Lame, Pas de l'ombre deux fois plus vite ; Paladin, l'Aura brûle ; Rôdeur, arc bandé 50 % plus vite | Burst, prise de risque |
+| Oushebti (statuette funéraire animée) | Égyptienne | Corps d'argile : une carapace absorbe un coup toutes les 8 s | Quand la carapace éclate : Guerrier, +25 de rage ; Lame, une charge du Pas de l'ombre ; Paladin, garde pleine ; Rôdeur, statuette-leurre 3 s ; Sorcier, +30 mana | Résistant, serviteur |
+| Einherjar (guerrier mort au combat) | Nordique | Rage du guerrier mort : jusqu'à +35 % de dégâts près de la mort. Festin du Valhalla : 2,5 % des PV par ennemi tué | Sous la moitié des PV : Guerrier, la rage ne retombe plus ; Lame, esquive et Pas de l'ombre 50 % plus vite ; Paladin, garde deux fois plus vite ; Rôdeur, flèches qui transpercent. Sorcier : le mana remonte jusqu'à 60 % plus vite près de la mort | Agressif, au bord de la mort |
 
 **Affinité d'île** : une race est un peu plus forte sur l'île de sa mythologie et débloque des dialogues propres avec certains dieux.
 
@@ -78,7 +78,7 @@ Cinq classes au lancement, neutres culturellement : la race les habille. Un Guer
 | Guerrier (Berserker) | Mêlée, rage | Blocage qui remplit la rage | La rage monte plus vite et Frénésie dure plus longtemps |
 | Lame (Assassin des ombres) | DPS mêlée, peu de PV | Dash à travers les ennemis, qui les marque | Les coups après une esquive sont critiques |
 | Paladin (Rempart solaire) | Tank / soutien | Bouclier levé, arrête 85 % d'un coup de face tant que la garde tient | Le bouclier soigne les alliés proches, invocations comprises (moitié moins le Paladin) |
-| Invocateur (Lieur d'âmes) | Contrôle par les âmes, un compagnon choisi | Lier l'âme d'un ennemi vaincu | Plus d'invocations actives, et plus fortes |
+| Sorcier (Onmyōji du feu) | DPS à distance : les plus gros dégâts du jeu, la pire survie | Sceau : un cercle sous la souris qui explose au bout d'1 s | Les sorts coûtent moins de mana, et chaque yokai pris dans un sceau en rend |
 | Rôdeur (Chasseur) | DPS à distance, sans pièges | Tir chargé | Les tirs chargés traversent et marquent les ennemis |
 
 ### Kits des classes
@@ -90,28 +90,34 @@ Contrôles communs : clic gauche pour l'attaque de base, clic droit pour la sign
 | Guerrier (Berserker) | Blocage qui remplit la rage | Frappe fracassante : consomme la rage, gros dégâts | Bond : saute sur une zone | Frénésie : attaque plus vite, subit plus de dégâts |
 | Lame (Assassin des ombres) | Dash à travers les ennemis, qui les marque | Marque de mort : la cible prend des critiques | Écran de fumée : invisibilité courte | Danse des lames : enchaînement sur plusieurs cibles |
 | Paladin (Rempart solaire) | Bouclier levé : bloque de face, on avance lentement | Aura de lumière : à activer, soigne autour | Marteau lancé : aller-retour | Relever : relève le dernier allié tombé (invocation détruite ou yokai vaincu) |
-| Invocateur (Lieur d'âmes) | Lier l'âme d'un ennemi vaincu | Rappel : les invocations foncent sur la cible | Sacrifice : une invocation explose | Chœur spectral : renforce les invocations |
+| Sorcier (Onmyōji du feu) | Sceau : explose au bout d'1 s, gros dégâts en zone | Bouclier de flammes : absorbe, repousse et brûle | Fuite de feu : bond intouchable, traînée de feu | Grand météore : énormes dégâts en zone au bout de 2 s |
 | Rôdeur (Chasseur) | Tir chargé | Flèche-filet : immobilise | Marque du chasseur : la cible prend plus de dégâts | Recul : bond en arrière en tirant |
 
-La Marque du chasseur remplace la Mine spirituelle prévue au départ, pour garder le Rôdeur en DPS sans pièges.
+La Marque du chasseur remplace la Mine spirituelle prévue au départ, pour garder le Rôdeur en DPS sans pièges. Le Sorcier a remplacé l'Invocateur en 0.8.0 : son clic gauche lance une salve de boules de feu guidées.
 
-**Chaque classe se soigne à sa façon** (30 à 60 PV par minute au niveau 10, mesurés par le bot) :
+**Chaque classe se soigne à sa façon** (30 à 60 PV par minute au niveau 10, mesurés par le bot), sauf le Sorcier, qui se protège au lieu de se soigner :
 
 | Classe | Soin | Réglage |
 | --- | --- | --- |
 | Guerrier | La Frappe fracassante rend 4 % des PV max quand elle touche : dépenser sa rage soigne | `smash.heal` |
-| Invocateur | 5 % des dégâts de ses âmes (compagnon compris), versés par gorgées de 3 PV | `summon.leech` |
 | Lame | Festin de l'ombre : 4 PV par ennemi marqué abattu | `perks.markKillHeal` |
 | Paladin | Aura de lumière et bouclier (tag) : ses alliés reçoivent le soin entier, lui la moitié. L'Aura suit la puissance de l'arme | `paladin.aura`, `paladin.selfHeal` |
 | Rôdeur | Abattre la cible de la Marque du chasseur rend 6 % des PV max | `ranger.huntMark.killHeal` |
+| Sorcier | Aucun soin : le Bouclier de flammes absorbe 40 % de ses PV max, la Fuite de feu le sort de la mêlée. Le talent Foie immortel (Prométhée) rend 10 % des PV à chaque Fuite | `sorcier.ward`, `perks.flightHeal` |
 
 **Paladin, tank-soutien** : son bouclier arrête 85 % d'un coup de face. Chaque coup bloqué use une **jauge de garde** : 100 points, 2,5 points par % des PV max que le coup aurait retirés, 12 au moins. Vide, la garde se brise 1,5 s. Elle remonte de 30 par seconde après 1 s sans rien bloquer (`paladin.guard`). Le HUD montre la jauge à la place de la vigueur de l'allié relevé.
 
-**Compagnon de l'Invocateur** : un yokai choisi dans l'arbre de compétences (bloc `companion` de la classe dans `skills.json`). Au choix : kappa (robuste), kodama (soigne), feu follet (brûle), Oublié (étourdit), kasa-obake (équilibré), araignée (frappe souvent), shikome, ikazuchi et ikusa.
-- Il se lève au début de chaque descente, suit l'Invocateur d'une vague à l'autre et se reforme 10 s après avoir été détruit.
-- Il répond au Rappel et au Chœur. Il ne compte pas dans les âmes actives, n'affaiblit pas l'Invocateur et ne se sacrifie pas.
-- Les neuf compagnons se valent à peu près au bot : 67 à 78 % de victoires au niveau 1, 91 à 98 % au niveau 20.
-- **Plus tard**, comme l'Osamodas de Wakfu : capturer ses compagnons au lieu de les choisir dans une liste.
+**Sorcier, onmyōji du feu** (0.8.0, remplace l'Invocateur) : les plus gros dégâts du jeu à tous les niveaux, et la pire survie (80 % des PV de base, aucun soin). Réglages dans `src/data/player.json` (bloc `sorcier`).
+- **Mana** : 100, +10 par seconde. Les sorts en coûtent : Sceau 18, Bouclier de flammes 30, Fuite de feu 15, Grand météore 50. Le HUD montre la jauge à la place de la rage ; sans assez de mana, le sort ne part pas.
+- **Clic gauche, salve** : 3 boules de feu (4 dégâts chacune avec les grelots), lancées en éventail vers la souris. Elles visent le yokai le plus proche du curseur au moment du clic et s'infléchissent vers lui ; s'il tombe, elles cherchent le yokai le plus proche à 3 m. La salve ne coûte rien.
+- **Clic droit, Sceau** : un cercle de 2,2 m sous la souris (9 m au plus) qui explose au bout d'1 s : 34 dégâts, carapaces ignorées. Revient en 2,5 s.
+- **A, Bouclier de flammes** : un bouclier de 40 % des PV max pendant 5 s (montré sur la barre de PV). En s'allumant, il repousse les yokai collés au Sorcier, puis brûle à 8 dégâts par seconde ceux qui l'approchent. Revient en 10 s.
+- **E, Fuite de feu** : un bond de 4,5 m dans le sens de la marche, intouchable, qui laisse une traînée de braises (10 dégâts par seconde, 3 s). Revient en 5 s.
+- **R, Grand météore** : s'écrase sous la souris au bout de 2 s, dans un rayon de 3,6 m : 140 dégâts et une forte projection. Revient en 18 s.
+- Tous ses dégâts (boules, sceaux, braises, bouclier, météore) suivent la puissance de l'arme, comme les coups des autres classes.
+- **Équilibrage** (bot, 0.8.0) : au banc, le Sorcier fait 110 à 119 % des dégâts de la meilleure autre classe, et en donjon il a le plus de dégâts par seconde à tous les niveaux. Il a aussi la pire survie : 67, 46 et 30 % de victoires au Palais aux niveaux 10, 30 et 50, et 100 % aux Rizières. Sa croissance lui est propre : son niveau ne lui donne aucun dégât et 2 PV au lieu de 3, et son catalyseur forgé fait toute sa puissance. Sans objet au niveau 50, il ne gagne que 22 % des descentes contre un donjon niveau 30. Détail dans `docs/equilibrage.md`.
+- **Sauvegardes** : un héros Invocateur devient Sorcier, ses points de talent lui sont rendus et son compagnon disparaît. Les âmes alliées ne restent qu'au Paladin, avec Relever.
+- **Apparence** : de nouveaux sprites sont à dessiner (prompts dans `docs/prompts-2d/03-heros-sorcier.md`, vues de face et de dos dans `plus-tard/`). En attendant, le Sorcier reprend ceux de l'Invocateur (`src/render/heroes.ts`, `BORROWED`).
 
 ### Arbres de compétences (V1)
 
@@ -127,13 +133,15 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 | Héraclès (défense) | Le blocage réduit plus de dégâts | **Peau du lion de Némée** : dégâts subis réduits au-dessus de 50 % de rage | Bond étourdit à l'atterrissage | **Les Douze Travaux** : chaque ennemi tué réduit les temps de recharge |
 | Berserkir, guerriers-ours d'Odin (risque) | Chaque ennemi tué pendant Frénésie soigne | Sous 50 % de PV, les dégâts augmentent | Bond coûte moins de rage | **Peau d'ours** : une fois par combat, survit à un coup fatal avec 1 PV et la rage pleine |
 
-**Invocateur (Lieur d'âmes)**
+**Sorcier (Onmyōji du feu)**
 
 | Branche | Nœud 1 | Nœud 2 | Nœud 3 | Ultime |
 | --- | --- | --- | --- | --- |
-| Abe no Seimei, le grand onmyōji (armée) | Invocations plus résistantes | +1 invocation active (le malus par invocation s'applique) | Rappel donne de la vitesse aux invocations | **Les Douze Shikigami** : une invocation garde une capacité de l'ennemi dont elle vient |
-| Orphée, qui charma les Enfers par son chant (soutien) | Chœur spectral soigne aussi le joueur | Chœur spectral ralentit les ennemis proches | Lier une âme est plus rapide | **Chant des Enfers** : un ennemi sous 20 % de PV peut être lié sans être tué |
-| Anubis, gardien de la pesée (sacrifice) | Sacrifice fait plus de dégâts | Sacrifice rend des PV au joueur | Une invocation sacrifiée réduit le temps de recharge de Lier | **Le Jugement** : le Sacrifice d'une âme d'élite inflige des dégâts selon les PV de la cible |
+| Kagutsuchi, le dieu du feu (embrasement) | **Flammes vives** : boules de feu +10 % | **Quatrième flamme** : une boule de plus par salve, −20 % de dégâts chacune | **Sol brûlant** : le sceau laisse le sol en feu 3 s (4 dégâts par seconde) | **Naissance du feu** : un yokai qui tombe près du Sorcier libère 3 boules de feu vers ses voisins |
+| Abe no Seimei, le grand onmyōji (sceaux) | **Sceau élargi** : rayon +25 % | **Tracé rapide** : le sceau explose au bout de 0,6 s | **Pinceau léger** : le sceau coûte 40 % de mana en moins | **Seiman** : le sceau explose une seconde fois 1 s après, à 30 % de sa force |
+| Prométhée, le voleur de feu (endurance) | **Feu volé** : +30 mana max, +2 mana par seconde | **Flamme rendue** : le Bouclier de flammes rend 30 mana quand il se dissipe ou se brise | **Foie immortel** : la Fuite de feu rend 10 % des PV max | **Feu inextinguible** : sous 30 % des PV, les sorts ne coûtent plus de mana |
+
+Affinités de race : Einherjar, **Brasier des morts** (la Rage du guerrier mort nourrit aussi le mana, jusqu'à +60 %) ; Oushebti, **Argile ignifugée** (+30 mana quand la carapace absorbe un coup) ; Hanyō, **Feu follet intérieur** (transformé, les sorts reviennent deux fois plus vite). Le Demi-dieu garde son parent divin.
 
 **Lame (Assassin des ombres)**
 
@@ -157,17 +165,18 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 | --- | --- | --- | --- | --- |
 | Artémis, la chasseresse (précision) | Tir chargé plus rapide à bander | Tir chargé plus fort | **Lune pleine** : un tir chargé plein étourdit | **Carquois divin** : un tir chargé plein part en trois flèches |
 | Skadi, chasseresse des neiges (contrôle) | Filet plus long | **Skis** : Recul plus long et plus fréquent | Filet plus large et plus fréquent | **Vent du nord** : le Recul laisse un filet derrière soi |
-| Hachiman, dieu de l'arc (traque) | Marque du chasseur plus longue | Marque plus forte (+50 %) | **Curée** : abattre la cible marquée recharge la Marque | **Flèche du kami** : les flèches s'infléchissent vers les cibles marquées |
+| Hachiman, dieu de l'arc (traque) | Marque du chasseur plus longue | Marque plus forte (+50 %) | **Curée** : abattre la cible marquée recharge la Marque | **Coup de grâce** : sous 30 % de ses PV, la cible marquée prend des coups critiques (×2). Remplace Flèche du kami (0.8.0) |
 
-**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `summon`, `blade`, `paladin`, `ranger`) et les armes dans `src/data/items.json` : cinq pour le Guerrier et le Rôdeur au Yomi, quatre pour la Lame, trois pour le Paladin, deux pour l'Invocateur (voir « Kit d'items du Yomi »).
+**En place** : les cinq classes se choisissent à la création, avec leur kit, leur tag (2, 4 ou 6 objets) et leurs trois branches (tableaux ci-dessus). Les réglages sont dans `src/data/player.json` (blocs `sorcier`, `blade`, `paladin`, `ranger`, et `summon` pour les alliés relevés du Paladin) et les armes dans `src/data/items.json` : cinq pour le Guerrier et le Rôdeur au Yomi, quatre pour la Lame, trois pour le Paladin et le Sorcier (voir « Kit d'items du Yomi »).
 
 - **Guerrier** : 115 PV ; sa garde arrête 90 % d'un coup de face (le talent Garde du héros, chez Héraclès, la rend totale) ; bloquer rapporte 16 de rage. Nodachi 9 dégâts, Frappe fracassante 38, Frénésie qui accélère les coups de 28 %.
 
 - **Lame** : 90 % des PV du Guerrier, une esquive plus longue qui revient plus vite. Le Pas de l'ombre (clic droit, 2,5 s) traverse les ennemis et marque chacun : le prochain coup d'arme sur lui est critique (×2), et abattre un ennemi marqué rend 4 PV (Festin de l'ombre). La Marque de mort rend tous les coups critiques 5 s. L'Écran de fumée laisse un nuage là où était la Lame : invisible 3 s, elle n'est plus visée, les yokai attaquent le nuage, et son premier coup depuis l'ombre est une embuscade critique. La Danse des lames saute d'ennemi en ennemi (5 au plus), invulnérable. Le tag rend critiques les coups qui suivent une esquive. La Jorōgumo n'est pas dupe de la fumée.
-- **Paladin** : le bouclier levé bloque de face comme la garde du Guerrier, mais arrête le coup en entier, sans rage ; il renverse la coupelle du kappa. L'Aura suit le héros 6 s et soigne 4 PV par seconde, âmes comprises. Le Marteau frappe à l'aller et au retour. Relever relève le dernier allié tombé à moins de 7 m depuis moins de 12 s (une âme brisée ou un yokai vaincu), qui combat 24 s en âme de lumière dorée ; les alliés relevés n'affaiblissent pas le Paladin. Le tag fait soigner les alliés proches à chaque coup bloqué.
-- **Rôdeur** : le clic gauche tire une flèche à la portée de l'arc (10 m pour le Yumi). Le tir chargé se bande en marchant lentement, jusqu'à ×3 ; une ligne de visée montre sa portée. La carapace du kappa arrête les flèches de face. La Marque du chasseur (+30 % de dégâts reçus) compte pour toutes les sources, âmes comprises. Le tag fait traverser et marquer les tirs chargés pleins.
+- **Paladin** : le bouclier levé bloque de face comme la garde du Guerrier, mais arrête le coup en entier, sans rage ; il renverse la coupelle du kappa. L'Aura suit le héros 6 s et soigne 4 PV par seconde, alliés relevés compris. Le Marteau frappe à l'aller et au retour. Relever relève le dernier allié tombé à moins de 7 m depuis moins de 12 s (un yokai vaincu, ou un allié relevé brisé), qui combat 24 s en âme de lumière dorée ; les alliés relevés n'affaiblissent pas le Paladin. Le tag fait soigner les alliés proches à chaque coup bloqué.
+- **Sorcier** : voir plus haut. Le moins de PV du jeu ; ses boules de feu, ses sceaux et son météore font de lui le premier DPS, mais un yokai au contact le met vite en danger.
+- **Rôdeur** : le clic gauche tire une flèche à la portée de l'arc (10 m pour le Yumi). Le tir chargé se bande en marchant lentement, jusqu'à ×3 ; une ligne de visée montre sa portée. La carapace du kappa arrête les flèches de face. La Marque du chasseur (+30 % de dégâts reçus) compte pour toutes les sources, alliés compris. Le tag fait traverser et marquer les tirs chargés pleins.
 
-**Équilibrage** : un bot joue chaque classe sur les vagues du donjon, sans rendu, en ratant une partie des attaques annoncées comme un joueur moyen. Il a servi à régler les chiffres ci-dessus. Le Guerrier, qui gardait son blocage levé sans rien perdre, encaisse désormais une partie des coups ; la Lame, qui ne vivait que de ses esquives, gagne des PV, de la portée et un soin sur les ennemis marqués ; le Paladin tape un peu moins fort que le Guerrier, le Rôdeur un peu plus vite qu'avant. L'Invocateur, qui laissait ses âmes tuer et encaisser à sa place, a des âmes plus fragiles, moins nombreuses dans le temps et un peu moins fortes, et les yokai visent le héros avant elles.
+**Équilibrage** : un bot joue chaque classe sur les vagues du donjon, sans rendu, en ratant une partie des attaques annoncées comme un joueur moyen. Il a servi à régler les chiffres ci-dessus. Le Guerrier, qui gardait son blocage levé sans rien perdre, encaisse désormais une partie des coups ; la Lame, qui ne vivait que de ses esquives, gagne des PV, de la portée et un soin sur les ennemis marqués ; le Paladin tape un peu moins fort que le Guerrier, le Rôdeur un peu plus vite qu'avant. L'Invocateur, qui laissait ses âmes tuer et encaisser à sa place, a des âmes plus fragiles, moins nombreuses dans le temps et un peu moins fortes, et les yokai visent le héros avant elles. (L'Invocateur a été remplacé par le Sorcier en 0.8.0.)
 
 **Premier donjon (septembre 2026)** : le bot a appris à provoquer la charge du kappa plutôt que de tourner autour, et à se servir du fil de Jōren (esquiver derrière une souche quand la Jorōgumo tire). Sur des héros de niveau 1, arme de départ, sans talent, la force d'origine ne laissait passer que la Lame et le Paladin ; Guerrier, Invocateur et Rôdeur n'y gagnaient presque jamais, surtout contre la phase au plafond de la Jorōgumo. Réglage retenu : Rizières plus douces (voir « Difficulté à l'entrée »), Guerrier à 115 PV avec une garde à 90 %, Invocateur à 95 PV et grelots à 7 dégâts. Victoires du bot sur une descente complète : Paladin 97 %, Lame 93 %, Invocateur 37 %, Guerrier 37 %, Rôdeur 30 %. Le Paladin et la Lame restent nettement au-dessus : c'est le prochain chantier d'équilibrage.
 
@@ -182,7 +191,7 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
   - premier donjon exigeant mais égal entre classes ;
   - Lame inchangée ;
   - plus de seconde vie pour le Demi-dieu ;
-  - un compagnon choisi pour l'Invocateur.
+  - un compagnon choisi pour l'Invocateur (retiré avec lui en 0.8.0).
 - Réglage des classes :
   - Guerrier à ×1,4 PV ;
   - Rôdeur à ×1,25 PV ; sa Marque revient en 8 s, la Flèche-filet en 6 s, le Recul en 5 s ;
@@ -192,7 +201,7 @@ Chaque classe a 3 branches de 4 nœuds, chacune inspirée d'une figure mythologi
 
 Victoires du bot, 40 descentes par combinaison :
 
-| Niveau | Guerrier | Invocateur | Lame | Paladin | Rôdeur |
+| Niveau | Guerrier | Invocateur (avant le Sorcier) | Lame | Paladin | Rôdeur |
 | --- | --- | --- | --- | --- | --- |
 | 1, avant | 43 % | 41 % | 88 % | 100 % | 56 % |
 | 1, après | 79 % | 81 % | 87 % | 79 % | 75 % |
@@ -208,7 +217,7 @@ Victoires du bot, 40 descentes par combinaison :
 
 **Apparence** : chaque combinaison de race et de classe a son héros en pixel art (`tools/pixel/heros.mjs`) : la race donne la tête, la peau et la tenue (casque viking, némès égyptien, laurier grec, cornes d'oni), la classe l'arme, la couleur de la cape et les gestes (arc bandé du Rôdeur, bouclier levé du Paladin). L'Einherjar guerrier garde sa planche peinte.
 
-**Invocateur** : un yokai vaincu par un Invocateur laisse son âme au sol quelques secondes (un halo bleu) ; liée, elle combat un temps limité, deux âmes à la fois de base, et chacune réduit un peu les dégâts du héros. Rappel, Sacrifice, Chœur spectral et les trois branches suivent le tableau ci-dessus. Les réglages sont dans `src/data/player.json` (bloc `summon`). Les âmes ont des PV (30 de base, plus pour un kappa, moins pour un feu follet) et frappent 8 dégâts toutes les 0,95 s ; liées, elles combattent 24 s, et chacune réduit de 10 % les dégâts du héros. Chaque yokai s'en prend à la cible la plus proche, mais le héros compte comme 1,5 fois plus proche qu'une âme : les yokai le préfèrent, et une âme ne sert pas de bouclier gratuit. Leurs charges, chutes et coups en arc touchent tout le monde. Une âme s'efface avec le temps ou se brise sous les coups. Le Masque d'Oublié inverse la préférence : les âmes deviennent trois fois plus attirantes que le héros. La Jorōgumo, elle, ne poursuit que le héros, mais ses coups frappent aussi les âmes à portée.
+**Alliés relevés** : il ne reste des invocations que Relever, du Paladin. Un allié relevé a des PV et frappe le yokai le plus proche ; chaque yokai s'en prend à la cible la plus proche, mais le héros compte comme 1,5 fois plus proche qu'un allié : les yokai le préfèrent. Réglages dans `src/data/player.json` (bloc `summon`). L'Invocateur, qui liait l'âme des yokai vaincus, a été remplacé par le Sorcier en 0.8.0 : son gameplay n'était pas assez amusant.
 
 **Système de tags** : chaque compétence, arme ou passif porte un ou deux tags de classe. Réunir 2, 4 ou 6 éléments d'une même classe débloque un bonus de plus en plus fort, comme les traits de TFT.
 
@@ -218,7 +227,7 @@ Victoires du bot, 40 descentes par combinaison :
 2. **Avant chaque donjon** : on compose son équipement (arme, pièces d'équipement, relique, compétences). Les tags viennent de cet équipement, et les builds hybrides naissent du mélange.
 3. **Au fil de l'aventure** : déblocage permanent de classes, d'items et de l'emplacement secondaire.
 
-**Exemples de synergies** : Paladin + Invocateur (invocations soignées et increvables), Rôdeur + Invocateur (les invocations s'acharnent sur les cibles marquées), Lame + Guerrier (duelliste parade-esquive).
+**Exemples de synergies** : Paladin + Sorcier (le Paladin tient la ligne, le Sorcier rase ce qui s'y arrête), Rôdeur + Sorcier (la Marque du chasseur amplifie sceaux et météore), Lame + Guerrier (duelliste parade-esquive).
 
 ## Armes, items & reliques
 
@@ -242,7 +251,9 @@ Sept emplacements seulement, pour ne pas noyer le joueur : l'arme, cinq pièces 
 
 **Tags** : chaque pièce porte au moins un tag de classe. Avec 7 emplacements plus les compétences, atteindre le palier 6 d'une classe demande d'y consacrer presque tout l'équipement, alors que deux paliers 2 ou 4 s'obtiennent facilement en build hybride.
 
-**Panoplies** (en place au Yomi, 0.3.0) : quatre pièces d'armure d'une même panoplie (casque, plastron, jambières, bottes) donnent un bonus à 2 pièces et un autre à 4, en plus de leur tag de classe. Chaque île pourra avoir les siennes. Réglages dans `items.json` : le champ `set` de chaque pièce et le bloc `sets`.
+**Puissance : le niveau d'un côté, l'équipement de l'autre** (en place, 0.8.0) : l'équipement pèse au moins la moitié de la puissance du héros. Forgé à son niveau, il double à peu près ses dégâts et ses PV effectifs, et un peu plus en fin de progression (×2 à ×3 au niveau 50). Le niveau du héros donne +1 % de dégâts et +3 PV par niveau ; l'arme forgée, +3,3 % de dégâts par niveau ; une pièce, +9 % de ses PV et +1 % de ses dégâts et de son armure par niveau. Les dégâts des pièces sont en % et comptent pour tous les dégâts du héros (coup, compétences, foudre). Test de référence : un héros niveau 50 sans objet, avec son arme de départ jamais forgée, échoue au donjon niveau 30. L'inventaire montre ce que l'équipement apporte (« Équipement : dégâts ×2,6 · PV effectifs ×2,4 »). Réglages : `levels` dans `skills.json`, `forge.upgrade` dans `items.json`. **Exception, le Sorcier** (`growth` de sa classe) : son niveau ne lui donne aucun dégât et 2 PV au lieu de 3 ; toute sa puissance vient de la forge de son catalyseur, qui monte plus vite (+7,5 % par niveau au lieu de 3,3 %). Ses sorts de zone et son bouclier le portaient trop loin sans équipement (près de 70 % de victoires, niveau 50 nu contre un donjon niveau 30).
+
+**Styles de jeu par l'équipement** (en place, 0.8.0, à la place des panoplies) : chaque classe a au moins trois façons de jouer portées par ses objets, une de survie, une de dégâts et une qui équilibre les deux, et le joueur mélange librement les pièces de plusieurs styles. Pas de bonus de panoplie : chaque pièce a son propre effet. Voir « Styles de jeu par l'équipement » plus bas.
 
 **Objets de race** (en place, 0.3.0) : une amulette réservée à une race (champ `races`), qui renforce ou détourne son passif commun. Les autres races ne peuvent pas la porter, et elle ne tombe que pour un héros de sa race.
 
@@ -255,21 +266,21 @@ Sept emplacements seulement, pour ne pas noyer le joueur : l'arme, cinq pièces 
 | Épique | Héros célèbres | Arc d'Héraclès, sandales d'Hermès | 1 ou 2, effet qui change le jeu |
 | Légendaire | Dieux et artefacts majeurs | Voir ci-dessous | 2, règle unique |
 
-**Armes de classe** : épée ou katana (Guerrier), dagues jumelles (Lame), masse et bouclier (Paladin), catalyseur d'âmes (Invocateur), arc (Rôdeur). Chaque type se décline en nombreuses armes : voir « Arsenal » dans Progression.
+**Armes de classe** : épée ou katana (Guerrier), dagues jumelles (Lame), masse et bouclier (Paladin), catalyseur de feu : grelots, éventail, pinceau (Sorcier), arc (Rôdeur). Chaque type se décline en nombreuses armes : voir « Arsenal » dans Progression.
 
-**Armes hybrides** (plus tard) : une arme porte deux tags et mélange deux styles. Exemples : une lame spectrale dont les parades invoquent une âme (Guerrier + Invocateur), un arc sacré dont les flèches soignent les alliés (Rôdeur + Paladin).
+**Armes hybrides** (plus tard) : une arme porte deux tags et mélange deux styles. Exemples : une lame ardente dont les parades posent un sceau (Guerrier + Sorcier), un arc sacré dont les flèches soignent les alliés (Rôdeur + Paladin).
 
 **Reliques légendaires de départ**
 
 | Relique | Mythologie | Tags | Effet |
 | --- | --- | --- | --- |
 | Kusanagi-no-Tsurugi | Japonaise | Guerrier · Rôdeur | Les coups projettent des lames de vent à distance |
-| Magatama de Yasakani | Japonaise | Invocateur | +1 invocation active |
+| Magatama de Yasakani | Japonaise | Sorcier | Les sorts coûtent 25 % de mana en moins |
 | Égide | Grecque | Paladin · Guerrier | Une parade parfaite pétrifie l'attaquant |
 | Casque d'Hadès | Grecque | Lame | Invisible 2 s après une esquive, premier coup critique |
 | Harpè de Persée | Grecque | Lame · Guerrier | Exécute les ennemis sous 15 % de PV |
-| Ankh | Égyptienne | Paladin · Invocateur | Une invocation détruite revient une fois par salle |
-| Plume de Maât | Égyptienne | Invocateur | Les ennemis « jugés » deviennent des invocations élites |
+| Ankh | Égyptienne | Paladin | Un allié relevé détruit revient une fois par salle |
+| Plume de Maât | Égyptienne | Sorcier | Un yokai pris dans un sceau est « jugé » : il prend 30 % de dégâts en plus pendant 3 s |
 | Gungnir | Nordique | Rôdeur · Guerrier | Lance lancée qui ne rate jamais et revient |
 | Mjöllnir | Nordique | Guerrier · Paladin | L'arme lancée revient en frappant de la foudre |
 | Draupnir | Nordique | Tous | Chaque palier de tags atteint duplique une relique commune |
@@ -298,11 +309,12 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 | Nodachi des rizières | Arme | Commune | Guerrier | Arme de départ, portée longue | Départ |
 | Kanabō d'oni | Arme | Rare | Guerrier | Coups lents, Frappe fracassante étourdit | Kappa renforcé |
 | Katana de rōnin | Arme | Rare | Guerrier | Plus rapide, le blocage donne plus de rage | Jorōgumo |
-| Grelots d'onmyōji | Arme | Commune | Invocateur | Arme de départ, les invocations tapent plus vite | Départ |
+| Grelots d'onmyōji | Arme | Commune | Sorcier | Arme de départ : salve de 3 boules de feu guidées, 4 dégâts chacune, 10 m. Paliers : +2 mana par seconde (10), +1 boule (25), +25 mana max (50) | Départ |
 | Kunai jumeaux | Arme | Commune | Lame | Arme de départ, coups très rapides et courts | Départ |
 | Naginata et bouclier de temple | Arme | Commune | Paladin | Arme de départ, longue portée, coups qui repoussent | Départ |
 | Yumi en bambou | Arme | Commune | Rôdeur | Arme de départ, flèches à 10 m | Départ |
-| Éventail de la Jorōgumo | Arme | Épique | Invocateur | Les invocations posent des toiles qui ralentissent | Jorōgumo |
+| Éventail de la Jorōgumo | Arme | Épique | Sorcier | Boules plus lourdes (5 dégâts, 10,5 m) qui ralentissent de 30 % pendant 1 s | Jorōgumo |
+| Pinceau de Seimei | Arme | Rare | Sorcier | Boules légères (3,75 dégâts) mais vives ; sceaux qui reviennent 0,5 s plus tôt et lient les yokai (−60 % de vitesse, 2 s) | Oubliés, forge |
 | Kusarigama des Oubliés | Arme | Rare | Lame | Portée longue ; Pas de l'ombre plus long, marques plus durables | Oubliés, forge (masques, papier) |
 | Crocs de la Jorōgumo | Arme | Épique | Lame | Chaque coup critique rend des PV | Jorōgumo, boutique de fin |
 | Tetsubō et bouclier-cloche | Arme | Rare | Paladin | Coups lourds ; Marteau lancé plus fort, qui étourdit | Kappa renforcé, forge (écailles, braises) |
@@ -310,12 +322,12 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 | Hankyū de chasse | Arme | Rare | Rôdeur | Arc court : tirs rapides, Recul plus fréquent | Kasa-obake, forge (papier, sève) |
 | Arc de soie de la Jorōgumo | Arme | Épique | Rôdeur | Un tir chargé plein ouvre un filet | Jorōgumo, boutique de fin |
 | Chapeau de paille | Casque | Commune | — | +PV | Forge (sève) |
-| Masque d'Oublié | Casque | Rare | Invocateur | Les ennemis ciblent les invocations en priorité | Oubliés |
+| Masque d'Oublié | Casque | Rare | Sorcier | La Fuite de feu revient 2 s plus tôt ; après elle, les yokai oublient le Sorcier 1,5 s et frappent la flamme restée en arrière | Boutiques de fin |
 | Carapace de kappa | Plastron | Rare | Guerrier | Dégâts de face réduits | Forge (écailles) |
 | Hakama de soie | Jambières | Peu commune | — | Vitesse de déplacement | Forge (soie) |
 | Geta du kasa-obake | Bottes | Peu commune | — | Esquive plus longue (le kasa-obake est représenté sautant sur une geta) | Kasa-obake |
 | Lanterne-braise | Amulette | Commune | Guerrier | Les attaques brûlent | Forge (braises) |
-| Magatama fêlé | Amulette | Rare | Invocateur | Invocations plus durables | Boutique de fin |
+| Magatama fêlé | Amulette | Rare | Sorcier | +25 mana max | Boutique de fin |
 
 **Reliques**
 
@@ -323,30 +335,30 @@ Chaque ennemi du Yomi lâche un matériau, et chaque item se fabrique ou se drop
 | --- | --- | --- | --- | --- |
 | Coupelle du kappa | Rare | Guerrier | Tant qu'on n'est pas touché, les dégâts augmentent. Un coup reçu vide la coupelle quelques secondes | Kappa renforcé |
 | Fil de Jōren | Épique | Tous | Une esquive laisse un fil : le premier ennemi qui le touche est immobilisé | Jorōgumo |
-| Magatama de Yasakani | Légendaire | Invocateur | +1 invocation active | Jorōgumo (très rare) |
+| Magatama de Yasakani | Légendaire | Sorcier | Les sorts coûtent 25 % de mana en moins ; +20 PV max | Jorōgumo (très rare) |
 
 ### Nouveaux items du Yomi (0.3.0)
 
-Conçus à partir du plan de mise à jour : des items de build pour chaque classe, du confort, du risque, un objet par race, et une panoplie défensive pour les classes qui n'avaient aucune pièce d'armure à leur tag (Lame, Rôdeur) ou une seule (Paladin). Tout vient du Yomi. L'Invocateur a déjà assez d'items : il n'en reçoit pas.
+Conçus à partir du plan de mise à jour : des items de build pour chaque classe, du confort, du risque, un objet par race, et des pièces d'armure pour les classes qui n'en avaient aucune à leur tag (Lame, Rôdeur) ou une seule (Paladin). Tout vient du Yomi. L'Invocateur n'en avait pas reçu ; le Sorcier qui l'a remplacé a les siens (voir « Styles de jeu par l'équipement »). Valeurs de la 0.8.0 (voir « Styles de jeu par l'équipement »).
 
 **Items de build, de confort et à risque**
 
 | Item | Emplacement | Rareté | Tag | Catégorie | Effet | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 | Masque de hannya | Casque | Rare | Guerrier | Build faibles PV | « Au bord du gouffre » (passif du Guerrier) se déclenche dès 50 % des PV au lieu de 30 % : on frappe plus fort et on se soigne plus tôt | Oubliés (4 %) |
-| Gourde de saké d'oni | Amulette | Rare | Guerrier | Build garde et rage | Blocage parfait : +15 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois plus (8 %) | Kappa renforcé (15 %) |
+| Gourde de saké d'oni | Amulette | Rare | Guerrier | Build garde et rage | Blocage parfait : +20 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois et demie plus (10 %) | Kappa renforcé (15 %) |
 | Nodachi de l'Ikusa | Arme | Épique | Guerrier | Build faibles PV | Coups plus rapides selon les PV perdus : jusqu'à +30 % sous 30 % des PV. Paliers : portée (10), Frénésie +2 s (25), +40 % (50) | Izanami (20 %), guerriers du Yomi (2 %) |
-| Cloche du Grand Rocher | Amulette | Rare | Paladin | Tank offensif | Un coup bloqué renvoie 40 % de ses dégâts à l'attaquant | Forge (écailles, braises) |
+| Cloche du Grand Rocher | Amulette | Rare | Paladin | Tank offensif | Un coup bloqué renvoie 30 % de ses dégâts à l'attaquant | Forge (écailles, braises) |
 | Encensoir du moine | Amulette | Rare | Paladin | Du soin aux dégâts | Chaque PV rendu par l'Aura ajoute 2 dégâts au prochain Marteau lancé (au plus le double de ses dégâts) | Boutique du Palais |
-| Shimenawa tressée | Plastron | Rare | Paladin | Tank pur | Garde +30 points, qui remonte 50 % plus vite ; −8 % de vitesse | Guerriers du Yomi (5 %) |
+| Shimenawa tressée | Plastron | Rare | Paladin | Tank pur | Garde +40 points, qui remonte 50 % plus vite ; −5 % de vitesse | Guerriers du Yomi (5 %) |
 | Tabi du messager | Bottes | Rare | Rôdeur | Mobilité | Après un Recul, le prochain tir part chargé à fond | Kasa-obake (5 %) |
 | Arc d'Ikazuchi | Arme | Épique | Rôdeur | Tir chargé | Un tir chargé plein appelle la foudre sur sa première proie : 18 dégâts autour (2 m), ralentit de moitié 0,6 s, au plus toutes les 1,5 s. Paliers : rayon (10), dégâts (25), ralentissement (50) | Izanami (20 %), ikazuchi (3 %) |
 | Tabi de shinobi | Bottes | Rare | Lame | Mobilité | Pas de l'ombre : une charge de plus, qui revient 15 % plus vite | Oubliés (4 %) |
 | Tsuba ébréchée | Amulette | Rare | Lame | Critique | Chaque coup critique retire 0,3 s à la recharge de la Marque de mort | Boutique de fin des Rizières |
 | Mino de paille | Plastron | Commune | — | Confort | −20 % de dégâts de ce qui tombe du ciel : foudre, pluie de fils, toiles lancées, kasa-obake qui retombent | Obaa (50 oboles) |
-| Yomotsu-hegui | Relique | Épique | Tous | Risque | La nourriture du Yomi : +35 % de dégâts et +10 % de vitesse, mais tous les soins reçus sont réduits de moitié | Izanami (10 %) |
+| Yomotsu-hegui | Relique | Épique | Tous | Risque | La nourriture du Yomi : +35 % de dégâts et +10 % de vitesse, mais tous les soins et boucliers reçus sont réduits de moitié | Izanami (10 %) |
 
-Les amulettes de build et de race donnent environ 20 PV, comme le Magatama fêlé : leur effet est un choix, pas une perte de PV (réglage d'octobre 2026).
+Les amulettes de build et de race donnent 12 à 15 PV (le Magatama fêlé 20) : leur effet est un choix, pas une perte de PV.
 
 **Amulettes de race**
 
@@ -357,33 +369,80 @@ Les amulettes de build et de race donnent environ 20 PV, comme le Magatama fêl�
 | Dogū aux yeux clos | Oushebti | La carapace d'argile absorbe deux coups avant d'éclater, mais se reforme en 12 s au lieu de 8 | Jorōgumo (12 %) |
 | Tsuba du rōnin mort | Einherjar | La Rage du guerrier mort monte jusqu'à +50 % de dégâts au lieu de +35 % | Izanami (12 %) |
 
-**Panoplies défensives** : des PV et de l'armure, calés sur les pièces du Guerrier. Le casque et le plastron se forgent chez Tetsu dès le début, avec les matériaux des Rizières ; les jambières et les bottes tombent au Palais (5 %).
+**Pièces de classe** (anciennes panoplies, 0.8.0) : chaque pièce garde le tag de sa classe et porte son propre effet. Le casque et le plastron se forgent chez Tetsu dès le début, avec les matériaux des Rizières ; les jambières et les bottes tombent au Palais (5 %).
 
-| Panoplie | Classe | Pièces | 2 pièces | 4 pièces | Drops du Palais |
+| Pièce | Classe | Emplacement | Effet | Source |
+| --- | --- | --- | --- | --- |
+| Menpō de shikome | Lame | Casque | +8 % de dégâts ; critiques +0,25 | Forge |
+| Dō de lamelles d'os | Lame | Plastron | +10 % de PV max | Forge |
+| Haidate de shikome | Lame | Jambières | Après un Pas de l'ombre, un bouclier de 10 % des PV max pendant 2 s | Shikome |
+| Waraji de la meute | Lame | Bottes | Danse des lames : 2 cibles de plus, revient 3 s plus tôt | Shikome |
+| Zukin de sōhei | Paladin | Casque | La garde remonte 25 % plus vite | Forge |
+| Kesa de sōhei | Paladin | Plastron | La garde s'use 25 % moins vite | Forge |
+| Haidate du temple | Paladin | Jambières | Quand la garde se brise, une onde repousse les yokai et les ralentit de moitié 2 s | Ikazuchi |
+| Geta du temple | Paladin | Bottes | Le Marteau lancé revient 1 s plus tôt | Ikazuchi |
+| Jingasa laqué | Rôdeur | Casque | +8 % de dégâts ; le tir chargé se bande 15 % plus vite | Forge |
+| Dō de cuir noir | Rôdeur | Plastron | La cible de la Marque du chasseur fait 35 % de dégâts en moins | Forge |
+| Kyahan d'éclaireur | Rôdeur | Jambières | Le Recul revient 2 s plus tôt | Guerriers du Yomi |
+| Waraji de l'éclaireur | Rôdeur | Bottes | La Flèche-filet revient 3 s plus tôt et s'ouvre 30 % plus large | Guerriers du Yomi |
+
+### Styles de jeu par l'équipement (0.8.0)
+
+Chaque classe a trois styles portés par ses objets : **survie**, **dégâts**, et l'**équilibre** entre les deux. Ce ne sont pas des panoplies : les pièces se mélangent, et un style se monte avec une arme, deux ou trois pièces qui portent son effet, et des pièces communes (Chapeau de paille, Shiroshōzoku, Hakama de soie, Geta du kasa, Omamori, Fil de Jōren). Les objets sont forts : forgés au niveau du héros, ils pèsent au moins la moitié de sa puissance.
+
+| Classe | Style | Arme | Pièces du style | Ce que ça change |
+| --- | --- | --- | --- | --- |
+| Guerrier | Survie : rempart de rage | Katana de rōnin | Carapace de kappa, Suneate d'écailles, Gourde de saké d'oni, **Écaille de Ryūjin** | Bloquer donne de la rage et soigne (3 % par coup bloqué) ; la Frappe à rage pleine soigne 10 % |
+| Guerrier | Dégâts : berserker du gouffre | Nodachi de l'Ikusa | Masque de hannya, Lanterne de braise, Coupelle du kappa | Au bord du gouffre dès 50 % des PV, coups plus rapides blessé, +12 % de dégâts, Frénésie plus longue |
+| Guerrier | Équilibre : tempête | Totsuka-no-tsurugi | Kabuto fendu, Waraji du pèlerin, Carapace, Suneate | Frappe et Bond moins chers en rage : la rage tourne, la foudre tombe |
+| Lame | Survie : ombre fuyante | Kusarigama | Dō de lamelles d'os, Haidate de shikome, Tabi de shinobi, **Kemuri-dama** | Deux Pas de l'ombre, un bouclier après chacun, la fumée soigne 8 % |
+| Lame | Dégâts : exécution | Kaiken d'Izanami | Menpō de shikome, Tsuba ébréchée, **Encre de Shinigami** | Critiques plus forts, Marque de mort plus fréquente, tout yokai sous 30 % prend des critiques, chaque mise à mort soigne |
+| Lame | Équilibre : danse des lames | Crocs de la Jorōgumo | Waraji de la meute, Dō de lamelles d'os | Danse sur 7 cibles, les critiques soignent |
+| Paladin | Survie : rempart | Miroir de Yata | Zukin de sōhei, Kesa de sōhei, Haidate du temple | Garde qui tient et remonte vite, onde quand elle se brise |
+| Paladin | Dégâts : soleil et marteau | Tetsubō et bouclier-cloche | **Eboshi d'Amaterasu**, Encensoir du moine, Geta du temple, **Tambour du temple** | L'Aura brûle, ses soins chargent le Marteau, plus fort et plus fréquent ; le Jugement frappe plus souvent et plus fort |
+| Paladin | Équilibre : représailles | Miroir de Yata | Shimenawa tressée, Cloche du Grand Rocher, Geta du temple | Grosse garde, les coups bloqués reviennent à l'attaquant |
+| Rôdeur | Survie : traque | Arc du pêcher | Dō de cuir noir, **Plume de Yatagarasu**, Suneate | La proie marquée frappe 35 % moins fort, l'abattre soigne 23 % |
+| Rôdeur | Dégâts : artillerie | Arc d'Ikazuchi | Jingasa laqué, Tabi du messager, **Flèches d'Ame-no-Hahaya** | Tirs chargés plus rapides et foudroyants, toutes les flèches transpercent |
+| Rôdeur | Équilibre : escarmouche | Arc de soie | Jingasa laqué, Kyahan d'éclaireur, Waraji de l'éclaireur | Recul et filets plus fréquents, toiles qui ralentissent |
+| Sorcier | Survie : rempart de flammes | Éventail de la Jorōgumo | **Haori ignifugé**, Suneate, Omamori | Bouclier de flammes plus épais et plus brûlant, boules qui ralentissent : on tient la mêlée à distance |
+| Sorcier | Dégâts : pluie de feu | Grelots d'onmyōji | Voile d'Izanami, **Ofuda de Kagutsuchi**, Magatama de Yasakani | 4 boules par salve, météore plus fort et plus rapide, sorts moins chers |
+| Sorcier | Équilibre : feu follet | **Pinceau de Seimei** | Masque d'Oublié, **Geta de braise**, Magatama fêlé | Sceaux plus fréquents qui lient les yokai, Fuite de feu plus longue et plus fréquente qui laisse une flamme-leurre, plus de mana |
+
+**Nouveaux objets (0.8.0)**
+
+| Item | Emplacement | Rareté | Tag | Effet | Source |
 | --- | --- | --- | --- | --- | --- |
-| Lamelles d'os de shikome | Lame | Menpō de shikome, Dō de lamelles d'os, Haidate de shikome, Waraji de la meute | +15 % de PV max | Après un Pas de l'ombre, un bouclier de 8 % des PV max pendant 2 s | Shikome |
-| Sōhei (moine-soldat) | Paladin | Zukin de sōhei, Kesa de sōhei, Haidate du temple, Geta du temple | La garde remonte 25 % plus vite | Quand la garde se brise, une onde de lumière repousse et étourdit 1 s autour du Paladin | Ikazuchi |
-| Éclaireur du Yomi | Rôdeur | Jingasa laqué, Dō de cuir noir, Kyahan d'éclaireur, Waraji de l'éclaireur | +15 % de PV max | La cible de la Marque du chasseur fait 25 % de dégâts en moins | Guerriers du Yomi |
+| Écaille de Ryūjin | Relique | Rare | Guerrier | Chaque coup bloqué rend 3 % des PV max | Kappa renforcé (12 %), boutique de fin des Rizières |
+| Kemuri-dama | Amulette | Rare | Lame | L'Écran de fumée revient 4 s plus tôt et rend 8 % des PV max | Shikome (4 %) |
+| Encre de Shinigami | Relique | Épique | Lame | Tout coup sur un yokai sous 30 % de ses PV est critique ; chaque yokai abattu rend 3 % des PV max | Izanami (10 %) |
+| Eboshi d'Amaterasu | Casque | Rare | Paladin | +8 % de dégâts ; l'Aura brûle les yokai, 6 dégâts par seconde | Ikazuchi (4 %) |
+| Tambour du temple | Relique | Rare | Paladin | Le Jugement se remplit 50 % plus vite et frappe 30 % plus fort | Boutique du Palais |
+| Plume de Yatagarasu | Amulette | Rare | Rôdeur | Abattre la cible marquée rend 15 % de PV max de plus ; Marque +2 s | Guerriers du Yomi (4 %) |
+| Flèches d'Ame-no-Hahaya | Relique | Épique | Rôdeur | +10 % de dégâts ; toutes les flèches transpercent | Izanami (10 %), boutique du Palais |
+| Pinceau de Seimei | Arme | Rare | Sorcier | Boules légères (3,75 dégâts) ; sceaux 0,5 s plus tôt, qui lient les yokai (−60 % de vitesse, 2 s) | Oubliés, forge |
+| Ofuda de Kagutsuchi | Amulette | Rare | Sorcier | Une boule de feu de plus par salve | Ikazuchi, boutique de fin des Rizières |
+| Haori ignifugé | Plastron | Rare | Sorcier | Bouclier de flammes : +50 % d'absorption et de brûlure | Forge |
+| Geta de braise | Bottes | Rare | Sorcier | Fuite de feu 30 % plus longue, traînée deux fois plus durable ; esquive un peu plus longue | Kasa-obake |
 
-Les Tabi du messager, les Tabi de shinobi et la Shimenawa prennent la place d'une pièce de panoplie : il faut choisir entre l'effet de build et le bonus à 4 pièces. L'inventaire montre la panoplie de chaque pièce, les bonus atteints, et ce qu'on perd en ôtant une pièce.
+**Réglages des objets existants** (0.8.0) : Totsuka-no-tsurugi plus maniable (engagement 0,26 s au lieu de 0,36), Tetsubō avec son bouclier-cloche (+25 de garde, engagement 0,26 s au lieu de 0,45), Pêche Ōkamuzumi qui rend 2 % des PV max par yokai vaincu (au lieu de 2 PV), Kabuto fendu, Suneate, Waraji du pèlerin et Lanterne de braise avec un effet propre. Les objets de l'Invocateur (grelots, éventail, Masque d'Oublié, Voile d'Izanami, magatama) servent désormais le Sorcier. Mesures dans `docs/equilibrage.md`.
 
 ## Combat
 
 Le combat mélange arme au corps à corps, parade/esquive et invocations, en vue isométrique et en temps réel.
 
 - **Arme** : attaque de base, avec un moveset qui change selon le type d'arme (en place) : chaque arme a sa **forme** et son **engagement**.
-  - **Forme** : un arc tourné vers la souris, plus ou moins large (kunai 120°, nodachi 150°, naginata 180°, kanabō 200°), ou un estoc droit et long (katana, kaiken). Seuls les grelots de l'Invocateur frappent tout autour, faiblement. Un repère discret au sol montre la forme du prochain coup.
+  - **Forme** : un arc tourné vers la souris, plus ou moins large (kunai 120°, nodachi 150°, naginata 180°, kanabō 200°), ou un estoc droit et long (katana, kaiken). Le Sorcier, lui, ne frappe pas : ses grelots, son éventail ou son pinceau lancent des boules de feu guidées. Un repère discret au sol montre la forme du prochain coup.
   - **Engagement** : le temps pendant lequel un coup lancé ne s'annule pas. Ensuite, se déplacer ou esquiver interrompt la fin du coup. Les kunai se feintent à l'esquive dès l'élan, le katana se dégage dès que le coup porte, le nodachi peu après, et le kanabō va toujours jusqu'au bout. Réglages dans `items.json` (`attack.shape`, `attack.arcDeg`, `attack.commit`).
   - **Visée** : la souris vise à hauteur de poitrine, là où volent les flèches et où l'on voit le corps des ennemis : pointer un yokai, c'est le viser. En vue isométrique, le sol sous le curseur est 1,3 m derrière ce corps (la visée au sol faisait rater les tirs sur les côtés). Seul le Bond du Guerrier vise le sol, là où il retombe. Le Rôdeur a un trait de visée discret qui part de sa poitrine et passe sous le curseur.
 - **Parade** : sa forme dépend de la classe (blocage et rage pour le Guerrier, bouclier levé pour le Paladin). Le clic droit porte la mécanique signature de chaque classe.
   - **Blocage parfait** (en place, 0.3.0) : une garde levée moins de 0,2 s avant le coup. « Parfait ! », un éclair autour du bouclier et une micro-pause le signalent. En coop, la fenêtre d'un invité s'élargit de la moitié de son ping. Seule la Gourde de saké d'oni en tire un bonus pour l'instant ; l'Égide pourra s'en servir plus tard.
 - **Esquive** : dash court avec invulnérabilité brève.
 - **Compétences** : 2 à 4 emplacements, volontairement simples (une touche, un effet clair).
-- **Invocations** : des âmes combattent aux côtés du joueur. Leur origine dépend de la classe (ennemis liés, pactes, anciens porteurs).
+- **Invocations** : des âmes combattent aux côtés du joueur. En place : les alliés relevés du Paladin. Plus tard, d'autres origines (pactes, anciens porteurs).
 
 **Contrôles** : clavier-souris pour commencer (déplacement ZQSD, visée à la souris, clic gauche pour attaquer, clic droit pour la mécanique de classe, Espace pour esquiver, A / E / R pour les compétences).
 
-**Équilibrage des invocations** : pas de limite fixe stricte, mais chaque invocation active affaiblit le joueur (dégâts ou PV réduits). Un build invocateur pur est fort en groupe mais fragile seul, un build duelliste reste solide sans armée. Les armes sont détaillées dans « Armes, items & reliques ».
+**Équilibrage des invocations** : pas de limite fixe stricte, mais chaque invocation active affaiblit le joueur (dégâts ou PV réduits). Un build d'invocations pur serait fort en groupe mais fragile seul, un build duelliste reste solide sans armée. Les armes sont détaillées dans « Armes, items & reliques ».
 
 ## Structure du jeu
 
@@ -438,7 +497,7 @@ Du titre à la fin de la première descente : écran titre et création du héro
 | Difficulté | Très dur, mais passable avec toutes les classes : les Rizières ont leur propre force de départ (yokai ×1,2 PV et ×1,35 dégâts, Jorōgumo ×0,85 et ×0,9), le Palais garde celle de `difficulty.json` | Un jeu exigeant accroche mieux qu'un jeu trop simple, mais aucune classe ne doit rester bloquée au premier boss |
 | Île | Le joueur explore librement avant la première descente : tous les PNJ et leurs « ! » sont là dès l'arrivée | L'île fait partie de la découverte |
 | Retour de donjon | Tous les donjons ramènent au ponton de Charon | Les coffres s'ouvrent sur la barque, le hub : on les ouvre dès le retour, sans traverser l'île |
-| Butin | Tiré au sort, sauf à la première victoire contre la Jorōgumo : une arme de la classe du héros, tirée de sa table (Guerrier : katana de rōnin, Lame : crocs de la Jorōgumo, Paladin : miroir de Yata, Rôdeur : arc de soie, Invocateur : éventail de la Jorōgumo) | La première victoire se voit dans l'équipement ; ensuite, les tables de drop à la Warframe donnent leur sens au farming |
+| Butin | Tiré au sort, sauf à la première victoire contre la Jorōgumo : une arme de la classe du héros, tirée de sa table (Guerrier : katana de rōnin, Lame : crocs de la Jorōgumo, Paladin : miroir de Yata, Rôdeur : arc de soie, Sorcier : éventail de la Jorōgumo) | La première victoire se voit dans l'équipement ; ensuite, les tables de drop à la Warframe donnent leur sens au farming |
 | Création du héros | Chaque classe affiche sa difficulté (★ à ★★★) et son style en une ligne, sans présélection | Choisir en connaissance de cause, sans imposer de classe |
 | Son | Des bruitages d'abord (combat et interface), la musique plus tard, quand la direction artistique sera figée | Le retour de chaque coup compte plus que l'ambiance dans les premières minutes |
 | Retour de coup | Chiffre de dégâts et secousse à chaque coup porté ; micro-pause de 40 à 50 ms sur un critique ou une parade ; une attaque lancée passe avant la garde, et la garde interrompt la fin d'un coup | Chaque coup doit se sentir, même avec des graphismes provisoires |
@@ -535,11 +594,11 @@ Tout vient du mythe d'Izanagi (Kojiki) : les furies qu'Izanami lança à ses tro
 2. **Son vrai visage** (sous 65 %) : le corps rongé, les huit dieux du tonnerre crépitent sur elle. La foudre tombe sur le héros et autour, elle disparaît et reparaît, des ikazuchi la rejoignent.
 3. **La poursuite** (sous 32 %) : elle traque le héros et bondit sur lui ; elle ne subit plus que 30 % des dégâts.
 
-**Son regard** (tout le combat) : la regarder, c'est viser vers elle. Sous le regard, une jauge monte : elle encaisse de mieux en mieux (jusqu'à −70 % de dégâts), puis, pleine, sa colère éclate en zone et appelle des renforts. Il faut frapper en visant à côté d'elle : le bord d'un arc large la touche sans la regarder, alors qu'un estoc (katana, kaiken) oblige à la regarder ; le Rôdeur tire par courtes salves, ou pose sa Marque du chasseur : marquée, elle ne sent plus aucun regard (réglage d'octobre 2026, le Rôdeur perdait presque toujours contre elle) ; les âmes de l'Invocateur, elles, peuvent la regarder. Parer oblige à lui faire face : c'est un choix.
+**Son regard** (tout le combat) : la regarder, c'est viser vers elle. Sous le regard, une jauge monte : elle encaisse de mieux en mieux (jusqu'à −70 % de dégâts), puis, pleine, sa colère éclate en zone et appelle des renforts. Il faut frapper en visant à côté d'elle : le bord d'un arc large la touche sans la regarder, alors qu'un estoc (katana, kaiken) oblige à la regarder ; le Rôdeur tire par courtes salves, ou pose sa Marque du chasseur : marquée, elle ne sent plus aucun regard (réglage d'octobre 2026, le Rôdeur perdait presque toujours contre elle) ; le Sorcier vise à côté d'elle : ses boules de feu la trouvent seules, et ses sceaux tombent sous elle sans qu'il la regarde. Parer oblige à lui faire face : c'est un choix.
 
 **Faiblesse : les trois pêches** : fuyant le Yomi, Izanagi lança trois pêches, et l'armée des morts recula. Trois pêchers poussent dans l'arène ; frapper un pêcher mûr fait tomber sa pêche, qui file repousser Izanami : elle reste sans défense 4,5 s et subit 60 % de dégâts en plus. Le pêcher refleurit en 14 s. Le moine raconte l'histoire avant la descente, et l'annonce de la troisième phase la rappelle, sans dire comment s'en servir.
 
-**Butin** : Totsuka-no-tsurugi (Guerrier), Kaiken d'Izanami (Lame), Arc du pêcher (Rôdeur), Voile d'Izanami (Invocateur), Peigne d'Izanagi (relique), Pêche Ōkamuzumi (très rare) ; matériaux : os de guerrier du Yomi, éclats de foudre. Tetsu en forge le Dō de l'armée du Yomi (Paladin).
+**Butin** : Totsuka-no-tsurugi (Guerrier), Kaiken d'Izanami (Lame), Arc du pêcher (Rôdeur), Voile d'Izanami (Sorcier), Peigne d'Izanagi (relique), Pêche Ōkamuzumi (très rare) ; matériaux : os de guerrier du Yomi, éclats de foudre. Tetsu en forge le Dō de l'armée du Yomi (Paladin).
 
 ## Zone d'exploration du Yomi : Yomotsu Hirasaka
 
@@ -600,7 +659,7 @@ Le build se construit avec l'équipement choisi avant chaque donjon, et tout ce 
 | Entre les donjons | Armes de l'arsenal, reliques, niveaux d'équipement, classes débloquées, emplacement de classe secondaire, talents de race | Tout |
 | Monde | Quêtes, îles et donjons débloqués, agrandissement de la barque | Tout |
 
-**Niveau du personnage** : niveau max 50. Les points de talent s'arrêtent au niveau 10 (9 points pour 12 nœuds) ; au-delà, chaque niveau donne des PV et relève le plafond de la forge. Les niveaux de donjon permettent de progresser sur une seule île en attendant les suivantes (Hadès, Duat, Helheim, Mésopotamie). Une fois au niveau max, la progression passe par l'équipement.
+**Niveau du personnage** : niveau max 50. Les points de talent s'arrêtent au niveau 10 (9 points pour 12 nœuds) ; chaque niveau donne +3 PV et +1 % de dégâts (le Sorcier : +2 PV, sans dégâts), et relève le plafond de la forge. L'équipement fait l'autre moitié de la puissance (voir « Puissance » dans Équipement). Les niveaux de donjon permettent de progresser sur une seule île en attendant les suivantes (Hadès, Duat, Helheim, Mésopotamie). Une fois au niveau max, la progression passe par l'équipement.
 
 **Donjons dans la durée** : pour que les anciens donjons ne meurent pas, deux systèmes.
 
@@ -632,14 +691,14 @@ Comme dans Waven, on améliore son équipement avec des ressources récoltées. 
 | Guerrier | Katana de rōnin | Xiphos d'hoplite | Khopesh | Hache de draugr |
 | Lame | Kunai jumeaux | Dagues d'Érinye | Griffes de Bastet | Seax de givre |
 | Paladin | Naginata et bouclier de temple | Lance et bouclier spartiate | Sceptre ouas | Marteau runique |
-| Invocateur | Grelots d'onmyōji | Lyre d'Orphée | Sistre d'Hathor | Bâton de völva |
+| Sorcier | Grelots d'onmyōji | Torche d'Hécate | Œil de Sekhmet | Bâton de völva |
 | Rôdeur | Yumi en bambou | Arc de chasse d'Artémis | Boomerang de Thot | Arc en frêne d'Yggdrasil |
 
 Les compétences et passifs se débloquent en montant de niveau, dans un arbre de compétences par classe comme dans Waven, et s'équipent entre les donjons.
 
 **Options d'amélioration (validées)**
 
-1. **Niveaux d'équipement** (en place) : oboles et matériaux montent le niveau de l'arme et des cinq pièces d'équipement jusqu'à 50, plafonné au niveau du personnage. L'arme multiplie tous ses dégâts et gagne ses propres passifs aux niveaux 10, 25 et 50 ; une pièce d'équipement compte double pour les paliers de tags au niveau 25 et gagne le tag « Tous » au niveau 50. Les reliques attendent l'éveil et la fusion.
+1. **Niveaux d'équipement** (en place) : oboles et matériaux montent le niveau de l'arme et des cinq pièces d'équipement jusqu'à 50, plafonné au niveau du personnage. L'arme multiplie tous ses dégâts (+3,3 % par niveau) et gagne ses propres passifs aux niveaux 10, 25 et 50 ; une pièce gagne 9 % de ses PV et 1 % de ses dégâts et de son armure par niveau ; une pièce d'équipement compte double pour les paliers de tags au niveau 25 et gagne le tag « Tous » au niveau 50. Les reliques attendent l'éveil et la fusion.
 2. **Éveil de relique** (plus tard) : un Éclat des Tablettes éveille une relique et renforce son effet. Exemple : l'Égide éveillée pétrifie en zone.
 3. **Sceaux** (plus tard, à développer et équilibrer) : graver un sceau sur une arme lui ajoute un tag de classe.
 4. **Fusion** (plus tard) : fusionner des reliques identiques les fait monter de niveau.
@@ -666,7 +725,7 @@ Le jeu tourne dans le navigateur avec **Babylon.js** (JavaScript/TypeScript), po
 - **Moteur** : Babylon.js, avec sa physique (Havok), ses animations et son GUI intégrés.
 - **Données** : items, compétences et tags décrits en JSON, pour ajouter du contenu sans toucher au code du combat.
 - **Multi (en cours)** : coop PvE jusqu'à **3 joueurs**, en P2P gratuit. Le navigateur d'un joueur, l'hôte, fait tourner le combat. Les autres lui envoient leurs commandes et reçoivent l'état de la partie. La mise en relation passe par des relais publics (Trystero, WebRTC), sans serveur à payer. On rejoint une partie avec un code, ou depuis une liste de parties publiques. PvP peut-être plus tard.
-  - **En place (étape 1, sans réseau)** : le combat accepte 1 à 3 héros. Chacun a ses âmes, son Aura, sa fumée et ses projectiles. Les yokai choisissent leur cible parmi tous les héros et toutes les âmes.
+  - **En place (étape 1, sans réseau)** : le combat accepte 1 à 3 héros. Chacun a ses alliés relevés, son Aura, sa fumée, ses sceaux et ses projectiles. Les yokai choisissent leur cible parmi tous les héros et tous les alliés relevés.
   - **Héros à terre** : un héros à 0 PV tombe à terre. Un allié qui reste 4 s à côté de lui le relève avec 30 % de PV, et Relever du Paladin le remet debout avec 50 %. La descente échoue quand tous sont à terre.
   - **Difficulté selon le nombre de héros** (`party` dans `src/data/difficulty.json`) : PV des yokai ×1,8 à deux et ×2,8 à trois, PV du boss ×2,1 et ×3,3, et un yokai de plus par vague pour chaque héros en plus.
   - **Test sans réseau** : `?coop=2` ou `?coop=3` ajoute des alliés joués par l'ordinateur (`src/game/bot.ts`).
@@ -716,7 +775,7 @@ Le prototype valide le combat et le système d'âmes sur une seule île, avant t
 | Étape | Contenu | Ce qu'elle valide |
 | --- | --- | --- |
 | 1. Combat de base | Guerrier, une arme, déplacement, frappe, parade, esquive, un type d'ennemi | Le combat est-il agréable ? |
-| 2. Système d'âmes | Invocateur, lier les ennemis vaincus | L'élément unique du jeu fonctionne-t-il ? |
+| 2. Système d'âmes | Invocateur, lier les ennemis vaincus (remplacé par le Sorcier en 0.8.0) | L'élément unique du jeu fonctionne-t-il ? |
 | 3. Premier donjon | Salles fixes, coffres de fin de combat, boutique de fin, un boss (Jorōgumo) | La boucle donjon + farming est-elle addictive ? |
 | 4. Première île | Zone d'exploration du Yomi, 2 ou 3 quêtes courtes, un marchand | La boucle monde + donjon tient-elle ? |
 | 5. Contenu | Lame, Paladin, Rôdeur (en place), les 4 races (en place), progression entre les donjons | Diversité des builds |
@@ -734,7 +793,7 @@ La V1 est une tranche jouable complète mais petite : une île, un donjon, cinq 
 | Donjons | Les Rizières noyées (Jorōgumo) et le Palais d'Izanami (en place), boutiques de fin, coffres, drops | Rotation, donjons des autres îles |
 | Classes | Les cinq classes et leurs armes du Yomi (en place) | Armes des autres îles, classe secondaire |
 | Races | Les quatre races, passifs simples (en place) | Transformation du Hanyō à la demande, apparence par race, Nahual, Sidhe, affinité d'île |
-| Équipement | 7 emplacements, niveaux d'arme, tags et paliers, 2 ou 3 reliques | Sceaux, armes hybrides, éveil, fusion, panoplies |
+| Équipement | 7 emplacements, niveaux d'arme, tags et paliers, 2 ou 3 reliques, trois styles de jeu par classe | Sceaux, armes hybrides, éveil, fusion |
 | Progression | XP, niveau max 10, arbre de compétences réduit pour les 5 classes | Niveau 20 puis 50, arbre de mémoire, niveaux d'invocation |
 | Ressources | Oboles, matériaux du Yomi | Éclats de mémoire, Éclats des Tablettes |
 | Multi | Aucun | Coop PvE, puis PvP éventuel |

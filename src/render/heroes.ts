@@ -6,11 +6,16 @@ import type { SpriteDef, SpriteManifest } from './renderer';
 
 /** L'Einherjar guerrier garde sa planche peinte d'origine (sprite « heros ») : c'est lui qu'elle représente. */
 const ORIGINAL = { race: 'einherjar', class: 'guerrier' };
+/**
+ * Classes qui portent encore les planches d'une autre : le Sorcier garde l'onmyōji de l'Invocateur, en attendant
+ * les siennes (prompts dans docs/Prompts héros.md).
+ */
+const BORROWED: Record<string, string> = { sorcier: 'invocateur' };
 
 /** Nom du sprite du héros selon sa race et sa classe. */
 export function heroSprite(hero: Hero): string {
   const race = hero.race || ORIGINAL.race;
-  const cls = hero.class || ORIGINAL.class;
+  const cls = BORROWED[hero.class] ?? (hero.class || ORIGINAL.class);
   return race === ORIGINAL.race && cls === ORIGINAL.class ? 'heros' : `heros-${race}-${cls}`;
 }
 

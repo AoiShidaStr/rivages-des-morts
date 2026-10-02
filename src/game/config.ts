@@ -4,7 +4,7 @@ import type { EnemyKind } from './types';
 // Forme des fichiers de src/data : les valeurs s'équilibrent là-bas, sans toucher au code du combat.
 
 /** Jeu de compétences de la classe : clic droit et A / E / R n'ont pas le même rôle. */
-export type Kit = 'guerrier' | 'invocateur' | 'lame' | 'paladin' | 'rodeur';
+export type Kit = 'guerrier' | 'sorcier' | 'lame' | 'paladin' | 'rodeur';
 
 export interface PlayerConfig {
   kit: Kit;
@@ -80,26 +80,23 @@ export interface PlayerConfig {
     attackTimeFactor: number;
     damageTakenFactor: number;
   };
-  /** Âmes liées de l'Invocateur (ignoré par le Guerrier). */
+  /** Alliés relevés par le Paladin (Relever). */
   summon: SummonConfig;
   blade: BladeConfig;
   paladin: PaladinConfig;
   ranger: RangerConfig;
+  sorcier: SorcierConfig;
   /** Effets venus des talents, de la race, des reliques et des paliers de tags. */
   perks?: Perks;
 }
 
-/** Invocateur : les âmes des ennemis vaincus se relèvent et combattent à ses côtés. */
+/** Alliés relevés par le Paladin (Relever) : des âmes de lumière qui combattent à ses côtés un moment. */
 export interface SummonConfig {
-  /** Âmes actives en même temps. */
+  /** Alliés relevés gardés en même temps (Roi des morts en ajoute). */
   max: number;
-  /** Distance maximale entre le héros et l'âme qu'il lie. */
-  bindRange: number;
-  /** Secondes pendant lesquelles l'âme d'un ennemi vaincu reste au sol, prête à être liée. */
-  soulLife: number;
-  /** Secondes de combat d'une âme liée avant qu'elle ne s'efface. */
+  /** Secondes de combat d'un allié relevé avant qu'il ne s'efface. */
   life: number;
-  /** PV d'une âme liée : les yokai l'attaquent, et elle se brise à 0. */
+  /** PV d'un allié relevé : les yokai l'attaquent, et il se brise à 0. */
   hp: number;
   radius: number;
   speed: number;
@@ -107,37 +104,38 @@ export interface SummonConfig {
   attackRange: number;
   attackCooldown: number;
   knockback: number;
-  /** Au-delà de cette distance du héros, une âme revient vers lui. */
+  /** Au-delà de cette distance du héros, un allié revient vers lui. */
   leash: number;
-  /** Dégâts du héros en moins pour chaque âme active (GDD : chaque invocation affaiblit le joueur). */
-  malus: number;
-  /** Part des dégâts de ses âmes que l'Invocateur récupère en PV. */
-  leech: number;
-  /** A : les âmes foncent sur l'ennemi visé et frappent plus fort. */
-  recall: { cooldown: number; speed: number; damageFactor: number; duration: number };
-  /** E : la plus vieille âme explose. */
-  sacrifice: { cooldown: number; damage: number; radius: number };
-  /** R : les âmes sont renforcées un moment. */
-  choir: { cooldown: number; duration: number; damageFactor: number; speedFactor: number; radius: number };
-  /** Multiplicateurs par yokai d'origine : un kappa lié frappe plus fort et encaisse mieux qu'un feu follet. */
-  /** `range` : l'âme d'un yokai à distance garde son tir, et frappe de là (dégâts × `rangedFactor`). */
+  /** Multiplicateurs par yokai d'origine : un kappa relevé frappe plus fort et encaisse mieux qu'un feu follet. */
+  /** `range` : un yokai à distance garde son tir, et frappe de là (dégâts × `rangedFactor`). */
   kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number; range?: number }>>;
   rangedFactor: number;
-  /**
-   * Compagnon permanent de l'Invocateur (choisi par le joueur) : son yokai, ses multiplicateurs de dégâts, de PV,
-   * de vitesse et de cadence, et les secondes avant qu'il ne se reforme. Absent pour les autres classes.
-   */
-  companion?: CompanionStats;
 }
 
-export interface CompanionStats {
-  kind: EnemyKind;
-  respawn: number;
-  damage: number;
-  hp: number;
-  speed: number;
-  rate: number;
-  range?: number;
+/**
+ * Sorcier (onmyōji du feu) : il vit de son mana. Le clic gauche lance une salve de boules de feu guidées, gratuite ;
+ * ses sorts (clic droit, A, E, R) coûtent du mana (`cost`) et ont leur recharge.
+ */
+export interface SorcierConfig {
+  /** Réserve de mana et ce qu'elle regagne par seconde. */
+  mana: { max: number; regen: number };
+  /**
+   * Clic gauche : `count` boules de feu (dégâts : `attack.damage` chacune, portée : `attack.range`), ouvertes en
+   * éventail de `spreadDeg` puis guidées vers l'ennemi le plus proche du curseur au moment du clic (`turnRate` rad/s).
+   * Si leur cible tombe, elles cherchent un autre yokai à moins de `seek` m.
+   */
+  fireball: { count: number; spreadDeg: number; speed: number; turnRate: number; radius: number; seek: number };
+  /** Clic droit : un sceau tracé au sol, sous le curseur (à `range` m au plus), qui explose au bout de `delay` s. */
+  seal: { cost: number; cooldown: number; delay: number; radius: number; damage: number; range: number };
+  /**
+   * A : Bouclier de flammes. En s'allumant, il repousse (`knockback`) les yokai à moins de `radius` m ; puis il absorbe
+   * `shield` des PV max pendant `duration` s, et brûle ceux qui l'approchent.
+   */
+  ward: { cost: number; cooldown: number; duration: number; shield: number; burn: number; radius: number; knockback: number };
+  /** E : Fuite de feu. Un bond de `distance` m qui laisse une traînée brûlante (`burn` dégâts par seconde, `trailLife` s). */
+  flight: { cost: number; cooldown: number; distance: number; duration: number; trailLife: number; trailRadius: number; burn: number };
+  /** R : grand météore, sous le curseur (à `range` m au plus), qui s'écrase au bout de `delay` s. */
+  meteor: { cost: number; cooldown: number; delay: number; radius: number; damage: number; range: number; knockback: number };
 }
 
 /** Lame : frappe vite, marque ses proies et les achève en critiques. */
@@ -249,8 +247,6 @@ export interface Perks {
   valhallaShare?: number;
   /** Einherjar guerrier : sous `threshold` des PV, la rage ne retombe plus et monte `gain` fois plus vite. */
   lowHpRage?: { threshold: number; gain: number };
-  /** Einherjar invocateur : les âmes profitent aussi de la Rage du guerrier mort. */
-  soulsFury?: boolean;
   /** Einherjar lame : sous `threshold` des PV, l'esquive et le Pas de l'ombre reviennent `factor` fois plus vite. */
   lowHpHaste?: { threshold: number; factor: number };
   /** Einherjar paladin : sous `threshold` des PV, la garde remonte `factor` fois plus vite. */
@@ -280,8 +276,6 @@ export interface Perks {
   yokaiBlood?: { fill: number; duration: number; damage: number; speed: number; taken: number };
   /** Hanyō guerrier : transformé, la rage monte ce nombre de fois plus vite. */
   yokaiRage?: number;
-  /** Hanyō invocateur : transformé, ses âmes frappent aussi plus fort. */
-  yokaiSouls?: boolean;
   /** Hanyō lame : transformé, le Pas de l'ombre et l'esquive reviennent ce nombre de fois plus vite. */
   yokaiDash?: number;
   /** Hanyō paladin : transformé, l'Aura brûle les yokai (dégâts par seconde). */
@@ -291,27 +285,35 @@ export interface Perks {
   /** Hanyō : sous `threshold` des PV, vitesse en plus et régénération. */
   yokaiInstinct?: { threshold: number; speed: number; regen: number };
 
-  // --- Invocateur ---
-  /** Dégâts des âmes multipliés (paliers du tag Invocateur). */
-  summonDamageFactor?: number;
-  /** Les coups des âmes étourdissent (Éventail de la Jorōgumo). */
-  summonStun?: number;
-  /** Masque d'Oublié : les yokai s'en prennent d'abord aux âmes. */
-  summonTaunt?: boolean;
-  /** Les Douze Shikigami : chaque âme garde un trait de son yokai. */
-  shikigami?: boolean;
-  /** PV rendus en lançant le Chœur spectral. */
-  choirHeal?: number;
-  /** Le Chœur spectral étourdit les ennemis proches. */
-  choirStun?: number;
-  /** Chant des Enfers : un ennemi sous cette part de ses PV (hors boss) peut être lié vivant. */
-  underworldSong?: number;
-  /** PV rendus par un Sacrifice. */
-  sacrificeHeal?: number;
-  /** Une âme sacrifiée laisse son âme au sol. */
-  sacrificeSoul?: boolean;
-  /** Le Jugement : le Sacrifice inflige en plus cette part des PV max des ennemis touchés. */
-  judgement?: number;
+  // --- Sorcier ---
+  /** Part du coût en mana des sorts (paliers du tag Sorcier, Magatama de Yasakani). */
+  manaCost?: number;
+  /** Éventail de la Jorōgumo : les boules de feu ralentissent leur cible (`amount` de sa vitesse, `duration` s). */
+  fireballSlow?: { amount: number; duration: number };
+  /** Pinceau de Seimei : le sceau lie les yokai qu'il frappe, ralentis de `amount` pendant `duration` s. */
+  sealSlow?: { amount: number; duration: number };
+  /** Sol brûlant : le sceau qui explose laisse le sol en feu (`burn` dégâts par seconde pendant `life` s). */
+  sealBurn?: { burn: number; life: number };
+  /** Seiman : le sceau explose une seconde fois, `delay` s après la première, à `damage` de sa force. */
+  sealEcho?: { delay: number; damage: number };
+  /** Étincelle : mana rendu par yokai touché par un sceau. */
+  sealMana?: number;
+  /** Flamme rendue : mana rendu quand le Bouclier de flammes se dissipe ou se brise. */
+  wardMana?: number;
+  /** La Fuite de feu rend cette part des PV max. */
+  flightHeal?: number;
+  /** Masque d'Oublié : après une Fuite de feu, les yokai oublient le Sorcier ces secondes et s'en prennent à sa flamme. */
+  flightDecoy?: number;
+  /** Feu inextinguible : sous cette part de ses PV, les sorts ne coûtent plus de mana. */
+  freeSpells?: number;
+  /** Naissance du feu : chaque yokai abattu par le Sorcier libère ce nombre de boules de feu vers ses voisins. */
+  killBurst?: number;
+  /** Einherjar sorcier : le mana remonte plus vite selon les PV perdus (valeur à 0 PV). */
+  manaRage?: number;
+  /** Oushebti sorcier : mana rendu quand la carapace d'argile absorbe un coup. */
+  clayMana?: number;
+  /** Hanyō sorcier : transformé, les sorts reviennent ce nombre de fois plus vite. */
+  yokaiSpells?: number;
 
   // --- Lame ---
   /** Après une esquive (ou un Pas de l'ombre), les `swings` premiers coups dans les `window` s sont critiques (tag Lame). */
@@ -377,8 +379,8 @@ export interface Perks {
   leapNet?: boolean;
   /** Curée : tuer une cible marquée recharge la Marque du chasseur. */
   markRefund?: boolean;
-  /** Kami de la victoire : tes flèches s'infléchissent vers la cible marquée. */
-  homing?: boolean;
+  /** Coup de grâce : la cible marquée, sous `threshold` de ses PV, prend des coups critiques (× `factor`). */
+  coupDeGrace?: { threshold: number; factor: number };
 
   // --- Objets du Yomi (0.3.0) ---
   /** Masque de hannya : « Au bord du gouffre » (passif du Guerrier) se déclenche dès ce seuil de PV. */
@@ -405,14 +407,24 @@ export interface Perks {
   parentBoost?: number;
   /** Dogū aux yeux clos : la carapace d'argile absorbe ce nombre de coups avant de se reformer. */
   clayCharges?: number;
-  /** Panoplies : PV max multipliés. */
+  /** Dō de lamelles d'os : PV max multipliés. */
   maxHpFactor?: number;
-  /** Lamelles d'os de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
+  /** Haidate de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
   dashShield?: { amount: number; duration: number };
-  /** Sōhei : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
+  /** Haidate du temple : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
   guardBreakNova?: { radius: number; stun: number; knockback: number };
-  /** Éclaireur du Yomi : la cible de la Marque du chasseur fait cette part de dégâts en moins. */
+  /** Dō de cuir noir : la cible de la Marque du chasseur fait cette part de dégâts en moins. */
   huntMarkWeaken?: number;
+
+  // --- Styles de jeu par l'équipement (0.8.0) ---
+  /** Écaille de Ryūjin : chaque coup bloqué rend cette part des PV max (Guerrier). */
+  blockHeal?: number;
+  /** Kemuri-dama : l'Écran de fumée rend cette part des PV max. */
+  smokeHeal?: number;
+  /** Encre de Shinigami : tout coup sur un yokai sous cette part de ses PV est critique. */
+  finisher?: number;
+  /** Flèches d'Ame-no-Hahaya : toutes les flèches transpercent. */
+  arrowPierce?: boolean;
 }
 
 export interface EnemyBaseConfig {
@@ -712,7 +724,7 @@ export interface EnemyConfigs {
 export interface WaveConfig {
   label: string;
   hint?: string;
-  /** Conseil propre à une classe, à la place de `hint` (le Guerrier bloque, l'Invocateur lie des âmes). */
+  /** Conseil propre à une classe, à la place de `hint` (le Guerrier bloque, le Sorcier pose un sceau). */
   hints?: Partial<Record<Kit, string>>;
   /** `elite` : ce yokai est un champion (plus grand, plus résistant), quel que soit le niveau. */
   spawns: { kind: EnemyKind; count: number; elite?: boolean }[];

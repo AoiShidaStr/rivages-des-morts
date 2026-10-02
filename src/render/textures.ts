@@ -155,6 +155,30 @@ export function drawRing(size = 256): HTMLCanvasElement {
   return canvas;
 }
 
+/** Sceau d'onmyōji tracé au sol : deux cercles et une étoile à cinq branches (seiman), en blanc à teinter. */
+export function drawSeal(size = 256): HTMLCanvasElement {
+  const [canvas, ctx] = makeCanvas(size, size);
+  const c = size / 2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+  ctx.lineWidth = size * 0.035;
+  for (const r of [0.47, 0.4]) {
+    ctx.beginPath();
+    ctx.arc(c, c, c * r * 2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.lineWidth = size * 0.025;
+  ctx.beginPath();
+  for (let i = 0; i <= 5; i++) {
+    const a = -Math.PI / 2 + (i * 4 * Math.PI) / 5;
+    const x = c + Math.cos(a) * c * 0.78;
+    const y = c + Math.sin(a) * c * 0.78;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  return canvas;
+}
+
 /** Traînée douce orientée vers +X, plus nette à l'arrivée : Pas de l'ombre, Danse des lames. */
 export function drawStreak(width = 256, height = 64): HTMLCanvasElement {
   const [canvas, ctx] = makeCanvas(width, height);

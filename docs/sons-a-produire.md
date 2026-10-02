@@ -26,7 +26,7 @@ Format conseillé : `.ogg` (ou `.mp3`), mono, 44,1 kHz, sans silence au début. 
 
 ## Combat, par classe
 - **Guerrier** (nodachi) : Frappe fracassante · Bond (saut, atterrissage) · Frénésie
-- **Invocateur** (grelots) : lier une âme · âme qui frappe · Rappel · Sacrifice (explosion) · Chœur spectral · âme qui s'efface / se brise
+- **Sorcier** (grelots) : salve de boules de feu (départ, impact) · Sceau (tracé, explosion) · Bouclier de flammes (allumage, brûlure, dissipation) · Fuite de feu · Grand météore (sifflement, impact) · plus de mana
 - **Lame** (kunai) : Pas de l'ombre · Marque de mort · Écran de fumée · Danse des lames
 - **Paladin** (naginata) : bouclier levé · Aura de lumière · Marteau lancé (vol, impact, retour) · Relever · Jugement (onde sacrée)
 - **Rôdeur** (yumi) : tir · tir chargé (bander, relâcher) · Flèche-filet · Marque du chasseur · Recul

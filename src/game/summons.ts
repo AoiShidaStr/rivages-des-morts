@@ -1,28 +1,19 @@
-// Âmes de l'Invocateur (GDD, « Système d'âmes ») : un yokai vaincu laisse son âme au sol quelques secondes ;
-// liée, elle se relève et combat aux côtés du héros, jusqu'à s'effacer ou se briser sous les coups des yokai.
-// Le Paladin, lui, relève un allié tombé (Relever) : une âme de lumière qui suit les mêmes règles.
-import type { CompanionStats, SummonConfig } from './config';
+// Alliés relevés par le Paladin (Relever) : un yokai tombé depuis peu se relève en âme de lumière et combat aux
+// côtés du héros, jusqu'à s'effacer ou se briser sous les coups des yokai.
+import type { SummonConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, distance, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { EnemyKind, Pose } from './types';
 import type { World } from './world';
 
-/** Distance à laquelle une âme sans cible se tient du héros. */
+/** Distance à laquelle un allié sans cible se tient du héros. */
 const FOLLOW_DISTANCE = 1.6;
 /** Durée de la pose de frappe. */
 const STRIKE_POSE = 0.18;
-/** Temps d'apparition d'une âme liée. */
+/** Temps d'apparition d'un allié relevé. */
 const RISE_TIME = 0.4;
 /** Répit après un coup reçu, pour qu'une même attaque ne la touche pas deux fois. */
 const HIT_GRACE = 0.25;
-
-/** Âme au sol d'un ennemi vaincu, prête à être liée. */
-export interface Soul {
-  id: number;
-  pos: Vec2;
-  kind: EnemyKind;
-  life: number;
-}
 
 export class Summon {
   facing: Vec2 = vec(1, 0);
@@ -34,14 +25,11 @@ export class Summon {
   /** Détruite par les yokai (et non effacée par le temps). */
   broken = false;
   readonly mass = 0.6;
-  /** Rappel : l'ennemi sur lequel l'âme fonce, et les secondes de ruée restantes. */
-  rush: { target: number; t: number } | null = null;
-  /** Le héros qui l'a liée ou relevée. */
+  /** Le héros qui l'a relevé. */
   owner = 0;
-  /** Multiplicateurs propres à son yokai (ou à son rôle de compagnon) : dégâts, vitesse, cadence des coups. */
+  /** Multiplicateurs propres à son yokai : dégâts et vitesse. */
   readonly damageFactor: number;
   readonly speedFactor: number;
-  readonly rate: number;
   /** Portée de tir d'une âme de yokai à distance ; absente, l'âme frappe au contact. */
   readonly range: number | undefined;
   private cooldown = 0;
@@ -50,33 +38,23 @@ export class Summon {
   private rising = 0;
   private grace = 0;
 
-  /**
-   * `toughness` multiplie ses PV et sa durée (Les Douze Shikigami pour un kappa) ; `holy` : relevée par un Paladin ;
-   * `companion` : le compagnon permanent de l'Invocateur, qui ne s'efface jamais avec le temps.
-   */
+  /** `toughness` multiplie ses PV et sa durée (Bandelettes d'Osiris). */
   constructor(
     readonly id: number,
     readonly kind: EnemyKind,
     public pos: Vec2,
     private readonly cfg: SummonConfig,
     toughness: number,
-    readonly holy = false,
-    companion?: CompanionStats,
   ) {
-    const k = companion ?? { damage: 1, speed: 1, hp: 1, rate: 1, ...cfg.kinds[kind] };
-    this.companion = Boolean(companion);
-    this.life = companion ? Infinity : cfg.life * toughness;
+    const k = { damage: 1, speed: 1, hp: 1, ...cfg.kinds[kind] };
+    this.life = cfg.life * toughness;
     this.maxLife = this.life;
     this.hp = cfg.hp * k.hp * toughness;
     this.maxHp = this.hp;
     this.damageFactor = k.damage;
     this.speedFactor = k.speed;
-    this.rate = k.rate;
-    this.range = k.range ?? (companion ? cfg.kinds[companion.kind]?.range : undefined);
+    this.range = k.range;
   }
-
-  /** Le compagnon permanent de l'Invocateur. */
-  readonly companion: boolean;
 
   get radius(): number {
     return this.cfg.radius;
@@ -91,9 +69,8 @@ export class Summon {
     return Math.min(1, this.rising / RISE_TIME);
   }
 
-  /** De 1 (toute fraîche) à 0 (sur le point de s'effacer ou de se briser) : le rendu la fait pâlir. */
+  /** De 1 (tout frais) à 0 (sur le point de s'effacer ou de se briser) : le rendu le fait pâlir. */
   get vigor(): number {
-    if (this.companion) return Math.max(0, this.hp / this.maxHp);
     return Math.max(0, Math.min(this.life / this.maxLife, this.hp / this.maxHp));
   }
 
@@ -146,31 +123,23 @@ export class Summon {
     this.knockback = scale(this.knockback, Math.exp(-10 * dt));
     if (this.rising < RISE_TIME) return;
 
-    let speed = cfg.speed * this.speedFactor * (world.choir > 0 ? cfg.choir.speedFactor : 1);
-    let target: Enemy | undefined;
-    if (this.rush) {
-      this.rush.t -= dt;
-      target = world.enemies.find((e) => e.id === this.rush?.target && e.targetable);
-      if (!target || this.rush.t <= 0) this.rush = null;
-      else speed = cfg.recall.speed;
-    }
-    // Sans ordre, l'âme s'en prend à l'ennemi le plus proche, sans trop s'éloigner du héros.
+    const speed = cfg.speed * this.speedFactor;
+    // L'allié s'en prend à l'ennemi le plus proche, sans trop s'éloigner du héros.
     const farFromHero = distance(this.pos, player.pos) > cfg.leash;
-    if (!target && !farFromHero) target = this.nearestEnemy(world);
+    const target = farFromHero ? undefined : this.nearestEnemy(world);
 
     if (target) {
       const toTarget = sub(target.pos, this.pos);
       this.facing = normalize(toTarget, this.facing);
       const gap = length(toTarget) - target.radius - this.radius;
-      // Une âme à distance tire de loin et recule si l'ennemi la serre de trop près (sauf pendant un Rappel).
-      const reach = this.range && !this.rush ? this.range : cfg.attackRange;
+      // Un allié à distance tire de loin et recule si l'ennemi le serre de trop près.
+      const reach = this.range ?? cfg.attackRange;
       if (gap > reach) this.step(this.facing, speed, dt);
-      else if (this.range && !this.rush && gap < this.range * 0.4) this.step(scale(this.facing, -1), speed * 0.8, dt);
+      else if (this.range && gap < this.range * 0.4) this.step(scale(this.facing, -1), speed * 0.8, dt);
       if (gap <= reach && this.cooldown <= 0) {
-        const ranged = Boolean(this.range) && !this.rush;
-        world.summonHit(this, target, (this.rush ? cfg.recall.damageFactor : 1) * (ranged ? cfg.rangedFactor : 1), ranged);
-        this.rush = null;
-        this.cooldown = cfg.attackCooldown / this.rate;
+        const ranged = Boolean(this.range);
+        world.summonHit(this, target, ranged ? cfg.rangedFactor : 1, ranged);
+        this.cooldown = cfg.attackCooldown;
         this.striking = STRIKE_POSE;
       }
     } else {
