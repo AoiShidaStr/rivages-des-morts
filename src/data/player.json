@@ -61,8 +61,6 @@
   },
   "summon": {
     "max": 2,
-    "bindRange": 4,
-    "soulLife": 5,
     "life": 24,
     "hp": 30,
     "radius": 0.45,
@@ -72,11 +70,6 @@
     "attackCooldown": 0.95,
     "knockback": 2,
     "leash": 8,
-    "malus": 0.1,
-    "leech": 0.05,
-    "recall": { "cooldown": 7, "speed": 13, "damageFactor": 1.6, "duration": 1.2 },
-    "sacrifice": { "cooldown": 8, "damage": 30, "radius": 2.6 },
-    "choir": { "cooldown": 18, "duration": 6, "damageFactor": 1.4, "speedFactor": 1.2, "radius": 4 },
     "rangedFactor": 0.85,
     "kinds": {
       "hitodama": { "damage": 0.7, "speed": 1.35, "hp": 0.6 },
@@ -112,5 +105,13 @@
     "net": { "cooldown": 12, "stun": 2.5, "radius": 1.4, "range": 10 },
     "huntMark": { "cooldown": 8, "duration": 6, "bonus": 0.3, "range": 12, "killHeal": 0.08 },
     "leap": { "cooldown": 5, "distance": 4.5, "duration": 0.35, "height": 0.8, "arrows": 3, "spreadDeg": 14 }
+  },
+  "sorcier": {
+    "mana": { "max": 100, "regen": 10 },
+    "fireball": { "count": 3, "spreadDeg": 16, "speed": 15, "turnRate": 9, "radius": 0.28, "seek": 3 },
+    "seal": { "cost": 18, "cooldown": 2.5, "delay": 1, "radius": 2.2, "damage": 34, "range": 9 },
+    "ward": { "cost": 30, "cooldown": 10, "duration": 5, "shield": 0.4, "burn": 8, "radius": 1.6, "knockback": 7 },
+    "flight": { "cost": 15, "cooldown": 5, "distance": 4.5, "duration": 0.22, "trailLife": 3, "trailRadius": 0.9, "burn": 10 },
+    "meteor": { "cost": 50, "cooldown": 18, "delay": 2, "radius": 3.6, "damage": 140, "range": 10, "knockback": 8 }
   }
 }

@@ -3,7 +3,6 @@
 //
 //   npm run equilibrage                                  niveaux 1, 10 et 20, 12 descentes par combinaison
 //   npm run equilibrage -- --niveaux 10 --parties 20 --classes paladin,rodeur --donjon palais --json resultats.json
-//   npm run equilibrage -- --classes invocateur --compagnon kodama
 //   npm run equilibrage -- --niveaux 30,50 --stuff complet            fin de progression, meilleur équipement
 //   npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3    en coop : deux alliés joués par le bot
 //   npm run equilibrage -- --classes lame --objets menpo-shikome,tsuba-ebrechee   le héros testé porte ces objets
@@ -28,23 +27,22 @@ function option(name, fallback) {
   return i >= 0 ? process.argv[i + 1] : fallback;
 }
 
-const CLASSES = ['guerrier', 'invocateur', 'lame', 'paladin', 'rodeur'];
+const CLASSES = ['guerrier', 'sorcier', 'lame', 'paladin', 'rodeur'];
 const RACES = [['einherjar'], ['oushebti'], ['demi-dieu', 'zeus'], ['demi-dieu', 'ares'], ['demi-dieu', 'hermes'], ['demi-dieu', 'athena'], ['hanyo']];
 /** Les branches de talents prises par le bot : les deux premières pleines, un nœud de la troisième. */
-const TREE = { guerrier: ['susanoo', 'heracles', 'berserkir'], invocateur: ['seimei', 'orphee', 'anubis'], lame: ['tsukuyomi', 'thanatos', 'loki'], paladin: ['tyr', 'amaterasu', 'osiris'], rodeur: ['artemis', 'hachiman', 'skadi'] };
+const TREE = { guerrier: ['susanoo', 'heracles', 'berserkir'], sorcier: ['kagutsuchi', 'seimei', 'promethee'], lame: ['tsukuyomi', 'thanatos', 'loki'], paladin: ['tyr', 'amaterasu', 'osiris'], rodeur: ['artemis', 'hachiman', 'skadi'] };
 const GEAR = { casque: 'chapeau-paille', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'magatama-fele' };
 /** `--stuff complet` : le meilleur équipement de chaque classe, forgé au niveau du héros (arme comprise). */
 const FULL = {
   guerrier: { arme: 'totsuka-tsurugi', casque: 'kabuto-fendu', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'peche-okamuzumi', relique: 'coupelle-kappa' },
-  invocateur: { arme: 'eventail-jorogumo', casque: 'voile-izanami', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'magatama-fele', relique: 'magatama-yasakani' },
+  sorcier: { arme: 'eventail-jorogumo', casque: 'voile-izanami', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'magatama-fele', relique: 'magatama-yasakani' },
   lame: { arme: 'kaiken-izanami', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
   paladin: { arme: 'miroir-yata', casque: 'chapeau-paille', plastron: 'do-yomi', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
   rodeur: { arme: 'arc-soie', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
 };
 /**
  * Les trois styles de jeu de chaque classe (GDD, « Styles de jeu par l'équipement ») : survie, dégâts, et l'équilibre
- * entre les deux. Les pièces d'un style se mélangent avec celles des autres. L'Invocateur attend sa refonte en Sorcier :
- * ses trois styles sont son équipement complet.
+ * entre les deux. Les pièces d'un style se mélangent avec celles des autres.
  */
 const KITS = {
   guerrier: {
@@ -62,13 +60,18 @@ const KITS = {
     dps: { arme: 'tetsubo-cloche', casque: 'eboshi-amaterasu', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-temple', amulette: 'encensoir-moine', relique: 'tambour-temple' },
     equilibre: { arme: 'miroir-yata', casque: 'chapeau-paille', plastron: 'shimenawa-tressee', jambieres: 'suneate-ecailles', bottes: 'geta-temple', amulette: 'cloche-grand-rocher', relique: 'fil-joren' },
   },
+  sorcier: {
+    survie: { arme: 'eventail-jorogumo', casque: 'chapeau-paille', plastron: 'haori-ignifuge', jambieres: 'suneate-ecailles', bottes: 'geta-kasa', amulette: 'omamori-temple', relique: 'fil-joren' },
+    dps: { arme: 'grelots-onmyoji', casque: 'voile-izanami', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'ofuda-kagutsuchi', relique: 'magatama-yasakani' },
+    equilibre: { arme: 'pinceau-seimei', casque: 'masque-oublie', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-braise', amulette: 'magatama-fele', relique: 'fil-joren' },
+  },
   rodeur: {
     survie: { arme: 'arc-pecher', casque: 'chapeau-paille', plastron: 'do-cuir-noir', jambieres: 'suneate-ecailles', bottes: 'geta-kasa', amulette: 'plume-yatagarasu', relique: 'fil-joren' },
     dps: { arme: 'arc-ikazuchi', casque: 'jingasa-laque', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'tabi-messager', amulette: 'dent-kappa', relique: 'fleches-hahaya' },
     equilibre: { arme: 'arc-soie', casque: 'jingasa-laque', plastron: 'shiroshozoku', jambieres: 'kyahan-eclaireur', bottes: 'waraji-eclaireur', amulette: 'omamori-temple', relique: 'fil-joren' },
   },
 };
-KITS.invocateur = { survie: FULL.invocateur, dps: FULL.invocateur, equilibre: FULL.invocateur };
+
 const STYLES = ['survie', 'dps', 'equilibre'];
 const STUFF = option('stuff', 'typique');
 /** `--niveau-donjon 30` : niveau du donjon, celui du héros sinon. */
@@ -79,16 +82,14 @@ const OBJECTS = option('objets', '').split(',').filter(Boolean);
  * `--mode dps` (`npm run dps`) : banc de DPS. Chaque héros frappe pendant `--duree` secondes un kodama immobile et
  * inoffensif dont les PV remontent sans cesse (`--pv` : ses PV de base, pour les effets qui en dépendent). Toutes les
  * compétences qui font des dégâts partent dès qu'elles sont prêtes. Cible (GDD, plan de mise à jour) : en dégâts
- * par seconde, Lame 100 %, Rôdeur 95 %, Guerrier et Invocateur 75 %, Paladin 60 %.
+ * par seconde, Sorcier 115 % (premier DPS du jeu), Lame 100 %, Rôdeur 95 %, Guerrier 75 %, Paladin 60 %.
  */
 const MODE = option('mode', 'donjon');
-const DPS_TARGET = { lame: 1, rodeur: 1 / 1.05, guerrier: 0.75, invocateur: 0.75, paladin: 0.6 };
+const DPS_TARGET = { sorcier: 1.15, lame: 1, rodeur: 1 / 1.05, guerrier: 0.75, paladin: 0.6 };
 const DURATION = Number(option('duree', '60'));
 const DUMMY_HP = Number(option('pv', '750'));
 const PLAYERS = Math.max(1, Math.min(3, Number(option('joueurs', '1'))));
 const ALLIES = option('allies', '').split(',').filter(Boolean);
-/** Compagnon de l'Invocateur (`--compagnon kodama`), celui par défaut de la classe sinon. */
-const COMPANION = option('compagnon', '');
 /** Le donjon joué (`--donjon palais`), les Rizières noyées par défaut. */
 const DUNGEON = option('donjon', 'rizieres');
 // Donjon infini (`--donjon infini`) : le bloc qui contient ce palier (le héros garde le niveau de `--niveaux`).
@@ -132,7 +133,6 @@ async function worker() {
     const state = {
       version: 1,
       hero: { race, class: cls, ...(parent ? { parent } : {}) },
-      ...(COMPANION && cls === 'invocateur' ? { companion: COMPANION } : {}),
       oboles: 0,
       xp: 0,
       talents,

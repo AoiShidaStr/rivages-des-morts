@@ -987,6 +987,54 @@ export const ICONS = {
     px(c, [[24, 4], [25, 3], [23, 5]], '#f0c040');
     px(c, [[12, 19], [16, 14], [19, 10]], '#5a6aa8');
   },
+  'pinceau-seimei'(c) {
+    // Pinceau de calligraphie en diagonale : manche de bambou laqué, pointe trempée de cinabre, une goutte.
+    for (let i = 0; i <= 18; i++) {
+      c.set(26 - i, 4 + i, i % 6 === 0 ? '#5a4a2a' : '#9a7a42');
+      c.set(27 - i, 4 + i, '#c8a868');
+      c.set(26 - i, 5 + i, '#6b5530');
+    }
+    c.rect(24, 3, 4, 2, '#2b2a30');
+    poly(c, [[9, 21], [12, 24], [6, 30], [4, 28]], '#e8dcc0');
+    poly(c, [[7, 26], [9, 28], [5, 31], [3, 29]], '#c8341f');
+    c.disc(9, 31, 0.8, '#c8341f');
+    c.line([12, 20], [14, 22], 0, '#3a3024');
+  },
+  'haori-ignifuge'(c) {
+    // Veste d'onmyōji rouge sombre, larges manches, motif de flammes dorées et cordon blanc.
+    poly(c, [[9, 5], [23, 5], [30, 14], [26, 18], [24, 15], [24, 29], [8, 29], [8, 15], [6, 18], [2, 14]], '#7a1f1a');
+    poly(c, [[16, 5], [23, 5], [30, 14], [26, 18], [24, 15], [24, 29], [16, 29]], '#5e1714');
+    poly(c, [[13, 5], [19, 5], [16, 14]], '#efe6cf');
+    for (const [x, y] of [[11, 20], [16, 24], [21, 19]]) {
+      poly(c, [[x - 2, y + 3], [x + 2, y + 3], [x, y - 3]], '#f0a030');
+      c.set(x, y + 1, '#ffe080');
+    }
+    c.line([12, 13], [20, 13], 0, '#efe6cf');
+  },
+  'geta-braise'(c) {
+    // Deux socques de bois noirci, dents épaisses, braises rougeoyantes dans les fentes.
+    for (const ox of [4, 17]) {
+      c.rect(ox, 8, 11, 17, '#3a2a20');
+      c.rect(ox + 1, 9, 9, 15, '#4f3a2a');
+      c.rect(ox + 1, 25, 3, 4, '#2b201a');
+      c.rect(ox + 7, 25, 3, 4, '#2b201a');
+      c.line([ox + 2, 12], [ox + 5, 15], 0, '#c8341f');
+      c.line([ox + 5, 15], [ox + 8, 12], 0, '#c8341f');
+      px(c, [[ox + 4, 19], [ox + 7, 21], [ox + 3, 22]], '#ffa030');
+      c.set(ox + 5, 17, '#ffe080');
+    }
+  },
+  'ofuda-kagutsuchi'(c) {
+    // Talisman de papier vertical, glyphe de feu vermillon, bords roussis.
+    c.rect(10, 3, 12, 26, '#efe6cf');
+    c.rect(10, 3, 12, 2, '#a8763a');
+    c.rect(10, 27, 12, 2, '#5a3a20');
+    px(c, [[10, 26], [21, 25], [11, 24], [21, 6]], '#8a5a30');
+    poly(c, [[13, 20], [19, 20], [16, 9]], '#c8341f');
+    poly(c, [[14, 20], [18, 20], [16, 14]], '#f0a030');
+    c.line([13, 23], [19, 23], 0, '#c8341f');
+    c.line([16, 6], [16, 8], 0, '#c8341f');
+  },
   'fleches-hahaya'(c) {
     // Carquois de laque noire à liseré d'or, trois flèches célestes aux pointes de lumière.
     for (const [x, tip] of [[11, 3], [16, 1], [21, 4]]) {

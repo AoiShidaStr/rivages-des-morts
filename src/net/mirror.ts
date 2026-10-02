@@ -43,7 +43,6 @@ export class MirrorWorld implements WorldView {
   stumps: StumpView[] = [];
   peaches: PeachView[] = [];
   webs: WebView[] = [];
-  soulInReach = false;
   graveInReach = false;
   hammerOut = false;
   readonly cfg: WorldView['cfg'];
@@ -151,7 +150,6 @@ export class MirrorWorld implements WorldView {
       this.peaches = b.peaches;
     }
     const mine = latest.heroes[this.seat];
-    this.soulInReach = mine?.soulNear ?? false;
     this.graveInReach = mine?.graveNear ?? false;
     this.hammerOut = mine?.hammerOut ?? false;
   }
@@ -202,7 +200,8 @@ export class MirrorWorld implements WorldView {
       transformed: 0,
       hidden: 0,
       aura: 0,
-      choir: 0,
+      ward: 0,
+      mana: 0,
       smoke: null,
       drawProgress: 0,
       rage: 0,
@@ -210,9 +209,10 @@ export class MirrorWorld implements WorldView {
       dodgeCooldown: 0,
       bondCooldown: 0,
       frenzyCooldown: 0,
-      recallCooldown: 0,
-      sacrificeCooldown: 0,
-      choirCooldown: 0,
+      sealCooldown: 0,
+      wardCooldown: 0,
+      flightCooldown: 0,
+      meteorCooldown: 0,
       dashCharges: cfg.blade.shadowDash.charges,
       dashRecharge: 0,
       deathMarkCooldown: 0,
@@ -230,7 +230,7 @@ export class MirrorWorld implements WorldView {
       leapCooldown: 0,
     };
     if (snap) {
-      const { soulNear: _soul, graveNear: _grave, hammerOut: _hammer, ...fields } = snap;
+      const { graveNear: _grave, hammerOut: _hammer, ...fields } = snap;
       Object.assign(view, fields);
     }
     return view;

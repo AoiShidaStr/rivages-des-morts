@@ -22,7 +22,9 @@ export interface HeroView {
   readonly transformed: number;
   readonly hidden: number;
   readonly aura: number;
-  readonly choir: number;
+  /** Sorcier : secondes de Bouclier de flammes restantes, et son mana. */
+  readonly ward: number;
+  readonly mana: number;
   readonly smoke: { readonly pos: Vec2; readonly cloud: number } | null;
   readonly drawProgress: number;
   readonly rage: number;
@@ -30,9 +32,10 @@ export interface HeroView {
   readonly dodgeCooldown: number;
   readonly bondCooldown: number;
   readonly frenzyCooldown: number;
-  readonly recallCooldown: number;
-  readonly sacrificeCooldown: number;
-  readonly choirCooldown: number;
+  readonly sealCooldown: number;
+  readonly wardCooldown: number;
+  readonly flightCooldown: number;
+  readonly meteorCooldown: number;
   readonly dashCharges: number;
   readonly dashRecharge: number;
   readonly deathMarkCooldown: number;
@@ -45,7 +48,7 @@ export interface HeroView {
   readonly guardBroken: number;
   /** Paladin : ferveur du Jugement. */
   readonly fervor: number;
-  /** Bouclier temporaire (panoplie de la Lame), en PV. */
+  /** Bouclier temporaire (Haidate de shikome, Bouclier de flammes), en PV. */
   readonly barrier: number;
   readonly raiseCooldown: number;
   readonly netCooldown: number;
@@ -89,14 +92,11 @@ export interface SummonView {
   readonly pose: Pose;
   readonly spawnProgress: number;
   readonly vigor: number;
-  readonly holy: boolean;
-  /** Le compagnon permanent de l'Invocateur. */
-  readonly companion: boolean;
 }
 
 export interface ProjectileView {
   readonly id: number;
-  readonly kind: 'arrow' | 'net' | 'hammer';
+  readonly kind: 'arrow' | 'net' | 'hammer' | 'fireball';
   readonly pos: Vec2;
   readonly dir: Vec2;
   readonly full: boolean;
@@ -129,8 +129,7 @@ export interface WorldView {
   readonly stumps: readonly StumpView[];
   readonly peaches: readonly PeachView[];
   readonly webs: readonly WebView[];
-  /** Pour le héros de ce joueur : une âme à lier à portée, quelqu'un à relever, son marteau en vol. */
-  readonly soulInReach: boolean;
+  /** Pour le héros de ce joueur : quelqu'un à relever, son marteau en vol. */
   readonly graveInReach: boolean;
   readonly hammerOut: boolean;
   /** Le héros que poursuit ce yokai (le premier en solo). */

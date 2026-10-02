@@ -18,8 +18,6 @@ export interface Hero {
 export interface ProgressState {
   version: 1;
   hero: Hero;
-  /** Invocateur : le yokai choisi comme compagnon permanent (celui par défaut de la classe s'il manque). */
-  companion?: string;
   oboles: number;
   xp: number;
   /** Nœuds appris dans l'arbre de compétences. */
@@ -458,6 +456,8 @@ type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeons' | 'hero'> &
     weaponLevels?: Record<string, number>;
     /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
     dungeon?: DungeonRecord;
+    /** Avant la 0.8.0 : le compagnon de l'Invocateur. */
+    companion?: string;
   };
 
 function isSavedState(value: unknown): value is SavedState {
@@ -471,9 +471,14 @@ function isExportFile(value: unknown): value is ExportFile {
 }
 
 function migrate(saved: SavedState, catalog: Catalog): ProgressState {
-  const { weaponLevel, weaponLevels, dungeon, ...rest } = saved;
+  const { weaponLevel, weaponLevels, dungeon, companion: _companion, ...rest } = saved;
   const state: ProgressState = { ...fresh(), ...rest };
   state.hero = saved.hero ?? { ...DEFAULT_HERO };
+  // 0.8.0 : le Sorcier remplace l'Invocateur. Le héros garde son niveau et ses objets ; ses talents lui sont rendus.
+  if (state.hero.class === 'invocateur') {
+    state.hero = { ...state.hero, class: 'sorcier' };
+    state.talents = [];
+  }
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
   // Une Jorōgumo déjà vaincue compte comme une victoire au niveau 1.
   const rizieres = dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });

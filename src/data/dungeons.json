@@ -18,7 +18,7 @@
         { "if": [{ "class": "lame" }], "give": "crocs-jorogumo" },
         { "if": [{ "class": "paladin" }], "give": "miroir-yata" },
         { "if": [{ "class": "rodeur" }], "give": "arc-soie" },
-        { "if": [{ "class": "invocateur" }], "give": "eventail-jorogumo" }
+        { "if": [{ "class": "sorcier" }], "give": "eventail-jorogumo" }
       ]
     },
     "shop": "fin",

@@ -42,7 +42,6 @@ type Threat = { type: 'melee'; src: Vec2 } | { type: 'charge'; src: Vec2; dir: V
 
 export class Bot {
   private readonly seen = new WeakMap<object, boolean>();
-  private lastBind = -9;
   /** Face à Izanami : vrai tant qu'on détourne les yeux pour laisser retomber son regard. */
   private averting = false;
 
@@ -62,6 +61,7 @@ export class Bot {
     const p = this.hero;
     const c = p.cfg;
     const kit = c.kit;
+    const ranged = kit === 'rodeur' || kit === 'sorcier';
     const input: InputFrame = {
       move: vec(),
       aim: { ...p.pos },
@@ -139,7 +139,9 @@ export class Bot {
       }
       input.move = hit.type === 'charge' ? vec(-hit.dir.z, hit.dir.x) : normalize(sub(p.pos, hit.src));
       if (p.dodgeCooldown <= 0) input.dodgePressed = true;
-      if (kit !== 'rodeur' || p.dodgeCooldown > 0) return input;
+      // Le Sorcier, esquive en recharge, s'en sort par la Fuite de feu.
+      else if (kit === 'sorcier' && p.flightCooldown <= 0 && p.mana >= p.spellCost(c.sorcier.flight.cost)) input.skillEPressed = true;
+      if (!ranged || p.dodgeCooldown > 0) return input;
     }
 
     // Izanami : une pêche cueillie sur un pêcher mûr la repousse et l'expose. On va frapper l'arbre (ou on lui tire
@@ -149,7 +151,7 @@ export class Bot {
       const tree = ripe.length ? ripe.reduce((a, b) => (distance(a.pos, p.pos) <= distance(b.pos, p.pos) ? a : b)) : null;
       if (tree) {
         const toTree = sub(tree.pos, p.pos);
-        const reach = kit === 'rodeur' ? c.attack.range * 0.8 : c.attack.range * 0.7;
+        const reach = ranged ? c.attack.range * 0.8 : c.attack.range * 0.7;
         input.aim = { ...tree.pos };
         input.aimGround = { ...tree.pos };
         if (length(toTree) - tree.radius > reach) input.move = normalize(toTree);
@@ -165,14 +167,17 @@ export class Bot {
       else if (her.gaze < GAZE_LOW) this.averting = false;
       const wide = c.attack.shape !== 'line' && c.attack.arcDeg >= 80;
       const side = turn(toTarget, AVERT);
-      if (kit !== 'rodeur' && (wide || gap < 0.6)) {
+      if (kit === 'sorcier') {
+        // Ses boules de feu se guident seules : il vise à côté d'elle, hors de son regard, et tire sans relâche.
+        input.aim = add(p.pos, scale(side, Math.max(2, gap + target.radius)));
+      } else if (!ranged && (wide || gap < 0.6)) {
         input.aim = add(p.pos, scale(side, Math.max(1, gap + target.radius)));
         input.aimGround = { ...input.aim };
         if (gap > (wide ? c.attack.range * 0.6 : 0.4)) input.move = toTarget;
         if (gap <= (wide ? c.attack.range * 0.85 : 0.6)) input.attackHeld = true;
         return input;
       }
-      if (this.averting) {
+      else if (this.averting) {
         // On détourne les yeux : on recule en visant ailleurs, et on frappe ce qui passe.
         input.aim = add(p.pos, scale(turn(toTarget, Math.PI / 2), 3));
         input.aimGround = { ...input.aim };
@@ -189,18 +194,30 @@ export class Bot {
       else if (p.canBond && gap > 2.5 && gap < c.bond.range) input.skillEPressed = true;
       else if (this.greedy && p.canBond) input.skillEPressed = true;
       if (p.canFrenzy && (near(4).length >= 2 || target.boss || this.greedy)) input.skillRPressed = true;
-    } else if (kit === 'invocateur') {
-      const soul = w.souls.find((s) => distance(s.pos, p.pos) <= c.summon.bindRange);
-      if (soul && w.time - this.lastBind > 0.3) {
+    } else if (kit === 'sorcier') {
+      // Le sceau tombe sur la cible dès qu'il est prêt ; le météore sur un boss ou une grappe. Le bouclier se lève
+      // quand on le serre, et la Fuite de feu l'en sort.
+      const s = c.sorcier;
+      const can = (cost: number) => p.mana >= p.spellCost(cost);
+      const crowd = near(s.meteor.radius, target.pos).length;
+      if (p.meteorCooldown <= 0 && can(s.meteor.cost) && gap < s.meteor.range && (target.boss || crowd >= 3 || this.greedy)) {
+        input.skillRPressed = true;
+        input.aimGround = { ...target.pos };
+      } else if (p.sealCooldown <= 0 && can(s.seal.cost) && gap < s.seal.range) {
         input.signaturePressed = true;
-        input.aim = { ...soul.pos };
-        this.lastBind = w.time;
+        input.aimGround = { ...target.pos };
+      }
+      const boss = foes.find((e) => e.boss && distance(e.pos, p.pos) < 5);
+      if (p.wardCooldown <= 0 && can(s.ward.cost) && (near(3).length >= 1 || boss || hpRatio < 0.6 || this.greedy)) input.skillAPressed = true;
+      // Une Fuite qui revient vite (Masque d'Oublié) se joue sans attendre d'être cerné.
+      const pressed = near(2);
+      const eager = s.flight.cooldown <= 3.5;
+      const cornered = pressed.length >= (eager ? 1 : 2) || pressed.some((e) => e.boss) || (pressed.length > 0 && hpRatio < 0.6);
+      if (p.flightCooldown <= 0 && can(s.flight.cost) && cornered) {
+        input.skillEPressed = true;
+        input.move = normalize(sub(p.pos, pressed[0].pos));
         return input;
       }
-      if (mine.length && p.recallCooldown <= 0) input.skillAPressed = true;
-      const crowd = this.greedy ? 1 : 2;
-      if (mine.length >= Math.min(crowd, c.summon.max) && p.sacrificeCooldown <= 0 && near(c.summon.sacrifice.radius, mine[0].pos).length >= crowd) input.skillEPressed = true;
-      if (mine.length && p.choirCooldown <= 0) input.skillRPressed = true;
     } else if (kit === 'lame') {
       // Au banc de DPS, la Lame joue comme un bon joueur : elle traverse sa cible dès qu'elle a une charge (marque et
       // critique), puis revient au contact d'une esquive, qui ouvre elle aussi ses critiques.
@@ -228,7 +245,15 @@ export class Bot {
       if (p.leapCooldown <= 0 && near(2).length >= 1) input.skillRPressed = true;
     }
 
-    // Déplacement et attaque.
+    // Déplacement et attaque. Le Sorcier garde ses distances et lance ses salves.
+    if (kit === 'sorcier') {
+      const range = c.attack.range;
+      const close = near(3);
+      if (close.length) input.move = normalize(sub(p.pos, close[0].pos));
+      else if (gap > range - 1.5) input.move = toTarget;
+      if (gap <= range) input.attackHeld = true;
+      return input;
+    }
     if (kit === 'rodeur') {
       const range = c.attack.range;
       const close = near(3.5);

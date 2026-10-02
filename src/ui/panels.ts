@@ -5,8 +5,8 @@ import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgra
 import {
   buildLoadout,
   canLearn,
+  classUpgrade,
   equipBlock,
-  companionOf,
   heroClass,
   heroRace,
   itemLevel,
@@ -400,11 +400,16 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled
 
 // --- Forge ------------------------------------------------------------------
 
+/** Règles de forge des armes pour le héros : sa classe peut tirer plus de puissance de la forge (Sorcier). */
+function heroUpgrade(ctx: UiContext) {
+  return classUpgrade(content.upgrade, heroClass(content.skills, ctx.progress.state.hero));
+}
+
 /** Dégâts du coup d'une arme à ce niveau de forge. */
 function weaponDamage(ctx: UiContext, def: ItemDef, level: number): number {
   const set = def.effects?.find((e) => e.op === 'set' && e.path === 'attack.damage');
   const base = set ? Number(set.value) : ctx.basePlayer.attack.damage;
-  return Math.round(base * weaponPower(content.upgrade, level));
+  return Math.round(base * weaponPower(heroUpgrade(ctx), level));
 }
 
 interface UpgradePlan {
@@ -461,7 +466,7 @@ function levelTrack(def: ItemDef, level: number, cap: number): HTMLElement {
 function growthRows(ctx: UiContext, def: ItemDef, level: number): HTMLElement[] {
   if (def.slot === 'arme') {
     // Les dégâts sont arrondis : la puissance montre ce que chaque niveau apporte vraiment (+6 %).
-    const power = (n: number) => `+${Math.round((weaponPower(content.upgrade, n) - 1) * 100)} %`;
+    const power = (n: number) => `+${Math.round((weaponPower(heroUpgrade(ctx), n) - 1) * 100)} %`;
     return [
       h('dt', {}, 'Puissance de l’arme'),
       h('dd', {}, `${power(level)} → `, h('b', {}, power(level + 1))),
@@ -782,10 +787,9 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
   add(Math.round((after.bonus.oboles - before.bonus.oboles) * 100), ' %', 'oboles');
   const tag = heroClass(content.skills, ctx.progress.state.hero).tag.name;
   add(after.tagCount - before.tagCount, '', `tag${Math.abs(after.tagCount - before.tagCount) > 1 ? 's' : ''} ${tag}`);
-  if (a.kit === 'invocateur') {
-    add(b.summon.max - a.summon.max, '', `âme${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''} active${Math.abs(b.summon.max - a.summon.max) > 1 ? 's' : ''}`);
-    add(Math.round(b.summon.damage) - Math.round(a.summon.damage), '', 'dégâts des âmes');
-    add(Math.round(b.summon.life - a.summon.life), ' s', 'de vie des âmes');
+  if (a.kit === 'sorcier') {
+    add(Math.round(b.sorcier.mana.max - a.sorcier.mana.max), '', 'mana max');
+    add(Math.round(b.sorcier.seal.damage) - Math.round(a.sorcier.seal.damage), '', 'dégâts du sceau');
   }
   return out;
 }
@@ -903,7 +907,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     // départ jamais forgée. Dégâts : forge de l'arme et dégâts des pièces ; PV : PV et armure.
     const bare = buildLoadout(ctx.basePlayer, { ...state, equipped: { arme: cls.weapon }, itemLevels: {} }, content, progress.level).config;
     const weapon = state.equipped.arme;
-    const gearDamage = (weapon ? weaponPower(content.upgrade, itemLevel(state, weapon)) : 1) * (1 + loadout.bonus.damage);
+    const gearDamage = (weapon ? weaponPower(classUpgrade(content.upgrade, cls), itemLevel(state, weapon)) : 1) * (1 + loadout.bonus.damage);
     const effective = (c: PlayerConfig) => c.maxHp / (c.damageTakenFactor ?? 1);
     const stats = h(
       'dl',
@@ -924,14 +928,14 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       h('dd', {}, `${Math.round((cfg.damageTakenFactor ?? 1) * 100)} %`),
       loadout.bonus.oboles ? h('dt', {}, 'Oboles gagnées') : null,
       loadout.bonus.oboles ? h('dd', {}, `+${Math.round(loadout.bonus.oboles * 100)} %`) : null,
-      ...(cfg.kit === 'invocateur'
+      ...(cfg.kit === 'sorcier'
         ? [
-            h('dt', {}, 'Âmes actives'),
-            h('dd', {}, String(cfg.summon.max)),
-            h('dt', {}, 'Dégâts d’une âme'),
-            h('dd', {}, String(Math.round(cfg.summon.damage * (cfg.perks?.summonDamageFactor ?? 1)))),
-            h('dt', {}, 'Vie d’une âme'),
-            h('dd', {}, `${Math.round(cfg.summon.life)} s`),
+            h('dt', {}, 'Mana'),
+            h('dd', {}, `${Math.round(cfg.sorcier.mana.max)} (+${fr(cfg.sorcier.mana.regen, 1)} par s)`),
+            h('dt', {}, 'Boules de feu'),
+            h('dd', {}, `${Math.round(cfg.sorcier.fireball.count)} × ${Math.round(cfg.attack.damage)}`),
+            h('dt', {}, 'Sceau · météore'),
+            h('dd', {}, `${Math.round(cfg.sorcier.seal.damage)} · ${Math.round(cfg.sorcier.meteor.damage)}`),
           ]
         : []),
     );
@@ -1052,34 +1056,6 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       ),
     );
 
-    // Invocateur : son compagnon permanent, au choix parmi les yokai.
-    const companionDef = cls.companion;
-    const chosen = companionDef ? companionOf(companionDef, state) : '';
-    const companions = companionDef
-      ? h(
-          'div',
-          { class: 'companions' },
-          ...Object.entries(companionDef.kinds).map(([id, kind]) =>
-            h(
-              'button',
-              {
-                class: `node${id === chosen ? ' learned' : ''}`,
-                onclick: () => {
-                  if (id === chosen) return;
-                  state.companion = id;
-                  progress.save();
-                  ctx.toast(`Compagnon : ${kind.name}`, 'quest');
-                  render();
-                },
-              },
-              h('span', { class: 'node-rank' }, id === chosen ? 'Ton compagnon' : 'Choisir'),
-              h('strong', {}, kind.name),
-              h('small', {}, kind.description),
-            ),
-          ),
-        )
-      : null;
-
     const passives = h(
       'div',
       { class: 'passives' },
@@ -1095,9 +1071,6 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
         'div',
         { class: 'list' },
         header,
-        companions ? h('h3', {}, 'Compagnon') : null,
-        companions ? h('p', { class: 'note' }, 'Il te suit dès le début de chaque descente, d’une vague à l’autre, et se reforme s’il tombe. Il n’affaiblit pas tes coups. On en change quand on veut.') : null,
-        companions,
         h('div', { class: 'tree' }, ...branches),
         h('h3', {}, 'Passifs et compétences'),
         passives,

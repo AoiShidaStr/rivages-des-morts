@@ -96,7 +96,7 @@ interface Ally {
 }
 
 /** Classes des alliés joués par l'ordinateur, dans l'ordre où on les ajoute (en sautant celle du joueur). */
-const ALLY_CLASSES = ['paladin', 'rodeur', 'guerrier', 'lame', 'invocateur'];
+const ALLY_CLASSES = ['paladin', 'rodeur', 'guerrier', 'lame', 'sorcier'];
 const ALLY_RACES = ['oushebti', 'demi-dieu', 'hanyo', 'einherjar'];
 
 const randInt = ([min, max]: [number, number]) => min + Math.floor(Math.random() * (max - min + 1));

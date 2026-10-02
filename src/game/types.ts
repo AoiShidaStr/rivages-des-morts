@@ -36,7 +36,7 @@ export interface InputFrame {
   aimGround: Vec2;
   attackPressed: boolean;
   attackHeld: boolean;
-  /** Clic droit : blocage du Guerrier et du Paladin, Lier de l'Invocateur, Pas de l'ombre, tir chargé. */
+  /** Clic droit : blocage du Guerrier et du Paladin, Sceau du Sorcier, Pas de l'ombre, tir chargé. */
   signatureHeld: boolean;
   signaturePressed: boolean;
   dodgePressed: boolean;
@@ -93,17 +93,15 @@ export type GameEvent =
   | { type: 'clayShell'; pos: Vec2 }
   | { type: 'divineAegis'; pos: Vec2 }
   | { type: 'transform'; pos: Vec2 }
-  // Invocateur : âmes au sol, âmes liées et leurs compétences
-  | { type: 'soulSet'; id: number; pos: Vec2 }
-  | { type: 'soulEnd'; id: number }
-  | { type: 'bind'; id: number; pos: Vec2; kind: EnemyKind }
-  | { type: 'bindFail'; pos: Vec2 }
-  | { type: 'summonHit'; id: number; pos: Vec2; amount: number }
-  /** `broken` : l'âme a été détruite par les yokai, plutôt que de s'effacer avec le temps. */
-  | { type: 'summonFade'; id: number; pos: Vec2; broken: boolean }
-  | { type: 'recall'; pos: Vec2 }
-  | { type: 'sacrifice'; pos: Vec2; radius: number }
-  | { type: 'choir'; pos: Vec2; radius: number }
+  // Sorcier : sceaux et météores annoncés puis abattus, sol en feu, Bouclier de flammes
+  | { type: 'blast'; id: number; kind: 'seal' | 'meteor'; pos: Vec2; radius: number; delay: number }
+  | { type: 'blastEnd'; id: number; kind: 'seal' | 'meteor'; pos: Vec2; radius: number }
+  | { type: 'ember'; id: number; pos: Vec2; radius: number; life: number }
+  | { type: 'emberEnd'; id: number }
+  | { type: 'ward'; pos: Vec2; radius: number }
+  | { type: 'wardEnd'; pos: Vec2 }
+  | { type: 'flight'; from: Vec2; to: Vec2 }
+  | { type: 'noMana'; pos: Vec2 }
   // Lame : marques, traînées du Pas de l'ombre et de la Danse des lames, fumée
   | { type: 'mark'; id: number; pos: Vec2; mark: MarkKind }
   | { type: 'streak'; from: Vec2; to: Vec2 }
@@ -112,6 +110,9 @@ export type GameEvent =
   | { type: 'aura'; pos: Vec2; radius: number }
   | { type: 'raise'; id: number; pos: Vec2 }
   | { type: 'raiseFail'; pos: Vec2 }
+  // Alliés relevés : `broken`, détruit par les yokai plutôt qu'effacé par le temps
+  | { type: 'summonHit'; id: number; pos: Vec2; amount: number }
+  | { type: 'summonFade'; id: number; pos: Vec2; broken: boolean }
   // Rôdeur : filet qui s'ouvre, tir chargé plein
   | { type: 'netBurst'; pos: Vec2; radius: number }
   | { type: 'loose'; pos: Vec2; full: boolean }

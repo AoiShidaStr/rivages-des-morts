@@ -1,5 +1,5 @@
 {
-  "about": "bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : summon.* pour les âmes de l'Invocateur, blade.*, paladin.* et ranger.* pour la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks.",
+  "about": "bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : sorcier.*, blade.*, paladin.* et ranger.* pour le Sorcier, la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks.",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -93,49 +93,67 @@
       "name": "Grelots d'onmyōji",
       "slot": "arme",
       "rarity": "commune",
-      "tags": ["Invocateur"],
-      "summary": "Arme de départ de l’Invocateur : le tintement frappe tout autour de toi, mais faiblement ; tes âmes frappent 10 % plus vite.",
+      "tags": ["Sorcier"],
+      "summary": "Arme de départ du Sorcier : chaque tintement lance une salve de boules de feu guidées (4 dégâts chacune), portée 10 m.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 1.7 },
-        { "op": "set", "path": "attack.shape", "value": "arc" },
-        { "op": "set", "path": "attack.arcDeg", "value": 360 },
-        { "op": "set", "path": "attack.commit", "value": 0.17 },
-        { "op": "set", "path": "attack.windup", "value": 0.07 },
-        { "op": "set", "path": "attack.recovery", "value": 0.22 },
-        { "op": "set", "path": "attack.knockback", "value": 2 },
-        { "op": "mul", "path": "summon.attackCooldown", "value": 0.9 }
+        { "op": "set", "path": "attack.damage", "value": 4 },
+        { "op": "set", "path": "attack.range", "value": 10 },
+        { "op": "set", "path": "attack.windup", "value": 0.12 },
+        { "op": "set", "path": "attack.recovery", "value": 0.34 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 }
       ],
       "paliers": [
-        { "level": 10, "name": "Tintement", "summary": "Tes âmes courent 15 % plus vite", "effects": [{ "op": "mul", "path": "summon.speed", "value": 1.15 }] },
-        { "level": 25, "name": "Carillon", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
-        { "level": 50, "name": "Clochette sacrée", "summary": "Tes âmes restent 50 % plus longtemps", "effects": [{ "op": "mul", "path": "summon.life", "value": 1.5 }] }
+        { "level": 10, "name": "Tintement", "summary": "Le mana remonte de 2 de plus par seconde", "effects": [{ "op": "add", "path": "sorcier.mana.regen", "value": 2 }] },
+        { "level": 25, "name": "Carillon", "summary": "Une boule de feu de plus par salve", "effects": [{ "op": "add", "path": "sorcier.fireball.count", "value": 1 }] },
+        { "level": 50, "name": "Clochette sacrée", "summary": "+25 mana max", "effects": [{ "op": "add", "path": "sorcier.mana.max", "value": 25 }] }
       ],
-      "description": "Un bâton à grelots d'onmyōji. Leur tintement appelle les âmes égarées, qui viennent se ranger derrière toi."
+      "description": "Un bâton à grelots d'onmyōji. À chaque tintement, une gerbe de feux de renard s'en échappe et file vers ce que tu désignes."
     },
     "eventail-jorogumo": {
       "name": "Éventail de la Jorōgumo",
       "slot": "arme",
       "rarity": "épique",
-      "tags": ["Invocateur"],
-      "summary": "Grand coup d’éventail (200°, portée 2,2). Les coups de tes âmes collent l’ennemi dans la soie : ralenti de 40 % pendant 1 s.",
+      "tags": ["Sorcier"],
+      "summary": "Boules de feu plus lourdes (5 dégâts), portée 10,5 m ; elles collent dans la soie : ralenti de 30 % pendant 1 s.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
-        { "op": "set", "path": "attack.range", "value": 2.2 },
-        { "op": "set", "path": "attack.shape", "value": "arc" },
-        { "op": "set", "path": "attack.arcDeg", "value": 200 },
-        { "op": "set", "path": "attack.commit", "value": 0.18 },
-        { "op": "set", "path": "attack.windup", "value": 0.08 },
-        { "op": "set", "path": "attack.recovery", "value": 0.26 },
-        { "op": "set", "path": "attack.knockback", "value": 3 },
-        { "op": "set", "path": "perks.summonStun", "value": 1 }
+        { "op": "set", "path": "attack.damage", "value": 5 },
+        { "op": "set", "path": "attack.range", "value": 10.5 },
+        { "op": "set", "path": "attack.windup", "value": 0.12 },
+        { "op": "set", "path": "attack.recovery", "value": 0.36 },
+        { "op": "set", "path": "attack.commit", "value": 0.12 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 },
+        { "op": "set", "path": "perks.fireballSlow", "value": { "amount": 0.3, "duration": 1 } }
       ],
       "paliers": [
-        { "level": 10, "name": "Fil tendu", "summary": "Ralentissement des âmes +0,6 s", "effects": [{ "op": "add", "path": "perks.summonStun", "value": 0.6 }] },
-        { "level": 25, "name": "Toile des âmes", "summary": "+1 âme active", "effects": [{ "op": "add", "path": "summon.max", "value": 1 }] },
-        { "level": 50, "name": "Dame des rizières", "summary": "Tes âmes font 25 % de dégâts en plus", "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.25 }] }
+        { "level": 10, "name": "Fil tendu", "summary": "Ralentissement des boules de feu : +0,5 s", "effects": [{ "op": "add", "path": "perks.fireballSlow.duration", "value": 0.5 }] },
+        { "level": 25, "name": "Toile embrasée", "summary": "Le sceau coûte 4 mana de moins", "effects": [{ "op": "add", "path": "sorcier.seal.cost", "value": -4 }] },
+        { "level": 50, "name": "Dame des rizières", "summary": "Le météore frappe 20 % plus fort", "effects": [{ "op": "mul", "path": "sorcier.meteor.damage", "value": 1.2 }] }
       ],
       "description": "L'éventail de soie de la Jorōgumo. Quand on l'agite, on entend encore des fils se tendre."
+    },
+    "pinceau-seimei": {
+      "name": "Pinceau de Seimei",
+      "slot": "arme",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "summary": "Boules de feu légères (3,75 dégâts) mais vives ; tes sceaux reviennent 0,5 s plus tôt et lient les yokai qu'ils frappent : ralentis de 60 % pendant 2 s.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 3.75 },
+        { "op": "set", "path": "attack.range", "value": 9.5 },
+        { "op": "set", "path": "attack.windup", "value": 0.1 },
+        { "op": "set", "path": "attack.recovery", "value": 0.28 },
+        { "op": "set", "path": "attack.commit", "value": 0.1 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 },
+        { "op": "add", "path": "sorcier.seal.cooldown", "value": -0.5 },
+        { "op": "set", "path": "perks.sealSlow", "value": { "amount": 0.6, "duration": 2 } }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Encre de cinabre", "summary": "Le sceau frappe 10 % plus fort", "effects": [{ "op": "mul", "path": "sorcier.seal.damage", "value": 1.1 }] },
+        { "level": 25, "name": "Trait sûr", "summary": "Le sceau explose 0,2 s plus tôt", "effects": [{ "op": "add", "path": "sorcier.seal.delay", "value": -0.2 }] },
+        { "level": 50, "name": "Étoile de Seimei", "summary": "Chaque yokai pris dans un sceau te rend 2 mana", "effects": [{ "op": "add", "path": "perks.sealMana", "value": 2 }] }
+      ],
+      "description": "Le pinceau dont Abe no Seimei traçait ses sceaux. L'encre de cinabre n'a jamais séché."
     },
     "kunai-jumeaux": {
       "name": "Kunai jumeaux",
@@ -450,21 +468,27 @@
       "name": "Masque d'Oublié",
       "slot": "casque",
       "rarity": "rare",
-      "tags": ["Invocateur"],
-      "bonus": { "maxHp": 6, "damage": 0.06 },
-      "summary": "Les yokai s'en prennent d'abord à tes âmes.",
-      "effects": [{ "op": "set", "path": "perks.summonTaunt", "value": true }],
-      "description": "Un masque blanc sans visage. Le porter fait un peu oublier la peur."
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 6, "damage": 0.08 },
+      "summary": "La Fuite de feu revient 2 s plus tôt ; après elle, les yokai t'oublient 1,5 s et s'en prennent à la flamme restée en arrière.",
+      "effects": [
+        { "op": "add", "path": "sorcier.flight.cooldown", "value": -2 },
+        { "op": "set", "path": "perks.flightDecoy", "value": 1.5 }
+      ],
+      "description": "Un masque blanc sans visage. Qui le porte, on l'oublie un peu."
     },
     "voile-izanami": {
       "name": "Voile d'Izanami",
       "slot": "casque",
       "rarity": "rare",
-      "tags": ["Invocateur"],
+      "tags": ["Sorcier"],
       "bonus": { "maxHp": 12 },
-      "summary": "Tes âmes frappent 15 % plus fort.",
-      "effects": [{ "op": "mul", "path": "summon.damage", "value": 1.15 }],
-      "description": "Le voile blanc qui cachait le visage d'Izanami. Les âmes égarées le suivent comme on suit une reine."
+      "summary": "Ton météore s'écrase 0,6 s plus tôt et frappe 20 % plus fort.",
+      "effects": [
+        { "op": "add", "path": "sorcier.meteor.delay", "value": -0.6 },
+        { "op": "mul", "path": "sorcier.meteor.damage", "value": 1.2 }
+      ],
+      "description": "Le voile blanc qui cachait le visage d'Izanami. Celle que le feu a tuée en a gardé la mémoire."
     },
     "shiroshozoku": {
       "name": "Shiroshōzoku",
@@ -537,11 +561,21 @@
       "name": "Magatama fêlé",
       "slot": "amulette",
       "rarity": "rare",
-      "tags": ["Invocateur"],
+      "tags": ["Sorcier"],
       "bonus": { "maxHp": 20 },
-      "effects": [{ "op": "mul", "path": "summon.life", "value": 1.25 }],
-      "summary": "Tes âmes restent 25 % plus longtemps.",
+      "summary": "+25 mana max.",
+      "effects": [{ "op": "add", "path": "sorcier.mana.max", "value": 25 }],
       "description": "Un magatama de jade fêlé, qui luit encore faiblement."
+    },
+    "ofuda-kagutsuchi": {
+      "name": "Ofuda de Kagutsuchi",
+      "slot": "amulette",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 6, "damage": 0.1 },
+      "summary": "Chaque salve lance une boule de feu de plus.",
+      "effects": [{ "op": "add", "path": "sorcier.fireball.count", "value": 1 }],
+      "description": "Un talisman de papier au nom du dieu du feu. Il roussit déjà sur les bords."
     },
     "omamori-temple": {
       "name": "Omamori du temple",
@@ -612,10 +646,10 @@
       "name": "Magatama de Yasakani",
       "slot": "relique",
       "rarity": "légendaire",
-      "tags": ["Invocateur"],
+      "tags": ["Sorcier"],
       "bonus": { "maxHp": 20 },
-      "effects": [{ "op": "add", "path": "summon.max", "value": 1 }],
-      "summary": "+1 âme active. Sa lueur apaise : +20 PV max.",
+      "summary": "Tes sorts coûtent 25 % de mana en moins. Sa lueur apaise : +20 PV max.",
+      "effects": [{ "op": "mul", "path": "perks.manaCost", "value": 0.75 }],
       "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?"
     },
     "peigne-izanagi": {
@@ -845,7 +879,7 @@
       "slot": "relique",
       "rarity": "épique",
       "tags": ["Tous"],
-      "summary": "+35 % de dégâts et +10 % de vitesse, mais tous les soins que tu reçois sont réduits de moitié.",
+      "summary": "+35 % de dégâts et +10 % de vitesse, mais tous les soins et boucliers que tu reçois sont réduits de moitié.",
       "effects": [
         { "op": "set", "path": "perks.yomotsu", "value": { "damage": 0.35, "speed": 0.1, "healing": 0.5 } }
       ],
@@ -917,6 +951,19 @@
       "effects": [{ "op": "mul", "path": "perks.maxHpFactor", "value": 1.1 }],
       "description": "Des lamelles d'os laquées de noir, lacées de soie rouge. Légères comme une ombre, dures comme une rancune."
     },
+    "haori-ignifuge": {
+      "name": "Haori ignifugé",
+      "slot": "plastron",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 20, "armor": 0.06 },
+      "summary": "Ton Bouclier de flammes absorbe 50 % de plus et brûle 50 % plus fort.",
+      "effects": [
+        { "op": "mul", "path": "sorcier.ward.shield", "value": 1.5 },
+        { "op": "mul", "path": "sorcier.ward.burn", "value": 1.5 }
+      ],
+      "description": "Une veste d'onmyōji doublée de papier huilé et cousue de fils d'amiante. Elle sent le roussi, jamais le brûlé."
+    },
     "haidate-shikome": {
       "name": "Haidate de shikome",
       "slot": "jambieres",
@@ -939,6 +986,19 @@
         { "op": "add", "path": "blade.dance.cooldown", "value": -3 }
       ],
       "description": "Des sandales de paille renforcées de phalanges. La meute des furies les porte pour bondir sans glisser."
+    },
+    "geta-braise": {
+      "name": "Geta de braise",
+      "slot": "bottes",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 6, "dodge": 0.15, "speed": 0.05 },
+      "summary": "La Fuite de feu porte 30 % plus loin, et sa traînée brûle deux fois plus longtemps.",
+      "effects": [
+        { "op": "mul", "path": "sorcier.flight.distance", "value": 1.3 },
+        { "op": "mul", "path": "sorcier.flight.trailLife", "value": 2 }
+      ],
+      "description": "Des socques de bois noirci. Chaque pas laisse une braise que le vent du Yomi n'éteint pas."
     },
     "zukin-sohei": {
       "name": "Zukin de sōhei",
@@ -1088,7 +1148,8 @@
       "chance": 0.6,
       "items": [
         { "item": "hankyu", "chance": 0.06 },
-        { "item": "tabi-messager", "chance": 0.05 }
+        { "item": "tabi-messager", "chance": 0.05 },
+        { "item": "geta-braise", "chance": 0.05 }
       ]
     },
     "oublie": {
@@ -1100,7 +1161,8 @@
         { "item": "kabuto-fendu", "chance": 0.06 },
         { "item": "kusarigama", "chance": 0.04 },
         { "item": "masque-hannya", "chance": 0.04 },
-        { "item": "tabi-shinobi", "chance": 0.04 }
+        { "item": "tabi-shinobi", "chance": 0.04 },
+        { "item": "pinceau-seimei", "chance": 0.04 }
       ]
     },
     "araignee": { "oboles": 1, "xp": 1 },
@@ -1142,7 +1204,8 @@
         { "item": "arc-ikazuchi", "chance": 0.03 },
         { "item": "haidate-temple", "chance": 0.05 },
         { "item": "geta-temple", "chance": 0.05 },
-        { "item": "eboshi-amaterasu", "chance": 0.04 }
+        { "item": "eboshi-amaterasu", "chance": 0.04 },
+        { "item": "ofuda-kagutsuchi", "chance": 0.04 }
       ]
     },
     "ikusa": {
@@ -1226,6 +1289,7 @@
         { "item": "arc-soie", "price": 180, "weight": 1 },
         { "item": "tsuba-ebrechee", "price": 110, "weight": 2 },
         { "item": "ecaille-ryujin", "price": 140, "weight": 1 },
+        { "item": "ofuda-kagutsuchi", "price": 110, "weight": 2 },
         { "material": "soie", "count": 2, "price": 45, "weight": 2 },
         { "material": "ecaille", "count": 5, "price": 30, "weight": 3 },
         { "material": "masque", "count": 4, "price": 30, "weight": 3 },
@@ -1291,7 +1355,9 @@
       { "item": "zukin-sohei", "oboles": 35, "materials": { "papier": 2, "seve": 1 } },
       { "item": "kesa-sohei", "oboles": 50, "materials": { "papier": 3, "seve": 2 } },
       { "item": "jingasa-laque", "oboles": 35, "materials": { "papier": 2, "braise": 1 } },
-      { "item": "do-cuir-noir", "oboles": 50, "materials": { "ecaille": 2, "papier": 2 } }
+      { "item": "do-cuir-noir", "oboles": 50, "materials": { "ecaille": 2, "papier": 2 } },
+      { "item": "pinceau-seimei", "oboles": 60, "materials": { "papier": 4, "masque": 2 } },
+      { "item": "haori-ignifuge", "oboles": 50, "materials": { "braise": 3, "papier": 2 } }
     ]
   }
 }
