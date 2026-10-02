@@ -7,6 +7,5 @@
     "boss": null
   },
   "fadeSeconds": 1.2,
-  "defaultVolume": 0.5,
-  "defaultSfxVolume": 0.7
+  "defaultVolume": 0.5
 }

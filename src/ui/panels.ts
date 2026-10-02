@@ -22,7 +22,6 @@ import {
 import type { RolledOffer } from '../game/loot';
 import type { Progress, Slot } from '../game/progress';
 import { keyName } from '../keys';
-import { playSound } from '../audio/sfx';
 import { h, icon, obole, type Child } from './dom';
 
 /** Nombre à la française : « 1,35 ». */
@@ -62,8 +61,6 @@ export class PanelHost {
   }
 
   show(title: string, subtitle: Node | string | null, body: HTMLElement, options: { onClose?: () => void; wide?: boolean } = {}): void {
-    // Un rendu de plus dans la même fenêtre (achat, équipement) ne rejoue pas le son d'ouverture.
-    if (!this.open) playSound('ui.open');
     const panel = h(
       'section',
       { class: `panel${options.wide ? ' wide' : ''}` },
@@ -72,7 +69,7 @@ export class PanelHost {
         {},
         h('div', { class: 'seal' }, '黄泉'),
         h('div', {}, h('h2', {}, title), subtitle ? h('div', { class: 'subtitle' }, subtitle) : null),
-        h('button', { class: 'close', title: 'Fermer (Échap)', 'data-sfx': 'none', onclick: () => this.close() }, '✕'),
+        h('button', { class: 'close', title: 'Fermer (Échap)', onclick: () => this.close() }, '✕'),
       ),
       body,
     );
@@ -89,7 +86,6 @@ export class PanelHost {
 
   close(): void {
     if (!this.open) return;
-    playSound('ui.close');
     this.backdrop.classList.remove('visible');
     this.backdrop.replaceChildren();
     const done = this.onClose;
@@ -259,7 +255,7 @@ function tabs<T extends string>(options: { id: T; label: string; count?: number 
     ...options.map((o) =>
       h(
         'button',
-        { class: `tab${o.id === current ? ' active' : ''}`, role: 'tab', 'aria-selected': String(o.id === current), 'data-sfx': 'ui.tab', onclick: () => pick(o.id) },
+        { class: `tab${o.id === current ? ' active' : ''}`, role: 'tab', 'aria-selected': String(o.id === current), onclick: () => pick(o.id) },
         o.label,
         o.count ? h('span', { class: 'tab-count' }, String(o.count)) : null,
       ),
@@ -311,7 +307,6 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled
               'button',
               {
                 class: `btn${missing <= 0 ? ' primary' : ''}`,
-                'data-sfx': 'ui.buy',
                 disabled: missing > 0,
                 title: missing > 0 ? `Il te manque ${missing} oboles` : undefined,
                 onclick: () => {
@@ -352,7 +347,6 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled
             'button',
             {
               class: `btn${missing <= 0 ? ' primary' : ''}`,
-            'data-sfx': 'ui.buy',
               disabled: missing > 0,
               title: missing > 0 ? `Il te manque ${missing} oboles` : undefined,
               onclick: () => {
@@ -509,7 +503,6 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
       'button',
       {
         class: 'btn primary',
-        'data-sfx': 'forge.upgrade',
         disabled: one.to === level,
         onclick: () => {
           applyUpgrade(ctx, id, one);
@@ -523,7 +516,6 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
           'button',
           {
             class: 'btn',
-            'data-sfx': 'forge.upgrade',
             title: 'Améliorer tant que tu peux payer, jusqu’à ton niveau',
             onclick: () => {
               applyUpgrade(ctx, id, all);
@@ -715,7 +707,6 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
             'button',
             {
               class: 'btn',
-              'data-sfx': 'forge.craft',
               disabled: !price.ok,
               onclick: () => {
                 progress.gainOboles(-recipe.oboles);
@@ -873,7 +864,6 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
         {
           class: `owned${equipped ? ' equipped' : ''}`,
           title: def.description,
-          'data-sfx': slot === 'arme' ? 'ui.equip.weapon' : 'ui.equip.armor',
           onclick: () => {
             memory.inventorySlot = slot;
             progress.equip(id, slot);

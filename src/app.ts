@@ -1,6 +1,5 @@
 import type { Engine } from '@babylonjs/core';
 import { Music } from './audio/music';
-import { Sfx, playSound } from './audio/sfx';
 import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
@@ -158,8 +157,6 @@ export class App {
   private readonly ui: UiContext;
 
   constructor(private readonly d: AppDeps) {
-    // Les effets sonores suivent les réglages de la musique ; l'interface les joue par playSound.
-    new Sfx(this.music.settings);
     this.screens = new Screens(d.uiRoot);
     this.creation = new CreationScreen(d.uiRoot);
     this.dialogue = new DialogueBox(d.uiRoot);
@@ -269,8 +266,8 @@ export class App {
     }
     // La lettre M, où qu'elle soit : en AZERTY, la touche « KeyM » est la virgule.
     if (input.consumeTyped('m')) {
-      const muted = this.music.toggleAll();
-      this.screens.toast(muted ? 'Son coupé (M)' : 'Son remis (M)');
+      this.music.setMuted(!this.music.settings.muted);
+      this.screens.toast(this.music.settings.muted ? 'Musique coupée (M)' : 'Musique remise (M)');
     }
     if (this.panels.open) {
       if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK')) this.panels.close();
@@ -522,7 +519,6 @@ export class App {
     const { progress } = this.d;
     const count = progress.state.chests;
     if (count <= 0) return;
-    playSound('chest.open');
     const chest = content.chest;
     let oboles = 0;
     const materials: Record<string, number> = {};
@@ -647,7 +643,6 @@ export class App {
       else if (event.type === 'smash') this.hitstop = 0.04;
     }
     dungeonRenderer.sync(world, events, dt);
-    this.combatSounds(events, 0);
     if (online) hud.pings = world.players.slice(1).map((hero) => this.remote.get(hero.id)?.ping);
     hud.update(world, events, dt);
     // Onglet caché : l'hôte fait avancer le combat pour ses amis, sans rien dessiner.
@@ -712,7 +707,6 @@ export class App {
     for (const event of events) this.track(event);
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
-      this.combatSounds(events, mirror.seat);
       // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
       hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 ? session?.ping : undefined));
       hud.update(mirror, events, dt);
@@ -904,57 +898,6 @@ export class App {
       const name = `${content.skills.classes[cls].name} (ordinateur)`;
       return { config: buildLoadout(config.player, state, content, progress.level).config, sprite: heroSprite(hero), name };
     });
-  }
-
-  /** Les sons du combat, d'après ses événements ; `seat` : le héros de ce joueur (ses coups reçus seulement). */
-  private combatSounds(events: readonly GameEvent[], seat: number): void {
-    for (const e of events) {
-      switch (e.type) {
-        case 'swing':
-          playSound('combat.swing');
-          break;
-        case 'loose':
-          playSound('combat.loose', e.full ? 1.3 : 1);
-          break;
-        case 'enemyHit':
-          playSound(e.shielded ? 'combat.shell' : e.crit ? 'combat.crit' : 'combat.hit');
-          break;
-        case 'playerHit':
-          if ((e.hero ?? 0) === seat) playSound(e.blocked ? 'combat.block' : 'combat.hurt');
-          break;
-        case 'perfectGuard':
-          playSound('combat.perfectGuard');
-          break;
-        case 'guardBreak':
-          playSound('combat.guardBreak');
-          break;
-        case 'dodge':
-          playSound('combat.dodge');
-          break;
-        case 'smash':
-        case 'bondLand':
-          playSound('combat.smash');
-          break;
-        case 'death':
-          playSound('combat.death');
-          break;
-        case 'wave':
-          playSound('combat.wave');
-          break;
-        case 'bossPhase':
-          playSound('combat.bossPhase');
-          break;
-        case 'peach':
-          playSound('combat.peach');
-          break;
-        case 'heroDown':
-          playSound('combat.heroDown');
-          break;
-        case 'end':
-          playSound(e.outcome === 'victory' ? 'combat.victory' : 'combat.defeat');
-          break;
-      }
-    }
   }
 
   /** Réglages du héros avec sa race, sa classe, l'équipement, le niveau et les talents actuels. */

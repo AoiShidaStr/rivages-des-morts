@@ -1,5 +1,4 @@
 import { keyName, moveKeys } from '../keys';
-import { playSound } from '../audio/sfx';
 import { h, icon, obole } from './dom';
 
 const FADE_MS = 450;
@@ -213,7 +212,6 @@ export class Screens {
 
   /** `item` : l'objet ou le matériau dont l'icône accompagne le texte. */
   toast(text: string, tone: 'quest' | 'loot' | 'info' = 'info', item?: string): void {
-    if (tone !== 'info') playSound(tone === 'loot' ? 'toast.loot' : 'toast.quest');
     const el = h('div', { class: `toast ${tone}${item ? ' with-icon' : ''}` }, item ? icon(item, 'small') : null, text);
     this.toasts.append(el);
     setTimeout(() => el.classList.add('leaving'), TOAST_MS);

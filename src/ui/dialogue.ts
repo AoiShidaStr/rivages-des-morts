@@ -1,4 +1,3 @@
-import { playSound } from '../audio/sfx';
 import { h } from './dom';
 
 export interface Speaker {
@@ -72,7 +71,6 @@ export class DialogueBox {
         'button',
         {
           class: 'choice',
-          'data-sfx': 'none',
           onclick: (e) => {
             e.stopPropagation();
             this.pick(i);
@@ -98,7 +96,6 @@ export class DialogueBox {
 
   /** Termine la ligne en cours d'écriture, ou passe à la suivante. */
   advance(): void {
-    playSound('dialogue.next');
     if (this.onChoice) {
       this.pick(this.selected);
       return;
@@ -119,7 +116,6 @@ export class DialogueBox {
 
   pick(index: number): void {
     if (!this.onChoice || index < 0 || index >= this.choiceButtons.length) return;
-    playSound('dialogue.next');
     const resolve = this.onChoice;
     this.onChoice = null;
     resolve(index);
