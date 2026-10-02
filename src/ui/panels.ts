@@ -55,6 +55,11 @@ export class PanelHost {
     return this.backdrop.classList.contains('visible');
   }
 
+  /** Le panneau affiché, pour y chercher un élément après un rendu. */
+  get root(): HTMLElement {
+    return this.backdrop;
+  }
+
   show(title: string, subtitle: Node | string | null, body: HTMLElement, options: { onClose?: () => void; wide?: boolean } = {}): void {
     const panel = h(
       'section',
@@ -162,11 +167,69 @@ function bonusValue(key: BonusKind, value: number): string {
   return `+${value}`;
 }
 
+/**
+ * Rayon d'objets, dans l'inventaire et la forge : `mine` (ce que le héros peut porter parmi les objets de sa classe,
+ * les universels et ceux de sa race), une classe (son identifiant), `universel` ou `racial`. Les objets d'une autre
+ * classe, ou qu'il ne peut pas porter, n'apparaissent que dans le rayon de leur classe ou de leur race.
+ */
+type Shelf = string;
+const MINE: Shelf = 'mine';
+const UNIVERSAL: Shelf = 'universel';
+const RACIAL: Shelf = 'racial';
+
+/** Classes d'un objet, d'après ses tags (« Guerrier », « Rôdeur » ; « Tous » ou rien : universel). */
+function itemClasses(def: ItemDef): string[] {
+  const byName = new Map(Object.entries(content.skills.classes).map(([id, cls]) => [cls.name, id]));
+  return (def.tags ?? []).map((tag) => byName.get(tag)).filter((id): id is string => id !== undefined);
+}
+
+function onShelf(progress: Progress, def: ItemDef, shelf: Shelf): boolean {
+  if (shelf === MINE) {
+    // Sa classe, les objets universels et ceux de sa race ; une pièce taguée pour une autre classe reste dans son rayon.
+    const classes = itemClasses(def);
+    return blockText(progress, def) === null && (classes.length === 0 || classes.includes(progress.state.hero.class));
+  }
+  if (shelf === RACIAL) return Boolean(def.races?.length);
+  if (shelf === UNIVERSAL) return !def.races?.length && itemClasses(def).length === 0;
+  return itemClasses(def).includes(shelf);
+}
+
+/**
+ * Onglets des rayons qui ont au moins un objet parmi `ids` (« Ma classe » toujours en premier). La classe du héros
+ * n'a pas d'onglet à elle : c'est « Ma classe ».
+ */
+function shelfTabs(progress: Progress, ids: string[], current: Shelf, pick: (shelf: Shelf) => void, extra: { id: string; label: string; count?: number }[] = []): HTMLElement {
+  const own = progress.state.hero.class;
+  const count = (shelf: Shelf) => ids.filter((id) => onShelf(progress, content.items[id], shelf)).length;
+  const classes = Object.entries(content.skills.classes)
+    .filter(([id]) => id !== own)
+    .map(([id, cls]) => ({ id, label: cls.name, count: count(id) }));
+  const options = [
+    ...extra,
+    { id: MINE, label: `Ma classe · ${content.skills.classes[own]?.name ?? own}`, count: count(MINE) },
+    ...classes,
+    { id: UNIVERSAL, label: 'Universels', count: count(UNIVERSAL) },
+    { id: RACIAL, label: 'Raciaux', count: count(RACIAL) },
+  ].filter((o) => o.id === MINE || o.id === current || extra.includes(o) || o.count);
+  const bar = tabs(options, current, pick);
+  bar.classList.add('shelves');
+  return bar;
+}
+
+/** Les objets de `ids` rangés par emplacement, dans l'ordre des emplacements. */
+function bySlot(ids: string[]): [Slot, string[]][] {
+  return (Object.keys(content.slots) as Slot[]).map((slot): [Slot, string[]] => [slot, ids.filter((id) => content.items[id]?.slot === slot)]).filter(([, list]) => list.length);
+}
+
 /** Ce que le joueur a choisi dans les fenêtres, gardé d'une ouverture à l'autre. */
 const memory = {
   forgeTab: 'upgrade' as 'upgrade' | 'craft',
-  /** La forge montre d'abord les pièces portées, les autres sur demande. */
-  forgeScope: 'worn' as 'worn' | 'all',
+  /** La forge montre d'abord les pièces portées (`worn`), sinon un rayon. */
+  forgeScope: 'worn' as Shelf,
+  /** Rayon de l'onglet Fabriquer. */
+  craftShelf: MINE,
+  /** Rayon de l'inventaire : à l'ouverture, ce que le héros peut porter. */
+  inventoryShelf: MINE,
   forgeItem: null as string | null,
   inventorySlot: 'arme' as Slot,
   /** Sections repliables ouvertes ou fermées par le joueur. */
@@ -576,19 +639,19 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
 
     let body: HTMLElement;
     if (memory.forgeTab === 'upgrade') {
-      const shown = memory.forgeScope === 'worn' ? worn : upgradable;
+      // « Portés », puis les rayons : Ma classe, chaque autre classe, Universels, Raciaux.
+      const shown = memory.forgeScope === 'worn' ? worn : upgradable.filter((id) => onShelf(progress, content.items[id], memory.forgeScope));
       if (!memory.forgeItem || !shown.includes(memory.forgeItem)) memory.forgeItem = shown.find((id) => content.items[id].slot === 'arme') ?? shown[0] ?? null;
       const selected = memory.forgeItem;
-      const scope = tabs(
-        [
-          { id: 'worn', label: `Portés (${worn.length})` },
-          { id: 'all', label: `Tout (${upgradable.length})` },
-        ],
+      const scope = shelfTabs(
+        progress,
+        upgradable,
         memory.forgeScope,
         (s) => {
           memory.forgeScope = s;
           render();
         },
+        [{ id: 'worn', label: 'Portés', count: worn.length }],
       );
       scope.classList.add('small');
 
@@ -597,9 +660,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         list = worn.map((id) => forgePick(ctx, id, cap, id === selected, true, render));
       } else {
         // Un groupe repliable par emplacement ; celui de la pièce choisie est ouvert.
-        list = slotOrder.map((slot) => {
-          const ids = upgradable.filter((id) => content.items[id].slot === slot);
-          if (!ids.length) return null;
+        list = bySlot(shown).map(([slot, ids]) => {
           const ready = ids.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
           const holdsSelection = selected !== null && ids.includes(selected);
           return fold(
@@ -614,7 +675,12 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
       body = h(
         'div',
         { class: 'forge' },
-        h('div', { class: 'forge-side' }, scope, h('div', { class: 'pick-list', 'data-scroll': 'forge-list' }, ...list)),
+        h(
+          'div',
+          { class: 'forge-side' },
+          scope,
+          h('div', { class: 'pick-list', 'data-scroll': 'forge-list' }, ...(list.length ? list : [h('p', { class: 'note' }, 'Aucune pièce dans ce rayon.')])),
+        ),
         selected ? forgeDetail(ctx, selected, cap, render) : h('p', { class: 'note' }, 'Aucune pièce à améliorer pour le moment.'),
       );
     } else {
@@ -654,12 +720,38 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
           ),
         );
       };
-      const owned = recipes.filter((r) => progress.has(r.item));
+      // Les recettes du rayon choisi, une section par emplacement, les payables d'abord ; les pièces déjà
+      // possédées sont repliées en bas.
+      const inShelf = (r: (typeof recipes)[number]) => onShelf(progress, content.items[r.item], memory.craftShelf);
+      const owned = recipes.filter((r) => progress.has(r.item) && inShelf(r));
+      const pending = toForge.filter(inShelf);
+      const shelves = shelfTabs(
+        progress,
+        recipes.map((r) => r.item),
+        memory.craftShelf,
+        (s) => {
+          memory.craftShelf = s;
+          render();
+        },
+      );
+      shelves.classList.add('small');
+      const sections = bySlot(pending.map((r) => r.item)).map(([slot, ids]) => {
+        const rows = pending.filter((r) => ids.includes(r.item)).sort((a, b) => Number(canForge(b)) - Number(canForge(a)));
+        const payable = rows.filter(canForge).length;
+        return fold(
+          `craft-${slot}`,
+          true,
+          content.slots[slot],
+          h('span', {}, `${rows.length} recette${rows.length > 1 ? 's' : ''}`, payable ? h('span', { class: 'ready-count', title: 'Recettes payables' }, `▲ ${payable}`) : null),
+          h('div', { class: 'list' }, ...rows.map(recipeRow)),
+        );
+      });
       body = h(
         'div',
         { class: 'list' },
-        toForge.length ? null : h('p', { class: 'note' }, 'Tu as déjà tout ce que Tetsu sait forger.'),
-        ...[...toForge].sort((a, b) => Number(canForge(b)) - Number(canForge(a))).map(recipeRow),
+        shelves,
+        pending.length ? null : h('p', { class: 'note' }, toForge.length ? 'Rien à forger dans ce rayon.' : 'Tu as déjà tout ce que Tetsu sait forger.'),
+        ...sections,
         owned.length
           ? fold('forge-owned', false, 'Déjà possédés', String(owned.length), h('ul', { class: 'plain' }, ...owned.map((r) => h('li', {}, content.items[r.item].name))))
           : null,
@@ -724,26 +816,32 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
     // À gauche, ce qui est porté : un clic sur un emplacement n'affiche que ses objets à droite.
     const slotButtons = slots.map(([slot, label]) => {
       const id = state.equipped[slot];
-      const count = ofSlot(slot).length;
+      const count = ofSlot(slot).filter((item) => onShelf(progress, content.items[item], memory.inventoryShelf)).length;
       return h(
         'button',
         {
           class: `slot${id ? '' : ' empty'}${slot === current ? ' selected' : ''}`,
           onclick: () => {
+            // Un emplacement porté ouvre sa section à droite, et la fait défiler jusqu'à elle.
             memory.inventorySlot = slot;
+            memory.folds.set(`inv-${memory.inventoryShelf}-${slot}`, true);
             render();
+            host.root.querySelector(`.inventory-shelf [data-slot="${slot}"]`)?.scrollIntoView({ block: 'nearest' });
           },
         },
         h('span', { class: 'slot-label' }, label),
         h('span', { class: 'slot-item' }, id ? icon(id, 'small') : null, id ? content.items[id].name + levelTag(progress, id) : '—'),
-        h('span', { class: 'slot-count', title: `${count} objet${count > 1 ? 's' : ''} pour cet emplacement` }, String(count)),
+        h('span', { class: 'slot-count', title: `${count} objet${count > 1 ? 's' : ''} de ce rayon pour cet emplacement` }, String(count)),
       );
     });
 
     const cls = heroClass(content.skills, state.hero);
-    const choices = ofSlot(current).map((id) => {
+    const shelf = memory.inventoryShelf;
+    const shelved = owned.filter((id) => onShelf(progress, content.items[id], shelf));
+    const choice = (id: string): HTMLElement => {
       const def = content.items[id];
-      const equipped = state.equipped[current] === id;
+      const slot = def.slot as Slot;
+      const equipped = state.equipped[slot] === id;
       // Une arme d'une autre classe, une pièce réservée à une autre race, se gardent mais ne se portent pas.
       const blocked = blockText(progress, def);
       if (blocked) {
@@ -760,14 +858,15 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           ),
         );
       }
-      const delta = equipped ? [] : equipDelta(ctx, loadout, id, current);
+      const delta = equipped ? [] : equipDelta(ctx, loadout, id, slot);
       return h(
         'button',
         {
           class: `owned${equipped ? ' equipped' : ''}`,
           title: def.description,
           onclick: () => {
-            progress.equip(id, current);
+            memory.inventorySlot = slot;
+            progress.equip(id, slot);
             render();
           },
         },
@@ -784,6 +883,19 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
         ),
         equipped ? h('span', { class: 'badge' }, 'Équipé') : null,
       );
+    };
+    // Le rayon choisi, une section par emplacement ; celle de l'emplacement choisi à gauche est ouverte.
+    const sections = bySlot(shelved).map(([slot, ids]) => {
+      const section = fold(
+        `inv-${shelf}-${slot}`,
+        slot === current,
+        content.slots[slot],
+        `${ids.length} objet${ids.length > 1 ? 's' : ''}`,
+        h('div', { class: 'owned-list' }, ...ids.map(choice)),
+      );
+      section.dataset.slot = slot;
+      if (slot === current) section.classList.add('current');
+      return section;
     });
 
     // Panoplies dont on possède au moins une pièce : pièces portées et bonus atteints.
@@ -884,14 +996,15 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
         ),
         h(
           'div',
-          { class: 'col' },
-          h('h3', {}, `${content.slots[current]} · ${choices.length} objet${choices.length > 1 ? 's' : ''}`),
-          choices.length
-            ? h('div', { class: 'owned-list', 'data-scroll': 'inventory-list' }, ...choices)
-            : h('p', { class: 'note' }, 'Aucun objet pour cet emplacement. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.'),
-          choices.length
-            ? h('p', { class: 'note' }, current === 'arme' ? 'Clique sur une arme pour la prendre en main.' : 'Clique sur un objet pour l’équiper ; clique sur l’objet porté pour le retirer.')
-            : null,
+          { class: 'col inventory-shelf' },
+          shelfTabs(progress, owned, shelf, (s) => {
+            memory.inventoryShelf = s;
+            render();
+          }),
+          sections.length
+            ? h('div', { class: 'shelf-sections', 'data-scroll': `inventory-${shelf}` }, ...sections)
+            : h('p', { class: 'note' }, 'Aucun objet dans ce rayon. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.'),
+          sections.length ? h('p', { class: 'note' }, 'Clique sur un objet pour l’équiper ; clique sur l’objet porté pour le retirer. Une arme se change, elle ne se retire pas.') : null,
         ),
       ),
       { wide: true },
