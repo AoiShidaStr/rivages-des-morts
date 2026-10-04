@@ -35,7 +35,7 @@
       "hint": "Sa carapace arrête les coups de face. Contourne-le, ou bloque sa charge (clic droit) pour renverser sa coupelle.",
       "hints": {
         "sorcier": "Sa carapace arrête les boules de feu de face. Ton sceau, lui, frappe par-dessous : pose-le sous ses pieds.",
-        "lame": "Sa carapace arrête les coups de face. Traverse-le avec le Pas de l'ombre (clic droit) et frappe-le dans le dos.",
+        "lame": "Sa carapace arrête les coups de face. Apparais dans son dos avec la Frappe fantôme (clic droit), et frappe.",
         "paladin": "Sa carapace arrête les coups de face. Bloque sa charge pour renverser sa coupelle, ou lance ton marteau ({E}) : il le frappe dans le dos au retour.",
         "rodeur": "Sa carapace arrête les flèches de face. Immobilise-le avec la Flèche-filet ({A}), puis tire-lui dans le dos."
       },
@@ -59,7 +59,7 @@
     },
     {
       "label": "La mêlée",
-      "hint": "Les Oubliés marquent une pause avant de frapper. Bloquer remplit la rage, et {A} déclenche une frappe fracassante qui ignore la carapace.",
+      "hint": "Les Oubliés marquent une pause avant de frapper. Bloque-les en Garde, et {A} déclenche une frappe fracassante qui ignore la carapace.",
       "hints": {
         "sorcier": "Les Oubliés marquent une pause avant de frapper : c'est le temps d'un sceau. S'ils te rattrapent, {A} lève un bouclier qui les brûle.",
         "lame": "Les Oubliés marquent une pause avant de frapper. {E} pour disparaître dans la fumée, {R} pour danser de l'un à l'autre.",

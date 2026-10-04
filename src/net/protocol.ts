@@ -5,12 +5,12 @@
 import type { PlayerConfig } from '../game/config';
 import type { Vec2 } from '../game/math';
 import type { GameEvent } from '../game/types';
-import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, SummonView, WebView } from '../game/view';
+import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WebView } from '../game/view';
 import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 7;
+export const PROTOCOL = 8;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -70,7 +70,7 @@ export interface Announce {
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 /** Un héros dans un instantané : tout ce que l'affichage lit, sauf ses réglages (connus depuis le départ). */
-export type HeroSnap = Omit<Mutable<HeroView>, 'cfg'> & { graveNear: boolean; hammerOut: boolean };
+export type HeroSnap = Omit<Mutable<HeroView>, 'cfg'> & { hammerOut: boolean };
 
 export interface Snapshot {
   /** Numéro de la descente : un paquet d'une descente précédente, arrivé en retard, est ignoré. */
@@ -80,7 +80,6 @@ export interface Snapshot {
   ack: number;
   heroes: HeroSnap[];
   enemies: EnemyView[];
-  summons: SummonView[];
   projectiles: ProjectileView[];
   stumps: StumpView[];
   peaches: PeachView[];
@@ -132,7 +131,6 @@ const COOLDOWNS = {
   wardCooldown: 0,
   flightCooldown: 0,
   meteorCooldown: 0,
-  dashRecharge: 0,
   deathMarkCooldown: 0,
   smokeCooldown: 0,
   danceCooldown: 0,
@@ -140,14 +138,13 @@ const COOLDOWNS = {
   hammerCooldown: 0,
   guardBroken: 0,
   fervor: 0,
-  raiseCooldown: 0,
   netCooldown: 0,
   huntCooldown: 0,
   leapCooldown: 0,
 } as const;
 
 /** Champs du héros que seul son joueur reçoit. */
-const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'dashCharges', 'guardLeft', 'rage', 'canSmash', 'drawProgress', 'mana', 'graveNear', 'hammerOut'];
+const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'guardLeft', 'canSmash', 'drawProgress', 'mana', 'hammerOut'];
 
 const HERO_DEFAULTS: Partial<HeroSnap> = {
   pose: 'idle',
@@ -163,18 +160,15 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   mana: 0,
   smoke: null,
   drawProgress: 0,
-  rage: 0,
   canSmash: false,
   ...COOLDOWNS,
   guardLeft: 100,
   barrier: 0,
   stance: 'garde',
   aegisOn: null,
-  graveNear: false,
   hammerOut: false,
 };
 const ENEMY_DEFAULTS: Partial<EnemyView> = { pose: 'idle', altitude: 0, spawnProgress: 1, elite: false, mark: null, dead: false, boss: false };
-const SUMMON_DEFAULTS: Partial<SummonView> = { pose: 'idle', spawnProgress: 1, vigor: 1 };
 const PROJECTILE_DEFAULTS: Partial<ProjectileView> = { full: false };
 const WEB_DEFAULTS: Partial<WebView> = { burning: null };
 const NO_DEFAULTS = {};
@@ -185,9 +179,9 @@ const VECTORS = new Set(['pos', 'facing', 'dir', 'to']);
 /** Champs des instantanés, dans un ordre fixe : leur rang donne leur code. Un champ absent de la liste garde son nom. */
 const FIELDS = [
   ...['id', 'pos', 'facing', 'radius', 'pose', 'hp', 'kind', 'sprite', 'maxHp', 'altitude', 'spawnProgress', 'elite', 'mark', 'dead', 'boss', 'prey'],
-  ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'dir', 'full', 'ripe', 'age', 'burning'],
-  ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'ward', 'smoke', 'cloud', 'drawProgress', 'rage', 'canSmash'],
-  ...['dashCharges', 'mana', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier', 'stance', 'aegisOn'],
+  ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'dir', 'full', 'ripe', 'age', 'burning'],
+  ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'ward', 'smoke', 'cloud', 'drawProgress', 'canSmash'],
+  ...['mana', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier', 'stance', 'aegisOn'],
 ];
 const CODE = new Map(FIELDS.map((name, i) => [name, i.toString(36)]));
 const NAME = new Map(FIELDS.map((name, i) => [i.toString(36), name]));
@@ -254,7 +248,6 @@ function heroSnaps(world: World): HeroSnap[] {
     mana: p.mana,
     smoke: p.smoke ? { pos: p.smoke.pos, cloud: p.smoke.cloud } : null,
     drawProgress: p.drawProgress,
-    rage: p.rage,
     canSmash: p.canSmash,
     dodgeCooldown: p.dodgeCooldown,
     bondCooldown: p.bondCooldown,
@@ -268,8 +261,6 @@ function heroSnaps(world: World): HeroSnap[] {
     wardCooldown: p.wardCooldown,
     flightCooldown: p.flightCooldown,
     meteorCooldown: p.meteorCooldown,
-    dashCharges: p.dashCharges,
-    dashRecharge: p.dashRecharge,
     deathMarkCooldown: p.deathMarkCooldown,
     smokeCooldown: p.smokeCooldown,
     danceCooldown: p.danceCooldown,
@@ -279,11 +270,9 @@ function heroSnaps(world: World): HeroSnap[] {
     guardBroken: p.guardBroken,
     fervor: p.fervor,
     barrier: p.barrier,
-    raiseCooldown: p.raiseCooldown,
     netCooldown: p.netCooldown,
     huntCooldown: p.huntCooldown,
     leapCooldown: p.leapCooldown,
-    graveNear: world.graveNear(p),
     hammerOut: world.hammerOutOf(p),
   }));
 }
@@ -320,23 +309,11 @@ export function shareSnapshot(world: World, tick: number): SharedSnap {
       ...(extra.thread !== undefined ? { thread: extra.thread ? { to: extra.thread.to, taut: extra.thread.taut } : null } : {}),
     };
   });
-  const summons = world.summons.map((s) => ({
-    id: s.id,
-    kind: s.kind,
-    owner: s.owner,
-    pos: s.pos,
-    facing: s.facing,
-    radius: s.radius,
-    pose: s.pose,
-    spawnProgress: s.spawnProgress,
-    vigor: s.vigor,
-  }));
   return {
     tick,
     heroes: heroSnaps(world),
     rest: {
       e: packList(enemies, ENEMY_DEFAULTS),
-      s: packList(summons, SUMMON_DEFAULTS),
       p: packList(
         world.projectiles.map((p) => ({ id: p.id, kind: p.kind, pos: p.pos, dir: p.dir, full: p.full })),
         PROJECTILE_DEFAULTS,
@@ -382,7 +359,6 @@ export function unpackSnapshot(data: Json): Snapshot | null {
       e.sprite ??= e.kind;
       return e;
     }),
-    summons: unpackList<SummonView>(d.s, SUMMON_DEFAULTS),
     projectiles: unpackList<ProjectileView>(d.p, PROJECTILE_DEFAULTS),
     stumps: unpackList<StumpView>(d.t, NO_DEFAULTS),
     peaches: unpackList<PeachView>(d.c, NO_DEFAULTS),

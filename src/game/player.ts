@@ -12,10 +12,8 @@ type Action =
   /** `crit` : multiplicateur de critique du coup (1 : coup normal) ; `aim` : le point visé au clic (boules de feu). */
   | { kind: 'attack'; t: number; dir: Vec2; hit: Set<number>; swung: boolean; crit: number; aim: Vec2 }
   | { kind: 'dodge'; t: number; dir: Vec2 }
-  /** `full` : lancée à rage pleine (Gourde de saké d'oni). */
-  | { kind: 'smash'; t: number; dir: Vec2; landed: boolean; full: boolean }
+  | { kind: 'smash'; t: number; dir: Vec2; landed: boolean }
   | { kind: 'bond'; t: number; from: Vec2; to: Vec2 }
-  | { kind: 'shadowDash'; t: number; dir: Vec2; marked: Set<number> }
   /** Danse des lames : `index` est la cible en cours ; chaque pas dure `blade.dance.hop`. */
   | { kind: 'dance'; t: number; targets: number[]; index: number }
   | { kind: 'draw'; t: number }
@@ -25,15 +23,15 @@ type Action =
 
 /**
  * Le héros : il frappe à l'arme et esquive, quelle que soit sa classe.
- * Guerrier (`cfg.kit`) : bloque pour remplir sa rage, et la dépense en Frappe fracassante (A), Bond (E) et Frénésie (R).
+ * Guerrier (`cfg.kit`) : postures Garde et Offensive (double clic droit), Frappe fracassante (A), Bond (E), Frénésie (R).
  * Sorcier : boules de feu guidées (clic gauche) et sorts payés en mana : sceau (clic droit), Bouclier de flammes (A),
  * Fuite de feu (E), grand météore (R).
- * Lame : traverse les ennemis en les marquant (clic droit) : Marque de mort (A), Écran de fumée (E), Danse des lames (R).
- * Paladin : bouclier levé (clic droit), Aura de lumière (A), Marteau lancé (E), Relever (R).
+ * Lame : empoisonne à chaque coup, Frappe fantôme (clic droit), Marque de mort (A), Écran de fumée (E), Danse des lames (R).
+ * Paladin : bouclier levé (clic droit), Aura de lumière (A), Marteau lancé (E), Égide (R).
  * Rôdeur : tire à l'arc, tir chargé (clic droit), Flèche-filet (A), Marque du chasseur (E), Recul (R).
  * Les talents, la race et les reliques arrivent par `cfg.perks`.
  */
-/** Soin des âmes versé dès qu'il atteint ces PV. */
+/** Vol de vie versé dès qu'il atteint ces PV. */
 const LEECH_SIP = 3;
 /** Blocage parfait : garde levée moins de ce temps avant le coup (plus le retard réseau d'un invité). */
 const PERFECT_GUARD = 0.2;
@@ -53,7 +51,6 @@ export class Player {
   facing: Vec2 = vec(1, 0);
   knockback: Vec2 = vec();
   hp: number;
-  rage = 0;
   blocking = false;
   dodgeCooldown = 0;
   bondCooldown = 0;
@@ -108,9 +105,7 @@ export class Player {
   /** Hanyō : jauge de sang yokai (en dégâts infligés) et secondes de transformation restantes. */
   yokaiGauge = 0;
   transformed = 0;
-  /** Lame : charges du Pas de l'ombre et recharge de la suivante, recharges des compétences. */
-  dashCharges: number;
-  dashRecharge = 0;
+  /** Lame : recharges des compétences. */
   deathMarkCooldown = 0;
   smokeCooldown = 0;
   danceCooldown = 0;
@@ -128,10 +123,9 @@ export class Player {
   /** Paladin : ferveur du Jugement, de 0 à `paladin.judgement.max`. */
   fervor = 0;
   private guardRest = 0;
-  /** Paladin : recharges de l'Aura, du Marteau et de Relever. */
+  /** Paladin : recharges de l'Aura et du Marteau. */
   auraCooldown = 0;
   hammerCooldown = 0;
-  raiseCooldown = 0;
   /** Rôdeur : recharges de la Flèche-filet, de la Marque du chasseur et du Recul. */
   netCooldown = 0;
   huntCooldown = 0;
@@ -188,7 +182,6 @@ export class Player {
   ) {
     this.guardLeft = cfg.paladin.guard.max;
     this.hp = cfg.maxHp;
-    this.dashCharges = cfg.blade.shadowDash.charges;
     this.clayLeft = cfg.perks?.clayCharges ?? 1;
     this.mana = cfg.sorcier.mana.max;
   }
@@ -201,13 +194,12 @@ export class Player {
     return this.hp <= 0;
   }
 
-  /** Esquive, bond, Pas de l'ombre, Danse, Recul, Fuite de feu : le héros traverse les ennemis. */
+  /** Esquive, bond, Danse, Recul, Fuite de feu : le héros traverse les ennemis. */
   get dodging(): boolean {
     const kind = this.action.kind;
-    return kind === 'dodge' || kind === 'bond' || kind === 'shadowDash' || kind === 'dance' || kind === 'leap' || kind === 'flight';
+    return kind === 'dodge' || kind === 'bond' || kind === 'dance' || kind === 'leap' || kind === 'flight';
   }
 
-  // Plus de rage : la Frappe fracassante, le Bond et la Frénésie ne dépendent que de leur recharge.
   get canSmash(): boolean {
     return this.smashCooldown <= 0;
   }
@@ -252,7 +244,6 @@ export class Player {
       case 'smash':
         return a.t < this.cfg.smash.windup ? 'windup' : 'strike';
       case 'dodge':
-      case 'shadowDash':
       case 'flight':
         return 'dash';
       case 'dance':
@@ -274,7 +265,6 @@ export class Player {
     const missing = 1 - this.hp / this.cfg.maxHp;
     let factor = 1 + (perks.einherjarRage ?? 0) * missing;
     if (perks.lowHpDamage && this.hp < this.cfg.maxHp / 2) factor += perks.lowHpDamage;
-    if (perks.lastStand && this.below(this.standThreshold)) factor += perks.lastStand.damage;
     if (perks.coupelle && this.coupelleFull) factor += perks.coupelle.bonus;
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
@@ -325,11 +315,8 @@ export class Player {
     return zeus && this.hits % zeus.every === 0 ? zeus.damage * this.damageMultiplier() : 0;
   }
 
-  /** Dégâts infligés par ce héros ou les siens (âmes, flèches, marteau…) : ils remplissent le sang yokai du Hanyō. */
+  /** Dégâts infligés par ce héros (coups, flèches, sorts, marteau…) : vol de vie, et sang yokai du Hanyō. */
   dealt(amount: number, world: World): void {
-    // Au bord du gouffre : sous le seuil, les dégâts infligés soignent, goutte à goutte.
-    const stand = this.cfg.perks?.lastStand;
-    if (stand && !this.dead && this.below(this.standThreshold)) this.leech(amount * stand.lifesteal, world);
     // Vol de vie des armes du Guerrier : il survit en restant au cœur de la mêlée.
     const lifesteal = this.lifesteal(world);
     if (lifesteal && !this.dead) this.leech(amount * lifesteal, world);
@@ -357,18 +344,12 @@ export class Player {
     this.aegisUsed = false;
   }
 
-  /** Seuil d'« Au bord du gouffre » : le Masque de hannya le relève (le passif se déclenche plus tôt). */
-  private get standThreshold(): number {
-    const perks = this.cfg.perks ?? {};
-    return Math.max(perks.lastStand?.threshold ?? 0, perks.hannya?.threshold ?? 0);
-  }
-
   /** Sous cette part de ses PV (affinités de l'Einherjar). */
   private below(threshold: number): boolean {
     return this.hp < this.cfg.maxHp * threshold;
   }
 
-  /** Einherjar lame, Hanyō lame : l'esquive et le Pas de l'ombre reviennent plus vite. */
+  /** Einherjar lame, Hanyō lame : l'esquive et la Frappe fantôme reviennent plus vite. */
   private get haste(): number {
     const perks = this.cfg.perks ?? {};
     let factor = 1;
@@ -459,7 +440,7 @@ export class Player {
         a.t += dt;
         if (!a.landed && a.t >= c.smash.windup) {
           a.landed = true;
-          world.smash(add(this.pos, scale(a.dir, c.smash.offset)), a.full);
+          world.smash(add(this.pos, scale(a.dir, c.smash.offset)));
         }
         if (a.t >= c.smash.windup + c.smash.recovery) this.action = { kind: 'free' };
         break;
@@ -472,15 +453,6 @@ export class Player {
           this.action = { kind: 'free' };
           world.bondLand(this.pos);
         }
-        break;
-      }
-      case 'shadowDash': {
-        a.t += dt;
-        const dash = c.blade.shadowDash;
-        this.pos = add(this.pos, scale(a.dir, (dash.distance / dash.duration) * world.slowAt(this.pos) * dt));
-        world.clampToArena(this.pos, this.radius);
-        world.shadowMark(this.pos, a.marked);
-        if (a.t >= dash.duration) this.action = { kind: 'free' };
         break;
       }
       case 'dance':
@@ -579,7 +551,7 @@ export class Player {
   }
 
   /**
-   * Un coup a été bloqué. Guerrier : la rage monte. Paladin : le bouclier soigne les alliés proches (tag),
+   * Un coup a été bloqué. Guerrier : riposte (Mempō), soin (Écaille de Ryūjin). Paladin : le bouclier soigne les alliés proches (tag),
    * renvoie des dégâts (Riposte, Cloche du Grand Rocher) et entrave l'attaquant (Gleipnir). `amount` : la force du
    * coup ; `parried` : un assaut arrêté net (bond de shikome, poursuite d'Izanami), dont rien ne passe.
    */
@@ -599,16 +571,12 @@ export class Player {
       attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2 }, world);
       if (attacker.dead) this.onKill();
     }
+    world.emit({ type: 'guard', pos: { ...this.pos } });
     if (this.cfg.kit !== 'paladin') {
-      let gain = this.cfg.block.rageOnGuard * (1 + (perks.guardRageFactor ?? 0));
-      if (perfect && perks.gourde) gain += perks.gourde.rage;
-      // Écaille de Ryūjin : chaque coup arrêté rend un peu de vie.
+      // Écaille de Ryūjin, Katana de rōnin : chaque coup arrêté rend un peu de vie.
       if (perks.blockHeal && amount > 0) this.heal(this.cfg.maxHp * perks.blockHeal, world);
-      const gained = this.gainRage(gain);
-      world.emit({ type: 'guard', pos: { ...this.pos }, rage: Math.round(gained) });
       return;
     }
-    world.emit({ type: 'guard', pos: { ...this.pos }, rage: 0 });
     const judgement = this.cfg.paladin.judgement;
     this.gainFervor(judgement.perBlock * (perfect ? 2 : 1));
     // La garde s'use selon la force du coup ; vide, elle se brise.
@@ -649,8 +617,8 @@ export class Player {
       if (--this.clayLeft > 0) return true;
       this.clayLeft = perks.clayCharges ?? 1;
       this.clayCooldown = perks.clayShell;
-      // Affinités de l'Oushebti : l'argile qui éclate nourrit la rage, rend l'ombre, remplit la garde, ou reste en leurre.
-      if (perks.clayRage) this.gainRage(perks.clayRage);
+      // Affinités de l'Oushebti : l'argile qui éclate prépare une riposte, rend le mana ou la Frappe fantôme, remplit
+      // la garde, ou reste en leurre.
       if (perks.clayMana) this.gainMana(perks.clayMana);
       if (perks.clayDash) this.ghostCooldown = 0;
       if (perks.clayCleave) this.clayPrimed = true;
@@ -680,7 +648,6 @@ export class Player {
     factor *= 1 - this.aegisArmor;
     if (this.auraBuffTime > 0) factor *= 1 - this.auraArmor;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
-    if (perks.lionSkin && this.rage >= this.cfg.rageMax / 2) factor *= 1 - perks.lionSkin;
     if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
     return factor;
   }
@@ -722,14 +689,6 @@ export class Player {
     if (!share || !attacker || attacker.dead || absorbed <= 0) return;
     attacker.receiveHit({ amount: absorbed * share, from: this.pos, knockback: 2 }, world);
     if (attacker.dead) this.onKill();
-  }
-
-  /**
-   * La rage n'existe plus depuis la 0.9.0 : la jauge reste vide, pour que les talents et objets qui s'en servaient
-   * (foudre à rage pleine, Peau du lion…) restent inertes en attendant leur refonte (docs/objets-inertes-0.9.md).
-   */
-  gainRage(_amount: number): number {
-    return 0;
   }
 
   /** Un ennemi vient de tomber sous nos coups. */
@@ -792,10 +751,9 @@ export class Player {
   /** Frappe fracassante du Guerrier, comme le Bond : depuis l'arrêt, ou en coupant la fin d'un coup. */
   private startSmash(aimDir: Vec2): void {
     this.facing = aimDir;
-    const full = false;
     this.smashCooldown = this.cfg.smash.cooldown;
     this.blocking = false;
-    this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false, full };
+    this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false };
   }
 
   private startAttack(aim: Vec2): void {
@@ -1037,18 +995,10 @@ export class Player {
     this.critWindow = tick(this.critWindow);
     this.auraCooldown = tick(this.auraCooldown);
     this.hammerCooldown = tick(this.hammerCooldown);
-    this.raiseCooldown = tick(this.raiseCooldown);
     this.netCooldown = tick(this.netCooldown);
     this.huntCooldown = tick(this.huntCooldown);
     this.leapCooldown = tick(this.leapCooldown);
     this.ghostCooldown = Math.max(0, this.ghostCooldown - dt * this.haste);
-    // Les charges du Pas de l'ombre reviennent une à une.
-    const dash = this.cfg.blade.shadowDash;
-    if (this.dashCharges >= dash.charges) return;
-    this.dashRecharge -= dt * this.haste;
-    if (this.dashRecharge > 0) return;
-    this.dashCharges++;
-    this.dashRecharge = dash.cooldown;
   }
 
   // --- Lame ------------------------------------------------------------------
@@ -1085,11 +1035,6 @@ export class Player {
       this.blocking = false;
       this.action = { kind: 'dance', t: 0, targets: targets.map((e) => e.id), index: -1 };
     }
-  }
-
-  /** Rend une charge du Pas de l'ombre (Marée d'ombre). */
-  refundDash(): void {
-    this.dashCharges = Math.min(this.cfg.blade.shadowDash.charges, this.dashCharges + 1);
   }
 
   /** La Danse des lames saute de cible en cible ; une cible disparue est passée. */

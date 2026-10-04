@@ -27,7 +27,6 @@ export interface HeroView {
   readonly mana: number;
   readonly smoke: { readonly pos: Vec2; readonly cloud: number } | null;
   readonly drawProgress: number;
-  readonly rage: number;
   readonly canSmash: boolean;
   readonly dodgeCooldown: number;
   readonly bondCooldown: number;
@@ -44,8 +43,6 @@ export interface HeroView {
   readonly wardCooldown: number;
   readonly flightCooldown: number;
   readonly meteorCooldown: number;
-  readonly dashCharges: number;
-  readonly dashRecharge: number;
   readonly deathMarkCooldown: number;
   readonly smokeCooldown: number;
   readonly danceCooldown: number;
@@ -58,7 +55,6 @@ export interface HeroView {
   readonly fervor: number;
   /** Bouclier temporaire (Haidate de shikome, Bouclier de flammes), en PV. */
   readonly barrier: number;
-  readonly raiseCooldown: number;
   readonly netCooldown: number;
   readonly huntCooldown: number;
   readonly leapCooldown: number;
@@ -88,18 +84,6 @@ export interface EnemyView {
   readonly thread?: { readonly to: Vec2; readonly taut: boolean } | null;
   /** Coop : le héros que ce boss poursuit. */
   readonly prey?: number;
-}
-
-export interface SummonView {
-  readonly id: number;
-  readonly kind: EnemyKind;
-  readonly owner: number;
-  readonly pos: Vec2;
-  readonly facing: Vec2;
-  readonly radius: number;
-  readonly pose: Pose;
-  readonly spawnProgress: number;
-  readonly vigor: number;
 }
 
 export interface ProjectileView {
@@ -132,13 +116,11 @@ export interface WorldView {
   readonly players: readonly HeroView[];
   readonly player: HeroView;
   readonly enemies: readonly EnemyView[];
-  readonly summons: readonly SummonView[];
   readonly projectiles: readonly ProjectileView[];
   readonly stumps: readonly StumpView[];
   readonly peaches: readonly PeachView[];
   readonly webs: readonly WebView[];
-  /** Pour le héros de ce joueur : quelqu'un à relever, son marteau en vol. */
-  readonly graveInReach: boolean;
+  /** Pour le héros de ce joueur : son marteau en vol. */
   readonly hammerOut: boolean;
   /** Le héros que poursuit ce yokai (le premier en solo). */
   preyOf(enemyId: number): number;

@@ -180,7 +180,7 @@
     "guerrier": {
       "name": "Guerrier",
       "subtitle": "Berserker",
-      "role": "Mêlée, rage",
+      "role": "Mêlée, postures",
       "difficulty": 1,
       "playstyle": "Maître d'armes : alterne la Garde et l'Offensive, et survis en frappant.",
       "kit": "guerrier",
@@ -559,7 +559,7 @@
         "tiers": [
           {
             "count": 2,
-            "description": "Ton premier coup après une esquive ou un Pas de l'ombre est critique.",
+            "description": "Ton premier coup après une esquive est critique.",
             "effects": [{ "op": "set", "path": "perks.dodgeCrit", "value": { "window": 1, "swings": 1 } }]
           },
           {

@@ -16,8 +16,6 @@ export interface PlayerConfig {
   invulnerableAfterHit: number;
   /** Part des dégâts réellement subis (1 par défaut ; l'équipement la réduit). */
   damageTakenFactor?: number;
-  rageMax: number;
-  rageDecayPerSecond: number;
   attack: {
     damage: number;
     range: number;
@@ -40,14 +38,11 @@ export interface PlayerConfig {
     /** Distance parcourue en avant pendant le coup. */
     lunge: number;
     knockback: number;
-    rageOnHit: number;
   };
   /** `reduction` : part d'un coup bloqué qui est arrêtée (1 : tout ; le reste passe quand même). */
-  block: { arcDeg: number; rageOnGuard: number; reduction: number };
+  block: { arcDeg: number; reduction: number };
   dodge: { distance: number; duration: number; invulnerable: number; cooldown: number };
   smash: {
-    rageCost: number;
-    /** Recharge de la Frappe (le Guerrier n'a plus de rage). */
     cooldown: number;
     damage: number;
     /** Distance entre le joueur et le centre de l'impact. */
@@ -57,12 +52,11 @@ export interface PlayerConfig {
     recovery: number;
     knockback: number;
     stun: number;
-    /** Part des PV max rendue quand la Frappe touche au moins un ennemi : dépenser sa rage soigne. */
+    /** Part des PV max rendue quand la Frappe touche au moins un ennemi. */
     heal: number;
   };
   /** E : saut sur une zone, qui frappe à l'atterrissage. */
   bond: {
-    rageCost: number;
     range: number;
     duration: number;
     height: number;
@@ -73,7 +67,6 @@ export interface PlayerConfig {
     /** Secondes de ralentissement à l'atterrissage (0 sans le talent d'Héraclès). */
     slow: number;
   };
-  /** R : on frappe plus vite, mais on encaisse plus. */
   /**
    * Guerrier : postures. Garde : coups plus lents (`attackTimeFactor` > 1), dégâts subis réduits, blocage au clic droit
    * tenu. Offensive : coups plus rapides, `reach` m d'allonge en plus. Un double clic droit (deux appuis en moins de
@@ -84,44 +77,20 @@ export interface PlayerConfig {
     guard: { attackTimeFactor: number; damageTakenFactor: number };
     offense: { attackTimeFactor: number; reach: number };
   };
+  /** R : on frappe plus vite, mais on encaisse plus. */
   frenzy: {
-    rageCost: number;
     duration: number;
     cooldown: number;
     /** Multiplicateur des temps d'attaque (moins de 1 = plus rapide). */
     attackTimeFactor: number;
     damageTakenFactor: number;
   };
-  /** Alliés relevés par le Paladin (Relever). */
-  summon: SummonConfig;
   blade: BladeConfig;
   paladin: PaladinConfig;
   ranger: RangerConfig;
   sorcier: SorcierConfig;
   /** Effets venus des talents, de la race, des reliques et des paliers de tags. */
   perks?: Perks;
-}
-
-/** Alliés relevés par le Paladin (Relever) : des âmes de lumière qui combattent à ses côtés un moment. */
-export interface SummonConfig {
-  /** Alliés relevés gardés en même temps (Roi des morts en ajoute). */
-  max: number;
-  /** Secondes de combat d'un allié relevé avant qu'il ne s'efface. */
-  life: number;
-  /** PV d'un allié relevé : les yokai l'attaquent, et il se brise à 0. */
-  hp: number;
-  radius: number;
-  speed: number;
-  damage: number;
-  attackRange: number;
-  attackCooldown: number;
-  knockback: number;
-  /** Au-delà de cette distance du héros, un allié revient vers lui. */
-  leash: number;
-  /** Multiplicateurs par yokai d'origine : un kappa relevé frappe plus fort et encaisse mieux qu'un feu follet. */
-  /** `range` : un yokai à distance garde son tir, et frappe de là (dégâts × `rangedFactor`). */
-  kinds: Partial<Record<EnemyKind, { damage: number; speed: number; hp: number; range?: number }>>;
-  rangedFactor: number;
 }
 
 /**
@@ -151,12 +120,10 @@ export interface SorcierConfig {
   meteor: { cooldown: number; delay: number; radius: number; damage: number; range: number; knockback: number };
 }
 
-/** Lame : frappe vite, marque ses proies et les achève en critiques. */
+/** Lame : frappe vite, empoisonne ses proies et les achève en critiques. */
 export interface BladeConfig {
   /** Multiplicateur des coups critiques. */
   critFactor: number;
-  /** Ancien clic droit (Pas de l'ombre), gardé pour les talents et objets qui s'y réfèrent encore. */
-  shadowDash: { distance: number; duration: number; cooldown: number; charges: number; markTime: number };
   /**
    * Clic droit : Frappe fantôme. La Lame apparaît sur l'ennemi le plus proche de la souris (à `range` m), frappe de
    * `damage` × les dégâts de son arme, critique ×(1 + charges de poison consommées), et revient en `cooldown` s
@@ -177,20 +144,17 @@ export interface BladeConfig {
   dance: { cooldown: number; targets: number; range: number; damage: number; hop: number };
 }
 
-/** Paladin : bouclier levé, aura de soin, marteau lancé, et un allié relevé. */
+/** Paladin : bouclier levé, aura de soin, marteau lancé, et l'Égide. */
 export interface PaladinConfig {
-  /**
-   * A : zone qui soigne les alliés de `heal` PV par seconde. Le Paladin lui-même n'en reçoit qu'une part, selon la
-   * taille de l'équipe (`selfHeal` : seul, à deux, à trois).
-   */
-  aura: { cooldown: number; duration: number; radius: number; heal: number; healShare: number };
+  /** A : zone qui rend à chacun, Paladin compris, `healShare` de ses PV max sur ses `duration` s. */
+  aura: { cooldown: number; duration: number; radius: number; healShare: number };
   /**
    * R : Égide, posée sur l'allié le plus proche de la souris (à `range` m), sinon sur soi ; elle reste jusqu'au
    * prochain R. Elle retire `armor` des dégâts reçus ; sur soi, le Paladin frappe `selfDamageMalus` moins fort.
    */
   /** `cooldown` : délai avant de poser ou de déplacer l'Égide à nouveau (la retirer reste libre). */
   aegis: { range: number; armor: number; selfDamageMalus: number; cooldown: number };
-  /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
+  /** Part de ses propres soins au blocage (tag Paladin) que reçoit le Paladin, seul, à deux, à trois. */
   selfHeal: number[];
   /**
    * Jugement : chaque coup bloqué (`perBlock`, doublé en blocage parfait) et chaque coup d'arme porté (`perHit`)
@@ -206,8 +170,6 @@ export interface PaladinConfig {
   guard: { max: number; cost: number; minCost: number; regen: number; delay: number; breakTime: number };
   /** E : le marteau part vers la souris et revient, en frappant à l'aller et au retour. */
   hammer: { cooldown: number; damage: number; range: number; speed: number; radius: number; knockback: number };
-  /** R : relève le dernier allié tombé (âme brisée, ou yokai vaincu) près du héros. */
-  raise: { cooldown: number; range: number; memory: number };
 }
 
 /** Rôdeur : flèches, tir chargé, filet, marque du chasseur, bond en arrière. */
@@ -240,27 +202,12 @@ export interface RangerConfig {
 
 /** Effets spéciaux du Guerrier ; absents = inactifs. */
 export interface Perks {
-  /** Multiplie la rage gagnée en frappant. */
-  hitRageFactor?: number;
-  /** Multiplie toute la rage gagnée (paliers du tag Guerrier). */
-  rageGainFactor?: number;
-  /** Rage gagnée en bloquant, en plus (Katana de rōnin). */
-  guardRageFactor?: number;
-  /** Éclair ajouté à chaque coup quand la rage est pleine. */
-  storm?: number;
-  /** Réduction des dégâts subis au-dessus de la moitié de la rage. */
-  lionSkin?: number;
   /** Secondes retirées aux temps de recharge à chaque ennemi tué. */
   cooldownOnKill?: number;
   /** PV rendus par ennemi tué pendant la Frénésie. */
   frenzyHealOnKill?: number;
   /** Dégâts en plus sous la moitié des PV. */
   lowHpDamage?: number;
-  /**
-   * Au bord du gouffre (passif du Guerrier, et objets) : sous `threshold` de ses PV, le héros frappe plus fort (`damage`)
-   * et se soigne d'une part des dégâts qu'il inflige (`lifesteal`).
-   */
-  lastStand?: { threshold: number; damage: number; lifesteal: number };
   /** Une fois par descente, survit à un coup fatal. */
   bearSkin?: boolean;
   /** Einherjar : dégâts en plus selon les PV perdus (valeur à 0 PV). */
@@ -275,9 +222,7 @@ export interface Perks {
   // --- Races ---
   /** Einherjar (Festin du Valhalla) : part des PV max rendue par ennemi tué. */
   valhallaShare?: number;
-  /** Einherjar guerrier : sous `threshold` des PV, la rage ne retombe plus et monte `gain` fois plus vite. */
-  lowHpRage?: { threshold: number; gain: number };
-  /** Einherjar lame : sous `threshold` des PV, l'esquive et le Pas de l'ombre reviennent `factor` fois plus vite. */
+  /** Einherjar lame : sous `threshold` des PV, l'esquive et la Frappe fantôme reviennent `factor` fois plus vite. */
   lowHpHaste?: { threshold: number; factor: number };
   /** Einherjar paladin : sous `threshold` des PV, la garde remonte `factor` fois plus vite. */
   lowHpGuard?: { threshold: number; factor: number };
@@ -285,8 +230,6 @@ export interface Perks {
   lowHpPierce?: number;
   /** Oushebti : une carapace d'argile absorbe un coup, puis se reforme après ce nombre de secondes. */
   clayShell?: number;
-  /** Oushebti guerrier : rage gagnée quand la carapace absorbe un coup. */
-  clayRage?: number;
   /** Oushebti lame : la carapace qui absorbe un coup rend aussitôt la Frappe fantôme. */
   clayDash?: boolean;
   /**
@@ -310,13 +253,11 @@ export interface Perks {
   /** Demi-dieu, fils d'Arès : dégâts en plus, pour toutes les attaques. */
   divineMight?: number;
   /**
-   * Hanyō : les dégâts infligés, de toutes les sources (arme, flèches, âmes, compétences), remplissent une jauge ;
+   * Hanyō : les dégâts infligés, de toutes les sources (arme, flèches, sorts, compétences), remplissent une jauge ;
    * à `fill` fois ses PV max, elle transforme le héros un moment.
    */
   yokaiBlood?: { fill: number; duration: number; damage: number; speed: number; taken: number };
-  /** Hanyō guerrier : transformé, la rage monte ce nombre de fois plus vite. */
-  yokaiRage?: number;
-  /** Hanyō lame : transformé, le Pas de l'ombre et l'esquive reviennent ce nombre de fois plus vite. */
+  /** Hanyō lame : transformé, la Frappe fantôme et l'esquive reviennent ce nombre de fois plus vite. */
   yokaiDash?: number;
   /** Hanyō paladin : transformé, l'Aura brûle les yokai (dégâts par seconde). */
   yokaiAuraBurn?: number;
@@ -356,12 +297,8 @@ export interface Perks {
   yokaiSpells?: number;
 
   // --- Lame ---
-  /** Après une esquive (ou un Pas de l'ombre), les `swings` premiers coups dans les `window` s sont critiques (tag Lame). */
+  /** Après une esquive, les `swings` premiers coups dans les `window` s sont critiques (tag Lame). */
   dodgeCrit?: { window: number; swings: number };
-  /** Croissant : dégâts infligés aux ennemis traversés par le Pas de l'ombre. */
-  dashDamage?: number;
-  /** Marée d'ombre : tuer un ennemi marqué rend une charge du Pas de l'ombre. */
-  dashRefund?: boolean;
   /** Poudre aux yeux : l'Écran de fumée étourdit les ennemis proches. */
   smokeStun?: number;
   /** Langue d'argent : multiplicateur en plus des critiques portés depuis l'invisibilité. */
@@ -372,8 +309,6 @@ export interface Perks {
   execute?: { threshold: number; bonus: number };
   /** Moisson des âmes : la Marque de mort passe à l'ennemi le plus proche quand sa cible meurt. */
   markJump?: boolean;
-  /** Festin de l'ombre : abattre un ennemi marqué rend ces PV. */
-  markKillHeal?: number;
   /** Festin toxique (Lame) : abattre un ennemi qui porte ton poison rend ces PV. */
   poisonKillHeal?: number;
   /** Crocs de la Jorōgumo : chaque coup critique rend ces PV. */
@@ -444,12 +379,6 @@ export interface Perks {
   auraWeaken?: number;
   /** Marteau du juge : le Marteau lancé étourdit. */
   hammerStun?: number;
-  /** Relever te soigne. */
-  raiseHeal?: number;
-  /** Bandelettes : PV et durée des alliés relevés multipliés. */
-  raiseToughness?: number;
-  /** Roi des morts : Relever relève ce nombre d'alliés. */
-  raiseCount?: number;
 
   // --- Rôdeur ---
   /** Tir chargé plein : il traverse les ennemis (tag Rôdeur). */
@@ -475,10 +404,6 @@ export interface Perks {
   coupDeGrace?: { threshold: number; factor: number };
 
   // --- Objets du Yomi (0.3.0) ---
-  /** Masque de hannya : « Au bord du gouffre » (passif du Guerrier) se déclenche dès ce seuil de PV. */
-  hannya?: { threshold: number };
-  /** Gourde de saké d'oni : un blocage parfait donne `rage` ; une Frappe lancée à rage pleine soigne `smashHeal` fois plus. */
-  gourde?: { rage: number; smashHeal: number };
   /** Nodachi de l'Ikusa : coups plus rapides selon les PV perdus, jusqu'à `bonus` sous `threshold` des PV. */
   lowHpAttackSpeed?: { threshold: number; bonus: number };
   /** Cloche du Grand Rocher : un coup bloqué renvoie cette part de ses dégâts à l'attaquant. */
@@ -511,8 +436,6 @@ export interface Perks {
   clayCharges?: number;
   /** Dō de lamelles d'os : PV max multipliés. */
   maxHpFactor?: number;
-  /** Haidate de shikome : après un Pas de l'ombre, un bouclier de `amount` des PV max pendant `duration` s. */
-  dashShield?: { amount: number; duration: number };
   /** Haidate du temple : quand la garde se brise, une onde repousse et étourdit `stun` s dans un rayon de `radius`. */
   guardBreakNova?: { radius: number; stun: number; knockback: number };
   /** Dō de cuir noir : la cible de la Marque du chasseur fait cette part de dégâts en moins. */

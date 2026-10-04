@@ -179,7 +179,7 @@ export function drawSeal(size = 256): HTMLCanvasElement {
   return canvas;
 }
 
-/** Traînée douce orientée vers +X, plus nette à l'arrivée : Pas de l'ombre, Danse des lames. */
+/** Traînée douce orientée vers +X, plus nette à l'arrivée : Frappe fantôme, Danse des lames. */
 export function drawStreak(width = 256, height = 64): HTMLCanvasElement {
   const [canvas, ctx] = makeCanvas(width, height);
   const along = ctx.createLinearGradient(0, 0, width, 0);

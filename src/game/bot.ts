@@ -188,7 +188,6 @@ export class Bot {
     }
 
     // Compétences.
-    const mine = w.summons.filter((s) => s.owner === p.id);
     const hpRatio = p.hp / c.maxHp;
     if (kit === 'guerrier') {
       // Sans coup à parer, il repasse en Offensive (double clic, un appui à chaque pas) pour frapper vite et loin.
@@ -238,7 +237,7 @@ export class Bot {
       if (p.danceCooldown <= 0 && near(c.blade.dance.range).length >= (this.greedy ? 1 : 2)) input.skillRPressed = true;
     } else if (kit === 'paladin') {
       const hurt = w.players.some((h) => !h.dead && h.hp < h.cfg.maxHp * 0.75 && distance(h.pos, p.pos) < c.paladin.aura.radius);
-      if (p.auraCooldown <= 0 && (hurt || this.greedy || mine.some((s) => s.hp < s.maxHp * 0.6))) input.skillAPressed = true;
+      if (p.auraCooldown <= 0 && (hurt || this.greedy)) input.skillAPressed = true;
       if (p.hammerCooldown <= 0 && !w.hammerOutOf(p) && gap < c.paladin.hammer.range) input.skillEPressed = true;
       // Égide : sur lui quand il faiblit, retirée une fois remis (elle divise ses dégâts par deux).
       const shielded = p.aegisOn === p.id;

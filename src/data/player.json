@@ -5,8 +5,6 @@
   "moveSpeed": 5.5,
   "blockMoveFactor": 0.35,
   "invulnerableAfterHit": 0.5,
-  "rageMax": 100,
-  "rageDecayPerSecond": 2,
   "attack": {
     "damage": 9,
     "range": 1.9,
@@ -16,12 +14,10 @@
     "recovery": 0.24,
     "lunge": 0.35,
     "commit": 0.26,
-    "knockback": 3,
-    "rageOnHit": 4
+    "knockback": 3
   },
   "block": {
     "arcDeg": 130,
-    "rageOnGuard": 16,
     "reduction": 0.75
   },
   "dodge": {
@@ -31,7 +27,6 @@
     "cooldown": 0.65
   },
   "smash": {
-    "rageCost": 50,
     "damage": 38,
     "offset": 1.1,
     "radius": 2.3,
@@ -43,7 +38,6 @@
     "heal": 0.04
   },
   "bond": {
-    "rageCost": 25,
     "range": 5,
     "duration": 0.45,
     "height": 1.4,
@@ -59,40 +53,13 @@
     "offense": { "attackTimeFactor": 0.75, "reach": 0.4 }
   },
   "frenzy": {
-    "rageCost": 30,
     "duration": 6,
     "cooldown": 14,
     "attackTimeFactor": 0.72,
     "damageTakenFactor": 1.25
   },
-  "summon": {
-    "max": 2,
-    "life": 24,
-    "hp": 30,
-    "radius": 0.45,
-    "speed": 5.2,
-    "damage": 8,
-    "attackRange": 0.9,
-    "attackCooldown": 0.95,
-    "knockback": 2,
-    "leash": 8,
-    "rangedFactor": 0.85,
-    "kinds": {
-      "hitodama": { "damage": 0.7, "speed": 1.35, "hp": 0.6 },
-      "kodama": { "damage": 0.8, "speed": 1, "hp": 0.8, "range": 5 },
-      "kappa": { "damage": 1.2, "speed": 0.85, "hp": 1.5 },
-      "kappaRenforce": { "damage": 1.4, "speed": 0.85, "hp": 2 },
-      "kasaObake": { "damage": 1.1, "speed": 1.1, "hp": 1 },
-      "oublie": { "damage": 1.2, "speed": 1, "hp": 1.1 },
-      "araignee": { "damage": 0.6, "speed": 1.3, "hp": 0.5 },
-      "shikome": { "damage": 1.1, "speed": 1.3, "hp": 0.8 },
-      "ikazuchi": { "damage": 0.9, "speed": 1.1, "hp": 0.6, "range": 6 },
-      "ikusa": { "damage": 1.4, "speed": 0.9, "hp": 1.7 }
-    }
-  },
   "blade": {
     "critFactor": 2,
-    "shadowDash": { "distance": 4.6, "duration": 0.2, "cooldown": 2.5, "charges": 1, "markTime": 6 },
     "ghost": { "range": 8, "cooldown": 6, "damage": 1.5, "invulnerable": 0.25 },
     "poison": { "duration": 20, "maxStacks": 3, "damage": 0.25 },
     "deathMark": { "cooldown": 9, "duration": 5, "range": 9 },
@@ -100,13 +67,12 @@
     "dance": { "cooldown": 16, "targets": 5, "range": 7, "damage": 14, "hop": 0.1 }
   },
   "paladin": {
-    "aura": { "cooldown": 16, "duration": 6, "radius": 3, "heal": 3, "healShare": 0.25 },
+    "aura": { "cooldown": 16, "duration": 6, "radius": 3, "healShare": 0.25 },
     "aegis": { "range": 8, "armor": 0.6, "selfDamageMalus": 0.5, "cooldown": 15 },
     "selfHeal": [0.75, 0.6, 0.5],
     "judgement": { "max": 100, "perBlock": 20, "perHit": 5, "radius": 3, "damage": 45, "heal": 0.06 },
     "guard": { "max": 100, "cost": 2.5, "minCost": 12, "regen": 30, "delay": 1, "breakTime": 1.5 },
-    "hammer": { "cooldown": 5, "damage": 20, "range": 7, "speed": 15, "radius": 0.6, "knockback": 4 },
-    "raise": { "cooldown": 20, "range": 7, "memory": 12 }
+    "hammer": { "cooldown": 5, "damage": 20, "range": 7, "speed": 15, "radius": 0.6, "knockback": 4 }
   },
   "ranger": {
     "arrow": { "speed": 24, "radius": 0.25 },

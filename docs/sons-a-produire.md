@@ -25,10 +25,10 @@ Format conseillé : `.ogg` (ou `.mp3`), mono, 44,1 kHz, sans silence au début. 
 - Mort d'un yokai *(var.)* · début de vague · victoire · défaite · ralenti · étourdi
 
 ## Combat, par classe
-- **Guerrier** (nodachi) : Frappe fracassante · Bond (saut, atterrissage) · Frénésie
-- **Sorcier** (grelots) : salve de boules de feu (départ, impact) · Sceau (tracé, explosion) · Bouclier de flammes (allumage, brûlure, dissipation) · Fuite de feu · Grand météore (sifflement, impact) · plus de mana
-- **Lame** (kunai) : Pas de l'ombre · Marque de mort · Écran de fumée · Danse des lames
-- **Paladin** (naginata) : bouclier levé · Aura de lumière · Marteau lancé (vol, impact, retour) · Relever · Jugement (onde sacrée)
+- **Guerrier** (nodachi) : changement de posture (Garde, Offensive) · riposte · Frappe fracassante · Bond (saut, atterrissage) · Frénésie · saignement
+- **Sorcier** (grelots) : salve de boules de feu (départ, impact) · Sceau (tracé, explosion) · Bouclier de flammes (allumage, brûlure, dissipation) · Fuite de feu · Grand météore (sifflement, impact) · dôme de feu · plus de mana
+- **Lame** (kunai) : poison (charge posée) · Frappe fantôme · Marque de mort · Écran de fumée · Danse des lames
+- **Paladin** (naginata) : bouclier levé · Aura de lumière · Marteau lancé (vol, impact, retour) · Égide (posée, retirée) · Jugement (onde sacrée)
 - **Rôdeur** (yumi) : tir · tir chargé (bander, relâcher) · Flèche-filet · Marque du chasseur · Recul
 
 ## Yokai

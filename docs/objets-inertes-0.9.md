@@ -59,10 +59,10 @@ En 0.10.0, **tout ce qui s'appuyait dessus a été remplacé**. Ce tableau garde
 | Tag Guerrier 2 / 4 / 6 | Changer de posture : +10 / +20 / +30 % de vitesse de frappe pendant 3 s. À 4 pièces, le Bond étourdit 0,5 s ; à 6, la Frappe fracassante revient 20 % plus vite |
 | Tag Paladin 4 / 6 | Soin au blocage, plus l'Aura qui donne +15 / +30 % d'Armure ; à 6 pièces, +10 % de dégâts |
 
-## Code laissé en place
+## Code retiré
 
-Ces morceaux ne servent plus à aucune donnée et pourront être retirés :
+Depuis le nettoyage qui suit la 0.10.0, le code de ces mécaniques n'existe plus :
 
-- la jauge `rage` (toujours vide), `gainRage`, `rageCost`, `rageOnHit` ;
-- le dash `shadowDash`, `dashCharges`, `refundDash`, les marques d'ombre ;
-- `paladin.raise`, les âmes relevées, et `paladin.selfHeal`.
+- la jauge de rage et tout ce qui s'en nourrissait ;
+- le Pas de l'ombre, ses charges et les marques d'ombre ;
+- Relever, les tombes et les âmes relevées, avec leur affichage et leur place dans le réseau.

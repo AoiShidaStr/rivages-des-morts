@@ -5,7 +5,7 @@
 import type { PlayerConfig } from '../game/config';
 import { lerp, type Vec2 } from '../game/math';
 import type { InputFrame } from '../game/types';
-import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, SummonView, WebView, WorldView } from '../game/view';
+import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WebView, WorldView } from '../game/view';
 import { Prediction } from './predict';
 import { SNAPSHOT_EVERY, TICK_RATE, type HeroSnap, type Snapshot } from './protocol';
 
@@ -38,12 +38,10 @@ export class MirrorWorld implements WorldView {
   players: HeroView[] = [];
   player: HeroView;
   enemies: EnemyView[] = [];
-  summons: SummonView[] = [];
   projectiles: ProjectileView[] = [];
   stumps: StumpView[] = [];
   peaches: PeachView[] = [];
   webs: WebView[] = [];
-  graveInReach = false;
   hammerOut = false;
   readonly cfg: WorldView['cfg'];
 
@@ -136,7 +134,6 @@ export class MirrorWorld implements WorldView {
     });
     this.player = this.players[this.seat] ?? this.players[0];
     this.enemies = blend(a.enemies, b.enemies, t);
-    this.summons = blend(a.summons, b.summons, t);
     this.projectiles = blend(a.projectiles, b.projectiles, t);
     this.webs = b.webs;
     const stumpKey = JSON.stringify(b.stumps);
@@ -150,7 +147,6 @@ export class MirrorWorld implements WorldView {
       this.peaches = b.peaches;
     }
     const mine = latest.heroes[this.seat];
-    this.graveInReach = mine?.graveNear ?? false;
     this.hammerOut = mine?.hammerOut ?? false;
   }
 
@@ -204,7 +200,6 @@ export class MirrorWorld implements WorldView {
       mana: 0,
       smoke: null,
       drawProgress: 0,
-      rage: 0,
       canSmash: false,
       smashCooldown: 0,
       stance: 'garde',
@@ -218,8 +213,6 @@ export class MirrorWorld implements WorldView {
       wardCooldown: 0,
       flightCooldown: 0,
       meteorCooldown: 0,
-      dashCharges: cfg.blade.shadowDash.charges,
-      dashRecharge: 0,
       deathMarkCooldown: 0,
       smokeCooldown: 0,
       danceCooldown: 0,
@@ -229,13 +222,12 @@ export class MirrorWorld implements WorldView {
       guardBroken: 0,
       fervor: 0,
       barrier: 0,
-      raiseCooldown: 0,
       netCooldown: 0,
       huntCooldown: 0,
       leapCooldown: 0,
     };
     if (snap) {
-      const { graveNear: _grave, hammerOut: _hammer, ...fields } = snap;
+      const { hammerOut: _hammer, ...fields } = snap;
       Object.assign(view, fields);
     }
     return view;

@@ -19,7 +19,6 @@ import {
   type Vec2,
 } from './math';
 import { Player } from './player';
-import { Summon } from './summons';
 import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome, StunReason } from './types';
 
 /** Pause entre deux vagues, en secondes. */
@@ -28,8 +27,6 @@ const WAVE_PAUSE = 1.5;
 const SPAWN_CLEARANCE = 5;
 /** Secondes sans être touché avant que la « Sève du Yomi » ne soigne un yokai. */
 const SAP_DELAY = 3;
-/** Un yokai préfère le héros : un allié relevé doit être une fois et demie plus proche pour l'attirer. */
-const HERO_PULL = 1.5;
 /** Sol en feu et Bouclier de flammes du Sorcier : ils brûlent par à-coups, toutes les demi-secondes. */
 const BURN_TICK = 0.5;
 /** Secondes pendant lesquelles un yokai touché par le feu du Sorcier reste « en feu » (Cristal de pyromancie). */
@@ -70,7 +67,7 @@ function idleInput(hero: Player): InputFrame {
   };
 }
 
-/** Ce qu'un yokai peut attaquer : le héros, ou un allié relevé par le Paladin. */
+/** Ce qu'un yokai peut attaquer : un héros, ou le leurre qui le remplace (fumée, statuette, flamme). */
 export interface Foe {
   pos: Vec2;
   readonly radius: number;
@@ -201,13 +198,6 @@ export class Decoy implements Foe {
   }
 }
 
-/** Allié tombé depuis peu (yokai vaincu, allié relevé brisé) : le Paladin peut le relever. */
-interface Grave {
-  kind: EnemyKind;
-  pos: Vec2;
-  time: number;
-}
-
 /** Fil de Jōren laissé par une esquive : le premier ennemi qui le touche est immobilisé. */
 interface Snare {
   id: number;
@@ -225,8 +215,6 @@ export class World {
   /** Les héros de la partie : un seul en solo, jusqu'à trois en coop. */
   readonly players: Player[];
   enemies: Enemy[] = [];
-  /** Alliés relevés par le Paladin, qui combattent à ses côtés. */
-  summons: Summon[] = [];
   /** Flèches du Rôdeur, marteau du Paladin, boules de feu du Sorcier. */
   projectiles: Projectile[] = [];
   /** Sorcier : sceaux et météores annoncés, sol en feu. */
@@ -255,7 +243,6 @@ export class World {
   private readonly prey = new Map<number, { hero: Player; t: number }>();
   /** Héros déjà signalés à terre. */
   private readonly downed = new Set<Player>();
-  private graves: Grave[] = [];
   private events: GameEvent[] = [];
 
   /** `startWave` permet de commencer directement à une vague (tests, `?vague=7`). */
@@ -291,12 +278,7 @@ export class World {
     return this.players.filter((p) => !p.dead);
   }
 
-  /** Alliés relevés par le héros qui agit : le maximum les limite. */
-  private get mine(): Summon[] {
-    return this.summons.filter((s) => s.owner === this.actor.id);
-  }
-
-  /** Fait agir `hero` le temps de `fn` : ses compétences, ses talents et ses alliés relevés. */
+  /** Fait agir `hero` le temps de `fn` : ses compétences et ses talents. */
   private act<T>(hero: Player, fn: () => T): T {
     const previous = this.actor;
     this.actor = hero;
@@ -339,7 +321,7 @@ export class World {
 
   emit(event: GameEvent): void {
     this.events.push(event);
-    // Les dégâts du héros qui agit (ses coups, ses âmes, ses flèches) remplissent le sang yokai du Hanyō.
+    // Les dégâts du héros qui agit (ses coups, ses sorts, ses flèches) remplissent le sang yokai du Hanyō.
     if (event.type === 'enemyHit') this.actor.dealt(event.amount, this);
   }
 
@@ -349,22 +331,18 @@ export class World {
     return events;
   }
 
-  /** Tout ce que les yokai peuvent frapper : les héros et leurs alliés relevés. */
+  /** Tout ce que les yokai peuvent frapper : les héros debout. */
   foes(): Foe[] {
-    return [...this.standing, ...this.summons.filter((s) => s.targetable)];
+    return this.standing;
   }
 
-  /** Vrai tant que `foe` peut encore être attaqué (un allié effacé ou brisé ne l'est plus, le héros invisible non plus). */
+  /** Vrai tant que `foe` peut encore être attaqué (un héros à terre ou invisible ne l'est plus). */
   isFoe(foe: Foe | null): foe is Foe {
     if (foe instanceof Player) return this.players.includes(foe) && !foe.dead && foe.hidden <= 0;
-    if (foe instanceof Decoy) return this.players.some((p) => p.smoke === foe && !p.dead);
-    return foe instanceof Summon && foe.targetable && this.summons.includes(foe);
+    return foe instanceof Decoy && this.players.some((p) => p.smoke === foe && !p.dead);
   }
 
-  /**
-   * La cible d'un yokai : la plus proche, entre les héros et leurs alliés relevés, le héros passant devant à distance
-   * égale. Invisible, le héros est remplacé par son nuage de fumée.
-   */
+  /** La cible d'un yokai : le héros le plus proche. Invisible, le héros est remplacé par son nuage de fumée. */
   pickFoe(from: Vec2): Foe {
     let best: Foe = this.players[0];
     let bestScore = Infinity;
@@ -373,14 +351,6 @@ export class World {
       const score = distance(from, foe.pos);
       if (score < bestScore) {
         best = foe;
-        bestScore = score;
-      }
-    }
-    for (const summon of this.summons) {
-      if (!summon.targetable) continue;
-      const score = distance(from, summon.pos) * HERO_PULL;
-      if (score < bestScore) {
-        best = summon;
         bestScore = score;
       }
     }
@@ -423,8 +393,6 @@ export class World {
     for (const hero of this.players) {
       if (hero.smoke && hero.hidden <= 0) hero.smoke = null;
     }
-    for (const summon of this.summons) this.act(this.hero(summon.owner), () => summon.update(dt, this));
-    for (const summon of this.summons.filter((s) => s.gone)) this.dismiss(summon);
     for (const hero of this.players) this.act(hero, () => this.updateAura(dt));
     for (const hero of this.players) this.act(hero, () => this.updateWard(dt));
     this.updateProjectiles(dt);
@@ -443,7 +411,6 @@ export class World {
     for (const enemy of fallen) this.prey.delete(enemy.id);
     this.releaseWisps(fallen);
     for (const hero of this.players) this.act(hero, () => this.afterKills(fallen));
-    this.forgetGraves();
     this.updateFallen(dt);
     if (this.players.every((p) => p.dead)) {
       this.finish('defeat');
@@ -461,7 +428,7 @@ export class World {
       if (!hero.dead) continue;
       if (hero.revive === 0 && !this.downed.has(hero)) {
         this.downed.add(hero);
-        // À terre, son Aura et sa fumée se dissipent ; ses alliés relevés, eux, continuent le combat.
+        // À terre, son Aura et sa fumée se dissipent.
         hero.aura = 0;
         hero.smoke = null;
         // Son Égide tombe avec lui.
@@ -530,7 +497,7 @@ export class World {
   }
 
   /**
-   * Tout coup d'arme porté à un ennemi (lame, flèche, Danse des lames) : critiques, rage, foudre, sang yokai.
+   * Tout coup d'arme porté à un ennemi (lame, flèche, Danse des lames) : critiques, foudre, poison, saignement.
    * `crit` : multiplicateur de critique déjà acquis (embuscade, après une esquive) ; une marque de la Lame le rend critique.
    * Renvoie vrai si la carapace a arrêté le coup.
    */
@@ -538,7 +505,7 @@ export class World {
     const player = this.player;
     const perks = player.cfg.perks ?? {};
     // Une marque de la Lame, ou un yokai à l'agonie avec l'Encre de Shinigami, rend le coup critique.
-    const marked = enemy.marks.death > 0 || enemy.marks.shadow > 0 || enemy.hp < enemy.maxHp * (perks.finisher ?? 0);
+    const marked = enemy.marks.death > 0 || enemy.hp < enemy.maxHp * (perks.finisher ?? 0);
     let factor = marked ? Math.max(crit, player.cfg.blade.critFactor) : crit;
     // Coup de grâce (Hachiman) : la proie marquée du Rôdeur, à bout de forces, prend des critiques.
     const grace = perks.coupDeGrace;
@@ -567,16 +534,6 @@ export class World {
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
     // Tsuba ébréchée : chaque critique rapproche la prochaine Marque de mort.
     if (factor > 1 && perks.critMarkRefund) player.deathMarkCooldown = Math.max(0, player.deathMarkCooldown - perks.critMarkRefund);
-    // La marque d'ombre part au premier coup ; sur un ennemi abattu, elle reste pour Marée d'ombre.
-    if (!enemy.dead) enemy.marks.shadow = 0;
-    const rage = player.cfg.attack.rageOnHit * (perks.hitRageFactor ?? 1);
-    // Colère de la tempête : à rage pleine, chaque coup appelle la foudre de Susanoo.
-    const storm = perks.storm && player.rage >= player.cfg.rageMax - 0.5;
-    player.gainRage(shielded ? rage / 2 : rage);
-    if (storm && !enemy.dead) {
-      this.emit({ type: 'lightning', pos: { ...enemy.pos } });
-      enemy.receiveHit({ amount: perks.storm ?? 0, from, knockback: 1, ignoreShell: true }, this);
-    }
     // Fils de Zeus : un coup sur quelques-uns appelle la foudre (le sang du Hanyō, lui, monte dans `emit`).
     const bolt = player.landHit();
     if (bolt && !enemy.dead) {
@@ -763,8 +720,8 @@ export class World {
     this.emit({ type: 'aegis', hero: id, pos: { ...hero.pos }, on: false });
   }
 
-  /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. `full` : lancée à rage pleine. */
-  smash(center: Vec2, full = false): void {
+  /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. */
+  smash(center: Vec2): void {
     const smash = this.player.cfg.smash;
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     this.shakePeaches(center, smash.radius);
@@ -782,9 +739,8 @@ export class World {
       else this.player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
-    // Le Guerrier se soigne en dépensant sa rage, pourvu que la Frappe porte ; deux fois plus à rage pleine avec la Gourde.
-    const gourde = full ? (this.player.cfg.perks?.gourde?.smashHeal ?? 1) : 1;
-    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal * gourde, this);
+    // Une Frappe qui porte soigne le Guerrier.
+    if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal, this);
   }
 
   /** Atterrissage du Bond : dégâts de zone autour du héros, étourdissement avec le talent d'Héraclès. */
@@ -1000,53 +956,7 @@ export class World {
     if (prey) p.dir = rotateTowards(p.dir, normalize(sub(prey.pos, p.pos), p.dir), cfg.turnRate * dt);
   }
 
-  /** Coup d'un allié relevé ; `factor` réduit les coups portés de loin. */
-  summonHit(summon: Summon, target: Enemy, factor: number, ranged = false): void {
-    const player = this.player;
-    const cfg = player.cfg.summon;
-    const amount = cfg.damage * summon.damageFactor * factor;
-    if (ranged) this.emit({ type: 'lightning', pos: { ...target.pos } });
-    else this.emit({ type: 'swing', pos: { ...summon.pos }, dir: summon.facing, range: cfg.attackRange + summon.radius, arcDeg: 90 });
-    target.receiveHit({ amount, from: summon.pos, knockback: cfg.knockback }, this);
-    if (target.dead) player.onKill();
-    if (target.kind === 'hitodama') this.igniteNear(target.pos);
-  }
-
-  /** Relève un allié tombé, en âme de lumière ; au-delà du maximum, le plus ancien laisse sa place. */
-  private raise(kind: EnemyKind, pos: Vec2): Summon {
-    const player = this.player;
-    const cfg = player.cfg.summon;
-    while (this.mine.length >= Math.max(1, cfg.max)) this.dismiss(this.mine[0]);
-    const summon = new Summon(this.nextId++, kind, { ...pos }, cfg, player.cfg.perks?.raiseToughness ?? 1);
-    summon.owner = player.id;
-    this.summons.push(summon);
-    return summon;
-  }
-
-  private dismiss(summon: Summon): void {
-    this.summons = this.summons.filter((s) => s !== summon);
-    // Un allié brisé par les yokai peut être relevé à nouveau.
-    if (summon.broken) this.graves.push({ kind: summon.kind, pos: { ...summon.pos }, time: this.time });
-    this.emit({ type: 'summonFade', id: summon.id, pos: { ...summon.pos }, broken: summon.broken });
-  }
-
   // --- Lame ------------------------------------------------------------------
-
-  /** Pas de l'ombre : marque les ennemis que le héros traverse (leur prochain coup d'arme reçu sera critique). */
-  shadowMark(pos: Vec2, marked: Set<number>): void {
-    const player = this.player;
-    const cut = player.cfg.perks?.dashDamage;
-    for (const enemy of this.enemies) {
-      if (!enemy.targetable || marked.has(enemy.id) || distance(enemy.pos, pos) > enemy.radius + player.radius + 0.3) continue;
-      marked.add(enemy.id);
-      this.markEnemy(enemy, 'shadow', player.cfg.blade.shadowDash.markTime);
-      // Croissant : la lame entaille au passage.
-      if (cut) {
-        enemy.receiveHit({ amount: cut * player.damageMultiplier(), from: pos, knockback: 1, ignoreShell: true }, this);
-        if (enemy.dead) player.onKill();
-      }
-    }
-  }
 
   /** A : Marque de mort sur l'ennemi le plus proche de la souris, à portée du héros. Faux s'il n'y a personne. */
   deathMark(aim: Vec2): boolean {
@@ -1120,16 +1030,11 @@ export class World {
     this.emit({ type: 'mark', id: enemy.id, pos: { ...enemy.pos }, mark });
   }
 
-  /** Talents qui réagissent à la mort d'un ennemi, quelle qu'en soit la cause ; et les tombes que Relever peut rouvrir. */
+  /** Talents qui réagissent à la mort d'un ennemi, quelle qu'en soit la cause. */
   private afterKills(fallen: Enemy[]): void {
     const player = this.player;
     const perks = player.cfg.perks ?? {};
     for (const enemy of fallen) {
-      if (!enemy.boss && player === this.players[0]) this.graves.push({ kind: enemy.kind, pos: { ...enemy.pos }, time: this.time });
-      // Marée d'ombre : un ennemi marqué abattu rend une charge du Pas de l'ombre ; Festin de l'ombre, des PV.
-      const marked = enemy.marks.shadow > 0 || enemy.marks.death > 0;
-      if (perks.dashRefund && marked) player.refundDash();
-      if (perks.markKillHeal && marked) player.heal(perks.markKillHeal, this);
       // Festin toxique : une proie qui portait le poison de la Lame la nourrit.
       if (perks.poisonKillHeal && enemy.poison?.hero === player.id) player.heal(perks.poisonKillHeal, this);
       // Marée d'ombre : la Frappe fantôme se rapproche à chaque proie empoisonnée qui tombe.
@@ -1159,12 +1064,6 @@ export class World {
         }
       }
     }
-  }
-
-  /** Relever ne rouvre que les tombes récentes. */
-  private forgetGraves(): void {
-    const memory = Math.max(...this.players.map((p) => p.cfg.paladin.raise.memory));
-    this.graves = this.graves.filter((g) => this.time - g.time <= memory);
   }
 
   // --- Paladin ---------------------------------------------------------------
@@ -1212,9 +1111,6 @@ export class World {
         hero.auraBuffTime = AURA_BUFF;
       }
     }
-    for (const summon of this.summons) {
-      if (distance(summon.pos, player.pos) <= cfg.radius + summon.radius) healed += summon.heal(summon.maxHp * share, this);
-    }
     // Encensoir du moine : les PV rendus renforcent le prochain Marteau.
     const censer = perks.censer;
     if (censer) player.censer = Math.min(player.censer + healed * censer.perHp, player.cfg.paladin.hammer.damage * censer.max);
@@ -1228,7 +1124,7 @@ export class World {
   }
 
   /**
-   * Soigne les héros debout et les âmes alliées autour de `center` (Aura, bouclier du Paladin). Le Paladin qui soigne
+   * Soigne les héros debout autour de `center` (bouclier du Paladin). Le Paladin qui soigne
    * (`healer`) n'en reçoit qu'une part : il soigne mieux les autres que lui-même.
    */
   healAllies(center: Vec2, radius: number, amount: number, healer?: Player): number {
@@ -1237,9 +1133,6 @@ export class World {
       const shares = hero.cfg.paladin.selfHeal;
       const share = hero === healer ? (shares[Math.min(this.players.length, shares.length) - 1] ?? 1) : 1;
       if (distance(hero.pos, center) <= radius + hero.radius) healed += hero.heal(amount * share, this);
-    }
-    for (const summon of this.summons) {
-      if (distance(summon.pos, center) <= radius + summon.radius) healed += summon.heal(amount, this);
     }
     return healed;
   }
@@ -1285,48 +1178,6 @@ export class World {
     const damage = cfg.damage + this.player.censer;
     this.player.censer = 0;
     this.launch('hammer', dir, { speed: cfg.speed, range: cfg.range, damage, knockback: cfg.knockback, radius: cfg.radius, pierce: true });
-    return true;
-  }
-
-  /** Vrai si Relever a quelqu'un à relever (le HUD le signale). */
-  get graveInReach(): boolean {
-    return this.graveNear(this.player);
-  }
-
-  /** Vrai si `hero` a quelqu'un à relever : un allié tombé depuis peu, ou un héros à terre. */
-  graveNear(hero: Player): boolean {
-    const range = hero.cfg.paladin.raise.range;
-    const near = (pos: Vec2) => distance(pos, hero.pos) <= range;
-    return this.graves.some((g) => near(g.pos)) || this.players.some((p) => p.dead && !p.gone && near(p.pos));
-  }
-
-  /** R : Relever. Les alliés tombés le plus récemment près du héros se relèvent en âmes de lumière. Faux s'il n'y a personne. */
-  relever(): boolean {
-    const player = this.player;
-    const range = player.cfg.paladin.raise.range;
-    const perks = player.cfg.perks ?? {};
-    // Un héros à terre passe avant tout : Relever le remet debout avec la moitié de ses PV.
-    const fallen = this.players.find((p) => p.dead && !p.gone && distance(p.pos, player.pos) <= range);
-    if (fallen) {
-      this.reviveHero(fallen, 0.5);
-      this.emit({ type: 'raise', id: -1, pos: { ...fallen.pos } });
-      if (perks.raiseHeal) player.heal(perks.raiseHeal, this);
-      return true;
-    }
-    const chosen = this.graves
-      .filter((g) => distance(g.pos, player.pos) <= range)
-      .sort((a, b) => b.time - a.time)
-      .slice(0, perks.raiseCount ?? 1);
-    if (!chosen.length) {
-      this.emit({ type: 'raiseFail', pos: { ...player.pos } });
-      return false;
-    }
-    this.graves = this.graves.filter((g) => !chosen.includes(g));
-    for (const grave of chosen) {
-      const summon = this.raise(grave.kind, grave.pos);
-      this.emit({ type: 'raise', id: summon.id, pos: { ...grave.pos } });
-    }
-    if (perks.raiseHeal) player.heal(perks.raiseHeal, this);
     return true;
   }
 
@@ -1650,14 +1501,12 @@ export class World {
   }
 
   /**
-   * Empêche les corps au sol de se chevaucher. Pendant une esquive, le joueur traverse les ennemis, pas les souches ;
-   * les alliés relevés, eux, traversent toujours le héros.
+   * Empêche les corps au sol de se chevaucher. Pendant une esquive, le joueur traverse les ennemis, pas les souches.
    */
   private separate(): void {
     const bodies = this.enemies.filter((e) => e.active && e.grounded);
-    const crowd: Body[] = [...bodies, ...this.summons];
-    for (let i = 0; i < crowd.length; i++) {
-      for (let j = i + 1; j < crowd.length; j++) pushApart(crowd[i], crowd[j]);
+    for (let i = 0; i < bodies.length; i++) {
+      for (let j = i + 1; j < bodies.length; j++) pushApart(bodies[i], bodies[j]);
     }
     for (const hero of this.standing) {
       if (hero.dodging) continue;
@@ -1670,7 +1519,6 @@ export class World {
       for (const enemy of bodies) {
         if (enemy.kind !== 'hitodama' && enemy.kind !== 'ikazuchi') pushOut(enemy, stump);
       }
-      for (const summon of this.summons) pushOut(summon, stump);
     }
   }
 
@@ -1680,7 +1528,7 @@ export class World {
       if (h.t < h.cfg.warning) return true;
       this.emit({ type: 'land', id: h.id, pos: h.pos, radius: h.cfg.radius });
       if (h.cfg.fx === 'lightning') this.emit({ type: 'lightning', pos: { ...h.pos } });
-      // Les chutes viennent des boss et de leurs serviteurs : elles suivent leur puissance, et frappent aussi les âmes.
+      // Les chutes viennent des boss et de leurs serviteurs : elles suivent leur puissance.
       for (const foe of this.foes()) {
         const offset = sub(foe.pos, h.pos);
         if (length(offset) <= h.cfg.radius + foe.radius) foe.takeHit(h.cfg.damage * this.bossMight(), normalize(offset), h.cfg.knockback, this, true);

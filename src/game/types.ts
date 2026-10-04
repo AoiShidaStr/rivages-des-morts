@@ -16,8 +16,8 @@ export type EnemyKind =
   | 'izanami';
 /** `peach` : une pêche d'Izanagi a repoussé Izanami. */
 export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare' | 'net' | 'daze' | 'peach';
-/** Marques posées sur un ennemi : ombre et mort (Lame), chasseur (Rôdeur). */
-export type MarkKind = 'shadow' | 'death' | 'hunt';
+/** Marques posées sur un ennemi : mort (Lame), chasseur (Rôdeur). */
+export type MarkKind = 'death' | 'hunt';
 export type Outcome = 'victory' | 'defeat';
 
 /** Posture affichée : le rendu s'en sert pour animer les sprites (écrasement, tremblement, teinte). */
@@ -36,7 +36,7 @@ export interface InputFrame {
   aimGround: Vec2;
   attackPressed: boolean;
   attackHeld: boolean;
-  /** Clic droit : blocage du Guerrier et du Paladin, Sceau du Sorcier, Pas de l'ombre, tir chargé. */
+  /** Clic droit : blocage du Guerrier et du Paladin, Sceau du Sorcier, Frappe fantôme, tir chargé. */
   signatureHeld: boolean;
   signaturePressed: boolean;
   dodgePressed: boolean;
@@ -56,7 +56,7 @@ export type GameEvent =
   /** Coop : un héros tombe à terre ; un allié qui reste à côté le relève. */
   | { type: 'heroDown'; hero: number; pos: Vec2 }
   | { type: 'heroRevived'; hero: number; pos: Vec2 }
-  | { type: 'guard'; pos: Vec2; rage: number }
+  | { type: 'guard'; pos: Vec2 }
   /** La garde du Paladin se brise : sa jauge est vide. */
   | { type: 'guardBreak'; pos: Vec2 }
   /** Garde levée juste avant le coup. */
@@ -107,17 +107,12 @@ export type GameEvent =
   | { type: 'wardEnd'; pos: Vec2 }
   | { type: 'flight'; from: Vec2; to: Vec2 }
   | { type: 'noMana'; pos: Vec2 }
-  // Lame : marques, traînées du Pas de l'ombre et de la Danse des lames, fumée
+  // Lame : marques, traînées de la Frappe fantôme et de la Danse des lames, fumée
   | { type: 'mark'; id: number; pos: Vec2; mark: MarkKind }
   | { type: 'streak'; from: Vec2; to: Vec2 }
   | { type: 'smoke'; pos: Vec2; radius: number }
   // Paladin
   | { type: 'aura'; pos: Vec2; radius: number }
-  | { type: 'raise'; id: number; pos: Vec2 }
-  | { type: 'raiseFail'; pos: Vec2 }
-  // Alliés relevés : `broken`, détruit par les yokai plutôt qu'effacé par le temps
-  | { type: 'summonHit'; id: number; pos: Vec2; amount: number }
-  | { type: 'summonFade'; id: number; pos: Vec2; broken: boolean }
   // Rôdeur : filet qui s'ouvre, tir chargé plein
   | { type: 'netBurst'; pos: Vec2; radius: number }
   | { type: 'loose'; pos: Vec2; full: boolean }

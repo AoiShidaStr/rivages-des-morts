@@ -35,9 +35,9 @@ import type { Foe, World } from './world';
 export const SPAWN_TIME = 0.6;
 /** Au-dessus de cette hauteur, un ennemi est hors d'atteinte et ne bloque plus le passage. */
 const AIRBORNE_ALTITUDE = 0.5;
-/** Secondes entre deux choix de cible (héros ou âme liée) : un yokai ne change pas d'avis à chaque pas. */
+/** Secondes entre deux choix de cible (parmi les héros) : un yokai ne change pas d'avis à chaque pas. */
 const RETARGET_TIME = 0.8;
-const MARK_KINDS: readonly MarkKind[] = ['shadow', 'death', 'hunt'];
+const MARK_KINDS: readonly MarkKind[] = ['death', 'hunt'];
 
 export interface Hit {
   amount: number;
@@ -62,14 +62,13 @@ export abstract class Enemy {
   elite = false;
   /** Secondes depuis le dernier coup reçu (malédiction « Sève du Yomi »). */
   sinceHurt = 0;
-  /** Le héros ou l'âme liée que ce yokai poursuit. */
+  /** Le héros que ce yokai poursuit. */
   private focus: Foe | null = null;
   private focusTimer = 0;
   /**
-   * Marques du héros, en secondes restantes. Ombre (Pas de l'ombre de la Lame) : le prochain coup d'arme est critique.
-   * Mort (Marque de mort) : tous les coups d'arme sont critiques. Chasseur (Rôdeur) : tous les dégâts reçus augmentent.
+   * Marques du héros, en secondes restantes. Mort (Marque de mort) : tous les coups d'arme sont critiques. Chasseur (Rôdeur) : tous les dégâts reçus augmentent.
    */
-  readonly marks: Record<MarkKind, number> = { shadow: 0, death: 0, hunt: 0 };
+  readonly marks: Record<MarkKind, number> = { death: 0, hunt: 0 };
   /** Dégâts reçus en plus sous la Marque du chasseur. */
   huntBonus = 0;
   /**
@@ -159,8 +158,7 @@ export abstract class Enemy {
   /** Marque la plus forte portée par l'ennemi, pour le rendu. */
   get mark(): MarkKind | null {
     if (this.marks.death > 0) return 'death';
-    if (this.marks.hunt > 0) return 'hunt';
-    return this.marks.shadow > 0 ? 'shadow' : null;
+    return this.marks.hunt > 0 ? 'hunt' : null;
   }
 
   /** Vrai pour un boss : sa mort termine la vague et dissipe les autres ennemis. */
@@ -224,7 +222,7 @@ export abstract class Enemy {
     world.emit({ type: 'heal', id: this.id, pos: { ...this.pos }, amount: gained });
   }
 
-  /** Le héros ou l'âme liée que ce yokai poursuit (le héros tant qu'il n'a pas choisi). */
+  /** Le héros que ce yokai poursuit (le premier tant qu'il n'a pas choisi). */
   protected foe(world: World): Foe {
     return world.isFoe(this.focus) ? this.focus : world.player;
   }
@@ -239,7 +237,7 @@ export abstract class Enemy {
     return amount * this.might * angry * (1 - world.dazzle(this.pos, this.marks.hunt > 0));
   }
 
-  /** Tout coup porté au héros ou à une âme passe par ici ; `falling` : il tombe du ciel (Mino de paille). */
+  /** Tout coup porté à un héros passe par ici ; `falling` : il tombe du ciel (Mino de paille). */
   protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World, falling = false): boolean {
     return foe.takeHit(this.power(amount, world), dir, knockback, world, falling, this);
   }
@@ -250,8 +248,8 @@ export abstract class Enemy {
   }
 
   /**
-   * Coup en arc devant le yokai : touche le héros et les âmes à portée. Le héros qui bloque de face
-   * pare le coup (et gagne de la rage).
+   * Coup en arc devant le yokai : touche les héros à portée. Le héros qui bloque de face
+   * pare le coup.
    */
   protected strikeArc(dir: Vec2, range: number, arcDeg: number, damage: number, knockback: number, world: World): void {
     for (const foe of world.foes()) {
@@ -263,7 +261,7 @@ export abstract class Enemy {
     }
   }
 
-  /** Coup en cercle (chute, morsure) : touche le héros et les âmes dans le rayon. `falling` : il tombe du ciel. */
+  /** Coup en cercle (chute, morsure) : touche les héros dans le rayon. `falling` : il tombe du ciel. */
   protected strikeAround(center: Vec2, radius: number, damage: number, knockback: number, world: World, falling = false): void {
     for (const foe of world.foes()) {
       const offset = sub(foe.pos, center);
@@ -271,7 +269,7 @@ export abstract class Enemy {
     }
   }
 
-  /** Premier corps (héros ou âme) que touche un yokai lancé, ou null. */
+  /** Premier héros que touche un yokai lancé, ou null. */
   protected bump(world: World): Foe | null {
     return world.foes().find((foe) => distance(foe.pos, this.pos) < foe.radius + this.radius) ?? null;
   }
@@ -600,7 +598,7 @@ export class Kappa extends Enemy {
     const foe = this.bump(world);
     if (foe) {
       if (foe.isGuarding(this.pos)) {
-        // La coupelle se renverse : le kappa est étourdi, le joueur recule et gagne de la rage.
+        // La coupelle se renverse : le kappa est étourdi, le joueur recule.
         this.blocked(foe, cfg.chargeDamage, world);
         foe.knockback = scale(state.dir, 5);
         world.emit({ type: 'parry', id: this.id, pos: { ...this.pos } });

@@ -24,7 +24,7 @@ export interface ItemCondition {
 /** Effet d'objet qui ne vaut que sous condition : un objet hybride donne une chose au Guerrier, une autre au reste. */
 export interface ConditionalEffect {
   if: ItemCondition;
-  /** Ce que fait l'effet, en une ligne (« Guerrier : +10 % de rage »). */
+  /** Ce que fait l'effet, en une ligne (« Guerrier : +10 % de vitesse de frappe »). */
   summary: string;
   bonus?: Bonus;
   effects?: ConfigEffect[];
@@ -294,8 +294,6 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.attack.damage *= damage;
   config.smash.damage *= damage;
   config.bond.damage *= damage;
-  config.summon.damage *= damage;
-  config.summon.hp *= power;
   config.blade.dance.damage *= damage;
   config.paladin.hammer.damage *= damage;
   config.paladin.judgement.damage *= damage;
@@ -304,8 +302,6 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   sorcier.meteor.damage *= damage;
   sorcier.ward.burn *= damage;
   sorcier.flight.burn *= damage;
-  // Les soins du Paladin suivent aussi sa puissance : ils gardent leur poids quand les PV montent avec les niveaux.
-  config.paladin.aura.heal *= power;
   for (const palier of paliers) for (const effect of palier.effects ?? []) applyEffect(config, effect);
 
   if (state.flags.benediction_jizo) bonus.maxHp += JIZO_BLESSING;
@@ -329,13 +325,17 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.maxHp *= config.perks?.maxHpFactor ?? 1;
   config.moveSpeed *= 1 + bonus.speed;
   config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
-  // Les dégâts fixes des talents et des objets (foudre de Susanoo, Croissant, Riposte, Chaleur) suivent la puissance.
+  // Les dégâts fixes des talents et des objets (Riposte, Chaleur, foudre de Susanoo) suivent la puissance.
   const perks = config.perks ?? {};
-  for (const key of ['storm', 'dashDamage', 'riposte', 'auraBurn', 'yokaiAuraBurn'] as const) {
+  for (const key of ['riposte', 'auraBurn', 'yokaiAuraBurn'] as const) {
     const value = perks[key];
     if (value) perks[key] = value * damage;
   }
   if (perks.shieldHeal) perks.shieldHeal = { ...perks.shieldHeal, amount: perks.shieldHeal.amount * power };
+  if (perks.stanceBolt) perks.stanceBolt = { ...perks.stanceBolt, damage: perks.stanceBolt.damage * damage };
+  if (perks.offenseBolt) perks.offenseBolt = { ...perks.offenseBolt, damage: perks.offenseBolt.damage * damage };
+  if (perks.fireDome) perks.fireDome = { ...perks.fireDome, burn: perks.fireDome.burn * damage };
+  if (perks.dodgeEmbers) perks.dodgeEmbers = { ...perks.dodgeEmbers, burn: perks.dodgeEmbers.burn * damage };
   if (perks.chargedBolt) perks.chargedBolt = { ...perks.chargedBolt, damage: perks.chargedBolt.damage * damage };
   if (perks.sealBurn) perks.sealBurn = { ...perks.sealBurn, burn: perks.sealBurn.burn * damage };
   config.dodge.distance *= 1 + bonus.dodge;

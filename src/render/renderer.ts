@@ -99,8 +99,6 @@ interface Snapshot {
   aura?: boolean;
   /** Ennemi d'élite (niveau de donjon élevé). */
   elite?: boolean;
-  /** Allié relevé par le Paladin : doré et translucide, il pâlit avec sa vigueur (de 1 à 0). */
-  spirit?: number;
   /** Marque de la Lame ou du Rôdeur : un anneau tourne sous l'ennemi. */
   mark?: MarkKind | null;
   /** Lame invisible : on ne voit plus qu'une ombre. */
@@ -209,12 +207,10 @@ const PEACH = new Color3(1, 0.72, 0.62);
 const STORM = new Color3(0.8, 0.9, 1);
 const CLAY = new Color3(0.78, 0.55, 0.35);
 const DIVINE = new Color3(1, 0.86, 0.45);
-const HOLY_TINT = new Color3(1.15, 1, 0.6);
 const SMOKE = new Color3(0.16, 0.14, 0.22);
 const HIDDEN_TINT = new Color3(0.45, 0.4, 0.6);
 const DRAW = new Color3(0.85, 1, 0.6);
 const MARK_COLORS: Record<MarkKind, Color3> = {
-  shadow: new Color3(0.7, 0.58, 1),
   death: new Color3(0.85, 0.2, 0.45),
   hunt: new Color3(1, 0.6, 0.3),
 };
@@ -543,19 +539,6 @@ export class Renderer {
         glare: enemy.gaze,
       }, dt);
     }
-    for (const summon of world.summons) {
-      seen.add(summon.id);
-      this.syncEntity(summon.id, summon.kind, {
-        pos: summon.pos,
-        facing: summon.facing,
-        radius: summon.radius,
-        pose: summon.pose,
-        altitude: 0,
-        spawn: summon.spawnProgress,
-        blink: false,
-        spirit: summon.vigor,
-      }, dt);
-    }
     for (const [id, view] of this.views) {
       if (seen.has(id)) continue;
       this.views.delete(id);
@@ -706,11 +689,6 @@ export class Renderer {
     if (s.elite && tint === WHITE) tint = Color3.Lerp(WHITE, ELITE_TINT, 0.65 + 0.35 * Math.sin(t * 5));
     // Izanami regardée : elle rougeoie à mesure que sa colère monte.
     if (s.glare && tint === WHITE) tint = Color3.Lerp(WHITE, GLARE_TINT, s.glare * (0.8 + 0.2 * Math.sin(t * 12)));
-    // Allié relevé : doré, de plus en plus pâle avant de s'effacer.
-    if (s.spirit !== undefined) {
-      tint = HOLY_TINT;
-      alpha *= 0.35 + 0.4 * s.spirit;
-    }
     // Invisible (Écran de fumée) : une silhouette sombre, à peine visible.
     if (s.hidden) {
       tint = HIDDEN_TINT;
@@ -1240,9 +1218,7 @@ export class Renderer {
         break;
       case 'guard':
         this.guardPulse = 1;
-        // Le Paladin ne gagne pas de rage : son bouclier pare, simplement.
-        if (event.rage > 0) this.text(event.pos, 2.2, `+${event.rage} rage`, 'rage');
-        else this.text(event.pos, 2.2, 'Paré', 'shield');
+        this.text(event.pos, 2.2, 'Paré', 'shield');
         break;
       case 'parry':
         this.text(event.pos, 2.3, 'Coupelle renversée !', 'parry', 1.3);
@@ -1565,12 +1541,6 @@ export class Renderer {
       case 'noMana':
         this.text(event.pos, 2.3, 'Pas assez de mana', 'stun', 0.7);
         break;
-      case 'summonHit': {
-        const view = this.views.get(event.id);
-        if (view) view.flash = 1;
-        this.text(event.pos, 1.8, `−${Math.round(event.amount)}`, 'soul');
-        break;
-      }
       case 'mark':
         if (event.mark === 'death') this.text(event.pos, 2.4, 'Marque de mort', 'mark', 1.2);
         else if (event.mark === 'hunt') this.text(event.pos, 2.4, 'Proie marquée', 'hunt', 1.1);
@@ -1601,13 +1571,6 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, event.radius * 2.4, DIVINE, 0.5));
         this.text(event.pos, 2.4, 'Aura de lumière', 'light', 1.1);
         break;
-      case 'raise':
-        this.text(event.pos, 2.2, 'Relevé !', 'light', 1.1);
-        this.addFx(this.ringFx(event.pos, 2.6, DIVINE, 0.5));
-        break;
-      case 'raiseFail':
-        this.text(event.pos, 2.3, 'Personne à relever', 'stun', 0.8);
-        break;
       case 'netBurst':
         this.addFx({
           texture: this.fxTextures.web,
@@ -1626,12 +1589,6 @@ export class Renderer {
         break;
       case 'loose':
         this.addFx(this.ringFx(event.pos, 1.6, DRAW, 0.25));
-        break;
-      case 'summonFade':
-        if (event.broken) {
-          this.text(event.pos, 2, 'Âme brisée', 'soul', 1.1);
-          this.addFx(this.ringFx(event.pos, 1.8, SPIRIT, 0.35));
-        }
         break;
       case 'dodge':
       case 'wave':
