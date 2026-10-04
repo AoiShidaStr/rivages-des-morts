@@ -58,6 +58,20 @@ export class Player {
   dodgeCooldown = 0;
   bondCooldown = 0;
   frenzyCooldown = 0;
+  smashCooldown = 0;
+  /**
+   * Guerrier : posture. Garde : coups plus lents, dégâts subis réduits, et le clic droit tenu bloque. Offensive :
+   * coups très rapides, allonge accrue. Un appui court sur le clic droit change de posture.
+   */
+  stance: 'garde' | 'offensive' = 'garde';
+  /** Guerrier : secondes depuis l'appui sur le clic droit, et posture au moment de l'appui (null : pas d'appui). */
+  private stancePress: { t: number; from: 'garde' | 'offensive' } | null = null;
+  /** Paladin : le héros sur qui il a posé l'Égide (null : personne). */
+  aegisOn: number | null = null;
+  /** Armure de l'Égide d'un Paladin posée sur ce héros (part des dégâts retirée), 0 sans Égide. */
+  aegisArmor = 0;
+  /** Lame : recharge de la Frappe fantôme. */
+  ghostCooldown = 0;
   /** Secondes de Frénésie restantes. */
   frenzy = 0;
   invulnerable = 0;
@@ -177,16 +191,22 @@ export class Player {
     return kind === 'dodge' || kind === 'bond' || kind === 'shadowDash' || kind === 'dance' || kind === 'leap' || kind === 'flight';
   }
 
+  // Plus de rage : la Frappe fracassante, le Bond et la Frénésie ne dépendent que de leur recharge.
   get canSmash(): boolean {
-    return this.rage >= this.cfg.smash.rageCost;
+    return this.smashCooldown <= 0;
   }
 
   get canBond(): boolean {
-    return this.bondCooldown <= 0 && this.rage >= this.cfg.bond.rageCost;
+    return this.bondCooldown <= 0;
   }
 
   get canFrenzy(): boolean {
-    return this.frenzyCooldown <= 0 && this.frenzy <= 0 && this.rage >= this.cfg.frenzy.rageCost;
+    return this.frenzyCooldown <= 0 && this.frenzy <= 0;
+  }
+
+  /** Allonge en plus des coups d'arme (posture Offensive du Guerrier). */
+  get reachBonus(): number {
+    return this.cfg.kit === 'guerrier' && this.stance === 'offensive' ? this.cfg.stance.offense.reach : 0;
   }
 
   /** Hauteur pendant le Bond et le Recul, pour que le rendu dessine l'arc du saut. */
@@ -243,6 +263,8 @@ export class Player {
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
+    // Égide posée sur soi : le Paladin devient un rempart, mais frappe deux fois moins fort.
+    if (this.cfg.kit === 'paladin' && this.aegisOn === this.id) factor *= 1 - this.cfg.paladin.aegis.selfDamageMalus;
     return factor;
   }
 
@@ -285,6 +307,9 @@ export class Player {
     // Au bord du gouffre : sous le seuil, les dégâts infligés soignent, goutte à goutte.
     const stand = this.cfg.perks?.lastStand;
     if (stand && !this.dead && this.below(this.standThreshold)) this.leech(amount * stand.lifesteal, world);
+    // Vol de vie des armes du Guerrier : il survit en restant au cœur de la mêlée.
+    const lifesteal = this.cfg.perks?.lifesteal;
+    if (lifesteal && !this.dead) this.leech(amount * lifesteal, world);
     const blood = this.cfg.perks?.yokaiBlood;
     if (!blood || this.transformed > 0 || this.dead) return;
     this.yokaiGauge += amount;
@@ -324,6 +349,7 @@ export class Player {
     this.dodgeCooldown = Math.max(0, this.dodgeCooldown - dt * this.haste);
     this.bondCooldown = Math.max(0, this.bondCooldown - dt);
     this.frenzyCooldown = Math.max(0, this.frenzyCooldown - dt);
+    this.smashCooldown = Math.max(0, this.smashCooldown - dt);
     this.frenzy = Math.max(0, this.frenzy - dt);
     this.coupelleEmpty = Math.max(0, this.coupelleEmpty - dt);
     this.clayCooldown = Math.max(0, this.clayCooldown - dt);
@@ -334,9 +360,6 @@ export class Player {
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
     this.recoverGuard(dt);
-    // Einherjar guerrier : près de la mort, la rage ne retombe plus.
-    const furious = c.perks?.lowHpRage && this.below(c.perks.lowHpRage.threshold);
-    if (!furious) this.rage = Math.max(0, this.rage - c.rageDecayPerSecond * dt);
     if (input.attackPressed) this.attackBuffer = ATTACK_BUFFER;
     // Pendant l'engagement d'un coup, la demande attend qu'on puisse l'interrompre ; ensuite, elle s'efface vite.
     const buffered = this.buffered;
@@ -352,6 +375,7 @@ export class Player {
 
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     const warrior = c.kit === 'guerrier';
+    if (warrior) this.updateStance(dt, input, world);
     if (warrior && input.skillRPressed && this.canFrenzy) this.startFrenzy(world);
     if (buffered.dodge > 0 && this.dodgeCooldown <= 0 && this.canCancel()) {
       buffered.dodge = 0;
@@ -440,9 +464,37 @@ export class Player {
     world.clampToArena(this.pos, this.radius);
   }
 
-  /** Guerrier et Paladin lèvent leur garde, sauf quand celle du Paladin vient de se briser. */
+  /**
+   * Guerrier et Paladin lèvent leur garde, sauf quand celle du Paladin vient de se briser. Le Guerrier ne bloque
+   * qu'en posture de Garde (un appui sur le clic droit en Offensive l'y ramène aussitôt).
+   */
   get canGuard(): boolean {
-    return (this.cfg.kit === 'guerrier' || this.cfg.kit === 'paladin') && this.guardBroken <= 0;
+    if (this.cfg.kit === 'guerrier') return this.stance === 'garde';
+    return this.cfg.kit === 'paladin' && this.guardBroken <= 0;
+  }
+
+  /**
+   * Postures du Guerrier. Appuyer sur le clic droit en Offensive passe en Garde tout de suite (et bloque si on tient) ;
+   * en Garde, un appui court (relâché avant `tapTime`) passe en Offensive, un appui tenu bloque.
+   */
+  private updateStance(dt: number, input: InputFrame, world: World): void {
+    const s = this.cfg.stance;
+    if (input.signaturePressed) {
+      this.stancePress = { t: 0, from: this.stance };
+      if (this.stance === 'offensive') this.setStance('garde', world);
+    }
+    const press = this.stancePress;
+    if (!press) return;
+    press.t += dt;
+    if (input.signatureHeld) return;
+    if (press.from === 'garde' && press.t <= s.tapTime) this.setStance('offensive', world);
+    this.stancePress = null;
+  }
+
+  private setStance(stance: 'garde' | 'offensive', world: World): void {
+    if (this.stance === stance) return;
+    this.stance = stance;
+    world.emit({ type: 'stance', pos: { ...this.pos }, hero: this.id, stance });
   }
 
   /** Paladin : la garde brisée se relève, puis la jauge remonte quand on ne bloque plus rien. */
@@ -482,6 +534,8 @@ export class Player {
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
     const chip = parried ? 0 : amount * (1 - this.cfg.block.reduction);
     if (chip > 0) this.loseHp(chip * this.damageTakenFactor(), world, true);
+    // Main de Týr : ce que la garde et l'Armure ont arrêté repart en partie vers l'attaquant.
+    this.tyrHand(attacker, amount - chip * this.damageTakenFactor(), world);
     if (attacker && !attacker.dead && perks.guardReflect && amount > 0) {
       attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2 }, world);
       if (attacker.dead) this.onKill();
@@ -523,7 +577,7 @@ export class Player {
    * Renvoie faux si le joueur est invulnérable (esquive ou coup tout juste reçu). `falling` : un coup qui tombe du ciel
    * (foudre, pluie de fils, toile lancée, kasa-obake qui retombe), que le Mino de paille amortit.
    */
-  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling = false): boolean {
+  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling = false, attacker?: Enemy): boolean {
     const kind = this.action.kind;
     if (this.invulnerable > 0 || kind === 'bond' || kind === 'dance' || kind === 'leap') return false;
     const perks = this.cfg.perks ?? {};
@@ -545,7 +599,9 @@ export class Player {
       if (perks.clayDecoy) world.clayDecoy(this, perks.clayDecoy);
       return true;
     }
-    this.loseHp(amount * this.damageTakenFactor() * (falling ? 1 - (perks.hazardWard ?? 0) : 1), world, false);
+    const taken = amount * this.damageTakenFactor() * (falling ? 1 - (perks.hazardWard ?? 0) : 1);
+    this.loseHp(taken, world, false);
+    this.tyrHand(attacker, amount - taken, world);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
     this.invulnerable = this.cfg.invulnerableAfterHit;
     this.knockback = scale(pushDir, knockback);
@@ -553,10 +609,13 @@ export class Player {
     return true;
   }
 
-  /** Part des dégâts réellement subis : équipement, Frénésie, Peau du lion, sang yokai. */
-  private damageTakenFactor(): number {
+  /** Part des dégâts réellement subis : équipement (Armure), posture, Égide, Frénésie, Peau du lion, sang yokai. */
+  damageTakenFactor(): number {
     const perks = this.cfg.perks ?? {};
     let factor = this.cfg.damageTakenFactor ?? 1;
+    if (this.cfg.kit === 'guerrier' && this.stance === 'garde') factor *= this.cfg.stance.guard.damageTakenFactor;
+    // Égide d'un Paladin : une Armure qui retire une part des dégâts avant les PV et la garde.
+    factor *= 1 - this.aegisArmor;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
     if (perks.lionSkin && this.rage >= this.cfg.rageMax / 2) factor *= 1 - perks.lionSkin;
     if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
@@ -590,6 +649,14 @@ export class Player {
     world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked, hero: this.id });
   }
 
+  /** Main de Týr (talent du Paladin) : renvoie à l'attaquant une part des dégâts que l'Armure et la garde ont absorbés. */
+  private tyrHand(attacker: Enemy | undefined, absorbed: number, world: World): void {
+    const share = this.cfg.perks?.tyrHand;
+    if (!share || !attacker || attacker.dead || absorbed <= 0) return;
+    attacker.receiveHit({ amount: absorbed * share, from: this.pos, knockback: 2 }, world);
+    if (attacker.dead) this.onKill();
+  }
+
   /** Ajoute de la rage (paliers du tag Guerrier compris) ; renvoie ce qui a été gagné. */
   gainRage(amount: number): number {
     const perks = this.cfg.perks ?? {};
@@ -616,6 +683,7 @@ export class Player {
   private timing(): { windup: number; active: number; recovery: number; commit: number } {
     const a = this.cfg.attack;
     let f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
+    if (this.cfg.kit === 'guerrier') f *= this.stance === 'garde' ? this.cfg.stance.guard.attackTimeFactor : this.cfg.stance.offense.attackTimeFactor;
     const hurried = this.cfg.perks?.lowHpAttackSpeed;
     if (hurried) {
       // De 0 à pleine vitesse entre tous ses PV et le seuil : +30 % de vitesse, ce sont des coups 1,3 fois plus courts.
@@ -658,8 +726,8 @@ export class Player {
   /** Frappe fracassante du Guerrier, comme le Bond : depuis l'arrêt, ou en coupant la fin d'un coup. */
   private startSmash(aimDir: Vec2): void {
     this.facing = aimDir;
-    const full = this.rage >= this.cfg.rageMax - 0.5;
-    this.rage -= this.cfg.smash.rageCost;
+    const full = false;
+    this.smashCooldown = this.cfg.smash.cooldown;
     this.blocking = false;
     this.action = { kind: 'smash', t: 0, dir: { ...this.facing }, landed: false, full };
   }
@@ -703,7 +771,7 @@ export class Player {
       a.swung = true;
       if (this.cfg.kit === 'sorcier') world.fireSalvo(a.dir, a.aim);
       else if (ranged) world.loose(a.dir);
-      else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
+      else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range + this.reachBonus, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
       // Jugement : la ferveur pleine, le coup libère l'onde sacrée devant le Paladin.
       const judgement = this.cfg.paladin.judgement;
       if (this.cfg.kit === 'paladin' && this.fervor >= judgement.max) {
@@ -769,7 +837,6 @@ export class Player {
     const reach = Math.min(b.range, length(toAim));
     const target = add(this.pos, scale(normalize(toAim, this.facing), reach));
     world.clampToArena(target, this.radius);
-    this.rage -= b.rageCost;
     this.bondCooldown = b.cooldown;
     this.blocking = false;
     this.facing = normalize(toAim, this.facing);
@@ -888,6 +955,7 @@ export class Player {
     this.netCooldown = tick(this.netCooldown);
     this.huntCooldown = tick(this.huntCooldown);
     this.leapCooldown = tick(this.leapCooldown);
+    this.ghostCooldown = Math.max(0, this.ghostCooldown - dt * this.haste);
     // Les charges du Pas de l'ombre reviennent une à une.
     const dash = this.cfg.blade.shadowDash;
     if (this.dashCharges >= dash.charges) return;
@@ -899,10 +967,20 @@ export class Player {
 
   // --- Lame ------------------------------------------------------------------
 
-  /** Pas de l'ombre (clic droit), Marque de mort (A), Écran de fumée (E), Danse des lames (R). */
+  /** Frappe fantôme (clic droit), Marque de mort (A), Écran de fumée (E), Danse des lames (R). */
   private bladeSkills(input: InputFrame, aimDir: Vec2, world: World): void {
     const b = this.cfg.blade;
-    if (input.signaturePressed && this.dashCharges > 0 && this.canCancel()) this.startShadowDash(aimDir, world);
+    // Frappe fantôme : la Lame apparaît sur sa proie et consomme son poison ; une proie achevée la recharge aussitôt.
+    if (input.signaturePressed && this.ghostCooldown <= 0 && this.canCancel()) {
+      const strike = world.ghostStrike(input.aim);
+      if (strike) {
+        this.ghostCooldown = strike.killed ? 0 : b.ghost.cooldown;
+        this.blocking = false;
+        this.action = { kind: 'free' };
+        this.facing = normalize(sub(strike.target, this.pos), aimDir);
+        this.invulnerable = Math.max(this.invulnerable, b.ghost.invulnerable);
+      }
+    }
     if (input.skillAPressed && this.deathMarkCooldown <= 0 && world.deathMark(input.aim)) this.deathMarkCooldown = b.deathMark.cooldown;
     if (input.skillEPressed && this.smokeCooldown <= 0) {
       world.smokeScreen();
@@ -925,24 +1003,6 @@ export class Player {
     this.dashCharges = Math.min(this.cfg.blade.shadowDash.charges, this.dashCharges + 1);
   }
 
-  private startShadowDash(dir: Vec2, world: World): void {
-    const dash = this.cfg.blade.shadowDash;
-    // La recharge ne démarre que quand on entame les charges pleines.
-    if (this.dashCharges >= dash.charges) this.dashRecharge = dash.cooldown;
-    this.dashCharges--;
-    this.blocking = false;
-    this.facing = dir;
-    this.action = { kind: 'shadowDash', t: 0, dir, marked: new Set() };
-    this.invulnerable = Math.max(this.invulnerable, dash.duration + 0.05);
-    // Haidate de shikome : un bouclier au sortir de l'ombre.
-    const shield = this.cfg.perks?.dashShield;
-    if (shield) this.shield(this.cfg.maxHp * shield.amount, shield.duration);
-    this.openCritWindow();
-    const to = add(this.pos, scale(dir, dash.distance));
-    world.clampToArena(to, this.radius);
-    world.emit({ type: 'streak', from: { ...this.pos }, to });
-  }
-
   /** La Danse des lames saute de cible en cible ; une cible disparue est passée. */
   private updateDance(dt: number, a: Extract<Action, { kind: 'dance' }>, world: World): void {
     a.t -= dt;
@@ -961,7 +1021,7 @@ export class Player {
 
   // --- Paladin ---------------------------------------------------------------
 
-  /** Aura de lumière (A), Marteau lancé (E), Relever (R) ; le bouclier se lève dans `updateFree`. */
+  /** Aura de lumière (A), Marteau lancé (E), Égide (R) ; le bouclier se lève dans `updateFree`. */
   private paladinSkills(input: InputFrame, aimDir: Vec2, world: World): void {
     const p = this.cfg.paladin;
     if (input.skillAPressed && this.auraCooldown <= 0) {
@@ -969,7 +1029,7 @@ export class Player {
       this.auraCooldown = p.aura.cooldown;
     }
     if (input.skillEPressed && this.hammerCooldown <= 0 && world.throwHammer(aimDir)) this.hammerCooldown = p.hammer.cooldown;
-    if (input.skillRPressed && this.raiseCooldown <= 0 && world.relever()) this.raiseCooldown = p.raise.cooldown;
+    if (input.skillRPressed) world.castAegis(this, input.aim);
   }
 
   // --- Rôdeur ----------------------------------------------------------------
@@ -1030,7 +1090,6 @@ export class Player {
 
   private startFrenzy(world: World): void {
     const f = this.cfg.frenzy;
-    this.rage -= f.rageCost;
     this.frenzy = f.duration;
     this.frenzyCooldown = f.cooldown;
     world.emit({ type: 'frenzy', pos: { ...this.pos } });

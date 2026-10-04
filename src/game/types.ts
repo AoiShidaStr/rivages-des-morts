@@ -66,6 +66,8 @@ export type GameEvent =
   | { type: 'parry'; id: number; pos: Vec2 }
   | { type: 'stun'; id: number; pos: Vec2; reason: StunReason }
   | { type: 'slow'; id: number; pos: Vec2 }
+  | { type: 'stance'; pos: Vec2; hero: number; stance: 'garde' | 'offensive' }
+  | { type: 'aegis'; hero: number; pos: Vec2; on: boolean }
   | { type: 'telegraph'; id: number; from: Vec2; dir: Vec2; length: number; width: number; duration: number }
   | { type: 'chargeEnd'; id: number }
   | { type: 'channel'; id: number; pos: Vec2; radius: number; duration: number }

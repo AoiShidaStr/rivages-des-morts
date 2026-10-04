@@ -182,26 +182,25 @@
       "subtitle": "Berserker",
       "role": "Mêlée, rage",
       "difficulty": 1,
-      "playstyle": "Fonce, bloque, frappe fort : encaisser les coups remplit ta rage.",
+      "playstyle": "Maître d'armes : alterne la Garde et l'Offensive, et survis en frappant.",
       "kit": "guerrier",
       "weapon": "nodachi",
       "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
       "effects": [
         { "op": "mul", "path": "maxHp", "value": 1.4 },
-        { "op": "set", "path": "block.reduction", "value": 0.9 },
-        { "op": "set", "path": "perks.lastStand", "value": { "threshold": 0.3, "damage": 0.3, "lifesteal": 0.1 } }
+        { "op": "set", "path": "block.reduction", "value": 0.9 }
       ],
       "passives": [
         {
-          "name": "Au bord du gouffre",
-          "description": "Sous 30 % de tes PV, tu frappes 30 % plus fort et 10 % des dégâts que tu infliges te soignent. Rester bas est un risque qui paie."
+          "name": "Maître d'armes",
+          "description": "Deux postures. Garde : coups plus lents, 25 % de dégâts subis en moins, et le clic droit tenu bloque. Offensive : coups bien plus rapides et 0,4 m d'allonge. Tes armes de classe volent de la vie : tu survis en restant au cœur de la mêlée."
         }
       ],
       "actives": [
-        { "key": "Clic droit", "name": "Blocage", "description": "Arrête 90 % d'un coup de face et remplit la rage." },
-        { "key": "A", "name": "Frappe fracassante", "description": "Consomme 50 de rage : gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV." },
-        { "key": "E", "name": "Bond", "description": "Consomme 25 de rage : saute sur la zone visée et frappe à l'atterrissage." },
-        { "key": "R", "name": "Frénésie", "description": "Consomme 30 de rage : pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus." }
+        { "key": "Clic droit", "name": "Posture", "description": "Un appui court : passe de la Garde à l'Offensive. Un appui en Offensive te remet en Garde ; tenu en Garde, il bloque 90 % d'un coup de face." },
+        { "key": "A", "name": "Frappe fracassante", "description": "Gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV. Revient en 6 s." },
+        { "key": "E", "name": "Bond", "description": "Saute sur la zone visée et frappe à l'atterrissage. Revient en 5 s." },
+        { "key": "R", "name": "Frénésie", "description": "Pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus. Revient en 14 s." }
       ],
       "tag": {
         "name": "Guerrier",
@@ -537,8 +536,8 @@
       "actives": [
         {
           "key": "Clic droit",
-          "name": "Pas de l'ombre",
-          "description": "Dash vers la souris à travers les ennemis : chacun est marqué, et ton prochain coup sur lui est critique (×2). Abattre un ennemi marqué te rend 4 PV. Revient en 2,5 s."
+          "name": "Frappe fantôme",
+          "description": "Tu apparais derrière l'ennemi le plus proche de la souris et le frappes, en consommant son poison : critique ×2, ×3 ou ×4 selon 1, 2 ou 3 charges. Revient en 6 s, aussitôt si elle tue. Chacun de tes coups empoisonne (3 charges au plus, 20 s)."
         },
         { "key": "A", "name": "Marque de mort", "description": "Pendant 5 s, tous tes coups sur l'ennemi le plus proche de la souris sont critiques." },
         {
@@ -714,12 +713,12 @@
           "name": "Bouclier levé",
           "description": "Maintiens pour arrêter 85 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
         },
-        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et soigne chaque seconde tes alliés proches, âmes comprises (3 PV avec une arme de niveau 1, plus avec la forge). Toi-même, aux trois quarts en solo, un peu moins à deux, à moitié à trois." },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend à toi et à tes alliés proches (âmes comprises) 25 % de leurs PV max, une part chaque seconde." },
         { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
         {
           "key": "R",
-          "name": "Relever",
-          "description": "Le dernier allié tombé près de toi (une âme brisée, ou un yokai vaincu) se relève en âme de lumière et combat pour toi 24 s."
+          "name": "Égide",
+          "description": "Pose l'Égide sur l'allié le plus proche de la souris, sinon sur toi : elle retire 60 % des dégâts qu'il reçoit et reste jusqu'au prochain R (R sur lui la retire). Sur toi, tu deviens presque intuable, mais tes coups font 50 % de dégâts en moins."
         }
       ],
       "tag": {
@@ -803,8 +802,8 @@
             {
               "id": "tyr-3",
               "name": "Main de Týr",
-              "description": "Chaque coup bloqué renvoie 10 dégâts à l'attaquant.",
-              "effects": [{ "op": "set", "path": "perks.riposte", "value": 10 }]
+              "description": "10 % des dégâts que ton Armure, ton Égide et ton bouclier absorbent repartent vers l'attaquant.",
+              "effects": [{ "op": "set", "path": "perks.tyrHand", "value": 0.1 }]
             },
             {
               "id": "tyr-4",

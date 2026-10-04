@@ -82,6 +82,8 @@ export abstract class Enemy {
    * comprises, sans jamais interrompre une attaque : l'esquive garde tout son sens.
    */
   slowAmount = 0;
+  /** Poison de la Lame : charges, secondes restantes, prochaine morsure, dégâts d'une charge, héros qui l'a posé. */
+  poison: { stacks: number; time: number; tick: number; damage: number; hero: number } | null = null;
   slowTime = 0;
 
   constructor(
@@ -235,7 +237,7 @@ export abstract class Enemy {
 
   /** Tout coup porté au héros ou à une âme passe par ici ; `falling` : il tombe du ciel (Mino de paille). */
   protected hitFoe(foe: Foe, amount: number, dir: Vec2, knockback: number, world: World, falling = false): boolean {
-    return foe.takeHit(this.power(amount, world), dir, knockback, world, falling);
+    return foe.takeHit(this.power(amount, world), dir, knockback, world, falling, this);
   }
 
   /** Coup paré : la garde du Guerrier en laisse passer une part, le bouclier du Paladin rien. */

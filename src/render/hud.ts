@@ -9,9 +9,9 @@ const BANNER_TIME = 2.6;
 /** Au-delà de ce ping (ms), il s'affiche en couleur d'alerte. */
 const LAGGY = 150;
 const SKILL_KEYS = ['A', 'E', 'R'] as const;
-/** La barre sous les PV : rage du Guerrier, mana du Sorcier, ombre de la Lame, garde du Paladin, arc du Rôdeur. */
+/** La barre sous les PV : posture du Guerrier, mana du Sorcier, ombre de la Lame, garde du Paladin, arc du Rôdeur. */
 const RESOURCE: Record<Kit, { label: string; style: string }> = {
-  guerrier: { label: 'Rage', style: '' },
+  guerrier: { label: 'Posture', style: '' },
   sorcier: { label: 'Mana', style: 'mana' },
   lame: { label: 'Ombre', style: 'shadow' },
   paladin: { label: 'Garde', style: 'light' },
@@ -163,13 +163,11 @@ export class Hud {
         { cooldown: player.meteorCooldown / s.meteor.cooldown, locked: player.mana < cost(s.meteor.cost) },
       ];
     } else if (cfg.kit === 'lame') {
-      // Charges du Pas de l'ombre, la suivante se remplit ; invisible, la barre le dit.
+      // Frappe fantôme : la barre se remplit avec sa recharge ; invisible, la barre le dit.
       const b = cfg.blade;
-      const max = b.shadowDash.charges;
-      const refill = player.dashCharges < max ? 1 - player.dashRecharge / b.shadowDash.cooldown : 0;
-      fill = (player.dashCharges + refill) / max;
-      ready = player.dashCharges > 0;
-      label = player.hidden > 0 ? 'Invisible' : max > 1 ? `Ombre ${player.dashCharges} / ${max}` : 'Ombre';
+      fill = 1 - player.ghostCooldown / b.ghost.cooldown;
+      ready = player.ghostCooldown <= 0;
+      label = player.hidden > 0 ? 'Invisible' : ready ? 'Frappe fantôme' : 'Fantôme…';
       views = [
         { cooldown: player.deathMarkCooldown / b.deathMark.cooldown, locked: false },
         { cooldown: player.hidden > 0 ? 0 : player.smokeCooldown / b.smoke.cooldown, locked: false, active: player.hidden > 0 },
@@ -181,11 +179,13 @@ export class Hud {
       fill = player.guardBroken > 0 ? 0 : player.guardLeft / p.guard.max;
       ready = fill >= 1;
       const ferveur = Math.round((player.fervor / p.judgement.max) * 100);
-      label = player.guardBroken > 0 ? 'Garde brisée' : ferveur >= 100 ? 'Jugement prêt' : `Garde · Ferveur ${ferveur} %`;
+      const egide = player.aegisOn === player.id ? ' · Égide' : '';
+      label = player.guardBroken > 0 ? 'Garde brisée' : ferveur >= 100 ? `Jugement prêt${egide}` : `Garde · Ferveur ${ferveur} %${egide}`;
       views = [
         { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },
-        { cooldown: player.raiseCooldown / p.raise.cooldown, locked: !world.graveInReach },
+        // Égide : allumée tant qu'elle est posée, sur soi ou sur un allié.
+        { cooldown: 0, locked: false, active: player.aegisOn !== null },
       ];
     } else if (cfg.kit === 'rodeur') {
       const r = cfg.ranger;
@@ -197,14 +197,16 @@ export class Hud {
         { cooldown: player.leapCooldown / r.leap.cooldown, locked: false },
       ];
     } else {
-      fill = player.rage / cfg.rageMax;
-      ready = player.canSmash;
+      // Guerrier : plus de rage ; la barre montre la posture (pleine en Offensive).
+      fill = player.stance === 'offensive' ? 1 : 0.5;
+      ready = player.stance === 'offensive';
+      label = player.stance === 'offensive' ? 'Posture offensive' : 'Posture de garde';
       views = [
-        { cooldown: 0, locked: !player.canSmash },
-        { cooldown: player.bondCooldown / cfg.bond.cooldown, locked: player.rage < cfg.bond.rageCost },
+        { cooldown: player.smashCooldown / cfg.smash.cooldown, locked: false },
+        { cooldown: player.bondCooldown / cfg.bond.cooldown, locked: false },
         {
           cooldown: player.frenzy > 0 ? 0 : player.frenzyCooldown / cfg.frenzy.cooldown,
-          locked: player.frenzy <= 0 && player.rage < cfg.frenzy.rageCost,
+          locked: false,
           active: player.frenzy > 0,
         },
       ];

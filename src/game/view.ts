@@ -32,6 +32,13 @@ export interface HeroView {
   readonly dodgeCooldown: number;
   readonly bondCooldown: number;
   readonly frenzyCooldown: number;
+  /** Guerrier : recharge de la Frappe fracassante, et sa posture. */
+  readonly smashCooldown: number;
+  readonly stance: 'garde' | 'offensive';
+  /** Lame : recharge de la Frappe fantôme. */
+  readonly ghostCooldown: number;
+  /** Paladin : le héros qui porte son Égide (null : personne). */
+  readonly aegisOn: number | null;
   readonly sealCooldown: number;
   readonly wardCooldown: number;
   readonly flightCooldown: number;

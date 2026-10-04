@@ -10,7 +10,7 @@ import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 5;
+export const PROTOCOL = 6;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -125,6 +125,8 @@ const COOLDOWNS = {
   dodgeCooldown: 0,
   bondCooldown: 0,
   frenzyCooldown: 0,
+  smashCooldown: 0,
+  ghostCooldown: 0,
   sealCooldown: 0,
   wardCooldown: 0,
   flightCooldown: 0,
@@ -165,6 +167,8 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   ...COOLDOWNS,
   guardLeft: 100,
   barrier: 0,
+  stance: 'garde',
+  aegisOn: null,
   graveNear: false,
   hammerOut: false,
 };
@@ -182,7 +186,7 @@ const FIELDS = [
   ...['id', 'pos', 'facing', 'radius', 'pose', 'hp', 'kind', 'sprite', 'maxHp', 'altitude', 'spawnProgress', 'elite', 'mark', 'dead', 'boss', 'prey'],
   ...['gaze', 'watched', 'repelled', 'thread', 'to', 'taut', 'owner', 'vigor', 'dir', 'full', 'ripe', 'age', 'burning'],
   ...['revive', 'invulnerable', 'frenzy', 'transformed', 'hidden', 'aura', 'ward', 'smoke', 'cloud', 'drawProgress', 'rage', 'canSmash'],
-  ...['dashCharges', 'mana', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier'],
+  ...['dashCharges', 'mana', 'graveNear', 'hammerOut', 'guardLeft', ...Object.keys(COOLDOWNS), 'barrier', 'stance', 'aegisOn'],
 ];
 const CODE = new Map(FIELDS.map((name, i) => [name, i.toString(36)]));
 const NAME = new Map(FIELDS.map((name, i) => [i.toString(36), name]));
@@ -254,6 +258,10 @@ function heroSnaps(world: World): HeroSnap[] {
     dodgeCooldown: p.dodgeCooldown,
     bondCooldown: p.bondCooldown,
     frenzyCooldown: p.frenzyCooldown,
+    smashCooldown: p.smashCooldown,
+    stance: p.stance,
+    ghostCooldown: p.ghostCooldown,
+    aegisOn: p.aegisOn,
     sealCooldown: p.sealCooldown,
     wardCooldown: p.wardCooldown,
     flightCooldown: p.flightCooldown,

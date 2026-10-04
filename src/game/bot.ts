@@ -95,7 +95,6 @@ export class Bot {
     const downed = w.players.find((h) => h !== p && h.dead);
     if (downed && !threats.length) {
       const gap = distance(downed.pos, p.pos);
-      if (kit === 'paladin' && p.raiseCooldown <= 0 && w.graveNear(p)) input.skillRPressed = true;
       if (gap > 1.2) input.move = normalize(sub(downed.pos, p.pos));
       return input;
     }
@@ -120,7 +119,8 @@ export class Bot {
     const toTarget = normalize(sub(target.pos, p.pos));
     input.aim = { ...target.pos };
     input.aimGround = { ...target.pos };
-    const canBlock = p.canGuard;
+    // Le Guerrier en Offensive bloque aussi : appuyer sur le clic droit le remet aussitôt en Garde.
+    const canBlock = p.canGuard || kit === 'guerrier';
 
     // Réactions aux attaques annoncées.
     const land = threats.find((th): th is Extract<Threat, { type: 'land' }> => th.type === 'land');
@@ -134,6 +134,7 @@ export class Bot {
     if (hit) {
       if (canBlock) {
         input.signatureHeld = true;
+        if (kit === 'guerrier' && p.stance === 'offensive') input.signaturePressed = true;
         input.aim = { ...hit.src };
         return input;
       }
@@ -190,6 +191,8 @@ export class Bot {
     const mine = w.summons.filter((s) => s.owner === p.id);
     const hpRatio = p.hp / c.maxHp;
     if (kit === 'guerrier') {
+      // Sans coup à parer, il repasse en Offensive (un appui court en Garde) pour frapper vite et loin.
+      if (p.stance === 'garde' && !hit) input.signaturePressed = true;
       if (p.canSmash && near(c.smash.offset + c.smash.radius * 0.8).length >= 1) input.skillAPressed = true;
       else if (p.canBond && gap > 2.5 && gap < c.bond.range) input.skillEPressed = true;
       else if (this.greedy && p.canBond) input.skillEPressed = true;
@@ -219,12 +222,12 @@ export class Bot {
         return input;
       }
     } else if (kit === 'lame') {
-      // Au banc de DPS, la Lame joue comme un bon joueur : elle traverse sa cible dès qu'elle a une charge (marque et
-      // critique), puis revient au contact d'une esquive, qui ouvre elle aussi ses critiques.
-      const through = this.greedy ? gap < c.blade.shadowDash.distance - 1.5 : gap > 1.2 && gap < c.blade.shadowDash.distance - 1.5;
-      if (p.dashCharges > 0 && (target.kind !== 'kodama' || this.greedy) && through) {
+      // Frappe fantôme : sur une proie bien empoisonnée (3 charges), ou pour revenir au contact d'une proie lointaine.
+      const stacks = (target as unknown as { poison: { stacks: number } | null }).poison?.stacks ?? 0;
+      const ghost = c.blade.ghost;
+      if (p.ghostCooldown <= 0 && gap < ghost.range && (stacks >= c.blade.poison.maxStacks || (gap > 3 && stacks >= 1))) {
         input.signaturePressed = true;
-        input.aim = add(target.pos, scale(toTarget, 2));
+        input.aim = { ...target.pos };
       } else if (this.greedy && c.perks?.dodgeCrit && p.dodgeCooldown <= 0 && gap > 1.5) {
         input.move = toTarget;
         input.dodgePressed = true;
@@ -237,7 +240,12 @@ export class Bot {
       const hurt = w.players.some((h) => !h.dead && h.hp < h.cfg.maxHp * 0.75 && distance(h.pos, p.pos) < c.paladin.aura.radius);
       if (p.auraCooldown <= 0 && (hurt || this.greedy || mine.some((s) => s.hp < s.maxHp * 0.6))) input.skillAPressed = true;
       if (p.hammerCooldown <= 0 && !w.hammerOutOf(p) && gap < c.paladin.hammer.range) input.skillEPressed = true;
-      if (p.raiseCooldown <= 0 && w.graveNear(p)) input.skillRPressed = true;
+      // Égide : sur lui quand il faiblit, retirée une fois remis (elle divise ses dégâts par deux).
+      const shielded = p.aegisOn === p.id;
+      if ((!shielded && hpRatio < 0.4) || (shielded && hpRatio > 0.8)) {
+        input.skillRPressed = true;
+        input.aim = { ...p.pos };
+      }
     } else if (kit === 'rodeur') {
       const shelled = target.kind.startsWith('kappa') && peek(target).state?.kind !== 'stunned';
       if (p.netCooldown <= 0 && (shelled || near(2.5).length >= 1 || near(c.ranger.net.radius, target.pos).length >= 2)) input.skillAPressed = true;

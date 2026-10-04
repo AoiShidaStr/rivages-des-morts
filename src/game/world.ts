@@ -79,7 +79,7 @@ export interface Foe {
    */
   guard(world: World, attacker?: Enemy, amount?: number, parried?: boolean): void;
   /** Faux si le coup n'a pas porté (esquive, invulnérabilité). `falling` : il tombe du ciel (Mino de paille). */
-  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling?: boolean): boolean;
+  takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling?: boolean, attacker?: Enemy): boolean;
 }
 
 interface Body {
@@ -428,6 +428,7 @@ export class World {
     this.updateHazards(dt);
     this.updateWebs(dt);
     this.updateSnares(dt);
+    this.updatePoison(dt);
     this.updatePeaches(dt);
     this.separate();
     this.clearBossMinions();
@@ -457,6 +458,11 @@ export class World {
         // À terre, son Aura et sa fumée se dissipent ; ses alliés relevés, eux, continuent le combat.
         hero.aura = 0;
         hero.smoke = null;
+        // Son Égide tombe avec lui.
+        if (hero.aegisOn !== null) {
+          this.hero(hero.aegisOn).aegisArmor = 0;
+          hero.aegisOn = null;
+        }
         if (this.players.length > 1) this.emit({ type: 'heroDown', hero: hero.id, pos: { ...hero.pos } });
       }
       if (hero.gone) continue;
@@ -492,7 +498,9 @@ export class World {
    * `crit` : multiplicateur de critique du coup (Lame).
    */
   strike(origin: Vec2, dir: Vec2, alreadyHit: Set<number>, crit = 1): void {
-    const attack = this.player.cfg.attack;
+    const base = this.player.cfg.attack;
+    // Posture Offensive du Guerrier : l'arme porte plus loin.
+    const attack = { ...base, range: base.range + this.player.reachBonus };
     // `enemies` peut contenir des morts du pas en cours : `targetable` les écarte.
     const thrust = attack.shape === 'line';
     const fullCircle = !thrust && attack.arcDeg >= 360;
@@ -556,8 +564,88 @@ export class World {
       enemy.receiveHit({ amount: bolt, from, knockback: 1, ignoreShell: true }, this);
     }
     if (enemy.dead) player.onKill();
+    else if (player.cfg.kit === 'lame') this.poison(enemy, player);
     if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     return shielded;
+  }
+
+  // --- Lame : poison et Frappe fantôme ------------------------------------------------
+
+  /** Une charge de poison de plus (au plus `maxStacks`), et ses `duration` s relancées. */
+  private poison(enemy: Enemy, hero: Player): void {
+    const cfg = hero.cfg.blade.poison;
+    enemy.poison = {
+      stacks: Math.min(cfg.maxStacks, (enemy.poison?.stacks ?? 0) + 1),
+      time: cfg.duration,
+      tick: enemy.poison?.tick ?? 1,
+      // Les dégâts d'une charge sont pris au moment du coup : arme, forge et bonus du héros.
+      damage: Math.max(enemy.poison?.damage ?? 0, hero.cfg.attack.damage * cfg.damage * hero.damageMultiplier()),
+      hero: hero.id,
+    };
+  }
+
+  /** Le poison ronge : chaque seconde, chaque charge inflige ses dégâts ; la Lame qui l'a posé compte la proie. */
+  private updatePoison(dt: number): void {
+    for (const enemy of this.enemies) {
+      const poison = enemy.poison;
+      if (!poison || enemy.dead) continue;
+      poison.time -= dt;
+      poison.tick -= dt;
+      if (poison.tick <= 0) {
+        poison.tick += 1;
+        const hero = this.hero(poison.hero);
+        this.act(hero, () => {
+          enemy.receiveHit({ amount: poison.damage * poison.stacks, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
+          if (enemy.dead) hero.onKill();
+        });
+      }
+      if (poison.time <= 0) enemy.poison = null;
+    }
+  }
+
+  /**
+   * Clic droit de la Lame : elle apparaît sur l'ennemi le plus proche de la souris et le frappe, critique ×(1 + charges
+   * de poison), qu'elle consomme toutes. Renvoie la cible et vrai si elle l'a tuée, ou null s'il n'y a personne.
+   */
+  ghostStrike(aim: Vec2): { target: Vec2; killed: boolean } | null {
+    const player = this.player;
+    const cfg = player.cfg.blade.ghost;
+    const target = closest(this.enemies.filter((e) => e.targetable && distance(e.pos, player.pos) <= cfg.range), aim);
+    if (!target) return null;
+    const stacks = target.poison?.stacks ?? 0;
+    target.poison = null;
+    // Elle reparaît juste derrière sa proie.
+    const from = { ...player.pos };
+    const behind = normalize(sub(target.pos, player.pos), player.facing);
+    player.pos = add(target.pos, scale(behind, target.radius + player.radius + 0.2));
+    this.clampToArena(player.pos, player.radius);
+    this.emit({ type: 'streak', from, to: { ...player.pos } });
+    this.weaponHit(target, player.cfg.attack.damage * cfg.damage, player.pos, 3, 1 + stacks);
+    // Le coup a reposé une charge : la Frappe les consomme toutes.
+    if (!target.dead) target.poison = null;
+    return { target: { ...target.pos }, killed: target.dead };
+  }
+
+  // --- Paladin : Égide --------------------------------------------------------------
+
+  /**
+   * R du Paladin : pose l'Égide sur le héros (lui compris) le plus proche de la souris, parmi ses alliés debout à portée ;
+   * à nouveau sur le même héros, il la retire. Une seule Égide par Paladin.
+   */
+  castAegis(paladin: Player, aim: Vec2): void {
+    const cfg = paladin.cfg.paladin.aegis;
+    // Le héros (lui compris) le plus proche de la souris, parmi ceux à portée.
+    const target = closest([paladin, ...this.standing.filter((h) => h !== paladin && distance(h.pos, paladin.pos) <= cfg.range)], aim) ?? paladin;
+    const previous = paladin.aegisOn === null ? null : this.hero(paladin.aegisOn);
+    if (previous) previous.aegisArmor = 0;
+    if (previous === target) {
+      paladin.aegisOn = null;
+      this.emit({ type: 'aegis', hero: target.id, pos: { ...target.pos }, on: false });
+      return;
+    }
+    paladin.aegisOn = target.id;
+    target.aegisArmor = cfg.armor;
+    this.emit({ type: 'aegis', hero: target.id, pos: { ...target.pos }, on: true });
   }
 
   /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. `full` : lancée à rage pleine. */
@@ -960,7 +1048,15 @@ export class World {
     // Un soin par seconde, le premier dès l'activation : six pour une Aura de 6 s.
     if (player.auraTick > 0 || player.aura <= 0) return;
     player.auraTick = 1;
-    const healed = this.healAllies(player.pos, cfg.radius, cfg.heal, player);
+    // Chacun, Paladin compris, regagne `healShare` de ses PV max sur toute l'Aura, une part à chaque seconde.
+    let healed = 0;
+    const share = cfg.healShare / Math.max(1, cfg.duration);
+    for (const hero of this.standing) {
+      if (distance(hero.pos, player.pos) <= cfg.radius + hero.radius) healed += hero.heal(hero.cfg.maxHp * share, this);
+    }
+    for (const summon of this.summons) {
+      if (distance(summon.pos, player.pos) <= cfg.radius + summon.radius) healed += summon.heal(summon.maxHp * share, this);
+    }
     // Encensoir du moine : les PV rendus renforcent le prochain Marteau.
     const censer = perks.censer;
     if (censer) player.censer = Math.min(player.censer + healed * censer.perHp, player.cfg.paladin.hammer.damage * censer.max);

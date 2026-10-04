@@ -39,6 +39,7 @@
     "recovery": 0.32,
     "knockback": 7,
     "stun": 0.8,
+    "cooldown": 6,
     "heal": 0.04
   },
   "bond": {
@@ -51,6 +52,11 @@
     "knockback": 6,
     "cooldown": 5,
     "slow": 0
+  },
+  "stance": {
+    "tapTime": 0.2,
+    "guard": { "attackTimeFactor": 1.2, "damageTakenFactor": 0.75 },
+    "offense": { "attackTimeFactor": 0.75, "reach": 0.4 }
   },
   "frenzy": {
     "rageCost": 30,
@@ -87,12 +93,15 @@
   "blade": {
     "critFactor": 2,
     "shadowDash": { "distance": 4.6, "duration": 0.2, "cooldown": 2.5, "charges": 1, "markTime": 6 },
+    "ghost": { "range": 8, "cooldown": 6, "damage": 1.5, "invulnerable": 0.25 },
+    "poison": { "duration": 20, "maxStacks": 3, "damage": 0.25 },
     "deathMark": { "cooldown": 9, "duration": 5, "range": 9 },
     "smoke": { "cooldown": 15, "duration": 2.5, "radius": 2.2, "maxHidden": 6 },
     "dance": { "cooldown": 16, "targets": 5, "range": 7, "damage": 14, "hop": 0.1 }
   },
   "paladin": {
-    "aura": { "cooldown": 16, "duration": 6, "radius": 3, "heal": 3 },
+    "aura": { "cooldown": 16, "duration": 6, "radius": 3, "heal": 3, "healShare": 0.25 },
+    "aegis": { "range": 8, "armor": 0.6, "selfDamageMalus": 0.5 },
     "selfHeal": [0.75, 0.6, 0.5],
     "judgement": { "max": 100, "perBlock": 20, "perHit": 5, "radius": 3, "damage": 45, "heal": 0.06 },
     "guard": { "max": 100, "cost": 2.5, "minCost": 12, "regen": 30, "delay": 1, "breakTime": 1.5 },

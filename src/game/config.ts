@@ -47,6 +47,8 @@ export interface PlayerConfig {
   dodge: { distance: number; duration: number; invulnerable: number; cooldown: number };
   smash: {
     rageCost: number;
+    /** Recharge de la Frappe (le Guerrier n'a plus de rage). */
+    cooldown: number;
     damage: number;
     /** Distance entre le joueur et le centre de l'impact. */
     offset: number;
@@ -72,6 +74,15 @@ export interface PlayerConfig {
     slow: number;
   };
   /** R : on frappe plus vite, mais on encaisse plus. */
+  /**
+   * Guerrier : postures. Garde : coups plus lents (`attackTimeFactor` > 1), dégâts subis réduits, blocage au clic droit
+   * tenu. Offensive : coups plus rapides, `reach` m d'allonge en plus. Un appui de moins de `tapTime` s change de posture.
+   */
+  stance: {
+    tapTime: number;
+    guard: { attackTimeFactor: number; damageTakenFactor: number };
+    offense: { attackTimeFactor: number; reach: number };
+  };
   frenzy: {
     rageCost: number;
     duration: number;
@@ -142,8 +153,19 @@ export interface SorcierConfig {
 export interface BladeConfig {
   /** Multiplicateur des coups critiques. */
   critFactor: number;
-  /** Clic droit : dash qui traverse les ennemis et marque chacun d'eux (leur prochain coup reçu est critique). */
+  /** Ancien clic droit (Pas de l'ombre), gardé pour les talents et objets qui s'y réfèrent encore. */
   shadowDash: { distance: number; duration: number; cooldown: number; charges: number; markTime: number };
+  /**
+   * Clic droit : Frappe fantôme. La Lame apparaît sur l'ennemi le plus proche de la souris (à `range` m), frappe de
+   * `damage` × les dégâts de son arme, critique ×(1 + charges de poison consommées), et revient en `cooldown` s
+   * (aussitôt si elle tue).
+   */
+  ghost: { range: number; cooldown: number; damage: number; invulnerable: number };
+  /**
+   * Poison : chaque coup de la Lame qui touche ajoute une charge (`maxStacks` au plus) et relance les `duration` s.
+   * Chaque seconde, chaque charge inflige `damage` × les dégâts de son arme.
+   */
+  poison: { duration: number; maxStacks: number; damage: number };
   /** A : tous les coups sur la cible sont critiques un moment. */
   deathMark: { cooldown: number; duration: number; range: number };
   /** E : nuage de fumée ; le héros disparaît, les yokai attaquent le nuage. */
@@ -159,7 +181,12 @@ export interface PaladinConfig {
    * A : zone qui soigne les alliés de `heal` PV par seconde. Le Paladin lui-même n'en reçoit qu'une part, selon la
    * taille de l'équipe (`selfHeal` : seul, à deux, à trois).
    */
-  aura: { cooldown: number; duration: number; radius: number; heal: number };
+  aura: { cooldown: number; duration: number; radius: number; heal: number; healShare: number };
+  /**
+   * R : Égide, posée sur l'allié le plus proche de la souris (à `range` m), sinon sur soi ; elle reste jusqu'au
+   * prochain R. Elle retire `armor` des dégâts reçus ; sur soi, le Paladin frappe `selfDamageMalus` moins fort.
+   */
+  aegis: { range: number; armor: number; selfDamageMalus: number };
   /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
   selfHeal: number[];
   /**
@@ -342,6 +369,10 @@ export interface Perks {
   shieldHeal?: { amount: number; radius: number };
   /** Riposte : un coup bloqué renvoie ces dégâts à l'attaquant. */
   riposte?: number;
+  /** Main de Týr : part des dégâts absorbés (Armure, Égide, garde) renvoyée à l'attaquant. */
+  tyrHand?: number;
+  /** Vol de vie (armes du Guerrier) : part des dégâts infligés rendue en PV. */
+  lifesteal?: number;
   /** Gleipnir : un coup bloqué étourdit l'attaquant. */
   gleipnir?: number;
   /** Chaleur : l'Aura brûle les ennemis qui s'y trouvent (dégâts par seconde). */

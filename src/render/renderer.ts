@@ -1249,6 +1249,12 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 3, SPIRIT, 0.4));
         this.addShake(0.4);
         break;
+      case 'stance':
+        this.text(event.pos, 2.2, event.stance === 'offensive' ? 'Offensive' : 'Garde', 'stun', 0.7);
+        break;
+      case 'aegis':
+        this.text(event.pos, 2.4, event.on ? 'Égide' : 'Égide retirée', 'parry', 0.9);
+        break;
       case 'slow':
         this.text(event.pos, 2, 'Ralenti', 'stun', 0.8);
         break;
