@@ -1,101 +1,68 @@
-# Objets et passifs inertes depuis la 0.9.0
+# Objets et passifs inertes depuis la 0.9.0, et leur remplacement
 
-La refonte 0.9.0 a retiré trois mécaniques :
+La refonte 0.9.0 a retiré :
 
 - la **rage** et « Au bord du gouffre » du Guerrier ;
-- le **Pas de l'ombre** de la Lame (remplacé par la Frappe fantôme), et avec lui ses marques d'ombre ;
-- **Relever** du Paladin (remplacé par l'Égide), ainsi que le **soin fixe de l'Aura** (elle rend maintenant 25 % des PV max).
+- le **Pas de l'ombre** de la Lame, avec ses marques d'ombre ;
+- **Relever** du Paladin ;
+- le **soin fixe de l'Aura**.
 
-Tout ce qui s'appuyait dessus est listé ici. Rien n'a été retouché : ces objets et passifs restent dans le jeu, mais leur effet ne fait plus rien.
-
-- **Inerte** : l'effet ne fait plus rien du tout.
-- **Partiel** : une partie de l'effet marche encore (précisée).
-
-Les bonus de base des objets (PV, dégâts…) et les statistiques des armes (dégâts, portée, forme du coup) marchent toujours.
+En 0.10.0, **tout ce qui s'appuyait dessus a été remplacé**. Ce tableau garde la correspondance.
 
 ## Objets
 
-| Objet | Où | Effet prévu | État |
-|---|---|---|---|
-| Katana de rōnin | Arme rare, Guerrier | « Bloquer rapporte 50 % de rage en plus » | **Partiel** : l'arme et son vol de vie marchent, la rage non |
-| Iaijutsu | Palier 25 du Katana de rōnin | Bloquer rapporte encore 50 % de rage en plus | Inerte |
-| Moisson | Palier 25 du Nodachi des rizières | +2 rage par coup porté | Inerte |
-| Totsuka-no-tsurugi | Arme épique, Guerrier | « Rage pleine, chaque coup appelle la foudre » | **Partiel** : l'arme et son vol de vie marchent, la foudre non |
-| Huit tonnerres | Palier 25 du Totsuka-no-tsurugi | La foudre de la rage pleine frappe plus fort (+6) | Inerte |
-| Kabuto fendu | Casque peu commun, Guerrier | La Frappe fracassante coûte 10 de rage en moins | Inerte |
-| Waraji de pèlerin | Bottes communes, Guerrier | Le Bond coûte 10 de rage en moins | Inerte |
-| Masque de hannya | Casque rare, Guerrier | Au bord du gouffre dès 50 % des PV | Inerte |
-| Gourde de saké d'oni | Amulette rare, Guerrier | Blocage parfait : +20 rage ; Frappe à rage pleine : soin ×2,5 | Inerte |
-| Kunai équilibrés | Palier 10 des Kunai jumeaux | Pas de l'ombre : revient 0,5 s plus vite | Inerte |
-| Kusarigama des Oubliés | Arme rare, Lame | « Le Pas de l'ombre porte 1 m plus loin et ses marques durent 3 s de plus » | **Partiel** : l'arme marche, le bonus de Pas de l'ombre non |
-| Tabi de shinobi | Bottes rares, Lame | Pas de l'ombre : une charge de plus, revient 15 % plus vite | Inerte |
-| Haidate de shikome | Jambières peu communes, Lame | Après un Pas de l'ombre, un bouclier de 10 % des PV max pendant 2 s | Inerte |
-| Soleil levant | Palier 50 du Miroir de Yata | Aura : soigne 30 % de plus | Inerte |
+| Objet | Avant | Depuis la 0.10.0 |
+|---|---|---|
+| Totsuka-no-tsurugi (arme épique) | Foudre à rage pleine | Devient la **Naginata du Maître d'Armes** : saignement en passant en Offensive |
+| Huit tonnerres (palier du Totsuka) | Foudre +6 | Paliers de la Naginata : allonge, Bond +20 %, critiques en Offensive |
+| Gourde de saké d'oni (amulette) | Rage au blocage parfait | Devient le **Cœur de l'Arène** (relique) : vol de vie selon les ennemis proches |
+| Kabuto fendu (casque) | Frappe −10 rage | Devient le **Mempō de Contre-Attaque** : riposte après un blocage parfait |
+| Katana de rōnin | Bloquer : +50 % de rage | Un coup bloqué rend 2 % des PV max |
+| Iaijutsu (palier du Katana) | Bloquer : rage | Premier coup en Offensive critique (×1,5) |
+| Moisson (palier du Nodachi des rizières) | +2 rage par coup | +1 % de vol de vie |
+| Waraji de pèlerin | Bond −10 rage | Bond −1,5 s de recharge |
+| Masque de hannya | Au bord du gouffre dès 50 % | Sous 50 % des PV, +20 % de dégâts en Offensive |
+| Kunai équilibrés (palier des Kunai jumeaux) | Pas de l'ombre −0,5 s | Frappe fantôme −0,5 s |
+| Kusarigama des Oubliés | Pas de l'ombre plus long | Frappe fantôme +2 m, poison +5 s |
+| Tabi de shinobi | Pas de l'ombre : une charge de plus | Frappe fantôme 15 % plus vite, +0,3 s d'invulnérabilité |
+| Haidate de shikome | Bouclier après un Pas de l'ombre | Bouclier après une Frappe fantôme |
+| Soleil levant (palier du Miroir de Yata) | Aura +30 % | L'Aura rend 35 % des PV max au lieu de 25 % |
 
 ## Talents de style
 
-### Guerrier
-
-| Style | Talent | Effet prévu | État |
-|---|---|---|---|
-| Berserkir | Peau d'ours | Survit à un coup fatal avec 1 PV **et la rage pleine** | **Partiel** : la survie à 1 PV marche, la rage non |
-| Berserkir | Élan sauvage | Le Bond coûte 15 de rage en moins | Inerte |
-| Héraclès | Peau du lion de Némée | Au-dessus de la moitié de la rage, 30 % de dégâts subis en moins | Inerte |
-| Susanoo | Vent de tempête | Chaque coup donne deux fois plus de rage | Inerte |
-| Susanoo | Colère de la tempête | À rage pleine, chaque coup déclenche un éclair (+12) | Inerte |
-
-### Lame
-
-| Style | Talent | Effet prévu | État |
-|---|---|---|---|
-| Tsukuyomi | Pas de lune | Le Pas de l'ombre revient 1 s plus vite | Inerte |
-| Tsukuyomi | Croissant | Le Pas de l'ombre porte 30 % plus loin et entaille (8 dégâts) | Inerte |
-| Tsukuyomi | Marée d'ombre | Abattre un ennemi marqué rend une charge du Pas de l'ombre | Inerte |
-| Tsukuyomi | Éclipse | Le Pas de l'ombre a deux charges, marques +4 s | Inerte |
-
-### Paladin
-
-| Style | Talent | Effet prévu | État |
-|---|---|---|---|
-| Osiris | Crue du Nil | Relever revient 6 s plus tôt | Inerte |
-| Osiris | Bandelettes | Alliés relevés : +60 % de PV et de durée | Inerte |
-| Osiris | Souffle de vie | Relever te rend 20 PV | Inerte |
-| Osiris | Roi des morts (ultime) | Relever relève deux alliés, et tu peux en garder trois | Inerte |
-
-Les quatre talents d'Osiris reposent sur Relever : le style entier est vide en l'état.
-
-## Passifs de race
-
-| Race | Passif (classe) | Effet prévu | État |
-|---|---|---|---|
-| Einherjar | Colère des morts (Guerrier) | Sous 50 % des PV, la rage monte 30 % plus vite | Inerte |
-| Einherjar | Dernier assaut (Lame) | Sous 50 % des PV, l'esquive et le Pas de l'ombre reviennent 50 % plus vite | **Partiel** : l'esquive marche |
-| Hanyō | Furie du oni (Guerrier) | Transformé, la rage monte deux fois plus vite | Inerte |
-| Hanyō | Pas du renard (Lame) | Transformé, l'esquive et le Pas de l'ombre reviennent deux fois plus vite | **Partiel** : l'esquive marche |
-| Oushebti | Colère d'argile (Guerrier) | Quand la carapace absorbe un coup, +25 de rage | Inerte |
-| Oushebti | Argile fuyante (Lame) | Quand la carapace absorbe un coup, une charge du Pas de l'ombre revient | Inerte |
-
-Toujours actifs, malgré leur nom :
-
-- Einherjar › Rage du guerrier mort et l'objet Tsuba du rōnin mort : dégâts selon les PV manquants.
-- Einherjar › Brasier des morts (Sorcier).
-
-## Passifs de classe et paliers de tag
-
-| Où | Effet prévu | État |
+| Style | Talent | Depuis la 0.10.0 |
 |---|---|---|
-| Lame, passif de classe | « Abattre un ennemi marqué rend 4 PV » | Inerte : plus rien ne marque d'ombre. Le reste du passif (PV, esquive) marche |
-| Tag Guerrier, 2 objets | La rage monte 25 % plus vite | Inerte |
-| Tag Guerrier, 4 objets | Rage +50 % ; Frénésie +2 s | **Partiel** : la Frénésie +2 s marche |
-| Tag Guerrier, 6 objets | Rage +75 % ; Frénésie +4 s ; Frappe fracassante −10 de rage | **Partiel** : la Frénésie +4 s marche |
-| Tag Paladin, 4 objets | Blocage soigne 5 PV autour ; Aura +30 % | **Partiel** : le soin au blocage marche, l'Aura +30 % non |
-| Tag Paladin, 6 objets | Blocage soigne 8 PV autour ; Aura +60 % | **Partiel** : le soin au blocage marche, l'Aura +60 % non |
-| Paladin, soin personnel de l'Aura (`selfHeal`) | Le Paladin se soignait moins que ses alliés en groupe | Ignoré : l'Aura rend maintenant 25 % à tout le monde |
+| Susanoo | Vent de tempête | Changer de posture lance un éclair (10 dégâts, 2,5 m) |
+| Susanoo | Colère de la tempête (ultime) | En Offensive, un coup sur 4 appelle la foudre (+12) |
+| Héraclès | Peau du lion de Némée | En Garde, 15 % de dégâts subis en moins en plus |
+| Berserkir | Élan sauvage | Le Bond revient 2 s plus tôt |
+| Berserkir | Peau d'ours (ultime) | Survie à 1 PV, puis 4 s de Frénésie |
+| Tsukuyomi | Pas de lune | Frappe fantôme −1,5 s |
+| Tsukuyomi | Croissant | Frappe fantôme +30 % de portée, empoisonne autour de la cible |
+| Tsukuyomi | Marée d'ombre | Abattre un ennemi empoisonné : Frappe fantôme −3 s |
+| Tsukuyomi | Éclipse (ultime) | Poison jusqu'à 4 charges (critique ×5) |
+| Osiris | Crue du Nil | L'Égide revient 6 s plus tôt |
+| Osiris | Bandelettes | L'Égide absorbe 60 % de plus |
+| Osiris | Souffle de vie | Poser l'Égide rend 20 PV |
+| Osiris | Roi des morts (ultime) | L'Égide protège deux héros à la fois |
+
+## Passifs de race, de classe et paliers de tag
+
+| Où | Depuis la 0.10.0 |
+|---|---|
+| Einherjar guerrier | Sang du Gladiateur : sous 50 % des PV, +15 % de vol de vie |
+| Hanyō guerrier | Maîtrise du oni : transformé, +20 % de dégâts en Offensive |
+| Oushebti guerrier | Riposte d'argile : coup suivant en zone, qui fait saigner |
+| Einherjar et Hanyō lame | Leur accélération vaut pour l'esquive et la Frappe fantôme |
+| Oushebti lame | La carapace rend la Frappe fantôme aussitôt prête |
+| Lame, passif de classe | Festin toxique : abattre un ennemi empoisonné rend 4 PV |
+| Tag Guerrier 2 / 4 / 6 | Changer de posture : +10 / +20 / +30 % de vitesse de frappe pendant 3 s. À 4 pièces, le Bond étourdit 0,5 s ; à 6, la Frappe fracassante revient 20 % plus vite |
+| Tag Paladin 4 / 6 | Soin au blocage, plus l'Aura qui donne +15 / +30 % d'Armure ; à 6 pièces, +10 % de dégâts |
 
 ## Code laissé en place
 
-Ces morceaux ne servent plus et pourront être retirés une fois les objets refaits :
+Ces morceaux ne servent plus à aucune donnée et pourront être retirés :
 
-- la jauge `rage` (elle reste à 0), `gainRage`, la barre de rage du HUD ;
+- la jauge `rage` (toujours vide), `gainRage`, `rageCost`, `rageOnHit` ;
 - le dash `shadowDash`, `dashCharges`, `refundDash`, les marques d'ombre ;
-- `paladin.raise` et les âmes relevées.
+- `paladin.raise`, les âmes relevées, et `paladin.selfHeal`.

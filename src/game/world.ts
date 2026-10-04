@@ -32,6 +32,10 @@ const SAP_DELAY = 3;
 const HERO_PULL = 1.5;
 /** Sol en feu et Bouclier de flammes du Sorcier : ils brûlent par à-coups, toutes les demi-secondes. */
 const BURN_TICK = 0.5;
+/** Secondes pendant lesquelles un yokai touché par le feu du Sorcier reste « en feu » (Cristal de pyromancie). */
+const ON_FIRE = 2;
+/** Secondes que durent l'Armure et les dégâts donnés par l'Aura (tag Paladin) après son dernier soin. */
+const AURA_BUFF = 1.2;
 /** Coop : secondes qu'un allié doit passer à côté d'un héros à terre pour le relever, et à quelle distance. */
 export const REVIVE_TIME = 4;
 const REVIVE_RANGE = 1.6;
@@ -171,6 +175,8 @@ interface Ember {
   life: number;
   tick: number;
   owner: number;
+  /** Dôme de feu (Bâton de Susanoo) : il arrête aussi ce qui tombe du ciel sur les héros qui s'y abritent. */
+  dome?: boolean;
 }
 
 /** Leurre de l'Écran de fumée : les yokai l'attaquent à la place du héros invisible, sans rien toucher. */
@@ -459,10 +465,9 @@ export class World {
         hero.aura = 0;
         hero.smoke = null;
         // Son Égide tombe avec lui.
-        if (hero.aegisOn !== null) {
-          this.hero(hero.aegisOn).aegisArmor = 0;
-          hero.aegisOn = null;
-        }
+        for (const id of [hero.aegisOn, hero.aegisSecond]) if (id !== null) this.hero(id).aegisArmor = 0;
+        hero.aegisOn = null;
+        hero.aegisSecond = null;
         if (this.players.length > 1) this.emit({ type: 'heroDown', hero: hero.id, pos: { ...hero.pos } });
       }
       if (hero.gone) continue;
@@ -538,6 +543,21 @@ export class World {
     // Coup de grâce (Hachiman) : la proie marquée du Rôdeur, à bout de forces, prend des critiques.
     const grace = perks.coupDeGrace;
     if (grace && enemy.marks.hunt > 0 && enemy.hp < enemy.maxHp * grace.threshold) factor = Math.max(factor, grace.factor);
+    // Guerrier : la riposte du Mempō (un blocage parfait juste avant) est un critique ; en Offensive, la Naginata
+    // affûte les critiques.
+    const warrior = player.cfg.kit === 'guerrier';
+    const counter = warrior && player.counterWindow > 0 ? perks.counter : undefined;
+    if (counter) {
+      player.counterWindow = 0;
+      factor *= 1 + counter.bonus;
+      this.emit({ type: 'counter', pos: { ...enemy.pos } });
+    }
+    // Iaijutsu : le premier coup après être passé en Offensive est critique.
+    if (warrior && player.stanceCritPrimed && perks.stanceCrit) {
+      player.stanceCritPrimed = false;
+      factor = Math.max(factor, perks.stanceCrit);
+    }
+    if (warrior && factor > 1 && perks.offenseCrit && player.stance === 'offensive') factor += perks.offenseCrit;
     // « Écorce des kodama » : seuls les coups d'arme sont amoindris.
     let amount = base * factor * player.damageMultiplier() * (1 - this.curse('ecorce'));
     const execute = perks.execute;
@@ -565,8 +585,63 @@ export class World {
     }
     if (enemy.dead) player.onKill();
     else if (player.cfg.kit === 'lame') this.poison(enemy, player);
+    if (counter && !enemy.dead) enemy.stun(Math.min(SMASH_STUN_MAX, counter.stun), 'smash', this);
+    // Colère de la tempête : en Offensive, un coup sur quelques-uns appelle la foudre de Susanoo.
+    if (player.offenseStrike() && !enemy.dead) {
+      this.emit({ type: 'lightning', pos: { ...enemy.pos } });
+      enemy.receiveHit({ amount: (perks.offenseBolt?.damage ?? 0) * player.damageMultiplier(), from, knockback: 1, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+    }
+    // Naginata du Maître d'Armes : le coup préparé en passant en Offensive fait saigner.
+    if (warrior && player.bleedPrimed && perks.stanceBleed) {
+      player.bleedPrimed = false;
+      if (!enemy.dead) this.bleed(enemy, player, base * perks.stanceBleed.damage, perks.stanceBleed.duration);
+    }
+    // Riposte d'argile : après que la carapace a encaissé, le coup suivant frappe aussi autour et fait saigner.
+    if (warrior && player.clayPrimed && perks.clayCleave) {
+      player.clayPrimed = false;
+      this.clayCleave(enemy, base, perks.clayCleave);
+    }
     if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     return shielded;
+  }
+
+  /** Riposte d'argile : la mêlée éclate autour de `center`, et tous ceux qu'elle touche saignent. */
+  private clayCleave(center: Enemy, base: number, cfg: { radius: number; damage: number; bleed: number; duration: number }): void {
+    const player = this.player;
+    this.emit({ type: 'smash', pos: { ...center.pos }, radius: cfg.radius });
+    for (const enemy of [...this.enemies]) {
+      if (!enemy.targetable || distance(enemy.pos, center.pos) - enemy.radius > cfg.radius) continue;
+      if (enemy !== center) {
+        enemy.receiveHit({ amount: base * cfg.damage * player.damageMultiplier(), from: center.pos, knockback: 2 }, this);
+        if (enemy.dead) player.onKill();
+      }
+      if (!enemy.dead) this.bleed(enemy, player, base * cfg.bleed, cfg.duration);
+    }
+  }
+
+  /** Saignement : `total` dégâts (déjà ceux de l'arme) répartis sur `duration` s ; un nouveau remplace le précédent s'il est plus fort. */
+  private bleed(enemy: Enemy, hero: Player, total: number, duration: number): void {
+    const perSecond = (total * hero.damageMultiplier()) / Math.max(0.5, duration);
+    if (enemy.bleed && enemy.bleed.perSecond * enemy.bleed.time > perSecond * duration) return;
+    enemy.bleed = { time: duration, tick: BURN_TICK, perSecond, hero: hero.id };
+    this.emit({ type: 'bleed', pos: { ...enemy.pos } });
+  }
+
+  /** Vent de tempête : un éclair tombe autour du Guerrier qui change de posture. */
+  stanceBolt(center: Vec2, cfg: { damage: number; radius: number }): void {
+    const player = this.player;
+    this.emit({ type: 'lightning', pos: { ...center } });
+    for (const enemy of [...this.enemies]) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 2, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+    }
+  }
+
+  /** Héros : nombre d'ennemis à moins de `radius` m de `pos` (Cœur de l'Arène). */
+  enemiesNear(pos: Vec2, radius: number): number {
+    return this.enemies.filter((e) => e.targetable && distance(e.pos, pos) - e.radius <= radius).length;
   }
 
   // --- Lame : poison et Frappe fantôme ------------------------------------------------
@@ -587,6 +662,21 @@ export class World {
   /** Le poison ronge : chaque seconde, chaque charge inflige ses dégâts ; la Lame qui l'a posé compte la proie. */
   private updatePoison(dt: number): void {
     for (const enemy of this.enemies) {
+      enemy.burning = Math.max(0, enemy.burning - dt);
+      const bleed = enemy.bleed;
+      if (bleed && !enemy.dead) {
+        bleed.time -= dt;
+        bleed.tick -= dt;
+        if (bleed.tick <= 0) {
+          bleed.tick += BURN_TICK;
+          const hero = this.hero(bleed.hero);
+          this.act(hero, () => {
+            enemy.receiveHit({ amount: bleed.perSecond * BURN_TICK, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
+            if (enemy.dead) hero.onKill();
+          });
+        }
+        if (bleed.time <= 0) enemy.bleed = null;
+      }
       const poison = enemy.poison;
       if (!poison || enemy.dead) continue;
       poison.time -= dt;
@@ -613,7 +703,6 @@ export class World {
     const target = closest(this.enemies.filter((e) => e.targetable && distance(e.pos, player.pos) <= cfg.range), aim);
     if (!target) return null;
     const stacks = target.poison?.stacks ?? 0;
-    target.poison = null;
     // Elle reparaît juste derrière sa proie.
     const from = { ...player.pos };
     const behind = normalize(sub(target.pos, player.pos), player.facing);
@@ -621,7 +710,14 @@ export class World {
     this.clampToArena(player.pos, player.radius);
     this.emit({ type: 'streak', from, to: { ...player.pos } });
     this.weaponHit(target, player.cfg.attack.damage * cfg.damage, player.pos, 3, 1 + stacks);
-    // Le coup a reposé une charge : la Frappe les consomme toutes.
+    // Croissant : le poison gagne les ennemis tout autour de la proie.
+    const spread = player.cfg.perks?.ghostSpread;
+    if (spread) {
+      for (const enemy of this.enemies) {
+        if (enemy !== target && enemy.targetable && distance(enemy.pos, target.pos) - enemy.radius <= spread.radius) this.poison(enemy, player);
+      }
+    }
+    // La Frappe consomme toutes les charges (une proie achevée les garde, pour le Festin toxique).
     if (!target.dead) target.poison = null;
     return { target: { ...target.pos }, killed: target.dead };
   }
@@ -634,18 +730,37 @@ export class World {
    */
   castAegis(paladin: Player, aim: Vec2): void {
     const cfg = paladin.cfg.paladin.aegis;
+    const perks = paladin.cfg.perks ?? {};
     // Le héros (lui compris) le plus proche de la souris, parmi ceux à portée.
     const target = closest([paladin, ...this.standing.filter((h) => h !== paladin && distance(h.pos, paladin.pos) <= cfg.range)], aim) ?? paladin;
-    const previous = paladin.aegisOn === null ? null : this.hero(paladin.aegisOn);
-    if (previous) previous.aegisArmor = 0;
-    if (previous === target) {
-      paladin.aegisOn = null;
-      this.emit({ type: 'aegis', hero: target.id, pos: { ...target.pos }, on: false });
+    // R sur un héros déjà protégé : l'Égide le quitte, sans attendre la recharge.
+    if (paladin.aegisOn === target.id || paladin.aegisSecond === target.id) {
+      this.dropAegis(paladin, target.id);
       return;
     }
+    if (paladin.aegisCooldown > 0) return;
+    // Roi des morts : deux héros à la fois ; sinon l'Égide quitte l'ancien pour le nouveau.
+    if ((perks.aegisTargets ?? 1) < 2 && paladin.aegisOn !== null) this.dropAegis(paladin, paladin.aegisOn);
+    else if (paladin.aegisSecond !== null) this.dropAegis(paladin, paladin.aegisSecond);
+    paladin.aegisSecond = paladin.aegisOn;
     paladin.aegisOn = target.id;
-    target.aegisArmor = cfg.armor;
+    paladin.aegisCooldown = cfg.cooldown;
+    // Bandelettes : l'Égide absorbe davantage, les dégâts restants sont divisés d'autant.
+    target.aegisArmor = 1 - (1 - cfg.armor) / (perks.aegisAbsorb ?? 1);
+    if (perks.aegisHeal) paladin.heal(perks.aegisHeal, this);
     this.emit({ type: 'aegis', hero: target.id, pos: { ...target.pos }, on: true });
+  }
+
+  /** L'Égide de `paladin` quitte le héros `id`. */
+  private dropAegis(paladin: Player, id: number): void {
+    const hero = this.hero(id);
+    hero.aegisArmor = 0;
+    if (paladin.aegisSecond === id) paladin.aegisSecond = null;
+    if (paladin.aegisOn === id) {
+      paladin.aegisOn = paladin.aegisSecond;
+      paladin.aegisSecond = null;
+    }
+    this.emit({ type: 'aegis', hero: id, pos: { ...hero.pos }, on: false });
   }
 
   /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. `full` : lancée à rage pleine. */
@@ -681,7 +796,11 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > bond.radius) continue;
       enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback }, this);
       if (enemy.dead) this.player.onKill();
-      else if (bond.slow > 0) enemy.slow(BOND_SLOW, bond.slow, this);
+      else {
+        if (bond.slow > 0) enemy.slow(BOND_SLOW, bond.slow, this);
+        const stun = this.player.cfg.perks?.bondStun;
+        if (stun) enemy.stun(Math.min(SMASH_STUN_MAX, stun), 'bond', this);
+      }
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
   }
@@ -701,7 +820,7 @@ export class World {
     for (let i = 0; i < count; i++) {
       const spread = count === 1 ? 0 : (i / (count - 1) - 0.5) * 2;
       const angle = angleOf(dir) + degToRad(cfg.spreadDeg) * spread;
-      this.launch('fireball', fromAngle(angle), { speed: cfg.speed, range: attack.range, damage: attack.damage, knockback: attack.knockback, radius: cfg.radius, pierce: false, target: target?.id });
+      this.launch('fireball', fromAngle(angle), { speed: cfg.speed, range: attack.range, damage: attack.damage, knockback: attack.knockback, radius: cfg.radius, pierce: cfg.pierce ?? false, target: target?.id });
     }
   }
 
@@ -769,6 +888,7 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, blast.pos) - enemy.radius > blast.radius) continue;
       touched++;
       const knockback = meteor ? player.cfg.sorcier.meteor.knockback : 2;
+      enemy.burning = ON_FIRE;
       enemy.receiveHit({ amount: blast.damage * player.damageMultiplier(), from: blast.pos, knockback, ignoreShell: true }, this);
       if (enemy.dead) player.onKill();
       else if (!meteor && perks.sealSlow) enemy.slow(perks.sealSlow.amount, perks.sealSlow.duration, this);
@@ -778,8 +898,25 @@ export class World {
     // Étincelle : chaque yokai pris dans le sceau rend du mana ; Sol brûlant : le sceau laisse le sol en feu ;
     // Seiman : il explose une seconde fois, moins fort.
     if (perks.sealMana && touched) player.gainMana(perks.sealMana * touched);
+    // Bâton de Susanoo : un sceau qui prend une grappe soigne le Sorcier.
+    if (perks.sealHeal && touched >= perks.sealHeal.min) player.heal(player.cfg.maxHp * perks.sealHeal.share, this);
     if (perks.sealBurn) this.addEmber(blast.pos, blast.radius, perks.sealBurn.burn, perks.sealBurn.life);
     if (perks.sealEcho && !blast.echo) this.addBlast('seal', blast.pos, blast.radius, blast.damage * perks.sealEcho.damage, perks.sealEcho.delay, true);
+  }
+
+  /** Bâton de Susanoo : un dôme de feu autour du Sorcier, qui brûle et arrête ce qui tombe du ciel. */
+  castDome(): void {
+    const player = this.player;
+    const cfg = player.cfg.perks?.fireDome;
+    if (!cfg) return;
+    const dome: Ember = { id: this.nextFxId--, pos: { ...player.pos }, radius: cfg.radius, burn: cfg.burn, life: cfg.duration, tick: 0, owner: player.id, dome: true };
+    this.embers.push(dome);
+    this.emit({ type: 'dome', id: dome.id, pos: { ...dome.pos }, radius: dome.radius, life: dome.life });
+  }
+
+  /** Vrai si `pos` est sous un dôme de feu. */
+  insideDome(pos: Vec2): boolean {
+    return this.embers.some((e) => e.dome && distance(e.pos, pos) <= e.radius);
   }
 
   /** Sol en feu sous `pos` (traînée de la Fuite de feu, Sol brûlant). */
@@ -808,9 +945,13 @@ export class World {
     const player = this.player;
     if (player.ward <= 0) return;
     const cfg = player.cfg.sorcier.ward;
-    player.ward = player.barrier > 0 ? Math.max(0, player.ward - dt) : 0;
+    const broken = player.barrier <= 0;
+    player.ward = broken ? 0 : Math.max(0, player.ward - dt);
     if (player.ward <= 0) {
       this.emit({ type: 'wardEnd', pos: { ...player.pos } });
+      // Hakama de cendres : un bouclier brisé par les yokai rend des PV.
+      const ashes = player.cfg.perks?.wardBreakHeal;
+      if (broken && ashes) player.heal(player.cfg.maxHp * ashes, this);
       if (player.cfg.perks?.wardMana) player.gainMana(player.cfg.perks.wardMana);
       return;
     }
@@ -825,6 +966,7 @@ export class World {
     const player = this.player;
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
+      enemy.burning = ON_FIRE;
       enemy.receiveHit({ amount: amount * player.damageMultiplier(), from: center, knockback: 0, ignoreShell: true }, this);
       if (enemy.dead) player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
@@ -842,14 +984,15 @@ export class World {
     for (let i = 0; i < count; i++) {
       const target = near[i % near.length];
       const dir = normalize(sub(target.pos, from), fromAngle((i * Math.PI * 2) / count));
-      this.launch('fireball', dir, { pos: { ...from }, speed: sorcier.fireball.speed, range: attack.range, damage: attack.damage, knockback: attack.knockback, radius: sorcier.fireball.radius, pierce: false, target: target.id });
+      this.launch('fireball', dir, { pos: { ...from }, speed: sorcier.fireball.speed, range: attack.range, damage: attack.damage, knockback: attack.knockback, radius: sorcier.fireball.radius, pierce: sorcier.fireball.pierce ?? false, target: target.id });
     }
   }
 
   /** Boule de feu : elle s'infléchit vers sa cible ; si elle tombe, vers le yokai le plus proche encore intact. */
   private steer(p: Projectile, dt: number): void {
     const cfg = this.player.cfg.sorcier.fireball;
-    let prey = p.target === undefined ? undefined : this.enemies.find((e) => e.id === p.target && e.targetable);
+    // Une boule perforante qui a déjà traversé sa proie file droit vers la suivante.
+    let prey = p.target === undefined ? undefined : this.enemies.find((e) => e.id === p.target && e.targetable && !p.hit.has(e.id));
     if (!prey) {
       prey = closest(this.enemies.filter((e) => e.targetable && !p.hit.has(e.id) && distance(e.pos, p.pos) <= cfg.seek), p.pos);
       p.target = prey?.id;
@@ -987,6 +1130,15 @@ export class World {
       const marked = enemy.marks.shadow > 0 || enemy.marks.death > 0;
       if (perks.dashRefund && marked) player.refundDash();
       if (perks.markKillHeal && marked) player.heal(perks.markKillHeal, this);
+      // Festin toxique : une proie qui portait le poison de la Lame la nourrit.
+      if (perks.poisonKillHeal && enemy.poison?.hero === player.id) player.heal(perks.poisonKillHeal, this);
+      // Marée d'ombre : la Frappe fantôme se rapproche à chaque proie empoisonnée qui tombe.
+      if (perks.poisonKillCut && enemy.poison?.hero === player.id) player.ghostCooldown = Math.max(0, player.ghostCooldown - perks.poisonKillCut);
+      // Cristal de pyromancie : un yokai qui meurt en feu rend un peu de mana et de vie.
+      if (perks.pyroKill && enemy.burning > 0) {
+        player.gainMana(perks.pyroKill.mana);
+        player.heal(perks.pyroKill.hp, this);
+      }
       // Moisson des âmes : la Marque de mort passe à l'ennemi le plus proche.
       if (perks.markJump && enemy.marks.death > 0 && !enemy.boss) {
         const range = player.cfg.blade.deathMark.range;
@@ -1052,7 +1204,13 @@ export class World {
     let healed = 0;
     const share = cfg.healShare / Math.max(1, cfg.duration);
     for (const hero of this.standing) {
-      if (distance(hero.pos, player.pos) <= cfg.radius + hero.radius) healed += hero.heal(hero.cfg.maxHp * share, this);
+      if (distance(hero.pos, player.pos) > cfg.radius + hero.radius) continue;
+      healed += hero.heal(hero.cfg.maxHp * share, this);
+      if (perks.auraArmor || perks.auraDamage) {
+        hero.auraArmor = perks.auraArmor ?? 0;
+        hero.auraDamage = perks.auraDamage ?? 0;
+        hero.auraBuffTime = AURA_BUFF;
+      }
     }
     for (const summon of this.summons) {
       if (distance(summon.pos, player.pos) <= cfg.radius + summon.radius) healed += summon.heal(summon.maxHp * share, this);
@@ -1332,9 +1490,10 @@ export class World {
       case 'fireball': {
         // Les boules de feu sont l'attaque de base du Sorcier : des coups d'arme, critiques et talents compris.
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);
+        enemy.burning = ON_FIRE;
         const slow = perks.fireballSlow;
         if (slow && !enemy.dead) enemy.slow(slow.amount, slow.duration, this);
-        return false;
+        return p.pierce;
       }
       case 'arrow':
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);

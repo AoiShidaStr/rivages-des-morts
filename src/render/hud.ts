@@ -184,8 +184,8 @@ export class Hud {
       views = [
         { cooldown: player.aura > 0 ? 0 : player.auraCooldown / p.aura.cooldown, locked: false, active: player.aura > 0 },
         { cooldown: player.hammerCooldown / p.hammer.cooldown, locked: world.hammerOut },
-        // Égide : allumée tant qu'elle est posée, sur soi ou sur un allié.
-        { cooldown: 0, locked: false, active: player.aegisOn !== null },
+        // Égide : allumée tant qu'elle est posée, sur soi ou sur un allié ; la recharge empêche seulement de la déplacer.
+        { cooldown: player.aegisCooldown / p.aegis.cooldown, locked: false, active: player.aegisOn !== null },
       ];
     } else if (cfg.kit === 'rodeur') {
       const r = cfg.ranger;

@@ -479,6 +479,13 @@ function migrate(saved: SavedState, catalog: Catalog): ProgressState {
     state.hero = { ...state.hero, class: 'sorcier' };
     state.talents = [];
   }
+  // Un objet qui a changé d'emplacement (0.10.0 : la Gourde de saké d'oni devient le Cœur de l'Arène, une relique)
+  // quitte l'emplacement où il était porté ; il reste dans l'inventaire.
+  state.equipped = { ...state.equipped };
+  for (const slot of Object.keys(state.equipped) as Slot[]) {
+    const item = state.equipped[slot];
+    if (item && catalog.itemSlot(item) !== slot) delete state.equipped[slot];
+  }
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
   // Une Jorōgumo déjà vaincue compte comme une victoire au niveau 1.
   const rizieres = dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });

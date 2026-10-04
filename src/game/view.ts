@@ -37,8 +37,9 @@ export interface HeroView {
   readonly stance: 'garde' | 'offensive';
   /** Lame : recharge de la Frappe fantôme. */
   readonly ghostCooldown: number;
-  /** Paladin : le héros qui porte son Égide (null : personne). */
+  /** Paladin : le héros qui porte son Égide (null : personne), et la recharge avant de la poser ailleurs. */
   readonly aegisOn: number | null;
+  readonly aegisCooldown: number;
   readonly sealCooldown: number;
   readonly wardCooldown: number;
   readonly flightCooldown: number;

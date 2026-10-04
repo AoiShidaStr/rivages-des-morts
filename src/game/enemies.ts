@@ -84,6 +84,10 @@ export abstract class Enemy {
   slowAmount = 0;
   /** Poison de la Lame : charges, secondes restantes, prochaine morsure, dégâts d'une charge, héros qui l'a posé. */
   poison: { stacks: number; time: number; tick: number; damage: number; hero: number } | null = null;
+  /** Saignement (Guerrier) : secondes restantes, prochaine morsure, dégâts par seconde, héros qui l'a infligé. */
+  bleed: { time: number; tick: number; perSecond: number; hero: number } | null = null;
+  /** Secondes pendant lesquelles le yokai est encore en feu (touché par le feu du Sorcier). */
+  burning = 0;
   slowTime = 0;
 
   constructor(

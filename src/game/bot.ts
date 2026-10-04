@@ -119,7 +119,7 @@ export class Bot {
     const toTarget = normalize(sub(target.pos, p.pos));
     input.aim = { ...target.pos };
     input.aimGround = { ...target.pos };
-    // Le Guerrier en Offensive bloque aussi : appuyer sur le clic droit le remet aussitôt en Garde.
+    // Le Guerrier en Offensive bloque aussi : il double-clique pour revenir en Garde (un appui à chaque pas).
     const canBlock = p.canGuard || kit === 'guerrier';
 
     // Réactions aux attaques annoncées.
@@ -191,7 +191,7 @@ export class Bot {
     const mine = w.summons.filter((s) => s.owner === p.id);
     const hpRatio = p.hp / c.maxHp;
     if (kit === 'guerrier') {
-      // Sans coup à parer, il repasse en Offensive (un appui court en Garde) pour frapper vite et loin.
+      // Sans coup à parer, il repasse en Offensive (double clic, un appui à chaque pas) pour frapper vite et loin.
       if (p.stance === 'garde' && !hit) input.signaturePressed = true;
       if (p.canSmash && near(c.smash.offset + c.smash.radius * 0.8).length >= 1) input.skillAPressed = true;
       else if (p.canBond && gap > 2.5 && gap < c.bond.range) input.skillEPressed = true;

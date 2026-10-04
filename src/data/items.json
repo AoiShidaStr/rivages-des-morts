@@ -37,7 +37,7 @@
       ],
       "paliers": [
         { "level": 10, "name": "Allonge", "summary": "+0,3 de portée", "effects": [{ "op": "add", "path": "attack.range", "value": 0.3 }] },
-        { "level": 25, "name": "Moisson", "summary": "+2 rage par coup porté", "effects": [{ "op": "add", "path": "attack.rageOnHit", "value": 2 }] },
+        { "level": 25, "name": "Moisson", "summary": "+1 % de vol de vie", "effects": [{ "op": "add", "path": "perks.lifesteal", "value": 0.01 }] },
         { "level": 50, "name": "Faux des rizières", "summary": "Frappe fracassante : zone +25 %", "effects": [{ "op": "mul", "path": "smash.radius", "value": 1.25 }] }
       ],
       "description": "Une longue lame de paysan, au manche entouré de tissu délavé. Elle a coupé plus de riz que d'ennemis."
@@ -72,7 +72,7 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Guerrier"],
-      "summary": "Estoc large et rapide (7 dégâts), portée 2,6 : on se dégage dès que le coup porte. Bloquer rapporte 50 % de rage en plus. Vol de vie : 2 % des dégâts infligés.",
+      "summary": "Estoc large et rapide (7 dégâts), portée 2,6 : on se dégage dès que le coup porte. Chaque coup bloqué te rend 2 % de tes PV max. Vol de vie : 2 % des dégâts infligés.",
       "effects": [
         { "op": "add", "path": "perks.lifesteal", "value": 0.02 },
         { "op": "set", "path": "attack.damage", "value": 7 },
@@ -83,11 +83,11 @@
         { "op": "set", "path": "attack.windup", "value": 0.05 },
         { "op": "set", "path": "attack.recovery", "value": 0.15 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
-        { "op": "set", "path": "perks.guardRageFactor", "value": 0.5 }
+        { "op": "add", "path": "perks.blockHeal", "value": 0.02 }
       ],
       "paliers": [
         { "level": 10, "name": "Lame vive", "summary": "Récupération des coups −15 %", "effects": [{ "op": "mul", "path": "attack.recovery", "value": 0.85 }] },
-        { "level": 25, "name": "Iaijutsu", "summary": "Bloquer rapporte encore 50 % de rage en plus", "effects": [{ "op": "add", "path": "perks.guardRageFactor", "value": 0.5 }] },
+        { "level": 25, "name": "Iaijutsu", "summary": "Le premier coup après être passé en Offensive est critique (×1,5)", "effects": [{ "op": "set", "path": "perks.stanceCrit", "value": 1.5 }] },
         { "level": 50, "name": "Dernier rōnin", "summary": "Esquive rechargée 30 % plus vite", "effects": [{ "op": "mul", "path": "dodge.cooldown", "value": 0.7 }] }
       ],
       "description": "La lame d'un samouraï sans maître, pris dans les toiles de la Jorōgumo. Son cordon rouge est effiloché."
@@ -176,7 +176,7 @@
         { "op": "set", "path": "attack.lunge", "value": 0.3 }
       ],
       "paliers": [
-        { "level": 10, "name": "Kunai équilibrés", "summary": "Pas de l'ombre : revient 0,5 s plus vite", "effects": [{ "op": "add", "path": "blade.shadowDash.cooldown", "value": -0.5 }] },
+        { "level": 10, "name": "Kunai équilibrés", "summary": "Frappe fantôme : revient 0,5 s plus vite", "effects": [{ "op": "add", "path": "blade.ghost.cooldown", "value": -0.5 }] },
         { "level": 25, "name": "Fil du tranchant", "summary": "Critiques +0,25", "effects": [{ "op": "add", "path": "blade.critFactor", "value": 0.25 }] },
         { "level": 50, "name": "Ombre jumelle", "summary": "Danse des lames : +2 cibles", "effects": [{ "op": "add", "path": "blade.dance.targets", "value": 2 }] }
       ],
@@ -233,7 +233,7 @@
       "slot": "arme",
       "rarity": "rare",
       "tags": ["Lame"],
-      "summary": "Faucille et chaîne : arc de 140° qui porte loin (2,3 m), annulable à tout moment ; le Pas de l'ombre porte 1 m plus loin et ses marques durent 3 s de plus.",
+      "summary": "Faucille et chaîne : arc de 140° qui porte loin (2,3 m), annulable à tout moment ; la Frappe fantôme porte 2 m plus loin et ton poison dure 5 s de plus.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
         { "op": "set", "path": "attack.range", "value": 2.3 },
@@ -244,8 +244,8 @@
         { "op": "set", "path": "attack.recovery", "value": 0.2 },
         { "op": "set", "path": "attack.knockback", "value": 2.5 },
         { "op": "set", "path": "attack.lunge", "value": 0.2 },
-        { "op": "add", "path": "blade.shadowDash.distance", "value": 1 },
-        { "op": "add", "path": "blade.shadowDash.markTime", "value": 3 }
+        { "op": "add", "path": "blade.ghost.range", "value": 2 },
+        { "op": "add", "path": "blade.poison.duration", "value": 5 }
       ],
       "paliers": [
         { "level": 10, "name": "Chaîne longue", "summary": "+0,3 de portée", "effects": [{ "op": "add", "path": "attack.range", "value": 0.3 }] },
@@ -327,7 +327,7 @@
       "paliers": [
         { "level": 10, "name": "Éclat", "summary": "Aura : +0,5 de rayon", "effects": [{ "op": "add", "path": "paladin.aura.radius", "value": 0.5 }] },
         { "level": 25, "name": "Reflet", "summary": "Un coup bloqué renvoie 6 dégâts", "effects": [{ "op": "add", "path": "perks.riposte", "value": 6 }] },
-        { "level": 50, "name": "Soleil levant", "summary": "Aura : soigne 30 % de plus", "effects": [{ "op": "mul", "path": "paladin.aura.heal", "value": 1.3 }] }
+        { "level": 50, "name": "Soleil levant", "summary": "L'Aura rend 35 % des PV max au lieu de 25 %", "effects": [{ "op": "add", "path": "paladin.aura.healShare", "value": 0.1 }] }
       ],
       "description": "Le miroir octogonal qui tira Amaterasu hors de sa grotte, ou son reflet tombé au Yomi. La Jorōgumo n'osait pas s'y regarder."
     },
@@ -379,29 +379,29 @@
       "description": "Une corde tressée de soie de jorōgumo sur un arc de bois noir. Elle colle encore un peu aux doigts."
     },
     "totsuka-tsurugi": {
-      "name": "Totsuka-no-tsurugi",
+      "name": "Naginata du Maître d'Armes",
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Guerrier"],
-      "summary": "Arc large (170°), lourd (14 dégâts) ; rage pleine, chaque coup appelle la foudre. Vol de vie : 2 % des dégâts infligés.",
+      "summary": "Arme d'allonge (12 dégâts, portée 2,8 m). En passant en posture Offensive, ton coup suivant fait saigner : 60 % de ses dégâts en plus, sur 3 s. Vol de vie : 2 % des dégâts infligés.",
       "effects": [
         { "op": "add", "path": "perks.lifesteal", "value": 0.02 },
-        { "op": "set", "path": "attack.damage", "value": 14 },
-        { "op": "set", "path": "attack.range", "value": 2 },
+        { "op": "set", "path": "attack.damage", "value": 12 },
+        { "op": "set", "path": "attack.range", "value": 2.8 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
-        { "op": "set", "path": "attack.arcDeg", "value": 170 },
-        { "op": "set", "path": "attack.commit", "value": 0.26 },
-        { "op": "set", "path": "attack.windup", "value": 0.1 },
-        { "op": "set", "path": "attack.recovery", "value": 0.26 },
-        { "op": "set", "path": "attack.knockback", "value": 4 },
-        { "op": "add", "path": "perks.storm", "value": 10 }
+        { "op": "set", "path": "attack.arcDeg", "value": 120 },
+        { "op": "set", "path": "attack.commit", "value": 0.22 },
+        { "op": "set", "path": "attack.windup", "value": 0.09 },
+        { "op": "set", "path": "attack.recovery", "value": 0.24 },
+        { "op": "set", "path": "attack.knockback", "value": 3 },
+        { "op": "set", "path": "perks.stanceBleed", "value": { "damage": 0.6, "duration": 3 } }
       ],
       "paliers": [
-        { "level": 10, "name": "Dix poings", "summary": "+0,3 de portée", "effects": [{ "op": "add", "path": "attack.range", "value": 0.3 }] },
-        { "level": 25, "name": "Huit tonnerres", "summary": "La foudre de la rage pleine frappe plus fort (+6)", "effects": [{ "op": "add", "path": "perks.storm", "value": 6 }] },
-        { "level": 50, "name": "La fuite d'Izanagi", "summary": "Esquive rechargée 25 % plus vite", "effects": [{ "op": "mul", "path": "dodge.cooldown", "value": 0.75 }] }
+        { "level": 10, "name": "Hampe longue", "summary": "+0,4 m d'allonge", "effects": [{ "op": "add", "path": "attack.range", "value": 0.4 }] },
+        { "level": 25, "name": "Saut du maître", "summary": "Le Bond frappe 20 % plus fort", "effects": [{ "op": "mul", "path": "bond.damage", "value": 1.2 }] },
+        { "level": 50, "name": "Lame du maître", "summary": "En posture Offensive, tes coups critiques gagnent +0,5 de multiplicateur", "effects": [{ "op": "set", "path": "perks.offenseCrit", "value": 0.5 }] }
       ],
-      "description": "L'épée longue de dix poings qu'Izanagi brandissait derrière lui en fuyant les huit dieux du tonnerre. Elle crépite encore."
+      "description": "Une lame courbe au bout d'une hampe de chêne noir, longue comme deux hommes. Le maître d'armes qui la portait tenait toute une arène à distance, et finissait toujours par y entrer."
     },
     "kaiken-izanami": {
       "name": "Kaiken d'Izanami",
@@ -459,14 +459,14 @@
       "description": "Un chapeau conique en paille tressée. Il ne protège pas grand-chose, mais il rassure."
     },
     "kabuto-fendu": {
-      "name": "Kabuto fendu",
+      "name": "Mempō de Contre-Attaque",
       "slot": "casque",
       "rarity": "peu commune",
       "tags": ["Guerrier"],
       "bonus": { "maxHp": 8, "damage": 0.06 },
-      "summary": "La Frappe fracassante coûte 10 de rage en moins.",
-      "effects": [{ "op": "add", "path": "smash.rageCost", "value": -10 }],
-      "description": "Le casque fendu d'un guerrier dont plus personne ne se souvient. Il tient encore."
+      "summary": "Après un blocage parfait (garde levée juste avant le coup), ton premier coup dans la seconde est une riposte : +40 % de dégâts, et la cible est étourdie 0,5 s.",
+      "effects": [{ "op": "set", "path": "perks.counter", "value": { "window": 1, "bonus": 0.4, "stun": 0.5 } }],
+      "description": "Un masque de fer au rictus figé. Derrière, on ne voit pas venir la riposte."
     },
     "masque-oublie": {
       "name": "Masque d'Oublié",
@@ -547,8 +547,8 @@
       "rarity": "commune",
       "tags": ["Guerrier"],
       "bonus": { "maxHp": 8, "speed": 0.05 },
-      "summary": "Le Bond coûte 10 de rage en moins.",
-      "effects": [{ "op": "add", "path": "bond.rageCost", "value": -10 }],
+      "summary": "Le Bond revient 1,5 s plus tôt.",
+      "effects": [{ "op": "add", "path": "bond.cooldown", "value": -1.5 }],
       "description": "Des sandales de paille de pèlerin. Pour une fois, le tanuki n'a pas menti."
     },
     "lanterne-braise": {
@@ -634,7 +634,7 @@
       "rarity": "rare",
       "tags": ["Guerrier"],
       "summary": "Chaque coup bloqué te rend 3 % de tes PV max.",
-      "effects": [{ "op": "set", "path": "perks.blockHeal", "value": 0.03 }],
+      "effects": [{ "op": "add", "path": "perks.blockHeal", "value": 0.03 }],
       "description": "Une écaille du roi-dragon des mers, large comme une main. Les vagues s'y brisent sans jamais l'user."
     },
     "fil-joren": {
@@ -671,19 +671,19 @@
       "rarity": "rare",
       "tags": ["Guerrier"],
       "bonus": { "maxHp": 6, "damage": 0.08 },
-      "summary": "Au bord du gouffre se déclenche dès 50 % de tes PV au lieu de 30 % : tu frappes plus fort et tu te soignes plus tôt, sans attendre d'être au bord de la mort.",
-      "effects": [{ "op": "set", "path": "perks.hannya", "value": { "threshold": 0.5 } }],
+      "summary": "Sous la moitié de tes PV, tu infliges 20 % de dégâts en plus en posture Offensive.",
+      "effects": [{ "op": "set", "path": "perks.hannyaOffense", "value": { "threshold": 0.5, "bonus": 0.2 } }],
       "description": "Le masque cornu d'une femme que la jalousie a changée en démon. Celui qui le porte n'a plus peur de rien, surtout pas de mourir."
     },
     "gourde-sake-oni": {
-      "name": "Gourde de saké d'oni",
-      "slot": "amulette",
+      "name": "Cœur de l'Arène",
+      "slot": "relique",
       "rarity": "rare",
       "tags": ["Guerrier"],
       "bonus": { "maxHp": 15 },
-      "summary": "Blocage parfait (garde levée juste avant le coup) : +20 de rage. Frappe fracassante lancée à rage pleine : elle soigne deux fois et demie plus.",
-      "effects": [{ "op": "set", "path": "perks.gourde", "value": { "rage": 20, "smashHeal": 2.5 } }],
-      "description": "Une calebasse laquée de rouge, pleine d'un saké d'oni qui ne se vide jamais. Le kappa qui la gardait était ivre depuis trois siècles."
+      "summary": "Chaque ennemi à moins de 3 m te donne +2 % de vol de vie, jusqu'à +10 %. Plus la mêlée est serrée, plus tu tiens.",
+      "effects": [{ "op": "set", "path": "perks.arenaHeart", "value": { "perEnemy": 0.02, "max": 0.1, "radius": 3 } }],
+      "description": "Un cœur de pierre rouge trouvé sous le sable d'une arène oubliée. Il bat plus vite quand on l'entoure."
     },
     "nodachi-ikusa": {
       "name": "Nodachi de l'Ikusa",
@@ -831,10 +831,10 @@
       "rarity": "rare",
       "tags": ["Lame"],
       "bonus": { "maxHp": 6, "dodge": 0.1 },
-      "summary": "Pas de l'ombre : une charge de plus, qui revient 15 % plus vite.",
+      "summary": "Frappe fantôme : revient 15 % plus vite, et te laisse 0,3 s d'invulnérabilité de plus.",
       "effects": [
-        { "op": "add", "path": "blade.shadowDash.charges", "value": 1 },
-        { "op": "mul", "path": "blade.shadowDash.cooldown", "value": 0.85 }
+        { "op": "mul", "path": "blade.ghost.cooldown", "value": 0.85 },
+        { "op": "add", "path": "blade.ghost.invulnerable", "value": 0.3 }
       ],
       "description": "Des chaussettes de toile noire au gros orteil séparé. Un Oublié les portait ; il ne se souvenait plus de rien, sauf de marcher sans bruit."
     },
@@ -978,8 +978,8 @@
       "rarity": "peu commune",
       "tags": ["Lame"],
       "bonus": { "maxHp": 10, "armor": 0.04 },
-      "summary": "Après un Pas de l'ombre, un bouclier de 10 % de tes PV max pendant 2 s.",
-      "effects": [{ "op": "set", "path": "perks.dashShield", "value": { "amount": 0.1, "duration": 2 } }],
+      "summary": "Après une Frappe fantôme, un bouclier de 10 % de tes PV max pendant 2 s.",
+      "effects": [{ "op": "set", "path": "perks.ghostShield", "value": { "amount": 0.1, "duration": 2 } }],
       "description": "Des tassettes d'os qui cliquettent à peine. Les shikome courent vite ; leurs os aussi."
     },
     "waraji-meute": {
@@ -1112,6 +1112,61 @@
       "name": "Tablette d'argile fêlée",
       "rarity": "quête",
       "description": "Un fragment de tablette couvert d'écriture cunéiforme. Il est tiède, comme s'il battait encore."
+    },
+    "hakama-cendres": {
+      "name": "Hakama de cendres",
+      "slot": "jambieres",
+      "rarity": "rare",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 14, "armor": 0.04 },
+      "summary": "Quand les yokai brisent ton Bouclier de flammes, tu récupères aussitôt 15 % de tes PV max.",
+      "effects": [{ "op": "set", "path": "perks.wardBreakHeal", "value": 0.15 }],
+      "description": "Un pantalon plissé gris de cendre, qui sent encore le bûcher. Ce qui brûle autour de lui le nourrit."
+    },
+    "geta-danseur-feu": {
+      "name": "Geta du danseur de feu",
+      "slot": "bottes",
+      "rarity": "épique",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 8, "dodge": 0.1, "speed": 0.04 },
+      "summary": "Ton esquive laisse une traînée de braises : les yokai qui y marchent brûlent (6 dégâts par seconde, 2,5 s).",
+      "effects": [{ "op": "set", "path": "perks.dodgeEmbers", "value": { "radius": 0.9, "burn": 6, "life": 2.5 } }],
+      "description": "Des sandales de bois laqué dont les dents rougeoient. Le danseur qui les portait ne touchait le sol que pour l'enflammer."
+    },
+    "cristal-pyromancie": {
+      "name": "Cristal de pyromancie",
+      "slot": "amulette",
+      "rarity": "peu commune",
+      "tags": ["Sorcier"],
+      "bonus": { "maxHp": 8 },
+      "summary": "Abattre un yokai en feu (touché par ton feu dans les 2 s) te rend 1 mana et 1 PV.",
+      "effects": [{ "op": "set", "path": "perks.pyroKill", "value": { "mana": 1, "hp": 1 } }],
+      "description": "Une goutte de feu figée dans le verre. Elle se réchauffe un peu à chaque flamme qui s'éteint."
+    },
+    "baton-susanoo": {
+      "name": "Bâton de Susanoo",
+      "slot": "arme",
+      "rarity": "légendaire",
+      "tags": ["Sorcier"],
+      "summary": "Lance 4 boules de feu lentes mais perforantes (5 dégâts chacune), portée 10 m. Le Grand météore laisse place à un dôme de feu de 5 s autour de toi : il brûle les yokai et arrête tout ce qui tombe du ciel sur ceux qui s'y abritent.",
+      "effects": [
+        { "op": "set", "path": "attack.damage", "value": 5 },
+        { "op": "set", "path": "attack.range", "value": 10 },
+        { "op": "set", "path": "attack.windup", "value": 0.14 },
+        { "op": "set", "path": "attack.recovery", "value": 0.4 },
+        { "op": "set", "path": "attack.commit", "value": 0.14 },
+        { "op": "set", "path": "attack.knockback", "value": 0.5 },
+        { "op": "set", "path": "sorcier.fireball.count", "value": 4 },
+        { "op": "set", "path": "sorcier.fireball.speed", "value": 9 },
+        { "op": "set", "path": "sorcier.fireball.pierce", "value": true },
+        { "op": "set", "path": "perks.fireDome", "value": { "radius": 3.5, "duration": 5, "burn": 6 } }
+      ],
+      "paliers": [
+        { "level": 10, "name": "Vent d'orage", "summary": "Boules de feu : +10 % de dégâts", "effects": [{ "op": "mul", "path": "attack.damage", "value": 1.1 }] },
+        { "level": 25, "name": "Ciel fermé", "summary": "Le dôme de feu tient 1 s de plus", "effects": [{ "op": "add", "path": "perks.fireDome.duration", "value": 1 }] },
+        { "level": 50, "name": "Pluie bienfaisante", "summary": "Un sceau qui touche au moins 3 yokai te rend 5 % de tes PV max", "effects": [{ "op": "set", "path": "perks.sealHeal", "value": { "min": 3, "share": 0.05 } }] }
+      ],
+      "description": "Le bâton que Susanoo planta dans le ciel pour retenir l'orage. Le feu qui en sort ne tombe pas : il tourne autour de celui qui le tient."
     }
   },
   "materials": {
@@ -1157,7 +1212,8 @@
       "items": [
         { "item": "hankyu", "chance": 0.06 },
         { "item": "tabi-messager", "chance": 0.05 },
-        { "item": "geta-braise", "chance": 0.05 }
+        { "item": "geta-braise", "chance": 0.05 },
+        { "item": "hakama-cendres", "chance": 0.05 }
       ]
     },
     "oublie": {
@@ -1170,7 +1226,8 @@
         { "item": "kusarigama", "chance": 0.04 },
         { "item": "masque-hannya", "chance": 0.04 },
         { "item": "tabi-shinobi", "chance": 0.04 },
-        { "item": "pinceau-seimei", "chance": 0.04 }
+        { "item": "pinceau-seimei", "chance": 0.04 },
+        { "item": "cristal-pyromancie", "chance": 0.05 }
       ]
     },
     "araignee": { "oboles": 1, "xp": 1 },
@@ -1188,6 +1245,7 @@
         { "item": "miroir-yata", "chance": 0.25 },
         { "item": "arc-soie", "chance": 0.25 },
         { "item": "magatama-yasakani", "chance": 0.03 },
+        { "item": "geta-danseur-feu", "chance": 0.2 },
         { "item": "gohei-sanctuaire", "chance": 0.12, "if": [{ "race": "demi-dieu" }] },
         { "item": "dogu-yeux-clos", "chance": 0.12, "if": [{ "race": "oushebti" }] }
       ]
@@ -1243,6 +1301,7 @@
         { "item": "voile-izanami", "chance": 0.3 },
         { "item": "peigne-izanagi", "chance": 0.25 },
         { "item": "peche-okamuzumi", "chance": 0.04 },
+        { "item": "baton-susanoo", "chance": 0.04 },
         { "item": "nodachi-ikusa", "chance": 0.2 },
         { "item": "arc-ikazuchi", "chance": 0.2 },
         { "item": "yomotsu-hegui", "chance": 0.1 },
@@ -1298,6 +1357,7 @@
         { "item": "tsuba-ebrechee", "price": 110, "weight": 2 },
         { "item": "ecaille-ryujin", "price": 140, "weight": 1 },
         { "item": "ofuda-kagutsuchi", "price": 110, "weight": 2 },
+        { "item": "cristal-pyromancie", "price": 70, "weight": 2 },
         { "material": "soie", "count": 2, "price": 45, "weight": 2 },
         { "material": "ecaille", "count": 5, "price": 30, "weight": 3 },
         { "material": "masque", "count": 4, "price": 30, "weight": 3 },

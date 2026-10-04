@@ -64,12 +64,28 @@ export class Player {
    * coups très rapides, allonge accrue. Un appui court sur le clic droit change de posture.
    */
   stance: 'garde' | 'offensive' = 'garde';
-  /** Guerrier : secondes depuis l'appui sur le clic droit, et posture au moment de l'appui (null : pas d'appui). */
-  private stancePress: { t: number; from: 'garde' | 'offensive' } | null = null;
-  /** Paladin : le héros sur qui il a posé l'Égide (null : personne). */
+  /** Guerrier : secondes depuis le dernier appui sur le clic droit (un second appui assez tôt change de posture). */
+  private stanceTap = Infinity;
+  /** Guerrier : coups d'arme portés en Offensive (Colère de la tempête), et critique d'Iaijutsu prêt. */
+  private offenseHits = 0;
+  stanceCritPrimed = false;
+  /** Paladin : le héros sur qui il a posé l'Égide en dernier (null : personne), et le précédent avec Roi des morts. */
   aegisOn: number | null = null;
+  aegisSecond: number | null = null;
+  /** Paladin : secondes avant de pouvoir poser ou déplacer l'Égide. */
+  aegisCooldown = 0;
   /** Armure de l'Égide d'un Paladin posée sur ce héros (part des dégâts retirée), 0 sans Égide. */
   aegisArmor = 0;
+  /** Aura d'un Paladin (tag) : Armure et dégâts en plus, tant que `auraBuffTime` court. */
+  auraArmor = 0;
+  auraDamage = 0;
+  auraBuffTime = 0;
+  /** Guerrier : le prochain coup de mêlée fait saigner (Naginata), riposte (Mempō) ou frappe autour (Riposte d'argile). */
+  bleedPrimed = false;
+  counterWindow = 0;
+  clayPrimed = false;
+  /** Guerrier (tag) : secondes de vitesse de frappe en plus après un changement de posture. */
+  private rush = 0;
   /** Lame : recharge de la Frappe fantôme. */
   ghostCooldown = 0;
   /** Secondes de Frénésie restantes. */
@@ -263,8 +279,15 @@ export class Player {
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
+    // Maîtrise du oni : transformé, le Hanyō guerrier frappe plus fort en Offensive.
+    if (perks.yokaiOffense && this.transformed > 0 && this.cfg.kit === 'guerrier' && this.stance === 'offensive') factor += perks.yokaiOffense;
+    // Masque de hannya : blessé, le Guerrier en Offensive frappe plus fort.
+    const hannya = perks.hannyaOffense;
+    if (hannya && this.cfg.kit === 'guerrier' && this.stance === 'offensive' && this.below(hannya.threshold)) factor += hannya.bonus;
+    // Aura d'un Paladin (tag) : les héros qu'elle soigne frappent plus fort.
+    if (this.auraBuffTime > 0) factor *= 1 + this.auraDamage;
     // Égide posée sur soi : le Paladin devient un rempart, mais frappe deux fois moins fort.
-    if (this.cfg.kit === 'paladin' && this.aegisOn === this.id) factor *= 1 - this.cfg.paladin.aegis.selfDamageMalus;
+    if (this.cfg.kit === 'paladin' && (this.aegisOn === this.id || this.aegisSecond === this.id)) factor *= 1 - this.cfg.paladin.aegis.selfDamageMalus;
     return factor;
   }
 
@@ -308,7 +331,7 @@ export class Player {
     const stand = this.cfg.perks?.lastStand;
     if (stand && !this.dead && this.below(this.standThreshold)) this.leech(amount * stand.lifesteal, world);
     // Vol de vie des armes du Guerrier : il survit en restant au cœur de la mêlée.
-    const lifesteal = this.cfg.perks?.lifesteal;
+    const lifesteal = this.lifesteal(world);
     if (lifesteal && !this.dead) this.leech(amount * lifesteal, world);
     const blood = this.cfg.perks?.yokaiBlood;
     if (!blood || this.transformed > 0 || this.dead) return;
@@ -317,6 +340,16 @@ export class Player {
     this.yokaiGauge = 0;
     this.transformed = blood.duration;
     world.emit({ type: 'transform', pos: { ...this.pos } });
+  }
+
+  /** Vol de vie : armes du Guerrier, Sang du Gladiateur (blessé), Cœur de l'Arène (entouré). */
+  private lifesteal(world: World): number {
+    const perks = this.cfg.perks ?? {};
+    let share = perks.lifesteal ?? 0;
+    if (perks.lowHpLifesteal && this.below(perks.lowHpLifesteal.threshold)) share += perks.lowHpLifesteal.bonus;
+    const arena = perks.arenaHeart;
+    if (arena) share += Math.min(arena.max, arena.perEnemy * world.enemiesNear(this.pos, arena.radius));
+    return share;
   }
 
   /** Une nouvelle vague commence : l'Égide divine du Demi-dieu est de nouveau prête. */
@@ -355,6 +388,10 @@ export class Player {
     this.clayCooldown = Math.max(0, this.clayCooldown - dt);
     this.transformed = Math.max(0, this.transformed - dt);
     this.barrierTime = Math.max(0, this.barrierTime - dt);
+    this.counterWindow = Math.max(0, this.counterWindow - dt);
+    this.rush = Math.max(0, this.rush - dt);
+    this.auraBuffTime = Math.max(0, this.auraBuffTime - dt);
+    this.aegisCooldown = Math.max(0, this.aegisCooldown - dt);
     if (this.barrierTime <= 0) this.barrier = 0;
     this.tickKitCooldowns(dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
@@ -405,10 +442,17 @@ export class Player {
         this.updateAttack(dt, a, aimDir, input, world);
         break;
       case 'dodge': {
+        // Geta du danseur de feu : une braise au départ, une à mi-course, une à l'arrivée.
+        const embers = c.perks?.dodgeEmbers;
+        const half = c.dodge.duration / 2;
+        if (embers && a.t < half && a.t + dt >= half) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
         a.t += dt;
         // Seules les toiles freinent l'esquive : c'est elle qui permet de contourner une souche malgré le fil.
         this.pos = add(this.pos, scale(a.dir, (c.dodge.distance / c.dodge.duration) * world.slowAt(this.pos) * dt));
-        if (a.t >= c.dodge.duration) this.action = { kind: 'free' };
+        if (a.t >= c.dodge.duration) {
+          this.action = { kind: 'free' };
+          if (embers) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
+        }
         break;
       }
       case 'smash': {
@@ -474,26 +518,39 @@ export class Player {
   }
 
   /**
-   * Postures du Guerrier. Appuyer sur le clic droit en Offensive passe en Garde tout de suite (et bloque si on tient) ;
-   * en Garde, un appui court (relâché avant `tapTime`) passe en Offensive, un appui tenu bloque.
+   * Postures du Guerrier : un double clic droit passe de l'une à l'autre. Un appui seul ne change rien (en Garde, il
+   * lève la garde), pour que les parades parfaites restent possibles.
    */
   private updateStance(dt: number, input: InputFrame, world: World): void {
-    const s = this.cfg.stance;
-    if (input.signaturePressed) {
-      this.stancePress = { t: 0, from: this.stance };
-      if (this.stance === 'offensive') this.setStance('garde', world);
+    this.stanceTap += dt;
+    if (!input.signaturePressed) return;
+    if (this.stanceTap > this.cfg.stance.doubleTap) {
+      this.stanceTap = 0;
+      return;
     }
-    const press = this.stancePress;
-    if (!press) return;
-    press.t += dt;
-    if (input.signatureHeld) return;
-    if (press.from === 'garde' && press.t <= s.tapTime) this.setStance('offensive', world);
-    this.stancePress = null;
+    this.stanceTap = Infinity;
+    this.setStance(this.stance === 'garde' ? 'offensive' : 'garde', world);
+  }
+
+  /** Colère de la tempête : vrai pour le coup d'arme en Offensive qui appelle la foudre (un sur `every`). */
+  offenseStrike(): boolean {
+    const bolt = this.cfg.perks?.offenseBolt;
+    if (!bolt || this.cfg.kit !== 'guerrier' || this.stance !== 'offensive') return false;
+    this.offenseHits++;
+    return this.offenseHits % bolt.every === 0;
   }
 
   private setStance(stance: 'garde' | 'offensive', world: World): void {
     if (this.stance === stance) return;
     this.stance = stance;
+    const perks = this.cfg.perks ?? {};
+    // Naginata du Maître d'Armes : passer en Offensive prépare un coup qui fait saigner ; Iaijutsu, un critique.
+    if (stance === 'offensive' && perks.stanceBleed) this.bleedPrimed = true;
+    if (stance === 'offensive' && perks.stanceCrit) this.stanceCritPrimed = true;
+    // Vent de tempête : chaque changement de posture appelle la foudre autour du Guerrier.
+    if (perks.stanceBolt) world.stanceBolt(this.pos, perks.stanceBolt);
+    // Tag Guerrier : chaque changement de posture accélère les coups un instant.
+    if (perks.stanceRush) this.rush = perks.stanceRush.duration;
     world.emit({ type: 'stance', pos: { ...this.pos }, hero: this.id, stance });
   }
 
@@ -531,6 +588,8 @@ export class Player {
     // Blocage parfait : la garde levée juste avant le coup. En coop, la fenêtre s'élargit du retard de l'invité.
     const perfect = this.guardHeld <= PERFECT_GUARD + this.latency;
     if (perfect) world.emit({ type: 'perfectGuard', pos: { ...this.pos }, hero: this.id });
+    // Mempō de Contre-Attaque : le blocage parfait ouvre une riposte.
+    if (perfect && perks.counter) this.counterWindow = perks.counter.window;
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
     const chip = parried ? 0 : amount * (1 - this.cfg.block.reduction);
     if (chip > 0) this.loseHp(chip * this.damageTakenFactor(), world, true);
@@ -580,6 +639,8 @@ export class Player {
   takeHit(amount: number, pushDir: Vec2, knockback: number, world: World, falling = false, attacker?: Enemy): boolean {
     const kind = this.action.kind;
     if (this.invulnerable > 0 || kind === 'bond' || kind === 'dance' || kind === 'leap') return false;
+    // Dôme de feu (Bâton de Susanoo) : ce qui tombe du ciel s'y consume.
+    if (falling && world.insideDome(this.pos)) return false;
     const perks = this.cfg.perks ?? {};
     // Corps d'argile : la carapace de l'Oushebti absorbe le coup entier (deux avec le Dogū), puis se reforme.
     if (perks.clayShell && this.clayCooldown <= 0) {
@@ -591,7 +652,8 @@ export class Player {
       // Affinités de l'Oushebti : l'argile qui éclate nourrit la rage, rend l'ombre, remplit la garde, ou reste en leurre.
       if (perks.clayRage) this.gainRage(perks.clayRage);
       if (perks.clayMana) this.gainMana(perks.clayMana);
-      if (perks.clayDash) this.refundDash();
+      if (perks.clayDash) this.ghostCooldown = 0;
+      if (perks.clayCleave) this.clayPrimed = true;
       if (perks.clayGuard) {
         this.guardLeft = this.cfg.paladin.guard.max;
         this.guardBroken = 0;
@@ -613,9 +675,10 @@ export class Player {
   damageTakenFactor(): number {
     const perks = this.cfg.perks ?? {};
     let factor = this.cfg.damageTakenFactor ?? 1;
-    if (this.cfg.kit === 'guerrier' && this.stance === 'garde') factor *= this.cfg.stance.guard.damageTakenFactor;
+    if (this.cfg.kit === 'guerrier' && this.stance === 'garde') factor *= this.cfg.stance.guard.damageTakenFactor * (1 - (perks.guardSkin ?? 0));
     // Égide d'un Paladin : une Armure qui retire une part des dégâts avant les PV et la garde.
     factor *= 1 - this.aegisArmor;
+    if (this.auraBuffTime > 0) factor *= 1 - this.auraArmor;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
     if (perks.lionSkin && this.rage >= this.cfg.rageMax / 2) factor *= 1 - perks.lionSkin;
     if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
@@ -636,6 +699,11 @@ export class Player {
       this.bearSkinUsed = true;
       this.hp = 1;
       world.emit({ type: 'bearSkin', pos: { ...this.pos } });
+      // Et l'ours se déchaîne : quelques secondes de Frénésie.
+      if (perks.bearFrenzy) {
+        this.frenzy = Math.max(this.frenzy, perks.bearFrenzy);
+        world.emit({ type: 'frenzy', pos: { ...this.pos } });
+      }
     }
     const aegis = perks.divineAegis;
     if (aegis && !this.aegisUsed && this.hp > 0 && this.below(aegis.threshold)) {
@@ -680,6 +748,8 @@ export class Player {
     const a = this.cfg.attack;
     let f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
     if (this.cfg.kit === 'guerrier') f *= this.stance === 'garde' ? this.cfg.stance.guard.attackTimeFactor : this.cfg.stance.offense.attackTimeFactor;
+    const rush = this.cfg.perks?.stanceRush;
+    if (rush && this.rush > 0) f /= 1 + rush.bonus;
     const hurried = this.cfg.perks?.lowHpAttackSpeed;
     if (hurried) {
       // De 0 à pleine vitesse entre tous ses PV et le seuil : +30 % de vitesse, ce sont des coups 1,3 fois plus courts.
@@ -810,6 +880,8 @@ export class Player {
     const dir = normalize(length(input.move) > 0.1 ? input.move : this.facing, this.facing);
     const joren = this.cfg.perks?.joren;
     if (joren) world.setSnare(this.pos, joren);
+    const embers = this.cfg.perks?.dodgeEmbers;
+    if (embers) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
     this.action = { kind: 'dodge', t: 0, dir };
     this.blocking = false;
     this.dodgeCooldown = this.cfg.dodge.cooldown;
@@ -863,7 +935,9 @@ export class Player {
     if (input.skillRPressed && this.meteorCooldown <= 0 && this.spendAll(world)) {
       this.meteorCooldown = s.meteor.cooldown;
       this.facing = aimDir;
-      world.castMeteor(input.aimGround);
+      // Bâton de Susanoo : le météore laisse place à un dôme de feu autour du Sorcier.
+      if (this.cfg.perks?.fireDome) world.castDome();
+      else world.castMeteor(input.aimGround);
     }
   }
 
@@ -991,6 +1065,9 @@ export class Player {
         this.action = { kind: 'free' };
         this.facing = normalize(sub(strike.target, this.pos), aimDir);
         this.invulnerable = Math.max(this.invulnerable, b.ghost.invulnerable);
+        // Haidate de shikome : la Lame reparaît sous un bouclier.
+        const ward = this.cfg.perks?.ghostShield;
+        if (ward) this.shield(this.cfg.maxHp * ward.amount, ward.duration);
       }
     }
     if (input.skillAPressed && this.deathMarkCooldown <= 0 && world.deathMark(input.aim)) this.deathMarkCooldown = b.deathMark.cooldown;

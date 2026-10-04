@@ -76,10 +76,11 @@ export interface PlayerConfig {
   /** R : on frappe plus vite, mais on encaisse plus. */
   /**
    * Guerrier : postures. Garde : coups plus lents (`attackTimeFactor` > 1), dégâts subis réduits, blocage au clic droit
-   * tenu. Offensive : coups plus rapides, `reach` m d'allonge en plus. Un appui de moins de `tapTime` s change de posture.
+   * tenu. Offensive : coups plus rapides, `reach` m d'allonge en plus. Un double clic droit (deux appuis en moins de
+   * `doubleTap` s) change de posture : un appui seul ne fait que lever la garde, pour ne pas gêner les parades parfaites.
    */
   stance: {
-    tapTime: number;
+    doubleTap: number;
     guard: { attackTimeFactor: number; damageTakenFactor: number };
     offense: { attackTimeFactor: number; reach: number };
   };
@@ -135,7 +136,8 @@ export interface SorcierConfig {
    * éventail de `spreadDeg` puis guidées vers l'ennemi le plus proche du curseur au moment du clic (`turnRate` rad/s).
    * Si leur cible tombe, elles cherchent un autre yokai à moins de `seek` m.
    */
-  fireball: { count: number; spreadDeg: number; speed: number; turnRate: number; radius: number; seek: number };
+  /** `pierce` : les boules de feu traversent les yokai (Bâton de Susanoo). */
+  fireball: { count: number; spreadDeg: number; speed: number; turnRate: number; radius: number; seek: number; pierce?: boolean };
   /** Clic droit : un sceau tracé au sol, sous le curseur (à `range` m au plus), qui explose au bout de `delay` s. */
   seal: { cost: number; cooldown: number; delay: number; radius: number; damage: number; range: number };
   /**
@@ -186,7 +188,8 @@ export interface PaladinConfig {
    * R : Égide, posée sur l'allié le plus proche de la souris (à `range` m), sinon sur soi ; elle reste jusqu'au
    * prochain R. Elle retire `armor` des dégâts reçus ; sur soi, le Paladin frappe `selfDamageMalus` moins fort.
    */
-  aegis: { range: number; armor: number; selfDamageMalus: number };
+  /** `cooldown` : délai avant de poser ou de déplacer l'Égide à nouveau (la retirer reste libre). */
+  aegis: { range: number; armor: number; selfDamageMalus: number; cooldown: number };
   /** Part de ses propres soins (Aura, bouclier) que reçoit le Paladin : il soigne mieux les autres que lui-même. */
   selfHeal: number[];
   /**
@@ -284,8 +287,18 @@ export interface Perks {
   clayShell?: number;
   /** Oushebti guerrier : rage gagnée quand la carapace absorbe un coup. */
   clayRage?: number;
-  /** Oushebti lame : la carapace qui absorbe un coup rend une charge du Pas de l'ombre. */
+  /** Oushebti lame : la carapace qui absorbe un coup rend aussitôt la Frappe fantôme. */
   clayDash?: boolean;
+  /**
+   * Oushebti guerrier : la carapace qui absorbe un coup prépare une riposte. Le coup de mêlée suivant frappe aussi
+   * autour de sa cible (`radius` m, `damage` fois les dégâts de l'arme), et fait saigner tous ceux qu'il touche
+   * (`bleed` fois les dégâts de l'arme, sur `duration` s).
+   */
+  clayCleave?: { radius: number; damage: number; bleed: number; duration: number };
+  /** Einherjar guerrier : sous `threshold` des PV, le vol de vie gagne `bonus` (part des dégâts infligés). */
+  lowHpLifesteal?: { threshold: number; bonus: number };
+  /** Hanyō guerrier : transformé et en posture Offensive, cette part de dégâts en plus. */
+  yokaiOffense?: number;
   /** Oushebti paladin : la carapace qui absorbe un coup remplit la garde. */
   clayGuard?: boolean;
   /** Oushebti rôdeur : la carapace qui absorbe un coup laisse une statuette que les yokai attaquent, ces secondes. */
@@ -361,6 +374,8 @@ export interface Perks {
   markJump?: boolean;
   /** Festin de l'ombre : abattre un ennemi marqué rend ces PV. */
   markKillHeal?: number;
+  /** Festin toxique (Lame) : abattre un ennemi qui porte ton poison rend ces PV. */
+  poisonKillHeal?: number;
   /** Crocs de la Jorōgumo : chaque coup critique rend ces PV. */
   critHeal?: number;
 
@@ -373,6 +388,52 @@ export interface Perks {
   tyrHand?: number;
   /** Vol de vie (armes du Guerrier) : part des dégâts infligés rendue en PV. */
   lifesteal?: number;
+  /** Cœur de l'Arène : `perEnemy` de vol de vie par ennemi à moins de `radius` m, jusqu'à `max`. */
+  arenaHeart?: { perEnemy: number; max: number; radius: number };
+  /**
+   * Naginata du Maître d'Armes : en passant en Offensive, le coup de mêlée suivant fait saigner (`damage` fois les dégâts
+   * de l'arme, répartis sur `duration` s).
+   */
+  stanceBleed?: { damage: number; duration: number };
+  /** Naginata (palier 50) : en Offensive, les coups critiques gagnent ce multiplicateur. */
+  offenseCrit?: number;
+  /**
+   * Mempō de Contre-Attaque : après un blocage parfait, le premier coup porté dans les `window` s est une riposte :
+   * `bonus` de dégâts en plus (un critique), et la cible est étourdie `stun` s.
+   */
+  counter?: { window: number; bonus: number; stun: number };
+  /** Tag Guerrier : changer de posture donne `bonus` de vitesse de frappe pendant `duration` s. */
+  stanceRush?: { bonus: number; duration: number };
+  /** Tag Guerrier : le Bond étourdit à l'atterrissage, ces secondes. */
+  bondStun?: number;
+  /** Vent de tempête (Susanoo) : changer de posture lance un éclair autour du Guerrier. */
+  stanceBolt?: { damage: number; radius: number };
+  /** Colère de la tempête (Susanoo) : en Offensive, un coup d'arme sur `every` appelle la foudre sur sa cible. */
+  offenseBolt?: { every: number; damage: number };
+  /** Peau du lion de Némée (Héraclès) : en Garde, cette part de dégâts subis en moins, en plus de la posture. */
+  guardSkin?: number;
+  /** Peau d'ours (Berserkir) : la survie à 1 PV déclenche aussi ces secondes de Frénésie. */
+  bearFrenzy?: number;
+  /** Iaijutsu (Katana de rōnin) : le premier coup après être passé en Offensive est critique, de ce multiplicateur. */
+  stanceCrit?: number;
+  /** Masque de hannya : sous `threshold` des PV, `bonus` de dégâts en plus en posture Offensive. */
+  hannyaOffense?: { threshold: number; bonus: number };
+  /** Croissant (Tsukuyomi) : la Frappe fantôme empoisonne aussi les ennemis à moins de `radius` m de sa cible. */
+  ghostSpread?: { radius: number };
+  /** Marée d'ombre (Tsukuyomi) : abattre un ennemi empoisonné rapproche la Frappe fantôme de ces secondes. */
+  poisonKillCut?: number;
+  /** Haidate de shikome : après une Frappe fantôme, un bouclier de `amount` des PV max pendant `duration` s. */
+  ghostShield?: { amount: number; duration: number };
+  /** Bandelettes : l'Égide retire les dégâts restants divisés par ce facteur (1,6 : 60 % d'absorption en plus). */
+  aegisAbsorb?: number;
+  /** Souffle de vie : poser l'Égide rend ces PV au Paladin. */
+  aegisHeal?: number;
+  /** Roi des morts : l'Égide peut protéger ce nombre de héros à la fois. */
+  aegisTargets?: number;
+  /** Tag Paladin : l'Aura donne cette Armure (part des dégâts retirée) aux héros qui s'y tiennent. */
+  auraArmor?: number;
+  /** Tag Paladin : les héros soignés par l'Aura infligent cette part de dégâts en plus. */
+  auraDamage?: number;
   /** Gleipnir : un coup bloqué étourdit l'attaquant. */
   gleipnir?: number;
   /** Chaleur : l'Aura brûle les ennemis qui s'y trouvent (dégâts par seconde). */
@@ -422,6 +483,16 @@ export interface Perks {
   lowHpAttackSpeed?: { threshold: number; bonus: number };
   /** Cloche du Grand Rocher : un coup bloqué renvoie cette part de ses dégâts à l'attaquant. */
   guardReflect?: number;
+  /** Hakama de cendres : le Bouclier de flammes brisé par un ennemi rend cette part des PV max. */
+  wardBreakHeal?: number;
+  /** Geta du danseur de feu : l'esquive laisse une traînée de braises. */
+  dodgeEmbers?: { radius: number; burn: number; life: number };
+  /** Cristal de pyromancie : abattre un yokai en feu rend `mana` et `hp`. */
+  pyroKill?: { mana: number; hp: number };
+  /** Bâton de Susanoo : le R lance un dôme de feu (`radius` m, `duration` s) qui arrête ce qui tombe du ciel et brûle (`burn` par seconde). */
+  fireDome?: { radius: number; duration: number; burn: number };
+  /** Bâton de Susanoo (palier 50) : un sceau qui touche au moins `min` yokai rend `share` des PV max. */
+  sealHeal?: { min: number; share: number };
   /** Encensoir du moine : les PV rendus par l'Aura renforcent le prochain Marteau (`perHp` dégât par PV, au plus `max` fois ses dégâts). */
   censer?: { perHp: number; max: number };
   /** Tabi du messager : après un Recul, le prochain tir part chargé à fond. */

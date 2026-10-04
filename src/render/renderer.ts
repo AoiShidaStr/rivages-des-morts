@@ -1255,6 +1255,13 @@ export class Renderer {
       case 'aegis':
         this.text(event.pos, 2.4, event.on ? 'Égide' : 'Égide retirée', 'parry', 0.9);
         break;
+      case 'bleed':
+        this.text(event.pos, 2.1, 'Saignement', 'rage', 0.8);
+        break;
+      case 'counter':
+        this.text(event.pos, 2.4, 'Riposte !', 'parry', 1);
+        this.addFx(this.ringFx(event.pos, 2.2, SPIRIT, 0.3));
+        break;
       case 'slow':
         this.text(event.pos, 2, 'Ralenti', 'stun', 0.8);
         break;
@@ -1514,6 +1521,24 @@ export class Renderer {
       case 'emberEnd':
         this.endTracked(this.embers, event.id);
         break;
+      case 'dome': {
+        // Bâton de Susanoo : un anneau de feu qui palpite autour du Sorcier tant que le dôme tient.
+        const life = event.life;
+        const fx = this.addFx({
+          texture: this.fxTextures.ring,
+          pos: event.pos,
+          dir: { x: 1, z: 0 },
+          width: event.radius * 2,
+          depth: event.radius * 2,
+          color: FIRE,
+          life: life + 1,
+          y: 0.03,
+          update: (_k, f) => f.material.setFloat('alpha', Math.min(0.85, f.age * 4, (life - f.age) * 1.5) * (0.7 + 0.3 * Math.sin(f.age * 6))),
+        });
+        this.embers.set(event.id, fx);
+        this.text(event.pos, 2.6, 'Dôme de feu', 'rage', 1.2);
+        break;
+      }
       case 'ward':
         this.text(event.pos, 2.4, 'Bouclier de flammes', 'rage', 1.1);
         this.addFx(this.ringFx(event.pos, event.radius * 2.4, FIRE, 0.4));

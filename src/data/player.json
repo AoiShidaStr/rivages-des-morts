@@ -54,7 +54,7 @@
     "slow": 0
   },
   "stance": {
-    "tapTime": 0.2,
+    "doubleTap": 0.3,
     "guard": { "attackTimeFactor": 1.2, "damageTakenFactor": 0.75 },
     "offense": { "attackTimeFactor": 0.75, "reach": 0.4 }
   },
@@ -101,7 +101,7 @@
   },
   "paladin": {
     "aura": { "cooldown": 16, "duration": 6, "radius": 3, "heal": 3, "healShare": 0.25 },
-    "aegis": { "range": 8, "armor": 0.6, "selfDamageMalus": 0.5 },
+    "aegis": { "range": 8, "armor": 0.6, "selfDamageMalus": 0.5, "cooldown": 15 },
     "selfHeal": [0.75, 0.6, 0.5],
     "judgement": { "max": 100, "perBlock": 20, "perHit": 5, "radius": 3, "damage": 45, "heal": 0.06 },
     "guard": { "max": 100, "cost": 2.5, "minCost": 12, "regen": 30, "delay": 1, "breakTime": 1.5 },

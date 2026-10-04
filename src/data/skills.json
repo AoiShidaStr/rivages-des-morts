@@ -29,9 +29,9 @@
       ],
       "affinities": {
         "guerrier": {
-          "name": "Colère des morts",
-          "description": "Sous la moitié de tes PV, ta rage ne retombe plus et monte 30 % plus vite.",
-          "effects": [{ "op": "set", "path": "perks.lowHpRage", "value": { "threshold": 0.5, "gain": 1.3 } }]
+          "name": "Sang du Gladiateur",
+          "description": "Sous la moitié de tes PV, 15 % des dégâts que tu infliges en plus te soignent (vol de vie).",
+          "effects": [{ "op": "set", "path": "perks.lowHpLifesteal", "value": { "threshold": 0.5, "bonus": 0.15 } }]
         },
         "sorcier": {
           "name": "Brasier des morts",
@@ -40,7 +40,7 @@
         },
         "lame": {
           "name": "Dernier assaut",
-          "description": "Sous la moitié de tes PV, l'esquive et le Pas de l'ombre reviennent 50 % plus vite.",
+          "description": "Sous la moitié de tes PV, l'esquive et la Frappe fantôme reviennent 50 % plus vite.",
           "effects": [{ "op": "set", "path": "perks.lowHpHaste", "value": { "threshold": 0.5, "factor": 1.5 } }]
         },
         "paladin": {
@@ -68,9 +68,9 @@
       ],
       "affinities": {
         "guerrier": {
-          "name": "Colère d'argile",
-          "description": "Quand ta carapace absorbe un coup, tu gagnes 25 de rage.",
-          "effects": [{ "op": "set", "path": "perks.clayRage", "value": 25 }]
+          "name": "Riposte d'argile",
+          "description": "Quand ta carapace absorbe un coup, ton coup de mêlée suivant frappe aussi tout autour de sa cible (2,5 m) et fait saigner tous ceux qu'il touche.",
+          "effects": [{ "op": "set", "path": "perks.clayCleave", "value": { "radius": 2.5, "damage": 1, "bleed": 0.6, "duration": 3 } }]
         },
         "sorcier": {
           "name": "Argile ignifugée",
@@ -79,7 +79,7 @@
         },
         "lame": {
           "name": "Argile fuyante",
-          "description": "Quand ta carapace absorbe un coup, une charge du Pas de l'ombre te revient.",
+          "description": "Quand ta carapace absorbe un coup, ta Frappe fantôme est aussitôt prête.",
           "effects": [{ "op": "set", "path": "perks.clayDash", "value": true }]
         },
         "paladin": {
@@ -149,9 +149,9 @@
       ],
       "affinities": {
         "guerrier": {
-          "name": "Furie du oni",
-          "description": "Transformé, ta rage monte deux fois plus vite.",
-          "effects": [{ "op": "set", "path": "perks.yokaiRage", "value": 2 }]
+          "name": "Maîtrise du oni",
+          "description": "Transformé, tu infliges 20 % de dégâts en plus en posture Offensive.",
+          "effects": [{ "op": "set", "path": "perks.yokaiOffense", "value": 0.2 }]
         },
         "sorcier": {
           "name": "Feu follet intérieur",
@@ -160,7 +160,7 @@
         },
         "lame": {
           "name": "Pas du renard",
-          "description": "Transformé, l'esquive et le Pas de l'ombre reviennent deux fois plus vite.",
+          "description": "Transformé, l'esquive et la Frappe fantôme reviennent deux fois plus vite.",
           "effects": [{ "op": "set", "path": "perks.yokaiDash", "value": 2 }]
         },
         "paladin": {
@@ -193,11 +193,11 @@
       "passives": [
         {
           "name": "Maître d'armes",
-          "description": "Deux postures. Garde : coups plus lents, 25 % de dégâts subis en moins, et le clic droit tenu bloque. Offensive : coups bien plus rapides et 0,4 m d'allonge. Tes armes de classe volent de la vie : tu survis en restant au cœur de la mêlée."
+          "description": "Deux postures, qu'un double clic droit échange. Garde : coups plus lents, 25 % de dégâts subis en moins, et le clic droit tenu bloque. Offensive : coups bien plus rapides et 0,4 m d'allonge. Tes armes de classe volent de la vie : tu survis en restant au cœur de la mêlée."
         }
       ],
       "actives": [
-        { "key": "Clic droit", "name": "Posture", "description": "Un appui court : passe de la Garde à l'Offensive. Un appui en Offensive te remet en Garde ; tenu en Garde, il bloque 90 % d'un coup de face." },
+        { "key": "Clic droit", "name": "Posture", "description": "Double clic : passe de la Garde à l'Offensive, ou l'inverse. En Garde, le clic droit tenu bloque 90 % d'un coup de face (levé juste avant le coup : blocage parfait)." },
         { "key": "A", "name": "Frappe fracassante", "description": "Gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV. Revient en 6 s." },
         { "key": "E", "name": "Bond", "description": "Saute sur la zone visée et frappe à l'atterrissage. Revient en 5 s." },
         { "key": "R", "name": "Frénésie", "description": "Pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus. Revient en 14 s." }
@@ -207,24 +207,24 @@
         "tiers": [
           {
             "count": 2,
-            "description": "La rage monte 25 % plus vite.",
-            "effects": [{ "op": "set", "path": "perks.rageGainFactor", "value": 1.25 }]
+            "description": "Changer de posture te donne +10 % de vitesse de frappe pendant 3 s.",
+            "effects": [{ "op": "set", "path": "perks.stanceRush", "value": { "bonus": 0.1, "duration": 3 } }]
           },
           {
             "count": 4,
-            "description": "La rage monte 50 % plus vite ; Frénésie dure 2 s de plus.",
+            "description": "Changer de posture : +20 % de vitesse de frappe pendant 3 s. Le Bond étourdit 0,5 s à l'atterrissage.",
             "effects": [
-              { "op": "set", "path": "perks.rageGainFactor", "value": 1.5 },
-              { "op": "add", "path": "frenzy.duration", "value": 2 }
+              { "op": "set", "path": "perks.stanceRush", "value": { "bonus": 0.2, "duration": 3 } },
+              { "op": "set", "path": "perks.bondStun", "value": 0.5 }
             ]
           },
           {
             "count": 6,
-            "description": "La rage monte 75 % plus vite ; Frénésie dure 4 s de plus ; la Frappe fracassante coûte 10 de rage en moins.",
+            "description": "Changer de posture : +30 % de vitesse de frappe pendant 3 s. Le Bond étourdit 0,5 s ; la Frappe fracassante revient 20 % plus vite.",
             "effects": [
-              { "op": "set", "path": "perks.rageGainFactor", "value": 1.75 },
-              { "op": "add", "path": "frenzy.duration", "value": 4 },
-              { "op": "add", "path": "smash.rageCost", "value": -10 }
+              { "op": "set", "path": "perks.stanceRush", "value": { "bonus": 0.3, "duration": 3 } },
+              { "op": "set", "path": "perks.bondStun", "value": 0.5 },
+              { "op": "mul", "path": "smash.cooldown", "value": 0.8 }
             ]
           }
         ]
@@ -239,8 +239,8 @@
             {
               "id": "susanoo-1",
               "name": "Vent de tempête",
-              "description": "Chaque coup donne deux fois plus de rage.",
-              "effects": [{ "op": "set", "path": "perks.hitRageFactor", "value": 2 }]
+              "description": "Changer de posture lance un éclair autour de toi : 10 dégâts à 2,5 m.",
+              "effects": [{ "op": "set", "path": "perks.stanceBolt", "value": { "damage": 10, "radius": 2.5 } }]
             },
             {
               "id": "susanoo-2",
@@ -261,8 +261,8 @@
               "id": "susanoo-4",
               "name": "Colère de la tempête",
               "ultimate": true,
-              "description": "À rage pleine, chaque coup déclenche un éclair (+12 dégâts).",
-              "effects": [{ "op": "set", "path": "perks.storm", "value": 12 }]
+              "description": "En posture Offensive, un coup sur 4 appelle la foudre sur ta cible (+12 dégâts).",
+              "effects": [{ "op": "set", "path": "perks.offenseBolt", "value": { "every": 4, "damage": 12 } }]
             }
           ]
         },
@@ -284,8 +284,8 @@
             {
               "id": "heracles-2",
               "name": "Peau du lion de Némée",
-              "description": "Au-dessus de la moitié de ta rage, tu subis 30 % de dégâts en moins.",
-              "effects": [{ "op": "set", "path": "perks.lionSkin", "value": 0.3 }]
+              "description": "En Garde, tu subis encore 15 % de dégâts en moins.",
+              "effects": [{ "op": "set", "path": "perks.guardSkin", "value": 0.15 }]
             },
             {
               "id": "heracles-3",
@@ -323,15 +323,18 @@
             {
               "id": "berserkir-3",
               "name": "Élan sauvage",
-              "description": "Le Bond coûte 15 de rage en moins.",
-              "effects": [{ "op": "add", "path": "bond.rageCost", "value": -15 }]
+              "description": "Le Bond revient 2 s plus tôt.",
+              "effects": [{ "op": "add", "path": "bond.cooldown", "value": -2 }]
             },
             {
               "id": "berserkir-4",
               "name": "Peau d'ours",
               "ultimate": true,
-              "description": "Une fois par descente, tu survis à un coup fatal avec 1 PV et la rage pleine.",
-              "effects": [{ "op": "set", "path": "perks.bearSkin", "value": true }]
+              "description": "Une fois par descente, tu survis à un coup fatal avec 1 PV, et la Frénésie te prend 4 s.",
+              "effects": [
+                { "op": "set", "path": "perks.bearSkin", "value": true },
+                { "op": "set", "path": "perks.bearFrenzy", "value": 4 }
+              ]
             }
           ]
         }
@@ -522,16 +525,16 @@
       "subtitle": "Assassin des ombres",
       "role": "DPS mêlée, peu de PV",
       "difficulty": 3,
-      "playstyle": "Entre, marque, ressors : beaucoup de dégâts, peu de PV, aucune erreur permise.",
+      "playstyle": "Empoisonne, plonge, achève : beaucoup de dégâts, peu de PV, aucune erreur permise.",
       "kit": "lame",
       "weapon": "kunai-jumeaux",
-      "about": "Réglages de base de la classe : un peu moins de PV que le Guerrier, une esquive plus longue qui revient plus vite, et 4 PV rendus par ennemi marqué abattu (Festin de l'ombre).",
+      "about": "Réglages de base de la classe : un peu moins de PV que le Guerrier, une esquive plus longue qui revient plus vite, et 4 PV rendus par ennemi empoisonné abattu (Festin toxique).",
       "effects": [
         { "op": "set", "path": "kit", "value": "lame" },
         { "op": "mul", "path": "maxHp", "value": 0.9 },
         { "op": "mul", "path": "dodge.cooldown", "value": 0.8 },
         { "op": "add", "path": "dodge.invulnerable", "value": 0.06 },
-        { "op": "set", "path": "perks.markKillHeal", "value": 4 }
+        { "op": "set", "path": "perks.poisonKillHeal", "value": 4 }
       ],
       "actives": [
         {
@@ -587,33 +590,30 @@
             {
               "id": "tsukuyomi-1",
               "name": "Pas de lune",
-              "description": "Le Pas de l'ombre revient 1 s plus vite.",
-              "effects": [{ "op": "add", "path": "blade.shadowDash.cooldown", "value": -1 }]
+              "description": "La Frappe fantôme revient 1,5 s plus vite.",
+              "effects": [{ "op": "add", "path": "blade.ghost.cooldown", "value": -1.5 }]
             },
             {
               "id": "tsukuyomi-2",
               "name": "Croissant",
-              "description": "Le Pas de l'ombre porte 30 % plus loin et entaille les ennemis traversés (8 dégâts).",
+              "description": "La Frappe fantôme porte 30 % plus loin et empoisonne les ennemis à moins de 2,5 m de sa cible.",
               "effects": [
-                { "op": "mul", "path": "blade.shadowDash.distance", "value": 1.3 },
-                { "op": "set", "path": "perks.dashDamage", "value": 8 }
+                { "op": "mul", "path": "blade.ghost.range", "value": 1.3 },
+                { "op": "set", "path": "perks.ghostSpread", "value": { "radius": 2.5 } }
               ]
             },
             {
               "id": "tsukuyomi-3",
               "name": "Marée d'ombre",
-              "description": "Abattre un ennemi marqué rend une charge du Pas de l'ombre.",
-              "effects": [{ "op": "set", "path": "perks.dashRefund", "value": true }]
+              "description": "Abattre un ennemi empoisonné rapproche ta Frappe fantôme de 3 s.",
+              "effects": [{ "op": "set", "path": "perks.poisonKillCut", "value": 3 }]
             },
             {
               "id": "tsukuyomi-4",
               "name": "Éclipse",
               "ultimate": true,
-              "description": "Le Pas de l'ombre a deux charges, et ses marques durent 4 s de plus.",
-              "effects": [
-                { "op": "set", "path": "blade.shadowDash.charges", "value": 2 },
-                { "op": "add", "path": "blade.shadowDash.markTime", "value": 4 }
-              ]
+              "description": "Ton poison monte jusqu'à 4 charges : la Frappe fantôme peut critiquer ×5.",
+              "effects": [{ "op": "set", "path": "blade.poison.maxStacks", "value": 4 }]
             }
           ]
         },
@@ -718,7 +718,7 @@
         {
           "key": "R",
           "name": "Égide",
-          "description": "Pose l'Égide sur l'allié le plus proche de la souris, sinon sur toi : elle retire 60 % des dégâts qu'il reçoit et reste jusqu'au prochain R (R sur lui la retire). Sur toi, tu deviens presque intuable, mais tes coups font 50 % de dégâts en moins."
+          "description": "Pose l'Égide sur l'allié le plus proche de la souris, sinon sur toi : elle retire 60 % des dégâts qu'il reçoit et reste jusqu'à ce que tu la retires (R sur lui). Sur toi, tu deviens presque intuable, mais tes coups font 50 % de dégâts en moins. Une fois posée, il faut 15 s pour la poser ailleurs."
         }
       ],
       "tag": {
@@ -731,18 +731,19 @@
           },
           {
             "count": 4,
-            "description": "Chaque coup bloqué rend 5 PV autour de toi ; l'Aura soigne 30 % de plus.",
+            "description": "Chaque coup bloqué rend 5 PV autour de toi ; l'Aura donne aussi +15 % d'Armure aux héros qui s'y tiennent.",
             "effects": [
               { "op": "set", "path": "perks.shieldHeal", "value": { "amount": 5, "radius": 3.5 } },
-              { "op": "mul", "path": "paladin.aura.heal", "value": 1.3 }
+              { "op": "set", "path": "perks.auraArmor", "value": 0.15 }
             ]
           },
           {
             "count": 6,
-            "description": "Chaque coup bloqué rend 8 PV autour de toi ; l'Aura soigne 60 % de plus.",
+            "description": "Chaque coup bloqué rend 8 PV autour de toi ; l'Aura donne +30 % d'Armure, et les héros qu'elle soigne infligent 10 % de dégâts en plus.",
             "effects": [
               { "op": "set", "path": "perks.shieldHeal", "value": { "amount": 8, "radius": 4 } },
-              { "op": "mul", "path": "paladin.aura.heal", "value": 1.6 }
+              { "op": "set", "path": "perks.auraArmor", "value": 0.3 },
+              { "op": "set", "path": "perks.auraDamage", "value": 0.1 }
             ]
           }
         ]
@@ -817,36 +818,33 @@
         {
           "id": "osiris",
           "name": "Osiris",
-          "subtitle": "Le roi ressuscité · relève",
+          "subtitle": "Le roi ressuscité · Égide",
           "lore": "Découpé par son frère Seth, il fut rassemblé par Isis et revint à la vie pour régner sur les morts.",
           "nodes": [
             {
               "id": "osiris-1",
               "name": "Crue du Nil",
-              "description": "Relever revient 6 s plus tôt.",
-              "effects": [{ "op": "add", "path": "paladin.raise.cooldown", "value": -6 }]
+              "description": "L'Égide revient 6 s plus tôt.",
+              "effects": [{ "op": "add", "path": "paladin.aegis.cooldown", "value": -6 }]
             },
             {
               "id": "osiris-2",
               "name": "Bandelettes",
-              "description": "Tes alliés relevés ont 60 % de PV en plus et restent 60 % plus longtemps.",
-              "effects": [{ "op": "set", "path": "perks.raiseToughness", "value": 1.6 }]
+              "description": "L'Égide absorbe 60 % de plus : le héros protégé ne subit plus que 25 % des dégâts au lieu de 40 %.",
+              "effects": [{ "op": "set", "path": "perks.aegisAbsorb", "value": 1.6 }]
             },
             {
               "id": "osiris-3",
               "name": "Souffle de vie",
-              "description": "Relever te rend 20 PV.",
-              "effects": [{ "op": "set", "path": "perks.raiseHeal", "value": 20 }]
+              "description": "Poser l'Égide te rend 20 PV.",
+              "effects": [{ "op": "set", "path": "perks.aegisHeal", "value": 20 }]
             },
             {
               "id": "osiris-4",
               "name": "Roi des morts",
               "ultimate": true,
-              "description": "Relever relève deux alliés à la fois, et tu peux en garder trois.",
-              "effects": [
-                { "op": "set", "path": "perks.raiseCount", "value": 2 },
-                { "op": "add", "path": "summon.max", "value": 1 }
-              ]
+              "description": "L'Égide peut protéger deux héros à la fois.",
+              "effects": [{ "op": "set", "path": "perks.aegisTargets", "value": 2 }]
             }
           ]
         }

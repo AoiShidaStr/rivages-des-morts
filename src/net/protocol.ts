@@ -10,7 +10,7 @@ import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 6;
+export const PROTOCOL = 7;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -127,6 +127,7 @@ const COOLDOWNS = {
   frenzyCooldown: 0,
   smashCooldown: 0,
   ghostCooldown: 0,
+  aegisCooldown: 0,
   sealCooldown: 0,
   wardCooldown: 0,
   flightCooldown: 0,
@@ -262,6 +263,7 @@ function heroSnaps(world: World): HeroSnap[] {
     stance: p.stance,
     ghostCooldown: p.ghostCooldown,
     aegisOn: p.aegisOn,
+    aegisCooldown: p.aegisCooldown,
     sealCooldown: p.sealCooldown,
     wardCooldown: p.wardCooldown,
     flightCooldown: p.flightCooldown,
