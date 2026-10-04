@@ -1,10 +1,10 @@
 {
-  "about": "Musique de chaque moment du jeu (fichiers de public/audio). Deux moments qui partagent un fichier l'enchaînent sans coupure (le menu puis l'île). null : silence, en attendant une piste.",
+  "about": "Musique de chaque moment du jeu (fichiers de public/audio). Deux moments qui partagent un fichier l'enchaînent sans coupure (le combat puis le boss). null : silence, en attendant une piste. « combat-debut » est pensée pour Izanami : elle couvre tous les combats en attendant leurs propres pistes.",
   "tracks": {
-    "menu": "audio/menu.m4a",
+    "menu": "audio/menu-final.mp3",
     "ile": "audio/menu.m4a",
-    "combat": null,
-    "boss": null
+    "combat": "audio/combat-debut.mp3",
+    "boss": "audio/combat-debut.mp3"
   },
   "fadeSeconds": 1.2,
   "defaultVolume": 0.5
