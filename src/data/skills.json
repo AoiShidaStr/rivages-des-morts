@@ -374,13 +374,13 @@
         {
           "key": "R",
           "name": "Grand météore",
-          "description": "Un météore s’écrase sous la souris au bout de 2 s : dégâts énormes et projection dans un grand rayon. 50 mana, revient en 18 s."
+          "description": "Un météore s’écrase sous la souris au bout de 2 s : dégâts énormes et projection dans un grand rayon. Coûte tout ton mana (il faut la jauge pleine), revient en 18 s."
         }
       ],
       "passives": [
         {
           "name": "Mana",
-          "description": "Tes sorts coûtent du mana : 100 au départ, +10 par seconde. Le clic gauche lance une salve de 3 boules de feu guidées vers le yokai le plus proche de la souris, sans rien coûter."
+          "description": "Tes sorts coûtent du mana : 100 au départ, +5 par seconde. Le grand météore vide toute la jauge. Le clic gauche lance une salve de 3 boules de feu guidées vers le yokai le plus proche de la souris, sans rien coûter."
         }
       ],
       "tag": {

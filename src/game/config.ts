@@ -146,7 +146,7 @@ export interface SorcierConfig {
   /** E : Fuite de feu. Un bond de `distance` m qui laisse une traînée brûlante (`burn` dégâts par seconde, `trailLife` s). */
   flight: { cost: number; cooldown: number; distance: number; duration: number; trailLife: number; trailRadius: number; burn: number };
   /** R : grand météore, sous le curseur (à `range` m au plus), qui s'écrase au bout de `delay` s. */
-  meteor: { cost: number; cooldown: number; delay: number; radius: number; damage: number; range: number; knockback: number };
+  meteor: { cooldown: number; delay: number; radius: number; damage: number; range: number; knockback: number };
 }
 
 /** Lame : frappe vite, marque ses proies et les achève en critiques. */

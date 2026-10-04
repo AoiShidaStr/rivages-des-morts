@@ -859,7 +859,8 @@ export class Player {
       this.flightCooldown = s.flight.cooldown;
       this.startFlight(input, world);
     }
-    if (input.skillRPressed && this.meteorCooldown <= 0 && this.spend(s.meteor.cost, world)) {
+    // Le grand météore vide toute la jauge, quels que soient le niveau et les réductions : il faut l'avoir pleine.
+    if (input.skillRPressed && this.meteorCooldown <= 0 && this.spendAll(world)) {
       this.meteorCooldown = s.meteor.cooldown;
       this.facing = aimDir;
       world.castMeteor(input.aimGround);
@@ -882,6 +883,21 @@ export class Player {
     }
     this.mana -= price;
     return true;
+  }
+
+  /** Grand météore : vide le mana, qui doit être plein ; faux (et un mot au-dessus du héros) sinon. */
+  private spendAll(world: World): boolean {
+    if (!this.manaFull) {
+      world.emit({ type: 'noMana', pos: { ...this.pos } });
+      return false;
+    }
+    this.mana = 0;
+    return true;
+  }
+
+  /** Vrai quand la jauge de mana est pleine (le grand météore peut partir). */
+  get manaFull(): boolean {
+    return this.mana >= this.cfg.sorcier.mana.max - 0.5;
   }
 
   gainMana(amount: number): void {

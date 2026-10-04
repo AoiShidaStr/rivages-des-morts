@@ -213,7 +213,7 @@
       "tags": ["Rôdeur"],
       "summary": "Arme de départ du Rôdeur : flèches rapides, portée 10 m ; on bouge dès la flèche partie.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.damage", "value": 10 },
         { "op": "set", "path": "attack.range", "value": 10 },
         { "op": "set", "path": "attack.commit", "value": 0.1 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
@@ -338,7 +338,7 @@
       "tags": ["Rôdeur"],
       "summary": "Arc court : tirs plus rapides mais portée 8 m, on bouge presque aussitôt ; le Recul revient 2 s plus tôt.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 7 },
+        { "op": "set", "path": "attack.damage", "value": 7.7 },
         { "op": "set", "path": "attack.range", "value": 8 },
         { "op": "set", "path": "attack.commit", "value": 0.08 },
         { "op": "set", "path": "attack.windup", "value": 0.06 },
@@ -362,7 +362,7 @@
       "tags": ["Rôdeur"],
       "summary": "Corde de soie d'araignée : un tir chargé plein ouvre une toile qui ralentit de 60 % pendant 2,5 s les ennemis autour de sa première proie.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.damage", "value": 10 },
         { "op": "set", "path": "attack.range", "value": 11 },
         { "op": "set", "path": "attack.commit", "value": 0.12 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
@@ -433,9 +433,9 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Rôdeur"],
-      "summary": "Flèches lourdes (9 dégâts), portée 11 m ; se bande 20 % plus vite.",
+      "summary": "Flèches lourdes (10 dégâts), portée 11 m ; se bande 20 % plus vite.",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 9 },
+        { "op": "set", "path": "attack.damage", "value": 10 },
         { "op": "set", "path": "attack.range", "value": 11 },
         { "op": "set", "path": "attack.commit", "value": 0.12 },
         { "op": "set", "path": "attack.windup", "value": 0.12 },
@@ -772,8 +772,11 @@
       "rarity": "rare",
       "tags": ["Rôdeur"],
       "bonus": { "maxHp": 6, "speed": 0.04 },
-      "summary": "Après un Recul, ton prochain tir part chargé à fond.",
-      "effects": [{ "op": "set", "path": "perks.leapCharge", "value": true }],
+      "summary": "Le Recul tire deux flèches de plus, et ton prochain tir part chargé à fond.",
+      "effects": [
+        { "op": "set", "path": "perks.leapCharge", "value": true },
+        { "op": "add", "path": "ranger.leap.arrows", "value": 2 }
+      ],
       "description": "Les chaussettes fendues d'un messager des morts. Il courait si vite qu'il bandait son arc en retombant."
     },
     "plume-yatagarasu": {
@@ -804,9 +807,9 @@
       "slot": "arme",
       "rarity": "épique",
       "tags": ["Rôdeur"],
-      "summary": "Flèches (8 dégâts), portée 10,5 m ; un tir chargé plein appelle la foudre sur sa première proie : 18 dégâts autour, ralentit de moitié 0,6 s (au plus toutes les 1,5 s).",
+      "summary": "Flèches (8,8 dégâts), portée 10,5 m ; un tir chargé plein appelle la foudre sur sa première proie : 18 dégâts autour, ralentit de moitié 0,6 s (au plus toutes les 1,5 s).",
       "effects": [
-        { "op": "set", "path": "attack.damage", "value": 8 },
+        { "op": "set", "path": "attack.damage", "value": 8.8 },
         { "op": "set", "path": "attack.range", "value": 10.5 },
         { "op": "set", "path": "attack.commit", "value": 0.12 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
@@ -1053,8 +1056,8 @@
       "rarity": "peu commune",
       "tags": ["Rôdeur"],
       "bonus": { "maxHp": 6, "damage": 0.08 },
-      "summary": "Le tir chargé se bande 15 % plus vite.",
-      "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.85 }],
+      "summary": "Le tir chargé se bande 25 % plus vite.",
+      "effects": [{ "op": "mul", "path": "ranger.charged.time", "value": 0.75 }],
       "description": "Le chapeau plat des fantassins, laqué de noir. Il cache les yeux ; les yokai ne voient pas qui les vise."
     },
     "do-cuir-noir": {

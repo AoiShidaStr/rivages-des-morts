@@ -203,7 +203,7 @@ export class Bot {
       const s = c.sorcier;
       const can = (cost: number) => p.mana >= p.spellCost(cost);
       const crowd = near(s.meteor.radius, target.pos).length;
-      if (p.meteorCooldown <= 0 && can(s.meteor.cost) && gap < s.meteor.range && (target.boss || crowd >= 3 || this.greedy)) {
+      if (p.meteorCooldown <= 0 && p.manaFull && gap < s.meteor.range && (target.boss || crowd >= 3 || this.greedy)) {
         input.skillRPressed = true;
         input.aimGround = { ...target.pos };
       } else if (p.sealCooldown <= 0 && can(s.seal.cost) && gap < s.seal.range) {

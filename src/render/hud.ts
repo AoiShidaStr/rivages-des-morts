@@ -160,7 +160,7 @@ export class Hud {
       views = [
         { cooldown: player.ward > 0 ? 0 : player.wardCooldown / s.ward.cooldown, locked: player.mana < cost(s.ward.cost), active: player.ward > 0 },
         { cooldown: player.flightCooldown / s.flight.cooldown, locked: player.mana < cost(s.flight.cost) },
-        { cooldown: player.meteorCooldown / s.meteor.cooldown, locked: player.mana < cost(s.meteor.cost) },
+        { cooldown: player.meteorCooldown / s.meteor.cooldown, locked: player.mana < s.mana.max - 0.5 },
       ];
     } else if (cfg.kit === 'lame') {
       // Frappe fantôme : la barre se remplit avec sa recharge ; invisible, la barre le dit.

@@ -116,11 +116,11 @@
     "leap": { "cooldown": 5, "distance": 4.5, "duration": 0.35, "height": 0.8, "arrows": 3, "spreadDeg": 14 }
   },
   "sorcier": {
-    "mana": { "max": 100, "regen": 10 },
+    "mana": { "max": 100, "regen": 5 },
     "fireball": { "count": 3, "spreadDeg": 16, "speed": 15, "turnRate": 9, "radius": 0.28, "seek": 3 },
     "seal": { "cost": 18, "cooldown": 2.5, "delay": 1, "radius": 2.2, "damage": 34, "range": 9 },
     "ward": { "cost": 30, "cooldown": 10, "duration": 5, "shield": 0.4, "burn": 8, "radius": 1.6, "knockback": 7 },
     "flight": { "cost": 15, "cooldown": 5, "distance": 4.5, "duration": 0.22, "trailLife": 3, "trailRadius": 0.9, "burn": 10 },
-    "meteor": { "cost": 50, "cooldown": 18, "delay": 2, "radius": 3.6, "damage": 140, "range": 10, "knockback": 8 }
+    "meteor": { "cooldown": 18, "delay": 2, "radius": 3.6, "damage": 140, "range": 10, "knockback": 8 }
   }
 }
