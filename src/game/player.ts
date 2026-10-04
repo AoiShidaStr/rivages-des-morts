@@ -635,7 +635,6 @@ export class Player {
       // Peau d'ours : une fois par descente, le Berserkir refuse de tomber.
       this.bearSkinUsed = true;
       this.hp = 1;
-      this.rage = this.cfg.rageMax;
       world.emit({ type: 'bearSkin', pos: { ...this.pos } });
     }
     const aegis = perks.divineAegis;
@@ -657,15 +656,12 @@ export class Player {
     if (attacker.dead) this.onKill();
   }
 
-  /** Ajoute de la rage (paliers du tag Guerrier compris) ; renvoie ce qui a été gagné. */
-  gainRage(amount: number): number {
-    const perks = this.cfg.perks ?? {};
-    let gain = amount * (perks.rageGainFactor ?? 1);
-    if (perks.lowHpRage && this.below(perks.lowHpRage.threshold)) gain *= perks.lowHpRage.gain;
-    if (perks.yokaiRage && this.transformed > 0) gain *= perks.yokaiRage;
-    const before = this.rage;
-    this.rage = Math.min(this.cfg.rageMax, this.rage + gain);
-    return this.rage - before;
+  /**
+   * La rage n'existe plus depuis la 0.9.0 : la jauge reste vide, pour que les talents et objets qui s'en servaient
+   * (foudre à rage pleine, Peau du lion…) restent inertes en attendant leur refonte (docs/objets-inertes-0.9.md).
+   */
+  gainRage(_amount: number): number {
+    return 0;
   }
 
   /** Un ennemi vient de tomber sous nos coups. */
