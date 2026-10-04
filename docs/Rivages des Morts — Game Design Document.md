@@ -753,7 +753,7 @@ Le jeu tourne dans le navigateur avec **Babylon.js** (JavaScript/TypeScript), po
     | Images où le héros de l'invité reste figé en marchant | 67 % | 0 % |
     | Débit de l'hôte vers un invité | ~41 Ko/s | ~15 Ko/s |
 
-  - **Plus tard** : prédire aussi l'esquive, accepter une parade un peu tardive à cause du décalage, se reconnecter après une coupure, un relais TURN pour les réseaux qui bloquent le WebRTC, et l'île partagée.
+  - **Plus tard** : prédire aussi l'esquive, accepter une parade un peu tardive à cause du décalage, se reconnecter après une coupure, un relais TURN pour les réseaux qui bloquent le WebRTC, et l'île partagée. Pour la version finie : une version bureau sur Steam, dont le réseau relaie les parties (étude dans [version-steam.md](version-steam.md)).
 - **Cibles** : navigateurs desktop en priorité, mobile à évaluer.
 
 ### Créer la zone d'exploration du Yomi
@@ -797,6 +797,7 @@ La V1 est une tranche jouable complète mais petite : une île, un donjon, cinq 
 | Progression | XP, niveau max 10, arbre de compétences réduit pour les 5 classes | Niveau 20 puis 50, arbre de mémoire, niveaux d'invocation |
 | Ressources | Oboles, matériaux du Yomi | Éclats de mémoire, Éclats des Tablettes |
 | Multi | Aucun | Coop PvE, puis PvP éventuel |
+| Distribution | Navigateur | Version bureau (Electron) sur Steam : voir [version-steam.md](version-steam.md) |
 
 Le niveau max de la V1 (10) est une proposition, à ajuster selon la durée de jeu réelle.
 
