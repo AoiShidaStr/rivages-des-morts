@@ -11,6 +11,8 @@ Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game vi
 | `npm run poses -- <planche>` | une planche de poses clés (Nano Banana 2) | `poses/<planche>/pose-<n>.png`, une pose par image carrée | voir [Prompts des héros](Prompts%20h%C3%A9ros.md) |
 | `npm run kit-heros` | `~/Pictures/game visual/heros/<race>-<classe>/profil.jpg`, `face.jpg` | un dossier par animation : la pose à joindre et le prompt | `tools/prompts-heros.mjs` |
 
+> **Essai en cours :** pour les héros, une piste de squelette 2D à pièces séparées (équipement visible, genre) pourrait remplacer ces planches complètes. Voir la [section 11 de la Charte 2D](Charte%202D.md#11-héros-modulaire-paper-doll-piste-en-essai). Les ennemis et les boss restent en planches.
+
 On peut ne traiter qu'une entrée : `npm run sprites -- decor/ema`, `npm run planches -- heros`.
 
 ## Planches d'animation

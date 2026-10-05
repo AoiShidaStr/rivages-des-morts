@@ -4,6 +4,8 @@ Charte de la refonte graphique : **toutes les animations sont dessinées en 2D p
 
 Ce que la charte 3D garde comme valeur : la lumière froide, la règle « rouge = danger ennemi », l'anneau clair sous les héros, les hauteurs relatives des créatures (hitodama 0,6 m, kappa 1,3 m, héros 1,8 m…). Tout cela est reproduit ici ou dans le jeu, pas dans les planches.
 
+**Piste en essai (octobre 2026) : le héros modulaire.** Les planches image par image (sections 1 à 10) restent la référence pour les ennemis et les boss. Pour les héros, on essaie un squelette 2D dont chaque pièce porte l'équipement visible : voir la [section 11](#11-héros-modulaire-paper-doll-piste-en-essai). Les lots de héros (section 9) attendent le résultat de cet essai.
+
 **Le GDD d'origine prime.** Le jeu est un archipel d'au-delà (Yomi, Hadès, Duat, Helheim, puis la Mésopotamie) : les personnages ne sont pas « du Yomi ». Seuls les yokai et les boss du Yomi le sont. Les héros, eux, doivent rester cohérents sur toutes les îles : **la race fixe le corps et la culture du vêtement, la classe fixe seulement le rôle, la posture, la silhouette, la couleur d'accent et l'arme** (voir 2).
 
 ## 1. Rendu : peint, contour encre, deux tons
@@ -114,7 +116,7 @@ Les tenues propres à chaque race multiplient par 4 le nombre de planches de hé
 | --- | --- | --- | --- |
 | ~~1. Izanami~~ **fait** | les deux formes du boss (voilée, vrai visage) et le pêcher de son arène (2 états) : dans le jeu depuis octobre 2026 | [`01-izanami.md`](prompts-2d/01-izanami.md) | 18 |
 | ~~2. Yokai du Palais~~ **fait** | shikome, ikazuchi, ikusa : dans le jeu depuis octobre 2026 | [`02-yokai-du-palais.md`](prompts-2d/02-yokai-du-palais.md) | 23 |
-| **3. Héros du Yomi** | les 5 classes avec la race Hanyō (tenues japonaises), 8 animations de profil. Commencer par le Guerrier | `03-heros-<classe>.md` | 45 (9 par classe) |
+| **3. Héros du Yomi** *(en attente de l'essai de la [section 11](#11-héros-modulaire-paper-doll-piste-en-essai))* | les 5 classes avec la race Hanyō (tenues japonaises), 8 animations de profil. Commencer par le Guerrier. Si le héros modulaire est retenu, ce lot devient « pièces du corps et de l'équipement » au lieu de planches complètes | `03-heros-<classe>.md` | 45 (9 par classe) |
 | 4. Yokai des Rizières | hitodama, kodama, kappa, kappa renforcé, kasa-obake, Oublié, petite araignée : déjà peints, à refaire pour l'harmonie | [`04-yokai-des-rizieres.md`](prompts-2d/04-yokai-des-rizieres.md) | 53 |
 | 5. Jorōgumo | le premier boss, déjà peint, à refaire avec Izanami comme référence | [`05-jorogumo.md`](prompts-2d/05-jorogumo.md) | 16 |
 
@@ -129,7 +131,81 @@ Tant que les autres races ne sont pas faites, leurs héros doivent afficher, dan
 ## 10. Points d'attention
 
 - **Mémoire vidéo** : une planche de 16 images de 256 × 256 pèse environ 4 Mo décompressée, soit une trentaine de Mo pour les 8 animations de profil d'un héros. Le chargement à la demande des héros (`setHero`) reste utile quand la face et le dos arriveront.
+- **Poids du jeu (à traiter plus tard)** : en octobre 2026, `public/sprites/anim/` pèse 76 Mo, dont **46 Mo pour les 20 planches de héros** (une par race et par classe, jusqu'à 5,5 Mo chacune). Alléger le jeu n'est pas dans le périmètre de l'essai de la section 11, mais le héros modulaire y contribue : un squelette et quelques dizaines de pièces remplaceraient ces 20 planches. À chiffrer une fois l'essai fait.
 - **Cohérence** : sur 16 images, Nano Banana dérive moins que sur 32, mais peut encore changer la taille de la tête ou déplacer l'arme. Si une planche dérive, relancer avec la même fiche.
 - **Test d'abord** (pour chaque nouveau personnage) : générer **une fiche et une planche** et les regarder avant d'en faire d'autres. Ce premier test règle les prompts, et vérifie que Gemini rend bien une image carrée de 1 024 px.
 - **Import** : `npm run planches` gère déjà la grille 4 × 4 (`layout`), la ligne de base et l'échelle commune (`refHeight`). Restent à faire : le fond magenta de l'Oublié, et le repli des autres races sur la série du Yomi.
 - **PNJ** (Charon, le moine, Obaa-Kiku, Tanuki, Tetsu, Yuki) : pas encore couverts ; même principe, une fiche et une attente suffisent en général.
+
+## 11. Héros modulaire (« paper doll ») : piste en essai
+
+Décision du 5 octobre 2026. Une charte technique proposait de refaire le jeu sous Godot 4 avec des personnages à squelette 2D. On **garde TypeScript et Babylon.js** (17 800 lignes de règles, de réseau et de rendu, dont la coop, qu'il aurait fallu réécrire) et on **reprend seulement l'idée du squelette**, dans le rendu actuel.
+
+### Pourquoi
+
+Aujourd'hui, un héros est une planche d'images complètes (section 4), une par race et par classe : 20 planches, sans rien qui montre l'équipement porté ni le genre du personnage. Un héros modulaire apporte :
+
+1. **L'équipement visible** : changer de casque, de plastron, de jambières, de bottes ou d'arme change ce qu'on voit à l'écran. C'est le gain que le joueur remarque le plus.
+2. **Le genre au choix** (homme ou femme), sans effet sur le jeu.
+3. **Plus de postures sans redessiner** : une nouvelle posture est une suite de poses de squelette, pas une planche de 16 images. Le Sorcier, qui emprunte toujours les planches de l'Invocateur (`BORROWED` dans `src/render/heroes.ts`), en profiterait.
+4. **Moins de poids**, plus tard (voir la section 10).
+
+### Ce qui ne change pas
+
+- La **caméra orthographique**, le sol projeté, l'ombre, l'anneau sous les héros, le miroir pour regarder à gauche, les effets du jeu, et la règle « aucun effet dessiné dans les images ».
+- Les **proportions** (3 têtes de haut, section 3), le fond gris uni et le détourage (section 5), la vue de profil d'abord (section 6).
+- Les **ennemis et les boss** : ils restent en planches de 16 images.
+- Le **moteur** : le squelette est un groupe de plans Babylon, pas un nouveau moteur.
+
+### Principe
+
+- **Un squelette unique** pour tous les héros, de **quinze pièces environ** en vue de profil : tête, cheveux ou casque, buste, bassin, bras et avant-bras de chaque côté, cuisse et jambe de chaque côté, pieds, arme. (La charte Godot parlait de 18 à 24 os : de profil, moins suffisent.)
+- Chaque pièce est une **image détourée** sur son propre plan, avec son pivot à l'articulation (épaule, coude, hanche, genou). Un ordre de profondeur fixe place les pièces les unes devant les autres.
+- Les **animations sont des données** : pour chaque posture du jeu (`idle`, `move`, `windup`, `strike`, `guard`, `dash`, `channel`), des poses clés (position et rotation de chaque pièce) que le jeu interpole. Le jeu choisit toujours la posture d'après l'état du héros, comme avec les planches.
+- Chaque pièce utilise le **même shader `sprite`** que les autres images (`tint`, `flash`, `alpha`, `flipX`) : le jeu règle ces valeurs sur toutes les pièces du héros. Le miroir vers la gauche retourne le groupe entier.
+- Au plus trois héros sont à l'écran, soit une cinquantaine de plans : le coût de rendu est négligeable.
+
+### Équipement visible
+
+Sept emplacements (GDD), dont cinq se voient :
+
+| Emplacement | Pièce du squelette qu'il remplace |
+| --- | --- |
+| Arme | l'arme tenue en main (et le bouclier du Paladin, l'arc du Rôdeur) |
+| Casque | la couche casque ou cheveux de la tête |
+| Plastron | le buste (et les bras si l'objet a des manches) |
+| Jambières | les cuisses et les jambes |
+| Bottes | les pieds |
+| Amulette, relique | non visibles pour l'instant (un petit accessoire plus tard, si l'on veut) |
+
+Un objet visible porte donc, dans `items.json`, le nom de ses images de pièces. Un objet sans image garde la pièce d'origine de la race. (La charte Godot ajoutait un emplacement « épaulières » : il n'existe pas dans le GDD, on ne l'ajoute pas.)
+
+### Questions ouvertes
+
+À trancher grâce à l'essai, pas avant :
+
+- **L'équipement dépend-il de la race ?** Les corps diffèrent (Einherjar massif, Oushebti raide, Demi-dieu, Hanyō) : un même plastron peut ne pas aller à tous. Hypothèse de départ : **un gabarit de corps commun**, avec la race portée par la tête, la peau et les détails, et un équipement dessiné une seule fois.
+- **Le genre** change-t-il seulement la tête, le buste et le bassin, ou aussi la tenue d'origine ?
+- **La coop** : il faudra envoyer aux invités le genre et les objets visibles de chaque héros (nouveaux champs de `HeroView`, avec un nouveau numéro de `PROTOCOL`, comme pour `barrier`). Le genre se range aussi dans `Hero` (`src/game/progress.ts`) et se choisit à la création du personnage.
+- **La mort** : la dissolution en encre doit s'appliquer à toutes les pièces à la fois.
+
+### Essai : un seul héros
+
+On ne refait pas les 20 héros avant de savoir si cela tient. Essai sur l'**Einherjar guerrier** (c'est le héros de départ, `heros`), de profil seulement :
+
+1. **Fiche de pièces** : Nano Banana 2 dessine le héros, puis ses pièces séparées sur fond gris uni (une image de pièces, chacune bien écartée des autres). Plusieurs essais, on garde les pièces qui s'assemblent le mieux.
+2. **Détourage par pièce** : une extension de `npm run planches` ou de `tools/detourer.mjs` qui découpe chaque pièce et note son pivot.
+3. **`ModularHero`** dans `src/render/` : le groupe de plans, les poses clés et l'équipement. Activé par `?modulaire=1`, comme `?pixel=1`, pour comparer avec la planche actuelle sans rien casser.
+4. **Quatre postures** : attente, déplacement, coup, garde.
+5. **Deux objets interchangeables** : un casque et une arme, pour voir l'équipement changer.
+6. **Comparaison côte à côte** avec la planche actuelle, en jeu, à l'échelle réelle (héros d'environ 200 px).
+
+**Il est réussi si :** à l'échelle du jeu, les articulations ne se voient pas ou ne gênent pas ; les pièces gardent le même style d'une génération à l'autre ; changer un objet se voit sans retouche ; et la fluidité est au moins celle des planches.
+
+**Si l'essai échoue**, le repli le plus simple : garder les planches actuelles et y **superposer l'arme et le casque**, en notant pour chaque image la position de la tête et de la main (un petit fichier de points d'ancrage par planche). On obtient l'équipement visible, mais pas le genre ni les postures sans redessiner.
+
+### Hors périmètre pour l'instant
+
+- **Alléger le jeu** : « on verra plus tard » (section 10).
+- Les vues de face et de dos, les autres races (leurs corps et leurs tenues), les PNJ.
+- La migration vers Godot : écartée, voir plus haut.
