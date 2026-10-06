@@ -1,0 +1,71 @@
+{
+ "frames": [
+  {
+   "filename": "flight 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 200,
+    "h": 200
+   },
+   "duration": 55
+  },
+  {
+   "filename": "flight 1",
+   "frame": {
+    "x": 200,
+    "y": 0,
+    "w": 200,
+    "h": 200
+   },
+   "duration": 55
+  },
+  {
+   "filename": "flight 2",
+   "frame": {
+    "x": 400,
+    "y": 0,
+    "w": 200,
+    "h": 200
+   },
+   "duration": 55
+  },
+  {
+   "filename": "flight 3",
+   "frame": {
+    "x": 600,
+    "y": 0,
+    "w": 200,
+    "h": 200
+   },
+   "duration": 55
+  },
+  {
+   "filename": "flight 4",
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 200,
+    "h": 200
+   },
+   "duration": 55
+  }
+ ],
+ "meta": {
+  "app": "Rivages des morts asset effects",
+  "image": "projectile-rodeur-charge.webp",
+  "size": {
+   "w": 1000,
+   "h": 200
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "flight",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   }
+  ]
+ }
+}

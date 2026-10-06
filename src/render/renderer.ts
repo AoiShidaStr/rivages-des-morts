@@ -327,7 +327,7 @@ export class Renderer {
   private readonly blasts = new Map<number, Fx>();
   private readonly embers = new Map<number, Fx>();
   /** Flèches, marteau et boules de feu en vol. */
-  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number }>();
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
@@ -829,17 +829,36 @@ export class Renderer {
       if (!view) {
         const hammer = p.kind === 'hammer';
         const fire = p.kind === 'fireball';
-        const texture = hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : fire ? this.fxTextures.shadow : this.fxTextures.arrow;
-        const [width, depth] = hammer ? [1.2, 1.2] : p.kind === 'net' ? [0.8, 0.8] : fire ? [0.75, 0.75] : [1.1, 0.22];
-        const color = fire ? FIRE : p.full ? DRAW : WHITE;
-        view = this.createDecal(`projectile-${p.id}`, texture, width * (p.full ? 1.3 : 1), depth, color, 1, PROJECTILE_HEIGHT);
+        const arrow = p.kind === 'arrow';
+        const fxName = fire ? 'fxFireballSorcier' : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : '';
+        const effect = fxName ? this.sprites.get(fxName) : undefined;
+        const texture = effect?.texture ?? (hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : fire ? this.fxTextures.shadow : this.fxTextures.arrow);
+        const [width, depth] = hammer
+          ? [1.2, 1.2]
+          : p.kind === 'net'
+            ? [0.8, 0.8]
+            : fire
+              ? [1.4, 0.8]
+              : arrow
+                ? (p.full ? [1.65, 0.85] : [1.25, 0.62])
+                : [1.1, 0.22];
+        const color = effect ? WHITE : fire ? FIRE : p.full ? DRAW : WHITE;
+        view = {
+          ...this.createDecal(`projectile-${p.id}`, texture, width, depth, color, 1, PROJECTILE_HEIGHT),
+          anim: effect?.anim,
+          animTime: 0,
+        };
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
       }
       view.mesh.position.x = p.pos.x;
       view.mesh.position.z = p.pos.z;
-      // Le marteau et le filet tournoient ; la flèche suit sa course.
-      if (p.kind === 'arrow') view.mesh.rotation.y = -angleOf(p.dir);
+      if (view.anim) {
+        view.animTime += dt;
+        showFrame(view.material, view.anim, frameAt(view.anim, 'flight', view.animTime));
+      }
+      // Le marteau et le filet tournoient ; les projectiles dirigés suivent leur course.
+      if (p.kind === 'arrow' || p.kind === 'fireball') view.mesh.rotation.y = -angleOf(p.dir);
       else view.mesh.rotation.y += dt * (p.kind === 'hammer' ? 18 : 6);
     }
     for (const [id, view] of this.projectiles) {
@@ -1473,6 +1492,24 @@ export class Renderer {
       case 'blastEnd': {
         this.endTracked(this.blasts, event.id);
         const meteor = event.kind === 'meteor';
+        const wrath = meteor ? this.sprites.get('fxFireWrathSorcier') : undefined;
+        if (wrath?.anim) {
+          const life = 0.4;
+          this.addFx({
+            texture: wrath.texture,
+            pos: event.pos,
+            dir: { x: 1, z: 0 },
+            width: event.radius * 2.2,
+            depth: event.radius * 2.2,
+            color: WHITE,
+            life,
+            y: 0.035,
+            update: (k, fx) => {
+              showFrame(fx.material, wrath.anim!, frameAt(wrath.anim!, 'wrath', k * life));
+              fx.material.setFloat('alpha', 0.95 * (1 - k));
+            },
+          });
+        }
         this.addFx(this.ringFx(event.pos, event.radius * 2.2, FIRE, meteor ? 0.6 : 0.35));
         this.addFx(this.ringFx(event.pos, event.radius * (meteor ? 2.8 : 1.6), meteor ? DUST : SEAL, meteor ? 0.7 : 0.3));
         this.addShake(meteor ? 0.9 : 0.25);

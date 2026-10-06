@@ -1,5 +1,9 @@
 {
   "heros": { "file": "heros.png", "sheet": { "file": "anim/heros.json" }, "height": 1.75, "facesRight": true },
+  "fxFireballSorcier": { "file": null, "sheet": { "file": "fx/fireball-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxFireWrathSorcier": { "file": null, "sheet": { "file": "fx/fire-wrath-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxProjectileRodeur": { "file": null, "sheet": { "file": "fx/projectile-rodeur.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxProjectileRodeurCharge": { "file": null, "sheet": { "file": "fx/projectile-rodeur-charge.json", "height": 1 }, "height": 1, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "sheet": { "file": "anim/hitodama.json" }, "height": 0.9, "facesRight": false, "lift": 0.45 },
   "kodama": { "file": "kodama.png", "sheet": { "file": "anim/kodama.json" }, "height": 1.15, "facesRight": true, "lift": 0.15 },
   "kappa": { "file": "kappa.png", "sheet": { "file": "anim/kappa.json" }, "height": 1.45, "facesRight": true },
