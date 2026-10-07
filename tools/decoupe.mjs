@@ -29,7 +29,7 @@ export function eraseBoxes(alpha, w, h, boxes) {
  * ces quelques pixels restent collés au personnage. `vertical: false` épargne les traits verticaux
  * (pattes d'araignée, bâtons) quand seule la ligne de sol est à effacer.
  */
-export function eraseLines(alpha, w, h, { thickness, length = 0.1, vertical = true } = {}) {
+export function eraseLines(alpha, w, h, { thickness, length = 0.1, verticalLength = length, vertical = true } = {}) {
   const thin = thickness ?? Math.max(3, Math.round(Math.min(w, h) * 0.008));
   const erase = new Uint8Array(w * h);
   // Épaisseur du sujet en chaque pixel, en travers du trait cherché.
@@ -55,7 +55,8 @@ export function eraseLines(alpha, w, h, { thickness, length = 0.1, vertical = tr
     const thickness = across(horizontal);
     const lines = horizontal ? h : w;
     const len = horizontal ? w : h;
-    const min = Math.round(length * len);
+    // `verticalLength` : seuil propre aux traits verticaux (une corde d’arc est verticale, fine et assez longue).
+    const min = Math.round((horizontal ? length : verticalLength) * len);
     const at = (line, k) => (horizontal ? line * w + k : k * w + line);
     for (let line = 0; line < lines; line++) {
       let start = -1;

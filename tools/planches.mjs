@@ -34,10 +34,16 @@ const only = args;
 const MAX_SHEET_WIDTH = 4096;
 /** Marge transparente autour de chaque case, contre les débordements du filtrage. */
 const CELL_PADDING = 8;
+/** Images déjà découpées, par source et réglages de découpe. */
+const splitCache = new Map();
 
 await mkdir(outDir, { recursive: true });
-for (const planche of [...config.planches, ...(await heroPlanches(sourceDir))]) {
-  if (only.length > 0 && !only.includes(planche.name)) continue;
+// Un héros décrit dans tools/planches.json (planche complète) l'emporte sur ses anciennes planches du kit.
+const configured = new Set(config.planches.map((p) => p.name));
+const heroes = (await heroPlanches(sourceDir)).filter((p) => !configured.has(p.name));
+for (const entry of [...config.planches, ...heroes]) {
+  if (only.length > 0 && !only.includes(entry.name)) continue;
+  const planche = entry.rows ? await expandRows(entry) : entry;
   const frames = [];
   const tags = [];
   let missing = false;
@@ -49,7 +55,7 @@ for (const planche of [...config.planches, ...(await heroPlanches(sourceDir))]) 
       continue;
     }
     const options = { ...config.defaults, ...planche, ...anim };
-    const found = await splitFrames(input, options);
+    const found = await split(input, options);
     // `part` : la première ou la seconde moitié des images (élan puis coup d'une même planche d'attaque).
     const half = Math.floor(found.length / 2);
     const all = anim.part === 'first' ? found.slice(0, half) : anim.part === 'second' ? found.slice(half) : found;
@@ -66,6 +72,46 @@ for (const planche of [...config.planches, ...(await heroPlanches(sourceDir))]) 
   }
   if (missing && frames.length === 0) continue;
   await writeSheet(planche, frames, tags);
+}
+
+/** Découpe une image une seule fois, même quand plusieurs animations y puisent (planches complètes). */
+function split(input, options) {
+  const keys = ['layout', 'count', 'crop', 'erase', 'eraseLines', 'tolerance', 'localTolerance', 'maxSaturation', 'minPartRatio', 'fillHoles', 'minHole', 'keyColor'];
+  const key = input + JSON.stringify(keys.map((k) => options[k]));
+  if (!splitCache.has(key)) splitCache.set(key, splitFrames(input, options));
+  return splitCache.get(key);
+}
+
+/**
+ * Planche complète (`rows`) : toutes les animations d'un personnage sur une seule image, une ligne par animation
+ * (`layout` : nombre d'images de chaque ligne). Chaque entrée de `rows` devient une animation : la ligne `row`,
+ * ou seulement ses images `frames` (comptées dans la ligne). Une entrée peut prendre une autre image (`source`,
+ * `layout`), par exemple une ligne refaite à part. L'échelle commune vient du personnage debout : la plus grande
+ * image de la ligne `refRow` (l'attente par défaut), ou l'image `ref` de la ligne pour une autre source.
+ * `bodyHeight` vaut par défaut cette hauteur debout : la planche garde la résolution de la source.
+ */
+async function expandRows(planche) {
+  const offset = (layout, row) => layout.slice(0, row).reduce((a, b) => a + b, 0);
+  const options = { ...config.defaults, ...planche };
+  const main = await split(path.join(sourceDir, planche.source), options);
+  const refRow = planche.refRow ?? 0;
+  const start = offset(planche.layout, refRow);
+  const standing = Math.max(...main.slice(start, start + planche.layout[refRow]).map((f) => f.bodyHeight));
+  const animations = [];
+  for (const r of planche.rows) {
+    const layout = r.layout ?? planche.layout;
+    const row = r.row ?? 0;
+    const first = offset(layout, row);
+    const indices = (r.frames ?? [...Array(layout[row]).keys()]).map((i) => first + i);
+    let refHeight = standing;
+    if (r.source) {
+      const own = await split(path.join(sourceDir, r.source), { ...options, ...r, layout });
+      refHeight = own[first + (r.ref ?? 0)].bodyHeight;
+    }
+    const { row: _row, ref: _ref, ...rest } = r;
+    animations.push({ ...rest, source: r.source ?? planche.source, layout, frames: indices, refHeight });
+  }
+  return { ...planche, bodyHeight: planche.bodyHeight ?? Math.round(standing), animations };
 }
 
 async function writeSheet(planche, frames, tags) {

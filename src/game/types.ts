@@ -23,6 +23,9 @@ export type Outcome = 'victory' | 'defeat';
 /** Posture affichée : le rendu s'en sert pour animer les sprites (écrasement, tremblement, teinte). */
 export type Pose = 'idle' | 'move' | 'windup' | 'channel' | 'strike' | 'guard' | 'dash' | 'airborne' | 'stunned';
 
+/** Animations des planches complètes des héros, en plus des postures : compétence, ultime, recul après un coup. */
+export type ArtPose = 'skill' | 'ultimate' | 'hurt';
+
 /** Commandes du joueur pour un pas de simulation, déjà converties dans le repère du monde. */
 export interface InputFrame {
   /** Direction de déplacement au sol, de longueur 0 à 1. */

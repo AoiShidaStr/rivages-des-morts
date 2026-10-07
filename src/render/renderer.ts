@@ -22,7 +22,7 @@ import {
 import type { DungeonStyle } from '../content';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
-import type { PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
+import type { HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
@@ -107,6 +107,11 @@ interface Snapshot {
   downed?: boolean;
   /** Regard d'Izanami (de 0 à 1) : plus on la regarde, plus elle rougeoie. */
   glare?: number;
+  /**
+   * Animations dessinées à essayer avant la posture (planches complètes des héros) : la mort, une compétence,
+   * l'ultime ou le recul. La planche qui ne les a pas retombe sur la posture.
+   */
+  art?: readonly string[];
 }
 
 interface SpriteEntry {
@@ -166,6 +171,12 @@ const PLAYER_ID = 0;
 /** Coop : les vues des alliés prennent ces identifiants (et en dessous), loin de ceux des ennemis et des effets. */
 const ALLY_ID = -1_000_000_000;
 /** Posture de repli quand une planche n'a pas d'animation pour la posture demandée. */
+/** Animations dessinées du héros à préférer à sa posture : la mort, puis une compétence, l'ultime ou le recul. */
+function heroArt(hero: HeroView): readonly string[] {
+  if (hero.dead) return ['death'];
+  return hero.artPose ? [hero.artPose] : [];
+}
+
 const FALLBACK_POSE: Partial<Record<Pose, Pose>> = {
   dash: 'move',
   airborne: 'move',
@@ -513,6 +524,7 @@ export class Renderer {
       facing: player.facing,
       radius: player.radius,
       pose: player.dead ? 'stunned' : player.pose,
+      art: heroArt(player),
       altitude: player.altitude,
       spawn: 1,
       blink: player.invulnerable > 0 && player.pose !== 'dash' && !player.dead,
@@ -624,7 +636,7 @@ export class Renderer {
     // Une planche animée joue l'animation de la posture ; sinon, une seule image que l'on anime
     // par l'écrasement, le tremblement et la teinte.
     const anim = this.sprites.get(spriteName)?.anim;
-    if (anim) this.playSheet(view, anim, s.pose, dt);
+    if (anim) this.playSheet(view, anim, s.pose, dt, s.art);
     const t = this.time + view.phase;
     let sx = 1;
     let sy = 1;
@@ -694,7 +706,8 @@ export class Renderer {
       tint = HIDDEN_TINT;
       alpha *= 0.3;
     }
-    if (s.downed) {
+    // À terre : grisé et couché, sauf si la planche dessine la chute (animation « death »).
+    if (s.downed && view.animTag !== 'death') {
       tint = HIDDEN_TINT;
       alpha *= 0.6;
       sx *= 1.25;
@@ -756,9 +769,10 @@ export class Renderer {
   }
 
   /** Choisit l'image de la planche pour la posture en cours. */
-  private playSheet(view: EntityView, anim: SheetAnimation, pose: Pose, dt: number): void {
-    // Une posture sans animation dessinée retombe sur la plus proche, puis sur l'attente.
-    const tagName = [pose, FALLBACK_POSE[pose], 'idle'].find((name) => name && anim.tags.has(name)) ?? '';
+  private playSheet(view: EntityView, anim: SheetAnimation, pose: Pose, dt: number, art: readonly string[] = []): void {
+    // Une animation dessinée propre (mort, compétence…) d'abord ; une posture sans animation retombe sur la plus
+    // proche, puis sur l'attente.
+    const tagName = [...art, pose, FALLBACK_POSE[pose], 'idle'].find((name) => name && anim.tags.has(name)) ?? '';
     if (tagName !== view.animTag) {
       view.animTag = tagName;
       view.animTime = 0;
@@ -884,6 +898,7 @@ export class Renderer {
         facing: hero.facing,
         radius: hero.radius,
         pose: hero.dead ? 'stunned' : hero.pose,
+        art: heroArt(hero),
         altitude: hero.altitude,
         spawn: 1,
         blink: hero.invulnerable > 0 && hero.pose !== 'dash' && !hero.dead,

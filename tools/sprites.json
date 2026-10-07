@@ -47,6 +47,13 @@
     { "name": "heros-demi-dieu", "source": "heros_demi-dieu.jpg" },
     { "name": "heros-hanyo", "source": "heros_hanyo.jpg" },
     { "name": "pecher", "source": "2d/boss-2D/pecher.jpg" },
-    { "name": "pecher-nu", "source": "2d/boss-2D/pecher-nu.jpg" }
+    { "name": "pecher-nu", "source": "2d/boss-2D/pecher-nu.jpg" },
+    { "name": "heros-hanyo-rodeur", "source": "2d/hanyo-2D/hanyo-rodeur-reference.jpg" },
+    { "name": "heros-hanyo-sorcier", "source": "2d/hanyo-2D/hanyo-sorcier-reference.jpg" },
+    { "name": "heros-demi-dieu-guerrier", "source": "2d/demi-dieu-2D/demi-dieu-guerrier-reference.jpg" },
+    { "name": "heros-demi-dieu-lame", "source": "2d/demi-dieu-2D/demi-dieu-lame-reference.jpg" },
+    { "name": "heros-demi-dieu-paladin", "source": "2d/demi-dieu-2D/demi-dieu-paladin-reference.jpg" },
+    { "name": "heros-demi-dieu-rodeur", "source": "2d/demi-dieu-2D/demi-dieu-rodeur-reference.jpg" },
+    { "name": "heros-demi-dieu-sorcier", "source": "2d/demi-dieu-2D/demi-dieu-sorcier-reference.jpg" }
   ]
 }

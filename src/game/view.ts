@@ -2,7 +2,7 @@
 // World lui-même ; chez un invité, c'est une copie reconstruite à partir des instantanés de l'hôte (src/net).
 import type { PlayerConfig } from './config';
 import type { Vec2 } from './math';
-import type { EnemyKind, MarkKind, Pose } from './types';
+import type { ArtPose, EnemyKind, MarkKind, Pose } from './types';
 
 /** Un héros, tel que l'affichage le voit : où il est, ce qu'il fait, ses PV et ses recharges. */
 export interface HeroView {
@@ -12,6 +12,11 @@ export interface HeroView {
   readonly facing: Vec2;
   readonly radius: number;
   readonly pose: Pose;
+  /**
+   * Animation dessinée à préférer à la posture quand la planche l’a (planches complètes) : « skill », « ultimate »
+   * ou « hurt ». Absente chez un invité en coop : la posture suffit.
+   */
+  readonly artPose?: ArtPose | null;
   readonly altitude: number;
   readonly hp: number;
   readonly dead: boolean;

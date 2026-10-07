@@ -8,14 +8,16 @@ import type { SpriteDef, SpriteManifest } from './renderer';
 const ORIGINAL = { race: 'einherjar', class: 'guerrier' };
 /**
  * Classes qui portent encore les planches d'une autre : le Sorcier garde l'onmyōji de l'Invocateur, en attendant
- * les siennes (prompts dans docs/Prompts héros.md).
+ * les siennes, sauf pour les races qui ont déjà leur planche complète (`OWN`).
  */
 const BORROWED: Record<string, string> = { sorcier: 'invocateur' };
+const OWN: Record<string, readonly string[]> = { sorcier: ['hanyo', 'demi-dieu'] };
 
 /** Nom du sprite du héros selon sa race et sa classe. */
 export function heroSprite(hero: Hero): string {
   const race = hero.race || ORIGINAL.race;
-  const cls = BORROWED[hero.class] ?? (hero.class || ORIGINAL.class);
+  const own = OWN[hero.class]?.includes(race);
+  const cls = (!own && BORROWED[hero.class]) || hero.class || ORIGINAL.class;
   return race === ORIGINAL.race && cls === ORIGINAL.class ? 'heros' : `heros-${race}-${cls}`;
 }
 

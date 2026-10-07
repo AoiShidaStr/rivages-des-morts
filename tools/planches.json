@@ -250,6 +250,125 @@
         { "tag": "strike", "source": "2d/enemies-2D/guerrier-du-yomi-strike.jpg", "layout": [4, 4, 4, 4], "frames": [2, 3, 4, 5, 6, 7], "refHeight": 251, "duration": 25, "once": true },
         { "tag": "stunned", "source": "2d/enemies-2D/guerrier-du-yomi-hit.jpg", "layout": [4, 4, 4, 4], "refHeight": 251, "duration": 90 }
       ]
+    },
+    {
+      "name": "heros-demi-dieu-guerrier",
+      "source": "2d/demi-dieu-2D/demi-dieu-guerrier-planchecomplete.jpg",
+      "layout": [8, 8, 8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "skill", "row": 3, "duration": 70, "once": true },
+        { "tag": "airborne", "row": 3, "frames": [1, 2, 3, 4, 5], "duration": 60, "once": true },
+        { "tag": "hurt", "row": 4, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
+        { "tag": "death", "row": 4, "frames": [4, 5, 6, 7], "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 5, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-demi-dieu-lame",
+      "source": "2d/demi-dieu-2D/demi-dieu-lame-planchecomplete.jpg",
+      "layout": [10, 10, 10, 9, 10, 10],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7, 8, 9], "duration": 45, "once": true },
+        { "tag": "dash", "row": 3, "frames": [0, 1, 2, 4, 5], "duration": 45, "once": true },
+        { "tag": "skill", "row": 3, "frames": [0, 1, 2, 4, 5, 6, 7, 8], "duration": 70, "once": true },
+        { "tag": "hurt", "row": 4, "frames": [0, 1, 2, 3, 4, 5], "duration": 60, "once": true },
+        { "tag": "death", "row": 4, "frames": [6, 7, 8, 9], "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 5, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-demi-dieu-paladin",
+      "source": "2d/demi-dieu-2D/demi-dieu-paladin-planchecomplete.jpg",
+      "layout": [8, 8, 8, 8, 8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "guard", "row": 3, "duration": 70, "once": true },
+        { "tag": "skill", "row": 4, "frames": [0, 1, 2, 4, 5, 6, 7], "duration": 70, "once": true },
+        { "tag": "hurt", "row": 5, "duration": 60, "once": true },
+        { "tag": "death", "row": 6, "frames": [2, 3, 4, 5, 6, 7], "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-demi-dieu-rodeur",
+      "source": "2d/demi-dieu-2D/demi-dieu-rodeur_planchecomplete.jpg",
+      "layout": [8, 8, 8, 8, 8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "channel", "row": 3, "frames": [0, 1, 2, 3, 4], "duration": 70, "once": true },
+        { "tag": "skill", "row": 3, "duration": 70, "once": true },
+        { "tag": "dash", "row": 4, "duration": 45, "once": true },
+        { "tag": "airborne", "row": 4, "frames": [2, 3, 4, 5], "duration": 60, "once": true },
+        { "tag": "hurt", "row": 5, "duration": 60, "once": true },
+        { "tag": "death", "row": 6, "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-demi-dieu-sorcier",
+      "source": "2d/demi-dieu-2D/demi-dieu-sorcier-planchecomplete.jpg",
+      "layout": [12, 12, 12, 12, 12, 12],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2, 3, 4], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [5, 6, 7, 8, 9, 10, 11], "duration": 45, "once": true },
+        { "tag": "dash", "row": 3, "duration": 45, "once": true },
+        { "tag": "hurt", "row": 4, "frames": [0, 1, 2, 3, 4, 5, 6], "duration": 60, "once": true },
+        { "tag": "death", "row": 4, "frames": [7, 8, 9, 10, 11], "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 5, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-hanyo-rodeur",
+      "source": "2d/hanyo-2D/hanyo-rodeur-planchecomplete.jpg",
+      "layout": [8, 8, 8, 8, 8, 8, 8, 8],
+      "eraseLines": { "length": 0.03, "verticalLength": 0.1 },
+      "fillHoles": true,
+      "holeTolerance": 16,
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "channel", "row": 3, "frames": [0, 1, 2, 3, 4], "duration": 70, "once": true },
+        { "tag": "skill", "row": 3, "duration": 70, "once": true },
+        { "tag": "dash", "row": 4, "duration": 45, "once": true },
+        { "tag": "airborne", "row": 4, "frames": [3, 4, 5], "duration": 60, "once": true },
+        { "tag": "hurt", "row": 0, "duration": 60, "once": true, "source": "2d/hanyo-2D/hanyo-rodeur-correctionhurt.jpg", "layout": [8], "eraseLines": false },
+        { "tag": "death", "row": 0, "duration": 110, "once": true, "source": "2d/hanyo-2D/hanyo-rodeur-correctiondeath.jpg", "layout": [6], "eraseLines": false },
+        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-hanyo-sorcier",
+      "source": "2d/hanyo-2D/hanyo-sorcier-planche complète.jpg",
+      "layout": [8, 8, 8, 8, 7, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "guard", "row": 3, "duration": 70, "once": true },
+        { "tag": "skill", "row": 3, "duration": 70, "once": true },
+        { "tag": "dash", "row": 4, "duration": 45, "once": true },
+        { "tag": "hurt", "row": 5, "duration": 60, "once": true },
+        { "tag": "death", "row": 6, "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+      ]
     }
   ]
 }

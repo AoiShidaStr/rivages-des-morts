@@ -1,11 +1,14 @@
 import type { PlayerConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, lerp, normalize, scale, sub, vec, type Vec2 } from './math';
-import type { InputFrame, Pose } from './types';
+import type { ArtPose, InputFrame, Pose } from './types';
 import type { Decoy, World } from './world';
 
 /** Durée pendant laquelle un clic, une esquive ou une compétence reste en mémoire, le temps que le coup en cours le permette. */
 const ATTACK_BUFFER = 0.2;
+/** Affichage : durée du recul dessiné après un coup reçu, et du geste d'une compétence instantanée. */
+const HURT_TIME = 0.32;
+const CAST_TIME = { skill: 0.5, ultimate: 0.7 };
 
 type Action =
   | { kind: 'free' }
@@ -88,6 +91,13 @@ export class Player {
   /** Secondes de Frénésie restantes. */
   frenzy = 0;
   invulnerable = 0;
+  /** Affichage seulement : secondes de recul après un coup reçu (animation « hurt » des planches complètes). */
+  hurt = 0;
+  /**
+   * Affichage seulement : geste d'une compétence instantanée (sans action propre), joué par les planches complètes :
+   * `skill` pour A, E ou la signature, `ultimate` pour R.
+   */
+  cast: { tag: 'skill' | 'ultimate'; t: number } | null = null;
   /** Secondes pendant lesquelles la Coupelle du kappa reste vide après un coup reçu. */
   coupelleEmpty = 0;
   private bearSkinUsed = false;
@@ -259,6 +269,15 @@ export class Player {
     }
   }
 
+  /** Animation dessinée à préférer à la posture : Frappe fracassante, Danse des lames, geste d'une compétence, recul. */
+  get artPose(): ArtPose | null {
+    if (this.action.kind === 'smash') return 'skill';
+    if (this.action.kind === 'dance') return 'ultimate';
+    if (this.cast) return this.cast.tag;
+    if (this.hurt > 0 && this.action.kind === 'free') return 'hurt';
+    return null;
+  }
+
   /** Multiplicateur des dégâts infligés : race, talents, Coupelle du kappa, objets. */
   damageMultiplier(): number {
     const perks = this.cfg.perks ?? {};
@@ -376,6 +395,8 @@ export class Player {
     if (this.barrierTime <= 0) this.barrier = 0;
     this.tickKitCooldowns(dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
+    this.hurt = Math.max(0, this.hurt - dt);
+    if (this.cast && (this.cast.t -= dt) <= 0) this.cast = null;
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
     this.recoverGuard(dt);
     if (input.attackPressed) this.attackBuffer = ATTACK_BUFFER;
@@ -394,7 +415,10 @@ export class Player {
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     const warrior = c.kit === 'guerrier';
     if (warrior) this.updateStance(dt, input, world);
-    if (warrior && input.skillRPressed && this.canFrenzy) this.startFrenzy(world);
+    if (warrior && input.skillRPressed && this.canFrenzy) {
+      this.startFrenzy(world);
+      this.showCast('ultimate');
+    }
     if (buffered.dodge > 0 && this.dodgeCooldown <= 0 && this.canCancel()) {
       buffered.dodge = 0;
       this.startDodge(input, world);
@@ -634,6 +658,7 @@ export class Player {
     this.tyrHand(attacker, amount - taken, world);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
     this.invulnerable = this.cfg.invulnerableAfterHit;
+    this.hurt = HURT_TIME;
     this.knockback = scale(pushDir, knockback);
     if (this.action.kind === 'attack') this.action = { kind: 'free' };
     return true;
@@ -871,6 +896,11 @@ export class Player {
     if (distance(this.pos, target) < 0.1) this.action.t = b.duration * 0.5;
   }
 
+  /** Affichage : le héros fait le geste d'une compétence instantanée (planches complètes). */
+  private showCast(tag: 'skill' | 'ultimate'): void {
+    this.cast = { tag, t: CAST_TIME[tag] };
+  }
+
   // --- Sorcier ---------------------------------------------------------------
 
   /** Sceau (clic droit), Bouclier de flammes (A), Fuite de feu (E), grand météore (R) : chacun coûte du mana. */
@@ -880,10 +910,12 @@ export class Player {
       this.sealCooldown = s.seal.cooldown;
       this.facing = aimDir;
       world.castSeal(input.aimGround);
+      this.showCast('skill');
     }
     if (input.skillAPressed && this.wardCooldown <= 0 && this.spend(s.ward.cost, world)) {
       this.wardCooldown = s.ward.cooldown;
       world.raiseWard();
+      this.showCast('skill');
     }
     if (input.skillEPressed && this.flightCooldown <= 0 && this.canCancel() && this.spend(s.flight.cost, world)) {
       this.flightCooldown = s.flight.cooldown;
@@ -896,6 +928,7 @@ export class Player {
       // Bâton de Susanoo : le météore laisse place à un dôme de feu autour du Sorcier.
       if (this.cfg.perks?.fireDome) world.castDome();
       else world.castMeteor(input.aimGround);
+      this.showCast('ultimate');
     }
   }
 
@@ -1020,13 +1053,17 @@ export class Player {
         if (ward) this.shield(this.cfg.maxHp * ward.amount, ward.duration);
       }
     }
-    if (input.skillAPressed && this.deathMarkCooldown <= 0 && world.deathMark(input.aim)) this.deathMarkCooldown = b.deathMark.cooldown;
+    if (input.skillAPressed && this.deathMarkCooldown <= 0 && world.deathMark(input.aim)) {
+      this.deathMarkCooldown = b.deathMark.cooldown;
+      this.showCast('skill');
+    }
     if (input.skillEPressed && this.smokeCooldown <= 0) {
       world.smokeScreen();
       this.smokeCooldown = b.smoke.cooldown;
       this.hidden = b.smoke.duration;
       this.smokeExtended = 0;
       this.ambushReady = true;
+      this.showCast('skill');
     }
     if (input.skillRPressed && this.danceCooldown <= 0 && this.canCancel()) {
       const targets = world.danceTargets();
@@ -1061,9 +1098,17 @@ export class Player {
     if (input.skillAPressed && this.auraCooldown <= 0) {
       world.startAura();
       this.auraCooldown = p.aura.cooldown;
+      this.showCast('ultimate');
     }
-    if (input.skillEPressed && this.hammerCooldown <= 0 && world.throwHammer(aimDir)) this.hammerCooldown = p.hammer.cooldown;
-    if (input.skillRPressed) world.castAegis(this, input.aim);
+    if (input.skillEPressed && this.hammerCooldown <= 0 && world.throwHammer(aimDir)) {
+      this.hammerCooldown = p.hammer.cooldown;
+      this.showCast('skill');
+    }
+    if (input.skillRPressed) {
+      const before = this.aegisCooldown;
+      world.castAegis(this, input.aim);
+      if (this.aegisCooldown > before) this.showCast('ultimate');
+    }
   }
 
   // --- Rôdeur ----------------------------------------------------------------
@@ -1074,8 +1119,12 @@ export class Player {
     if (input.skillAPressed && this.netCooldown <= 0) {
       world.netArrow(aimDir);
       this.netCooldown = r.net.cooldown;
+      this.showCast('ultimate');
     }
-    if (input.skillEPressed && this.huntCooldown <= 0 && world.huntMark(input.aim)) this.huntCooldown = r.huntMark.cooldown;
+    if (input.skillEPressed && this.huntCooldown <= 0 && world.huntMark(input.aim)) {
+      this.huntCooldown = r.huntMark.cooldown;
+      this.showCast('skill');
+    }
     if (input.skillRPressed && this.leapCooldown <= 0 && this.canCancel()) this.startLeap(aimDir, world);
   }
 
