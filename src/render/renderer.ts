@@ -203,6 +203,8 @@ const SPIRIT = new Color3(0.45, 0.95, 1);
 const RAGE = new Color3(1, 0.6, 0.3);
 const DANGER = new Color3(1, 0.22, 0.16);
 const SLASH = new Color3(1, 0.97, 0.9);
+/** Ouvertures des planches de coups d'arme (public/sprites/fx/slash-<degrés>, `npm run vfx`). */
+const SLASH_ARCS = [120, 150, 180, 200, 360];
 const HEAL = new Color3(0.45, 1, 0.5);
 const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
 const DUST = new Color3(0.86, 0.78, 0.6);
@@ -1189,8 +1191,10 @@ export class Renderer {
   private handle(event: GameEvent): void {
     switch (event.type) {
       case 'swing': {
-        // Estoc : un trait droit devant le héros.
+        // Estoc : une lance de pinceau jaillit devant le héros (planche d'effet), sinon un trait droit.
         if (event.shape === 'line') {
+          const mid = { x: event.pos.x + (event.dir.x * event.range) / 2, z: event.pos.z + (event.dir.z * event.range) / 2 };
+          if (this.sheetFx('fxThrust', 'slash', mid, event.dir, event.range * 1.15, (event.width ?? 0.8) * 1.6, 0.15)) break;
           this.addFx({
             texture: this.fxTextures.streak,
             pos: { x: event.pos.x + (event.dir.x * event.range) / 2, z: event.pos.z + (event.dir.z * event.range) / 2 },
@@ -1206,7 +1210,10 @@ export class Renderer {
           });
           break;
         }
-        // Coup circulaire : un croissant presque fermé tourne autour du héros. Sinon, le croissant de l'arc de l'arme.
+        // Trait de pinceau qui balaie l'arc de l'arme (planche d'effet la plus proche de son ouverture).
+        const drawn = SLASH_ARCS.reduce((best, a) => (Math.abs(a - event.arcDeg) < Math.abs(best - event.arcDeg) ? a : best));
+        if (this.sheetFx(`fxSlash${drawn}`, 'slash', event.pos, event.dir, event.range * 2.1, event.range * 2.1, 0.18)) break;
+        // Repli : un croissant presque fermé tourne autour du héros, ou le croissant de l'arc de l'arme.
         const full = event.arcDeg >= 360;
         const start = -angleOf(event.dir);
         this.addFx({
@@ -1228,6 +1235,11 @@ export class Renderer {
       case 'enemyHit': {
         const view = this.views.get(event.id);
         if (view) view.flash = event.shielded ? 0.35 : 1;
+        if (!event.shielded) {
+          const size = event.crit ? 1.9 : 1.35;
+          const turn = Math.random() * Math.PI * 2;
+          this.sheetFx('fxImpact', 'impact', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, size, size, 0.24, 0.05);
+        }
         if (event.shielded) this.text(event.pos, 1.9, 'Bloqué', 'shield');
         else if (event.crit) this.text(event.pos, 2, `${Math.round(event.amount)} !`, 'crit');
         else this.text(event.pos, 1.7, String(Math.round(event.amount)), 'dmg');
@@ -1643,6 +1655,8 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 1.6, DRAW, 0.25));
         break;
       case 'dodge':
+        this.sheetFx('fxDodge', 'dodge', { x: event.pos.x - event.dir.x * 0.9, z: event.pos.z - event.dir.z * 0.9 }, event.dir, 2.6, 1.3, 0.32);
+        break;
       case 'wave':
       case 'end':
         break;
@@ -1654,6 +1668,31 @@ export class Renderer {
     const fx = tracked.get(id);
     if (fx) fx.life = fx.age;
     tracked.delete(id);
+  }
+
+  /**
+   * Effet dessiné image par image (planche de public/sprites/fx, `npm run vfx`) posé au sol, joué une fois sur
+   * `life` secondes. Renvoie faux si la planche manque : l'appelant garde alors son effet de repli.
+   */
+  private sheetFx(name: string, tag: string, pos: Vec2, dir: Vec2, width: number, depth: number, life: number, y = 0.04): boolean {
+    const sheet = this.sprites.get(name);
+    const anim = sheet?.anim;
+    if (!sheet || !anim) return false;
+    const tagInfo = anim.tags.get(tag);
+    const span = tagInfo ? anim.frames.slice(tagInfo.from, tagInfo.to + 1).reduce((sum, f) => sum + f.duration, 0) : life;
+    this.addFx({
+      texture: sheet.texture,
+      pos,
+      dir,
+      width,
+      depth,
+      color: WHITE,
+      life,
+      y,
+      // La planche est jouée en entier sur la durée de l'effet, quelle que soit la durée de ses images.
+      update: (k, fx) => showFrame(fx.material, anim, frameAt(anim, tag, k * span)),
+    });
+    return true;
   }
 
   private ringFx(pos: Vec2, size: number, color: Color3, life: number): Parameters<Renderer['addFx']>[0] {

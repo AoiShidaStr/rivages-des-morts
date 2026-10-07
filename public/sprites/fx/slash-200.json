@@ -1,100 +1,101 @@
 {
  "frames": [
   {
-   "filename": "flight 0",
+   "filename": "slash 0",
    "frame": {
     "x": 0,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 1",
+   "filename": "slash 1",
    "frame": {
     "x": 256,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 2",
+   "filename": "slash 2",
    "frame": {
     "x": 512,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 3",
+   "filename": "slash 3",
    "frame": {
     "x": 768,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 4",
+   "filename": "slash 4",
    "frame": {
     "x": 1024,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 5",
+   "filename": "slash 5",
    "frame": {
     "x": 1280,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 6",
+   "filename": "slash 6",
    "frame": {
     "x": 1536,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   },
   {
-   "filename": "flight 7",
+   "filename": "slash 7",
    "frame": {
     "x": 1792,
     "y": 0,
     "w": 256,
-    "h": 128
+    "h": 256
    },
-   "duration": 60
+   "duration": 22
   }
  ],
  "meta": {
   "app": "tools/vfx.mjs",
-  "image": "fireball-sorcier.webp",
+  "image": "slash-200.webp",
   "size": {
    "w": 2048,
-   "h": 128
+   "h": 256
   },
   "smooth": true,
   "frameTags": [
    {
-    "name": "flight",
+    "name": "slash",
     "from": 0,
     "to": 7,
-    "direction": "forward"
+    "direction": "forward",
+    "repeat": "1"
    }
   ]
  }

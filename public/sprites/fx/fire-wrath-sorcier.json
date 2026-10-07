@@ -5,65 +5,105 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 512,
+    "h": 512
    },
-   "duration": 80
+   "duration": 45
   },
   {
    "filename": "wrath 1",
    "frame": {
-    "x": 200,
+    "x": 512,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 512,
+    "h": 512
    },
-   "duration": 80
+   "duration": 45
   },
   {
    "filename": "wrath 2",
    "frame": {
-    "x": 400,
+    "x": 1024,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 512,
+    "h": 512
    },
-   "duration": 80
+   "duration": 45
   },
   {
    "filename": "wrath 3",
    "frame": {
-    "x": 600,
+    "x": 1536,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 512,
+    "h": 512
    },
-   "duration": 80
+   "duration": 45
   },
   {
    "filename": "wrath 4",
    "frame": {
-    "x": 800,
+    "x": 2048,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 512,
+    "h": 512
    },
-   "duration": 80
+   "duration": 45
+  },
+  {
+   "filename": "wrath 5",
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 45
+  },
+  {
+   "filename": "wrath 6",
+   "frame": {
+    "x": 3072,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 45
+  },
+  {
+   "filename": "wrath 7",
+   "frame": {
+    "x": 3584,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 45
+  },
+  {
+   "filename": "wrath 8",
+   "frame": {
+    "x": 4096,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 45
   }
  ],
  "meta": {
-  "app": "Rivages des morts asset effects",
+  "app": "tools/vfx.mjs",
   "image": "fire-wrath-sorcier.webp",
   "size": {
-   "w": 1000,
-   "h": 200
+   "w": 4608,
+   "h": 512
   },
   "smooth": true,
   "frameTags": [
    {
     "name": "wrath",
     "from": 0,
-    "to": 4,
+    "to": 8,
     "direction": "forward",
     "repeat": "1"
    }

@@ -209,3 +209,18 @@ On ne refait pas les 20 héros avant de savoir si cela tient. Essai sur l'**Einh
 - **Alléger le jeu** : « on verra plus tard » (section 10).
 - Les vues de face et de dos, les autres races (leurs corps et leurs tenues), les PNJ.
 - La migration vers Godot : écartée, voir plus haut.
+
+## 12. Effets animés (`npm run vfx`)
+
+Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessine image par image (SVG rastérisé par sharp) dans `public/sprites/fx/`, au format des planches, et le rendu les pose au sol (`sheetFx` dans `src/render/renderer.ts`). Style de la charte : traits de pinceau, éclaboussures d'encre, aplats or pâle et blanc, contour encre, aucun flou lumineux, jamais de vermillon.
+
+| Effet | Fichier | Quand |
+| --- | --- | --- |
+| Trait de pinceau qui balaie l'arc, puis s'effiloche | `slash-120`, `-150`, `-180`, `-200`, `-360` | coup d'arme en arc (la planche la plus proche de l'ouverture de l'arme) |
+| Lance de pinceau | `thrust` | estoc (katana, kaiken…) |
+| Éclaboussure or pâle | `impact` | ennemi touché (plus grande sur un critique) |
+| Poussière et traits de vitesse | `dodge` | esquive |
+| Comète de flammes en aplats | `fireball-sorcier` | boule de feu du Sorcier |
+| Couronne de flammes et braises | `fire-wrath-sorcier` | explosion du météore |
+
+Pour retoucher un effet : modifier sa fonction dans `tools/vfx.mjs` (durées, couleurs, formes), relancer `npm run vfx -- <nom>`. Une planche absente laisse le rendu retomber sur l'ancien effet dessiné par le code.
