@@ -175,6 +175,7 @@ export const catalog: Catalog = {
   materialName: (id) => content.materials[id] ?? id,
   questName: (id) => content.quests[id]?.name ?? id,
   itemSlot: (id) => content.items[id]?.slot,
+  hasItem: (id) => id in content.items,
   levelFor: (xp) => levelFor(content.skills, xp),
   talentPoints: (level) => talentPointsAt(content.skills, level),
   startingWeapon: (heroClass) => content.skills.classes[heroClass]?.weapon ?? STARTING_WEAPON,

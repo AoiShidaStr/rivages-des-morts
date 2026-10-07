@@ -85,6 +85,8 @@ export abstract class Enemy {
   poison: { stacks: number; time: number; tick: number; damage: number; hero: number } | null = null;
   /** Saignement (Guerrier) : secondes restantes, prochaine morsure, dégâts par seconde, héros qui l'a infligé. */
   bleed: { time: number; tick: number; perSecond: number; hero: number } | null = null;
+  /** Brûlure (Écaille de Ryūjin) : même forme que le saignement. */
+  scorch: { time: number; tick: number; perSecond: number; hero: number } | null = null;
   /** Secondes pendant lesquelles le yokai est encore en feu (touché par le feu du Sorcier). */
   burning = 0;
   slowTime = 0;
@@ -201,7 +203,7 @@ export abstract class Enemy {
   /** Applique un coup ; renvoie vrai si la carapace l'a en partie arrêté. */
   receiveHit(hit: Hit, world: World): boolean {
     const shielded = !hit.ignoreShell && this.shields(hit.from);
-    const exposed = this.marks.hunt > 0 ? 1 + this.huntBonus : 1;
+    const exposed = (this.marks.hunt > 0 ? 1 + this.huntBonus : 1) * world.exposure(this);
     const amount = Math.min(hit.amount * (shielded ? this.shieldFactor : 1) * this.damageFactor * exposed, this.hp - this.hpFloor);
     this.hp -= amount;
     if (amount > 0) this.sinceHurt = 0;
@@ -548,7 +550,7 @@ export class Kappa extends Enemy {
         const gap = length(toFoe) - this.radius - foe.radius;
         if (gap > 0.1) this.pos = add(this.pos, scale(this.facing, cfg.speed * dt));
         const aligned = inCone(this.facing, toward, degToRad(20));
-        if (this.cooldown <= 0 && length(toFoe) <= cfg.chargeRange && aligned) {
+        if (this.cooldown <= 0 && length(toFoe) <= cfg.chargeRange * world.notice(foe) && aligned) {
           this.chargesLeft = cfg.comboCharges;
           this.startTelegraph(this.facing, cfg.telegraph, world);
         }
@@ -697,7 +699,7 @@ export class KasaObake extends Enemy {
       case 'pause':
         state.t -= dt;
         if (state.t > 0) break;
-        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange && Math.random() < cfg.jumpChance) {
+        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange * world.notice(foe) && Math.random() < cfg.jumpChance) {
           this.jumpTimer = cfg.jumpCooldown;
           this.state = { kind: 'rise', t: 0 };
         } else {
@@ -1392,7 +1394,7 @@ export class Shikome extends Enemy {
         const curve = Math.min(0.8, Math.max(0, (dist - cfg.lungeRange) / 4));
         const gap = dist - this.radius - foe.radius;
         if (gap > 0.2) this.pos = add(this.pos, scale(normalize(add(toward, scale(side, curve))), cfg.speed * dt));
-        if (this.cooldown <= 0 && dist <= cfg.lungeRange) {
+        if (this.cooldown <= 0 && dist <= cfg.lungeRange * world.notice(foe)) {
           this.state = { kind: 'crouch', t: 0, dir: toward };
           world.emit({ type: 'telegraph', id: this.id, from: { ...this.pos }, dir: toward, length: cfg.lungeDistance, width: this.radius * 2, duration: cfg.crouch });
         }
@@ -1528,7 +1530,7 @@ export class Ikazuchi extends Enemy {
           return;
         }
         this.boltTimer -= dt;
-        if (this.boltTimer <= 0 && dist <= cfg.keepDistance * 2) {
+        if (this.boltTimer <= 0 && dist <= cfg.keepDistance * 2 * world.notice(foe)) {
           this.state = { kind: 'channel', t: 0 };
           return;
         }

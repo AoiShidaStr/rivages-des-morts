@@ -48,6 +48,8 @@ const IMMOBILIZE_RESPITE = 3;
 const SMASH_STUN_MAX = 0.8;
 /** Part de la vitesse que perdent les yokai frappés par le Bond (talent d'Héraclès). */
 const BOND_SLOW = 0.5;
+/** Un leurre (clone, plumes) attire les yokai à moins de ces mètres de lui. */
+const LURE_RANGE = 7;
 
 /** Commandes d'un héros sans joueur (entrée manquante) : il reste immobile. */
 function idleInput(hero: Player): InputFrame {
@@ -148,6 +150,8 @@ export interface Projectile {
   owner: number;
   /** Boule de feu : l'ennemi vers lequel elle s'infléchit. */
   target?: number;
+  /** Marteau : il a déjà rebondi vers un second yokai (Couronne du Juge). */
+  bounced?: boolean;
 }
 
 /** Sceau ou météore du Sorcier : annoncé au sol, il s'abat au bout de `t` secondes. `echo` : seconde explosion d'un sceau. */
@@ -198,6 +202,22 @@ export class Decoy implements Foe {
   }
 }
 
+/** Leurre laissé par un objet (Masque du Kitsune, Manteau de Plumes) : il attire les yokai proches `life` secondes. */
+interface Lure {
+  decoy: Decoy;
+  life: number;
+}
+
+/** Zone sacrée (Geta d'Amaterasu, Geta de l'Égide) : elle soigne les héros qui s'y tiennent, `heal` PV par seconde. */
+interface Sanctuary {
+  id: number;
+  pos: Vec2;
+  radius: number;
+  heal: number;
+  life: number;
+  tick: number;
+}
+
 /** Fil de Jōren laissé par une esquive : le premier ennemi qui le touche est immobilisé. */
 interface Snare {
   id: number;
@@ -220,6 +240,8 @@ export class World {
   /** Sorcier : sceaux et météores annoncés, sol en feu. */
   private blasts: Blast[] = [];
   private embers: Ember[] = [];
+  private lures: Lure[] = [];
+  private sanctuaries: Sanctuary[] = [];
   stumps: Stump[] = [];
   peaches: PeachTree[] = [];
   webs: Web[] = [];
@@ -339,22 +361,73 @@ export class World {
   /** Vrai tant que `foe` peut encore être attaqué (un héros à terre ou invisible ne l'est plus). */
   isFoe(foe: Foe | null): foe is Foe {
     if (foe instanceof Player) return this.players.includes(foe) && !foe.dead && foe.hidden <= 0;
-    return foe instanceof Decoy && this.players.some((p) => p.smoke === foe && !p.dead);
+    return foe instanceof Decoy && (this.players.some((p) => p.smoke === foe && !p.dead) || this.lures.some((l) => l.decoy === foe));
   }
 
-  /** La cible d'un yokai : le héros le plus proche. Invisible, le héros est remplacé par son nuage de fumée. */
+  /**
+   * La cible d'un yokai : un leurre tout proche, sinon le héros le plus proche. Invisible, le héros est remplacé par son
+   * nuage de fumée ; camouflé (Capuche de camouflage), il paraît plus loin qu'il n'est.
+   */
   pickFoe(from: Vec2): Foe {
+    const lure = closest(this.lures.map((l) => l.decoy), from);
+    if (lure && distance(lure.pos, from) <= LURE_RANGE) return lure;
     let best: Foe = this.players[0];
     let bestScore = Infinity;
     for (const hero of this.standing) {
       const foe = hero.hidden > 0 && hero.smoke ? hero.smoke : hero;
-      const score = distance(from, foe.pos);
+      const score = distance(from, foe.pos) / this.notice(foe);
       if (score < bestScore) {
         best = foe;
         bestScore = score;
       }
     }
     return best;
+  }
+
+  /** Part de leur portée à laquelle les yokai remarquent `foe` (Capuche de camouflage : moins loin). */
+  notice(foe: Foe): number {
+    return foe instanceof Player ? 1 - (foe.cfg.perks?.stealth ?? 0) : 1;
+  }
+
+  /** Dégâts en plus que prend un yokai des coups du héros qui agit : en feu (Hakama cramoisi), ralenti (Grèves de l'Inquisiteur). */
+  exposure(enemy: Enemy): number {
+    const perks = this.player.cfg.perks ?? {};
+    let factor = 1;
+    if (perks.burningBonus && enemy.burning > 0) factor += perks.burningBonus;
+    if (perks.slowedBonus && enemy.slowTime > 0) factor += perks.slowedBonus;
+    return factor;
+  }
+
+  /** Leurre immobile qui attire les yokai proches pendant `life` s (Masque du Kitsune, Manteau de Plumes). */
+  addLure(pos: Vec2, life: number): void {
+    this.lures.push({ decoy: new Decoy({ ...pos }, 0.8), life });
+    this.emit({ type: 'lure', pos: { ...pos } });
+  }
+
+  private updateLures(dt: number): void {
+    this.lures = this.lures.filter((l) => (l.life -= dt) > 0);
+  }
+
+  /** Zone sacrée qui soigne les héros qui s'y tiennent (Geta d'Amaterasu, Geta de l'Égide). */
+  addSanctuary(pos: Vec2, cfg: { heal: number; duration: number; radius: number }): void {
+    const zone: Sanctuary = { id: this.nextFxId--, pos: { ...pos }, radius: cfg.radius, heal: cfg.heal, life: cfg.duration, tick: 0 };
+    this.sanctuaries.push(zone);
+    this.emit({ type: 'sanctuary', id: zone.id, pos: { ...pos }, radius: cfg.radius, life: cfg.duration });
+  }
+
+  /** Une fois par seconde, la zone sacrée soigne ; puis elle s'efface. */
+  private updateSanctuaries(dt: number): void {
+    for (const zone of [...this.sanctuaries]) {
+      zone.life -= dt;
+      zone.tick -= dt;
+      if (zone.tick <= 0 && zone.life > 0) {
+        zone.tick += 1;
+        for (const hero of this.standing) if (distance(hero.pos, zone.pos) <= zone.radius + hero.radius) hero.heal(zone.heal, this);
+      }
+      if (zone.life > 0) continue;
+      this.sanctuaries = this.sanctuaries.filter((z) => z !== zone);
+      this.emit({ type: 'emberEnd', id: zone.id });
+    }
   }
 
   /**
@@ -398,6 +471,8 @@ export class World {
     this.updateProjectiles(dt);
     this.updateBlasts(dt);
     this.updateEmbers(dt);
+    this.updateSanctuaries(dt);
+    this.updateLures(dt);
     this.regenerate(dt);
     this.updateHazards(dt);
     this.updateWebs(dt);
@@ -529,6 +604,13 @@ export class World {
     let amount = base * factor * player.damageMultiplier() * (1 - this.curse('ecorce'));
     const execute = perks.execute;
     if (execute && enemy.hp < enemy.maxHp * execute.threshold) amount *= 1 + execute.bonus;
+    // Suneate de l'assaut : le premier coup après une longue marche porte plus fort.
+    if (perks.marchStrike && player.marchPrimed) {
+      player.marchPrimed = false;
+      amount *= 1 + perks.marchStrike.bonus;
+    }
+    // Cœur de l'Assassin : frapper une proie empoisonnée nourrit la Lame.
+    if (perks.poisonHitHeal && enemy.poison) player.leech(perks.poisonHitHeal, this);
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
     if (!shielded) player.gainFervor(player.cfg.paladin.judgement.perHit);
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
@@ -585,6 +667,28 @@ export class World {
     this.emit({ type: 'bleed', pos: { ...enemy.pos } });
   }
 
+  /** Brûlure (Écaille de Ryūjin) : `perSecond` dégâts pendant `duration` s ; une plus forte remplace l'autre. */
+  scorch(enemy: Enemy, hero: Player, perSecond: number, duration: number): void {
+    if (enemy.scorch && enemy.scorch.perSecond > perSecond) return;
+    enemy.scorch = { time: duration, tick: BURN_TICK, perSecond, hero: hero.id };
+    enemy.burning = ON_FIRE;
+  }
+
+  /** Un dégât sur la durée (saignement, brûlure) ronge sa proie ; renvoie vrai quand il s'éteint. */
+  private tickDot(enemy: Enemy, dot: { time: number; tick: number; perSecond: number; hero: number }, dt: number): boolean {
+    dot.time -= dt;
+    dot.tick -= dt;
+    if (dot.tick <= 0) {
+      dot.tick += BURN_TICK;
+      const hero = this.hero(dot.hero);
+      this.act(hero, () => {
+        enemy.receiveHit({ amount: dot.perSecond * BURN_TICK, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
+        if (enemy.dead) hero.onKill();
+      });
+    }
+    return dot.time <= 0;
+  }
+
   /** Vent de tempête : un éclair tombe autour du Guerrier qui change de posture. */
   stanceBolt(center: Vec2, cfg: { damage: number; radius: number }): void {
     const player = this.player;
@@ -620,27 +724,19 @@ export class World {
   private updatePoison(dt: number): void {
     for (const enemy of this.enemies) {
       enemy.burning = Math.max(0, enemy.burning - dt);
-      const bleed = enemy.bleed;
-      if (bleed && !enemy.dead) {
-        bleed.time -= dt;
-        bleed.tick -= dt;
-        if (bleed.tick <= 0) {
-          bleed.tick += BURN_TICK;
-          const hero = this.hero(bleed.hero);
-          this.act(hero, () => {
-            enemy.receiveHit({ amount: bleed.perSecond * BURN_TICK, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
-            if (enemy.dead) hero.onKill();
-          });
-        }
-        if (bleed.time <= 0) enemy.bleed = null;
+      if (enemy.bleed && !enemy.dead && this.tickDot(enemy, enemy.bleed, dt)) enemy.bleed = null;
+      if (enemy.scorch && !enemy.dead) {
+        enemy.burning = Math.max(enemy.burning, BURN_TICK);
+        if (this.tickDot(enemy, enemy.scorch, dt)) enemy.scorch = null;
       }
       const poison = enemy.poison;
       if (!poison || enemy.dead) continue;
       poison.time -= dt;
       poison.tick -= dt;
       if (poison.tick <= 0) {
-        poison.tick += 1;
         const hero = this.hero(poison.hero);
+        // Haidate de la vipère : le poison mord plus vite.
+        poison.tick += 1 / (hero.cfg.perks?.poisonHaste ?? 1);
         this.act(hero, () => {
           enemy.receiveHit({ amount: poison.damage * poison.stacks, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
           if (enemy.dead) hero.onKill();
@@ -667,6 +763,13 @@ export class World {
     this.clampToArena(player.pos, player.radius);
     this.emit({ type: 'streak', from, to: { ...player.pos } });
     this.weaponHit(target, player.cfg.attack.damage * cfg.damage, player.pos, 3, 1 + stacks);
+    // Jambières de l'Araignée : la Lame immobilise sa proie et ce qu'elle traverse.
+    const root = player.cfg.perks?.ghostRoot;
+    if (root) {
+      for (const enemy of this.enemies) {
+        if (enemy.targetable && distanceToSegment(enemy.pos, from, player.pos) <= enemy.radius + player.radius) enemy.stun(root, 'snare', this);
+      }
+    }
     // Croissant : le poison gagne les ennemis tout autour de la proie.
     const spread = player.cfg.perks?.ghostSpread;
     if (spread) {
@@ -739,8 +842,48 @@ export class World {
       else this.player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
+    const perks = this.player.cfg.perks ?? {};
+    // Joyau de Susanoo : la foudre tombe sur la cible la plus proche de l'impact.
+    const bolted = perks.smashBolt ? closest(this.enemies.filter((e) => e.targetable && distance(e.pos, center) - e.radius <= smash.radius), center) : undefined;
+    if (bolted && perks.smashBolt) {
+      this.emit({ type: 'lightning', pos: { ...bolted.pos } });
+      bolted.receiveHit({ amount: perks.smashBolt * this.player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true }, this);
+      if (bolted.dead) this.player.onKill();
+    }
+    // Kanabō du Démon-Sang : une onde de choc part de l'impact et frappe plus loin.
+    const wave = perks.smashWave;
+    if (wave) {
+      this.emit({ type: 'shockwave', pos: { ...center }, radius: wave.radius });
+      for (const enemy of this.enemies) {
+        const gap = distance(enemy.pos, center) - enemy.radius;
+        if (!enemy.targetable || gap <= smash.radius || gap > wave.radius) continue;
+        enemy.receiveHit({ amount: smash.damage * wave.damage * this.player.damageMultiplier(), from: center, knockback: wave.knockback, ignoreShell: true }, this);
+        if (enemy.dead) this.player.onKill();
+        else if (perks.smashSlow) enemy.slow(perks.smashSlow.amount, perks.smashSlow.duration, this);
+      }
+    }
     // Une Frappe qui porte soigne le Guerrier.
     if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal, this);
+  }
+
+  /** Armure du Général Déchu : le blocage parfait repousse les yokai autour du héros. */
+  repel(center: Vec2, radius: number, knockback: number): void {
+    this.emit({ type: 'shockwave', pos: { ...center }, radius });
+    for (const enemy of this.enemies) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
+      enemy.knockback = add(enemy.knockback, scale(normalize(sub(enemy.pos, center)), knockback));
+    }
+  }
+
+  /** Onde qui frappe autour de `center`, carapaces ignorées (Masque du Traqueur, Geta de l'aube). */
+  private shockAround(center: Vec2, radius: number, damage: number, knockback: number): void {
+    const player = this.player;
+    this.emit({ type: 'shockwave', pos: { ...center }, radius });
+    for (const enemy of [...this.enemies]) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
+      enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+    }
   }
 
   /** Atterrissage du Bond : dégâts de zone autour du héros, étourdissement avec le talent d'Héraclès. */
@@ -759,6 +902,9 @@ export class World {
       }
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
+    // Waraji de pèlerin : chaque atterrissage soigne le Guerrier.
+    const heal = this.player.cfg.perks?.bondHeal;
+    if (heal) this.player.heal(this.player.cfg.maxHp * heal, this);
   }
 
   // --- Sorcier ---------------------------------------------------------------
@@ -796,10 +942,13 @@ export class World {
    * A : Bouclier de flammes. En s'allumant, il repousse les yokai collés au Sorcier ; ensuite, il absorbe des dégâts et
    * brûle ceux qui l'approchent (`updateWard`).
    */
-  raiseWard(): void {
-    const player = this.player;
+  raiseWard(hero?: Player): void {
+    const player = hero ?? this.player;
     const cfg = player.cfg.sorcier.ward;
     player.shield(player.cfg.maxHp * cfg.shield, cfg.duration);
+    // Capuche de l'ascète : le bouclier qui s'allume soigne.
+    const heal = player.cfg.perks?.wardHeal;
+    if (heal) player.heal(player.cfg.maxHp * heal, this);
     player.ward = cfg.duration;
     player.wardTick = 0;
     this.emit({ type: 'ward', pos: { ...player.pos }, radius: cfg.radius });
@@ -888,7 +1037,7 @@ export class World {
       ember.tick -= dt;
       if (ember.tick <= 0) {
         ember.tick += BURN_TICK;
-        this.act(this.hero(ember.owner), () => this.burnAround(ember.pos, ember.radius, ember.burn * BURN_TICK));
+        this.act(this.hero(ember.owner), () => this.burnAround(ember.pos, ember.radius, ember.burn * BURN_TICK, true));
       }
       if (ember.life > 0) continue;
       this.embers = this.embers.filter((e) => e !== ember);
@@ -908,6 +1057,9 @@ export class World {
       // Hakama de cendres : un bouclier brisé par les yokai rend des PV.
       const ashes = player.cfg.perks?.wardBreakHeal;
       if (broken && ashes) player.heal(player.cfg.maxHp * ashes, this);
+      // Cape du Phénix : un bouclier brisé explose.
+      const phoenix = player.cfg.perks?.wardBreakBlast;
+      if (broken && phoenix) this.fireBurst(player.pos, phoenix.radius, phoenix.damage);
       if (player.cfg.perks?.wardMana) player.gainMana(player.cfg.perks.wardMana);
       return;
     }
@@ -917,14 +1069,31 @@ export class World {
     this.burnAround(player.pos, cfg.radius, cfg.burn * BURN_TICK);
   }
 
-  /** Feu du Sorcier (sol en feu, Bouclier de flammes) : `amount` dégâts aux yokai à moins de `radius` m. */
-  private burnAround(center: Vec2, radius: number, amount: number): void {
+  /** Explosion de feu autour de `center` (Cape du Phénix). */
+  private fireBurst(center: Vec2, radius: number, damage: number): void {
     const player = this.player;
+    this.emit({ type: 'blastEnd', id: this.nextFxId--, kind: 'seal', pos: { ...center }, radius });
+    for (const enemy of [...this.enemies]) {
+      if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
+      enemy.burning = ON_FIRE;
+      enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback: 4, ignoreShell: true }, this);
+      if (enemy.dead) player.onKill();
+    }
+  }
+
+  /**
+   * Feu du Sorcier (sol en feu, Bouclier de flammes) : `amount` dégâts aux yokai à moins de `radius` m. `ground` : feu au
+   * sol, dont les proies rendent du mana avec le Pantalon d'esprit.
+   */
+  private burnAround(center: Vec2, radius: number, amount: number, ground = false): void {
+    const player = this.player;
+    const mana = ground ? (player.cfg.perks?.emberKillMana ?? 0) : 0;
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
       enemy.burning = ON_FIRE;
       enemy.receiveHit({ amount: amount * player.damageMultiplier(), from: center, knockback: 0, ignoreShell: true }, this);
       if (enemy.dead) player.onKill();
+      if (enemy.dead && mana) player.gainMana(mana);
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
   }
@@ -986,6 +1155,10 @@ export class World {
     // Kemuri-dama : la fumée rend un peu de vie.
     const heal = player.cfg.perks?.smokeHeal;
     if (heal) player.heal(player.cfg.maxHp * heal, this);
+    // Masque du Kitsune : un clone reste et attire les yokai ; Manteau d'Ombre : le prochain coup sera critique.
+    const clone = player.cfg.perks?.smokeClone;
+    if (clone) this.addLure(player.pos, clone);
+    if (player.cfg.perks?.smokeCrit) player.smokeCritPrimed = true;
     // Poudre aux yeux : la fumée étourdit ceux qui étaient tout près.
     const stun = player.cfg.perks?.smokeStun;
     if (!stun) return;
@@ -1052,6 +1225,8 @@ export class World {
       }
       // Curée : abattre la proie marquée recharge la Marque du chasseur. Et le Rôdeur se soigne sur sa proie.
       if (perks.markRefund && enemy.marks.hunt > 0) player.huntCooldown = 0;
+      // Masque du Traqueur : la proie marquée explose en tombant.
+      if (perks.huntBlast && enemy.marks.hunt > 0) this.shockAround(enemy.pos, perks.huntBlast.radius, perks.huntBlast.damage, 3);
       if (player.cfg.kit === 'rodeur' && enemy.marks.hunt > 0) player.heal(player.cfg.maxHp * player.cfg.ranger.huntMark.killHeal, this);
       // Naissance du feu : un yokai qui tombe près du Sorcier libère des boules de feu vers ses voisins.
       if (perks.killBurst && distance(enemy.pos, player.pos) <= player.cfg.attack.range) this.burst(enemy.pos, perks.killBurst);
@@ -1076,6 +1251,9 @@ export class World {
     player.auraTick = 0;
     player.auraStunned.clear();
     this.emit({ type: 'aura', pos: { ...this.player.pos }, radius: cfg.radius });
+    // Geta de l'aube : l'Aura s'allume dans un éclair qui brûle les yokai.
+    const flash = player.cfg.perks?.auraFlash;
+    if (flash) this.shockAround(player.pos, cfg.radius, flash, 0);
   }
 
   /**
@@ -1223,9 +1401,24 @@ export class World {
     }
   }
 
-  /** A : la flèche-filet s'ouvre sur le premier ennemi touché, ou au bout de sa course. */
-  netArrow(dir: Vec2): void {
+  /** Carquois de l'Ouragan : des flèches de plus, en éventail autour du tir. */
+  fan(dir: Vec2, arrows: number): void {
+    for (let i = 1; i < arrows; i++) {
+      const side = (i % 2 ? 1 : -1) * Math.ceil(i / 2);
+      this.loose(fromAngle(angleOf(dir) + degToRad(12 * side)));
+    }
+  }
+
+  /**
+   * A : la flèche-filet s'ouvre sur le premier ennemi touché, ou au bout de sa course. Avec les Jambières du Vent, elle
+   * s'ouvre aussitôt sous `aim`.
+   */
+  netArrow(dir: Vec2, aim?: Vec2): void {
     const { ranger } = this.player.cfg;
+    if (aim && this.player.cfg.perks?.netInstant) {
+      this.netBurst(this.reach(aim, ranger.net.range));
+      return;
+    }
     this.launch('net', dir, { speed: ranger.arrow.speed * 0.8, range: ranger.net.range, damage: 0, knockback: 0, radius: 0.35, pierce: false });
   }
 
@@ -1237,7 +1430,11 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, pos) > cfg.radius + enemy.radius) continue;
       // La soie de l'Arc de soie ne fait que ralentir : seul le filet du Rôdeur immobilise.
       if (silk) enemy.slow(silk.amount, silk.duration, this);
-      else this.immobilize(enemy, enemy.boss ? cfg.stun / 2 : cfg.stun, 'net');
+      else {
+        this.immobilize(enemy, enemy.boss ? cfg.stun / 2 : cfg.stun, 'net');
+        // Waraji de l'éclaireur : le filet empoisonne ce qu'il prend.
+        for (let i = 0; i < (this.player.cfg.perks?.netPoison ?? 0); i++) this.poison(enemy, this.player);
+      }
     }
   }
 
@@ -1313,6 +1510,9 @@ export class World {
         if (!p.returning && (p.range <= 0 || out)) {
           p.returning = true;
           p.hit.clear();
+          // Geta de l'Égide : là où le marteau fait demi-tour, le sol garde la prière.
+          const zone = player.cfg.perks?.hammerSanctuary;
+          if (zone) this.addSanctuary(p.pos, zone);
         }
         return true;
       }
@@ -1336,7 +1536,18 @@ export class World {
         enemy.receiveHit({ amount: p.damage * player.damageMultiplier(), from, knockback: p.knockback }, this);
         if (enemy.dead) player.onKill();
         else if (perks.hammerStun) enemy.slow(0.4, perks.hammerStun, this);
+        else if (perks.slowedBonus) enemy.slow(0.4, 1, this);
         if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
+        // Couronne du Juge : à l'aller, le marteau rebondit une fois vers un autre yokai proche.
+        if (perks.hammerBounce && !p.returning && !p.bounced) {
+          const reach = perks.hammerBounce;
+          const next = closest(this.enemies.filter((e) => e.targetable && e !== enemy && !p.hit.has(e.id) && distance(e.pos, enemy.pos) <= reach), enemy.pos);
+          if (next) {
+            p.bounced = true;
+            p.dir = normalize(sub(next.pos, p.pos), p.dir);
+            p.range = distance(next.pos, p.pos) + next.radius;
+          }
+        }
         return true;
       case 'fireball': {
         // Les boules de feu sont l'attaque de base du Sorcier : des coups d'arme, critiques et talents compris.
@@ -1346,8 +1557,12 @@ export class World {
         if (slow && !enemy.dead) enemy.slow(slow.amount, slow.duration, this);
         return p.pierce;
       }
-      case 'arrow':
-        this.weaponHit(enemy, p.damage, from, p.knockback, 1);
+      case 'arrow': {
+        // Dō de l'archer d'élite, Croc de loup : les tirs de loin portent plus fort, et parfois critiques.
+        const far = distance(player.pos, enemy.pos);
+        const long = perks.longShot && far >= perks.longShot.distance ? 1 + perks.longShot.bonus : 1;
+        const crit = perks.farCrit && far >= perks.farCrit.distance && Math.random() < perks.farCrit.chance ? player.cfg.blade.critFactor : 1;
+        this.weaponHit(enemy, p.damage * long, from, p.knockback, crit);
         // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
         if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos, perks.chargedNet);
         // Arc d'Ikazuchi : la foudre tombe sur la première proie d'un tir plein, au plus une fois par recharge.
@@ -1357,6 +1572,7 @@ export class World {
           if (perks.chargedStun) this.immobilize(enemy, perks.chargedStun, 'daze');
         }
         return p.pierce;
+      }
     }
   }
 

@@ -1840,6 +1840,39 @@ export class Renderer {
       case 'noMana':
         this.text(event.pos, 2.3, 'Pas assez de mana', 'stun', 0.7);
         break;
+      case 'evade':
+        this.text(event.pos, 2.3, 'Évité', 'mark', 0.8);
+        break;
+      case 'saved':
+        this.text(event.pos, 2.6, event.label, 'parry', 1.4);
+        this.addFx(this.ringFx(event.pos, 3, DIVINE, 0.5));
+        this.addShake(0.4);
+        break;
+      case 'shockwave':
+        this.addFx(this.ringFx(event.pos, event.radius * 2.2, DUST, 0.45));
+        this.addShake(0.3);
+        break;
+      case 'lure':
+        this.addFx(this.ringFx(event.pos, 2, SMOKE, 0.5));
+        this.text(event.pos, 2.2, 'Leurre', 'mark', 0.9);
+        break;
+      case 'sanctuary': {
+        // Zone sacrée : un disque de lumière dorée qui palpite tant qu'il soigne.
+        const life = event.life;
+        const fx = this.addFx({
+          texture: this.fxTextures.shadow,
+          pos: event.pos,
+          dir: { x: 1, z: 0 },
+          width: event.radius * 2,
+          depth: event.radius * 2,
+          color: DIVINE,
+          life: life + 1,
+          y: 0.026,
+          update: (_k, f) => f.material.setFloat('alpha', Math.min(0.6, f.age * 6, (life - f.age) * 1.5) * (0.8 + 0.2 * Math.sin(f.age * 6))),
+        });
+        this.embers.set(event.id, fx);
+        break;
+      }
       case 'mark':
         if (event.mark === 'death') this.text(event.pos, 2.4, 'Marque de mort', 'mark', 1.2);
         else if (event.mark === 'hunt') this.text(event.pos, 2.4, 'Proie marquée', 'hunt', 1.1);

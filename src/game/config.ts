@@ -450,6 +450,100 @@ export interface Perks {
   finisher?: number;
   /** Flèches d'Ame-no-Hahaya : toutes les flèches transpercent. */
   arrowPierce?: boolean;
+
+  // --- Refonte spécialisée (0.11.0) ---
+  /** Kanabō du Démon-Sang : la Frappe libère une onde qui frappe jusqu'à `radius` m (`damage` fois ses dégâts). */
+  smashWave?: { radius: number; damage: number; knockback: number };
+  /** Joyau de Susanoo : la Frappe appelle la foudre sur la cible la plus proche de l'impact (dégâts). */
+  smashBolt?: number;
+  /** Armure du Général Déchu : le blocage parfait repousse les yokai à moins de `radius` m. */
+  perfectPush?: { radius: number; knockback: number };
+  /** Suneate de l'assaut : après `time` s de marche, le premier coup fait `bonus` de dégâts en plus. */
+  marchStrike?: { time: number; bonus: number };
+  /** Grèves du Colosse : un coup reçu sans le bloquer donne `bonus` de dégâts pendant `duration` s. */
+  hurtFury?: { bonus: number; duration: number };
+  /** Dō du fanatique : la garde brisée donne `bonus` de dégâts pendant `duration` s. */
+  breakFury?: { bonus: number; duration: number };
+  /** Bottes du bastion : part du recul subi. */
+  knockbackTaken?: number;
+  /** Waraji de pèlerin : chaque atterrissage du Bond rend cette part des PV max. */
+  bondHeal?: number;
+  /** Talisman de l'Ours : sous `threshold` des PV, `reduction` des dégâts subis en moins. */
+  lowHpArmor?: { threshold: number; reduction: number };
+  /** Écaille de Ryūjin : un coup bloqué brûle l'attaquant (`damage` par seconde, `duration` s). */
+  blockBurn?: { damage: number; duration: number };
+  /** Capuche de l'ascète : le Bouclier de flammes rend cette part des PV max en s'allumant. */
+  wardHeal?: number;
+  /** Robe de feu : dégâts de feu en plus (tous les dégâts du Sorcier). */
+  fireDamage?: number;
+  /** Cape du Phénix : le Bouclier de flammes brisé explose. */
+  wardBreakBlast?: { damage: number; radius: number };
+  /** Hakama cramoisi : dégâts en plus sur les yokai en feu. */
+  burningBonus?: number;
+  /** Pantalon d'esprit : mana rendu par yokai abattu par le feu au sol. */
+  emberKillMana?: number;
+  /** Geta d'Amaterasu : la Fuite de feu laisse une zone qui soigne (`heal` PV par seconde, `duration` s). */
+  flightSanctuary?: { heal: number; duration: number; radius: number };
+  /** Pierre de sang yōkai : chaque sort coûte aussi cette part des PV actuels. */
+  bloodCost?: number;
+  /** Cœur de Cendres : survit à un coup mortel et allume le Bouclier de flammes, une fois toutes les `cooldown` s. */
+  cheatDeath?: { cooldown: number };
+  /** Bandeau du vent : pendant `duration` s après une esquive, `chance` d'éviter un coup. */
+  evasion?: { chance: number; duration: number };
+  /** Masque du Kitsune : l'Écran de fumée laisse un clone qui attire les yokai ces secondes. */
+  smokeClone?: number;
+  /** Gi de l'assassin : vitesse de frappe en plus. */
+  attackSpeed?: number;
+  /** Manteau d'Ombre : l'Écran de fumée rend la prochaine attaque critique. */
+  smokeCrit?: boolean;
+  /** Haidate de la vipère : le poison mord ce nombre de fois plus vite. */
+  poisonHaste?: number;
+  /** Jambières de l'Araignée : la Frappe fantôme immobilise ce qu'elle traverse, ces secondes. */
+  ghostRoot?: number;
+  /** Bottes de Tengu : esquives qu'on peut garder en réserve. */
+  dodgeCharges?: number;
+  /** Talisman de l'ombre : chaque ennemi traversé en esquivant rend cette part des PV max. */
+  dodgeThroughHeal?: number;
+  /** Cœur de l'Assassin : PV rendus par coup sur une cible empoisonnée. */
+  poisonHitHeal?: number;
+  /** Couronne du Juge : le Marteau rebondit vers un yokai à moins de ces mètres. */
+  hammerBounce?: number;
+  /** Kesa de sōhei : la garde s'use de cette part face aux boss et aux coups lourds. */
+  heavyGuard?: number;
+  /** Grèves de l'Inquisiteur : dégâts en plus sur les yokai ralentis (et le Marteau ralentit). */
+  slowedBonus?: number;
+  /** Geta de l'aube : allumer l'Aura frappe les yokai qu'elle touche (dégâts). */
+  auraFlash?: number;
+  /** Geta du bastion : bouclier levé, rien ne repousse le héros. */
+  steadyGuard?: boolean;
+  /** Geta de l'Égide : le Marteau laisse une zone qui soigne là où il fait demi-tour. */
+  hammerSanctuary?: { heal: number; duration: number; radius: number };
+  /** Écaille du Dragon d'Or : la garde qui se briserait tient, une fois toutes les ces secondes. */
+  guardSave?: number;
+  /** Capuche de camouflage : les yokai remarquent le héros de cette part moins loin. */
+  stealth?: number;
+  /** Masque du Traqueur : la proie marquée explose en tombant. */
+  huntBlast?: { damage: number; radius: number };
+  /** Dō de l'archer d'élite : dégâts en plus sur les cibles à plus de `distance` m. */
+  longShot?: { distance: number; bonus: number };
+  /** Manteau de Plumes : le Recul laisse un leurre ces secondes. */
+  leapDecoy?: number;
+  /** Kyahan d'éclaireur : après le Recul, `bonus` de vitesse de tir pendant `duration` s. */
+  leapRush?: { bonus: number; duration: number };
+  /** Jambières de survie : part du ralentissement des toiles et des fils qui est ignorée. */
+  slowResist?: number;
+  /** Jambières du Vent : la Flèche-filet s'ouvre aussitôt sous la visée. */
+  netInstant?: boolean;
+  /** Waraji de l'éclaireur : charges de poison posées par le filet. */
+  netPoison?: number;
+  /** Croc de loup : `chance` de critique sur les cibles à plus de `distance` m. */
+  farCrit?: { distance: number; chance: number };
+  /** Charme des bois : immobile `delay` s, le héros regagne `heal` PV par seconde. */
+  stillHeal?: { delay: number; heal: number };
+  /** Cœur de la Forêt : arc bandé, aucun recul et cette part de dégâts subis en moins. */
+  drawGuard?: number;
+  /** Carquois de l'Ouragan : un tir simple sur `every` part en éventail de `arrows` flèches. */
+  quiverVolley?: { every: number; arrows: number };
 }
 
 export interface EnemyBaseConfig {

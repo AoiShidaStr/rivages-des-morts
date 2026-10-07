@@ -47,6 +47,8 @@ export interface ItemDef {
   effects?: ConfigEffect[];
   /** Effets sous condition (classe, race, niveau). Les effets de combat (sous 30 % de PV…) passent par les perks. */
   conditional?: ConditionalEffect[];
+  /** Rôle de l'objet pour sa classe : dégâts, survie, ou mécanique de boss (ne tombe que sur les boss). */
+  spec?: 'dps' | 'survie' | 'boss';
   /** Résumé lisible des effets (armes, reliques). */
   summary?: string;
   /** Passifs débloqués à certains niveaux de forge (armes). */
@@ -327,15 +329,31 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
   // Les dégâts fixes des talents et des objets (Riposte, Chaleur, foudre de Susanoo) suivent la puissance.
   const perks = config.perks ?? {};
-  for (const key of ['riposte', 'auraBurn', 'yokaiAuraBurn'] as const) {
+  // Robe de feu : tout le feu du Sorcier brûle plus fort.
+  const fire = 1 + (perks.fireDamage ?? 0);
+  if (config.kit === 'sorcier') config.attack.damage *= fire;
+  sorcier.seal.damage *= fire;
+  sorcier.meteor.damage *= fire;
+  sorcier.ward.burn *= fire;
+  sorcier.flight.burn *= fire;
+  for (const key of ['riposte', 'auraBurn', 'yokaiAuraBurn', 'smashBolt', 'auraFlash'] as const) {
     const value = perks[key];
     if (value) perks[key] = value * damage;
   }
   if (perks.shieldHeal) perks.shieldHeal = { ...perks.shieldHeal, amount: perks.shieldHeal.amount * power };
   if (perks.stanceBolt) perks.stanceBolt = { ...perks.stanceBolt, damage: perks.stanceBolt.damage * damage };
   if (perks.offenseBolt) perks.offenseBolt = { ...perks.offenseBolt, damage: perks.offenseBolt.damage * damage };
-  if (perks.fireDome) perks.fireDome = { ...perks.fireDome, burn: perks.fireDome.burn * damage };
-  if (perks.dodgeEmbers) perks.dodgeEmbers = { ...perks.dodgeEmbers, burn: perks.dodgeEmbers.burn * damage };
+  if (perks.fireDome) perks.fireDome = { ...perks.fireDome, burn: perks.fireDome.burn * damage * fire };
+  if (perks.dodgeEmbers) perks.dodgeEmbers = { ...perks.dodgeEmbers, burn: perks.dodgeEmbers.burn * damage * fire };
+  if (perks.blockBurn) perks.blockBurn = { ...perks.blockBurn, damage: perks.blockBurn.damage * damage };
+  if (perks.wardBreakBlast) perks.wardBreakBlast = { ...perks.wardBreakBlast, damage: perks.wardBreakBlast.damage * damage * fire };
+  if (perks.huntBlast) perks.huntBlast = { ...perks.huntBlast, damage: perks.huntBlast.damage * damage };
+  // Les soins fixes des objets suivent la puissance, comme le soin au blocage.
+  if (perks.flightSanctuary) perks.flightSanctuary = { ...perks.flightSanctuary, heal: perks.flightSanctuary.heal * power };
+  if (perks.hammerSanctuary) perks.hammerSanctuary = { ...perks.hammerSanctuary, heal: perks.hammerSanctuary.heal * power };
+  if (perks.stillHeal) perks.stillHeal = { ...perks.stillHeal, heal: perks.stillHeal.heal * power };
+  if (perks.pyroKill) perks.pyroKill = { ...perks.pyroKill, hp: perks.pyroKill.hp * power };
+  if (perks.poisonHitHeal) perks.poisonHitHeal *= power;
   if (perks.chargedBolt) perks.chargedBolt = { ...perks.chargedBolt, damage: perks.chargedBolt.damage * damage };
   if (perks.sealBurn) perks.sealBurn = { ...perks.sealBurn, burn: perks.sealBurn.burn * damage };
   config.dodge.distance *= 1 + bonus.dodge;

@@ -172,7 +172,8 @@ export function rollEndlessItem(
   // De la rareté tirée vers les plus communes, tant qu'aucun objet ne convient.
   const order = entries.map(([r]) => r);
   for (let i = order.indexOf(rarity); i >= 0; i--) {
-    const pool = Object.entries(items).filter(([, def]) => def.rarity === order[i] && def.slot);
+    // Les objets de boss ne tombent que sur Jorōgumo et Izanami.
+    const pool = Object.entries(items).filter(([, def]) => def.rarity === order[i] && def.slot && def.spec !== 'boss');
     const pick = (list: [string, ItemDef][]) => (list.length ? list[Math.floor(random() * list.length)][0] : null);
     const fresh = pool.filter(([id]) => !owned(id));
     const chosen = pick(fresh.filter(([, def]) => equipBlock(def, hero, skills) === null)) ?? pick(fresh) ?? (i === 0 ? pick(pool) : null);

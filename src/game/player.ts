@@ -14,7 +14,8 @@ type Action =
   | { kind: 'free' }
   /** `crit` : multiplicateur de critique du coup (1 : coup normal) ; `aim` : le point visé au clic (boules de feu). */
   | { kind: 'attack'; t: number; dir: Vec2; hit: Set<number>; swung: boolean; crit: number; aim: Vec2 }
-  | { kind: 'dodge'; t: number; dir: Vec2 }
+  /** `passed` : ennemis déjà traversés (Talisman de l'ombre). */
+  | { kind: 'dodge'; t: number; dir: Vec2; passed: Set<number> }
   | { kind: 'smash'; t: number; dir: Vec2; landed: boolean }
   | { kind: 'bond'; t: number; from: Vec2; to: Vec2 }
   /** Danse des lames : `index` est la cible en cours ; chaque pas dure `blade.dance.hop`. */
@@ -84,8 +85,28 @@ export class Player {
   bleedPrimed = false;
   counterWindow = 0;
   clayPrimed = false;
-  /** Guerrier (tag) : secondes de vitesse de frappe en plus après un changement de posture. */
+  /** Vitesse de frappe en plus un moment (tag Guerrier, Kyahan d'éclaireur) : secondes restantes et bonus. */
   private rush = 0;
+  private rushBonus = 0;
+  /** Dégâts en plus un moment (Grèves du Colosse, Dō du fanatique) : secondes restantes et bonus. */
+  private furyTime = 0;
+  private furyBonus = 0;
+  /** Suneate de l'assaut : secondes de marche, et coup renforcé prêt. */
+  private marchTime = 0;
+  marchPrimed = false;
+  /** Bandeau du vent : secondes pendant lesquelles un coup peut passer à côté. */
+  private evadeTime = 0;
+  /** Bottes de Tengu : esquives gardées en réserve, en plus de celle qui se recharge. */
+  dodgeSpare: number;
+  /** Cœur de Cendres, Écaille du Dragon d'Or : secondes avant de pouvoir resservir. */
+  private cheatCooldown = 0;
+  private guardSaveCooldown = 0;
+  /** Manteau d'Ombre : la prochaine attaque est critique. */
+  smokeCritPrimed = false;
+  /** Charme des bois : secondes sans bouger. */
+  private stillTime = 0;
+  /** Carquois de l'Ouragan : tirs simples lâchés. */
+  private shots = 0;
   /** Lame : recharge de la Frappe fantôme. */
   ghostCooldown = 0;
   /** Secondes de Frénésie restantes. */
@@ -193,6 +214,7 @@ export class Player {
     this.guardLeft = cfg.paladin.guard.max;
     this.hp = cfg.maxHp;
     this.clayLeft = cfg.perks?.clayCharges ?? 1;
+    this.dodgeSpare = (cfg.perks?.dodgeCharges ?? 1) - 1;
     this.mana = cfg.sorcier.mana.max;
   }
 
@@ -288,6 +310,7 @@ export class Player {
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
+    if (this.furyTime > 0) factor += this.furyBonus;
     // Maîtrise du oni : transformé, le Hanyō guerrier frappe plus fort en Offensive.
     if (perks.yokaiOffense && this.transformed > 0 && this.cfg.kit === 'guerrier' && this.stance === 'offensive') factor += perks.yokaiOffense;
     // Masque de hannya : blessé, le Guerrier en Offensive frappe plus fort.
@@ -298,6 +321,36 @@ export class Player {
     // Égide posée sur soi : le Paladin devient un rempart, mais frappe deux fois moins fort.
     if (this.cfg.kit === 'paladin' && (this.aegisOn === this.id || this.aegisSecond === this.id)) factor *= 1 - this.cfg.paladin.aegis.selfDamageMalus;
     return factor;
+  }
+
+  /** Dégâts en plus pendant `duration` s (Grèves du Colosse, Dō du fanatique) ; le plus fort l'emporte, sans cumul. */
+  private fury(bonus: number, duration: number): void {
+    if (this.furyTime > 0 && this.furyBonus > bonus) return;
+    this.furyBonus = bonus;
+    this.furyTime = duration;
+  }
+
+  /** Vitesse de frappe en plus pendant un moment (tag Guerrier, Kyahan d'éclaireur). */
+  private setRush(rush: { bonus: number; duration: number }): void {
+    this.rush = rush.duration;
+    this.rushBonus = rush.bonus;
+  }
+
+  /** Une esquive est prête : celle qui se recharge, ou une en réserve (Bottes de Tengu). */
+  get dodgeReady(): boolean {
+    return this.dodgeCooldown <= 0 || this.dodgeSpare > 0;
+  }
+
+  /** Part du recul subi : Bottes du bastion, Geta du bastion (bouclier levé), Cœur de la Forêt (arc bandé). */
+  private pushFactor(): number {
+    const perks = this.cfg.perks ?? {};
+    if ((perks.steadyGuard && this.blocking) || (perks.drawGuard && this.action.kind === 'draw')) return 0;
+    return perks.knockbackTaken ?? 1;
+  }
+
+  /** Jambières de survie : les toiles et les fils freinent moins. */
+  private resistSlow(factor: number): number {
+    return 1 - (1 - factor) * (1 - (this.cfg.perks?.slowResist ?? 0));
   }
 
   /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
@@ -380,6 +433,11 @@ export class Player {
   update(dt: number, input: InputFrame, world: World): void {
     const c = this.cfg;
     this.dodgeCooldown = Math.max(0, this.dodgeCooldown - dt * this.haste);
+    // Bottes de Tengu : une esquive rechargée part en réserve, et la suivante se recharge.
+    if (this.dodgeCooldown <= 0 && this.dodgeSpare < (c.perks?.dodgeCharges ?? 1) - 1) {
+      this.dodgeSpare++;
+      this.dodgeCooldown = c.dodge.cooldown;
+    }
     this.bondCooldown = Math.max(0, this.bondCooldown - dt);
     this.frenzyCooldown = Math.max(0, this.frenzyCooldown - dt);
     this.smashCooldown = Math.max(0, this.smashCooldown - dt);
@@ -390,6 +448,10 @@ export class Player {
     this.barrierTime = Math.max(0, this.barrierTime - dt);
     this.counterWindow = Math.max(0, this.counterWindow - dt);
     this.rush = Math.max(0, this.rush - dt);
+    this.furyTime = Math.max(0, this.furyTime - dt);
+    this.evadeTime = Math.max(0, this.evadeTime - dt);
+    this.cheatCooldown = Math.max(0, this.cheatCooldown - dt);
+    this.guardSaveCooldown = Math.max(0, this.guardSaveCooldown - dt);
     this.auraBuffTime = Math.max(0, this.auraBuffTime - dt);
     this.aegisCooldown = Math.max(0, this.aegisCooldown - dt);
     if (this.barrierTime <= 0) this.barrier = 0;
@@ -419,7 +481,7 @@ export class Player {
       this.startFrenzy(world);
       this.showCast('ultimate');
     }
-    if (buffered.dodge > 0 && this.dodgeCooldown <= 0 && this.canCancel()) {
+    if (buffered.dodge > 0 && this.dodgeReady && this.canCancel()) {
       buffered.dodge = 0;
       this.startDodge(input, world);
     } else if (warrior && buffered.bond > 0 && this.canBond && this.canCancel()) {
@@ -436,7 +498,7 @@ export class Player {
 
     const tether = this.tether;
     this.tether = null;
-    const slow = world.slowAt(this.pos) * (tether?.moveFactor ?? 1);
+    const slow = this.resistSlow(world.slowAt(this.pos) * (tether?.moveFactor ?? 1));
 
     const a = this.action;
     switch (a.kind) {
@@ -453,7 +515,16 @@ export class Player {
         if (embers && a.t < half && a.t + dt >= half) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
         a.t += dt;
         // Seules les toiles freinent l'esquive : c'est elle qui permet de contourner une souche malgré le fil.
-        this.pos = add(this.pos, scale(a.dir, (c.dodge.distance / c.dodge.duration) * world.slowAt(this.pos) * dt));
+        this.pos = add(this.pos, scale(a.dir, (c.dodge.distance / c.dodge.duration) * this.resistSlow(world.slowAt(this.pos)) * dt));
+        // Talisman de l'ombre : chaque ennemi traversé rend un peu de vie.
+        const through = c.perks?.dodgeThroughHeal;
+        if (through) {
+          for (const enemy of world.enemies) {
+            if (!enemy.targetable || a.passed.has(enemy.id) || distance(enemy.pos, this.pos) > enemy.radius + this.radius) continue;
+            a.passed.add(enemy.id);
+            this.heal(c.maxHp * through, world);
+          }
+        }
         if (a.t >= c.dodge.duration) {
           this.action = { kind: 'free' };
           if (embers) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
@@ -497,9 +568,17 @@ export class Player {
         break;
     }
 
+    // Suneate de l'assaut : la marche se compte tant qu'on avance.
+    if (!this.moving && this.action.kind === 'free') this.marchTime = 0;
+    // Charme des bois : immobile un moment, le héros se soigne.
+    const still = c.perks?.stillHeal;
+    if (still) {
+      this.stillTime = this.moving || this.dodging ? 0 : this.stillTime + dt;
+      if (this.stillTime >= still.delay && this.hp < c.maxHp) this.leech(still.heal * dt, world);
+    }
     this.guardHeld = this.blocking ? this.guardHeld + dt : 0;
     if (tether && this.action.kind !== 'bond' && this.action.kind !== 'leap') this.pos = add(this.pos, scale(tether.pull, dt));
-    this.pos = add(this.pos, scale(this.knockback, dt));
+    this.pos = add(this.pos, scale(this.knockback, dt * this.pushFactor()));
     this.knockback = scale(this.knockback, Math.exp(-10 * dt));
     world.clampToArena(this.pos, this.radius);
   }
@@ -546,7 +625,7 @@ export class Player {
     // Vent de tempête : chaque changement de posture appelle la foudre autour du Guerrier.
     if (perks.stanceBolt) world.stanceBolt(this.pos, perks.stanceBolt);
     // Tag Guerrier : chaque changement de posture accélère les coups un instant.
-    if (perks.stanceRush) this.rush = perks.stanceRush.duration;
+    if (perks.stanceRush) this.setRush(perks.stanceRush);
     world.emit({ type: 'stance', pos: { ...this.pos }, hero: this.id, stance });
   }
 
@@ -584,6 +663,8 @@ export class Player {
     // Blocage parfait : la garde levée juste avant le coup. En coop, la fenêtre s'élargit du retard de l'invité.
     const perfect = this.guardHeld <= PERFECT_GUARD + this.latency;
     if (perfect) world.emit({ type: 'perfectGuard', pos: { ...this.pos }, hero: this.id });
+    // Armure du Général Déchu : le blocage parfait repousse tout ce qui est collé au héros.
+    if (perfect && perks.perfectPush) world.repel(this.pos, perks.perfectPush.radius, perks.perfectPush.knockback);
     // Mempō de Contre-Attaque : le blocage parfait ouvre une riposte.
     if (perfect && perks.counter) this.counterWindow = perks.counter.window;
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
@@ -595,6 +676,8 @@ export class Player {
       attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2 }, world);
       if (attacker.dead) this.onKill();
     }
+    // Écaille de Ryūjin : l'attaquant arrêté repart en feu.
+    if (attacker && !attacker.dead && perks.blockBurn && amount > 0) world.scorch(attacker, this, perks.blockBurn.damage * this.damageMultiplier(), perks.blockBurn.duration);
     world.emit({ type: 'guard', pos: { ...this.pos } });
     if (this.cfg.kit !== 'paladin') {
       // Écaille de Ryūjin, Katana de rōnin : chaque coup arrêté rend un peu de vie.
@@ -606,12 +689,22 @@ export class Player {
     // La garde s'use selon la force du coup ; vide, elle se brise.
     const g = this.cfg.paladin.guard;
     this.guardRest = 0;
-    this.guardLeft -= Math.max(g.minCost, (g.cost * 100 * (parried ? 0 : amount)) / this.cfg.maxHp);
+    // Kesa de sōhei : face aux boss et aux coups lourds, la garde s'use moins.
+    const heavy = perks.heavyGuard && (attacker?.boss || amount > this.cfg.maxHp * 0.1) ? perks.heavyGuard : 1;
+    this.guardLeft -= Math.max(g.minCost, (g.cost * 100 * (parried ? 0 : amount)) / this.cfg.maxHp) * heavy;
+    if (this.guardLeft <= 0 && perks.guardSave && this.guardSaveCooldown <= 0) {
+      // Écaille du Dragon d'Or : la garde tient, à un souffle.
+      this.guardSaveCooldown = perks.guardSave;
+      this.guardLeft = 1;
+      world.emit({ type: 'saved', pos: { ...this.pos }, label: 'La garde tient !' });
+    }
     if (this.guardLeft <= 0) {
       this.guardLeft = 0;
       this.guardBroken = g.breakTime;
       this.blocking = false;
       world.emit({ type: 'guardBreak', pos: { ...this.pos } });
+      // Dō du fanatique : la garde brisée, la foi frappe à sa place.
+      if (perks.breakFury) this.fury(perks.breakFury.bonus, perks.breakFury.duration);
       // Sōhei : la garde qui se brise libère une onde de lumière.
       if (perks.guardBreakNova) world.guardNova(this.pos, perks.guardBreakNova);
     }
@@ -634,6 +727,12 @@ export class Player {
     // Dôme de feu (Bâton de Susanoo) : ce qui tombe du ciel s'y consume.
     if (falling && world.insideDome(this.pos)) return false;
     const perks = this.cfg.perks ?? {};
+    // Bandeau du vent : juste après une esquive, un coup peut passer à côté.
+    if (this.evadeTime > 0 && perks.evasion && Math.random() < perks.evasion.chance) {
+      this.invulnerable = Math.max(this.invulnerable, 0.2);
+      world.emit({ type: 'evade', pos: { ...this.pos } });
+      return false;
+    }
     // Corps d'argile : la carapace de l'Oushebti absorbe le coup entier (deux avec le Dogū), puis se reforme.
     if (perks.clayShell && this.clayCooldown <= 0) {
       this.invulnerable = this.cfg.invulnerableAfterHit;
@@ -657,6 +756,8 @@ export class Player {
     this.loseHp(taken, world, false);
     this.tyrHand(attacker, amount - taken, world);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
+    // Grèves du Colosse : chaque coup encaissé réveille le colosse.
+    if (perks.hurtFury) this.fury(perks.hurtFury.bonus, perks.hurtFury.duration);
     this.invulnerable = this.cfg.invulnerableAfterHit;
     this.hurt = HURT_TIME;
     this.knockback = scale(pushDir, knockback);
@@ -674,6 +775,9 @@ export class Player {
     if (this.auraBuffTime > 0) factor *= 1 - this.auraArmor;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
     if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
+    // Talisman de l'Ours : au bord de la mort ; Cœur de la Forêt : l'arc bandé.
+    if (perks.lowHpArmor && this.below(perks.lowHpArmor.threshold)) factor *= 1 - perks.lowHpArmor.reduction;
+    if (perks.drawGuard && this.action.kind === 'draw') factor *= 1 - perks.drawGuard;
     return factor;
   }
 
@@ -696,6 +800,15 @@ export class Player {
         this.frenzy = Math.max(this.frenzy, perks.bearFrenzy);
         world.emit({ type: 'frenzy', pos: { ...this.pos } });
       }
+    }
+    const ashes = perks.cheatDeath;
+    if (this.hp <= 0 && ashes && this.cheatCooldown <= 0) {
+      // Cœur de Cendres : le héros refuse de tomber, et son Bouclier de flammes s'allume.
+      this.cheatCooldown = ashes.cooldown;
+      this.hp = 1;
+      this.invulnerable = Math.max(this.invulnerable, 0.5);
+      world.raiseWard(this);
+      world.emit({ type: 'saved', pos: { ...this.pos }, label: 'Cœur de Cendres !' });
     }
     const aegis = perks.divineAegis;
     if (aegis && !this.aegisUsed && this.hp > 0 && this.below(aegis.threshold)) {
@@ -732,8 +845,10 @@ export class Player {
     const a = this.cfg.attack;
     let f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
     if (this.cfg.kit === 'guerrier') f *= this.stance === 'garde' ? this.cfg.stance.guard.attackTimeFactor : this.cfg.stance.offense.attackTimeFactor;
-    const rush = this.cfg.perks?.stanceRush;
-    if (rush && this.rush > 0) f /= 1 + rush.bonus;
+    if (this.rush > 0) f /= 1 + this.rushBonus;
+    // Gi de l'assassin : des coups plus vifs.
+    const quick = this.cfg.perks?.attackSpeed;
+    if (quick) f /= 1 + quick;
     const hurried = this.cfg.perks?.lowHpAttackSpeed;
     if (hurried) {
       // De 0 à pleine vitesse entre tous ses PV et le seuil : +30 % de vitesse, ce sont des coups 1,3 fois plus courts.
@@ -770,6 +885,8 @@ export class Player {
       const speed = c.moveSpeed * slow * this.speedFactor() * (this.blocking ? c.blockMoveFactor : 1);
       this.pos = add(this.pos, scale(input.move, speed * dt));
       this.moving = true;
+      const march = c.perks?.marchStrike;
+      if (march && (this.marchTime += dt) >= march.time) this.marchPrimed = true;
     }
   }
 
@@ -783,6 +900,7 @@ export class Player {
 
   private startAttack(aim: Vec2): void {
     this.attackBuffer = 0;
+    this.marchTime = 0;
     this.blocking = false;
     this.action = { kind: 'attack', t: 0, dir: { ...this.facing }, hit: new Set(), swung: false, crit: this.nextCrit(), aim: { ...aim } };
   }
@@ -793,6 +911,11 @@ export class Player {
    */
   private nextCrit(): number {
     const crit = this.cfg.blade.critFactor;
+    // Manteau d'Ombre : la fumée garde un critique en réserve, même une fois sorti du nuage.
+    if (this.smokeCritPrimed && !(this.hidden > 0 && this.ambushReady)) {
+      this.smokeCritPrimed = false;
+      return crit;
+    }
     if (this.hidden > 0 && this.ambushReady) {
       this.ambushReady = false;
       return crit * (this.cfg.perks?.ambush ?? 1);
@@ -819,7 +942,12 @@ export class Player {
     if (!a.swung && a.t >= time.windup) {
       a.swung = true;
       if (this.cfg.kit === 'sorcier') world.fireSalvo(a.dir, a.aim);
-      else if (ranged) world.loose(a.dir);
+      else if (ranged) {
+        world.loose(a.dir);
+        // Carquois de l'Ouragan : un tir sur quelques-uns part en éventail.
+        const quiver = this.cfg.perks?.quiverVolley;
+        if (quiver && ++this.shots % quiver.every === 0) world.fan(a.dir, quiver.arrows);
+      }
       else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range + this.reachBonus, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
       // Jugement : la ferveur pleine, le coup libère l'onde sacrée devant le Paladin.
       const judgement = this.cfg.paladin.judgement;
@@ -865,9 +993,13 @@ export class Player {
     if (joren) world.setSnare(this.pos, joren);
     const embers = this.cfg.perks?.dodgeEmbers;
     if (embers) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
-    this.action = { kind: 'dodge', t: 0, dir };
+    this.action = { kind: 'dodge', t: 0, dir, passed: new Set() };
     this.blocking = false;
-    this.dodgeCooldown = this.cfg.dodge.cooldown;
+    // Bottes de Tengu : pendant la recharge, l'esquive gardée en réserve part à la place.
+    if (this.dodgeCooldown > 0) this.dodgeSpare--;
+    else this.dodgeCooldown = this.cfg.dodge.cooldown;
+    const evasion = this.cfg.perks?.evasion;
+    if (evasion) this.evadeTime = evasion.duration;
     this.invulnerable = Math.max(this.invulnerable, this.cfg.dodge.invulnerable);
     this.openCritWindow();
     world.emit({ type: 'dodge', pos: { ...this.pos }, dir });
@@ -947,7 +1079,14 @@ export class Player {
       return false;
     }
     this.mana -= price;
+    this.payBlood();
     return true;
+  }
+
+  /** Pierre de sang yōkai : chaque sort coûte aussi une part des PV actuels (sans jamais tuer). */
+  private payBlood(): void {
+    const share = this.cfg.perks?.bloodCost;
+    if (share) this.hp = Math.max(1, this.hp * (1 - share));
   }
 
   /** Grand météore : vide le mana, qui doit être plein ; faux (et un mot au-dessus du héros) sinon. */
@@ -957,6 +1096,7 @@ export class Player {
       return false;
     }
     this.mana = 0;
+    this.payBlood();
     return true;
   }
 
@@ -1005,6 +1145,9 @@ export class Player {
     if (a.t < f.duration) return;
     if (a.embers < drops) world.addEmber(this.pos, f.trailRadius, f.burn, f.trailLife);
     this.action = { kind: 'free' };
+    // Geta d'Amaterasu : là où le Sorcier se pose, un sceau divin soigne.
+    const zone = this.cfg.perks?.flightSanctuary;
+    if (zone) world.addSanctuary(this.pos, zone);
   }
 
   private tickKitCooldowns(dt: number): void {
@@ -1117,7 +1260,7 @@ export class Player {
   private rangerSkills(input: InputFrame, aimDir: Vec2, world: World): void {
     const r = this.cfg.ranger;
     if (input.skillAPressed && this.netCooldown <= 0) {
-      world.netArrow(aimDir);
+      world.netArrow(aimDir, input.aimGround);
       this.netCooldown = r.net.cooldown;
       this.showCast('ultimate');
     }
@@ -1165,7 +1308,11 @@ export class Player {
     if (this.cfg.perks?.leapNet) world.netBurst(this.pos);
     world.volley(aimDir);
     this.leapCooldown = leap.cooldown;
-    if (this.cfg.perks?.leapCharge) this.leapPrimed = true;
+    const perks = this.cfg.perks ?? {};
+    if (perks.leapCharge) this.leapPrimed = true;
+    // Manteau de Plumes : une silhouette reste et attire les yokai ; Kyahan d'éclaireur : on tire plus vite.
+    if (perks.leapDecoy) world.addLure(this.pos, perks.leapDecoy);
+    if (perks.leapRush) this.setRush(perks.leapRush);
     this.blocking = false;
     this.facing = aimDir;
     this.action = { kind: 'leap', t: 0, from: { ...this.pos }, to };
