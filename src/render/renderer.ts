@@ -148,6 +148,8 @@ interface EntityView {
   animTime: number;
   /** Anneau des marques, créé à la première marque. */
   markRing?: { mesh: Mesh; material: ShaderMaterial };
+  /** Style lumière : temps avant la prochaine image rémanente pendant une esquive. */
+  ghostTimer?: number;
 }
 
 interface Fx {
@@ -172,6 +174,11 @@ const PLAYER_ID = 0;
 const ALLY_ID = -1_000_000_000;
 /** Posture de repli quand une planche n'a pas d'animation pour la posture demandée. */
 /** Animations dessinées du héros à préférer à sa posture : la mort, puis une compétence, l'ultime ou le recul. */
+/** « guerrier » → « Guerrier » (noms des sprites d'effets par classe). */
+function capitalize(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
 function heroArt(hero: HeroView): readonly string[] {
   if (hero.dead) return ['death'];
   return hero.artPose ? [hero.artPose] : [];
@@ -205,6 +212,18 @@ const DANGER = new Color3(1, 0.22, 0.16);
 const SLASH = new Color3(1, 0.97, 0.9);
 /** Ouvertures des planches de coups d'arme (public/sprites/fx/slash-<degrés>, `npm run vfx`). */
 const SLASH_ARCS = [120, 150, 180, 200, 360];
+/**
+ * Style « lumière » des effets (essai, octobre 2026, inspiré de Merakintsugi) : classes qui l'utilisent, et la
+ * teinte de leurs images rémanentes. Les autres gardent les effets au pinceau.
+ */
+const LIGHT_STYLE: Record<string, { ghost: Color3 }> = {
+  guerrier: { ghost: new Color3(1, 0.74, 0.38) },
+};
+/** Hauteur de la lame : les traînées du style lumière balaient à cette hauteur, pas au sol. */
+const BLADE_HEIGHT = 0.85;
+/** Une image rémanente toutes les… (secondes), et sa durée. */
+const GHOST_EVERY = 0.035;
+const GHOST_LIFE = 0.24;
 /** Soin à partir duquel un cercle de pinceau se trace aussi au sol (les petites gorgées de vol de vie n'en ont pas). */
 const BIG_HEAL = 15;
 const HEAL = new Color3(0.45, 1, 0.5);
@@ -258,6 +277,7 @@ export function registerShaders(): void {
     uniform sampler2D textureSampler;
     uniform vec3 tint;
     uniform float flash;
+    uniform vec3 flashColor;
     uniform float alpha;
     uniform float flipX;
     uniform vec4 frameRect;
@@ -266,7 +286,7 @@ export function registerShaders(): void {
       vec4 color = texture2D(textureSampler, uv);
       float a = color.a * alpha;
       if (a < 0.02) discard;
-      gl_FragColor = vec4(mix(color.rgb * tint, vec3(1.0), flash), a);
+      gl_FragColor = vec4(mix(color.rgb * tint, flashColor, flash), a);
     }`;
 }
 
@@ -277,7 +297,7 @@ export function spriteMaterial(scene: Scene, name: string, texture: BaseTexture)
     { vertex: 'sprite', fragment: 'sprite' },
     {
       attributes: ['position', 'uv'],
-      uniforms: ['worldViewProjection', 'tint', 'flash', 'alpha', 'flipX', 'frameRect'],
+      uniforms: ['worldViewProjection', 'tint', 'flash', 'flashColor', 'alpha', 'flipX', 'frameRect'],
       samplers: ['textureSampler'],
       needAlphaBlending: true,
     },
@@ -285,6 +305,7 @@ export function spriteMaterial(scene: Scene, name: string, texture: BaseTexture)
   material.setTexture('textureSampler', texture);
   material.setColor3('tint', WHITE);
   material.setFloat('flash', 0);
+  material.setColor3('flashColor', WHITE);
   material.setFloat('alpha', 1);
   material.setFloat('flipX', 0);
   material.setVector4('frameRect', new Vector4(0, 0, 1, 1));
@@ -381,6 +402,8 @@ export class Renderer {
   private texts: FloatingText[] = [];
   /** Sprite du héros : sa race et sa classe (src/render/heroes.ts). */
   private heroSprite = 'heros';
+  /** Classe du héros de ce joueur : choisit le style des effets (`LIGHT_STYLE`). */
+  private localKit = '';
   /** Le héros demandé, affiché dès que sa planche est chargée. */
   private wantedHero = 'heros';
   private readonly heroLoads = new Map<string, Promise<void>>();
@@ -522,6 +545,7 @@ export class Renderer {
     this.time += dt;
     const player = world.player;
     this.localId = player.id;
+    this.localKit = player.cfg.kit;
     const seen = new Set<number>([PLAYER_ID]);
     this.syncEntity(PLAYER_ID, this.heroSprite, {
       pos: player.pos,
@@ -729,6 +753,15 @@ export class Renderer {
     view.sprite.position.set(this.right.x * jitter, lift + hover + s.altitude, this.right.z * jitter);
 
     if (s.blink) alpha *= Math.sin(this.time * 40) > 0 ? 1 : 0.45;
+    // Style lumière : des copies translucides et teintées du héros restent derrière lui pendant l'esquive.
+    const light = LIGHT_STYLE[this.localKit];
+    if (light && view.isPlayer && s.pose === 'dash') {
+      view.ghostTimer = (view.ghostTimer ?? 0) - dt;
+      if (view.ghostTimer <= 0) {
+        view.ghostTimer = GHOST_EVERY;
+        this.spawnGhost(view, anim, light.ghost);
+      }
+    } else view.ghostTimer = 0;
     view.flash = Math.max(0, view.flash - dt * 7);
     view.material.setFloat('flash', view.flash);
     view.material.setFloat('alpha', alpha * s.spawn);
@@ -1222,8 +1255,12 @@ export class Renderer {
           });
           break;
         }
-        // Trait de pinceau qui balaie l'arc de l'arme (planche d'effet la plus proche de son ouverture).
+        // Trait de pinceau qui balaie l'arc de l'arme (planche d'effet la plus proche de son ouverture). Style
+        // lumière : une traînée fine qui balaie à hauteur de lame, au-dessus des sprites.
         const drawn = SLASH_ARCS.reduce((best, a) => (Math.abs(a - event.arcDeg) < Math.abs(best - event.arcDeg) ? a : best));
+        const lightKit = LIGHT_STYLE[this.localKit] ? capitalize(this.localKit) : '';
+        const size = event.range * 2.1;
+        if (lightKit && this.sheetFx(`fxLightSlash${lightKit}${drawn}`, 'slash', event.pos, event.dir, size, size, 0.15, BLADE_HEIGHT, true)) break;
         if (this.sheetFx(`fxSlash${drawn}`, 'slash', event.pos, event.dir, event.range * 2.1, event.range * 2.1, 0.18)) break;
         // Repli : un croissant presque fermé tourne autour du héros, ou le croissant de l'arc de l'arme.
         const full = event.arcDeg >= 360;
@@ -1247,7 +1284,12 @@ export class Renderer {
       case 'enemyHit': {
         const view = this.views.get(event.id);
         if (view) view.flash = event.shielded ? 0.35 : 1;
-        if (!event.shielded) {
+        const lightKit = LIGHT_STYLE[this.localKit] ? capitalize(this.localKit) : '';
+        if (!event.shielded && lightKit) {
+          // Style lumière : une étoile sèche dressée face à la caméra, à hauteur de poitrine.
+          const size = event.crit ? 1.9 : 1.3;
+          this.uprightFx(`fxLightImpact${lightKit}`, 'impact', event.pos, size, size, 0.15, { center: 0.85 });
+        } else if (!event.shielded) {
           const size = event.crit ? 1.9 : 1.35;
           const turn = Math.random() * Math.PI * 2;
           this.sheetFx('fxImpact', 'impact', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, size, size, 0.24, 0.05);
@@ -1676,6 +1718,12 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 1.6, DRAW, 0.25));
         break;
       case 'dodge':
+        if (LIGHT_STYLE[this.localKit]) {
+          // Style lumière : volutes de poussière au départ, à l'opposé de la course (les images rémanentes suivent).
+          const away = dot(event.dir, this.right) < 0;
+          this.uprightFx('fxLightDust', 'dust', { x: event.pos.x - event.dir.x * 0.4, z: event.pos.z - event.dir.z * 0.4 }, 2.4, 1.2, 0.4, { flip: away });
+          break;
+        }
         this.sheetFx('fxDodge', 'dodge', { x: event.pos.x - event.dir.x * 0.9, z: event.pos.z - event.dir.z * 0.9 }, event.dir, 2.6, 1.3, 0.32);
         break;
       case 'wave':
@@ -1695,13 +1743,13 @@ export class Renderer {
    * Effet dessiné image par image (planche de public/sprites/fx, `npm run vfx`) posé au sol, joué une fois sur
    * `life` secondes. Renvoie faux si la planche manque : l'appelant garde alors son effet de repli.
    */
-  private sheetFx(name: string, tag: string, pos: Vec2, dir: Vec2, width: number, depth: number, life: number, y = 0.04): boolean {
+  private sheetFx(name: string, tag: string, pos: Vec2, dir: Vec2, width: number, depth: number, life: number, y = 0.04, overSprites = false): boolean {
     const sheet = this.sprites.get(name);
     const anim = sheet?.anim;
     if (!sheet || !anim) return false;
     const tagInfo = anim.tags.get(tag);
     const span = tagInfo ? anim.frames.slice(tagInfo.from, tagInfo.to + 1).reduce((sum, f) => sum + f.duration, 0) : life;
-    this.addFx({
+    const fx = this.addFx({
       texture: sheet.texture,
       pos,
       dir,
@@ -1711,8 +1759,10 @@ export class Renderer {
       life,
       y,
       // La planche est jouée en entier sur la durée de l'effet, quelle que soit la durée de ses images.
-      update: (k, fx) => showFrame(fx.material, anim, frameAt(anim, tag, k * span)),
+      update: (k, f) => showFrame(f.material, anim, frameAt(anim, tag, k * span)),
     });
+    // À hauteur de lame, la traînée passe devant les sprites ; le test de profondeur cache la partie derrière eux.
+    if (overSprites) fx.mesh.alphaIndex = SPRITE_ORDER * 2;
     return true;
   }
 
@@ -1720,7 +1770,7 @@ export class Renderer {
    * Effet dessiné debout (éclair, pétales qui montent) : un plan tourné vers la caméra comme les personnages, posé
    * sur le sol en `pos`, qui joue sa planche une fois sur `life` secondes. Renvoie faux si la planche manque.
    */
-  private uprightFx(name: string, tag: string, pos: Vec2, width: number, height: number, life: number): boolean {
+  private uprightFx(name: string, tag: string, pos: Vec2, width: number, height: number, life: number, options: { center?: number; flip?: boolean } = {}): boolean {
     const sheet = this.sprites.get(name);
     const anim = sheet?.anim;
     if (!sheet || !anim) return false;
@@ -1732,14 +1782,41 @@ export class Renderer {
     mesh.isPickable = false;
     mesh.position.x = pos.x;
     mesh.position.z = pos.z;
+    // `center` : hauteur du milieu de l'image (un impact à hauteur de poitrine) ; sinon, posée sur le sol.
+    if (options.center !== undefined) mesh.position.y = options.center - height / 2;
     mesh.alphaIndex = SPRITE_ORDER * 2;
     const material = spriteMaterial(this.scene, 'fx', sheet.texture);
     material.disableDepthWrite = true;
+    if (options.flip) material.setFloat('flipX', 1);
     mesh.material = material;
     const fx: Fx = { mesh, material, age: 0, life, update: (k, f) => showFrame(f.material, anim, frameAt(anim, tag, k * span)) };
     fx.update(0, fx);
     this.effects.push(fx);
     return true;
+  }
+
+  /** Image rémanente : une copie de l'image actuelle du héros, teintée, qui reste sur place et s'efface. */
+  private spawnGhost(view: EntityView, anim: SheetAnimation | undefined, tint: Color3): void {
+    const entry = this.sprites.get(view.spriteName);
+    if (!entry) return;
+    view.sprite.computeWorldMatrix(true);
+    const mesh = view.sprite.clone('ghost', null);
+    // Le clone garde le parent du héros : on le détache, sinon il suivrait le héros au lieu de rester sur place.
+    mesh.parent = null;
+    mesh.position.copyFrom(view.sprite.getAbsolutePosition());
+    mesh.scaling.copyFrom(view.sprite.scaling);
+    mesh.alphaIndex = view.sprite.alphaIndex - 1;
+    const material = spriteMaterial(this.scene, 'ghost', entry.texture);
+    material.disableDepthWrite = true;
+    // Silhouette presque unie de la couleur de la classe, où l'on devine encore le dessin.
+    material.setColor3('flashColor', tint);
+    material.setFloat('flash', 0.78);
+    material.setFloat('flipX', view.faceRight === view.imageFacesRight ? 0 : 1);
+    if (anim && view.animTag) showFrame(material, anim, frameAt(anim, view.animTag, view.animTime));
+    mesh.material = material;
+    const fx: Fx = { mesh, material, age: 0, life: GHOST_LIFE, update: (k, f) => f.material.setFloat('alpha', 0.6 * (1 - k) ** 1.5) };
+    fx.update(0, fx);
+    this.effects.push(fx);
   }
 
   private ringFx(pos: Vec2, size: number, color: Color3, life: number): Parameters<Renderer['addFx']>[0] {

@@ -1,0 +1,72 @@
+{
+ "frames": [
+  {
+   "filename": "impact 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 160
+   },
+   "duration": 30
+  },
+  {
+   "filename": "impact 1",
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 160,
+    "h": 160
+   },
+   "duration": 30
+  },
+  {
+   "filename": "impact 2",
+   "frame": {
+    "x": 320,
+    "y": 0,
+    "w": 160,
+    "h": 160
+   },
+   "duration": 30
+  },
+  {
+   "filename": "impact 3",
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 160,
+    "h": 160
+   },
+   "duration": 30
+  },
+  {
+   "filename": "impact 4",
+   "frame": {
+    "x": 640,
+    "y": 0,
+    "w": 160,
+    "h": 160
+   },
+   "duration": 30
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "light-impact-guerrier.webp",
+  "size": {
+   "w": 800,
+   "h": 160
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "impact",
+    "from": 0,
+    "to": 4,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

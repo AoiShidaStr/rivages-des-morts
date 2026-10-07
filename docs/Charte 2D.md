@@ -230,4 +230,13 @@ Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessin
 | Rayons or et anneau qui s'ouvre | `aura-burst` | lancement de l'Aura de lumière |
 | Marteau qui tournoie, trait de pinceau derrière la tête | `hammer` | marteau lancé du Paladin |
 
+**Essai du style « lumière » (7 octobre 2026, Guerrier seulement).** Les effets au pinceau ci-dessus font trop « cartoon » à côté de l'Invocateur Hanyō. Le style lumière, inspiré des effets de Merakintsugi, les remplace pour le Guerrier :
+
+- pas de contour : un cœur blanc et une seule couleur d'accent par classe (ambre pour le Guerrier), des traits fins effilés en pointe, un pic très bref sur l'impact puis des éclats ;
+- traînée de lame à hauteur de poitrine (`light-slash-guerrier-<degrés>`), qui passe devant ou derrière les sprites selon la profondeur, au lieu d'être couchée au sol ;
+- impact en étoile sèche dressée face à la caméra (`light-impact-guerrier`) ;
+- esquive : volutes de poussière (`light-dust`) et **images rémanentes** du héros, des copies ambrées et translucides de son image du moment (`spawnGhost`, aucune planche à dessiner).
+
+Les classes concernées sont listées dans `LIGHT_STYLE` (`src/render/renderer.ts`) avec la teinte de leurs images rémanentes, et leurs couleurs dans `LIGHT` (`tools/vfx.mjs`). Si l'essai est validé, on l'étend aux autres classes et effets.
+
 Pour retoucher un effet : modifier sa fonction dans `tools/vfx.mjs` (durées, couleurs, formes), relancer `npm run vfx -- <nom>`. Une planche absente laisse le rendu retomber sur l'ancien effet dessiné par le code.

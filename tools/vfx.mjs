@@ -542,6 +542,143 @@ function hammerSpin() {
   });
 }
 
+// --- Style « lumière » (essai sur le Guerrier, octobre 2026) -----------------------------------------------------
+//
+// Inspiré des effets de Merakintsugi : pas de contour, un cœur blanc et une seule couleur d'accent par classe,
+// des traits très fins effilés en pointe, un pic très bref sur l'impact, puis la dissolution en éclats.
+
+/** Couleurs de lumière par classe : cœur, accent, accent sombre (jamais le vermillon, réservé au danger). */
+const LIGHT = {
+  guerrier: { core: '#fffaf0', main: '#ffbf5e', deep: '#e0782f' },
+};
+
+/** Croissant effilé aux deux bouts, plus épais vers la tête (u = 1). */
+const needle = (maxW, peak = 0.78) => (u) => {
+  const a = u < peak ? (u / peak) ** 1.4 : ((1 - u) / (1 - peak)) ** 0.6;
+  return Math.max(0.6, maxW * a);
+};
+
+/** Éclat : un losange très allongé, orienté selon `angle`. */
+function sliver(x, y, length, width, angle, fill, opacity) {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const p = (along, across) => [x + c * along - s * across, y + s * along + c * across];
+  return polygon([p(-length / 2, 0), p(0, -width / 2), p(length / 2, 0), p(0, width / 2)], fill, 'none', 0, opacity);
+}
+
+/** Coup d'arme en arc, style lumière : une traînée fine et nette balaie l'arc, puis éclate en éclats. */
+function slashLight(arcDeg, color) {
+  const S = 256;
+  const c = S / 2;
+  const R = 116;
+  const full = arcDeg >= 360;
+  const a0 = full ? -180 : -arcDeg / 2;
+  const a1 = full ? 180 : arcDeg / 2;
+  const span = a1 - a0;
+  const N = 6;
+  const rand = seeded(arcDeg + 101);
+  const shards = [...Array(9)].map(() => ({ u: 0.35 + rand() * 0.65, out: 4 + rand() * 22, len: 8 + rand() * 14, w: 1.6 + rand() * 1.6, drift: 0.6 + rand() * 0.8, white: rand() < 0.35 }));
+  // Tête et queue de la traînée à chaque image : départ, pic sur l'impact (image 2), retrait, éclats.
+  const head = [0.18, 0.72, 1, 1, 1, 1];
+  const tail = [0, 0.05, 0.25, 0.62, 0.92, 1];
+  const thick = [0.35, 0.85, 1, 0.55, 0.2, 0];
+  return [...Array(N)].map((_, i) => {
+    const h = lerp(a0, a1, head[i]);
+    const t = lerp(a0, a1, tail[i]);
+    const W = 20 * thick[i];
+    let body = '';
+    if (h - t > 2 && W > 0.5) {
+      // Corps de la traînée en accent, cœur blanc sur le bord d'attaque (extérieur), filets fins à l'intérieur.
+      // Voile de mouvement : une bande plus large et translucide, qui donne sa masse au geste.
+      body += polygon(arcBand(c, c, R - 2, t, h, needle(W * 2.1, 0.7)), color.main, 'none', 0, 0.28);
+      body += polygon(arcBand(c, c, R, t, h, needle(W)), color.main, 'none', 0, 0.95);
+      body += polygon(arcBand(c, c, R, t + (h - t) * 0.25, h, needle(W * 0.42)), color.core, 'none', 0, 1);
+      for (const [dr, k, w] of [[W + 6, 0.55, 1.6], [W + 13, 0.35, 1.1]]) {
+        const from = h - (h - t) * k;
+        body += polygon(arcBand(c, c, R - dr, from, h - 3, needle(w, 0.7)), color.deep, 'none', 0, 0.8 * thick[i]);
+      }
+      // Fines lignes de vitesse à l'extérieur, qui précèdent la tête au pic.
+      if (i <= 2) body += polygon(arcBand(c, c, R + 7, h - span * 0.3, h + 2, needle(1.3, 0.85)), color.core, 'none', 0, 0.7);
+    }
+    // Éclats projetés depuis le chemin de la lame, qui filent dans le sens du coup puis s'éteignent.
+    if (i >= 3) {
+      const q = (i - 2) / (N - 3);
+      for (const s of shards) {
+        const a = deg(lerp(a0, a1, s.u) + span * 0.06 * q * s.drift);
+        const r = R - 6 + s.out * q * 1.4;
+        const x = c + Math.cos(a) * r;
+        const y = c + Math.sin(a) * r;
+        body += sliver(x, y, s.len * (1 - q * 0.55), s.w, a + Math.PI / 2, s.white ? color.core : color.main, 1 - q * 0.7);
+      }
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Impact, style lumière : une étoile blanche sèche, un trait, des éclats d'accent ; dressé face à la caméra. */
+function impactLight(color) {
+  const S = 160;
+  const c = S / 2;
+  const N = 5;
+  const rand = seeded(55);
+  const tilt = deg(-18);
+  const shards = [...Array(7)].map((_, k) => ({ a: tilt + (k / 7) * Math.PI * 2 + (rand() - 0.5) * 0.5, len: 10 + rand() * 12, w: 2 + rand() * 1.5, d: 0.8 + rand() * 0.5 }));
+  const star = (r, w, fill, opacity) =>
+    [0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, k) => sliver(c + Math.cos(tilt + a) * r * (k % 2 ? 0.32 : 0.5), c + Math.sin(tilt + a) * r * (k % 2 ? 0.32 : 0.5), r * (k % 2 ? 0.64 : 1), w, tilt + a, fill, opacity)).join('');
+  const size = [44, 62, 40, 0, 0];
+  return [...Array(N)].map((_, i) => {
+    const q = i / (N - 1);
+    let body = '';
+    if (size[i]) {
+      body += star(size[i] * 1.25, 9 - i * 2, color.main, 0.9);
+      body += star(size[i], 5 - i, color.core, 1);
+      body += `<circle cx="${c}" cy="${c}" r="${(7 - i * 2.5).toFixed(1)}" fill="${color.core}"/>`;
+    }
+    // Trait horizontal très fin, le « clac » du coup.
+    if (i <= 1) body += sliver(c, c, 120 + 30 * i, 2.2, tilt * 0.3, color.core, 0.9);
+    if (i >= 1) {
+      for (const s of shards) {
+        const r = (16 + 40 * easeOut(q)) * s.d;
+        body += sliver(c + Math.cos(s.a) * r, c + Math.sin(s.a) * r, s.len * (1 - q * 0.6), s.w, s.a, i % 2 ? color.main : color.core, 1 - q * 0.8);
+      }
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Poussière d'esquive, style lumière : des volutes claires, juste esquissées, qui traînent derrière (héros vers +x). */
+function dustLight() {
+  const W = 256;
+  const H = 128;
+  const N = 8;
+  const rand = seeded(77);
+  const base = H - 22;
+  const curls = [...Array(5)].map((k, i) => ({ x: 150 - i * 26 + rand() * 10, r: 9 + rand() * 9 + i * 1.5, delay: i * 0.06, rise: 10 + rand() * 18 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    let body = '';
+    for (const cu of curls) {
+      const q = clamp01((p - cu.delay) / 0.85);
+      if (q <= 0 || q >= 1) continue;
+      const r = cu.r * (0.5 + 0.8 * easeOut(q));
+      const x = cu.x - 30 * easeOut(q);
+      const y = base - cu.rise * easeOut(q) - r * 0.5;
+      const o = (1 - q) ** 1.3;
+      // Volute : un arc ouvert qui s'enroule, et un voile très léger.
+      body += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${DUST}" opacity="${(0.28 * o).toFixed(3)}"/>`;
+      body += `<path d="M ${(x - r).toFixed(1)} ${y.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 1 1 ${(x + r * 0.2).toFixed(1)} ${(y + r * 0.95).toFixed(1)} A ${(r * 0.45).toFixed(1)} ${(r * 0.45).toFixed(1)} 0 0 1 ${(x + r * 0.05).toFixed(1)} ${(y + r * 0.1).toFixed(1)}" fill="none" stroke="#f4f6f8" stroke-width="${(2.6 * (1 - q * 0.5)).toFixed(1)}" stroke-linecap="round" opacity="${(0.9 * o).toFixed(3)}"/>`;
+    }
+    // Deux traits de vitesse au ras du sol, très fins.
+    if (p < 0.6) {
+      for (const [dy, len] of [[-4, 120], [6, 80]]) {
+        const x1 = W - 50;
+        body += sliver(x1 - len / 2, base + dy, len * (1 - p), 2, 0, '#f4f6f8', 0.8 * (1 - p / 0.6));
+      }
+    }
+    return svg(W, H, body);
+  });
+}
+
 // --- Écriture des planches ---------------------------------------------------------------------------------------
 
 /** name : fichier (sans extension) ; tag : nom de l'animation ; once : jouée une fois ; duration : ms par image. */
@@ -557,6 +694,10 @@ const EFFECTS = [
   { name: 'aura-loop', tag: 'aura', once: false, duration: 90, frames: auraLoop },
   { name: 'aura-burst', tag: 'aura', once: true, duration: 50, frames: auraBurst },
   { name: 'hammer', tag: 'flight', once: false, duration: 45, frames: hammerSpin },
+  // Style lumière, essai sur le Guerrier.
+  ...[120, 150, 180, 200, 360].map((a) => ({ name: `light-slash-guerrier-${a}`, tag: 'slash', once: true, duration: 25, frames: () => slashLight(a, LIGHT.guerrier) })),
+  { name: 'light-impact-guerrier', tag: 'impact', once: true, duration: 30, frames: () => impactLight(LIGHT.guerrier) },
+  { name: 'light-dust', tag: 'dust', once: true, duration: 45, frames: dustLight },
   // Remplacent les effets du Sorcier : mêmes fichiers et mêmes tags, déjà branchés dans le rendu.
   { name: 'fireball-sorcier', tag: 'flight', once: false, duration: 60, frames: fireball },
   { name: 'fire-wrath-sorcier', tag: 'wrath', once: true, duration: 45, frames: fireBurst },
