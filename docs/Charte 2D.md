@@ -224,10 +224,10 @@ Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessin
 | Poussière et traits de vitesse | `dodge` | esquive |
 | Comète de flammes en aplats | `fireball-sorcier` | boule de feu du Sorcier |
 | Couronne de flammes et braises | `fire-wrath-sorcier` | explosion du météore |
-| Éclair debout (deux coups) et fissures au sol | `lightning-bolt`, `lightning-ground` | foudre : fils de Zeus, Ikazuchi qui disparaît, zones d'éclair |
+| Éclair fin et lumineux, sans contour (deux coups), fissures de lumière au sol (style lumière) | `lightning-bolt`, `lightning-ground` | foudre : fils de Zeus, Ikazuchi qui disparaît, zones d'éclair |
 | Pétales de jade qui montent, ensō jade au sol | `heal-rise`, `heal-ring` | soin (l'ensō seulement à partir de 15 PV) |
-| Cercle de pinceau or qui tourne (boucle) | `aura-loop` | Aura de lumière du Paladin, tant qu'elle dure |
-| Rayons or et anneau qui s'ouvre | `aura-burst` | lancement de l'Aura de lumière |
+| Cercle d'or fin et lumineux, éclats qui courent dessus, étincelles (boucle, style lumière) | `aura-loop` | Aura de lumière du Paladin, tant qu'elle dure |
+| Éclat doux, anneau fin qui s'ouvre et fins rayons (style lumière) | `aura-burst` | lancement de l'Aura de lumière |
 | Marteau qui tournoie, trait de pinceau derrière la tête | `hammer` | marteau lancé du Paladin |
 
 **Style « lumière » (octobre 2026, toutes les classes).** Les effets au pinceau ci-dessus faisaient trop « cartoon » à côté de l'Invocateur Hanyō. Le style lumière, inspiré des effets de Merakintsugi, les remplace pour les héros :
@@ -258,7 +258,8 @@ Les classes et la teinte de leurs images rémanentes sont dans `LIGHT_STYLE` (`s
 | État | Aura (boucle) | Lancement |
 | --- | --- | --- |
 | Bouclier de flammes (Sorcier) | `aura-state-fire` : langues de feu et braises | `dome-fire` : sphère de flammes |
-| Frénésie (Guerrier), Sang yokai (Hanyō) | `aura-state-rage` : flammes rouges | `dome-rage` : sphère de flammes rouges |
+| Frénésie (Guerrier) | `aura-state-rage` : flammes rouges | `dome-rage` : sphère de flammes rouges |
+| Sang yokai (Hanyō) | `aura-state-yokai` : énergie violette sombre, plus discrète | `dome-yokai` : sphère violette atténuée |
 | Égide (Paladin, sur le héros protégé) | `aura-state-aegis` : traits de lumière dorés et étincelles | `dome-aegis` : bulle-bouclier dorée à treillis hexagonal |
 
 Code : `syncStateAuras` dans `src/render/renderer.ts`.

@@ -223,9 +223,12 @@ const LIGHT_STYLE: Record<string, { ghost: Color3 }> = {
   rodeur: { ghost: new Color3(0.6, 0.9, 0.56) },
   sorcier: { ghost: new Color3(1, 0.55, 0.22) },
 };
-/** Auras d'état dressées derrière le héros : Bouclier de flammes (feu), Frénésie et Sang yokai (rage), Égide (or). */
-type StateAura = 'fire' | 'rage' | 'aegis';
-const STATE_AURA_SPRITE: Record<StateAura, string> = { fire: 'fxAuraStateFire', rage: 'fxAuraStateRage', aegis: 'fxAuraStateAegis' };
+/**
+ * Auras d'état dressées derrière le héros : Bouclier de flammes (feu), Frénésie (rage rouge), Sang yokai (violet,
+ * plus discret), Égide (or).
+ */
+type StateAura = 'fire' | 'rage' | 'yokai' | 'aegis';
+const STATE_AURA_SPRITE: Record<StateAura, string> = { fire: 'fxAuraStateFire', rage: 'fxAuraStateRage', yokai: 'fxAuraStateYokai', aegis: 'fxAuraStateAegis' };
 /** Taille de l'aura d'état (largeur, hauteur) et ce qui passe sous les pieds du héros. */
 const STATE_AURA_SIZE = { width: 2.1, height: 3.5, below: 0.3 };
 /** Anneau de flammes (brand-ring) : rayon du cercle dans l'image, en part de sa demi-largeur. */
@@ -1017,7 +1020,7 @@ export class Renderer {
         mesh.scaling.setAll(radius);
         showFrame(material, drawn.anim, frameAt(drawn.anim, 'aura', this.time));
         // Elle pâlit pendant sa dernière seconde.
-        material.setFloat('alpha', 0.9 * Math.min(1, hero.aura));
+        material.setFloat('alpha', 0.8 * Math.min(1, hero.aura));
         continue;
       }
       mesh.scaling.setAll(radius * (1 + 0.03 * Math.sin(this.time * 4)));
@@ -1038,9 +1041,11 @@ export class Renderer {
         ? null
         : hero.ward > 0
           ? 'fire'
-          : hero.frenzy > 0 || hero.transformed > 0
+          : hero.frenzy > 0
             ? 'rage'
-            : world.players.some((p) => p.aegisOn === hero.id)
+            : hero.transformed > 0
+              ? 'yokai'
+              : world.players.some((p) => p.aegisOn === hero.id)
               ? 'aegis'
               : null;
       let aura = this.stateAuras.get(hero.id);
@@ -1575,8 +1580,8 @@ export class Renderer {
         break;
       case 'lightning': {
         const turn = Math.random() * Math.PI * 2;
-        const ground = this.sheetFx('fxLightningGround', 'bolt', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, 2.4, 2.4, 0.45);
-        const bolt = this.uprightFx('fxLightningBolt', 'bolt', event.pos, 1.5, 4.8, 0.36);
+        const ground = this.sheetFx('fxLightningGround', 'bolt', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, 1.9, 1.9, 0.4);
+        const bolt = this.uprightFx('fxLightningBolt', 'bolt', event.pos, 1.4, 4.6, 0.3);
         if (!ground && !bolt) this.addFx(this.ringFx(event.pos, 1.8, STORM, 0.22));
         this.addShake(0.2);
         break;
@@ -1630,7 +1635,7 @@ export class Renderer {
         break;
       case 'transform':
         this.text(event.pos, 2.5, 'Sang yokai !', 'rage', 1.4);
-        if (!this.uprightFx('fxDomeRage', 'dome', event.pos, 3.4, 3.4, 0.55, { center: 0.9 })) this.addFx(this.ringFx(event.pos, 3, RAGE, 0.5));
+        if (!this.uprightFx('fxDomeYokai', 'dome', event.pos, 2.8, 2.8, 0.5, { center: 0.9 })) this.addFx(this.ringFx(event.pos, 3, RAGE, 0.5));
         this.addShake(0.4);
         break;
       case 'blast': {

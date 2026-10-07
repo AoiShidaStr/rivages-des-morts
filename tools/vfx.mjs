@@ -332,73 +332,64 @@ function zigzag(x0, y0, x1, y1, steps, jitter, rand) {
   return list;
 }
 
-/** Trait d'éclair à trois couches : contour encre, bleu orage, cœur blanc. */
-function boltStroke(list, width, opacity) {
-  const line = (color, w) =>
-    `<polyline points="${pts(list)}" fill="none" stroke="${color}" stroke-width="${w.toFixed(1)}" stroke-linejoin="miter" stroke-miterlimit="3" stroke-linecap="round" opacity="${opacity.toFixed(3)}"/>`;
-  return line(INK, width + 5) + line(STORM.edge, width) + line(STORM.core, Math.max(1.5, width * 0.4));
-}
-
 /** Petite étoile à quatre branches (étincelle, éclat de lumière). */
 const sparkle = (x, y, r, fill, opacity = 1, stroke = INK) =>
   polygon([[x, y - r], [x + r * 0.28, y - r * 0.28], [x + r, y], [x + r * 0.28, y + r * 0.28], [x, y + r], [x - r * 0.28, y + r * 0.28], [x - r, y], [x - r * 0.28, y - r * 0.28]], fill, stroke, 1.2, opacity);
 
-/** Foudre, partie debout : l'éclair tombe du ciel, s'éteint, frappe une seconde fois, puis s'efface. */
+/** Foudre, partie debout (style lumière) : un éclair fin et net tombe, s'éteint, frappe une seconde fois, s'efface. */
 function lightningBolt() {
   const W = 160;
   const H = 512;
   const c = W / 2;
   const ground = H - 18;
   // Intensité de chaque image : deux coups de tonnerre, le second plus bref.
-  const beats = [1, 0.95, 0.3, 1, 0.85, 0.5, 0.25, 0.08];
+  const beats = [1, 0.85, 0.2, 0.9, 0.6, 0.3, 0.12, 0];
   const paths = [seeded(21), seeded(22)].map((rand) => {
-    const main = zigzag(c + (rand() - 0.5) * 30, 0, c, ground, 11, 26, rand);
-    const branches = [3, 6].map((k) => {
+    const main = zigzag(c + (rand() - 0.5) * 30, 0, c, ground, 13, 22, rand);
+    const branches = [4, 7].map((k) => {
       const [bx, by] = main[k];
       const side = rand() < 0.5 ? -1 : 1;
-      return zigzag(bx, by, bx + side * (35 + rand() * 25), by + 70 + rand() * 50, 4, 10, rand);
+      return zigzag(bx, by, bx + side * (30 + rand() * 20), by + 60 + rand() * 40, 4, 8, rand);
     });
     return { main, branches };
   });
+  const line = (list, color, w, o) => `<polyline points="${pts(list)}" fill="none" stroke="${color}" stroke-width="${w.toFixed(1)}" stroke-linejoin="round" stroke-linecap="round" opacity="${o.toFixed(3)}"/>`;
   return beats.map((power, i) => {
     const { main, branches } = paths[i < 3 ? 0 : 1];
-    const width = 7 + 10 * power;
-    let body = '';
-    // Éclat au point d'impact, à plat sur le sol (l'ellipse donne la perspective).
-    body += `<ellipse cx="${c}" cy="${ground}" rx="${(22 + 50 * power).toFixed(1)}" ry="${(7 + 12 * power).toFixed(1)}" fill="${STORM.core}" stroke="${INK}" stroke-width="2" opacity="${(0.9 * power).toFixed(3)}"/>`;
-    for (const b of branches) body += boltStroke(b, width * 0.45, power);
-    body += boltStroke(main, width, Math.min(1, power + 0.1));
-    if (power > 0.8) for (const [x, y, r] of [[c - 30, ground - 30, 9], [c + 34, ground - 18, 7], [c + 12, ground - 52, 6]]) body += sparkle(x, y, r * power, STORM.core);
+    let body = GLOW(6);
+    if (power <= 0) return svg(W, H, body);
+    body += glowGroup(line(main, STORM.edge, 9, 1) + branches.map((b) => line(b, STORM.edge, 5, 1)).join(''), 0.55 * power);
+    body += glowGroup(`<ellipse cx="${c}" cy="${ground}" rx="${(18 + 24 * power).toFixed(1)}" ry="${(5 + 6 * power).toFixed(1)}" fill="${STORM.core}"/>`, 0.7 * power);
+    for (const b of branches) body += line(b, STORM.core, 1.2, 0.8 * power);
+    body += line(main, STORM.edge, 3.2, 0.8 * power) + line(main, STORM.core, 1.6, power);
     return svg(W, H, body);
   });
 }
 
-/** Foudre, partie au sol : un éclat blanc, des fissures en étoile et une brûlure d'encre qui s'efface. */
+/** Foudre, partie au sol (style lumière) : un éclat bref, quelques fissures de lumière et des étincelles. */
 function lightningGround() {
   const S = 256;
   const c = S / 2;
   const N = 8;
   const rand = seeded(23);
-  const cracks = [...Array(7)].map((_, k) => {
-    const a = (k / 7) * Math.PI * 2 + (rand() - 0.5) * 0.5;
-    const len = 70 + rand() * 45;
-    return zigzag(c, c, c + Math.cos(a) * len, c + Math.sin(a) * len, 5, 9, rand);
+  const cracks = [...Array(5)].map((_, k) => {
+    const a = (k / 5) * Math.PI * 2 + (rand() - 0.5) * 0.6;
+    const len = 40 + rand() * 40;
+    return zigzag(c, c, c + Math.cos(a) * len, c + Math.sin(a) * len, 4, 7, rand);
   });
-  const sparks = [...Array(8)].map(() => ({ a: rand() * Math.PI * 2, d: 30 + rand() * 30, r: 4 + rand() * 4 }));
+  const sparks = [...Array(6)].map(() => ({ a: rand() * Math.PI * 2, d: 20 + rand() * 20 }));
   return [...Array(N)].map((_, i) => {
     const p = i / (N - 1);
-    const grow = easeOut(p / 0.3);
-    const fade = 1 - clamp01((p - 0.35) / 0.65);
-    let body = '';
-    body += polygon(splat(c, c, 26, 48, 9, seeded(24)), INK, 'none', 0, 0.45 * fade);
-    for (const crack of cracks) {
-      const part = crack.slice(0, Math.max(2, Math.round(grow * crack.length)));
-      body += boltStroke(part, 5 * (1 - 0.5 * p), fade);
-    }
-    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(30 + 60 * easeOut(p / 0.3)).toFixed(1)}" fill="${STORM.core}" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
+    const fade = 1 - clamp01((p - 0.2) / 0.8);
+    let body = GLOW(6);
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="34" fill="${INK}"/>`, 0.18 * fade);
+    if (p < 0.3) body += glowGroup(`<circle cx="${c}" cy="${c}" r="${(20 + 30 * (p / 0.3)).toFixed(1)}" fill="${STORM.core}"/>`, 0.8 * (1 - p / 0.3));
+    const lines = cracks.map((cr) => `<polyline points="${pts(cr.slice(0, Math.max(2, Math.round(cr.length * Math.min(1, p * 4)))))}" fill="none" stroke="${STORM.core}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+    body += glowGroup(lines.replaceAll(STORM.core, STORM.edge).replaceAll('1.6', '4'), 0.6 * fade);
+    body += `<g opacity="${fade.toFixed(3)}">${lines}</g>`;
     for (const s of sparks) {
-      const d = s.d + 70 * easeOut(p);
-      body += sparkle(c + Math.cos(s.a) * d, c + Math.sin(s.a) * d, s.r * (1 - 0.6 * p), STORM.core, fade);
+      const d = s.d + 40 * easeOut(p);
+      body += sliver(c + Math.cos(s.a) * d, c + Math.sin(s.a) * d, 8 * (1 - p * 0.6), 1.6, s.a, STORM.core, fade);
     }
     return svg(S, S, body);
   });
@@ -461,62 +452,55 @@ function healRing() {
 }
 
 /**
- * Aura de lumière du Paladin (boucle) : un cercle de pinceau or en trois arcs qui tournent lentement, des rayons
- * qui respirent et un voile doré sur la zone. Trois arcs : un tiers de tour par boucle suffit à la refermer.
+ * Aura de lumière du Paladin (boucle, style lumière) : un cercle d'or fin et lumineux, trois éclats qui courent
+ * dessus (un tiers de tour par boucle), un voile doré très léger et des étincelles qui montent.
  */
 function auraLoop() {
   const S = 512;
   const c = S / 2;
   const N = 12;
   const R = 236;
+  const rand = seeded(43);
+  const motes = [...Array(14)].map(() => ({ a: rand() * Math.PI * 2, d: 0.3 + rand() * 0.65, ph: rand(), r: 3 + rand() * 3 }));
   return [...Array(N)].map((_, i) => {
     const t = i / N;
     const spin = t * 120;
-    const breath = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
-    let body = `<circle cx="${c}" cy="${c}" r="${R - 8}" fill="${GOLD}" opacity="0.12"/>`;
-    body += `<circle cx="${c}" cy="${c}" r="${R - 30}" fill="none" stroke="${PAPER}" stroke-width="2" stroke-dasharray="6 14" opacity="0.55" transform="rotate(${(-spin * 0.5).toFixed(1)} ${c} ${c})"/>`;
+    let body = GLOW(8);
+    body += `<circle cx="${c}" cy="${c}" r="${R}" fill="${GOLD}" opacity="0.05"/>`;
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="${GOLD}" stroke-width="10"/>`, 0.35);
+    body += `<circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="#fff3cf" stroke-width="1.6" opacity="0.7"/>`;
     for (let k = 0; k < 3; k++) {
       const from = spin + k * 120;
-      body += polygon(arcBand(c, c, R, from, from + 92, (u) => 18 * (0.2 + 0.8 * Math.sin(Math.PI * u))), GOLD, INK, 2.2);
-      body += polygon(arcBand(c, c, R - 5, from + 10, from + 80, (u) => 5 * Math.sin(Math.PI * u)), PAPER, 'none', 0, 0.9);
+      body += glowGroup(polygon(arcBand(c, c, R + 4, from, from + 40, (u) => 8 * Math.sin(Math.PI * u)), GOLD, 'none', 0, 1), 0.6);
+      body += polygon(arcBand(c, c, R + 1.5, from + 5, from + 38, (u) => 3 * u ** 1.5), '#ffffff', 'none', 0, 0.9);
     }
-    // Rayons courts dans les creux entre les arcs, qui s'allongent et raccourcissent.
-    for (let k = 0; k < 12; k++) {
-      const a = deg(spin + k * 30 + 15);
-      const r0 = R - 34;
-      const r1 = r0 + 14 + 16 * (k % 2 ? breath : 1 - breath);
-      const side = deg(2.2);
-      body += polygon(
-        [[c + Math.cos(a - side) * r0, c + Math.sin(a - side) * r0], [c + Math.cos(a) * r1, c + Math.sin(a) * r1], [c + Math.cos(a + side) * r0, c + Math.sin(a + side) * r0]],
-        PAPER, INK, 1.2, 0.8,
-      );
+    for (const m of motes) {
+      const q = (m.ph + t) % 1;
+      body += sparkle(c + Math.cos(m.a) * R * m.d, c + Math.sin(m.a) * R * m.d - q * 30, m.r, '#fff6d6', 0.7 * Math.sin(Math.PI * q), 'none');
     }
     return svg(S, S, body);
   });
 }
 
-/** Aura de lumière, lancement : des rayons or jaillissent du héros, puis un anneau de lumière s'ouvre jusqu'au bord. */
+/** Aura de lumière, lancement (style lumière) : un éclat doux, un anneau fin qui s'ouvre, de fins rayons. */
 function auraBurst() {
   const S = 512;
   const c = S / 2;
   const N = 9;
   const rand = seeded(41);
-  const rays = [...Array(16)].map((_, k) => ({ a: (k / 16) * Math.PI * 2 + (rand() - 0.5) * 0.15, len: 0.7 + rand() * 0.3, w: k % 2 ? 7 : 11 }));
+  const rays = [...Array(12)].map((_, k) => ({ a: (k / 12) * Math.PI * 2 + (rand() - 0.5) * 0.2, len: 0.6 + rand() * 0.4 }));
   return [...Array(N)].map((_, i) => {
     const p = i / (N - 1);
-    const reach = easeOut(p / 0.5);
-    const fade = 1 - clamp01((p - 0.5) / 0.5);
-    let body = '';
-    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(40 + 80 * (p / 0.3)).toFixed(1)}" fill="${PAPER}" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
-    for (const ray of rays) {
-      const r1 = 30 + 210 * reach * ray.len;
-      const r0 = Math.max(24, r1 - 120);
-      const w = deg(ray.w * (1 - 0.5 * p)) / 2;
-      const tri = [[c + Math.cos(ray.a - w) * r0, c + Math.sin(ray.a - w) * r0], [c + Math.cos(ray.a) * r1, c + Math.sin(ray.a) * r1], [c + Math.cos(ray.a + w) * r0, c + Math.sin(ray.a + w) * r0]];
-      body += polygon(tri, ray.w > 8 ? GOLD : PAPER, INK, 1.8, fade);
+    const fade = 1 - clamp01((p - 0.35) / 0.65);
+    const ring = 40 + 196 * easeOut(p);
+    let body = GLOW(8);
+    if (p < 0.35) body += glowGroup(`<circle cx="${c}" cy="${c}" r="${(30 + 60 * (p / 0.35)).toFixed(1)}" fill="#fff6d6"/>`, 0.7 * (1 - p / 0.35));
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${ring.toFixed(1)}" fill="none" stroke="${GOLD}" stroke-width="10"/>`, 0.5 * fade);
+    body += `<circle cx="${c}" cy="${c}" r="${ring.toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="1.8" opacity="${(0.85 * fade).toFixed(3)}"/>`;
+    for (const r of rays) {
+      const r1 = 30 + 190 * easeOut(p / 0.6) * r.len;
+      body += sliver(c + Math.cos(r.a) * r1 * 0.7, c + Math.sin(r.a) * r1 * 0.7, r1 * 0.5, 2.4, r.a, '#fff3cf', 0.8 * fade);
     }
-    const ring = 60 + 180 * easeOut(p);
-    body += polygon(arcBand(c, c, ring, 0, 360, () => 14 * (1 - p) + 3, 72), GOLD, INK, 2, fade);
     return svg(S, S, body);
   });
 }
@@ -1039,6 +1023,8 @@ const STATE = {
   fire: { tones: [FIRE.red, FIRE.orange, FIRE.yellow, FIRE.white], glow: FIRE.orange, spark: FIRE.yellow },
   rage: { tones: ['#8f0f1a', '#d9262c', '#ff6a4a', '#ffd6c8'], glow: '#e0302e', spark: '#ff9a7a' },
   aegis: { tones: ['#c99a35', '#ffd877', '#fff0b8', '#ffffff'], glow: '#ffe28f', spark: '#ffffff' },
+  // Sang yokai : une énergie violette et sombre d'oni, plus discrète que la Frénésie.
+  yokai: { tones: ['#2e0f3f', '#6b2a8f', '#b46ad8', '#f0dcff'], glow: '#5a2378', spark: '#d6a2ff', quiet: true },
 };
 
 /** Flamme en quatre couches aux couleurs d'un état. */
@@ -1057,14 +1043,14 @@ function stateAura(kind) {
   const N = 10;
   const st = STATE[kind];
   const rand = seeded(kind.length * 31 + 7);
-  const wisps = [...Array(8)].map((_, k) => ({ x: (k % 2 ? 1 : -1) * (26 + rand() * 34), base: feet - rand() * 120, len: 70 + rand() * 90, w: 10 + rand() * 8, ph: rand() * 6, lean: (rand() - 0.5) * 20 }));
-  const motes = [...Array(12)].map(() => ({ x: (rand() - 0.5) * 120, y: rand(), r: 1.5 + rand() * 2, v: 0.7 + rand() * 0.6 }));
+  const wisps = [...Array(st.quiet ? 5 : 8)].map((_, k) => ({ x: (k % 2 ? 1 : -1) * (26 + rand() * 34), base: feet - rand() * 120, len: 70 + rand() * 90, w: 10 + rand() * 8, ph: rand() * 6, lean: (rand() - 0.5) * 20 }));
+  const motes = [...Array(st.quiet ? 6 : 12)].map(() => ({ x: (rand() - 0.5) * 120, y: rand(), r: 1.5 + rand() * 2, v: 0.7 + rand() * 0.6 }));
   return [...Array(N)].map((_, i) => {
     const t = i / N;
     const ph = t * Math.PI * 2;
     let body = GLOW(10);
-    body += glowGroup(`<ellipse cx="${c}" cy="${feet - 120}" rx="${(58 + 4 * Math.sin(ph)).toFixed(1)}" ry="128" fill="${st.glow}"/>`, 0.32);
-    body += glowGroup(`<ellipse cx="${c}" cy="${feet}" rx="62" ry="14" fill="${st.glow}"/>`, 0.5);
+    body += glowGroup(`<ellipse cx="${c}" cy="${feet - 120}" rx="${(58 + 4 * Math.sin(ph)).toFixed(1)}" ry="128" fill="${st.glow}"/>`, st.quiet ? 0.2 : 0.32);
+    body += glowGroup(`<ellipse cx="${c}" cy="${feet}" rx="62" ry="14" fill="${st.glow}"/>`, st.quiet ? 0.3 : 0.5);
     for (const w of wisps) {
       const k = 0.75 + 0.25 * Math.sin(ph * 2 + w.ph);
       const x0 = c + w.x;
@@ -1074,7 +1060,7 @@ function stateAura(kind) {
         body += sliver(x0, y - w.len * 0.4 * k, w.len * 0.8 * k, 3.2, Math.PI / 2, st.tones[1], 0.75);
         body += sliver(x0, y - w.len * 0.4 * k, w.len * 0.55 * k, 1.4, Math.PI / 2, st.tones[3], 0.95);
       } else {
-        body += stateFlame(x0, w.base, x0 + w.lean, w.base - w.len * k, w.w, 9, w.ph + ph, 0.65, st.tones);
+        body += stateFlame(x0, w.base, x0 + w.lean, w.base - w.len * k * (st.quiet ? 0.8 : 1), w.w, 9, w.ph + ph, st.quiet ? 0.4 : 0.65, st.tones);
       }
     }
     for (const m of motes) {
@@ -1097,7 +1083,7 @@ function flameDome(kind) {
   return [...Array(N)].map((_, i) => {
     const p = i / (N - 1);
     const r = 30 + 78 * easeOut(p / 0.45);
-    const fade = 1 - clamp01((p - 0.5) / 0.5);
+    const fade = (1 - clamp01((p - 0.5) / 0.5)) * (st.quiet ? 0.6 : 1);
     let body = GLOW(9);
     if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(26 + 70 * (p / 0.3)).toFixed(1)}" fill="${st.tones[3]}" opacity="${(0.8 * (1 - p / 0.3)).toFixed(3)}"/>`;
     body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="${st.glow}" opacity="${(0.12 * fade).toFixed(3)}"/>`;
@@ -1183,9 +1169,10 @@ const EFFECTS = [
   { name: 'brand-embers', tag: 'embers', once: false, duration: 70, frames: brandEmbers },
   { name: 'brand-trail', tag: 'trail', once: true, duration: 50, frames: brandTrail },
   // Auras d'état et lancements en dôme.
-  ...['fire', 'rage', 'aegis'].map((kind) => ({ name: `aura-state-${kind}`, tag: 'aura', once: false, duration: 75, frames: () => stateAura(kind) })),
+  ...['fire', 'rage', 'aegis', 'yokai'].map((kind) => ({ name: `aura-state-${kind}`, tag: 'aura', once: false, duration: 75, frames: () => stateAura(kind) })),
   { name: 'dome-fire', tag: 'dome', once: true, duration: 50, frames: () => flameDome('fire') },
   { name: 'dome-rage', tag: 'dome', once: true, duration: 50, frames: () => flameDome('rage') },
+  { name: 'dome-yokai', tag: 'dome', once: true, duration: 50, frames: () => flameDome('yokai') },
   { name: 'dome-aegis', tag: 'dome', once: true, duration: 50, frames: aegisDome },
   // Remplacent les effets du Sorcier : mêmes fichiers et mêmes tags, déjà branchés dans le rendu.
   { name: 'fireball-sorcier', tag: 'flight', once: false, duration: 60, frames: fireball },

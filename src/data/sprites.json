@@ -64,6 +64,8 @@
   "fxDomeFire": { "file": null, "sheet": { "file": "fx/dome-fire.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxDomeRage": { "file": null, "sheet": { "file": "fx/dome-rage.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxDomeAegis": { "file": null, "sheet": { "file": "fx/dome-aegis.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxAuraStateYokai": { "file": null, "sheet": { "file": "fx/aura-state-yokai.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxDomeYokai": { "file": null, "sheet": { "file": "fx/dome-yokai.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxLightDust": { "file": null, "sheet": { "file": "fx/light-dust.json", "height": 1 }, "height": 1, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "sheet": { "file": "anim/hitodama.json" }, "height": 0.9, "facesRight": false, "lift": 0.45 },
   "kodama": { "file": "kodama.png", "sheet": { "file": "anim/kodama.json" }, "height": 1.15, "facesRight": true, "lift": 0.15 },
