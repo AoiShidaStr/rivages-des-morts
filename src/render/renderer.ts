@@ -223,6 +223,11 @@ const LIGHT_STYLE: Record<string, { ghost: Color3 }> = {
   rodeur: { ghost: new Color3(0.6, 0.9, 0.56) },
   sorcier: { ghost: new Color3(1, 0.55, 0.22) },
 };
+/** Auras d'état dressées derrière le héros : Bouclier de flammes (feu), Frénésie et Sang yokai (rage), Égide (or). */
+type StateAura = 'fire' | 'rage' | 'aegis';
+const STATE_AURA_SPRITE: Record<StateAura, string> = { fire: 'fxAuraStateFire', rage: 'fxAuraStateRage', aegis: 'fxAuraStateAegis' };
+/** Taille de l'aura d'état (largeur, hauteur) et ce qui passe sous les pieds du héros. */
+const STATE_AURA_SIZE = { width: 2.1, height: 3.5, below: 0.3 };
 /** Anneau de flammes (brand-ring) : rayon du cercle dans l'image, en part de sa demi-largeur. */
 const BRAND_RING = 150 / 256;
 /** Météore : la comète apparaît ce temps (s) avant l'impact. */
@@ -375,6 +380,8 @@ export class Renderer {
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  /** Aura d'état de chaque héros (coop : une par héros), créée au premier usage. */
+  private readonly stateAuras = new Map<number, { mesh: Mesh; material: ShaderMaterial; kind: StateAura | null; level: number }>();
   /** Bouclier de flammes du Sorcier, un par héros. */
   private readonly wardDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
   private readonly smokeDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
@@ -599,6 +606,7 @@ export class Renderer {
     this.syncProjectiles(world.projectiles, dt);
     this.syncAura(world);
     this.syncWard(world);
+    this.syncStateAuras(world, dt);
     this.syncSmoke(world);
     this.syncAim(world);
     this.syncStumps(world.stumps);
@@ -635,7 +643,8 @@ export class Renderer {
     this.embers.clear();
     for (const view of this.projectiles.values()) this.disposeFx(view);
     this.projectiles.clear();
-    for (const decal of [...this.auraDecals.values(), ...this.wardDecals.values(), ...this.smokeDecals.values()]) decal.mesh.isVisible = false;
+    for (const decal of [...this.auraDecals.values(), ...this.wardDecals.values(), ...this.smokeDecals.values(), ...this.stateAuras.values()]) decal.mesh.isVisible = false;
+    for (const aura of this.stateAuras.values()) aura.level = 0;
     this.setAllies([]);
     if (this.aimDecal) this.aimDecal.mesh.isVisible = false;
     if (this.attackGuide) this.attackGuide.mesh.isVisible = false;
@@ -729,7 +738,7 @@ export class Renderer {
       sx = 1;
       if (s.pose !== 'stunned') sy = 1;
     }
-    if (s.aura && tint === WHITE) {
+    if (s.aura && tint === WHITE && !this.sprites.get(STATE_AURA_SPRITE.rage)?.anim) {
       tint = FRENZY_TINT;
       sy *= 1 + 0.03 * Math.sin(t * 16);
     }
@@ -1017,8 +1026,60 @@ export class Renderer {
     }
   }
 
+  /**
+   * Auras d'état : une aura dressée juste derrière l'image du héros (on n'en voit que ce qui dépasse de sa
+   * silhouette), de la couleur de l'état : feu pour le Bouclier de flammes, rouge pour la Frénésie et le Sang yokai,
+   * or pour l'Égide. Elle apparaît et s'efface en fondu.
+   */
+  private syncStateAuras(world: WorldView, dt: number): void {
+    const away = this.cameraOffset.normalizeToNew().scale(-0.35);
+    for (const hero of world.players) {
+      const kind: StateAura | null = hero.dead
+        ? null
+        : hero.ward > 0
+          ? 'fire'
+          : hero.frenzy > 0 || hero.transformed > 0
+            ? 'rage'
+            : world.players.some((p) => p.aegisOn === hero.id)
+              ? 'aegis'
+              : null;
+      let aura = this.stateAuras.get(hero.id);
+      const sheet = kind ? this.sprites.get(STATE_AURA_SPRITE[kind]) : undefined;
+      if (!aura && !sheet?.anim) continue;
+      if (!aura) {
+        const { width, height, below } = STATE_AURA_SIZE;
+        const mesh = MeshBuilder.CreatePlane(`state-aura-${hero.id}`, { width, height }, this.scene);
+        mesh.bakeTransformIntoVertices(Matrix.Translation(0, height / 2 - below, 0));
+        mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+        mesh.isPickable = false;
+        const material = spriteMaterial(this.scene, `state-aura-${hero.id}`, sheet!.texture);
+        material.disableDepthWrite = true;
+        mesh.material = material;
+        aura = { mesh, material, kind: null, level: 0 };
+        this.stateAuras.set(hero.id, aura);
+      }
+      // Fondu d'entrée et de sortie ; la dernière aura reste affichée le temps de s'effacer.
+      if (kind && sheet?.anim) {
+        if (aura.kind !== kind) aura.material.setTexture('textureSampler', sheet.texture);
+        aura.kind = kind;
+      }
+      aura.level = Math.max(0, Math.min(1, aura.level + (kind ? dt * 5 : -dt * 4)));
+      const view = this.views.get(hero === world.player ? PLAYER_ID : ALLY_ID - hero.id);
+      const shown = aura.level > 0 && aura.kind !== null && view !== undefined;
+      aura.mesh.isVisible = shown;
+      if (!shown || !view) continue;
+      const anim = this.sprites.get(STATE_AURA_SPRITE[aura.kind!])?.anim;
+      if (anim) showFrame(aura.material, anim, frameAt(anim, 'aura', this.time));
+      aura.mesh.position.copyFrom(view.node.position).addInPlace(away);
+      aura.mesh.position.y += view.sprite.position.y;
+      aura.mesh.alphaIndex = view.sprite.alphaIndex - 1;
+      aura.material.setFloat('alpha', aura.level * (0.85 + 0.15 * Math.sin(this.time * 5)));
+    }
+  }
+
   /** Bouclier de flammes du Sorcier : un anneau de feu qui suit le héros tant qu'il tient, et vacille. */
   private syncWard(world: WorldView): void {
+    if (this.sprites.get(STATE_AURA_SPRITE.fire)?.anim) return;
     for (const hero of world.players) {
       const active = hero.ward > 0 && !hero.dead;
       let decal = this.wardDecals.get(hero.id);
@@ -1348,6 +1409,8 @@ export class Renderer {
         break;
       case 'aegis':
         this.text(event.pos, 2.4, event.on ? 'Égide' : 'Égide retirée', 'parry', 0.9);
+        // Une bulle-bouclier dorée se referme sur le héros protégé, puis l'aura d'or prend le relais.
+        if (event.on) this.uprightFx('fxDomeAegis', 'dome', event.pos, 2.9, 2.9, 0.55, { center: 0.9 });
         break;
       case 'bleed':
         this.text(event.pos, 2.1, 'Saignement', 'rage', 0.8);
@@ -1508,7 +1571,7 @@ export class Renderer {
         break;
       case 'frenzy':
         this.text(event.pos, 2.3, 'Frénésie !', 'rage', 1.2);
-        this.addFx(this.ringFx(event.pos, 2.4, RAGE, 0.4));
+        if (!this.uprightFx('fxDomeRage', 'dome', event.pos, 3, 3, 0.5, { center: 0.9 })) this.addFx(this.ringFx(event.pos, 2.4, RAGE, 0.4));
         break;
       case 'lightning': {
         const turn = Math.random() * Math.PI * 2;
@@ -1567,7 +1630,7 @@ export class Renderer {
         break;
       case 'transform':
         this.text(event.pos, 2.5, 'Sang yokai !', 'rage', 1.4);
-        this.addFx(this.ringFx(event.pos, 3, RAGE, 0.5));
+        if (!this.uprightFx('fxDomeRage', 'dome', event.pos, 3.4, 3.4, 0.55, { center: 0.9 })) this.addFx(this.ringFx(event.pos, 3, RAGE, 0.5));
         this.addShake(0.4);
         break;
       case 'blast': {
@@ -1742,7 +1805,8 @@ export class Renderer {
       }
       case 'ward':
         this.text(event.pos, 2.4, 'Bouclier de flammes', 'rage', 1.1);
-        if (!this.sheetFx('fxBrandScorch', 'scorch', event.pos, { x: 1, z: 0 }, event.radius * 2.4, event.radius * 2.4, 0.45, 0.035)) {
+        // Une sphère de flammes jaillit autour du Sorcier, puis l'aura de feu prend le relais.
+        if (!this.uprightFx('fxDomeFire', 'dome', event.pos, 3, 3, 0.5, { center: 0.9 })) {
           this.addFx(this.ringFx(event.pos, event.radius * 2.4, FIRE, 0.4));
         }
         break;

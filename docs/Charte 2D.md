@@ -249,9 +249,19 @@ Les classes et la teinte de leurs images rémanentes sont dans `LIGHT_STYLE` (`s
 | Comète qui tombe du ciel | `brand-comet` | les 0,3 dernières secondes du météore |
 | Pilier de flammes qui jaillit, rugit et s'arrache en braises | `brand-pillar` | explosion du sceau (plus grand pour le météore) |
 | Onde de feu au sol et fissures en fusion | `brand-scorch` | sceau, météore, levée du Bouclier de flammes |
-| Anneau de flammes (boucle) | `brand-ring` | Bouclier de flammes, Dôme de feu |
+| Anneau de flammes (boucle) | `brand-ring` | Dôme de feu |
 | Plaque de fissures en fusion et petites flammes (boucle) | `brand-embers` | sol brûlant |
 | Sillage de flammes | `brand-trail` | Fuite de feu |
+
+**Auras d'état.** Un état qui dure se montre par une aura dressée juste derrière le héros (on n'en voit que ce qui dépasse de sa silhouette), de la couleur de l'état, et son lancement par une petite animation en sphère au centre du héros :
+
+| État | Aura (boucle) | Lancement |
+| --- | --- | --- |
+| Bouclier de flammes (Sorcier) | `aura-state-fire` : langues de feu et braises | `dome-fire` : sphère de flammes |
+| Frénésie (Guerrier), Sang yokai (Hanyō) | `aura-state-rage` : flammes rouges | `dome-rage` : sphère de flammes rouges |
+| Égide (Paladin, sur le héros protégé) | `aura-state-aegis` : traits de lumière dorés et étincelles | `dome-aegis` : bulle-bouclier dorée à treillis hexagonal |
+
+Code : `syncStateAuras` dans `src/render/renderer.ts`.
 
 Les planches plus larges que 4 096 px sont rangées en grille (taille de texture sûre sur toutes les cartes graphiques).
 

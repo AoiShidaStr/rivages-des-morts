@@ -1028,6 +1028,128 @@ function brandTrail() {
   });
 }
 
+// --- Auras d'état et lancements en dôme (Bouclier de flammes, Frénésie, Égide) -----------------------------------
+//
+// L'aura se dresse derrière le héros (le jeu la place juste derrière son image) : on n'en voit que ce qui dépasse de
+// sa silhouette, des langues d'énergie qui montent et des particules. Le lancement est une sphère, dressée face à
+// la caméra au centre du héros.
+
+/** Couleurs des états : bord, milieu, intérieur, cœur (du plus sombre au plus clair). */
+const STATE = {
+  fire: { tones: [FIRE.red, FIRE.orange, FIRE.yellow, FIRE.white], glow: FIRE.orange, spark: FIRE.yellow },
+  rage: { tones: ['#8f0f1a', '#d9262c', '#ff6a4a', '#ffd6c8'], glow: '#e0302e', spark: '#ff9a7a' },
+  aegis: { tones: ['#c99a35', '#ffd877', '#fff0b8', '#ffffff'], glow: '#ffe28f', spark: '#ffffff' },
+};
+
+/** Flamme en quatre couches aux couleurs d'un état. */
+function stateFlame(x0, y0, x1, y1, width, wobble, phase, opacity, tones) {
+  return [[0, 1, 1, 0.8], [1, 0.8, 0.7, 0.9], [2, 0.55, 0.45, 1], [3, 0.3, 0.24, 1]]
+    .map(([k, len, wide, o]) => polygon(tongue(x0, y0, lerp(x0, x1, len), lerp(y0, y1, len), width * wide, wobble * len, phase), tones[k], 'none', 0, o * opacity))
+    .join('');
+}
+
+/** Aura d'état (debout, boucle) : halo, langues d'énergie qui montent le long du corps, particules qui s'élèvent. */
+function stateAura(kind) {
+  const W = 192;
+  const H = 320;
+  const c = W / 2;
+  const feet = H - 34;
+  const N = 10;
+  const st = STATE[kind];
+  const rand = seeded(kind.length * 31 + 7);
+  const wisps = [...Array(8)].map((_, k) => ({ x: (k % 2 ? 1 : -1) * (26 + rand() * 34), base: feet - rand() * 120, len: 70 + rand() * 90, w: 10 + rand() * 8, ph: rand() * 6, lean: (rand() - 0.5) * 20 }));
+  const motes = [...Array(12)].map(() => ({ x: (rand() - 0.5) * 120, y: rand(), r: 1.5 + rand() * 2, v: 0.7 + rand() * 0.6 }));
+  return [...Array(N)].map((_, i) => {
+    const t = i / N;
+    const ph = t * Math.PI * 2;
+    let body = GLOW(10);
+    body += glowGroup(`<ellipse cx="${c}" cy="${feet - 120}" rx="${(58 + 4 * Math.sin(ph)).toFixed(1)}" ry="128" fill="${st.glow}"/>`, 0.32);
+    body += glowGroup(`<ellipse cx="${c}" cy="${feet}" rx="62" ry="14" fill="${st.glow}"/>`, 0.5);
+    for (const w of wisps) {
+      const k = 0.75 + 0.25 * Math.sin(ph * 2 + w.ph);
+      const x0 = c + w.x;
+      if (kind === 'aegis') {
+        // Égide : de fins traits de lumière qui montent, plutôt que des flammes.
+        const y = w.base - ((t + w.ph / 6) % 1) * 60;
+        body += sliver(x0, y - w.len * 0.4 * k, w.len * 0.8 * k, 3.2, Math.PI / 2, st.tones[1], 0.75);
+        body += sliver(x0, y - w.len * 0.4 * k, w.len * 0.55 * k, 1.4, Math.PI / 2, st.tones[3], 0.95);
+      } else {
+        body += stateFlame(x0, w.base, x0 + w.lean, w.base - w.len * k, w.w, 9, w.ph + ph, 0.65, st.tones);
+      }
+    }
+    for (const m of motes) {
+      const y = feet - ((m.y + t * m.v) % 1) * 280;
+      const o = 0.9 * Math.sin(Math.PI * ((m.y + t * m.v) % 1));
+      body += kind === 'aegis' ? sparkle(c + m.x, y, m.r * 2.2, st.spark, o, 'none') : ember(c + m.x, y, m.r, o).replaceAll(FIRE.orange, st.glow).replaceAll(FIRE.yellow, st.spark);
+    }
+    return svg(W, H, body);
+  });
+}
+
+/** Lancement en dôme de flammes (Bouclier de flammes, Frénésie) : une sphère de feu jaillit autour du héros. */
+function flameDome(kind) {
+  const S = 256;
+  const c = S / 2;
+  const N = 9;
+  const st = STATE[kind];
+  const rand = seeded(kind.length * 17 + 3);
+  const tongues = [...Array(20)].map((_, k) => ({ a: (k / 20) * Math.PI * 2 + (rand() - 0.5) * 0.2, k: 0.6 + rand() * 0.6, ph: rand() * 6 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const r = 30 + 78 * easeOut(p / 0.45);
+    const fade = 1 - clamp01((p - 0.5) / 0.5);
+    let body = GLOW(9);
+    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(26 + 70 * (p / 0.3)).toFixed(1)}" fill="${st.tones[3]}" opacity="${(0.8 * (1 - p / 0.3)).toFixed(3)}"/>`;
+    body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="${st.glow}" opacity="${(0.12 * fade).toFixed(3)}"/>`;
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="${st.glow}" stroke-width="16"/>`, 0.6 * fade);
+    // Les langues suivent la sphère et montent : plus longues sur le dessus, comme un feu qui tire vers le haut.
+    for (const t of tongues) {
+      const x0 = c + Math.cos(t.a) * r;
+      const y0 = c + Math.sin(t.a) * r;
+      const up = 0.5 + 0.5 * -Math.sin(t.a);
+      const len = (16 + 30 * up) * t.k * (1 - 0.4 * p);
+      body += stateFlame(x0, y0, x0 + Math.cos(t.a) * len * 0.5, y0 + Math.sin(t.a) * len * 0.5 - len * 0.8, 15, 5, t.ph + p * 6, fade, st.tones);
+    }
+    body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="${st.tones[3]}" stroke-width="2" opacity="${(0.7 * fade).toFixed(3)}"/>`;
+    return svg(S, S, body);
+  });
+}
+
+/** Lancement de l'Égide : une bulle-bouclier dorée se referme autour du héros, scintille, puis s'efface. */
+function aegisDome() {
+  const S = 256;
+  const c = S / 2;
+  const N = 10;
+  const st = STATE.aegis;
+  const R = 108;
+  // Treillis hexagonal discret à l'intérieur de la bulle.
+  const hex = [];
+  for (let row = -4; row <= 4; row++) {
+    for (let col = -4; col <= 4; col++) {
+      const x = c + col * 30 + (row % 2 ? 15 : 0);
+      const y = c + row * 26;
+      if (Math.hypot(x - c, y - c) > R - 12) continue;
+      hex.push(`<polygon points="${pts([...Array(6)].map((_, k) => [x + Math.cos(deg(60 * k + 30)) * 15, y + Math.sin(deg(60 * k + 30)) * 15]))}"/>`);
+    }
+  }
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const scale = p < 0.35 ? easeOut(p / 0.35) * 1.08 : 1.08 - 0.08 * clamp01((p - 0.35) / 0.2);
+    const r = R * scale;
+    const fade = 1 - clamp01((p - 0.6) / 0.4);
+    const shimmer = 0.6 + 0.4 * Math.sin(p * Math.PI * 4);
+    let body = GLOW(7);
+    body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="${st.glow}" opacity="${(0.14 * fade).toFixed(3)}"/>`;
+    body += `<g fill="none" stroke="${st.tones[1]}" stroke-width="1.6" opacity="${(0.45 * fade * shimmer).toFixed(3)}" transform="translate(${c} ${c}) scale(${scale.toFixed(3)}) translate(${-c} ${-c})">${hex.join('')}</g>`;
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="${st.glow}" stroke-width="12"/>`, 0.7 * fade);
+    body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="${st.tones[1]}" stroke-width="4" opacity="${fade.toFixed(3)}"/>`;
+    // Reflet blanc en haut à gauche, la lumière du jeu.
+    body += polygon(arcBand(c, c, r - 6, 200, 250, (u) => 7 * Math.sin(Math.PI * u)), st.tones[3], 'none', 0, 0.9 * fade);
+    if (p < 0.4) for (let k = 0; k < 8; k++) body += sparkle(c + Math.cos(deg(k * 45)) * r, c + Math.sin(deg(k * 45)) * r, 7 * (1 - p / 0.4), st.spark, 1 - p / 0.4, 'none');
+    return svg(S, S, body);
+  });
+}
+
 // --- Écriture des planches ---------------------------------------------------------------------------------------
 
 /** name : fichier (sans extension) ; tag : nom de l'animation ; once : jouée une fois ; duration : ms par image. */
@@ -1060,6 +1182,11 @@ const EFFECTS = [
   { name: 'brand-ring', tag: 'ring', once: false, duration: 60, frames: brandRing },
   { name: 'brand-embers', tag: 'embers', once: false, duration: 70, frames: brandEmbers },
   { name: 'brand-trail', tag: 'trail', once: true, duration: 50, frames: brandTrail },
+  // Auras d'état et lancements en dôme.
+  ...['fire', 'rage', 'aegis'].map((kind) => ({ name: `aura-state-${kind}`, tag: 'aura', once: false, duration: 75, frames: () => stateAura(kind) })),
+  { name: 'dome-fire', tag: 'dome', once: true, duration: 50, frames: () => flameDome('fire') },
+  { name: 'dome-rage', tag: 'dome', once: true, duration: 50, frames: () => flameDome('rage') },
+  { name: 'dome-aegis', tag: 'dome', once: true, duration: 50, frames: aegisDome },
   // Remplacent les effets du Sorcier : mêmes fichiers et mêmes tags, déjà branchés dans le rendu.
   { name: 'fireball-sorcier', tag: 'flight', once: false, duration: 60, frames: fireball },
   { name: 'fire-wrath-sorcier', tag: 'wrath', once: true, duration: 45, frames: fireBurst },

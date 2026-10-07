@@ -1,0 +1,121 @@
+{
+ "frames": [
+  {
+   "filename": "aura 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 1",
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 2",
+   "frame": {
+    "x": 384,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 3",
+   "frame": {
+    "x": 576,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 4",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 5",
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 6",
+   "frame": {
+    "x": 1152,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 7",
+   "frame": {
+    "x": 1344,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 8",
+   "frame": {
+    "x": 1536,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 9",
+   "frame": {
+    "x": 1728,
+    "y": 0,
+    "w": 192,
+    "h": 320
+   },
+   "duration": 75
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "aura-state-rage.webp",
+  "size": {
+   "w": 1920,
+   "h": 320
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "aura",
+    "from": 0,
+    "to": 9,
+    "direction": "forward"
+   }
+  ]
+ }
+}
