@@ -13,6 +13,17 @@ const ORIGINAL = { race: 'einherjar', class: 'guerrier' };
 const BORROWED: Record<string, string> = { sorcier: 'invocateur' };
 const OWN: Record<string, readonly string[]> = { sorcier: ['hanyo', 'demi-dieu'] };
 
+/**
+ * Races dont seules quelques classes ont des planches jugées assez bonnes : les autres sont grisées à la création
+ * (et chez le moine), en attendant de nouvelles planches. Un héros déjà créé garde sa race et sa classe.
+ */
+const PLAYABLE: Record<string, readonly string[]> = { einherjar: ['guerrier'], oushebti: ['guerrier'] };
+
+/** La combinaison race et classe peut-elle être choisie à la création ? */
+export function heroAvailable(race: string, cls: string): boolean {
+  return PLAYABLE[race]?.includes(cls) ?? true;
+}
+
 /** Nom du sprite du héros selon sa race et sa classe. */
 export function heroSprite(hero: Hero): string {
   const race = hero.race || ORIGINAL.race;

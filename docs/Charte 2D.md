@@ -2,6 +2,8 @@
 
 Charte de la refonte graphique : **toutes les animations sont dessinées en 2D par Nano Banana 2** (application Gemini, sans API), sur des planches de **16 images**. La 3D, Blender et la pipeline GLB sont abandonnés : ce document remplace [Charte 3D](Charte%203D.md) et [pipeline](pipeline.md) pour le rendu des personnages. Les prompts correspondants sont dans [`prompts-2d/`](prompts-2d/) et se régénèrent avec `npm run prompts-2d` (`tools/prompts-2d.mjs`).
 
+**Référence de style (7 octobre 2026) : le Hanyō Invocateur.** C'est le design le plus réussi du jeu ([portrait](../public/sprites/heros-hanyo-invocateur.png), planche `anim/heros-hanyo-invocateur`) : illustration peinte d'action-RPG au trait d'anime semi-réaliste, **proportions réalistes** (environ 7 têtes), costume détaillé (plis, motifs brodés, accessoires lisibles), contour encre net, ombres peintes douces. Tout nouveau personnage se dessine dans ce style, et la fiche de l'Invocateur Hanyō se joint aux prompts comme référence de style. Les planches complètes plus « cartoon » importées en octobre 2026 (Demi-dieux, Rôdeur et Sorcier Hanyō) jurent avec le reste du jeu (PNJ, île, décor) : elles restent en place en attendant d'être redessinées dans ce style (voir 9).
+
 Ce que la charte 3D garde comme valeur : la lumière froide, la règle « rouge = danger ennemi », l'anneau clair sous les héros, les hauteurs relatives des créatures (hitodama 0,6 m, kappa 1,3 m, héros 1,8 m…). Tout cela est reproduit ici ou dans le jeu, pas dans les planches.
 
 **Piste en essai (octobre 2026) : le héros modulaire.** Les planches image par image (sections 1 à 10) restent la référence pour les ennemis et les boss. Pour les héros, on essaie un squelette 2D dont chaque pièce porte l'équipement visible : voir la [section 11](#11-héros-modulaire-paper-doll-piste-en-essai). Les lots de héros (section 9) attendent le résultat de cet essai.
@@ -10,8 +12,8 @@ Ce que la charte 3D garde comme valeur : la lumière froide, la règle « rouge 
 
 ## 1. Rendu : peint, contour encre, deux tons
 
-- Formes lisses peintes, léger dégradé (plus clair en haut, plus sombre en bas), plus quelques plis simples.
-- **Contour encre bleu-noir fin** sur la silhouette extérieure seulement (1 à 2 px pour un personnage d'environ 200 px).
+- Style de l'**Invocateur Hanyō** (voir l'introduction) : illustration peinte semi-réaliste, au trait d’anime, pas cartoon. Formes peintes avec un dégradé doux, plis du tissu, motifs et accessoires dessinés nettement, sans texture fine.
+- **Contour encre bleu-noir net** sur la silhouette, plus fin sur les détails intérieurs (1 à 2 px pour un personnage d'environ 200 px).
 - **Deux tons** de lumière : la couleur de base et une ombre **teintée bleu-violet**, jamais noire.
 - Lumière froide et douce venant du **haut-gauche**, identique sur toutes les îles : le sprite garde le même éclairage et la même ombre bleu-violet partout, c'est le décor de chaque île qui porte sa palette (brume du Yomi, or de la Duat…). Personnages plus saturés et plus clairs que le décor.
 - Métal peint : un seul reflet blanc net. Pas de photo, pas de bruit, pas de texture fine, pas d'aspect « rendu 3D ».
@@ -44,8 +46,8 @@ Les 20 tenues (une par race × classe) sont écrites dans `OUTFITS`, en tête de
 
 ## 3. Proportions et échelle
 
-- **Héros : 3 têtes de haut, tous exactement de la même taille** (les 20 combinaisons). Grosse tête, épaules larges, grands pieds, mains / armes / accessoires ×1,3 à ×1,5.
-- **Ennemis** : l'esprit chibi de la charte 3D, mais la forme propre à chaque créature. Chacun est dessiné **à pleine hauteur dans sa case** : c'est le jeu qui le met à l'échelle d'après sa hauteur (hitodama petit, kappa plus grand, héros 1,8 m). On ne dessine donc pas le hitodama plus petit dans l'image.
+- **Héros : proportions réalistes, environ 7 têtes de haut, comme l'Invocateur Hanyō, et tous exactement de la même taille** (les 20 combinaisons). Silhouette élancée, tête de taille naturelle, armes et accessoires à leur taille réelle mais bien lisibles.
+- **Ennemis** : la forme propre à chaque créature, dans le même style peint semi-réaliste que les héros. Chacun est dessiné **à pleine hauteur dans sa case** : c'est le jeu qui le met à l'échelle d'après sa hauteur (hitodama petit, kappa plus grand, héros 1,8 m). On ne dessine donc pas le hitodama plus petit dans l'image.
 - **Boss** : même planche et même case que les autres, proportions libres, tête et point faible toujours lisibles. C'est le jeu qui les affiche plus grands (Izanami : 2,6 m).
 
 | | Case finale | Personnage debout | Pieds (ligne de base) |
@@ -116,7 +118,7 @@ Les tenues propres à chaque race multiplient par 4 le nombre de planches de hé
 | --- | --- | --- | --- |
 | ~~1. Izanami~~ **fait** | les deux formes du boss (voilée, vrai visage) et le pêcher de son arène (2 états) : dans le jeu depuis octobre 2026 | [`01-izanami.md`](prompts-2d/01-izanami.md) | 18 |
 | ~~2. Yokai du Palais~~ **fait** | shikome, ikazuchi, ikusa : dans le jeu depuis octobre 2026 | [`02-yokai-du-palais.md`](prompts-2d/02-yokai-du-palais.md) | 23 |
-| **3. Héros du Yomi** *(en attente de l'essai de la [section 11](#11-héros-modulaire-paper-doll-piste-en-essai))* | les 5 classes avec la race Hanyō (tenues japonaises), 8 animations de profil. Commencer par le Guerrier. Si le héros modulaire est retenu, ce lot devient « pièces du corps et de l'équipement » au lieu de planches complètes | `03-heros-<classe>.md` | 45 (9 par classe) |
+| **3. Héros** *(à reprendre dans le style de l'Invocateur Hanyō)* | 8 animations de profil par héros, sur l'exemple de l'Invocateur Hanyō. Des planches complètes (8 animations par planche) sont dans le jeu depuis octobre 2026 pour le Rôdeur et le Sorcier Hanyō et les cinq Demi-dieux, mais trop « cartoon » : elles restent en place jusqu'à leurs nouvelles planches. Si le héros modulaire est retenu (section 11), ce lot devient « pièces du corps et de l'équipement » | `03-heros-<classe>.md` | 45 (9 par classe) |
 | 4. Yokai des Rizières | hitodama, kodama, kappa, kappa renforcé, kasa-obake, Oublié, petite araignée : déjà peints, à refaire pour l'harmonie | [`04-yokai-des-rizieres.md`](prompts-2d/04-yokai-des-rizieres.md) | 53 |
 | 5. Jorōgumo | le premier boss, déjà peint, à refaire avec Izanami comme référence | [`05-jorogumo.md`](prompts-2d/05-jorogumo.md) | 16 |
 
@@ -126,7 +128,7 @@ Soit **155 prompts** (fiches de profil et planches de profil) pour la première 
 - **Autres races** (Einherjar, Oushebti, Demi-dieu : tenues nordique, égyptienne, grecque), de préférence en **rhabillant** les planches de la série du Yomi (on joint la planche finie et la fiche de la race) plutôt qu'en redessinant chaque animation : [`plus-tard/01-fiches-autres-races.md`](prompts-2d/plus-tard/01-fiches-autres-races.md).
 - **Autres îles** : yokai et boss de l'Hadès, de la Duat, du Helheim.
 
-Tant que les autres races ne sont pas faites, leurs héros doivent afficher, dans le jeu, la série du Yomi (une solution de repli à prévoir dans l'import, comme la teinte actuelle).
+**Héros jouables en attendant.** Les planches des Einherjar et des Oushebti sont mauvaises, sauf celles du Guerrier : à la création du personnage (et chez le moine), seuls l'**Einherjar Guerrier** et l'**Oushebti Guerrier** se choisissent, les autres classes de ces deux races sont grisées (« Bientôt »). La liste est `PLAYABLE` dans `src/render/heroes.ts` : y ajouter une classe dès que ses planches sont refaites. Un héros déjà créé garde sa race et sa classe. Hanyō et Demi-dieu restent ouverts dans toutes les classes.
 
 ## 10. Points d'attention
 
@@ -153,7 +155,7 @@ Aujourd'hui, un héros est une planche d'images complètes (section 4), une par 
 ### Ce qui ne change pas
 
 - La **caméra orthographique**, le sol projeté, l'ombre, l'anneau sous les héros, le miroir pour regarder à gauche, les effets du jeu, et la règle « aucun effet dessiné dans les images ».
-- Les **proportions** (3 têtes de haut, section 3), le fond gris uni et le détourage (section 5), la vue de profil d'abord (section 6).
+- Les **proportions** (section 3), le fond gris uni et le détourage (section 5), la vue de profil d'abord (section 6).
 - Les **ennemis et les boss** : ils restent en planches de 16 images.
 - Le **moteur** : le squelette est un groupe de plans Babylon, pas un nouveau moteur.
 

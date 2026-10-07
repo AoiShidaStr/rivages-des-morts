@@ -15,10 +15,10 @@ const OUT = new URL('../docs/prompts-2d/', import.meta.url);
 // Blocs communs
 
 const LOOK =
-  'Polished 2D game character art, hand-painted: smooth clean shapes with a soft painted gradient (lighter at the top of each shape, darker at the bottom), ' +
-  'a thin dark ink-blue outline around the outer silhouette only (about 1 to 2 px when the character is about 200 px tall), ' +
+  'Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, ' +
+  'clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), ' +
   'two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, ' +
-  'character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight, cloth folds drawn as a few simple shapes. ' +
+  'character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. ' +
   'No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. ' +
   'Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.';
 
@@ -31,7 +31,8 @@ const MAGENTA = { name: 'pure magenta', hex: '#ff00ff' };
 const bgText = (bg) => `Flat uniform ${bg.name} background (${bg.hex}), exactly the same color everywhere, no gradient, no vignette.`;
 
 const PROPORTIONS_HERO =
-  'Chibi proportions: the character is 3 heads tall, with a big head, broad shoulders, large stable feet, and hands, weapon and class accessories oversized (about 1.3 to 1.5 times normal). ' +
+  'Realistic heroic proportions: the character is about 7 heads tall, slender and athletic, with a natural head size, and the weapon and class accessories at their real size but easy to read. ' +
+  'Same art style and level of detail as our Hanyo Invocateur reference (attach heros-hanyo-invocateur.png as a style reference when it is not the character being drawn). ' +
   'Strong readable silhouette from far away.';
 
 const VIEW = {
@@ -566,7 +567,7 @@ function vueFichePrompt({ subject, view, bg = GREY, wide = false }) {
 }
 
 const PROPORTIONS_CREATURE =
-  'Keep the playful chibi spirit of the game (big head, short body) but follow the natural shape of this creature. A strong readable silhouette from far away; the character is drawn filling the full image height of its figure, with a clean outline.';
+  'Follow the natural shape of this creature, drawn in the same semi-realistic painted style as the heroes. A strong readable silhouette from far away; the character is drawn filling the full image height of its figure, with a clean outline.';
 
 const fence = (s) => ['```text', s, '```', ''].join('\n');
 

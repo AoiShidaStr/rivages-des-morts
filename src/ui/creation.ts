@@ -1,7 +1,7 @@
 import type { ItemDef, SkillsDef } from '../game/loadout';
 import type { Hero } from '../game/progress';
 import { keyName } from '../keys';
-import { heroImage, heroSprite } from '../render/heroes';
+import { heroAvailable, heroImage, heroSprite } from '../render/heroes';
 import type { AsepriteSheet } from '../render/sheets';
 import { h } from './dom';
 
@@ -22,6 +22,7 @@ export class CreationScreen {
     const raceIds = Object.keys(skills.races);
     const classIds = Object.keys(skills.classes);
     const hero: Hero = current ? { ...current } : { race: raceIds[0], class: classIds[0] };
+    const isCurrent = (race: string, cls: string) => current !== undefined && current.race === race && current.class === cls;
 
     const render = () => {
       const race = skills.races[hero.race];
@@ -42,6 +43,8 @@ export class CreationScreen {
             onclick: () => {
               hero.race = id;
               delete hero.parent;
+              // Classe pas encore jouable avec cette race : on retombe sur le Guerrier.
+              if (!heroAvailable(id, hero.class) && !isCurrent(id, hero.class)) hero.class = 'guerrier';
               render();
             },
           },
@@ -60,10 +63,14 @@ export class CreationScreen {
       const classCards = [
         ...classIds.map((id) => {
           const c = skills.classes[id];
+          // Grisée tant que la race n'a pas de bonnes planches pour cette classe (sauf la vie actuelle du héros).
+          const locked = !heroAvailable(hero.race, id) && !isCurrent(hero.race, id);
           return h(
             'button',
             {
-              class: `choice-card${id === hero.class ? ' selected' : ''}`,
+              class: `choice-card${id === hero.class ? ' selected' : ''}${locked ? ' soon' : ''}`,
+              disabled: locked,
+              title: locked ? `${c.name} ${race.name} : bientôt, en attendant ses nouvelles planches` : undefined,
               onclick: () => {
                 hero.class = id;
                 render();
@@ -73,7 +80,7 @@ export class CreationScreen {
             h('small', { class: 'choice-origin' }, c.subtitle),
             h('span', { class: 'choice-style' }, c.role),
             h('small', { class: 'choice-line' }, 'Arme : ', h('b', {}, items[c.weapon]?.name ?? c.weapon)),
-            h('small', { class: 'choice-line' }, 'Difficulté : ', stars(c.difficulty)),
+            locked ? h('small', { class: 'choice-line' }, `Bientôt en ${race.name}`) : h('small', { class: 'choice-line' }, 'Difficulté : ', stars(c.difficulty)),
           );
         }),
         ...skills.upcomingClasses.map((c) =>
