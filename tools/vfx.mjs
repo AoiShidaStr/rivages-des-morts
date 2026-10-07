@@ -550,6 +550,10 @@ function hammerSpin() {
 /** Couleurs de lumière par classe : cœur, accent, accent sombre (jamais le vermillon, réservé au danger). */
 const LIGHT = {
   guerrier: { core: '#fffaf0', main: '#ffbf5e', deep: '#e0782f' },
+  lame: { core: '#f7f2ff', main: '#b796ff', deep: '#6c4fd6' },
+  paladin: { core: '#ffffff', main: '#ffe28f', deep: '#d6a73c' },
+  rodeur: { core: '#f5fff2', main: '#95e28c', deep: '#3f9a5a' },
+  sorcier: { core: '#fff6d8', main: '#ffa040', deep: '#c8501e' },
 };
 
 /** Croissant effilé aux deux bouts, plus épais vers la tête (u = 1). */
@@ -585,14 +589,14 @@ function slashLight(arcDeg, color) {
   return [...Array(N)].map((_, i) => {
     const h = lerp(a0, a1, head[i]);
     const t = lerp(a0, a1, tail[i]);
-    const W = 20 * thick[i];
+    const W = 14 * thick[i];
     let body = '';
     if (h - t > 2 && W > 0.5) {
       // Corps de la traînée en accent, cœur blanc sur le bord d'attaque (extérieur), filets fins à l'intérieur.
       // Voile de mouvement : une bande plus large et translucide, qui donne sa masse au geste.
-      body += polygon(arcBand(c, c, R - 2, t, h, needle(W * 2.1, 0.7)), color.main, 'none', 0, 0.28);
-      body += polygon(arcBand(c, c, R, t, h, needle(W)), color.main, 'none', 0, 0.95);
-      body += polygon(arcBand(c, c, R, t + (h - t) * 0.25, h, needle(W * 0.42)), color.core, 'none', 0, 1);
+      body += polygon(arcBand(c, c, R - 2, t, h, needle(W * 2, 0.7)), color.main, 'none', 0, 0.14);
+      body += polygon(arcBand(c, c, R, t, h, needle(W)), color.main, 'none', 0, 0.7);
+      body += polygon(arcBand(c, c, R, t + (h - t) * 0.25, h, needle(W * 0.42)), color.core, 'none', 0, 0.8);
       for (const [dr, k, w] of [[W + 6, 0.55, 1.6], [W + 13, 0.35, 1.1]]) {
         const from = h - (h - t) * k;
         body += polygon(arcBand(c, c, R - dr, from, h - 3, needle(w, 0.7)), color.deep, 'none', 0, 0.8 * thick[i]);
@@ -679,6 +683,351 @@ function dustLight() {
   });
 }
 
+/** Estoc, style lumière : une aiguille de lumière jaillit droit devant, puis se brise en éclats. */
+function thrustLight(color) {
+  const W = 256;
+  const H = 96;
+  const cy = H / 2;
+  const N = 6;
+  const rand = seeded(91);
+  const shards = [...Array(6)].map(() => ({ x: 0.45 + rand() * 0.5, dy: (rand() - 0.5) * 30, len: 8 + rand() * 12 }));
+  const tip = [0.35, 0.85, 1, 1, 1, 1];
+  const tail = [0, 0.05, 0.3, 0.7, 0.95, 1];
+  const thick = [0.5, 1, 0.8, 0.4, 0.15, 0];
+  return [...Array(N)].map((_, i) => {
+    const x1 = lerp(20, W - 8, tip[i]);
+    const x0 = lerp(8, W - 30, tail[i]);
+    const half = 7 * thick[i];
+    let body = '';
+    if (x1 - x0 > 4 && half > 0.4) {
+      body += polygon([[x0, cy], [lerp(x0, x1, 0.75), cy - half * 2], [x1, cy], [lerp(x0, x1, 0.75), cy + half * 2]], color.main, 'none', 0, 0.14);
+      body += polygon([[x0, cy], [lerp(x0, x1, 0.8), cy - half], [x1, cy], [lerp(x0, x1, 0.8), cy + half]], color.main, 'none', 0, 0.7);
+      body += polygon([[lerp(x0, x1, 0.3), cy], [lerp(x0, x1, 0.85), cy - half * 0.4], [x1, cy], [lerp(x0, x1, 0.85), cy + half * 0.4]], color.core, 'none', 0, 0.85);
+      for (const [dy, k] of [[-half - 7, 0.5], [half + 8, 0.35]]) body += sliver(lerp(x0, x1, 1 - k / 2), cy + dy, (x1 - x0) * k, 1.4, 0, color.deep, 0.7 * thick[i]);
+    }
+    if (i >= 3) {
+      const q = (i - 2) / (N - 3);
+      for (const sh of shards) body += sliver(W * sh.x + 20 * q, cy + sh.dy * q, sh.len * (1 - q * 0.5), 1.8, 0, color.main, 1 - q * 0.7);
+    }
+    return svg(W, H, body);
+  });
+}
+
+// --- Feu du Sorcier, inspiré de Brand (League of Legends) --------------------------------------------------------
+//
+// Flammes en couches sans contour (rouge sombre, orange, jaune, cœur blanc), un halo flou sous chaque foyer, des
+// braises vives et un peu de fumée sombre : le seul effet du jeu qui a droit au flou, pour sa chaleur.
+
+const FIRE = { white: '#fffbe8', yellow: '#ffe066', orange: '#ff9a2e', red: '#e2481c', dark: '#7a1d0e', smoke: '#2e2220' };
+const GLOW = (blur) => `<defs><filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${blur}"/></filter>`
+  + `<radialGradient id="hot"><stop offset="0" stop-color="${FIRE.white}"/><stop offset="0.4" stop-color="${FIRE.yellow}"/><stop offset="0.75" stop-color="${FIRE.orange}" stop-opacity="0.85"/><stop offset="1" stop-color="${FIRE.red}" stop-opacity="0"/></radialGradient></defs>`;
+const glowGroup = (inner, opacity = 1) => `<g filter="url(#glow)" opacity="${opacity.toFixed(3)}">${inner}</g>`;
+const hotDisc = (x, y, r, opacity = 1) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(0.5, r).toFixed(1)}" fill="url(#hot)" opacity="${opacity.toFixed(3)}"/>`;
+
+/** Une flamme en quatre couches, de (x0, y0) vers sa pointe (x1, y1). */
+function flame(x0, y0, x1, y1, width, wobble, phase, opacity = 1) {
+  const layers = [
+    [FIRE.red, 1, 1, 0.85],
+    [FIRE.orange, 0.8, 0.72, 0.95],
+    [FIRE.yellow, 0.55, 0.48, 1],
+    [FIRE.white, 0.3, 0.26, 1],
+  ];
+  return layers
+    .map(([color, len, wide, o]) => polygon(tongue(x0, y0, lerp(x0, x1, len), lerp(y0, y1, len), width * wide, wobble * len, phase), color, 'none', 0, o * opacity))
+    .join('');
+}
+
+/** Braise : un petit éclat vif, avec son halo. */
+const ember = (x, y, r, opacity) =>
+  `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * 2.2).toFixed(1)}" fill="${FIRE.orange}" opacity="${(0.35 * opacity).toFixed(3)}"/>`
+  + `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${FIRE.yellow}" opacity="${opacity.toFixed(3)}"/>`;
+
+/** Boule de feu (boucle) : un cœur blanc brûlant, des flammes qui fouettent vers l'arrière, braises et fumée. */
+function brandFireball() {
+  const W = 288;
+  const H = 128;
+  const N = 8;
+  const hx = 214;
+  const cy = H / 2;
+  const rand = seeded(201);
+  const sparks = [...Array(10)].map(() => ({ x: rand(), y: (rand() - 0.5) * 50, r: 1.6 + rand() * 2, v: 0.6 + rand() * 0.8 }));
+  const tongues = [...Array(6)].map((_, k) => ({ dy: (k - 2.5) * 7, len: 110 + rand() * 70, w: 16 + rand() * 8, ph: rand() * 6 }));
+  return [...Array(N)].map((_, i) => {
+    const ph = (i / N) * Math.PI * 2;
+    let body = GLOW(9);
+    body += glowGroup(`<ellipse cx="${hx - 50}" cy="${cy}" rx="95" ry="26" fill="${FIRE.orange}"/><circle cx="${hx}" cy="${cy}" r="34" fill="${FIRE.yellow}"/>`, 0.55);
+    // Fumée sombre au bout de la traîne.
+    for (let k = 0; k < 3; k++) {
+      const x = 40 + k * 22 - ((i / N) * 22) % 22;
+      body += glowGroup(`<circle cx="${x.toFixed(1)}" cy="${(cy + Math.sin(ph + k) * 8).toFixed(1)}" r="${(16 - k * 2).toFixed(1)}" fill="${FIRE.smoke}"/>`, 0.18 + k * 0.05);
+    }
+    for (const t of tongues) {
+      const len = t.len * (0.85 + 0.15 * Math.sin(ph * 2 + t.ph));
+      body += flame(hx + 8, cy + t.dy * 0.3, hx - len, cy + t.dy + Math.sin(ph + t.ph) * 9, t.w, 9, ph + t.ph, 0.9);
+    }
+    for (const sp of sparks) {
+      const x = hx - 20 - ((sp.x * 170 + (i / N) * 70 * sp.v) % 170);
+      body += ember(x, cy + sp.y + Math.sin(ph + sp.x * 9) * 3, sp.r, 0.9);
+    }
+    body += hotDisc(hx, cy, 30);
+    body += `<circle cx="${hx + 2}" cy="${cy}" r="${(11 + Math.sin(ph * 2) * 1.5).toFixed(1)}" fill="${FIRE.white}"/>`;
+    return svg(W, H, body);
+  });
+}
+
+/** Explosion de la boule de feu au contact (debout) : éclair chaud, langues de feu, braises, bouffée de fumée. */
+function brandPop() {
+  const S = 192;
+  const c = S / 2;
+  const N = 7;
+  const rand = seeded(203);
+  const rays = [...Array(9)].map((_, k) => ({ a: (k / 9) * Math.PI * 2 + rand() * 0.4, len: 0.7 + rand() * 0.5, ph: rand() * 6 }));
+  const sparks = [...Array(10)].map(() => ({ a: rand() * Math.PI * 2, d: 0.6 + rand() * 0.6, r: 1.5 + rand() * 2 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const grow = easeOut(p / 0.45);
+    const fade = 1 - clamp01((p - 0.4) / 0.6);
+    let body = GLOW(8);
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${(20 + 40 * grow).toFixed(1)}" fill="${FIRE.orange}"/>`, 0.6 * fade);
+    if (p > 0.45) body += glowGroup(`<circle cx="${c}" cy="${(c - 20 * p).toFixed(1)}" r="${(20 + 30 * p).toFixed(1)}" fill="${FIRE.smoke}"/>`, 0.3 * (1 - p));
+    for (const r of rays) {
+      const len = (24 + 50 * grow) * r.len;
+      body += flame(c, c, c + Math.cos(r.a) * len, c + Math.sin(r.a) * len - 10 * p, 18 * (1 - 0.5 * p), 6, r.ph + p * 4, fade);
+    }
+    body += hotDisc(c, c, (28 + 20 * grow) * (1 - 0.6 * p), fade);
+    for (const sp of sparks) {
+      const d = (20 + 60 * easeOut(p)) * sp.d;
+      body += ember(c + Math.cos(sp.a) * d, c + Math.sin(sp.a) * d - 14 * p, sp.r * (1 - 0.5 * p), fade);
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Petite rune anguleuse (traits), dans un carré de côté `size` centré en (x, y). */
+function glyph(x, y, size, rand) {
+  const pts2 = [...Array(4)].map(() => [x + (rand() - 0.5) * size, y + (rand() - 0.5) * size]);
+  return `M ${pts2.map(([a, b]) => `${a.toFixed(1)} ${b.toFixed(1)}`).join(' L ')} M ${(x - size / 2).toFixed(1)} ${y.toFixed(1)} L ${(x + size / 2).toFixed(1)} ${y.toFixed(1)}`;
+}
+
+/**
+ * Cercle de runes (sol) : il se trace (images 0 à 8, jouées sur le délai de l'annonce), puis palpite (9 à 11).
+ * Sert d'annonce au sceau (pilier de flammes) et au météore.
+ */
+function brandRune() {
+  const S = 512;
+  const c = S / 2;
+  const N = 12;
+  const R = 226;
+  const rand = seeded(205);
+  const glyphs = [...Array(10)].map((_, k) => ({ a: (k / 10) * Math.PI * 2, d: glyph(0, 0, 26, rand) }));
+  return [...Array(N)].map((_, i) => {
+    const draw = clamp01(i / 8);
+    const pulse = i > 8 ? 0.75 + 0.25 * Math.sin(((i - 9) / 3) * Math.PI * 2) : 0.55 + 0.45 * draw;
+    let body = GLOW(7);
+    const ring = (r, w, color, o) => {
+      const end = -90 + 360 * draw;
+      if (draw >= 1) return `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="${w}" opacity="${o.toFixed(3)}"/>`;
+      return polygon(arcBand(c, c, r + w / 2, -90, end, () => w, 90), color, 'none', 0, o);
+    };
+    let lines = ring(R, 7, FIRE.orange, 0.9) + ring(R - 34, 3, FIRE.yellow, 0.8) + ring(R - 120, 2.5, FIRE.orange, 0.6);
+    // Triangle inscrit, puis les runes entre les deux cercles extérieurs.
+    if (draw > 0.4) {
+      const tri = [0, 1, 2].map((k) => [c + Math.cos(deg(-90 + k * 120)) * (R - 34), c + Math.sin(deg(-90 + k * 120)) * (R - 34)]);
+      lines += `<polygon points="${pts(tri)}" fill="none" stroke="${FIRE.orange}" stroke-width="2.5" opacity="${(0.7 * clamp01((draw - 0.4) / 0.4)).toFixed(3)}"/>`;
+    }
+    for (const g of glyphs) {
+      if (g.a / (Math.PI * 2) > draw) continue;
+      const x = c + Math.cos(g.a - Math.PI / 2) * (R - 17);
+      const y = c + Math.sin(g.a - Math.PI / 2) * (R - 17);
+      lines += `<path d="${g.d}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${((g.a * 180) / Math.PI).toFixed(1)})" fill="none" stroke="${FIRE.yellow}" stroke-width="3" stroke-linecap="round"/>`;
+    }
+    body += `<circle cx="${c}" cy="${c}" r="${R}" fill="${FIRE.red}" opacity="${(0.06 * pulse).toFixed(3)}"/>`;
+    body += glowGroup(lines, 0.8 * pulse);
+    body += `<g opacity="${pulse.toFixed(3)}">${lines}</g>`;
+    return svg(S, S, body);
+  });
+}
+
+/** Pilier de flammes (debout) : il jaillit du sol, rugit, puis s'arrache vers le haut en braises et fumée. */
+function brandPillar() {
+  const W = 224;
+  const H = 480;
+  const c = W / 2;
+  const base = H - 30;
+  const N = 11;
+  const rand = seeded(207);
+  const tongues = [...Array(11)].map(() => ({ x: (rand() - 0.5) * 70, len: 0.55 + rand() * 0.45, w: 22 + rand() * 18, ph: rand() * 6, drift: (rand() - 0.5) * 40 }));
+  const sparks = [...Array(16)].map(() => ({ x: (rand() - 0.5) * 120, h: rand(), r: 1.6 + rand() * 2.4, v: 0.6 + rand() }));
+  const height = [130, 380, 440, 430, 445, 420, 400, 330, 220, 120, 40];
+  const width = [0.6, 1.1, 1, 0.95, 1, 0.9, 0.85, 0.7, 0.55, 0.4, 0.25];
+  const lift = [0, 0, 0, 0, 0, 0, 10, 60, 130, 220, 300];
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const Hc = height[i];
+    const fade = 1 - clamp01((p - 0.6) / 0.4);
+    let body = GLOW(12);
+    // Éclat au sol et halo de la colonne.
+    body += `<ellipse cx="${c}" cy="${base}" rx="${(60 + 40 * Math.min(1, p * 3)).toFixed(1)}" ry="${(16 + 8 * Math.min(1, p * 3)).toFixed(1)}" fill="url(#hot)" opacity="${fade.toFixed(3)}"/>`;
+    body += glowGroup(`<ellipse cx="${c}" cy="${(base - lift[i] - Hc / 2).toFixed(1)}" rx="${(46 * width[i]).toFixed(1)}" ry="${(Hc / 2).toFixed(1)}" fill="${FIRE.orange}"/>`, 0.6 * fade);
+    if (p > 0.5) {
+      for (let k = 0; k < 3; k++) body += glowGroup(`<circle cx="${(c + (k - 1) * 30).toFixed(1)}" cy="${(base - lift[i] - Hc - 20 - k * 10).toFixed(1)}" r="${(26 + 20 * p).toFixed(1)}" fill="${FIRE.smoke}"/>`, 0.28 * (1 - p));
+    }
+    for (const t of tongues) {
+      const x0 = c + t.x * width[i];
+      const y0 = base - lift[i];
+      const len = Hc * t.len * (0.9 + 0.1 * Math.sin(i * 1.7 + t.ph));
+      body += flame(x0, y0, x0 + t.drift * width[i] * 0.5, y0 - len, t.w * width[i], 12, t.ph + i * 1.3, fade);
+    }
+    // Cœur blanc au pied de la colonne tant qu'elle tient.
+    if (lift[i] < 20) body += `<ellipse cx="${c}" cy="${(base - Hc * 0.25).toFixed(1)}" rx="${(16 * width[i]).toFixed(1)}" ry="${(Hc * 0.25).toFixed(1)}" fill="url(#hot)" opacity="${fade.toFixed(3)}"/>`;
+    for (const sp of sparks) {
+      const y = base - ((sp.h * 420 + p * 260 * sp.v) % 460);
+      body += ember(c + sp.x * (0.5 + p * 0.6), y, sp.r, Math.min(1, p * 4) * (1 - p * 0.6));
+    }
+    return svg(W, H, body);
+  });
+}
+
+/** Onde de feu au sol (sous le pilier et le météore) : une couronne de flammes s'ouvre, laisse des fissures en fusion. */
+function brandScorch() {
+  const S = 512;
+  const c = S / 2;
+  const N = 9;
+  const rand = seeded(209);
+  const tongues = [...Array(16)].map((_, k) => ({ a: (k / 16) * Math.PI * 2 + (rand() - 0.5) * 0.3, k: 0.35 + rand() * 1, ph: rand() * 6, w: 14 + rand() * 12 }));
+  const cracks = [...Array(8)].map((_, k) => {
+    const a = (k / 8) * Math.PI * 2 + rand() * 0.4;
+    return zigzag(c, c, c + Math.cos(a) * (120 + rand() * 80), c + Math.sin(a) * (120 + rand() * 80), 6, 12, rand);
+  });
+  const sparks = [...Array(18)].map(() => ({ a: rand() * Math.PI * 2, d: 0.5 + rand() * 0.6, r: 2 + rand() * 2.5 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const ring = 40 + 190 * easeOut(p / 0.6);
+    const height = 70 * (1 - clamp01((p - 0.3) / 0.7)) + 6;
+    const fade = 1 - clamp01((p - 0.55) / 0.45);
+    let body = GLOW(10);
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${(70 + 60 * Math.min(1, p * 2)).toFixed(1)}" fill="${FIRE.smoke}"/>`, 0.32 * (0.4 + 0.6 * fade));
+    const crackLines = cracks.map((cr) => `<polyline points="${pts(cr.slice(0, Math.max(2, Math.round(cr.length * Math.min(1, p * 2.5)))))}" fill="none" stroke="${FIRE.orange}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+    body += glowGroup(crackLines, 0.9 * fade);
+    body += `<g opacity="${fade.toFixed(3)}">${crackLines.replaceAll(FIRE.orange, FIRE.yellow).replaceAll('stroke-width="5"', 'stroke-width="2"')}</g>`;
+    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(50 + 120 * (p / 0.3)).toFixed(1)}" fill="url(#hot)" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${ring.toFixed(1)}" fill="none" stroke="${FIRE.orange}" stroke-width="${(26 * fade + 4).toFixed(1)}"/>`, 0.55 * fade);
+    for (const t of tongues) {
+      const x0 = c + Math.cos(t.a) * (ring - 8);
+      const y0 = c + Math.sin(t.a) * (ring - 8);
+      const h = height * t.k;
+      body += flame(x0, y0, c + Math.cos(t.a + 0.1) * (ring + h), c + Math.sin(t.a + 0.1) * (ring + h), t.w, 12, t.a * 3 + p * 6, fade);
+    }
+    for (const sp of sparks) {
+      const d = ring * sp.d + 50 * p;
+      body += ember(c + Math.cos(sp.a) * d, c + Math.sin(sp.a) * d, sp.r * (1 - 0.5 * p), Math.min(1, p * 3) * (1 - p * 0.7));
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Comète du météore (debout) : elle tombe du ciel, sa traîne de feu derrière elle, jusqu'au sol. */
+function brandComet() {
+  const W = 192;
+  const H = 512;
+  const N = 6;
+  const rand = seeded(211);
+  const sparks = [...Array(10)].map(() => ({ t: rand(), dx: (rand() - 0.5) * 30, r: 1.5 + rand() * 2 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const hy = lerp(30, H - 36, p ** 1.6);
+    const hx = lerp(150, 96, p ** 1.6);
+    const tail = Math.min(hy + 40, 300);
+    let body = GLOW(10);
+    body += glowGroup(`<ellipse cx="${(hx + 20).toFixed(1)}" cy="${(hy - tail / 2).toFixed(1)}" rx="30" ry="${(tail / 2).toFixed(1)}" fill="${FIRE.orange}" transform="rotate(10 ${hx.toFixed(1)} ${hy.toFixed(1)})"/>`, 0.55);
+    for (let k = 0; k < 5; k++) body += flame(hx, hy, hx + 30 + (k - 2) * 12, hy - tail * (0.6 + 0.1 * k), 26 - k * 2, 10, k * 1.7 + p * 5, 0.95);
+    for (const sp of sparks) body += ember(hx + 25 * sp.t + sp.dx, hy - tail * sp.t, sp.r, 0.9);
+    body += hotDisc(hx, hy, 30);
+    body += `<circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="12" fill="${FIRE.white}"/>`;
+    return svg(W, H, body);
+  });
+}
+
+/** Anneau de flammes (sol, boucle) : Bouclier de flammes et Dôme de feu. Les flammes tournent d'un cran par boucle. */
+function brandRing() {
+  const S = 512;
+  const c = S / 2;
+  const N = 12;
+  const R = 150;
+  const count = 26;
+  const rand = seeded(213);
+  const offs = [...Array(count)].map(() => ({ k: 0.5 + rand() * 1, ph: rand() * 6, w: 16 + rand() * 10 }));
+  return [...Array(N)].map((_, i) => {
+    const t = i / N;
+    const spin = (t * 360) / count;
+    let body = GLOW(9);
+    body += `<circle cx="${c}" cy="${c}" r="${R - 6}" fill="${FIRE.red}" opacity="0.08"/>`;
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="${FIRE.orange}" stroke-width="22"/>`, 0.6);
+    for (let k = 0; k < count; k++) {
+      const o = offs[k];
+      const a = deg(spin + (k * 360) / count);
+      const h = 68 * o.k * (0.7 + 0.3 * Math.sin(t * Math.PI * 2 * 2 + o.ph));
+      body += flame(c + Math.cos(a) * (R - 14), c + Math.sin(a) * (R - 14), c + Math.cos(a + 0.2) * (R + h), c + Math.sin(a + 0.2) * (R + h), o.w, 10, o.ph + t * Math.PI * 2, 0.92);
+    }
+    body += `<circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="${FIRE.white}" stroke-width="3" opacity="0.8"/>`;
+    return svg(S, S, body);
+  });
+}
+
+/** Sol brûlant (boucle) : une plaque de fissures en fusion qui palpite, de petites flammes qui lèchent, des étincelles. */
+function brandEmbers() {
+  const S = 256;
+  const c = S / 2;
+  const N = 10;
+  const rand = seeded(215);
+  const cracks = [...Array(6)].map((_, k) => {
+    const a = (k / 6) * Math.PI * 2 + rand() * 0.6;
+    return zigzag(c + Math.cos(a) * 10, c + Math.sin(a) * 10, c + Math.cos(a) * (70 + rand() * 40), c + Math.sin(a) * (70 + rand() * 40), 5, 9, rand);
+  });
+  const licks = [...Array(7)].map(() => ({ a: rand() * Math.PI * 2, d: 20 + rand() * 70, ph: rand() * 6, h: 22 + rand() * 18 }));
+  return [...Array(N)].map((_, i) => {
+    const t = (i / N) * Math.PI * 2;
+    const pulse = 0.75 + 0.25 * Math.sin(t);
+    let body = GLOW(7);
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="96" fill="${FIRE.smoke}"/>`, 0.35);
+    const lines = cracks.map((cr) => `<polyline points="${pts(cr)}" fill="none" stroke="${FIRE.orange}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+    body += glowGroup(lines, 0.8 * pulse);
+    body += `<g opacity="${pulse.toFixed(3)}">${lines.replaceAll(FIRE.orange, FIRE.yellow).replaceAll('stroke-width="5"', 'stroke-width="2"')}</g>`;
+    for (const l of licks) {
+      const x = c + Math.cos(l.a) * l.d;
+      const y = c + Math.sin(l.a) * l.d;
+      const h = l.h * (0.6 + 0.4 * Math.abs(Math.sin(t + l.ph)));
+      body += flame(x, y, x + Math.cos(l.a) * h * 0.4, y + Math.sin(l.a) * h * 0.4 - h, 12, 4, l.ph + t, 0.85);
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Traînée de la Fuite de feu (sol) : un sillage de flammes le long de la course (héros vers +x), qui s'éteint. */
+function brandTrail() {
+  const W = 512;
+  const H = 128;
+  const cy = H / 2;
+  const N = 8;
+  const rand = seeded(217);
+  const tongues = [...Array(12)].map((_, k) => ({ x: 40 + k * 38 + rand() * 10, dy: (rand() - 0.5) * 22, len: 70 + rand() * 50, ph: rand() * 6, w: 22 + rand() * 10 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    let body = GLOW(8);
+    // Une bande de chaleur continue, puis le sillage qui s'éteint de la queue (gauche) vers la tête (droite).
+    const reach = clamp01(1.4 - p * 1.6) * W;
+    if (reach > 20) body += glowGroup(`<rect x="${(W - reach).toFixed(1)}" y="${cy - 16}" width="${reach.toFixed(1)}" height="32" rx="16" fill="${FIRE.orange}"/>`, 0.5);
+    for (const t of tongues) {
+      const life = clamp01(1 - p * 1.6 + (t.x / W) * 0.7);
+      if (life <= 0) continue;
+      body += glowGroup(`<circle cx="${t.x.toFixed(1)}" cy="${(cy + t.dy).toFixed(1)}" r="${(16 * life).toFixed(1)}" fill="${FIRE.orange}"/>`, 0.5 * life);
+      body += flame(t.x, cy + t.dy, t.x - t.len * life, cy + t.dy - 8, t.w * life, 9, t.ph + p * 5, life);
+      if (life < 0.6) body += ember(t.x - 10, cy + t.dy - 14 * (1 - life), 2, life);
+    }
+    return svg(W, H, body);
+  });
+}
+
 // --- Écriture des planches ---------------------------------------------------------------------------------------
 
 /** name : fichier (sans extension) ; tag : nom de l'animation ; once : jouée une fois ; duration : ms par image. */
@@ -695,9 +1044,22 @@ const EFFECTS = [
   { name: 'aura-burst', tag: 'aura', once: true, duration: 50, frames: auraBurst },
   { name: 'hammer', tag: 'flight', once: false, duration: 45, frames: hammerSpin },
   // Style lumière, essai sur le Guerrier.
-  ...[120, 150, 180, 200, 360].map((a) => ({ name: `light-slash-guerrier-${a}`, tag: 'slash', once: true, duration: 25, frames: () => slashLight(a, LIGHT.guerrier) })),
-  { name: 'light-impact-guerrier', tag: 'impact', once: true, duration: 30, frames: () => impactLight(LIGHT.guerrier) },
+  // Style lumière : traînées de lame et estocs aux couleurs de chaque classe, poussière d'esquive.
+  ...Object.entries(LIGHT).flatMap(([cls, color]) => [
+    ...[120, 150, 180, 200, 360].map((a) => ({ name: `light-slash-${cls}-${a}`, tag: 'slash', once: true, duration: 25, frames: () => slashLight(a, color) })),
+    { name: `light-thrust-${cls}`, tag: 'slash', once: true, duration: 24, frames: () => thrustLight(color) },
+  ]),
   { name: 'light-dust', tag: 'dust', once: true, duration: 45, frames: dustLight },
+  // Sorcier : feu inspiré de Brand (League of Legends).
+  { name: 'brand-fireball', tag: 'flight', once: false, duration: 50, frames: brandFireball },
+  { name: 'brand-pop', tag: 'pop', once: true, duration: 40, frames: brandPop },
+  { name: 'brand-rune', tag: 'rune', once: true, duration: 60, frames: brandRune },
+  { name: 'brand-pillar', tag: 'pillar', once: true, duration: 50, frames: brandPillar },
+  { name: 'brand-scorch', tag: 'scorch', once: true, duration: 55, frames: brandScorch },
+  { name: 'brand-comet', tag: 'comet', once: true, duration: 50, frames: brandComet },
+  { name: 'brand-ring', tag: 'ring', once: false, duration: 60, frames: brandRing },
+  { name: 'brand-embers', tag: 'embers', once: false, duration: 70, frames: brandEmbers },
+  { name: 'brand-trail', tag: 'trail', once: true, duration: 50, frames: brandTrail },
   // Remplacent les effets du Sorcier : mêmes fichiers et mêmes tags, déjà branchés dans le rendu.
   { name: 'fireball-sorcier', tag: 'flight', once: false, duration: 60, frames: fireball },
   { name: 'fire-wrath-sorcier', tag: 'wrath', once: true, duration: 45, frames: fireBurst },
@@ -709,16 +1071,20 @@ for (const effect of EFFECTS) {
   const images = effect.frames();
   const buffers = await Promise.all(images.map((s) => sharp(Buffer.from(s)).png().toBuffer()));
   const { width, height } = await sharp(buffers[0]).metadata();
-  await sharp({ create: { width: width * buffers.length, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-    .composite(buffers.map((input, i) => ({ input, left: i * width, top: 0 })))
+  // Une bande, ou une grille si la bande dépasserait 4 096 px (taille de texture sûre sur toutes les cartes graphiques).
+  const cols = Math.min(buffers.length, Math.max(1, Math.floor(4096 / width)));
+  const rows = Math.ceil(buffers.length / cols);
+  const at = (i) => ({ x: (i % cols) * width, y: Math.floor(i / cols) * height });
+  await sharp({ create: { width: width * cols, height: height * rows, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite(buffers.map((input, i) => ({ input, left: at(i).x, top: at(i).y })))
     .webp({ quality: 92, alphaQuality: 100 })
     .toFile(path.join(outDir, `${effect.name}.webp`));
   const sheet = {
-    frames: buffers.map((_, i) => ({ filename: `${effect.tag} ${i}`, frame: { x: i * width, y: 0, w: width, h: height }, duration: effect.duration })),
+    frames: buffers.map((_, i) => ({ filename: `${effect.tag} ${i}`, frame: { ...at(i), w: width, h: height }, duration: effect.duration })),
     meta: {
       app: 'tools/vfx.mjs',
       image: `${effect.name}.webp`,
-      size: { w: width * buffers.length, h: height },
+      size: { w: width * cols, h: height * rows },
       smooth: true,
       frameTags: [{ name: effect.tag, from: 0, to: buffers.length - 1, direction: 'forward', ...(effect.once ? { repeat: '1' } : {}) }],
     },

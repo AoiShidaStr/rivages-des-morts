@@ -1,0 +1,92 @@
+{
+ "frames": [
+  {
+   "filename": "pop 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 1",
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 2",
+   "frame": {
+    "x": 384,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 3",
+   "frame": {
+    "x": 576,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 4",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 5",
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 6",
+   "frame": {
+    "x": 1152,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 40
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "brand-pop.webp",
+  "size": {
+   "w": 1344,
+   "h": 192
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "pop",
+    "from": 0,
+    "to": 6,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

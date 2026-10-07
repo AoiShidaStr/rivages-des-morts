@@ -83,8 +83,8 @@
   {
    "filename": "wrath 8",
    "frame": {
-    "x": 4096,
-    "y": 0,
+    "x": 0,
+    "y": 512,
     "w": 512,
     "h": 512
    },
@@ -95,8 +95,8 @@
   "app": "tools/vfx.mjs",
   "image": "fire-wrath-sorcier.webp",
   "size": {
-   "w": 4608,
-   "h": 512
+   "w": 4096,
+   "h": 1024
   },
   "smooth": true,
   "frameTags": [

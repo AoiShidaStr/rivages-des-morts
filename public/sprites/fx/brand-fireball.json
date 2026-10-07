@@ -1,0 +1,101 @@
+{
+ "frames": [
+  {
+   "filename": "flight 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 1",
+   "frame": {
+    "x": 288,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 2",
+   "frame": {
+    "x": 576,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 3",
+   "frame": {
+    "x": 864,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 4",
+   "frame": {
+    "x": 1152,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 5",
+   "frame": {
+    "x": 1440,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 6",
+   "frame": {
+    "x": 1728,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 7",
+   "frame": {
+    "x": 2016,
+    "y": 0,
+    "w": 288,
+    "h": 128
+   },
+   "duration": 50
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "brand-fireball.webp",
+  "size": {
+   "w": 2304,
+   "h": 128
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "flight",
+    "from": 0,
+    "to": 7,
+    "direction": "forward"
+   }
+  ]
+ }
+}

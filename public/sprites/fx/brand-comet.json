@@ -1,0 +1,82 @@
+{
+ "frames": [
+  {
+   "filename": "comet 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 192,
+    "h": 512
+   },
+   "duration": 50
+  },
+  {
+   "filename": "comet 1",
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 192,
+    "h": 512
+   },
+   "duration": 50
+  },
+  {
+   "filename": "comet 2",
+   "frame": {
+    "x": 384,
+    "y": 0,
+    "w": 192,
+    "h": 512
+   },
+   "duration": 50
+  },
+  {
+   "filename": "comet 3",
+   "frame": {
+    "x": 576,
+    "y": 0,
+    "w": 192,
+    "h": 512
+   },
+   "duration": 50
+  },
+  {
+   "filename": "comet 4",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 192,
+    "h": 512
+   },
+   "duration": 50
+  },
+  {
+   "filename": "comet 5",
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 192,
+    "h": 512
+   },
+   "duration": 50
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "brand-comet.webp",
+  "size": {
+   "w": 1152,
+   "h": 512
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "comet",
+    "from": 0,
+    "to": 5,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

@@ -1,0 +1,82 @@
+{
+ "frames": [
+  {
+   "filename": "slash 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 25
+  },
+  {
+   "filename": "slash 1",
+   "frame": {
+    "x": 256,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 25
+  },
+  {
+   "filename": "slash 2",
+   "frame": {
+    "x": 512,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 25
+  },
+  {
+   "filename": "slash 3",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 25
+  },
+  {
+   "filename": "slash 4",
+   "frame": {
+    "x": 1024,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 25
+  },
+  {
+   "filename": "slash 5",
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 25
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "light-slash-rodeur-200.webp",
+  "size": {
+   "w": 1536,
+   "h": 256
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "slash",
+    "from": 0,
+    "to": 5,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

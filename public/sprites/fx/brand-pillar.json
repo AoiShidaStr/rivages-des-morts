@@ -1,0 +1,132 @@
+{
+ "frames": [
+  {
+   "filename": "pillar 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 1",
+   "frame": {
+    "x": 224,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 2",
+   "frame": {
+    "x": 448,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 3",
+   "frame": {
+    "x": 672,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 4",
+   "frame": {
+    "x": 896,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 5",
+   "frame": {
+    "x": 1120,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 6",
+   "frame": {
+    "x": 1344,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 7",
+   "frame": {
+    "x": 1568,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 8",
+   "frame": {
+    "x": 1792,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 9",
+   "frame": {
+    "x": 2016,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  },
+  {
+   "filename": "pillar 10",
+   "frame": {
+    "x": 2240,
+    "y": 0,
+    "w": 224,
+    "h": 480
+   },
+   "duration": 50
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "brand-pillar.webp",
+  "size": {
+   "w": 2464,
+   "h": 480
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "pillar",
+    "from": 0,
+    "to": 10,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

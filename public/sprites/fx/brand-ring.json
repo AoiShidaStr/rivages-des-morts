@@ -1,0 +1,141 @@
+{
+ "frames": [
+  {
+   "filename": "ring 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 1",
+   "frame": {
+    "x": 512,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 2",
+   "frame": {
+    "x": 1024,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 3",
+   "frame": {
+    "x": 1536,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 4",
+   "frame": {
+    "x": 2048,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 5",
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 6",
+   "frame": {
+    "x": 3072,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 7",
+   "frame": {
+    "x": 3584,
+    "y": 0,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 8",
+   "frame": {
+    "x": 0,
+    "y": 512,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 9",
+   "frame": {
+    "x": 512,
+    "y": 512,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 10",
+   "frame": {
+    "x": 1024,
+    "y": 512,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ring 11",
+   "frame": {
+    "x": 1536,
+    "y": 512,
+    "w": 512,
+    "h": 512
+   },
+   "duration": 60
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "brand-ring.webp",
+  "size": {
+   "w": 4096,
+   "h": 1024
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "ring",
+    "from": 0,
+    "to": 11,
+    "direction": "forward"
+   }
+  ]
+ }
+}

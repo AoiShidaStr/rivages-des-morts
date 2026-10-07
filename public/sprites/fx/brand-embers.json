@@ -1,0 +1,121 @@
+{
+ "frames": [
+  {
+   "filename": "embers 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 1",
+   "frame": {
+    "x": 256,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 2",
+   "frame": {
+    "x": 512,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 3",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 4",
+   "frame": {
+    "x": 1024,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 5",
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 6",
+   "frame": {
+    "x": 1536,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 7",
+   "frame": {
+    "x": 1792,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 8",
+   "frame": {
+    "x": 2048,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  },
+  {
+   "filename": "embers 9",
+   "frame": {
+    "x": 2304,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 70
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "brand-embers.webp",
+  "size": {
+   "w": 2560,
+   "h": 256
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "embers",
+    "from": 0,
+    "to": 9,
+    "direction": "forward"
+   }
+  ]
+ }
+}

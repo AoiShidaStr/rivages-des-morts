@@ -218,7 +218,15 @@ const SLASH_ARCS = [120, 150, 180, 200, 360];
  */
 const LIGHT_STYLE: Record<string, { ghost: Color3 }> = {
   guerrier: { ghost: new Color3(1, 0.74, 0.38) },
+  lame: { ghost: new Color3(0.68, 0.55, 1) },
+  paladin: { ghost: new Color3(1, 0.9, 0.58) },
+  rodeur: { ghost: new Color3(0.6, 0.9, 0.56) },
+  sorcier: { ghost: new Color3(1, 0.55, 0.22) },
 };
+/** Anneau de flammes (brand-ring) : rayon du cercle dans l'image, en part de sa demi-largeur. */
+const BRAND_RING = 150 / 256;
+/** Météore : la comète apparaît ce temps (s) avant l'impact. */
+const COMET_TIME = 0.3;
 /** Hauteur de la lame : les traînées du style lumière balaient à cette hauteur, pas au sol. */
 const BLADE_HEIGHT = 0.85;
 /** Une image rémanente toutes les… (secondes), et sa durée. */
@@ -363,7 +371,7 @@ export class Renderer {
   private readonly blasts = new Map<number, Fx>();
   private readonly embers = new Map<number, Fx>();
   /** Flèches, marteau et boules de feu en vol. */
-  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number }>();
+  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number; fire?: boolean }>();
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
@@ -881,7 +889,7 @@ export class Renderer {
         const hammer = p.kind === 'hammer';
         const fire = p.kind === 'fireball';
         const arrow = p.kind === 'arrow';
-        const fxName = fire ? 'fxFireballSorcier' : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : hammer ? 'fxHammer' : '';
+        const fxName = fire ? (this.sprites.get('fxBrandFireball') ? 'fxBrandFireball' : 'fxFireballSorcier') : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : hammer ? 'fxHammer' : '';
         const effect = fxName ? this.sprites.get(fxName) : undefined;
         const texture = effect?.texture ?? (hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : fire ? this.fxTextures.shadow : this.fxTextures.arrow);
         const [width, depth] = hammer
@@ -889,7 +897,7 @@ export class Renderer {
           : p.kind === 'net'
             ? [0.8, 0.8]
             : fire
-              ? [1.4, 0.8]
+              ? (fxName === 'fxBrandFireball' ? [1.9, 0.85] : [1.4, 0.8])
               : arrow
                 ? (p.full ? [1.65, 0.85] : [1.25, 0.62])
                 : [1.1, 0.22];
@@ -898,6 +906,7 @@ export class Renderer {
           ...this.createDecal(`projectile-${p.id}`, texture, width, depth, color, 1, PROJECTILE_HEIGHT),
           anim: effect?.anim,
           animTime: 0,
+          fire,
         };
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
@@ -914,6 +923,8 @@ export class Renderer {
     }
     for (const [id, view] of this.projectiles) {
       if (seen.has(id)) continue;
+      // La boule de feu éclate là où elle s'arrête (contact ou bout de course).
+      if (view.fire) this.uprightFx('fxBrandPop', 'pop', { x: view.mesh.position.x, z: view.mesh.position.z }, 1.5, 1.5, 0.28, { center: PROJECTILE_HEIGHT });
       this.disposeFx(view);
       this.projectiles.delete(id);
     }
@@ -1012,8 +1023,11 @@ export class Renderer {
       const active = hero.ward > 0 && !hero.dead;
       let decal = this.wardDecals.get(hero.id);
       if (!active && !decal) continue;
+      const ring = this.sprites.get('fxBrandRing');
       if (!decal) {
-        decal = this.createDecal(`ward-${hero.id}`, this.fxTextures.ring, 2, 2, FIRE, 0.8, 0.03);
+        decal = ring?.anim
+          ? this.createDecal(`ward-${hero.id}`, ring.texture, 2 / BRAND_RING, 2 / BRAND_RING, WHITE, 1, 0.03)
+          : this.createDecal(`ward-${hero.id}`, this.fxTextures.ring, 2, 2, FIRE, 0.8, 0.03);
         decal.mesh.alphaIndex = DECAL_ORDER + 1;
         this.wardDecals.set(hero.id, decal);
       }
@@ -1022,6 +1036,12 @@ export class Renderer {
       if (!active) continue;
       mesh.position.x = hero.pos.x;
       mesh.position.z = hero.pos.z;
+      if (ring?.anim) {
+        mesh.scaling.setAll(hero.cfg.sorcier.ward.radius);
+        showFrame(material, ring.anim, frameAt(ring.anim, 'ring', this.time));
+        material.setFloat('alpha', Math.min(1, hero.ward * 2));
+        continue;
+      }
       mesh.scaling.setAll(hero.cfg.sorcier.ward.radius * (1 + 0.06 * Math.sin(this.time * 11)));
       material.setFloat('alpha', 0.6 * Math.min(1, hero.ward * 2) + 0.2 * Math.sin(this.time * 17));
     }
@@ -1239,6 +1259,8 @@ export class Renderer {
         // Estoc : une lance de pinceau jaillit devant le héros (planche d'effet), sinon un trait droit.
         if (event.shape === 'line') {
           const mid = { x: event.pos.x + (event.dir.x * event.range) / 2, z: event.pos.z + (event.dir.z * event.range) / 2 };
+          const kit = LIGHT_STYLE[this.localKit] ? capitalize(this.localKit) : '';
+          if (kit && this.sheetFx(`fxLightThrust${kit}`, 'slash', mid, event.dir, event.range * 1.15, (event.width ?? 0.8) * 1.4, 0.14, BLADE_HEIGHT, true)) break;
           if (this.sheetFx('fxThrust', 'slash', mid, event.dir, event.range * 1.15, (event.width ?? 0.8) * 1.6, 0.15)) break;
           this.addFx({
             texture: this.fxTextures.streak,
@@ -1284,12 +1306,8 @@ export class Renderer {
       case 'enemyHit': {
         const view = this.views.get(event.id);
         if (view) view.flash = event.shielded ? 0.35 : 1;
-        const lightKit = LIGHT_STYLE[this.localKit] ? capitalize(this.localKit) : '';
-        if (!event.shielded && lightKit) {
-          // Style lumière : une étoile sèche dressée face à la caméra, à hauteur de poitrine.
-          const size = event.crit ? 1.9 : 1.3;
-          this.uprightFx(`fxLightImpact${lightKit}`, 'impact', event.pos, size, size, 0.15, { center: 0.85 });
-        } else if (!event.shielded) {
+        // Style lumière : pas d'éclaboussure, le flash blanc de l'ennemi suffit.
+        if (!event.shielded && !LIGHT_STYLE[this.localKit]) {
           const size = event.crit ? 1.9 : 1.35;
           const turn = Math.random() * Math.PI * 2;
           this.sheetFx('fxImpact', 'impact', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, size, size, 0.24, 0.05);
@@ -1553,9 +1571,42 @@ export class Renderer {
         this.addShake(0.4);
         break;
       case 'blast': {
-        // Sceau : le seiman se trace et s'éclaire jusqu'à l'explosion. Météore : un cercle de feu qui se resserre.
         const duration = event.delay;
         const seal = event.kind === 'seal';
+        // Feu de Brand : un cercle de runes se trace sur la durée de l'annonce ; le météore tombe en comète à la fin.
+        const rune = this.sprites.get('fxBrandRune');
+        if (rune?.anim) {
+          const anim = rune.anim;
+          const drawn = anim.tags.get('rune');
+          const span = drawn ? anim.frames.slice(drawn.from, drawn.to + 1).reduce((sum, f) => sum + f.duration, 0) : 1;
+          const drawEnd = (span * 9) / 12;
+          let comet = seal;
+          const fx = this.addFx({
+            texture: rune.texture,
+            pos: event.pos,
+            dir: { x: 1, z: 0 },
+            width: event.radius * 2.15,
+            depth: event.radius * 2.15,
+            color: WHITE,
+            life: duration + 1,
+            y: 0.026,
+            update: (_k, f) => {
+              const ramp = Math.min(1, f.age / Math.max(0.01, duration));
+              // Les images 0 à 8 suivent l'annonce, puis 9 à 11 palpitent en boucle.
+              const t = ramp < 1 ? ramp * drawEnd : drawEnd + ((f.age - duration) % (span - drawEnd));
+              showFrame(f.material, anim, frameAt(anim, 'rune', t));
+              f.mesh.rotation.y = f.age * 0.4;
+              if (!comet && f.age >= duration - COMET_TIME) {
+                comet = true;
+                this.uprightFx('fxBrandComet', 'comet', event.pos, 2.2, 5.8, COMET_TIME);
+              }
+            },
+          });
+          this.blasts.set(event.id, fx);
+          if (!seal) this.text(event.pos, 2.6, 'Météore !', 'rage', 1.2);
+          break;
+        }
+        // Sceau : le seiman se trace et s'éclaire jusqu'à l'explosion. Météore : un cercle de feu qui se resserre.
         const fx = this.addFx({
           texture: seal ? this.fxTextures.seal : this.fxTextures.ring,
           pos: event.pos,
@@ -1579,6 +1630,13 @@ export class Renderer {
       case 'blastEnd': {
         this.endTracked(this.blasts, event.id);
         const meteor = event.kind === 'meteor';
+        // Feu de Brand : un pilier de flammes jaillit, une onde de feu s'ouvre au sol et laisse des fissures en fusion.
+        const pillar = meteor ? { w: 3, h: 6.4 } : { w: 2, h: 4.3 };
+        if (this.uprightFx('fxBrandPillar', 'pillar', event.pos, pillar.w, pillar.h, meteor ? 0.7 : 0.55)) {
+          this.sheetFx('fxBrandScorch', 'scorch', event.pos, { x: 1, z: 0 }, event.radius * (meteor ? 2.7 : 2.3), event.radius * (meteor ? 2.7 : 2.3), meteor ? 0.75 : 0.55, 0.035);
+          this.addShake(meteor ? 0.9 : 0.3);
+          break;
+        }
         const wrath = meteor ? this.sprites.get('fxFireWrathSorcier') : undefined;
         if (wrath?.anim) {
           const life = 0.4;
@@ -1604,6 +1662,27 @@ export class Renderer {
       }
       case 'ember': {
         const life = event.life;
+        // Sol brûlant : une plaque de fissures en fusion où lèchent de petites flammes (boucle).
+        const embers = this.sprites.get('fxBrandEmbers');
+        if (embers?.anim) {
+          const anim = embers.anim;
+          const fx = this.addFx({
+            texture: embers.texture,
+            pos: event.pos,
+            dir: { x: Math.random() - 0.5, z: Math.random() - 0.5 },
+            width: event.radius * 2.2,
+            depth: event.radius * 2.2,
+            color: WHITE,
+            life: life + 1,
+            y: 0.024,
+            update: (_k, f) => {
+              showFrame(f.material, anim, frameAt(anim, 'embers', f.age));
+              f.material.setFloat('alpha', Math.min(1, f.age * 6, (life - f.age) * 1.5));
+            },
+          });
+          this.embers.set(event.id, fx);
+          break;
+        }
         const fx = this.addFx({
           texture: this.fxTextures.shadow,
           pos: event.pos,
@@ -1624,6 +1703,28 @@ export class Renderer {
       case 'dome': {
         // Bâton de Susanoo : un anneau de feu qui palpite autour du Sorcier tant que le dôme tient.
         const life = event.life;
+        const ring = this.sprites.get('fxBrandRing');
+        if (ring?.anim) {
+          const anim = ring.anim;
+          const size = (event.radius * 2) / BRAND_RING;
+          const fx = this.addFx({
+            texture: ring.texture,
+            pos: event.pos,
+            dir: { x: 1, z: 0 },
+            width: size,
+            depth: size,
+            color: WHITE,
+            life: life + 1,
+            y: 0.03,
+            update: (_k, f) => {
+              showFrame(f.material, anim, frameAt(anim, 'ring', f.age));
+              f.material.setFloat('alpha', Math.min(1, f.age * 4, (life - f.age) * 1.5));
+            },
+          });
+          this.embers.set(event.id, fx);
+          this.text(event.pos, 2.6, 'Dôme de feu', 'rage', 1.2);
+          break;
+        }
         const fx = this.addFx({
           texture: this.fxTextures.ring,
           pos: event.pos,
@@ -1641,7 +1742,9 @@ export class Renderer {
       }
       case 'ward':
         this.text(event.pos, 2.4, 'Bouclier de flammes', 'rage', 1.1);
-        this.addFx(this.ringFx(event.pos, event.radius * 2.4, FIRE, 0.4));
+        if (!this.sheetFx('fxBrandScorch', 'scorch', event.pos, { x: 1, z: 0 }, event.radius * 2.4, event.radius * 2.4, 0.45, 0.035)) {
+          this.addFx(this.ringFx(event.pos, event.radius * 2.4, FIRE, 0.4));
+        }
         break;
       case 'wardEnd':
         this.addFx(this.ringFx(event.pos, 2, FIRE, 0.3));
@@ -1650,6 +1753,9 @@ export class Renderer {
         const dir = { x: event.to.x - event.from.x, z: event.to.z - event.from.z };
         const len = Math.hypot(dir.x, dir.z);
         if (len < 0.1) break;
+        // Fuite de feu : un sillage de flammes le long de la course, qui s'éteint de la queue vers la tête.
+        const mid = { x: (event.from.x + event.to.x) / 2, z: (event.from.z + event.to.z) / 2 };
+        if (this.sheetFx('fxBrandTrail', 'trail', mid, dir, len * 1.2, 1.2, 0.5)) break;
         this.addFx({
           texture: this.fxTextures.streak,
           pos: { x: (event.from.x + event.to.x) / 2, z: (event.from.z + event.to.z) / 2 },

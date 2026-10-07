@@ -230,13 +230,29 @@ Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessin
 | Rayons or et anneau qui s'ouvre | `aura-burst` | lancement de l'Aura de lumière |
 | Marteau qui tournoie, trait de pinceau derrière la tête | `hammer` | marteau lancé du Paladin |
 
-**Essai du style « lumière » (7 octobre 2026, Guerrier seulement).** Les effets au pinceau ci-dessus font trop « cartoon » à côté de l'Invocateur Hanyō. Le style lumière, inspiré des effets de Merakintsugi, les remplace pour le Guerrier :
+**Style « lumière » (octobre 2026, toutes les classes).** Les effets au pinceau ci-dessus faisaient trop « cartoon » à côté de l'Invocateur Hanyō. Le style lumière, inspiré des effets de Merakintsugi, les remplace pour les héros :
 
-- pas de contour : un cœur blanc et une seule couleur d'accent par classe (ambre pour le Guerrier), des traits fins effilés en pointe, un pic très bref sur l'impact puis des éclats ;
-- traînée de lame à hauteur de poitrine (`light-slash-guerrier-<degrés>`), qui passe devant ou derrière les sprites selon la profondeur, au lieu d'être couchée au sol ;
-- impact en étoile sèche dressée face à la caméra (`light-impact-guerrier`) ;
-- esquive : volutes de poussière (`light-dust`) et **images rémanentes** du héros, des copies ambrées et translucides de son image du moment (`spawnGhost`, aucune planche à dessiner).
+- pas de contour : un cœur blanc et une seule couleur d'accent par classe (Guerrier ambre, Lame violet, Paladin or pâle, Rôdeur vert, Sorcier feu), des traits fins effilés en pointe, un pic très bref puis des éclats ;
+- traînée de lame discrète à hauteur de poitrine (`light-slash-<classe>-<degrés>`) et estoc en aiguille (`light-thrust-<classe>`), qui passent devant ou derrière les sprites selon la profondeur ;
+- **pas d'effet d'impact** : le flash blanc de l'ennemi touché suffit ;
+- esquive : volutes de poussière (`light-dust`) et **images rémanentes** du héros, des silhouettes translucides de la couleur de la classe (`spawnGhost`).
 
-Les classes concernées sont listées dans `LIGHT_STYLE` (`src/render/renderer.ts`) avec la teinte de leurs images rémanentes, et leurs couleurs dans `LIGHT` (`tools/vfx.mjs`). Si l'essai est validé, on l'étend aux autres classes et effets.
+Les classes et la teinte de leurs images rémanentes sont dans `LIGHT_STYLE` (`src/render/renderer.ts`), leurs couleurs de traînée dans `LIGHT` (`tools/vfx.mjs`).
+
+**Feu du Sorcier, inspiré de Brand (League of Legends).** Le seul effet du jeu qui a droit au flou, pour sa chaleur : flammes en couches sans contour (rouge sombre, orange, jaune, cœur blanc), halo flou, braises vives et fumée sombre.
+
+| Effet | Fichier | Quand |
+| --- | --- | --- |
+| Boule de feu à cœur blanc, flammes qui fouettent, braises et fumée | `brand-fireball` | boule de feu (attaque) |
+| Éclatement de feu, debout | `brand-pop` | là où la boule de feu s'arrête |
+| Cercle de runes qui se trace pendant l'annonce, puis palpite | `brand-rune` | sceau et météore |
+| Comète qui tombe du ciel | `brand-comet` | les 0,3 dernières secondes du météore |
+| Pilier de flammes qui jaillit, rugit et s'arrache en braises | `brand-pillar` | explosion du sceau (plus grand pour le météore) |
+| Onde de feu au sol et fissures en fusion | `brand-scorch` | sceau, météore, levée du Bouclier de flammes |
+| Anneau de flammes (boucle) | `brand-ring` | Bouclier de flammes, Dôme de feu |
+| Plaque de fissures en fusion et petites flammes (boucle) | `brand-embers` | sol brûlant |
+| Sillage de flammes | `brand-trail` | Fuite de feu |
+
+Les planches plus larges que 4 096 px sont rangées en grille (taille de texture sûre sur toutes les cartes graphiques).
 
 Pour retoucher un effet : modifier sa fonction dans `tools/vfx.mjs` (durées, couleurs, formes), relancer `npm run vfx -- <nom>`. Une planche absente laisse le rendu retomber sur l'ancien effet dessiné par le code.
