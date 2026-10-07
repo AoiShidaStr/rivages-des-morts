@@ -205,6 +205,8 @@ const DANGER = new Color3(1, 0.22, 0.16);
 const SLASH = new Color3(1, 0.97, 0.9);
 /** Ouvertures des planches de coups d'arme (public/sprites/fx/slash-<degrés>, `npm run vfx`). */
 const SLASH_ARCS = [120, 150, 180, 200, 360];
+/** Soin à partir duquel un cercle de pinceau se trace aussi au sol (les petites gorgées de vol de vie n'en ont pas). */
+const BIG_HEAL = 15;
 const HEAL = new Color3(0.45, 1, 0.5);
 const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
 const DUST = new Color3(0.86, 0.78, 0.6);
@@ -846,11 +848,11 @@ export class Renderer {
         const hammer = p.kind === 'hammer';
         const fire = p.kind === 'fireball';
         const arrow = p.kind === 'arrow';
-        const fxName = fire ? 'fxFireballSorcier' : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : '';
+        const fxName = fire ? 'fxFireballSorcier' : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : hammer ? 'fxHammer' : '';
         const effect = fxName ? this.sprites.get(fxName) : undefined;
         const texture = effect?.texture ?? (hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : fire ? this.fxTextures.shadow : this.fxTextures.arrow);
         const [width, depth] = hammer
-          ? [1.2, 1.2]
+          ? (effect ? [1.8, 1.8] : [1.2, 1.2])
           : p.kind === 'net'
             ? [0.8, 0.8]
             : fire
@@ -873,9 +875,9 @@ export class Renderer {
         view.animTime += dt;
         showFrame(view.material, view.anim, frameAt(view.anim, 'flight', view.animTime));
       }
-      // Le marteau et le filet tournoient ; les projectiles dirigés suivent leur course.
+      // Le marteau et le filet tournoient (le marteau dessiné tourne dans sa planche) ; les projectiles dirigés suivent leur course.
       if (p.kind === 'arrow' || p.kind === 'fireball') view.mesh.rotation.y = -angleOf(p.dir);
-      else view.mesh.rotation.y += dt * (p.kind === 'hammer' ? 18 : 6);
+      else if (!(p.kind === 'hammer' && view.anim)) view.mesh.rotation.y += dt * (p.kind === 'hammer' ? 18 : 6);
     }
     for (const [id, view] of this.projectiles) {
       if (seen.has(id)) continue;
@@ -944,8 +946,11 @@ export class Renderer {
       const active = hero.aura > 0;
       let decal = this.auraDecals.get(hero.id);
       if (!active && !decal) continue;
+      const drawn = this.sprites.get('fxAuraLoop');
       if (!decal) {
-        decal = this.createDecal(`aura-${hero.id}`, this.fxTextures.ring, 2, 2, DIVINE, 0.7, 0.025);
+        decal = drawn?.anim
+          ? this.createDecal(`aura-${hero.id}`, drawn.texture, 2, 2, WHITE, 1, 0.025)
+          : this.createDecal(`aura-${hero.id}`, this.fxTextures.ring, 2, 2, DIVINE, 0.7, 0.025);
         decal.mesh.alphaIndex = DECAL_ORDER + 1;
         this.auraDecals.set(hero.id, decal);
       }
@@ -955,6 +960,13 @@ export class Renderer {
       const radius = hero.cfg.paladin.aura.radius;
       mesh.position.x = hero.pos.x;
       mesh.position.z = hero.pos.z;
+      if (drawn?.anim) {
+        mesh.scaling.setAll(radius);
+        showFrame(material, drawn.anim, frameAt(drawn.anim, 'aura', this.time));
+        // Elle pâlit pendant sa dernière seconde.
+        material.setFloat('alpha', 0.9 * Math.min(1, hero.aura));
+        continue;
+      }
       mesh.scaling.setAll(radius * (1 + 0.03 * Math.sin(this.time * 4)));
       // Elle pâlit pendant sa dernière seconde.
       material.setFloat('alpha', 0.55 * Math.min(1, hero.aura) + 0.15 * Math.sin(this.time * 6));
@@ -1384,6 +1396,8 @@ export class Renderer {
         break;
       case 'heal':
         this.text(event.pos, 1.8, `+${Math.round(event.amount)}`, 'heal');
+        this.uprightFx('fxHealRise', 'heal', event.pos, 1.4, 2.8, 0.75);
+        if (event.amount >= BIG_HEAL) this.sheetFx('fxHealRing', 'heal', event.pos, { x: 1, z: 0 }, 2, 2, 0.55, 0.03);
         break;
       case 'enemySwing':
         this.addFx({
@@ -1436,10 +1450,14 @@ export class Renderer {
         this.text(event.pos, 2.3, 'Frénésie !', 'rage', 1.2);
         this.addFx(this.ringFx(event.pos, 2.4, RAGE, 0.4));
         break;
-      case 'lightning':
-        this.addFx(this.ringFx(event.pos, 1.8, STORM, 0.22));
+      case 'lightning': {
+        const turn = Math.random() * Math.PI * 2;
+        const ground = this.sheetFx('fxLightningGround', 'bolt', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, 2.4, 2.4, 0.45);
+        const bolt = this.uprightFx('fxLightningBolt', 'bolt', event.pos, 1.5, 4.8, 0.36);
+        if (!ground && !bolt) this.addFx(this.ringFx(event.pos, 1.8, STORM, 0.22));
         this.addShake(0.2);
         break;
+      }
       case 'bearSkin':
         this.text(event.pos, 2.4, 'Peau d’ours !', 'parry', 1.5);
         this.addFx(this.ringFx(event.pos, 3.2, RAGE, 0.5));
@@ -1632,7 +1650,10 @@ export class Renderer {
         this.text(event.pos, 2.3, 'Écran de fumée', 'mark', 1);
         break;
       case 'aura':
-        this.addFx(this.ringFx(event.pos, event.radius * 2.4, DIVINE, 0.5));
+        // Des rayons or jaillissent du Paladin, puis un anneau de lumière s'ouvre jusqu'au bord de l'aura.
+        if (!this.sheetFx('fxAuraBurst', 'aura', event.pos, { x: 1, z: 0 }, event.radius * 2.2, event.radius * 2.2, 0.55, 0.035)) {
+          this.addFx(this.ringFx(event.pos, event.radius * 2.4, DIVINE, 0.5));
+        }
         this.text(event.pos, 2.4, 'Aura de lumière', 'light', 1.1);
         break;
       case 'netBurst':
@@ -1692,6 +1713,32 @@ export class Renderer {
       // La planche est jouée en entier sur la durée de l'effet, quelle que soit la durée de ses images.
       update: (k, fx) => showFrame(fx.material, anim, frameAt(anim, tag, k * span)),
     });
+    return true;
+  }
+
+  /**
+   * Effet dessiné debout (éclair, pétales qui montent) : un plan tourné vers la caméra comme les personnages, posé
+   * sur le sol en `pos`, qui joue sa planche une fois sur `life` secondes. Renvoie faux si la planche manque.
+   */
+  private uprightFx(name: string, tag: string, pos: Vec2, width: number, height: number, life: number): boolean {
+    const sheet = this.sprites.get(name);
+    const anim = sheet?.anim;
+    if (!sheet || !anim) return false;
+    const tagInfo = anim.tags.get(tag);
+    const span = tagInfo ? anim.frames.slice(tagInfo.from, tagInfo.to + 1).reduce((sum, f) => sum + f.duration, 0) : life;
+    const mesh = MeshBuilder.CreatePlane('fx', { width, height }, this.scene);
+    mesh.bakeTransformIntoVertices(Matrix.Translation(0, height / 2, 0));
+    mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    mesh.isPickable = false;
+    mesh.position.x = pos.x;
+    mesh.position.z = pos.z;
+    mesh.alphaIndex = SPRITE_ORDER * 2;
+    const material = spriteMaterial(this.scene, 'fx', sheet.texture);
+    material.disableDepthWrite = true;
+    mesh.material = material;
+    const fx: Fx = { mesh, material, age: 0, life, update: (k, f) => showFrame(f.material, anim, frameAt(anim, tag, k * span)) };
+    fx.update(0, fx);
+    this.effects.push(fx);
     return true;
   }
 

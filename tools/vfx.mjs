@@ -23,6 +23,8 @@ const GOLD = '#e0c27a';
 const GOLD_DEEP = '#c99a4a';
 const DUST = '#cfd6de';
 const FLAME = { outer: '#e8742a', mid: '#f4b942', core: '#fff3c4' };
+const STORM = { edge: '#9fc0f0', core: '#f4f8ff' };
+const JADE = { mid: '#6fcf8e', light: '#d8f5df' };
 
 // --- Outils de dessin --------------------------------------------------------------------------------------------
 
@@ -313,6 +315,233 @@ function fireBurst() {
   });
 }
 
+/** Ligne brisée d'un éclair, de (x0, y0) à (x1, y1) : `steps` segments décalés au hasard sur le côté. */
+function zigzag(x0, y0, x1, y1, steps, jitter, rand) {
+  const list = [[x0, y0]];
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len = Math.hypot(dx, dy);
+  const nx = -dy / len;
+  const ny = dx / len;
+  for (let k = 1; k < steps; k++) {
+    const u = k / steps;
+    const side = (rand() - 0.5) * 2 * jitter * Math.sin(Math.PI * u) ** 0.5;
+    list.push([x0 + dx * u + nx * side, y0 + dy * u + ny * side]);
+  }
+  list.push([x1, y1]);
+  return list;
+}
+
+/** Trait d'éclair à trois couches : contour encre, bleu orage, cœur blanc. */
+function boltStroke(list, width, opacity) {
+  const line = (color, w) =>
+    `<polyline points="${pts(list)}" fill="none" stroke="${color}" stroke-width="${w.toFixed(1)}" stroke-linejoin="miter" stroke-miterlimit="3" stroke-linecap="round" opacity="${opacity.toFixed(3)}"/>`;
+  return line(INK, width + 5) + line(STORM.edge, width) + line(STORM.core, Math.max(1.5, width * 0.4));
+}
+
+/** Petite étoile à quatre branches (étincelle, éclat de lumière). */
+const sparkle = (x, y, r, fill, opacity = 1, stroke = INK) =>
+  polygon([[x, y - r], [x + r * 0.28, y - r * 0.28], [x + r, y], [x + r * 0.28, y + r * 0.28], [x, y + r], [x - r * 0.28, y + r * 0.28], [x - r, y], [x - r * 0.28, y - r * 0.28]], fill, stroke, 1.2, opacity);
+
+/** Foudre, partie debout : l'éclair tombe du ciel, s'éteint, frappe une seconde fois, puis s'efface. */
+function lightningBolt() {
+  const W = 160;
+  const H = 512;
+  const c = W / 2;
+  const ground = H - 18;
+  // Intensité de chaque image : deux coups de tonnerre, le second plus bref.
+  const beats = [1, 0.95, 0.3, 1, 0.85, 0.5, 0.25, 0.08];
+  const paths = [seeded(21), seeded(22)].map((rand) => {
+    const main = zigzag(c + (rand() - 0.5) * 30, 0, c, ground, 11, 26, rand);
+    const branches = [3, 6].map((k) => {
+      const [bx, by] = main[k];
+      const side = rand() < 0.5 ? -1 : 1;
+      return zigzag(bx, by, bx + side * (35 + rand() * 25), by + 70 + rand() * 50, 4, 10, rand);
+    });
+    return { main, branches };
+  });
+  return beats.map((power, i) => {
+    const { main, branches } = paths[i < 3 ? 0 : 1];
+    const width = 7 + 10 * power;
+    let body = '';
+    // Éclat au point d'impact, à plat sur le sol (l'ellipse donne la perspective).
+    body += `<ellipse cx="${c}" cy="${ground}" rx="${(22 + 50 * power).toFixed(1)}" ry="${(7 + 12 * power).toFixed(1)}" fill="${STORM.core}" stroke="${INK}" stroke-width="2" opacity="${(0.9 * power).toFixed(3)}"/>`;
+    for (const b of branches) body += boltStroke(b, width * 0.45, power);
+    body += boltStroke(main, width, Math.min(1, power + 0.1));
+    if (power > 0.8) for (const [x, y, r] of [[c - 30, ground - 30, 9], [c + 34, ground - 18, 7], [c + 12, ground - 52, 6]]) body += sparkle(x, y, r * power, STORM.core);
+    return svg(W, H, body);
+  });
+}
+
+/** Foudre, partie au sol : un éclat blanc, des fissures en étoile et une brûlure d'encre qui s'efface. */
+function lightningGround() {
+  const S = 256;
+  const c = S / 2;
+  const N = 8;
+  const rand = seeded(23);
+  const cracks = [...Array(7)].map((_, k) => {
+    const a = (k / 7) * Math.PI * 2 + (rand() - 0.5) * 0.5;
+    const len = 70 + rand() * 45;
+    return zigzag(c, c, c + Math.cos(a) * len, c + Math.sin(a) * len, 5, 9, rand);
+  });
+  const sparks = [...Array(8)].map(() => ({ a: rand() * Math.PI * 2, d: 30 + rand() * 30, r: 4 + rand() * 4 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const grow = easeOut(p / 0.3);
+    const fade = 1 - clamp01((p - 0.35) / 0.65);
+    let body = '';
+    body += polygon(splat(c, c, 26, 48, 9, seeded(24)), INK, 'none', 0, 0.45 * fade);
+    for (const crack of cracks) {
+      const part = crack.slice(0, Math.max(2, Math.round(grow * crack.length)));
+      body += boltStroke(part, 5 * (1 - 0.5 * p), fade);
+    }
+    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(30 + 60 * easeOut(p / 0.3)).toFixed(1)}" fill="${STORM.core}" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
+    for (const s of sparks) {
+      const d = s.d + 70 * easeOut(p);
+      body += sparkle(c + Math.cos(s.a) * d, c + Math.sin(s.a) * d, s.r * (1 - 0.6 * p), STORM.core, fade);
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Soin, partie debout : des pétales de jade et des éclats montent autour du héros, puis s'effacent. */
+function healRise() {
+  const W = 160;
+  const H = 320;
+  const N = 10;
+  const rand = seeded(31);
+  const motes = [...Array(9)].map((_, k) => ({
+    x: 30 + rand() * 100,
+    delay: (k / 9) * 0.45,
+    rise: 140 + rand() * 120,
+    r: 8 + rand() * 7,
+    turn: rand() * Math.PI * 2,
+    petal: k % 3 !== 2,
+  }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    let body = '';
+    for (const m of motes) {
+      const q = clamp01((p - m.delay) / 0.55);
+      if (q <= 0 || q >= 1) continue;
+      const y = H - 30 - m.rise * easeOut(q);
+      const x = m.x + Math.sin(m.turn + q * 4) * 8;
+      const s = m.r * Math.sin(Math.PI * Math.min(1, q * 1.4)) + 1;
+      const o = 1 - clamp01((q - 0.6) / 0.4);
+      if (m.petal) {
+        const a = m.turn + q * 2;
+        const ax = Math.cos(a) * s * 1.6;
+        const ay = Math.sin(a) * s * 1.6;
+        body += `<path d="M ${(x - ax).toFixed(1)} ${(y - ay).toFixed(1)} Q ${(x - ay * 0.7).toFixed(1)} ${(y + ax * 0.7).toFixed(1)} ${(x + ax).toFixed(1)} ${(y + ay).toFixed(1)} Q ${(x + ay * 0.7).toFixed(1)} ${(y - ax * 0.7).toFixed(1)} ${(x - ax).toFixed(1)} ${(y - ay).toFixed(1)} Z" fill="${JADE.mid}" stroke="${INK}" stroke-width="1.5" opacity="${o.toFixed(3)}"/>`;
+        body += `<circle cx="${(x - ax * 0.25).toFixed(1)}" cy="${(y - ay * 0.25).toFixed(1)}" r="${(s * 0.35).toFixed(1)}" fill="${JADE.light}" opacity="${o.toFixed(3)}"/>`;
+      } else {
+        body += sparkle(x, y, s * 1.3, PAPER, o);
+      }
+    }
+    return svg(W, H, body);
+  });
+}
+
+/** Soin, partie au sol : un cercle de pinceau (ensō) jade se trace autour du héros, puis pâlit. */
+function healRing() {
+  const S = 256;
+  const c = S / 2;
+  const N = 9;
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const head = -100 + 330 * easeOut(p / 0.55);
+    const fade = 1 - clamp01((p - 0.55) / 0.45);
+    let body = '';
+    if (head > -95) {
+      body += polygon(arcBand(c, c, 112, -100, head, (u) => 16 * (0.25 + 0.75 * Math.sin(Math.PI * Math.min(1, u * 0.9 + 0.1)))), JADE.mid, INK, 2.2, fade);
+      body += polygon(arcBand(c, c, 106, -96, head - 6, (u) => 4 * u), JADE.light, 'none', 0, fade);
+    }
+    return svg(S, S, body);
+  });
+}
+
+/**
+ * Aura de lumière du Paladin (boucle) : un cercle de pinceau or en trois arcs qui tournent lentement, des rayons
+ * qui respirent et un voile doré sur la zone. Trois arcs : un tiers de tour par boucle suffit à la refermer.
+ */
+function auraLoop() {
+  const S = 512;
+  const c = S / 2;
+  const N = 12;
+  const R = 236;
+  return [...Array(N)].map((_, i) => {
+    const t = i / N;
+    const spin = t * 120;
+    const breath = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
+    let body = `<circle cx="${c}" cy="${c}" r="${R - 8}" fill="${GOLD}" opacity="0.12"/>`;
+    body += `<circle cx="${c}" cy="${c}" r="${R - 30}" fill="none" stroke="${PAPER}" stroke-width="2" stroke-dasharray="6 14" opacity="0.55" transform="rotate(${(-spin * 0.5).toFixed(1)} ${c} ${c})"/>`;
+    for (let k = 0; k < 3; k++) {
+      const from = spin + k * 120;
+      body += polygon(arcBand(c, c, R, from, from + 92, (u) => 18 * (0.2 + 0.8 * Math.sin(Math.PI * u))), GOLD, INK, 2.2);
+      body += polygon(arcBand(c, c, R - 5, from + 10, from + 80, (u) => 5 * Math.sin(Math.PI * u)), PAPER, 'none', 0, 0.9);
+    }
+    // Rayons courts dans les creux entre les arcs, qui s'allongent et raccourcissent.
+    for (let k = 0; k < 12; k++) {
+      const a = deg(spin + k * 30 + 15);
+      const r0 = R - 34;
+      const r1 = r0 + 14 + 16 * (k % 2 ? breath : 1 - breath);
+      const side = deg(2.2);
+      body += polygon(
+        [[c + Math.cos(a - side) * r0, c + Math.sin(a - side) * r0], [c + Math.cos(a) * r1, c + Math.sin(a) * r1], [c + Math.cos(a + side) * r0, c + Math.sin(a + side) * r0]],
+        PAPER, INK, 1.2, 0.8,
+      );
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Aura de lumière, lancement : des rayons or jaillissent du héros, puis un anneau de lumière s'ouvre jusqu'au bord. */
+function auraBurst() {
+  const S = 512;
+  const c = S / 2;
+  const N = 9;
+  const rand = seeded(41);
+  const rays = [...Array(16)].map((_, k) => ({ a: (k / 16) * Math.PI * 2 + (rand() - 0.5) * 0.15, len: 0.7 + rand() * 0.3, w: k % 2 ? 7 : 11 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const reach = easeOut(p / 0.5);
+    const fade = 1 - clamp01((p - 0.5) / 0.5);
+    let body = '';
+    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(40 + 80 * (p / 0.3)).toFixed(1)}" fill="${PAPER}" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
+    for (const ray of rays) {
+      const r1 = 30 + 210 * reach * ray.len;
+      const r0 = Math.max(24, r1 - 120);
+      const w = deg(ray.w * (1 - 0.5 * p)) / 2;
+      const tri = [[c + Math.cos(ray.a - w) * r0, c + Math.sin(ray.a - w) * r0], [c + Math.cos(ray.a) * r1, c + Math.sin(ray.a) * r1], [c + Math.cos(ray.a + w) * r0, c + Math.sin(ray.a + w) * r0]];
+      body += polygon(tri, ray.w > 8 ? GOLD : PAPER, INK, 1.8, fade);
+    }
+    const ring = 60 + 180 * easeOut(p);
+    body += polygon(arcBand(c, c, ring, 0, 360, () => 14 * (1 - p) + 3, 72), GOLD, INK, 2, fade);
+    return svg(S, S, body);
+  });
+}
+
+/** Marteau du Paladin en vol (boucle) : vu de dessus, il fait un tour complet, sa tête laisse un trait de pinceau. */
+function hammerSpin() {
+  const S = 192;
+  const c = S / 2;
+  const N = 8;
+  return [...Array(N)].map((_, i) => {
+    const turn = (i / N) * 360;
+    let body = '';
+    // Trait laissé par la tête (le marteau tourne dans le sens des aiguilles d'une montre dans l'image).
+    body += polygon(arcBand(c, c, 66, turn - 150, turn - 6, (u) => 30 * u ** 1.5), PAPER, 'none', 0, 0.75);
+    body += polygon(arcBand(c, c, 66, turn - 70, turn - 6, (u) => 16 * u), GOLD, 'none', 0, 0.8);
+    const handle = `<rect x="${c - 46}" y="${c - 5}" width="76" height="10" rx="4" fill="${GOLD_DEEP}" stroke="${INK}" stroke-width="2.5"/>`;
+    const grip = `<rect x="${c - 46}" y="${c - 6}" width="16" height="12" rx="3" fill="${INK}"/>`;
+    const head = `<rect x="${c + 26}" y="${c - 24}" width="36" height="48" rx="6" fill="${GOLD}" stroke="${INK}" stroke-width="3"/>`
+      + `<rect x="${c + 32}" y="${c - 18}" width="10" height="36" rx="3" fill="${PAPER}" opacity="0.85"/>`
+      + `<line x1="${c + 52}" y1="${c - 24}" x2="${c + 52}" y2="${c + 24}" stroke="${INK}" stroke-width="2"/>`;
+    body += `<g transform="rotate(${turn.toFixed(1)} ${c} ${c})">${handle}${grip}${head}</g>`;
+    return svg(S, S, body);
+  });
+}
+
 // --- Écriture des planches ---------------------------------------------------------------------------------------
 
 /** name : fichier (sans extension) ; tag : nom de l'animation ; once : jouée une fois ; duration : ms par image. */
@@ -321,6 +550,13 @@ const EFFECTS = [
   { name: 'thrust', tag: 'slash', once: true, duration: 22, frames: thrust },
   { name: 'impact', tag: 'impact', once: true, duration: 35, frames: impact },
   { name: 'dodge', tag: 'dodge', once: true, duration: 40, frames: dodge },
+  { name: 'lightning-bolt', tag: 'bolt', once: true, duration: 45, frames: lightningBolt },
+  { name: 'lightning-ground', tag: 'bolt', once: true, duration: 50, frames: lightningGround },
+  { name: 'heal-rise', tag: 'heal', once: true, duration: 70, frames: healRise },
+  { name: 'heal-ring', tag: 'heal', once: true, duration: 55, frames: healRing },
+  { name: 'aura-loop', tag: 'aura', once: false, duration: 90, frames: auraLoop },
+  { name: 'aura-burst', tag: 'aura', once: true, duration: 50, frames: auraBurst },
+  { name: 'hammer', tag: 'flight', once: false, duration: 45, frames: hammerSpin },
   // Remplacent les effets du Sorcier : mêmes fichiers et mêmes tags, déjà branchés dans le rendu.
   { name: 'fireball-sorcier', tag: 'flight', once: false, duration: 60, frames: fireball },
   { name: 'fire-wrath-sorcier', tag: 'wrath', once: true, duration: 45, frames: fireBurst },

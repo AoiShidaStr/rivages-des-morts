@@ -1,0 +1,122 @@
+{
+ "frames": [
+  {
+   "filename": "heal 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 1",
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 2",
+   "frame": {
+    "x": 320,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 3",
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 4",
+   "frame": {
+    "x": 640,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 5",
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 6",
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 7",
+   "frame": {
+    "x": 1120,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 8",
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  },
+  {
+   "filename": "heal 9",
+   "frame": {
+    "x": 1440,
+    "y": 0,
+    "w": 160,
+    "h": 320
+   },
+   "duration": 70
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "heal-rise.webp",
+  "size": {
+   "w": 1600,
+   "h": 320
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "heal",
+    "from": 0,
+    "to": 9,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

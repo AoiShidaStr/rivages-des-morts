@@ -1,0 +1,101 @@
+{
+ "frames": [
+  {
+   "filename": "flight 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 1",
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 2",
+   "frame": {
+    "x": 384,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 3",
+   "frame": {
+    "x": 576,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 4",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 5",
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 6",
+   "frame": {
+    "x": 1152,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  },
+  {
+   "filename": "flight 7",
+   "frame": {
+    "x": 1344,
+    "y": 0,
+    "w": 192,
+    "h": 192
+   },
+   "duration": 45
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "hammer.webp",
+  "size": {
+   "w": 1536,
+   "h": 192
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "flight",
+    "from": 0,
+    "to": 7,
+    "direction": "forward"
+   }
+  ]
+ }
+}

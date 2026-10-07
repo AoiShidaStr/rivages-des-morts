@@ -212,7 +212,7 @@ On ne refait pas les 20 héros avant de savoir si cela tient. Essai sur l'**Einh
 
 ## 12. Effets animés (`npm run vfx`)
 
-Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessine image par image (SVG rastérisé par sharp) dans `public/sprites/fx/`, au format des planches, et le rendu les pose au sol (`sheetFx` dans `src/render/renderer.ts`). Style de la charte : traits de pinceau, éclaboussures d'encre, aplats or pâle et blanc, contour encre, aucun flou lumineux, jamais de vermillon.
+Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessine image par image (SVG rastérisé par sharp) dans `public/sprites/fx/`, au format des planches, et le rendu les pose au sol (`sheetFx` dans `src/render/renderer.ts`) ou debout face à la caméra comme les personnages (`uprightFx` : éclair, pétales). Style de la charte : traits de pinceau, éclaboussures d'encre, aplats or pâle et blanc, contour encre, aucun flou lumineux, jamais de vermillon.
 
 | Effet | Fichier | Quand |
 | --- | --- | --- |
@@ -222,5 +222,10 @@ Les effets du combat ne passent pas par Nano Banana : `tools/vfx.mjs` les dessin
 | Poussière et traits de vitesse | `dodge` | esquive |
 | Comète de flammes en aplats | `fireball-sorcier` | boule de feu du Sorcier |
 | Couronne de flammes et braises | `fire-wrath-sorcier` | explosion du météore |
+| Éclair debout (deux coups) et fissures au sol | `lightning-bolt`, `lightning-ground` | foudre : fils de Zeus, Ikazuchi qui disparaît, zones d'éclair |
+| Pétales de jade qui montent, ensō jade au sol | `heal-rise`, `heal-ring` | soin (l'ensō seulement à partir de 15 PV) |
+| Cercle de pinceau or qui tourne (boucle) | `aura-loop` | Aura de lumière du Paladin, tant qu'elle dure |
+| Rayons or et anneau qui s'ouvre | `aura-burst` | lancement de l'Aura de lumière |
+| Marteau qui tournoie, trait de pinceau derrière la tête | `hammer` | marteau lancé du Paladin |
 
 Pour retoucher un effet : modifier sa fonction dans `tools/vfx.mjs` (durées, couleurs, formes), relancer `npm run vfx -- <nom>`. Une planche absente laisse le rendu retomber sur l'ancien effet dessiné par le code.
