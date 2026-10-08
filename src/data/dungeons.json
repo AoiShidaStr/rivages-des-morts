@@ -28,6 +28,7 @@
       "bossBase": { "hp": 0.85, "damage": 0.9 }
     },
     "style": {
+      "scene3d": "rizieres",
       "ground": [1, 1, 1],
       "sky": "#c3cbcf",
       "decor": [

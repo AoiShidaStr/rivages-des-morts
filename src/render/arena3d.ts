@@ -47,7 +47,8 @@ const PLATFORM_HALF = 12;
 /** Taille de la texture où cuit l'éclairage du sol (environ 85 pixels par unité). */
 const BAKE_SIZE = 2048;
 
-export type Arena3dKind = 'palais';
+/** Arènes construites en 3D : le Palais ici, les Rizières dans rizieres3d.ts. */
+export type Arena3dKind = 'palais' | 'rizieres';
 
 /** Teinte de chaque famille de pièces : dallage, murs, accessoires, et fondations du bas, presque dans le noir. */
 type Finish = 'floor' | 'wall' | 'prop' | 'deep';
@@ -106,7 +107,7 @@ export class Arena3d {
     this.shadows = shadows;
   }
 
-  static async build(scene: Scene, kind: Arena3dKind, lanterns: { x: number; z: number }[]): Promise<Arena3d> {
+  static async build(scene: Scene, lanterns: { x: number; z: number }[]): Promise<Arena3d> {
     const sky = Color3.FromHexString('#2e2733');
     scene.clearColor = Color4.FromColor3(sky.scale(0.7), 1);
 
@@ -149,7 +150,7 @@ export class Arena3d {
     glowTexture.update();
 
     const arena = new Arena3d(scene, [ambient, moon], shadows, materials, glowTexture);
-    if (kind === 'palais') await arena.buildPalais(lanterns);
+    await arena.buildPalais(lanterns);
     await arena.bakeFloor();
     // Vignettage calculé dans les matériaux 3D eux-mêmes : aucune passe d'écran en plus.
     const processing = scene.imageProcessingConfiguration;

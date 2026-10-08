@@ -24,7 +24,7 @@ import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
-import type { Arena3d } from './arena3d';
+import { SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
@@ -275,9 +275,8 @@ const PROJECTILE_HEIGHT = AIM_HEIGHT;
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
 
-/** Prototype d'arène en 3D (src/render/arena3d.ts) : seulement avec `?3d` dans l'adresse, pour comparer. */
+/** Arène en 3D : ce qui était posé au-delà de cette distance finit derrière les murs du fond. */
 const ARENA_3D_WALL = 12;
-const ARENA_3D = typeof location !== 'undefined' && new URLSearchParams(location.search).has('3d');
 
 export function registerShaders(): void {
   if (Effect.ShadersStore.spriteVertexShader) return;
@@ -417,8 +416,8 @@ export class Renderer {
   };
   private groundMaterial: StandardMaterial | null = null;
   private groundMesh: Mesh | null = null;
-  /** Arène en 3D du prototype, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
-  private arena3d: Arena3d | null = null;
+  /** Arène en 3D, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
+  private arena3d: { update(dt: number): void; dispose(): void } | null = null;
   private arena3dRequest = 0;
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
@@ -2204,7 +2203,7 @@ export class Renderer {
     for (const mesh of this.decor.meshes) mesh.dispose();
     const meshes: { dispose(): void }[] = [];
     const animated: { material: ShaderMaterial; anim: SheetAnimation; time: number }[] = [];
-    const walled = ARENA_3D && !!style.scene3d;
+    const walled = SCENES_3D && !!style.scene3d;
     style.decor.forEach((spot, i) => {
       const entry = this.sprites.get(spot.sprite);
       if (!entry) return;
@@ -2229,12 +2228,14 @@ export class Renderer {
     this.arena3d?.dispose();
     this.arena3d = null;
     this.groundMesh?.setEnabled(true);
-    if (!ARENA_3D || !style.scene3d) return;
+    if (!SCENES_3D || !style.scene3d) return;
     const lanterns = style.decor.filter((spot) => spot.sprite.startsWith('lanterne'));
-    const kind = style.scene3d;
-    // Chargé à la demande : le chargeur glTF et les modèles n'alourdissent pas le jeu sans `?3d`.
-    import('./arena3d')
-      .then(({ Arena3d }) => Arena3d.build(this.scene, kind, lanterns))
+    // Chargées à la demande : le chargeur glTF et les modèles n'alourdissent pas le premier chargement.
+    const build =
+      style.scene3d === 'palais'
+        ? import('./arena3d').then(({ Arena3d }) => Arena3d.build(this.scene, lanterns))
+        : import('./rizieres3d').then(({ Rizieres3d }) => Rizieres3d.build(this.scene, style.decor));
+    build
       .then((arena) => {
         if (request !== this.arena3dRequest) return arena.dispose();
         this.arena3d = arena;

@@ -19,7 +19,9 @@ import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawIslandGround, drawProp } from './pixelArt';
 import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
+import { SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
+import type { IslandScene3d } from './islandScene3d';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 
@@ -84,6 +86,9 @@ export class IslandRenderer {
   private shadowTexture!: BaseTexture;
   private readonly markers = new Map<string, Marker>();
   private time = 0;
+  /** L'île en 3D (relief, eau, végétation), et les décors peints qu'elle remplace. */
+  private scene3d: IslandScene3d | null = null;
+  private replaced: ReadonlySet<string> = new Set();
 
   constructor(
     private readonly engine: Engine,
@@ -124,6 +129,7 @@ export class IslandRenderer {
       ...(isHeroVariant(this.wantedHero) ? [this.loadHero(this.wantedHero)] : []),
     ]);
     for (const prop of island.data.props) {
+      if (this.replaced.has(prop.sprite)) continue;
       const entry = this.entryFor(prop.sprite, prop.height);
       if (!entry) continue;
       const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
@@ -186,6 +192,7 @@ export class IslandRenderer {
 
   sync(island: Island, targetId: string | null, markers: ReadonlyMap<string, string>, dt: number, showPlayer = true): void {
     this.time += dt;
+    this.scene3d?.update(dt);
     const visible = island.interactables();
     const seen = new Set<string>();
     for (const it of visible) {
@@ -250,8 +257,21 @@ export class IslandRenderer {
 
   // --- Construction ----------------------------------------------------------
 
-  /** Sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art. */
+  /**
+   * L'île en 3D (src/render/islandScene3d.ts, chargée à la demande). Avec `?2d`, ou si elle ne se construit pas :
+   * le sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art.
+   */
   private async buildGround(island: Island): Promise<void> {
+    if (SCENES_3D) {
+      try {
+        const { IslandScene3d } = await import('./islandScene3d');
+        this.scene3d = await IslandScene3d.build(this.scene, island.data);
+        this.replaced = IslandScene3d.replaces;
+        return;
+      } catch (error) {
+        console.warn('Île en 3D indisponible, retour au sol peint :', error);
+      }
+    }
     const ground = MeshBuilder.CreateGround('islandGround', { width: WORLD_SIZE, height: WORLD_SIZE }, this.scene);
     const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/ile.jpg`).catch(() => null);
     const texture = painted ?? this.canvasTexture('islandGroundTexture', drawIslandGround(island.data, WORLD_SIZE, PIXELS_PER_UNIT), true);
