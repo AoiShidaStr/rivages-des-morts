@@ -1,6 +1,6 @@
 import { Matrix, Mesh, MeshBuilder, type Scene, type ShaderMaterial, type Texture } from '@babylonjs/core';
 import { dot, type Vec2 } from '../game/math';
-import { loadTexture, spriteMaterial } from './renderer';
+import { loadTexture, PITCH, spriteMaterial, YAW } from './renderer';
 
 /** Un décor peint posé par le code (carte peinte de l'île, arènes). */
 export interface DecorSpot {
@@ -61,7 +61,9 @@ export class DecorSprites {
       // Les images gardent une petite marge sous le pied du décor.
       mesh.bakeTransformIntoVertices(Matrix.Translation(0, spot.height / 2 - spot.height * 0.02, 0));
       if (spot.flip) mesh.bakeTransformIntoVertices(Matrix.Scaling(-1, 1, 1));
-      mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      // Tournée face à la caméra une fois pour toutes : la caméra ne tourne jamais. Un billboard figé au chargement
+      // prendrait l'orientation de la caméra avant sa mise en place, et les décors paraîtraient écrasés.
+      mesh.rotation.set(PITCH, YAW, 0);
       mesh.isPickable = false;
       mesh.position.set(spot.x, 0, spot.z);
       return mesh;
@@ -97,7 +99,6 @@ export class DecorSprites {
       const mesh = plane(spot, texture, `decor-${i}`);
       mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, forward) * 100);
       mesh.material = materialFor(spot.file, texture);
-      // La caméra ne tourne jamais : l'orientation face à elle se calcule une fois, pas à chaque image.
       mesh.freezeWorldMatrix();
       meshes.push(mesh);
     });

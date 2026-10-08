@@ -168,7 +168,7 @@
       "bodyHeight": 384,
       "fillHoles": true,
       "minHole": 600,
-      "animations": [{ "tag": "idle", "source": "sprites/decor_ile_torii.jpg", "count": 6, "duration": 150 }]
+      "animations": [{ "tag": "idle", "source": "decor_ile_torii.jpg", "count": 6, "duration": 150 }]
     },
     {
       "name": "forge",
