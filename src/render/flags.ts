@@ -1,22 +1,22 @@
 /**
- * Scènes en 3D (île, arènes) ou ancienne carte peinte. Le réglage « graphismes allégés » des options rend la carte
- * peinte, plus légère pour les ordinateurs modestes ; il est gardé dans ce navigateur et s'applique au chargement.
+ * Carte peinte (par défaut) ou scènes en 3D (île, arènes). Le réglage « scènes en 3D » des options est gardé dans
+ * ce navigateur et s'applique au chargement : la 3D est plus gourmande et reste expérimentale.
  * Dans l'adresse, `?2d` ou `?3d` forcent l'un ou l'autre, pour comparer.
  */
-const LOW_GRAPHICS_KEY = 'rivages-graphismes';
+const GRAPHICS_KEY = 'rivages-graphismes';
 
-export function lowGraphics(): boolean {
+export function scenes3dChosen(): boolean {
   try {
-    return localStorage.getItem(LOW_GRAPHICS_KEY) === 'bas';
+    return localStorage.getItem(GRAPHICS_KEY) === '3d';
   } catch {
     return false;
   }
 }
 
-export function setLowGraphics(low: boolean): void {
+export function setScenes3d(on: boolean): void {
   try {
-    if (low) localStorage.setItem(LOW_GRAPHICS_KEY, 'bas');
-    else localStorage.removeItem(LOW_GRAPHICS_KEY);
+    if (on) localStorage.setItem(GRAPHICS_KEY, '3d');
+    else localStorage.removeItem(GRAPHICS_KEY);
   } catch {
     // Stockage indisponible : le réglage ne survit pas au rechargement.
   }
@@ -24,4 +24,4 @@ export function setLowGraphics(low: boolean): void {
 
 const params = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
 
-export const SCENES_3D = params.has('3d') || (!params.has('2d') && !lowGraphics());
+export const SCENES_3D = params.has('3d') || (!params.has('2d') && scenes3dChosen());

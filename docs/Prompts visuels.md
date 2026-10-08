@@ -279,26 +279,279 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 No text, no numbers, no letters, no grid lines.
 ```
 
-## À faire : décors sans socle (scènes en 3D)
+## À faire : carte peinte, planches de décors
 
-Depuis que l'île et les arènes sont en 3D, le sol est un vrai relief : les décors peints qui ont leur propre bout de sol dessiné sous eux (flaque d'eau, nuage, brume, ponton) font « autocollant ». Ces prompts retouchent les images d'origine pour ne garder que l'objet, posé sur rien, sur le même fond gris uni : le détourage et l'animation se refont avec les mêmes réglages.
+La carte peinte redevient l'affichage par défaut. La 3D reste disponible dans les options (« Scènes en 3D »).
 
-**Méthode :** joindre l'image d'origine, coller le prompt, et enregistrer le résultat **sous le même nom** (renommer d'abord l'ancienne en `…_avec-socle.jpg` pour la garder). Puis lancer la commande indiquée. Si Gemini change la taille, la pose ou le nombre d'images d'une planche, relancer la retouche.
+Pour que la carte ne fasse plus « image collée », la méthode change sur trois points :
 
-| Ordre | Décor | Image à joindre et à remplacer (`Pictures\game visual\`) | Commande ensuite |
-| --- | --- | --- | --- |
-| 1 | Torii du ponton (planche de 6) | `sprites\decor_ile_torii.jpg` | `npm run planches -- torii` |
-| 2 | Barque de Charon (planche de 6) | `sprites\decor_ile_barque.jpg` | `npm run planches -- barque` |
-| 3 | Maison de thé | `decor_ile_maison-the.jpg` | `npm run sprites -- decor/maison-the` |
-| 4 | Coffre | `decor_ile_coffre.jpg` | `npm run sprites -- decor/coffre` |
-| 5 | Ema | `decor_ile_ema.jpg` | `npm run sprites -- decor/ema` |
-| 6 | Jizō des Rizières | `decor_donjon_jizo.jpg` | `npm run sprites -- jizo` |
-| 7 | Lanterne allumée (planche de 6, facultatif) | `decor_ile_lanterne-allumee.jpg` | `npm run planches -- lanterne-allumee` |
-| 8 | Portail du donjon (planche de 8, facultatif) | `decor_ile_portail.jpg` | `npm run planches -- portail` |
+- **Le sol n'est plus une seule grande image.** Peinte en une fois, l'île n'avait qu'environ 24 pixels par mètre, et devenait floue et plate une fois agrandie à l'écran.
+  - Le jeu assemblera le sol à partir de **9 textures peintes qui se répètent** (herbe, chemin, sable…), en suivant le tracé de `island.json`.
+  - Le sol restera net à toutes les distances et toujours calé sur les zones où l'on marche.
+  - L'eau sera animée par le jeu.
+- **Beaucoup plus de décors sont posés dessus**, debout comme les personnages : arbres, buissons, rochers, objets du village. Ce sont eux qui donnent le volume.
+- **Plusieurs décors tiennent dans une même image**, comme les icônes des objets. Chaque planche est une grille, et `npm run decors` découpe et détoure chaque case sous son nom (`tools/decors.json`).
 
-Les autres décors (Grand Rocher, forge, cascade, lanterne éteinte, sutra, jizō de l'île) n'ont pas de socle ; la cascade garde son bassin de pierre, qui fait partie de l'objet.
+**Méthode :**
 
-### 1. Torii du ponton (planche de 6)
+1. Coller le prompt dans Gemini (Nano Banana 2) et joindre l'image indiquée.
+2. Enregistrer le résultat dans `Pictures\game visual\` sous le nom donné (`.png` ou `.jpg`).
+3. Lancer `npm run decors -- <nom de la planche>`, ou `npm run decors` pour toutes les planches.
+
+Si une case ressort mal (deux objets dans une case, objet coupé, case vide) : retoucher la planche en ne redemandant que cette case. Les numéros des cases ne changent pas.
+
+| Ordre | Planche | Joindre | Enregistrer sous | Ce qu'elle donne |
+| --- | --- | --- | --- | --- |
+| 1 | Décors sans leur socle (2 × 2, retouche) | `decors_sans-socle_reference.png` | `decors_sans-socle` | maison de thé, coffre, ema et jizō des Rizières, qui remplacent les actuels |
+| 2 | Textures de sol (3 × 3) | `sol_ile.jpg` | `decors_textures` | `sols/textures/*.jpg`, 1024 × 1024, raccordées sans couture par l'outil |
+| 3 | Arbres (3 × 3) | `decors_sans-socle.png` (le résultat de la planche 1) | `decors_arbres` | `decor/ile/*.png` |
+| 4 | Végétation (4 × 4) | `decors_sans-socle.png` | `decors_vegetation` | `decor/ile/*.png` |
+| 5 | Rochers (4 × 4) | `decors_sans-socle.png` | `decors_rochers` | `decor/ile/*.png` |
+| 6 | Objets du village (4 × 4) | `decors_sans-socle.png` | `decors_objets` | `decor/ile/*.png` |
+| 7 | Rizières de la Jorōgumo (4 × 4) | `decors_sans-socle.png` | `decors_rizieres` | `decor/rizieres/*.png` |
+
+L'image à joindre pour la planche 1 est déjà prête : ce sont les quatre décors actuels, rangés dans la grille. `npm run decors -- --reference` la refait.
+
+Pour les planches 3 à 7, la planche 1 réussie sert de **référence de style** : mêmes contours, même lumière, même palette.
+
+Une fois les planches découpées, il reste à brancher le nouveau sol et à placer les décors sur l'île et dans l'arène des Rizières.
+
+### 1. Décors sans leur socle (2 × 2, retouche)
+
+**Joindre :** `Pictures\game visual\decors_sans-socle_reference.png`.
+
+**Enregistrer sous :** `Pictures\game visual\decors_sans-socle.png`.
+
+**Commande :** `npm run decors -- decors_sans-socle`. Elle remplace `decor/maison-the.png`, `decor/coffre.png`, `decor/ema.png` et `jizo.png`.
+
+```text
+Edit the attached image.
+
+It is a sheet of 4 decor sprites in a grid of 2 columns and 2 rows. Keep exactly the same grid, the same 4 objects in the same cells, the same flat grey background, the same camera angle, size, position and hand-painted style. Remove everything at their feet, so that each object stands on nothing, as if on an invisible floor:
+
+1. the tea house: remove the pool of water and the cloud-like base; keep the house, its roof, its red noren curtain and its red paper lantern; the house ends on a low, flat stone foundation.
+2. the treasure chest: remove the white cloud under it; the bottom of the chest is visible and clean.
+3. the wooden ema stand: remove the glowing blue puddle under it; the feet of the stand end cleanly.
+4. the stone jizo statue: remove the swirling white mist around it; keep the statue, its ropes and its square stone pedestal.
+
+Nothing else changes. No shadow on the ground, no text, no numbers, no letters, no grid lines.
+```
+
+### 2. Textures de sol (3 × 3)
+
+**Joindre :** `Pictures\game visual\sol_ile.jpg`, pour la palette.
+
+**Enregistrer sous :** `Pictures\game visual\decors_textures.png`.
+
+**Commande :** `npm run decors -- decors_textures`.
+
+Chaque case doit être une matière uniforme, sans objet ni motif central, car le jeu la répète des dizaines de fois. L'outil ignore le bord de chaque case et rend la texture raccordable. Un motif trop marqué (un caillou isolé, une tache) se verrait quand même se répéter : dans ce cas, relancer la case.
+
+```text
+Use the attached image only as a reference for the colours and the painting style of the ground; do not copy its layout.
+
+A sheet of 9 hand-painted ground textures for a 2D isometric action RPG set in the Japanese land of the dead, in a grid of 3 columns and 3 rows of equal square cells. Each cell is filled edge to edge with one single ground material, seen straight from above, evenly lit: no perspective, no horizon, no cast shadows, no objects, no focal point, no vignette. Each texture is a uniform repeating surface with the same density of detail everywhere in its cell, so that it can be tiled. Soft painted brush strokes, slightly desaturated and muted, so that the characters stand out on it.
+
+Cells, read left to right then top to bottom:
+1. short soft green grass, small painted blades in two or three tones of green
+2. dark moss and thick grass of a forest edge, a darker and bluer green
+3. trodden earth path, light warm brown, with a few tiny pebbles
+4. fine pale beach sand with faint wind ripples
+5. pale grey raked gravel of a zen garden, with fine parallel rake lines running horizontally across the whole cell
+6. old grey stone paving slabs of irregular sizes, with thin moss in the joints
+7. cursed dark red-brown earth, dry and cracked by a network of thin dark cracks
+8. wet grey-brown mud of a flooded rice paddy, with shiny wet patches
+9. grey cliff rock with pale lichen, a flat cracked rock surface
+
+No text, no numbers, no letters, no borders, no frames, no grid lines.
+```
+
+### 3. Arbres (3 × 3)
+
+**Joindre :** `Pictures\game visual\decors_sans-socle.png`.
+
+**Enregistrer sous :** `Pictures\game visual\decors_arbres.png`.
+
+**Commande :** `npm run decors -- decors_arbres`.
+
+```text
+Use the attached image only as a style reference: the same hand-painted style, outline, lighting, camera angle and muted palette. Do not copy its objects.
+
+A sheet of 9 separate decor sprites for the same game: trees of the Japanese land of the dead, in a grid of 3 columns and 3 rows of equal cells. Each sprite is one single tree, whole from its roots to the top of its crown, centered in its cell with an empty margin around it, never touching the cell borders or another tree. All seen from the same raised camera (about 35 degrees above the horizon), lit from the upper left. Each tree stands on nothing: no patch of ground, no grass at its foot, no water, no mist and no shadow under it; the trunk ends cleanly at the bottom, as if planted in an invisible floor.
+
+Cells, read left to right then top to bottom:
+1. a Japanese black pine with a twisted trunk and flat, layered, cloud-shaped foliage
+2. a red Japanese maple with a slim dark trunk and a rounded crown of crimson leaves
+3. a weeping willow with long drooping pale green branches
+4. a pale ghostly cherry tree in bloom, its white-pink blossoms fading to a bluish white
+5. a tall clump of green bamboo, a dozen thin stalks with leaves at the top
+6. a tall Japanese cedar with a straight reddish trunk and a dark green conical crown
+7. a ginkgo tree with golden yellow fan-shaped leaves
+8. a dead grey tree with bare twisted branches
+9. a small twisted pine growing out of a mossy boulder
+
+Flat uniform medium grey background (#8f8f8f), no gradient. No text, no numbers, no letters, no grid lines.
+```
+
+### 4. Végétation (4 × 4)
+
+**Joindre :** `Pictures\game visual\decors_sans-socle.png`.
+
+**Enregistrer sous :** `Pictures\game visual\decors_vegetation.png`.
+
+**Commande :** `npm run decors -- decors_vegetation`.
+
+```text
+Use the attached image only as a style reference: the same hand-painted style, outline, lighting, camera angle and muted palette. Do not copy its objects.
+
+A sheet of 16 separate decor sprites for the same game: small plants of the Japanese land of the dead, in a grid of 4 columns and 4 rows of equal cells. Each sprite is one single plant or group, whole, centered in its cell with an empty margin around it, never touching the cell borders or another sprite. All seen from the same raised camera (about 35 degrees above the horizon), lit from the upper left. Each plant stands on nothing: no patch of ground or soil under it, no water, no mist and no shadow; its bottom ends cleanly, as if planted in an invisible floor.
+
+Cells, read left to right then top to bottom:
+1. a round bush of dense green leaves
+2. a low spreading bush, much wider than tall
+3. a tall tuft of wild grass
+4. a short small tuft of grass
+5. a fern with arching fronds
+6. a clump of reeds with brown cattail heads
+7. a small clump of three young bamboo stalks
+8. a cluster of red spider lilies (higanbana) on bare green stems
+9. a blue hydrangea bush with round flower heads
+10. a young red maple sapling
+11. a small dwarf pine, shaped like a bonsai
+12. a pink azalea bush trimmed into a rounded shape
+13. an old moss-covered tree stump
+14. a fallen mossy log
+15. a group of lily pads with one white lotus flower, lying flat as if floating
+16. tall grasses of a riverbank, thin and swaying
+
+Flat uniform medium grey background (#8f8f8f), no gradient. No text, no numbers, no letters, no grid lines.
+```
+
+### 5. Rochers (4 × 4)
+
+**Joindre :** `Pictures\game visual\decors_sans-socle.png`.
+
+**Enregistrer sous :** `Pictures\game visual\decors_rochers.png`.
+
+**Commande :** `npm run decors -- decors_rochers`.
+
+```text
+Use the attached image only as a style reference: the same hand-painted style, outline, lighting, camera angle and muted palette. Do not copy its objects.
+
+A sheet of 16 separate decor sprites for the same game: rocks and stones, in a grid of 4 columns and 4 rows of equal cells. Each sprite is one single rock or group, whole, centered in its cell with an empty margin around it, never touching the cell borders or another sprite. All seen from the same raised camera (about 35 degrees above the horizon), lit from the upper left, soft grey-blue stone with touches of moss. Each rock stands on nothing: no patch of ground or grass under it, no water, no mist and no shadow; its bottom ends cleanly, as if resting on an invisible floor.
+
+Cells, read left to right then top to bottom:
+1. a large grey boulder with a rounded top
+2. a medium grey rock
+3. a small rock
+4. a group of smooth river pebbles
+5. a rock covered with thick green moss on top
+6. a wide flat rock, low to the ground
+7. a pointed jagged rock
+8. a small cairn of three stacked flat stones
+9. a group of dark wet shore rocks
+10. a tall standing stone with a small straw shimenawa rope tied around it
+11. a rock split in two by a crack, with a little grass growing in the crack
+12. a small pile of broken rocks and scree
+13. a dark rock with green seaweed hanging from its lower half
+14. three flat round stepping stones in a row, lying flat
+15. a tall block of grey cliff rock with flat sides
+16. a weathered upright zen garden stone with pale lichen
+
+Flat uniform medium grey background (#8f8f8f), no gradient. No text, no numbers, no letters, no grid lines.
+```
+
+### 6. Objets du village (4 × 4)
+
+**Joindre :** `Pictures\game visual\decors_sans-socle.png`.
+
+**Enregistrer sous :** `Pictures\game visual\decors_objets.png`.
+
+**Commande :** `npm run decors -- decors_objets`.
+
+```text
+Use the attached image only as a style reference: the same hand-painted style, outline, lighting, camera angle and muted palette. Do not copy its objects.
+
+A sheet of 16 separate decor sprites for the same game: small objects of a quiet village on an island of the Japanese land of the dead, in a grid of 4 columns and 4 rows of equal cells. Each sprite is one single object or group, whole, centered in its cell with an empty margin around it, never touching the cell borders or another sprite. All seen from the same raised camera (about 35 degrees above the horizon), lit from the upper left. Each object stands on nothing: no patch of ground or grass under it, no water, no mist and no shadow; its bottom ends cleanly, as if standing on an invisible floor.
+
+Cells, read left to right then top to bottom:
+1. a small unlit stone lantern (toro)
+2. a short section of bamboo fence tied with black cord
+3. a straw shimenawa rope with white zigzag paper streamers, stretched between two short wooden posts
+4. a weathered wooden signpost with a blank board
+5. a stack of straw rice bags
+6. a neat pile of firewood logs
+7. three brown clay jars of different sizes
+8. a small stone kitsune fox statue wearing a red bib
+9. a row of three small weathered stone grave steles, blank
+10. three tall thin blank wooden grave tablets (sotoba) leaning slightly
+11. a red paper lantern hanging from a short wooden post
+12. a simple wooden bench
+13. a small offering stand with a bowl of rice, two oranges and a sake cup
+14. an old stone well with a wooden frame and a bucket
+15. a bamboo drying rack with a few white cloths hanging from it
+16. a small old wooden boat pulled up on land, empty
+
+Flat uniform medium grey background (#8f8f8f), no gradient. No text, no numbers, no letters, no writing on any object, no grid lines.
+```
+
+### 7. Rizières de la Jorōgumo (4 × 4)
+
+**Joindre :** `Pictures\game visual\decors_sans-socle.png`.
+
+**Enregistrer sous :** `Pictures\game visual\decors_rizieres.png`.
+
+**Commande :** `npm run decors -- decors_rizieres`.
+
+```text
+Use the attached image only as a style reference: the same hand-painted style, outline, lighting and camera angle. Do not copy its objects.
+
+A sheet of 16 separate decor sprites for the same game: the drowned rice paddies where the spider demon Jorogumo lives, a misty, grey-green and violet place, in a grid of 4 columns and 4 rows of equal cells. Each sprite is one single object or group, whole, centered in its cell with an empty margin around it, never touching the cell borders or another sprite. All seen from the same raised camera (about 35 degrees above the horizon), lit from the upper left. Each object stands on nothing: no patch of ground, no mud, no water, no mist and no shadow under it; its bottom ends cleanly, as if standing on an invisible floor.
+
+Cells, read left to right then top to bottom:
+1. a dead twisted tree with grey-violet bark and bare branches
+2. the same kind of dead tree wrapped in thin white spider silk threads
+3. a rotten tree stump
+4. a clump of dry pale reeds
+5. a tuft of green rice plants
+6. a tuft of yellowing rice plants, bent and flattened
+7. a large spider web stretched between two leaning wooden stakes
+8. a white silk cocoon hanging from a short broken branch
+9. a torn straw scarecrow with a straw hat
+10. a few leaning wooden stakes tied with old rope
+11. a small unlit stone lantern covered in moss and spider silk
+12. a dark rock, wet and muddy
+13. a few scattered old bones
+14. withered brown lily pads lying flat
+15. a tiny jizo statue with a red bib, wrapped in a few silk threads
+16. a pair of abandoned straw sandals
+
+Flat uniform medium grey background (#8f8f8f), no gradient. No text, no numbers, no letters, no grid lines.
+```
+
+## À faire : planches animées sans socle
+
+Quatre décors animés ont aussi un bout de sol peint sous eux (flaque, nuage, brume). Ce sont des planches d'animation : elles se retouchent une par une.
+
+**Méthode :**
+
+1. Joindre l'image d'origine et coller le prompt.
+2. Renommer l'ancienne image en `…_avec-socle.jpg` pour la garder.
+3. Enregistrer le résultat **sous le même nom** que l'image d'origine.
+4. Lancer la commande indiquée.
+
+Si Gemini change la taille, la pose ou le nombre d'images, relancer la retouche.
+
+| Décor | Image à joindre et à remplacer (`Pictures\game visual\`) | Commande ensuite |
+| --- | --- | --- |
+| Torii du ponton (planche de 6) | `sprites\decor_ile_torii.jpg` | `npm run planches -- torii` |
+| Barque de Charon (planche de 6) | `sprites\decor_ile_barque.jpg` | `npm run planches -- barque` |
+| Lanterne allumée (planche de 6) | `decor_ile_lanterne-allumee.jpg` | `npm run planches -- lanterne-allumee` |
+| Portail du donjon (planche de 8) | `decor_ile_portail.jpg` | `npm run planches -- portail` |
+
+Les autres décors n'ont pas de socle : le Grand Rocher, la forge, la cascade, la lanterne éteinte, le sutra et le jizō de l'île. La cascade garde son bassin de pierre, qui fait partie de l'objet.
+
+### Torii du ponton (planche de 6)
 
 ```text
 Edit the attached image.
@@ -308,7 +561,7 @@ It is an animation sheet of 6 frames (2 rows of 3) of the same torii gate. Keep 
 No text, no numbers, no letters, no grid lines, no shadow on the ground.
 ```
 
-### 2. Barque de Charon (planche de 6)
+### Barque de Charon (planche de 6)
 
 ```text
 Edit the attached image.
@@ -318,47 +571,7 @@ It is an animation sheet of 6 frames (2 rows of 3) of the same wooden boat. Keep
 No text, no numbers, no letters, no grid lines, no water, no shadow.
 ```
 
-### 3. Maison de thé
-
-```text
-Edit the attached image.
-
-Keep the same tea house, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the pool of water and the cloud-like base under the house: keep only the house itself, with its roof, walls, red noren curtain and red paper lantern. The bottom of the house ends on a low stone foundation, flat and clean, as if standing on an invisible floor. Nothing else changes.
-
-No text, no numbers, no letters, no water, no shadow on the ground.
-```
-
-### 4. Coffre
-
-```text
-Edit the attached image.
-
-Keep the same treasure chest, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the white cloud under the chest: keep only the chest itself, its wooden planks, gold bands and keyhole. The bottom of the chest is visible and clean, as if standing on an invisible floor. Nothing else changes.
-
-No text, no numbers, no letters, no cloud, no shadow on the ground.
-```
-
-### 5. Ema
-
-```text
-Edit the attached image.
-
-Keep the same wooden ema stand with its hanging fox-painted wooden plaque, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the glowing blue puddle under the stand: keep only the wooden stand and its plaque. The feet of the stand end cleanly, as if standing on an invisible floor. Nothing else changes.
-
-No text, no numbers, no letters, no glow on the ground, no shadow on the ground.
-```
-
-### 6. Jizō des Rizières
-
-```text
-Edit the attached image.
-
-Keep the same stone jizo statue with its red cap, red bib and ropes, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the swirling mist around its base: keep only the statue and its square stone pedestal, whose bottom ends cleanly, as if standing on an invisible floor. Nothing else changes.
-
-No text, no numbers, no letters, no mist, no shadow on the ground.
-```
-
-### 7. Lanterne allumée (planche de 6, facultatif)
+### Lanterne allumée (planche de 6)
 
 ```text
 Edit the attached image.
@@ -368,7 +581,7 @@ It is an animation sheet of 6 frames (2 rows of 3) of the same stone lantern wit
 No text, no numbers, no letters, no grid lines, no mist, no shadow on the ground.
 ```
 
-### 8. Portail du donjon (planche de 8, facultatif)
+### Portail du donjon (planche de 8)
 
 ```text
 Edit the attached image.

@@ -258,8 +258,8 @@ export class IslandRenderer {
   // --- Construction ----------------------------------------------------------
 
   /**
-   * L'île en 3D (src/render/islandScene3d.ts, chargée à la demande). Avec `?2d`, ou si elle ne se construit pas :
-   * le sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art.
+   * Avec l'option « Scènes en 3D », l'île en 3D (src/render/islandScene3d.ts, chargée à la demande). Par défaut, ou si
+   * elle ne se construit pas : le sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art.
    */
   private async buildGround(island: Island): Promise<void> {
     if (SCENES_3D) {

@@ -1,12 +1,13 @@
 # Sprites peints (Nano Banana)
 
-Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Quatre commandes les préparent pour le jeu ; deux autres préparent les animations des héros (voir [Prompts des héros](Prompts%20h%C3%A9ros.md)).
+Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Cinq commandes les préparent pour le jeu ; deux autres préparent les animations des héros (voir [Prompts des héros](Prompts%20h%C3%A9ros.md)).
 
 | Commande | Entrée | Sortie | Réglages |
 | --- | --- | --- | --- |
 | `npm run sprites` | une image fixe (PNJ, décor) | `public/sprites/<nom>.png`, détourée | `tools/sprites.json` |
 | `npm run planches` | une planche d'animation (plusieurs images en grille) | `public/sprites/anim/<nom>.webp` + `.json` | `tools/planches.json`, et `tools/planches-heros.mjs` pour les héros |
 | `npm run sols` | `sol_ile.jpg`, `sol_rizieres.jpg` (vus de dessus) | `public/sprites/sols/` | `tools/sols.mjs` |
+| `npm run decors` | une planche de décors ou de textures de sol (grille) | `public/sprites/decor/…` détourés, `public/sprites/sols/textures/…` raccordées | `tools/decors.json`, prompts dans [Prompts visuels](Prompts%20visuels.md) |
 | `npm run icones` | `objets_planche.jpg` (tous les objets en grille) | `public/sprites/icones/<id>.png`, 128 × 128 | `tools/icones.json` |
 | `npm run poses -- <planche>` | une planche de poses clés (Nano Banana 2) | `poses/<planche>/pose-<n>.png`, une pose par image carrée | voir [Prompts des héros](Prompts%20h%C3%A9ros.md) |
 | `npm run kit-heros` | `~/Pictures/game visual/heros/<race>-<classe>/profil.jpg`, `face.jpg` | un dossier par animation : la pose à joindre et le prompt | `tools/prompts-heros.mjs` |
@@ -52,7 +53,7 @@ Dans `src/data/sprites.json` (donjon) ou `src/data/islandSprites.json` (île), l
 
 ## Sol de l'île
 
-> **Depuis octobre 2026, l'île et les arènes sont construites en 3D** (relief, eau, végétation) : `src/render/world3d.ts` (socle commun), `islandScene3d.ts`, `rizieres3d.ts`, `arena3d.ts` (Palais). Modèles KayKit Forest et Dungeon (CC0) dans `public/models/`, palette sourde du pack Forest refaite par `node tools/palette-foret.mjs`. Les sols peints ci-dessous ne s'affichent plus qu'avec l'option « Graphismes allégés » (ou `?2d` dans l'adresse), ou si la 3D ne se charge pas.
+> **Scènes en 3D (expérimental, octobre 2026) :** avec l'option « Scènes en 3D » (ou `?3d` dans l'adresse), l'île et les arènes sont construites en 3D (relief, eau, végétation) : `src/render/world3d.ts` (socle commun), `islandScene3d.ts`, `rizieres3d.ts`, `arena3d.ts` (Palais). Modèles KayKit Forest et Dungeon (CC0) dans `public/models/`, palette sourde du pack Forest refaite par `node tools/palette-foret.mjs`. Par défaut, le jeu reste en carte peinte : ce sont les sols ci-dessous, qui seront remplacés par un sol assemblé à partir de textures peintes et couvert de décors (planches de décors, [Prompts visuels](Prompts%20visuels.md)).
 
 Nano Banana ne garde pas l'échelle du tracé : `npm run sols` retrouve l'échelle et le décalage qui posent les terres peintes sur les cercles praticables de `src/data/island.json` (ce sont eux qui font les collisions), puis fond les bords de l'image dans la brume. La commande affiche le recouvrement obtenu ; en dessous de 80 %, le tracé peint s'écarte trop du jeu.
 
