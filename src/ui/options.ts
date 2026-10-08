@@ -2,7 +2,7 @@ import type { Music } from '../audio/music';
 import { h } from './dom';
 import type { PanelHost } from './panels';
 
-/** Réglages du joueur, depuis l'écran titre ou la pause : pour l'instant, la musique. */
+/** Réglages du joueur, depuis l'écran titre ou la pause : la musique. */
 export function openOptions(host: PanelHost, music: Music, onClose?: () => void): void {
   const { settings } = music;
   const value = h('strong', { class: 'volume-value' });
@@ -22,6 +22,7 @@ export function openOptions(host: PanelHost, music: Music, onClose?: () => void)
     sync();
   });
   sync();
+
   host.show(
     'Options',
     'Réglages gardés dans ce navigateur',

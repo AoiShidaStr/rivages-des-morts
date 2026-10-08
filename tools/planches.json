@@ -335,22 +335,22 @@
     {
       "name": "heros-hanyo-rodeur",
       "source": "2d/hanyo-2D/hanyo-rodeur-planchecomplete.jpg",
-      "layout": [8, 8, 8, 8, 8, 8, 8, 8],
-      "eraseLines": { "length": 0.03, "verticalLength": 0.1 },
+      "layout": [12, 12, 12, 12, 12, 12, 12, 12],
       "fillHoles": true,
       "holeTolerance": 16,
+      "minHole": 30,
       "rows": [
-        { "tag": "idle", "row": 0, "duration": 120 },
-        { "tag": "move", "row": 1, "duration": 80 },
-        { "tag": "windup", "row": 2, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
-        { "tag": "strike", "row": 2, "frames": [4, 5, 6, 7], "duration": 45, "once": true },
-        { "tag": "channel", "row": 3, "frames": [0, 1, 2, 3, 4], "duration": 70, "once": true },
-        { "tag": "skill", "row": 3, "duration": 70, "once": true },
-        { "tag": "dash", "row": 4, "duration": 45, "once": true },
-        { "tag": "airborne", "row": 4, "frames": [3, 4, 5], "duration": 60, "once": true },
-        { "tag": "hurt", "row": 0, "duration": 60, "once": true, "source": "2d/hanyo-2D/hanyo-rodeur-correctionhurt.jpg", "layout": [8], "eraseLines": false },
-        { "tag": "death", "row": 0, "duration": 110, "once": true, "source": "2d/hanyo-2D/hanyo-rodeur-correctiondeath.jpg", "layout": [6], "eraseLines": false },
-        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+        { "tag": "idle", "row": 0, "duration": 100 },
+        { "tag": "move", "row": 1, "duration": 60 },
+        { "tag": "windup", "row": 2, "frames": [1, 3, 5, 6], "duration": 50, "once": true },
+        { "tag": "strike", "row": 2, "frames": [7, 8, 9, 10, 11], "duration": 45, "once": true },
+        { "tag": "channel", "row": 3, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8], "duration": 80, "once": true },
+        { "tag": "dash", "row": 4, "frames": [0, 1, 2, 3, 4, 5], "duration": 30, "once": true },
+        { "tag": "airborne", "row": 4, "frames": [1, 2, 3, 7, 8], "duration": 70, "once": true },
+        { "tag": "hurt", "row": 5, "frames": [0, 1, 2, 3, 4, 5, 6, 7], "duration": 40, "once": true },
+        { "tag": "death", "row": 6, "frames": [0, 1, 2, 3, 4, 5], "duration": 110, "once": true },
+        { "tag": "skill", "row": 7, "frames": [6, 7, 8, 9, 10, 11], "duration": 80, "once": true },
+        { "tag": "ultimate", "row": 7, "frames": [0, 1, 2, 3, 4, 5], "duration": 110, "once": true }
       ]
     },
     {
@@ -368,6 +368,55 @@
         { "tag": "hurt", "row": 5, "duration": 60, "once": true },
         { "tag": "death", "row": 6, "duration": 110, "once": true },
         { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-hanyo-guerrier",
+      "source": "2d/hanyo-2D/hanyo-guerrier-planchecomplete.jpg",
+      "layout": [12, 12, 12, 12, 12, 12],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 100 },
+        { "tag": "move", "row": 1, "duration": 60 },
+        { "tag": "windup", "row": 2, "frames": [0], "duration": 80, "once": true },
+        { "tag": "strike", "row": 2, "frames": [1, 2, 3, 5, 11], "duration": 45, "once": true },
+        { "tag": "guard", "row": 3, "frames": [0, 1, 2, 3, 4, 5], "duration": 50, "once": true },
+        { "tag": "skill", "row": 3, "frames": [6, 7, 8, 9, 10, 11], "duration": 100, "once": true },
+        { "tag": "airborne", "row": 3, "frames": [8, 9, 10], "duration": 60, "once": true },
+        { "tag": "hurt", "row": 4, "frames": [0, 1, 2, 3, 4, 5], "duration": 50, "once": true },
+        { "tag": "death", "row": 4, "frames": [6, 7, 8, 9, 10, 11], "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 5, "duration": 60, "once": true }
+      ]
+    },
+    {
+      "name": "heros-hanyo-lame",
+      "source": "2d/hanyo-2D/hanyo-lame-planchecomplete.jpg",
+      "layout": [8, 8, 8, 8, 7, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1], "duration": 40, "once": true },
+        { "tag": "strike", "row": 2, "frames": [2, 3, 4, 5, 6, 7], "duration": 40, "once": true },
+        { "tag": "dash", "row": 3, "frames": [0, 1, 2, 3, 4, 5], "duration": 30, "once": true },
+        { "tag": "skill", "row": 4, "duration": 70, "once": true },
+        { "tag": "hurt", "row": 5, "duration": 40, "once": true },
+        { "tag": "death", "row": 6, "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+      ]
+    },
+    {
+      "name": "heros-hanyo-paladin",
+      "source": "2d/hanyo-2D/hanyo-paladin-planchecomplete.jpg",
+      "layout": [8, 8, 8, 8, 8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 120 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1], "duration": 40, "once": true },
+        { "tag": "strike", "row": 2, "frames": [2, 3, 4, 5, 6, 7], "duration": 40, "once": true },
+        { "tag": "guard", "row": 3, "duration": 50, "once": true },
+        { "tag": "skill", "row": 4, "duration": 60, "once": true },
+        { "tag": "hurt", "row": 5, "duration": 40, "once": true },
+        { "tag": "death", "row": 6, "duration": 110, "once": true },
+        { "tag": "ultimate", "row": 7, "duration": 85, "once": true }
       ]
     }
   ]

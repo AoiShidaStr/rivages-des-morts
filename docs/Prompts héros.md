@@ -1,5 +1,7 @@
 # Prompts des héros (Nano Banana 2)
 
+> **Méthode remplacée (octobre 2026).** Les héros se dessinent désormais en une **planche complète chibi de 64 images (8 × 8)** : voir la [Charte 2D](Charte%202D.md), sections 3 et 4, et les prompts de [`prompts-2d/`](prompts-2d/). Cette page ne sert plus qu'aux héros encore faits avec `npm run kit-heros` (Invocateur Hanyō, autres races).
+
 Chaque prompt se colle tel quel dans Gemini, avec une seule image jointe. L'image donne la race, la classe, la tenue et l'arme : le même prompt sert aux quatre races d'une classe. Les vues de profil et de face sont prévues, la vue de dos viendra plus tard.
 
 1. **Poses clés :** joindre la fiche du héros, coller le prompt « Profil » de sa classe, puis le prompt « Face ».

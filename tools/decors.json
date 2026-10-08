@@ -1,0 +1,99 @@
+{
+  "sourceDir": "~/Pictures/game visual",
+  "outDir": "public/sprites",
+  "defaults": {
+    "tolerance": 30,
+    "localTolerance": 18,
+    "maxSaturation": 16,
+    "minPartRatio": 0.001,
+    "cellPartRatio": 0.03,
+    "padding": 6,
+    "maxSize": 768
+  },
+  "sheets": [
+    {
+      "source": "decors_textures",
+      "kind": "texture",
+      "columns": 3,
+      "rows": 3,
+      "size": 512,
+      "names": ["sols/textures/herbe", "sols/textures/mousse", "sols/textures/chemin", "sols/textures/sable", "sols/textures/gravier", "sols/textures/dalles", "sols/textures/terre-maudite", "sols/textures/vase", "sols/textures/roche"]
+    },
+    {
+      "source": "decors_arbres",
+      "columns": 3,
+      "rows": 3,
+      "names": ["decor/ile/pin-tordu", "decor/ile/erable-rouge", "decor/ile/saule", "decor/ile/cerisier-pale", "decor/ile/bambous-hauts", "decor/ile/cedre", "decor/ile/ginkgo", "decor/ile/arbre-mort", "decor/ile/pin-sur-rocher"],
+      "format": "webp"
+    },
+    {
+      "source": "decors_vegetation",
+      "columns": 4,
+      "rows": 4,
+      "names": ["decor/ile/buisson-rond", "decor/ile/buisson-bas", "decor/ile/herbe-haute", "decor/ile/herbe-courte", "decor/ile/fougere", "decor/ile/roseaux", "decor/ile/bambous", "decor/ile/higanbana", "decor/ile/hortensias", "decor/ile/jeune-erable", "decor/ile/petit-pin", "decor/ile/azalee", "decor/ile/souche-moussue", "decor/ile/tronc-couche", "decor/ile/nenuphars", "decor/ile/herbes-de-rive"],
+      "format": "webp"
+    },
+    {
+      "source": "decors_rochers",
+      "columns": 4,
+      "rows": 4,
+      "names": ["decor/ile/rocher-grand", "decor/ile/rocher-moyen", "decor/ile/rocher-petit", "decor/ile/galets", "decor/ile/rocher-moussu", "decor/ile/rocher-plat", "decor/ile/rocher-pointu", "decor/ile/cairn", "decor/ile/rochers-de-rive", "decor/ile/pierre-dressee", "decor/ile/rocher-fendu", "decor/ile/eboulis", "decor/ile/rocher-algues", "decor/ile/pas-japonais", "decor/ile/bloc-de-falaise", "decor/ile/pierre-du-jardin"],
+      "format": "webp"
+    },
+    {
+      "source": "decors_objets",
+      "columns": 4,
+      "rows": 4,
+      "names": ["decor/ile/petite-lanterne", "decor/ile/cloture-bambou", "decor/ile/shimenawa", "decor/ile/panneau", "decor/ile/sacs-de-riz", "decor/ile/tas-de-bois", "decor/ile/jarres", "decor/ile/kitsune", "decor/ile/steles", "decor/ile/sotoba", "decor/ile/lanterne-papier", "decor/ile/banc", "decor/ile/offrandes", "decor/ile/puits", "decor/ile/etendoir", "decor/ile/barque-echouee"],
+      "options": {
+        "decor/ile/cloture-bambou": {
+          "fillHoles": true,
+          "minHole": 300
+        },
+        "decor/ile/etendoir": {
+          "fillHoles": true,
+          "minHole": 300
+        },
+        "decor/ile/puits": {
+          "fillHoles": true,
+          "minHole": 300
+        },
+        "decor/ile/shimenawa": {
+          "fillHoles": true,
+          "minHole": 300
+        }
+      },
+      "format": "webp"
+    },
+    {
+      "source": "decors_rizieres",
+      "columns": 4,
+      "rows": 4,
+      "names": ["decor/rizieres/arbre-mort", "decor/rizieres/arbre-mort-soie", "decor/rizieres/souche", "decor/rizieres/roseaux", "decor/rizieres/riz", "decor/rizieres/riz-couche", "decor/rizieres/toile-piquets", "decor/rizieres/cocon", "decor/rizieres/epouvantail", "decor/rizieres/piquets", "decor/rizieres/lanterne-eteinte", "decor/rizieres/rocher-vase", "decor/rizieres/ossements", "decor/rizieres/nenuphars-fanes", "decor/rizieres/petit-jizo", "decor/rizieres/sandales"],
+      "options": {
+        "decor/rizieres/toile-piquets": {
+          "fillHoles": true,
+          "minHole": 30
+        },
+        "decor/rizieres/arbre-mort-soie": {
+          "fillHoles": true,
+          "minHole": 30
+        }
+      },
+      "format": "webp"
+    },
+    {
+      "source": "decors_sans-socle",
+      "columns": 2,
+      "rows": 2,
+      "reference": ["decor/maison-the.png", "decor/coffre.png", "decor/ema.png", "jizo.png"],
+      "names": ["decor/maison-the", "decor/coffre", "decor/ema", "jizo"],
+      "options": {
+        "decor/ema": {
+          "fillHoles": true,
+          "minHole": 2000
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 import dialoguesJson from './data/dialogues.json';
 import difficultyJson from './data/difficulty.json';
 import rizieresJson from './data/dungeon.json';
+import type { Arena3dKind } from './render/arena3d';
 import palaisJson from './data/dungeon-palais.json';
 import dungeonsJson from './data/dungeons.json';
 import endlessJson from './data/donjon-infini.json';
@@ -83,6 +84,8 @@ export interface DungeonStyle {
   ground: [number, number, number];
   sky: string;
   decor: { sprite: string; x: number; z: number }[];
+  /** Prototype : arène construite en 3D (src/render/arena3d.ts), affichée avec `?3d` dans l'adresse. */
+  scene3d?: Arena3dKind;
 }
 
 /** Ce qui change d'un donjon à l'autre dans la configuration du combat. */

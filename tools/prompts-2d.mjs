@@ -1,10 +1,11 @@
 // Prompts Nano Banana 2 de la refonte 2D (voir docs/Charte 2D.md), écrits par `npm run prompts-2d` dans
 // docs/prompts-2d/, un fichier par lot, dans l'ordre de travail (voir `LOTS`) :
 //   01-izanami.md, 02-yokai-du-palais.md, 03-heros-<classe>.md, 04-yokai-des-rizieres.md, 05-jorogumo.md
-//   chacun : la fiche de profil de chaque personnage, puis ses planches de profil ;
+//   chacun : la fiche de profil de chaque personnage, puis sa planche complète de profil ;
 //   plus-tard/            les fiches et planches de face et de dos, et les fiches des autres races.
-// Une planche = une animation = 16 images en grille 4 × 4 de cases carrées, dans une image carrée
-// (1 024 × 1 024 px : chaque case fait 256 px, la résolution retenue pour le jeu).
+// Une planche complète = tout un personnage = 64 images en grille 8 × 8 de cases carrées, une ligne de 8 images
+// par animation (ordre des lignes : `HERO_ROWS`, `CREATURE_ROWS`), dans une image carrée de 2 048 px si possible
+// (cases de 256 px). Personnages chibi de 3 têtes (voir docs/Charte 2D.md, section 3).
 // Les prompts sont en anglais : Nano Banana les suit mieux ainsi.
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,8 +16,8 @@ const OUT = new URL('../docs/prompts-2d/', import.meta.url);
 // Blocs communs
 
 const LOOK =
-  'Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, ' +
-  'clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), ' +
+  'Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, ' +
+  'clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), ' +
   'two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, ' +
   'character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. ' +
   'No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. ' +
@@ -31,8 +32,9 @@ const MAGENTA = { name: 'pure magenta', hex: '#ff00ff' };
 const bgText = (bg) => `Flat uniform ${bg.name} background (${bg.hex}), exactly the same color everywhere, no gradient, no vignette.`;
 
 const PROPORTIONS_HERO =
-  'Realistic heroic proportions: the character is about 7 heads tall, slender and athletic, with a natural head size, and the weapon and class accessories at their real size but easy to read. ' +
-  'Same art style and level of detail as our Hanyo Invocateur reference (attach heros-hanyo-invocateur.png as a style reference when it is not the character being drawn). ' +
+  'Chibi proportions: the character is exactly 3 heads tall. A large head with big expressive eyes, broad shoulders so that every pose reads clearly, a compact body with short sturdy limbs, ' +
+  'and the class weapon drawn oversized (clearly larger than life) so that it stays readable in a small sprite. ' +
+  'Same art style and level of detail as our Hanyo complete sheets (attach one of them, for example the Hanyo Lame or Paladin sheet, as a style reference when it is not the character being drawn). ' +
   'Strong readable silhouette from far away.';
 
 const VIEW = {
@@ -110,34 +112,54 @@ const OUTFITS = {
   },
 };
 
+// `signature` : la ligne 4 (clic droit) ; `hold` : l'action se tient (garde, arc bandé) au lieu de se jouer d'un trait.
+// `skill` : la ligne 5 (A et E), `ultimate` : la ligne 8. Le jeu y prend ses tags (voir docs/Charte 2D.md, section 4).
 const CLASSES = {
   guerrier: {
     name: 'Guerrier',
     role: 'Guerrier (berserker): heavy partial armor covering the shoulders, chest and forearms, a huge weapon carried high over the shoulder, forward-leaning aggressive posture, muted dark brown-red accents (never bright red).',
-    weapon: 'a nodachi (very long greatsword), the starting weapon',
+    weapon: 'an oversized nodachi (a very long greatsword, longer than the character is tall), the starting weapon',
     gear: 'nodachi',
     idle: 'the tip of the nodachi rises slightly with the breath',
     windup: 'the nodachi is raised high above the head in both hands, the body coiled',
     strike: 'the nodachi slashes down and across in a wide arc, ending fully extended forward with the front knee bent',
-    guard: 'the nodachi is held upright in front of the body, braced, feet planted wide',
-    dodge: 'a low fast lunge forward, the body almost horizontal, the nodachi trailing behind',
     run: 'the nodachi carried high on the shoulder with one hand, the other arm swinging, the body leaning forward',
-    skillWind: 'the nodachi is lifted overhead in both hands while the character inhales deeply and the stance widens',
-    skillRelease: 'the nodachi is driven into the ground in front of the character with a mighty downward blow, both hands on the hilt, the body bent over it',
+    signature: { name: 'Garde (clic droit)', hold: true, text: 'the nodachi held upright in front of the body in both hands, braced, feet planted wide' },
+    skill: {
+      name: 'Frappe fracassante (A) et Bond (E)',
+      wind: 'crouches low, then leaps up with the nodachi lifted overhead in both hands',
+      release: 'comes down and drives the nodachi into the ground in front with a mighty two-handed blow, the body bent over it',
+    },
+    ultimate: {
+      name: 'Frénésie (R)',
+      wind: 'hunches over, the hands clenched on the hilt, the shoulders rising, the face twisting with rage',
+      release: 'a furious battle roar: the head thrown back, the mouth wide open, the chest out, the nodachi raised high in one hand, the hair flaring',
+    },
   },
   sorcier: {
     name: 'Sorcier',
     role: 'Sorcier (fire onmyōji): a fire sorcerer-priest in layered robes with wide sleeves, paper talismans (ofuda) and small bells on the sash, a slender upright confident posture, vermilion and black accents with small gold details. The most fragile hero: no armor at all.',
-    weapon: 'a kagura-suzu bell wand (a short handle with a cluster of small gold bells and long red and white ribbons) and paper talismans, the starting weapon',
+    weapon: 'an oversized kagura-suzu bell wand (a handle with a big cluster of gold bells and long red and white ribbons) and paper talismans, the starting weapon',
     gear: 'bell wand and paper talismans',
     idle: 'the bells and ribbons sway with the breath, a paper talisman held between two fingers of the free hand',
     windup: 'the bell wand raised to shoulder height, the free hand drawn back with a paper talisman between two fingers',
     strike: 'the free hand flicks forward to throw the talisman, the bell wand swept forward, the body leaning into the throw (no visible fire)',
-    guard: 'the bell wand held across the chest, the free hand raised palm out, the feet planted',
-    dodge: 'a quick backward hop, the body leaning away, the robe and ribbons flaring forward',
     run: 'the bell wand held low at the side, the wide sleeves and ribbons streaming back',
-    skillWind: 'both hands rise together, the bell wand and a talisman lifted high above the head, the sleeves falling back',
-    skillRelease: 'both arms swept down and forward toward the ground in front, as if drawing a circle on the floor, the body bent forward',
+    signature: {
+      name: 'Sceau (clic droit) et Bouclier de flammes (A)',
+      hold: false,
+      text: 'a casting gesture: a paper talisman flung down toward the ground in front, the bell wand raised high, the sleeves flaring (no fire drawn)',
+    },
+    skill: {
+      name: 'Fuite de feu (E)',
+      wind: 'crouches, the robe gathered, the weight thrown forward',
+      release: 'a long low burst forward, almost flying, the robe, the sleeves and the ribbons streaming behind',
+    },
+    ultimate: {
+      name: 'Météore (R)',
+      wind: 'both arms rise high above the head, the bell wand pointing at the sky, the body stretching up onto the toes',
+      release: 'both arms swing down toward a point on the ground in front, the body bent forward, the sleeves whipping (no fire drawn)',
+    },
   },
   lame: {
     name: 'Lame',
@@ -147,39 +169,68 @@ const CLASSES = {
     idle: 'the two kunai turn slightly in the reverse grip with the breath',
     windup: 'both kunai are drawn back crossed at the chest, the body dropping low',
     strike: 'the kunai slash out in a wide X-shaped sweep, one arm extended forward and the other swept back, ending in a low lunge',
-    guard: 'crouched, both kunai crossed in front of the face',
-    dodge: 'the character drops low and slides forward on one knee, one hand touching the ground',
     run: 'a low sprint, leaning far forward, the kunai held back along the forearms',
-    skillWind: 'the body twists and drops into a very low crouch, the kunai crossed behind the back',
-    skillRelease: 'a dash-through slash: the character lunges through an imaginary target in a long low stretched pose, the kunai swept forward, the torso half turned away',
+    signature: {
+      name: 'Frappe fantôme (clic droit)',
+      hold: false,
+      text: 'a shadow step: drops into a crouch, bursts forward almost horizontal, then lands in a low stance with both kunai ready (the body stays solid: no shadow silhouette, no blur)',
+    },
+    skill: {
+      name: 'Marque de mort (A) et Écran de fumée (E)',
+      wind: 'reaches to the belt and pulls out a small round smoke bomb',
+      release: 'throws the bomb down at its own feet and crouches low, half turned away, the scarf flying (no smoke drawn)',
+    },
+    ultimate: {
+      name: 'Danse des lames (R)',
+      wind: 'coils into a very low crouch, the kunai crossed behind the back',
+      release: 'a whirling spin with both kunai extended, the body turning in the air, the scarf and the hair swirling (no trail drawn)',
+    },
   },
   paladin: {
     name: 'Paladin',
     role: 'Paladin (solar rampart): light cloth with gold trim, a rampart posture, gold accents.',
-    weapon: 'a naginata (long curved polearm) and a large round temple shield, the starting weapon',
+    weapon: 'an oversized naginata (long curved polearm) and a large temple shield almost as tall as the character, the starting weapon',
     gear: 'naginata and large shield',
     idle: 'the naginata and the shield shift slightly with the breath',
     windup: 'the naginata is drawn back over the shoulder while the shield rises',
-    strike: 'a long lunging thrust, the naginata at full extension forward, the shield pulled back',
-    guard: 'the shield is raised in front of the body, the character braced behind it, feet planted wide, the naginata held back',
-    dodge: 'a shield charge forward, shoulder low, then a sudden stop',
+    strike: 'a wide sweeping slash then a lunging thrust, the naginata at full extension forward, the shield pulled back',
     run: 'the shield forward at chest height, the naginata held diagonally behind',
-    skillWind: 'the naginata is lifted overhead in both hands, then slammed down vertically',
-    skillRelease: 'the naginata planted in front of the character, the shield raised beside it, the chest out, standing tall like a rampart',
+    signature: { name: 'Garde au bouclier (clic droit)', hold: true, text: 'the shield raised in front of the body, the character braced behind it, feet planted wide, the naginata held back' },
+    skill: {
+      name: 'Marteau lancé (E)',
+      wind: 'draws a short war hammer from the belt and pulls it back behind the shoulder, the shield turned aside',
+      release: 'hurls the hammer forward with the whole body, the throwing arm fully extended (the hammer has left the hand and is not drawn)',
+    },
+    ultimate: {
+      name: 'Aura de lumière (A) et Égide (R)',
+      wind: 'plants the naginata upright beside the body and raises the shield',
+      release: 'stands tall like a rampart, the chest out, the free hand raised palm up toward the sky, the head lifted (no light drawn)',
+    },
   },
   rodeur: {
     name: 'Rôdeur',
     role: 'Rôdeur (hunter): a light hunter outfit, a quiver on the back, a shooting-ready posture, green accents.',
-    weapon: 'a yumi (asymmetric longbow) taller than the character, the starting weapon',
+    weapon: 'an oversized yumi (asymmetric longbow) much taller than the character, the starting weapon',
     gear: 'yumi and quiver',
     idle: 'the bowstring and the quiver strap move with the breath, the head scans slightly left and right',
     windup: 'an arrow is nocked and the bowstring is drawn back to the cheek, the bow arm extended',
     strike: 'the arrow is released: the bowstring snaps forward and the bow arm stays extended, no arrow in flight',
-    guard: 'crouched, the bow held across the body',
-    dodge: 'an agile backward leap, knees tucked, the bow in hand',
     run: 'a swift stalking run, the bow held low in one hand, the quiver bouncing',
-    skillWind: 'the character pulls three arrows from the quiver at once',
-    skillRelease: 'a rapid volley: the bow raised at an angle, the string just released, the arm extended (no arrows visible)',
+    signature: {
+      name: 'Tir chargé (clic droit)',
+      hold: true,
+      text: 'an arrow nocked and the bowstring drawn slowly all the way back past the cheek, the bow arm locked, the body leaning into the draw and trembling with tension (no glow)',
+    },
+    skill: {
+      name: 'Flèche-filet (A) et Marque du chasseur (E)',
+      wind: 'pulls a special arrow with a bundled net head from the quiver and nocks it',
+      release: 'shoots it forward: the bowstring snaps, the bow arm extended (the arrow is not drawn in flight)',
+    },
+    ultimate: {
+      name: 'Recul (R)',
+      wind: 'crouches and springs backward into the air',
+      release: 'in mid-air, leaping backward with the body arched, the bow drawn and released toward the front, then landing crouched',
+    },
   },
 };
 
@@ -351,156 +402,228 @@ const BOSSES = {
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-// Découpe des animations en 16 images : [première image, dernière image, description]
+// Planche complète : 8 lignes de 8 images, une ligne par animation. Chaque ligne : [première image, dernière, texte].
 
-const GENERIC = {
-  attente: (c) => [
-    [1, 2, 'the neutral ready pose of the reference figure, then the chest begins to swell'],
-    [3, 4, 'breathing in: the chest expands, the shoulders and the head rise slowly'],
-    [5, 6, `top of the breath: the shoulders and head at their highest, the hair and cloth lifted slightly; ${c.idle}`],
-    [7, 8, 'a tiny pause, then breathing out begins: the shoulders settle and the head tilts very slightly'],
-    [9, 10, 'breathing out: the shoulders and the head sink, the knees give slightly, the hair and cloth sway the other way'],
-    [11, 12, 'bottom of the breath: the body at its lowest, the weight shifted onto one foot'],
-    [13, 14, 'the weight shifts back, the gaze moves a little, the hair and cloth settle'],
-    [15, 16, 'rising smoothly back toward frame 1; frame 16 is almost identical to frame 1'],
-  ],
-  course: (c) => {
-    const phases = [
-      'contact: the right leg reaches forward and the heel touches the ground, the left leg stretched behind, the left arm forward',
-      'down: the right leg bends under the weight, the body at its lowest',
-      'passing: the left leg swings forward past the right leg, the body rising',
-      'up: pushing off the right foot, the body at its highest, both feet almost off the ground',
-      'contact: the left leg reaches forward and the heel touches the ground, the right leg stretched behind, the right arm forward',
-      'down: the left leg bends under the weight, the body at its lowest',
-      'passing: the right leg swings forward past the left leg, the body rising',
-      'up: pushing off the left foot, the body at its highest, both feet almost off the ground',
-    ];
-    return phases.map((p, i) => [i * 2 + 1, i * 2 + 2, `${p}; ${c.run}`]);
+/** Une ligne de geste (compétence, ultime) : élan, tension, déclenchement, tenue, retour. */
+const gesture = (wind, release, hold) => [
+  [1, 2, `gathering: ${wind}`],
+  [3, 4, 'the tension builds, the movement clearly progressing in every frame'],
+  [5, hold ? 6 : 5, `RELEASE, the key pose: ${release}`],
+  ...(hold ? [] : [[6, 6, 'the release pose held at full strength, the hair and cloth flaring']]),
+  [7, 7, hold ? 'the release pose held at full strength, the hair and cloth flaring' : 'starting to recover'],
+  [8, 8, 'back to the ready pose of the reference figure'],
+];
+
+/** Ordre des lignes des héros, le même pour toutes les classes : le jeu les lit dans cet ordre. */
+const HERO_ROWS = [
+  {
+    fr: 'Attente',
+    en: 'IDLE, a slow breathing loop',
+    loop: true,
+    beats: (c) => [
+      [1, 2, 'the neutral ready pose of the reference figure, then the chest begins to swell'],
+      [3, 4, `breathing in, up to the top of the breath: the shoulders and the head rise; ${c.idle}`],
+      [5, 6, 'breathing out: the shoulders and the head sink, the knees give slightly, the hair and cloth sway the other way'],
+      [7, 8, 'rising smoothly back toward frame 1; frame 8 is almost identical to frame 1'],
+    ],
   },
-  attaque: (c) => [
-    [1, 2, 'the ready pose of the reference figure; the weight shifts back onto the rear foot'],
-    [3, 4, `wind-up: ${c.windup}, on its way`],
-    [5, 6, `wind-up complete and held: ${c.windup}, held with a slight tremble`],
-    [7, 8, `the strike launches, very fast, the body and the weapon at a clearly different place in every frame: ${c.strike}, on its way`],
-    [9, 9, `IMPACT, the key frame of the attack: ${c.strike}, at full extension`],
-    [10, 12, 'follow-through: the momentum carries the body past the impact, then slows down'],
-    [13, 16, 'recovery: back to balance and to the ready pose of the reference figure; frame 16 is close to frame 1'],
-  ],
-  garde: (c) => [
-    [1, 2, 'the ready pose of the reference figure'],
-    [3, 4, `starting to move: ${c.guard}, one third of the way`],
-    [5, 6, 'almost in guard, two thirds of the way'],
-    [7, 10, `full guard reached, braced and firm: ${c.guard}`],
-    [11, 16, 'the guard held: very slight breathing strain, only tiny movements of the hair and cloth; frames 11 to 16 are nearly identical'],
-  ],
-  esquive: (c) => [
-    [1, 2, 'anticipation: the character crouches slightly, loading the weight'],
-    [3, 4, 'push-off: the dodge begins, the body launching'],
-    [5, 8, `mid-dodge, the fastest moment, the peak around frame 6: ${c.dodge}`],
-    [9, 11, 'end of the movement: decelerating, still in motion'],
-    [12, 13, 'landing: the knees bend to absorb the impact'],
-    [14, 16, 'recovery: rising back to the ready pose of the reference figure; frame 16 is close to frame 1'],
-  ],
-  touche: (c) => [
-    [1, 2, 'hit: the head snaps back, the torso recoils, the eyes squeezed shut'],
-    [3, 5, 'maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held'],
-    [6, 8, 'staggering backward, fighting to keep balance'],
-    [9, 12, 'recovering: straightening up, shaking it off'],
-    [13, 16, `back to the ready pose of the reference figure, ${c.gear} in hand; frame 16 is close to frame 1`],
-  ],
-  mort: (c) => [
-    [1, 2, 'the fatal hit: the head snaps back, the body recoils'],
-    [3, 5, 'staggers backward, the grip on the weapon loosening'],
-    [6, 8, `the knees buckle and the body sinks down, the ${c.gear} slipping from the hands`],
-    [9, 11, 'falls to the ground'],
-    [12, 14, `settles lying on the ground with a small bounce, the ${c.gear} fallen beside the body, the cloth settling`],
-    [15, 16, 'lies completely still; frames 15 and 16 are identical. Do not draw any dissolving or fading: the body stays solid'],
-  ],
-  competence: (c) => [
-    [1, 3, `gathering: the body coils, the eyes focused; ${c.skillWind}`],
-    [4, 7, 'peak tension held with a slight tremble, everything ready to be released'],
-    [8, 9, `RELEASE, the key pose of the skill: ${c.skillRelease}`],
-    [10, 12, 'the release pose held at full strength, the hair and cloth flaring'],
-    [13, 16, 'recovery: back to the ready pose of the reference figure; frame 16 is close to frame 1'],
-  ],
-};
+  {
+    fr: 'Course',
+    en: 'RUN, a running cycle on the spot (movement with the ZQSD keys)',
+    loop: true,
+    beats: (c) =>
+      [
+        'contact: the right leg reaches forward, the left arm forward',
+        'down: the right leg bends under the weight, the body at its lowest',
+        'passing: the left leg swings forward past the right leg',
+        'up: pushing off the right foot, the body at its highest',
+        'contact: the left leg reaches forward, the right arm forward',
+        'down: the left leg bends under the weight, the body at its lowest',
+        'passing: the right leg swings forward past the left leg',
+        'up: pushing off the left foot, the body at its highest',
+      ].map((p, i) => [i + 1, i + 1, i === 0 ? `${p}; in every frame: ${c.run}` : p]),
+  },
+  {
+    fr: 'Attaque principale (clic gauche)',
+    en: 'MAIN ATTACK (left click), a single fast attack',
+    loop: false,
+    beats: (c) => [
+      [1, 1, 'the ready pose of the reference figure, the weight shifting back'],
+      [2, 3, `wind-up: ${c.windup}`],
+      [4, 4, `the strike launches, very fast: ${c.strike}, on its way`],
+      [5, 5, `IMPACT, the key frame of the attack: ${c.strike}, at full extension`],
+      [6, 6, 'follow-through: the momentum carries the body past the impact'],
+      [7, 8, 'recovery: back to the ready pose of the reference figure'],
+    ],
+  },
+  {
+    fr: 'Action défensive (clic droit)',
+    en: 'RIGHT-CLICK ACTION',
+    loop: false,
+    name: (c) => c.signature.name,
+    beats: (c) =>
+      c.signature.hold
+        ? [
+            [1, 1, 'the ready pose of the reference figure'],
+            [2, 3, `moving into position: ${c.signature.text}, on its way`],
+            [4, 5, `the position fully reached: ${c.signature.text}`],
+            [6, 8, 'the position held: only tiny movements of the hair and cloth; frames 6 to 8 are nearly identical'],
+          ]
+        : [
+            [1, 2, 'anticipation: the character crouches slightly, loading the weight'],
+            [3, 5, `the action, the body at a clearly different place in every frame: ${c.signature.text}`],
+            [6, 6, 'end of the movement'],
+            [7, 8, 'recovery: back to the ready pose of the reference figure'],
+          ],
+  },
+  {
+    fr: 'Compétences A et E',
+    en: 'SKILL (A and E keys)',
+    loop: false,
+    name: (c) => c.skill.name,
+    beats: (c) => gesture(c.skill.wind, c.skill.release, false),
+  },
+  {
+    fr: 'Dégâts',
+    en: 'HURT, being hit and recovering',
+    loop: false,
+    beats: (c) => [
+      [1, 1, 'hit: the head snaps back, the torso recoils, the eyes squeezed shut'],
+      [2, 3, 'maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held'],
+      [4, 5, 'staggering, fighting to keep balance'],
+      [6, 8, `recovering, back to the ready pose of the reference figure, ${c.gear} in hand`],
+    ],
+  },
+  {
+    fr: 'Mort',
+    en: 'DEATH',
+    loop: false,
+    beats: (c) => [
+      [1, 1, 'the fatal hit: the head snaps back, the body recoils'],
+      [2, 3, 'staggers backward, the grip on the weapon loosening'],
+      [4, 5, `the knees buckle and the body falls, the ${c.gear} slipping from the hands`],
+      [6, 6, `lands on the ground with a small bounce, the ${c.gear} fallen beside the body`],
+      [7, 8, 'lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid'],
+    ],
+  },
+  {
+    fr: 'Compétence ultime (touche R)',
+    en: 'ULTIMATE (R key)',
+    loop: false,
+    name: (c) => c.ultimate.name,
+    beats: (c) => gesture(c.ultimate.wind, c.ultimate.release, true),
+  },
+];
 
-const HERO_ANIMS = {
-  attente: { fr: 'Attente', en: 'a slow idle breathing loop', loop: true, moves: 'The motion is subtle but clearly visible: over the loop, the top of the head moves down and up by about a quarter of a head height, and the shoulders, hands, weapon, hair and cloth move with it.' },
-  course: { fr: 'Course', en: 'a running cycle on the spot', loop: true, moves: 'The character stays in place (no travelling across the cell). One full running cycle of 8 poses, each held for 2 frames; the legs and arms are in a different position in every pair of frames, the arms swinging opposite to the legs, the hair and cloth bouncing.' },
-  attaque: { fr: 'Attaque', en: 'a single attack', loop: false, moves: 'The weapon and the arms are at a clearly different place in every frame, following one continuous path.' },
-  garde: { fr: 'Garde', en: 'going into a defensive guard and holding it', loop: false, moves: 'The weapon, the arms and the stance change a little more in every frame until the guard is reached.' },
-  esquive: { fr: 'Esquive', en: 'a quick dodge', loop: false, moves: 'The body is at a clearly different place and shape in every frame.' },
-  touche: { fr: 'Touché', en: 'being hit and recovering', loop: false, moves: 'The body is at a clearly different place and shape in every frame.' },
-  mort: { fr: 'Mort', en: 'a death animation', loop: false, moves: 'The body is at a clearly different place and shape in every frame until it lies still.' },
-  competence: { fr: 'Compétence', en: 'a class skill pose', loop: false, moves: 'The body, the arms and the weapon are at a clearly different place in every frame.' },
-};
+/** Étourdissement générique des ennemis, quand leur geste propre n'en est pas un. */
+const STUNNED = 'dazed on the spot: the body swaying, the head wobbling, the limbs dangling, the eyes unfocused';
+const isStun = (special) => /stun|étourdi|sonnée/i.test(special?.name ?? '');
 
-// Scénarios des ennemis et des boss : le texte propre à la créature est glissé dans des étapes communes.
-const CREATURE = {
-  idle: (c) => [
-    [1, 2, `the neutral pose of the reference figure, then it starts to breathe: ${c.idle}`],
-    [3, 4, 'breathing in: the body swells and rises slightly'],
-    [5, 6, 'top of the breath: the body at its highest, secondary parts (hair, cloth, limbs, tail) lifted'],
-    [7, 8, 'a tiny pause, then breathing out begins'],
-    [9, 10, 'breathing out: the body sinks, the secondary parts sway the other way'],
-    [11, 12, 'bottom of the breath: the body at its lowest, the weight shifted'],
-    [13, 14, 'the weight shifts back, the head or gaze moves a little, everything settles'],
-    [15, 16, 'rising smoothly back toward frame 1; frame 16 is almost identical to frame 1'],
-  ],
-  move: (c) => [
-    [1, 4, `locomotion cycle, first beat: ${c.move}; the body at its lowest position`],
-    [5, 8, 'second beat: the body rising, the limbs or parts passing each other'],
-    [9, 12, 'third beat: the mirror of the first beat (the opposite side or phase), the body at its lowest'],
-    [13, 16, 'fourth beat: the body rising again, leading back to the start of the cycle'],
-  ],
-  windup: (c) => [
-    [1, 4, `from the idle pose, the body starts to build tension: ${c.windup}, first third of the movement`],
-    [5, 10, `${c.windup}, growing more and more tense`],
-    [11, 14, 'maximum tension: the pose fully reached, the body trembling slightly, the eyes or head fixed on the target'],
-    [15, 16, 'frozen at maximum tension; frames 15 and 16 are nearly identical'],
-  ],
-  attack: (c) => [
-    [1, 2, 'starts from the pose of maximum tension'],
-    [3, 5, `the strike launches, very fast, the body at a clearly different place in every frame: ${c.strike}, on its way`],
-    [6, 6, `IMPACT, the key frame of the attack: ${c.strike}, at full extension`],
-    [7, 10, 'follow-through: the momentum carries the body past the impact, then slows down'],
-    [11, 16, 'recovery: back to the idle pose of the reference figure; frame 16 is close to the idle pose'],
-  ],
-  hit: (c) => [
-    [1, 2, `hit: ${c.hit}`],
-    [3, 5, 'maximum recoil, the body thrown off balance'],
-    [6, 9, 'staggering, fighting to recover'],
-    [10, 13, 'recovering, regaining the normal shape'],
-    [14, 16, 'back to the idle pose of the reference figure; frame 16 is close to frame 1'],
-  ],
-  death: (c) => [
-    [1, 2, 'the fatal hit: the body recoils'],
-    [3, 6, 'staggers, the strength draining'],
-    [7, 10, `the collapse: ${c.death}`],
-    [11, 14, 'the body hits the ground and settles, a small bounce, secondary parts settling'],
-    [15, 16, 'lies completely still; frames 15 and 16 are identical. Do not draw any dissolving or fading: the body stays solid'],
-  ],
-  special: (c) => [
-    [1, 4, `the movement builds up: ${c.special.text}, first third`],
-    [5, 12, `${c.special.text}, fully reached and sustained, with only small rhythmic movements`],
-    [13, 16, c.special.loop ? 'easing back toward the first frame of this sheet, a seamless loop' : 'easing back to the idle pose of the reference figure; frame 16 is close to the idle pose'],
-  ],
-};
-
-const CREATURE_ANIMS = [
-  { key: 'idle', fr: 'Attente', en: 'a slow idle loop', loop: true, moves: 'The motion is subtle but clearly visible over the loop.' },
-  { key: 'move', fr: 'Déplacement', en: 'a locomotion cycle on the spot', loop: true, moves: 'The character stays in place (no travelling across the cell).' },
-  { key: 'windup', fr: 'Anticipation', en: 'the wind-up that telegraphs an attack', loop: false, moves: 'The body moves a little more in every frame toward the final tense pose.' },
-  { key: 'attack', fr: 'Attaque', en: 'a single attack', loop: false, moves: 'The body is at a clearly different place in every frame, following one continuous path.' },
-  { key: 'hit', fr: 'Touché', en: 'being hit and recovering', loop: false, moves: 'The body is at a clearly different place and shape in every frame.' },
-  { key: 'death', fr: 'Mort', en: 'a death animation', loop: false, moves: 'The body is at a clearly different place and shape in every frame until it lies still.' },
+/** Ordre des lignes des ennemis et des boss : même logique que les héros (voir la charte, section 4). */
+const CREATURE_ROWS = [
+  {
+    fr: 'Attente',
+    en: 'IDLE, a slow loop',
+    loop: true,
+    beats: (c) => [
+      [1, 2, `the neutral pose of the reference figure, then it starts to breathe: ${c.idle}`],
+      [3, 4, 'breathing in: the body swells and rises, secondary parts (hair, cloth, limbs, tail) lifted'],
+      [5, 6, 'breathing out: the body sinks, the secondary parts sway the other way'],
+      [7, 8, 'rising smoothly back toward frame 1; frame 8 is almost identical to frame 1'],
+    ],
+  },
+  {
+    fr: 'Déplacement',
+    en: 'MOVE, a locomotion cycle on the spot',
+    loop: true,
+    beats: (c) => [
+      [1, 2, `first beat: ${c.move}; the body at its lowest position`],
+      [3, 4, 'second beat: the body rising, the limbs or parts passing each other'],
+      [5, 6, 'third beat: the mirror of the first beat (the opposite side or phase), the body at its lowest'],
+      [7, 8, 'fourth beat: the body rising again, leading back to the start of the cycle'],
+    ],
+  },
+  {
+    fr: 'Attaque',
+    en: 'ATTACK, a single attack',
+    loop: false,
+    beats: (c) => [
+      [1, 1, 'the idle pose, tensing'],
+      [2, 3, `wind-up: ${c.windup}`],
+      [4, 4, `the strike launches, very fast: ${c.strike}, on its way`],
+      [5, 5, `IMPACT, the key frame of the attack: ${c.strike}, at full extension`],
+      [6, 6, 'follow-through: the momentum carries the body past the impact'],
+      [7, 8, 'recovery: back to the idle pose of the reference figure'],
+    ],
+  },
+  {
+    fr: 'Anticipation (télégraphe)',
+    en: 'TELEGRAPH, the wind-up that announces an attack, held',
+    loop: false,
+    beats: (c) => [
+      [1, 2, `from the idle pose, the body starts to build tension: ${c.windup}`],
+      [3, 6, 'growing more and more tense, the eyes or head fixed on the target'],
+      [7, 8, 'frozen at maximum tension, trembling slightly; frames 7 and 8 are nearly identical'],
+    ],
+  },
+  {
+    fr: 'Étourdi',
+    en: 'STUNNED, a dazed loop',
+    loop: true,
+    beats: (c) => [
+      [1, 2, isStun(c.special) ? c.special.text : STUNNED],
+      [3, 6, 'still dazed, swaying from one side to the other'],
+      [7, 8, 'easing back toward frame 1, a seamless loop'],
+    ],
+  },
+  {
+    fr: 'Dégâts',
+    en: 'HURT, being hit and recovering',
+    loop: false,
+    beats: (c) => [
+      [1, 1, `hit: ${c.hit}`],
+      [2, 3, 'maximum recoil, the body thrown off balance'],
+      [4, 5, 'staggering, fighting to recover'],
+      [6, 8, 'back to the idle pose of the reference figure'],
+    ],
+  },
+  {
+    fr: 'Mort',
+    en: 'DEATH',
+    loop: false,
+    beats: (c) => [
+      [1, 1, 'the fatal hit: the body recoils'],
+      [2, 3, 'staggers, the strength draining'],
+      [4, 5, `the collapse: ${c.death}`],
+      [6, 6, 'the body hits the ground and settles with a small bounce'],
+      [7, 8, 'lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid'],
+    ],
+  },
+  {
+    fr: 'Geste propre',
+    en: 'SPECIAL',
+    loop: (c) => Boolean(c.special && !isStun(c.special) && c.special.loop),
+    name: (c) => (c.special && !isStun(c.special) ? c.special.name : 'second attack'),
+    beats: (c) =>
+      c.special && !isStun(c.special)
+        ? [
+            [1, 2, `the movement builds up: ${c.special.text}, first part`],
+            [3, 6, `${c.special.text}, fully reached and sustained, with only small rhythmic movements`],
+            [7, 8, c.special.loop ? 'easing back toward frame 1 of this row, a seamless loop' : 'easing back to the idle pose of the reference figure'],
+          ]
+        : [
+            [1, 2, `a heavier version of the wind-up: ${c.windup}, pushed further`],
+            [3, 4, `a heavier version of the strike: ${c.strike}`],
+            [5, 5, 'IMPACT, the whole body thrown into the blow'],
+            [6, 8, 'a slow recovery back to the idle pose'],
+          ],
+  },
 ];
 
 // ---------------------------------------------------------------------------------------------------------------
 // Construction des prompts
 
-const FRAMES = 16;
+const COLUMNS = 8;
 
 function checkBeats(beats, label) {
   let next = 1;
@@ -508,26 +631,32 @@ function checkBeats(beats, label) {
     if (from !== next || to < from) throw new Error(`${label} : étapes discontinues à l'image ${from}`);
     next = to + 1;
   }
-  if (next !== FRAMES + 1) throw new Error(`${label} : les étapes s'arrêtent à l'image ${next - 1}`);
+  if (next !== COLUMNS + 1) throw new Error(`${label} : les étapes s'arrêtent à l'image ${next - 1}`);
 }
 
-const frameRange = (from, to) => (from === to ? `Frame ${from}` : `Frames ${from} to ${to}`);
+const frameRange = (from, to) => (from === to ? `frame ${from}` : `frames ${from} to ${to}`);
 
-/** Planche d'animation : 16 images, grille 4 × 4 de cases carrées, dans une image carrée. */
-function animationPrompt({ intro, beats, anim, bg, label }) {
-  checkBeats(beats, label);
+/** Planche complète : 64 images, grille 8 × 8 de cases carrées, une ligne de 8 images par animation. */
+function sheetPrompt({ intro, rows, ch, bg, label }) {
   const lines = [
     intro,
-    'Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).',
-    'The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.',
+    'Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible). The image is divided into an invisible grid of 8 columns x 8 rows (64 equal square cells).',
+    'Each row is one animation of 8 frames, read left to right. The 8 rows, from top to bottom, are always in this exact order:',
   ];
-  for (const [from, to, text] of beats) lines.push(`${frameRange(from, to)}: ${text}.`);
-  lines.push(anim.moves);
-  lines.push(anim.loop ? 'It is a seamless loop: frame 16 leads smoothly back to frame 1.' : 'It plays once, from frame 1 to frame 16.');
+  rows.forEach((row, r) => {
+    const beats = row.beats(ch);
+    checkBeats(beats, `${label}/ligne ${r + 1}`);
+    const name = row.name ? ` — ${row.name(ch)}` : '';
+    lines.push(
+      `ROW ${r + 1}, ${row.en}${name}, ${(typeof row.loop === 'function' ? row.loop(ch) : row.loop) ? 'a seamless loop where frame 8 leads back to frame 1' : 'played once'}: ` +
+        beats.map(([from, to, text]) => `${frameRange(from, to)}: ${text}`).join('; ') + '.',
+    );
+  });
   lines.push(
-    'Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.',
-    'The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.',
-    'DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.',
+    'Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.',
+    'The character stays exactly the same in all 64 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.',
+    'Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.',
+    'DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, except where a held pose is asked for.',
     'DO NOT simply copy the reference figure into every cell.',
     'DO NOT change the camera angle, the facing direction or the design from one frame to the next.',
     'DO NOT move the character across the sheet: each frame stays centered in its own cell.',
@@ -567,14 +696,15 @@ function vueFichePrompt({ subject, view, bg = GREY, wide = false }) {
 }
 
 const PROPORTIONS_CREATURE =
-  'Follow the natural shape of this creature, drawn in the same semi-realistic painted style as the heroes. A strong readable silhouette from far away; the character is drawn filling the full image height of its figure, with a clean outline.';
+  'Same chibi rendering as the heroes, adapted to the anatomy of this creature: an oversized head (or face) with big expressive eyes, a compact body, exaggerated readable features. ' +
+  'A humanoid creature is exactly 3 heads tall, like the heroes. A strong readable silhouette from far away, with a clean outline.';
 
 const fence = (s) => ['```text', s, '```', ''].join('\n');
 
-/** Introduction d'un prompt d'animation : l'image jointe est la fiche de la vue. */
-const animIntro = (vk, who, tail) =>
+/** Introduction d'une planche complète : l'image jointe est la fiche de la vue. */
+const sheetIntro = (vk, who, tail) =>
   `The attached image is the reference sheet of our game character: a single figure seen in ${VIEW[vk].fiche}.${who ? ' ' + who : ''}` +
-  ` Draw a 2D sprite animation sheet of this exact character performing ${tail}` +
+  ` Draw the complete 2D sprite sheet of this exact character, all its animations on one image: ${tail}` +
   ' Every frame is drawn in that same view and camera angle, exactly like the reference figure.';
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -583,29 +713,22 @@ const animIntro = (vk, who, tail) =>
 const heroSubject = (rk, race, ck, cls) =>
   `The character belongs to the ${race.name} race and the ${cls.name} class. BODY (the race): ${race.text} OUTFIT (follows the culture of the race, nothing from any other culture): ${OUTFITS[rk][ck]}. ROLE (the class): ${cls.role} WEAPON: ${cls.weapon}. The race decides the body, the face and the clothing culture; the class only decides the role, the posture, the silhouette, the accent color and the weapon.`;
 const HERO_PROP = PROPORTIONS_HERO + ' All twenty heroes of the game share exactly the same total height.';
-const BOSS_PROP = PROPORTIONS_CREATURE + ' A boss: the head and the body must be clearly readable.';
+const BOSS_PROP = PROPORTIONS_CREATURE + ' A boss: the head and the weak point must be clearly readable.';
 
-const creatureAnims = (c) => {
-  const list = [...CREATURE_ANIMS];
-  if (c.special) list.push({ key: 'special', fr: c.special.name, en: `a special pose (${c.special.name})`, loop: c.special.loop, moves: 'The body is at a clearly different place in every frame.' });
-  return list;
-};
-
-/** Un personnage = tout ce qu'il faut pour écrire sa fiche et ses planches. */
+/** Un personnage = tout ce qu'il faut pour écrire sa fiche et sa planche complète. */
 function hero(rk, ck) {
   const race = RACES[rk];
   const cls = CLASSES[ck];
   return {
     id: `${rk}-${ck}`,
     name: `${race.name} ${cls.name}`,
-    kind: 'hero',
     subject: heroSubject(rk, race, ck, cls),
     proportions: HERO_PROP,
     bg: GREY,
     wide: false,
-    anims: Object.entries(HERO_ANIMS).map(([key, a]) => ({ ...a, key })),
-    beats: (a) => GENERIC[a.key](cls),
-    tail: (a) => `${a.en}: same face, proportions, outfit, colors, ${cls.gear}, nothing added or removed.`,
+    rows: HERO_ROWS,
+    data: cls,
+    tail: `same face, chibi proportions, outfit, colors, ${cls.gear}, nothing added or removed.`,
     who: '',
     views: ['face', 'dos'],
   };
@@ -614,21 +737,23 @@ function creature(key, data, kind) {
   return {
     id: key,
     name: data.name,
-    kind,
     subject: `The character is ${data.look}`,
     proportions: kind === 'boss' ? BOSS_PROP : PROPORTIONS_CREATURE,
     bg: data.bg ?? GREY,
     wide: !!data.wide,
-    anims: creatureAnims(data),
-    beats: (a) => CREATURE[a.key](data),
-    tail: (a) => `${a.en}: same design, proportions, colors, nothing added or removed.`,
+    rows: CREATURE_ROWS,
+    data,
+    tail: `same design, chibi proportions, colors, nothing added or removed.${data.wide ? ' The creature is wider than tall: it uses the full width of each cell, at the same scale in every cell.' : ''}`,
     who: `The character is ${data.look}`,
     views: ['face'],
   };
 }
 
-/** Écrit la fiche (de profil, de zéro, ou de face/dos à partir du profil) et les planches des vues demandées. */
-function characterSection(ch, views, later) {
+/** Ordre des lignes d'une planche, en français, pour l'en-tête de chaque prompt. */
+const rowList = (ch) => ch.rows.map((row, r) => `${r + 1} ${row.fr}${row.name ? ` : ${row.name(ch.data)}` : ''}`).join(' · ');
+
+/** Écrit la fiche (de profil, de zéro, ou de face/dos à partir du profil) et la planche complète de chaque vue demandée. */
+function characterSection(ch, views) {
   const out = [`## ${ch.name}`, ''];
   for (const vk of views) {
     const prompt = vk === 'profil'
@@ -643,18 +768,16 @@ function characterSection(ch, views, later) {
       '',
       fence(prompt),
     );
-    for (const a of ch.anims) {
-      const beats = ch.beats(a);
-      const intro = animIntro(vk, ch.who, ch.tail(a));
-      const p = animationPrompt({ intro, beats, anim: a, bg: ch.bg, label: `${ch.id}/${vk}/${a.key}` });
-      out.push(
-        `### ${ch.name} — ${vk} — ${a.fr}`,
-        '',
-        `**Joindre :** \`fiche-${vk}.png\`. **Enregistrer :** \`2d/${ch.id}/${vk}-${a.key}.png\``,
-        '',
-        fence(p),
-      );
-    }
+    const sheet = sheetPrompt({ intro: sheetIntro(vk, ch.who, ch.tail), rows: ch.rows, ch: ch.data, bg: ch.bg, label: `${ch.id}/${vk}` });
+    out.push(
+      `### ${ch.name} — ${vk} — planche complète (8 × 8)`,
+      '',
+      `**Lignes :** ${rowList(ch)}.`,
+      '',
+      `**Joindre :** \`fiche-${vk}.png\`. **Enregistrer :** \`2d/${ch.id}/${vk}-planchecomplete.png\``,
+      '',
+      fence(sheet),
+    );
   }
   return out.join('\n');
 }
@@ -679,21 +802,21 @@ function pecherPrompts() {
 const LOTS = [
   {
     file: '01-izanami.md',
-    title: 'Lot 1 : Izanami (fait, dans le jeu)',
+    title: 'Lot 1 : Izanami (dans le jeu en planches 4 × 4, à refaire en 8 × 8 chibi)',
     intro: 'Les deux formes d\'Izanami, le boss du Palais. Le pêcher de son arène (décor, 2 états) est à la fin.',
     chars: [creature('izanami', BOSSES.izanami, 'boss'), creature('izanamiRevelee', BOSSES.izanamiRevelee, 'boss')],
     extra: () => ['## Pêcher de l\'arène (image fixe, 2 états)', '', ...pecherPrompts().flatMap((p) => [`### ${p.title}`, '', `**Enregistrer :** \`2d/${p.id}/${p.id}.png\``, '', fence(p.prompt)])].join('\n'),
   },
   {
     file: '02-yokai-du-palais.md',
-    title: 'Lot 2 : yokai du Palais d\'Izanami (fait, dans le jeu)',
+    title: 'Lot 2 : yokai du Palais d\'Izanami (dans le jeu en planches 4 × 4, à refaire en 8 × 8 chibi)',
     intro: 'Shikome, ikazuchi et ikusa : les trois yokai du Palais.',
     chars: [creature('shikome', ENEMIES.shikome, 'enemy'), creature('ikazuchi', ENEMIES.ikazuchi, 'enemy'), creature('ikusa', ENEMIES.ikusa, 'enemy')],
   },
   ...Object.entries(CLASSES).map(([ck, cls], i) => ({
     file: `03-heros-${ck}.md`,
     title: `Lot 3 : héros ${cls.name} (série du Yomi, Hanyō)`,
-    intro: 'Phase 1 : les tenues du Yomi, avec la race Hanyō. Les autres races viendront plus tard.',
+    intro: 'Phase 1 : les tenues du Yomi, avec la race Hanyō. Les cinq Hanyō ont leur planche complète dans le jeu depuis octobre 2026 ; ces prompts servent à en refaire une au format standard. Les autres races viendront plus tard.',
     chars: [hero('hanyo', ck)],
     order: i,
   })),
@@ -706,7 +829,7 @@ const LOTS = [
   {
     file: '05-jorogumo.md',
     title: 'Lot 5 : Jorōgumo (boss déjà peint, à refaire pour l\'harmonie)',
-    intro: 'Le premier boss a déjà ses planches peintes. À refaire en dernier avec Izanami comme référence de style.',
+    intro: 'Le premier boss a déjà ses planches peintes. À refaire en dernier, au format chibi 8 × 8 des autres personnages.',
     chars: [creature('jorogumo', BOSSES.jorogumo, 'boss'), creature('jorogumoAraignee', BOSSES.jorogumoAraignee, 'boss')],
   },
 ];
@@ -725,17 +848,17 @@ let total = 0;
 const count = (text) => (text.match(/^```text/gm) ?? []).length;
 
 for (const lot of LOTS) {
-  // Maintenant : fiche de profil + 8 (héros) ou 6-7 (créatures) planches de profil.
-  const body = [`# ${lot.title}`, '', lot.intro, '', '**Format de toutes les planches : image carrée 1 024 × 1 024 px, 16 images en grille 4 × 4 (cases de 256 px)**, fond gris uni (magenta pour l\'Oublié). ' + REGLAGES, ''];
-  for (const ch of lot.chars) body.push(characterSection(ch, NOW, false));
+  // Maintenant : fiche de profil + planche complète de profil.
+  const body = [`# ${lot.title}`, '', lot.intro, '', '**Format : une planche complète par personnage, image carrée de 2 048 × 2 048 px si possible, 64 images en grille 8 × 8 (cases de 256 px), une ligne de 8 images par animation**, personnages chibi de 3 têtes, fond gris uni (magenta pour l\'Oublié). Ordre des lignes : [Charte 2D](../Charte%202D.md), section 4. ' + REGLAGES, ''];
+  for (const ch of lot.chars) body.push(characterSection(ch, NOW));
   if (lot.extra) body.push(lot.extra());
   const text = body.join('\n');
   write(lot.file, text);
   total += count(text);
 
   // Plus tard : fiches et planches de face (et de dos pour les héros).
-  const later = [`# ${lot.title} : face et dos (plus tard)`, '', 'À faire **après** validation des planches de profil. Chaque fiche de face ou de dos se génère à partir de la **fiche de profil** jointe.', ''];
-  for (const ch of lot.chars) later.push(characterSection(ch, ch.views, true));
+  const later = [`# ${lot.title} : face et dos (plus tard)`, '', 'À faire **après** validation de la planche complète de profil. Chaque fiche de face ou de dos se génère à partir de la **fiche de profil** jointe.', ''];
+  for (const ch of lot.chars) later.push(characterSection(ch, ch.views));
   write(`plus-tard/${lot.file.replace(/^(\d+)-/, '$1-face-dos-')}`, later.join('\n'));
 }
 

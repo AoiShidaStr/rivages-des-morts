@@ -1,6 +1,6 @@
 # Lot 5 : Jorōgumo (boss déjà peint, à refaire pour l'harmonie) : face et dos (plus tard)
 
-À faire **après** validation des planches de profil. Chaque fiche de face ou de dos se génère à partir de la **fiche de profil** jointe.
+À faire **après** validation de la planche complète de profil. Chaque fiche de face ou de dos se génère à partir de la **fiche de profil** jointe.
 
 ## Jorōgumo, forme humaine
 
@@ -13,188 +13,37 @@ The attached image is the reference sheet of our game character, a single figure
 Draw the SAME character, alone, full body, in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image: same design, proportions, outfit, colors, weapon and accessories, nothing added or removed, same scale and same neutral calm idle stance. Invent the details hidden in the attached view so that they stay consistent with the design. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game.
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Jorōgumo, forme humaine — face — Attente
+### Jorōgumo, forme humaine — face — planche complète (8 × 8)
 
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-idle.png`
+**Lignes :** 1 Attente · 2 Déplacement · 3 Attaque · 4 Anticipation (télégraphe) · 5 Étourdi · 6 Dégâts · 7 Mort · 8 Geste propre : appel des araignées (summon).
+
+**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-planchecomplete.png`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing a slow idle loop: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the neutral pose of the reference figure, then it starts to breathe: standing elegantly, the fan held folded at the chest, the sleeves and the hairpins swaying slightly, the head tilting.
-Frames 3 to 4: breathing in: the body swells and rises slightly.
-Frames 5 to 6: top of the breath: the body at its highest, secondary parts (hair, cloth, limbs, tail) lifted.
-Frames 7 to 8: a tiny pause, then breathing out begins.
-Frames 9 to 10: breathing out: the body sinks, the secondary parts sway the other way.
-Frames 11 to 12: bottom of the breath: the body at its lowest, the weight shifted.
-Frames 13 to 14: the weight shifts back, the head or gaze moves a little, everything settles.
-Frames 15 to 16: rising smoothly back toward frame 1; frame 16 is almost identical to frame 1.
-The motion is subtle but clearly visible over the loop.
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same design, chibi proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
+Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible). The image is divided into an invisible grid of 8 columns x 8 rows (64 equal square cells).
+Each row is one animation of 8 frames, read left to right. The 8 rows, from top to bottom, are always in this exact order:
+ROW 1, IDLE, a slow loop, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: the neutral pose of the reference figure, then it starts to breathe: standing elegantly, the fan held folded at the chest, the sleeves and the hairpins swaying slightly, the head tilting; frames 3 to 4: breathing in: the body swells and rises, secondary parts (hair, cloth, limbs, tail) lifted; frames 5 to 6: breathing out: the body sinks, the secondary parts sway the other way; frames 7 to 8: rising smoothly back toward frame 1; frame 8 is almost identical to frame 1.
+ROW 2, MOVE, a locomotion cycle on the spot, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: first beat: a graceful gliding walk in small steps, the kimono swaying, the fan held at the chest; the body at its lowest position; frames 3 to 4: second beat: the body rising, the limbs or parts passing each other; frames 5 to 6: third beat: the mirror of the first beat (the opposite side or phase), the body at its lowest; frames 7 to 8: fourth beat: the body rising again, leading back to the start of the cycle.
+ROW 3, ATTACK, a single attack, played once: frame 1: the idle pose, tensing; frames 2 to 3: wind-up: the fan is lifted and opened wide behind the head, the body turned half away and coiled, the other hand raised; frame 4: the strike launches, very fast: the fan sweeps out in a wide slashing arc in front of the body, the whole body turning into it, the sleeves trailing, on its way; frame 5: IMPACT, the key frame of the attack: the fan sweeps out in a wide slashing arc in front of the body, the whole body turning into it, the sleeves trailing, at full extension; frame 6: follow-through: the momentum carries the body past the impact; frames 7 to 8: recovery: back to the idle pose of the reference figure.
+ROW 4, TELEGRAPH, the wind-up that announces an attack, held, played once: frames 1 to 2: from the idle pose, the body starts to build tension: the fan is lifted and opened wide behind the head, the body turned half away and coiled, the other hand raised; frames 3 to 6: growing more and more tense, the eyes or head fixed on the target; frames 7 to 8: frozen at maximum tension, trembling slightly; frames 7 and 8 are nearly identical.
+ROW 5, STUNNED, a dazed loop, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: dazed on the spot: the body swaying, the head wobbling, the limbs dangling, the eyes unfocused; frames 3 to 6: still dazed, swaying from one side to the other; frames 7 to 8: easing back toward frame 1, a seamless loop.
+ROW 6, HURT, being hit and recovering, played once: frame 1: hit: the head jerks aside, the fan flying open, the body recoiling; frames 2 to 3: maximum recoil, the body thrown off balance; frames 4 to 5: staggering, fighting to recover; frames 6 to 8: back to the idle pose of the reference figure.
+ROW 7, DEATH, played once: frame 1: the fatal hit: the body recoils; frames 2 to 3: staggers, the strength draining; frames 4 to 5: the collapse: the body collapses to the knees, the fan drops, the hairpins scatter, and the body sags forward onto the ground; frame 6: the body hits the ground and settles with a small bounce; frames 7 to 8: lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid.
+ROW 8, SPECIAL — appel des araignées (summon), played once: frames 1 to 2: the movement builds up: the fan drawn open wide in front of the chest then snapped down toward the ground, the other hand pointing at the ground, the body leaning forward, first part; frames 3 to 6: the fan drawn open wide in front of the chest then snapped down toward the ground, the other hand pointing at the ground, the body leaning forward, fully reached and sustained, with only small rhythmic movements; frames 7 to 8: easing back to the idle pose of the reference figure.
+Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
+The character stays exactly the same in all 64 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.
+Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.
+DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, except where a held pose is asked for.
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme humaine — face — Déplacement
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-move.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing a locomotion cycle on the spot: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 4: locomotion cycle, first beat: a graceful gliding walk in small steps, the kimono swaying, the fan held at the chest; the body at its lowest position.
-Frames 5 to 8: second beat: the body rising, the limbs or parts passing each other.
-Frames 9 to 12: third beat: the mirror of the first beat (the opposite side or phase), the body at its lowest.
-Frames 13 to 16: fourth beat: the body rising again, leading back to the start of the cycle.
-The character stays in place (no travelling across the cell).
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme humaine — face — Anticipation
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-windup.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing the wind-up that telegraphs an attack: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 4: from the idle pose, the body starts to build tension: the fan is lifted and opened wide behind the head, the body turned half away and coiled, the other hand raised, first third of the movement.
-Frames 5 to 10: the fan is lifted and opened wide behind the head, the body turned half away and coiled, the other hand raised, growing more and more tense.
-Frames 11 to 14: maximum tension: the pose fully reached, the body trembling slightly, the eyes or head fixed on the target.
-Frames 15 to 16: frozen at maximum tension; frames 15 and 16 are nearly identical.
-The body moves a little more in every frame toward the final tense pose.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme humaine — face — Attaque
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-attack.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing a single attack: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: starts from the pose of maximum tension.
-Frames 3 to 5: the strike launches, very fast, the body at a clearly different place in every frame: the fan sweeps out in a wide slashing arc in front of the body, the whole body turning into it, the sleeves trailing, on its way.
-Frame 6: IMPACT, the key frame of the attack: the fan sweeps out in a wide slashing arc in front of the body, the whole body turning into it, the sleeves trailing, at full extension.
-Frames 7 to 10: follow-through: the momentum carries the body past the impact, then slows down.
-Frames 11 to 16: recovery: back to the idle pose of the reference figure; frame 16 is close to the idle pose.
-The body is at a clearly different place in every frame, following one continuous path.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme humaine — face — Touché
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-hit.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing being hit and recovering: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: hit: the head jerks aside, the fan flying open, the body recoiling.
-Frames 3 to 5: maximum recoil, the body thrown off balance.
-Frames 6 to 9: staggering, fighting to recover.
-Frames 10 to 13: recovering, regaining the normal shape.
-Frames 14 to 16: back to the idle pose of the reference figure; frame 16 is close to frame 1.
-The body is at a clearly different place and shape in every frame.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme humaine — face — Mort
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-death.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing a death animation: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the fatal hit: the body recoils.
-Frames 3 to 6: staggers, the strength draining.
-Frames 7 to 10: the collapse: the body collapses to the knees, the fan drops, the hairpins scatter, and the body sags forward onto the ground.
-Frames 11 to 14: the body hits the ground and settles, a small bounce, secondary parts settling.
-Frames 15 to 16: lies completely still; frames 15 and 16 are identical. Do not draw any dissolving or fading: the body stays solid.
-The body is at a clearly different place and shape in every frame until it lies still.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme humaine — face — appel des araignées (summon)
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumo/face-special.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game. Draw a 2D sprite animation sheet of this exact character performing a special pose (appel des araignées (summon)): same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 4: the movement builds up: the fan drawn open wide in front of the chest then snapped down toward the ground, the other hand pointing at the ground, the body leaning forward, first third.
-Frames 5 to 12: the fan drawn open wide in front of the chest then snapped down toward the ground, the other hand pointing at the ground, the body leaning forward, fully reached and sustained, with only small rhythmic movements.
-Frames 13 to 16: easing back to the idle pose of the reference figure; frame 16 is close to the idle pose.
-The body is at a clearly different place in every frame.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
@@ -210,188 +59,37 @@ The attached image is the reference sheet of our game character, a single figure
 Draw the SAME character, alone, full body, in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image: same design, proportions, outfit, colors, weapon and accessories, nothing added or removed, same scale and same neutral calm idle stance. Invent the details hidden in the attached view so that they stay consistent with the design. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above.
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Landscape 16:9 image at the highest resolution available.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Jorōgumo, forme d'araignée — face — Attente
+### Jorōgumo, forme d'araignée — face — planche complète (8 × 8)
 
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-idle.png`
+**Lignes :** 1 Attente · 2 Déplacement · 3 Attaque · 4 Anticipation (télégraphe) · 5 Étourdi · 6 Dégâts · 7 Mort · 8 Geste propre : au plafond (climbing up).
+
+**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-planchecomplete.png`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing a slow idle loop: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the neutral pose of the reference figure, then it starts to breathe: standing tall on all eight legs, the body breathing, the front legs lifting one after the other, the woman's torso swaying, the hair drifting.
-Frames 3 to 4: breathing in: the body swells and rises slightly.
-Frames 5 to 6: top of the breath: the body at its highest, secondary parts (hair, cloth, limbs, tail) lifted.
-Frames 7 to 8: a tiny pause, then breathing out begins.
-Frames 9 to 10: breathing out: the body sinks, the secondary parts sway the other way.
-Frames 11 to 12: bottom of the breath: the body at its lowest, the weight shifted.
-Frames 13 to 14: the weight shifts back, the head or gaze moves a little, everything settles.
-Frames 15 to 16: rising smoothly back toward frame 1; frame 16 is almost identical to frame 1.
-The motion is subtle but clearly visible over the loop.
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same design, chibi proportions, colors, nothing added or removed. The creature is wider than tall: it uses the full width of each cell, at the same scale in every cell. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
+Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible). The image is divided into an invisible grid of 8 columns x 8 rows (64 equal square cells).
+Each row is one animation of 8 frames, read left to right. The 8 rows, from top to bottom, are always in this exact order:
+ROW 1, IDLE, a slow loop, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: the neutral pose of the reference figure, then it starts to breathe: standing tall on all eight legs, the body breathing, the front legs lifting one after the other, the woman's torso swaying, the hair drifting; frames 3 to 4: breathing in: the body swells and rises, secondary parts (hair, cloth, limbs, tail) lifted; frames 5 to 6: breathing out: the body sinks, the secondary parts sway the other way; frames 7 to 8: rising smoothly back toward frame 1; frame 8 is almost identical to frame 1.
+ROW 2, MOVE, a locomotion cycle on the spot, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: first beat: a heavy scuttling march, the eight legs alternating in two groups of four, the abdomen rocking, the torso leaning forward; the body at its lowest position; frames 3 to 4: second beat: the body rising, the limbs or parts passing each other; frames 5 to 6: third beat: the mirror of the first beat (the opposite side or phase), the body at its lowest; frames 7 to 8: fourth beat: the body rising again, leading back to the start of the cycle.
+ROW 3, ATTACK, a single attack, played once: frame 1: the idle pose, tensing; frames 2 to 3: wind-up: rears up on the rear legs, the front legs raised high and spread wide, the torso thrown back, the abdomen lowered; frame 4: the strike launches, very fast: a crushing charge: the front legs slammed forward, the body stretched low and long, the torso thrust out, the mouth open, on its way; frame 5: IMPACT, the key frame of the attack: a crushing charge: the front legs slammed forward, the body stretched low and long, the torso thrust out, the mouth open, at full extension; frame 6: follow-through: the momentum carries the body past the impact; frames 7 to 8: recovery: back to the idle pose of the reference figure.
+ROW 4, TELEGRAPH, the wind-up that announces an attack, held, played once: frames 1 to 2: from the idle pose, the body starts to build tension: rears up on the rear legs, the front legs raised high and spread wide, the torso thrown back, the abdomen lowered; frames 3 to 6: growing more and more tense, the eyes or head fixed on the target; frames 7 to 8: frozen at maximum tension, trembling slightly; frames 7 and 8 are nearly identical.
+ROW 5, STUNNED, a dazed loop, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: dazed on the spot: the body swaying, the head wobbling, the limbs dangling, the eyes unfocused; frames 3 to 6: still dazed, swaying from one side to the other; frames 7 to 8: easing back toward frame 1, a seamless loop.
+ROW 6, HURT, being hit and recovering, played once: frame 1: hit: the body thrown sideways, the legs buckling, the torso jerking back; frames 2 to 3: maximum recoil, the body thrown off balance; frames 4 to 5: staggering, fighting to recover; frames 6 to 8: back to the idle pose of the reference figure.
+ROW 7, DEATH, played once: frame 1: the fatal hit: the body recoils; frames 2 to 3: staggers, the strength draining; frames 4 to 5: the collapse: the legs give one by one, the body sinks, then rolls onto its back with the legs curling in over the belly; frame 6: the body hits the ground and settles with a small bounce; frames 7 to 8: lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid.
+ROW 8, SPECIAL — au plafond (climbing up), a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: the movement builds up: climbing upward: the body tilted and stretched vertically, the front legs reaching up, the rear legs pushing, the torso looking down, the hair hanging, first part; frames 3 to 6: climbing upward: the body tilted and stretched vertically, the front legs reaching up, the rear legs pushing, the torso looking down, the hair hanging, fully reached and sustained, with only small rhythmic movements; frames 7 to 8: easing back toward frame 1 of this row, a seamless loop.
+Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
+The character stays exactly the same in all 64 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.
+Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.
+DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, except where a held pose is asked for.
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme d'araignée — face — Déplacement
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-move.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing a locomotion cycle on the spot: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 4: locomotion cycle, first beat: a heavy scuttling march, the eight legs alternating in two groups of four, the abdomen rocking, the torso leaning forward; the body at its lowest position.
-Frames 5 to 8: second beat: the body rising, the limbs or parts passing each other.
-Frames 9 to 12: third beat: the mirror of the first beat (the opposite side or phase), the body at its lowest.
-Frames 13 to 16: fourth beat: the body rising again, leading back to the start of the cycle.
-The character stays in place (no travelling across the cell).
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme d'araignée — face — Anticipation
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-windup.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing the wind-up that telegraphs an attack: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 4: from the idle pose, the body starts to build tension: rears up on the rear legs, the front legs raised high and spread wide, the torso thrown back, the abdomen lowered, first third of the movement.
-Frames 5 to 10: rears up on the rear legs, the front legs raised high and spread wide, the torso thrown back, the abdomen lowered, growing more and more tense.
-Frames 11 to 14: maximum tension: the pose fully reached, the body trembling slightly, the eyes or head fixed on the target.
-Frames 15 to 16: frozen at maximum tension; frames 15 and 16 are nearly identical.
-The body moves a little more in every frame toward the final tense pose.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme d'araignée — face — Attaque
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-attack.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing a single attack: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: starts from the pose of maximum tension.
-Frames 3 to 5: the strike launches, very fast, the body at a clearly different place in every frame: a crushing charge: the front legs slammed forward, the body stretched low and long, the torso thrust out, the mouth open, on its way.
-Frame 6: IMPACT, the key frame of the attack: a crushing charge: the front legs slammed forward, the body stretched low and long, the torso thrust out, the mouth open, at full extension.
-Frames 7 to 10: follow-through: the momentum carries the body past the impact, then slows down.
-Frames 11 to 16: recovery: back to the idle pose of the reference figure; frame 16 is close to the idle pose.
-The body is at a clearly different place in every frame, following one continuous path.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme d'araignée — face — Touché
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-hit.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing being hit and recovering: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: hit: the body thrown sideways, the legs buckling, the torso jerking back.
-Frames 3 to 5: maximum recoil, the body thrown off balance.
-Frames 6 to 9: staggering, fighting to recover.
-Frames 10 to 13: recovering, regaining the normal shape.
-Frames 14 to 16: back to the idle pose of the reference figure; frame 16 is close to frame 1.
-The body is at a clearly different place and shape in every frame.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme d'araignée — face — Mort
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-death.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing a death animation: same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the fatal hit: the body recoils.
-Frames 3 to 6: staggers, the strength draining.
-Frames 7 to 10: the collapse: the legs give one by one, the body sinks, then rolls onto its back with the legs curling in over the belly.
-Frames 11 to 14: the body hits the ground and settles, a small bounce, secondary parts settling.
-Frames 15 to 16: lies completely still; frames 15 and 16 are identical. Do not draw any dissolving or fading: the body stays solid.
-The body is at a clearly different place and shape in every frame until it lies still.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Jorōgumo, forme d'araignée — face — au plafond (climbing up)
-
-**Joindre :** `fiche-face.png`. **Enregistrer :** `2d/jorogumoAraignee/face-special.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter front view, facing the viewer and slightly toward the bottom-right of the image. The character is the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above. Draw a 2D sprite animation sheet of this exact character performing a special pose (au plafond (climbing up)): same design, proportions, colors, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 4: the movement builds up: climbing upward: the body tilted and stretched vertically, the front legs reaching up, the rear legs pushing, the torso looking down, the hair hanging, first third.
-Frames 5 to 12: climbing upward: the body tilted and stretched vertically, the front legs reaching up, the rear legs pushing, the torso looking down, the hair hanging, fully reached and sustained, with only small rhythmic movements.
-Frames 13 to 16: easing back toward the first frame of this sheet, a seamless loop.
-The body is at a clearly different place in every frame.
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
