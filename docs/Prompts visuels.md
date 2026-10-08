@@ -82,9 +82,9 @@ Ce que joue chaque ligne pour chaque classe, et les tags du moteur : Charte 2D, 
 - **Ennemis et boss** : Izanami et les yokai du Palais sont dans le jeu en planches de 16 images par animation, les yokai des Rizières et la Jorōgumo en planches peintes plus anciennes ; tous sont à refaire en 8 × 8 chibi (lots de la Charte 2D, section 9).
 - **PNJ, décors de l'île et du donjon, sols, armes, équipement et reliques du premier donjon** : faits et dans le jeu. Les prompts remplis, avec l'image à joindre, sont dans `public/sprites/sprites/Prompts remplis.md` (dossier non versionné).
 
-## À faire : icônes des objets de la 0.11.0
+## Icônes des objets de la 0.11.0 (faites, dans le jeu)
 
-Les 52 objets ajoutés par la 0.11.0 (équipement spécialisé par classe) n'ont pas encore d'icône : l'interface affiche une case vide. Ils tiennent sur deux planches de 8 × 4, rangées par classe. Comme pour la planche 2, Gemini **retouche** une planche d'icônes réussie en changeant les objets, ce qui garde la grille, le fond et le style des 51 icônes déjà en jeu. La correspondance des cases est déjà dans `tools/icones.json` : une fois les images enregistrées, lancer `npm run icones`.
+Les 52 objets ajoutés par la 0.11.0 (équipement spécialisé par classe) ont leur icône depuis le 8 octobre 2026 (sur la planche 4, Gemini a ajouté une breloque en trop : la case 18 est ignorée et les suivantes décalées d'une case dans `tools/icones.json`). Ils tiennent sur deux planches de 8 × 4, rangées par classe. Comme pour la planche 2, Gemini **retouche** une planche d'icônes réussie en changeant les objets, ce qui garde la grille, le fond et le style des 51 icônes déjà en jeu. La correspondance des cases est déjà dans `tools/icones.json` : une fois les images enregistrées, lancer `npm run icones`.
 
 Si un objet ressort mal (deux objets dans une case, objet coupé), relancer la même retouche en ne demandant que les cases ratées : leur numéro ne change pas.
 

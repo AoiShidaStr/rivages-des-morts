@@ -54,7 +54,7 @@
       "ids": [
         "couronne-juge", "do-fanatique", "greves-inquisiteur", "geta-aube", "geta-bastion", "geta-egide", "rosaire-jade", "marteau-divin",
         "ecaille-dragon-or", "capuche-camouflage", "masque-traqueur", "do-archer-elite", "manteau-plumes", "jambieres-survie", "jambieres-vent", "waraji-esquive",
-        "croc-loup", "charme-bois", "coeur-foret", "carquois-ouragan", null, null, null, null,
+        "croc-loup", null, "charme-bois", "coeur-foret", "carquois-ouragan", null, null, null,
         null, null, null, null, null, null, null, null
       ]
     }
@@ -65,6 +65,11 @@
     "lanterne-braise": { "fillHoles": true, "minHole": 150 },
     "omamori-temple": { "fillHoles": true, "minHole": 150 },
     "rokumonsen": { "fillHoles": true, "minHole": 60 },
-    "soie": { "fillHoles": true, "minHole": 80 }
+    "soie": { "fillHoles": true, "minHole": 80 },
+    "rosaire-jade": { "fillHoles": true, "minHole": 150 },
+    "cristal-pyromancie": { "fillHoles": true, "minHole": 150 },
+    "couronne-juge": { "fillHoles": true, "minHole": 150 },
+    "marteau-divin": { "fillHoles": true, "minHole": 60 },
+    "talisman-ours": { "fillHoles": true, "minHole": 150 }
   }
 }
