@@ -21,6 +21,8 @@ import { drawIslandGround, drawProp } from './pixelArt';
 import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
 import { SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
+import { DecorSprites } from './decorSprites';
+import { IslandPainted, LOW_DECOR } from './islandPainted';
 import type { IslandScene3d } from './islandScene3d';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
@@ -88,6 +90,8 @@ export class IslandRenderer {
   private time = 0;
   /** L'île en 3D (relief, eau, végétation), et les décors peints qu'elle remplace. */
   private scene3d: IslandScene3d | null = null;
+  /** La carte peinte (sol assemblé, eau animée, décors posés par le code). */
+  private painted: IslandPainted | null = null;
   private replaced: ReadonlySet<string> = new Set();
 
   constructor(
@@ -135,6 +139,8 @@ export class IslandRenderer {
       const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
       if (entry.anim) this.animatedProps.push(view);
     }
+    // Les décors restent tant que l'île existe (toute la partie).
+    if (this.painted) await DecorSprites.build(this.scene, this.painted.decor, this.forward, LOW_DECOR);
     const hero = this.sprites.has(this.wantedHero) ? this.wantedHero : 'heros';
     this.player = this.billboard('player', this.required(hero), island.player.pos, 0.4, hero);
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
@@ -193,6 +199,7 @@ export class IslandRenderer {
   sync(island: Island, targetId: string | null, markers: ReadonlyMap<string, string>, dt: number, showPlayer = true): void {
     this.time += dt;
     this.scene3d?.update(dt);
+    this.painted?.update(dt);
     const visible = island.interactables();
     const seen = new Set<string>();
     for (const it of visible) {
@@ -262,6 +269,15 @@ export class IslandRenderer {
    * elle ne se construit pas : le sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art.
    */
   private async buildGround(island: Island): Promise<void> {
+    if (!SCENES_3D) {
+      try {
+        this.painted = await IslandPainted.build(this.scene, island.data);
+        this.replaced = IslandPainted.replaces;
+        return;
+      } catch (error) {
+        console.warn('Carte peinte indisponible, retour au sol en une image :', error);
+      }
+    }
     if (SCENES_3D) {
       try {
         const { IslandScene3d } = await import('./islandScene3d');

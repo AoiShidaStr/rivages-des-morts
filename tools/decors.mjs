@@ -103,12 +103,12 @@ async function cutSprites(input, sheet) {
       const holes = alphaMask(rgb, cw, ch, { ...options, minPartRatio: 0 });
       for (let i = 0; i < cw * ch; i++) rgba[i * 4 + 3] = Math.min(rgba[i * 4 + 3], holes[i]);
     }
-    const output = path.join(outDir, `${name}.png`);
+    // `"format": "webp"` : bien plus léger que le PNG pour les décors posés par dizaines (le jeu se charge en ligne).
+    const webp = sheet.format === 'webp';
+    const output = path.join(outDir, `${name}.${webp ? 'webp' : 'png'}`);
     await mkdir(path.dirname(output), { recursive: true });
-    const result = await sharp(rgba, { raw: { width: cw, height: ch, channels: 4 } })
-      .resize({ width: options.maxSize, height: options.maxSize, fit: 'inside', withoutEnlargement: true })
-      .png()
-      .toFile(output);
+    const resized = sharp(rgba, { raw: { width: cw, height: ch, channels: 4 } }).resize({ width: options.maxSize, height: options.maxSize, fit: 'inside', withoutEnlargement: true });
+    const result = await (webp ? resized.webp({ quality: 88, alphaQuality: 95 }) : resized.png()).toFile(output);
     console.log(`${name.padEnd(32)} case ${index + 1} → ${path.relative(projectDir, output)} (${result.width}×${result.height})`);
   }
 }

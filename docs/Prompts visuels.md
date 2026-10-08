@@ -279,7 +279,7 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 No text, no numbers, no letters, no grid lines.
 ```
 
-## À faire : carte peinte, planches de décors
+## Carte peinte, planches de décors (faites, dans le jeu)
 
 La carte peinte redevient l'affichage par défaut. La 3D reste disponible dans les options (« Scènes en 3D »).
 
@@ -304,17 +304,17 @@ Si une case ressort mal (deux objets dans une case, objet coupé, case vide) : r
 | --- | --- | --- | --- | --- |
 | 1 | Décors sans leur socle (2 × 2, retouche) | `decors_sans-socle_reference.png` | `decors_sans-socle` | maison de thé, coffre, ema et jizō des Rizières, qui remplacent les actuels |
 | 2 | Textures de sol (3 × 3) | `sol_ile.jpg` | `decors_textures` | `sols/textures/*.jpg`, 1024 × 1024, raccordées sans couture par l'outil |
-| 3 | Arbres (3 × 3) | `decors_sans-socle.png` (le résultat de la planche 1) | `decors_arbres` | `decor/ile/*.png` |
-| 4 | Végétation (4 × 4) | `decors_sans-socle.png` | `decors_vegetation` | `decor/ile/*.png` |
-| 5 | Rochers (4 × 4) | `decors_sans-socle.png` | `decors_rochers` | `decor/ile/*.png` |
-| 6 | Objets du village (4 × 4) | `decors_sans-socle.png` | `decors_objets` | `decor/ile/*.png` |
-| 7 | Rizières de la Jorōgumo (4 × 4) | `decors_sans-socle.png` | `decors_rizieres` | `decor/rizieres/*.png` |
+| 3 | Arbres (3 × 3) | `decors_sans-socle.png` (le résultat de la planche 1) | `decors_arbres` | `decor/ile/*.webp` |
+| 4 | Végétation (4 × 4) | `decors_sans-socle.png` | `decors_vegetation` | `decor/ile/*.webp` |
+| 5 | Rochers (4 × 4) | `decors_sans-socle.png` | `decors_rochers` | `decor/ile/*.webp` |
+| 6 | Objets du village (4 × 4) | `decors_sans-socle.png` | `decors_objets` | `decor/ile/*.webp` |
+| 7 | Rizières de la Jorōgumo (4 × 4) | `decors_sans-socle.png` | `decors_rizieres` | `decor/rizieres/*.webp` |
 
 L'image à joindre pour la planche 1 est déjà prête : ce sont les quatre décors actuels, rangés dans la grille. `npm run decors -- --reference` la refait.
 
 Pour les planches 3 à 7, la planche 1 réussie sert de **référence de style** : mêmes contours, même lumière, même palette.
 
-Une fois les planches découpées, il reste à brancher le nouveau sol et à placer les décors sur l'île et dans l'arène des Rizières.
+Depuis le 9 octobre 2026, le jeu assemble le sol et place les décors : `src/render/paintedGround.ts` (sol peint et eau animée), `islandPainted.ts` (île), `arenaPainted.ts` (arènes des Rizières et du Palais) et `decorSprites.ts` (décors debout). Pour ajouter un décor, l'ajouter à une planche (ou en faire une nouvelle dans `tools/decors.json`), puis lui donner une hauteur et une place dans ces fichiers.
 
 ### 1. Décors sans leur socle (2 × 2, retouche)
 

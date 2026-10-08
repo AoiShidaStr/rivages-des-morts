@@ -2228,11 +2228,14 @@ export class Renderer {
     this.arena3d?.dispose();
     this.arena3d = null;
     this.groundMesh?.setEnabled(true);
-    if (!SCENES_3D || !style.scene3d) return;
+    if (!style.scene3d) return;
+    const kind = style.scene3d;
     const lanterns = style.decor.filter((spot) => spot.sprite.startsWith('lanterne'));
-    // Chargées à la demande : le chargeur glTF et les modèles n'alourdissent pas le premier chargement.
-    const build =
-      style.scene3d === 'palais'
+    // Chargées à la demande : le chargeur glTF et les modèles n'alourdissent pas le premier chargement. Par
+    // défaut, l'arène en carte peinte (sol assemblé à partir des textures peintes, décors autour).
+    const build = !SCENES_3D
+      ? import('./arenaPainted').then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind, this.arenaHalfSize, style.decor, this.forward))
+      : kind === 'palais'
         ? import('./arena3d').then(({ Arena3d }) => Arena3d.build(this.scene, lanterns))
         : import('./rizieres3d').then(({ Rizieres3d }) => Rizieres3d.build(this.scene, style.decor));
     build
@@ -2241,7 +2244,7 @@ export class Renderer {
         this.arena3d = arena;
         this.groundMesh?.setEnabled(false);
       })
-      .catch((error: unknown) => console.warn('Arène 3D indisponible :', error));
+      .catch((error: unknown) => console.warn('Arène indisponible, retour au sol en une image :', error));
   }
 
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {
