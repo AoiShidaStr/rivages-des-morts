@@ -24,6 +24,7 @@ import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
+import type { Arena3d } from './arena3d';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
@@ -274,6 +275,10 @@ const PROJECTILE_HEIGHT = AIM_HEIGHT;
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
 
+/** Prototype d'arène en 3D (src/render/arena3d.ts) : seulement avec `?3d` dans l'adresse, pour comparer. */
+const ARENA_3D_WALL = 12;
+const ARENA_3D = typeof location !== 'undefined' && new URLSearchParams(location.search).has('3d');
+
 export function registerShaders(): void {
   if (Effect.ShadersStore.spriteVertexShader) return;
   Effect.ShadersStore.spriteVertexShader = `
@@ -411,6 +416,10 @@ export class Renderer {
     animated: [],
   };
   private groundMaterial: StandardMaterial | null = null;
+  private groundMesh: Mesh | null = null;
+  /** Arène en 3D du prototype, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
+  private arena3d: Arena3d | null = null;
+  private arena3dRequest = 0;
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
   /** Croissants des coups, un par largeur d'arc (le nodachi à 150°, le kanabō à 200°…). */
@@ -561,6 +570,7 @@ export class Renderer {
 
   sync(world: WorldView, events: readonly GameEvent[], dt: number): void {
     this.time += dt;
+    this.arena3d?.update(dt);
     const player = world.player;
     this.localId = player.id;
     this.localKit = player.cfg.kit;
@@ -2184,6 +2194,7 @@ export class Renderer {
     ground.material = material;
     ground.isPickable = false;
     this.groundMaterial = material;
+    this.groundMesh = ground;
   }
 
   /** Arène du donjon : teinte du sol, couleur de la brume, décor posé autour (src/data/dungeons.json). */
@@ -2193,9 +2204,12 @@ export class Renderer {
     for (const mesh of this.decor.meshes) mesh.dispose();
     const meshes: { dispose(): void }[] = [];
     const animated: { material: ShaderMaterial; anim: SheetAnimation; time: number }[] = [];
+    const walled = ARENA_3D && !!style.scene3d;
     style.decor.forEach((spot, i) => {
       const entry = this.sprites.get(spot.sprite);
       if (!entry) return;
+      // Arène 3D : ce qui était posé derrière les murs du fond ne se verrait plus qu'à moitié.
+      if (walled && Math.max(spot.x, spot.z) > ARENA_3D_WALL) return;
       const { sprite, material } = this.createSprite(`decor-${spot.sprite}-${i}`, entry);
       sprite.position.set(spot.x, 0, spot.z);
       sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, this.forward) * 100);
@@ -2207,6 +2221,26 @@ export class Renderer {
       meshes.push(sprite, material);
     });
     this.decor = { meshes, animated };
+    this.buildArena3d(style);
+  }
+
+  private buildArena3d(style: DungeonStyle): void {
+    const request = ++this.arena3dRequest;
+    this.arena3d?.dispose();
+    this.arena3d = null;
+    this.groundMesh?.setEnabled(true);
+    if (!ARENA_3D || !style.scene3d) return;
+    const lanterns = style.decor.filter((spot) => spot.sprite.startsWith('lanterne'));
+    const kind = style.scene3d;
+    // Chargé à la demande : le chargeur glTF et les modèles n'alourdissent pas le jeu sans `?3d`.
+    import('./arena3d')
+      .then(({ Arena3d }) => Arena3d.build(this.scene, kind, lanterns))
+      .then((arena) => {
+        if (request !== this.arena3dRequest) return arena.dispose();
+        this.arena3d = arena;
+        this.groundMesh?.setEnabled(false);
+      })
+      .catch((error: unknown) => console.warn('Arène 3D indisponible :', error));
   }
 
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {
