@@ -278,3 +278,102 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 
 No text, no numbers, no letters, no grid lines.
 ```
+
+## À faire : décors sans socle (scènes en 3D)
+
+Depuis que l'île et les arènes sont en 3D, le sol est un vrai relief : les décors peints qui ont leur propre bout de sol dessiné sous eux (flaque d'eau, nuage, brume, ponton) font « autocollant ». Ces prompts retouchent les images d'origine pour ne garder que l'objet, posé sur rien, sur le même fond gris uni : le détourage et l'animation se refont avec les mêmes réglages.
+
+**Méthode :** joindre l'image d'origine, coller le prompt, et enregistrer le résultat **sous le même nom** (renommer d'abord l'ancienne en `…_avec-socle.jpg` pour la garder). Puis lancer la commande indiquée. Si Gemini change la taille, la pose ou le nombre d'images d'une planche, relancer la retouche.
+
+| Ordre | Décor | Image à joindre et à remplacer (`Pictures\game visual\`) | Commande ensuite |
+| --- | --- | --- | --- |
+| 1 | Torii du ponton (planche de 6) | `sprites\decor_ile_torii.jpg` | `npm run planches -- torii` |
+| 2 | Barque de Charon (planche de 6) | `sprites\decor_ile_barque.jpg` | `npm run planches -- barque` |
+| 3 | Maison de thé | `decor_ile_maison-the.jpg` | `npm run sprites -- decor/maison-the` |
+| 4 | Coffre | `decor_ile_coffre.jpg` | `npm run sprites -- decor/coffre` |
+| 5 | Ema | `decor_ile_ema.jpg` | `npm run sprites -- decor/ema` |
+| 6 | Jizō des Rizières | `decor_donjon_jizo.jpg` | `npm run sprites -- jizo` |
+| 7 | Lanterne allumée (planche de 6, facultatif) | `decor_ile_lanterne-allumee.jpg` | `npm run planches -- lanterne-allumee` |
+| 8 | Portail du donjon (planche de 8, facultatif) | `decor_ile_portail.jpg` | `npm run planches -- portail` |
+
+Les autres décors (Grand Rocher, forge, cascade, lanterne éteinte, sutra, jizō de l'île) n'ont pas de socle ; la cascade garde son bassin de pierre, qui fait partie de l'objet.
+
+### 1. Torii du ponton (planche de 6)
+
+```text
+Edit the attached image.
+
+It is an animation sheet of 6 frames (2 rows of 3) of the same torii gate. Keep exactly the same grid, the same 6 frames, the same flat light grey background, the same camera angle, size, position and hand-painted style. In every frame, keep only the red torii gate with its rope and white paper streamers, and its two support posts. Remove everything at its feet: the pool of water, the cloud-like base, the reeds, the pebbles, the wooden walkway and the lantern post. The bottoms of the pillars now simply end on nothing, straight and clean, as if standing on an invisible floor. Nothing else changes: the small differences between the frames (the swaying streamers) stay as they are.
+
+No text, no numbers, no letters, no grid lines, no shadow on the ground.
+```
+
+### 2. Barque de Charon (planche de 6)
+
+```text
+Edit the attached image.
+
+It is an animation sheet of 6 frames (2 rows of 3) of the same wooden boat. Keep exactly the same grid, the same 6 frames, the same flat light grey background, the same camera angle, size, position and hand-painted style. In every frame, remove the swirling cloud and mist under and around the boat: keep only the boat itself, with its oars, ropes and hanging lantern. The bottom of the hull is fully visible and clean, as if floating above nothing. Nothing else changes: the small differences between the frames (the swinging lantern, the rocking of the boat) stay as they are.
+
+No text, no numbers, no letters, no grid lines, no water, no shadow.
+```
+
+### 3. Maison de thé
+
+```text
+Edit the attached image.
+
+Keep the same tea house, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the pool of water and the cloud-like base under the house: keep only the house itself, with its roof, walls, red noren curtain and red paper lantern. The bottom of the house ends on a low stone foundation, flat and clean, as if standing on an invisible floor. Nothing else changes.
+
+No text, no numbers, no letters, no water, no shadow on the ground.
+```
+
+### 4. Coffre
+
+```text
+Edit the attached image.
+
+Keep the same treasure chest, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the white cloud under the chest: keep only the chest itself, its wooden planks, gold bands and keyhole. The bottom of the chest is visible and clean, as if standing on an invisible floor. Nothing else changes.
+
+No text, no numbers, no letters, no cloud, no shadow on the ground.
+```
+
+### 5. Ema
+
+```text
+Edit the attached image.
+
+Keep the same wooden ema stand with its hanging fox-painted wooden plaque, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the glowing blue puddle under the stand: keep only the wooden stand and its plaque. The feet of the stand end cleanly, as if standing on an invisible floor. Nothing else changes.
+
+No text, no numbers, no letters, no glow on the ground, no shadow on the ground.
+```
+
+### 6. Jizō des Rizières
+
+```text
+Edit the attached image.
+
+Keep the same stone jizo statue with its red cap, red bib and ropes, the same flat light grey background, the same camera angle, size, position and hand-painted style. Remove the swirling mist around its base: keep only the statue and its square stone pedestal, whose bottom ends cleanly, as if standing on an invisible floor. Nothing else changes.
+
+No text, no numbers, no letters, no mist, no shadow on the ground.
+```
+
+### 7. Lanterne allumée (planche de 6, facultatif)
+
+```text
+Edit the attached image.
+
+It is an animation sheet of 6 frames (2 rows of 3) of the same stone lantern with a blue flame. Keep exactly the same grid, the same 6 frames, the same flat light grey background, the same camera angle, size, position and hand-painted style. In every frame, remove only the ring of white mist around the base of the lantern: keep the lantern, its red rope, its blue flame and the soft blue glow around the flame. The square stone base ends cleanly, as if standing on an invisible floor. Nothing else changes: the flickering of the flame between the frames stays as it is.
+
+No text, no numbers, no letters, no grid lines, no mist, no shadow on the ground.
+```
+
+### 8. Portail du donjon (planche de 8, facultatif)
+
+```text
+Edit the attached image.
+
+It is an animation sheet of 8 frames of the same dark torii gate with a red swirling portal. Keep exactly the same grid, the same 8 frames, the same flat light grey background, the same camera angle, size, position and hand-painted style. In every frame, remove only the white mist wisps and the small rocks at the feet of the gate: keep the gate and its portal. The bottoms of the pillars end cleanly, as if standing on an invisible floor. Nothing else changes: the swirling of the portal between the frames stays as it is.
+
+No text, no numbers, no letters, no grid lines, no mist, no shadow on the ground.
+```

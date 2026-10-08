@@ -52,7 +52,7 @@ Dans `src/data/sprites.json` (donjon) ou `src/data/islandSprites.json` (île), l
 
 ## Sol de l'île
 
-> **Depuis octobre 2026, l'île et les arènes sont construites en 3D** (relief, eau, végétation) : `src/render/world3d.ts` (socle commun), `islandScene3d.ts`, `rizieres3d.ts`, `arena3d.ts` (Palais). Modèles KayKit Forest et Dungeon (CC0) dans `public/models/`, palette sourde du pack Forest refaite par `node tools/palette-foret.mjs`. Les sols peints ci-dessous ne s'affichent plus qu'avec `?2d` dans l'adresse (pour comparer) ou si la 3D ne se charge pas.
+> **Depuis octobre 2026, l'île et les arènes sont construites en 3D** (relief, eau, végétation) : `src/render/world3d.ts` (socle commun), `islandScene3d.ts`, `rizieres3d.ts`, `arena3d.ts` (Palais). Modèles KayKit Forest et Dungeon (CC0) dans `public/models/`, palette sourde du pack Forest refaite par `node tools/palette-foret.mjs`. Les sols peints ci-dessous ne s'affichent plus qu'avec l'option « Graphismes allégés » (ou `?2d` dans l'adresse), ou si la 3D ne se charge pas.
 
 Nano Banana ne garde pas l'échelle du tracé : `npm run sols` retrouve l'échelle et le décalage qui posent les terres peintes sur les cercles praticables de `src/data/island.json` (ce sont eux qui font les collisions), puis fond les bords de l'image dans la brume. La commande affiche le recouvrement obtenu ; en dessous de 80 %, le tracé peint s'écarte trop du jeu.
 
