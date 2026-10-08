@@ -258,6 +258,8 @@ const STORM = new Color3(0.8, 0.9, 1);
 const CLAY = new Color3(0.78, 0.55, 0.35);
 const DIVINE = new Color3(1, 0.86, 0.45);
 const SMOKE = new Color3(0.16, 0.14, 0.22);
+/** Nuage de poison de la Lame. */
+const VENOM = new Color3(0.42, 0.85, 0.3);
 const HIDDEN_TINT = new Color3(0.45, 0.4, 0.6);
 const DRAW = new Color3(0.85, 1, 0.6);
 const MARK_COLORS: Record<MarkKind, Color3> = {
@@ -1410,7 +1412,7 @@ export class Renderer {
         this.addShake(0.4);
         break;
       case 'stance':
-        this.text(event.pos, 2.2, event.stance === 'offensive' ? 'Offensive' : 'Garde', 'stun', 0.7);
+        // La posture suit la garde, levée et baissée sans cesse : la barre du bas la montre, sans texte à chaque fois.
         break;
       case 'aegis':
         this.text(event.pos, 2.4, event.on ? 'Égide' : 'Égide retirée', 'parry', 0.9);
@@ -1856,6 +1858,23 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, 2, SMOKE, 0.5));
         this.text(event.pos, 2.2, 'Leurre', 'mark', 0.9);
         break;
+      case 'cloud': {
+        // Nuage de poison : une brume verte qui ondule tant qu'elle empoisonne.
+        const life = event.life;
+        const fx = this.addFx({
+          texture: this.fxTextures.shadow,
+          pos: event.pos,
+          dir: { x: Math.random() - 0.5, z: Math.random() - 0.5 },
+          width: event.radius * 2.2,
+          depth: event.radius * 2.2,
+          color: VENOM,
+          life: life + 1,
+          y: 0.028,
+          update: (_k, f) => f.material.setFloat('alpha', Math.min(0.55, f.age * 5, (life - f.age) * 1.5) * (0.8 + 0.2 * Math.sin(f.age * 4))),
+        });
+        this.embers.set(event.id, fx);
+        break;
+      }
       case 'sanctuary': {
         // Zone sacrée : un disque de lumière dorée qui palpite tant qu'il soigne.
         const life = event.life;

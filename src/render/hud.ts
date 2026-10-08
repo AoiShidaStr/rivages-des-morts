@@ -168,6 +168,7 @@ export class Hud {
       fill = 1 - player.ghostCooldown / b.ghost.cooldown;
       ready = player.ghostCooldown <= 0;
       label = player.hidden > 0 ? 'Invisible' : ready ? 'Frappe fantôme' : 'Fantôme…';
+      if (player.combo > 0) label += ` · Combo ×${player.combo}`;
       views = [
         { cooldown: player.deathMarkCooldown / b.deathMark.cooldown, locked: false },
         { cooldown: player.hidden > 0 ? 0 : player.smokeCooldown / b.smoke.cooldown, locked: false, active: player.hidden > 0 },

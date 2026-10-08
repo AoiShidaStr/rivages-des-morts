@@ -208,6 +208,16 @@ interface Lure {
   life: number;
 }
 
+/** Nuage de poison de la Lame (esquive, Écran de fumée) : une charge de poison par seconde aux yokai qui s'y trouvent. */
+interface Cloud {
+  id: number;
+  pos: Vec2;
+  radius: number;
+  life: number;
+  tick: number;
+  owner: number;
+}
+
 /** Zone sacrée (Geta d'Amaterasu, Geta de l'Égide) : elle soigne les héros qui s'y tiennent, `heal` PV par seconde. */
 interface Sanctuary {
   id: number;
@@ -242,6 +252,7 @@ export class World {
   private embers: Ember[] = [];
   private lures: Lure[] = [];
   private sanctuaries: Sanctuary[] = [];
+  private clouds: Cloud[] = [];
   stumps: Stump[] = [];
   peaches: PeachTree[] = [];
   webs: Web[] = [];
@@ -430,6 +441,31 @@ export class World {
     }
   }
 
+  /** Nuage de poison de la Lame qui agit (esquive, Écran de fumée). */
+  poisonCloud(pos: Vec2, radius: number, life: number): void {
+    const cloud: Cloud = { id: this.nextFxId--, pos: { ...pos }, radius, life, tick: 0, owner: this.player.id };
+    this.clouds.push(cloud);
+    this.emit({ type: 'cloud', id: cloud.id, pos: { ...pos }, radius, life });
+  }
+
+  /** Chaque seconde, chaque nuage pose une charge de poison sur les yokai qui s'y trouvent ; puis il se dissipe. */
+  private updateClouds(dt: number): void {
+    for (const cloud of [...this.clouds]) {
+      cloud.life -= dt;
+      cloud.tick -= dt;
+      if (cloud.tick <= 0 && cloud.life > 0) {
+        cloud.tick += 1;
+        const hero = this.hero(cloud.owner);
+        for (const enemy of this.enemies) {
+          if (enemy.targetable && distance(enemy.pos, cloud.pos) - enemy.radius <= cloud.radius) this.poison(enemy, hero);
+        }
+      }
+      if (cloud.life > 0) continue;
+      this.clouds = this.clouds.filter((c) => c !== cloud);
+      this.emit({ type: 'emberEnd', id: cloud.id });
+    }
+  }
+
   /**
    * Part des dégâts qu'un yokai perd : baigné par l'Aura du Paladin (Miroir de Yata), ou sous la Marque du chasseur
    * d'un Rôdeur (panoplie de l'Éclaireur du Yomi).
@@ -472,6 +508,7 @@ export class World {
     this.updateBlasts(dt);
     this.updateEmbers(dt);
     this.updateSanctuaries(dt);
+    this.updateClouds(dt);
     this.updateLures(dt);
     this.regenerate(dt);
     this.updateHazards(dt);
@@ -588,7 +625,9 @@ export class World {
     // Guerrier : la riposte du Mempō (un blocage parfait juste avant) est un critique ; en Offensive, la Naginata
     // affûte les critiques.
     const warrior = player.cfg.kit === 'guerrier';
-    const counter = warrior && player.counterWindow > 0 ? perks.counter : undefined;
+    // Riposte du Guerrier après un blocage parfait ; le Mempō de Contre-Attaque s'y ajoute.
+    const riposte = player.cfg.stance.counter;
+    const counter = warrior && player.counterWindow > 0 ? { bonus: riposte.bonus + (perks.counter?.bonus ?? 0), stun: Math.max(riposte.stun, perks.counter?.stun ?? 0) } : undefined;
     if (counter) {
       player.counterWindow = 0;
       factor *= 1 + counter.bonus;
@@ -614,6 +653,11 @@ export class World {
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
     if (!shielded) player.gainFervor(player.cfg.paladin.judgement.perHit);
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
+    // Lame : chaque coup nourrit le combo ; chaque critique rapproche l'esquive et soigne un peu.
+    if (player.cfg.kit === 'lame') {
+      if (!shielded) player.comboHit();
+      if (factor > 1) player.critLanded(this);
+    }
     // Tsuba ébréchée : chaque critique rapproche la prochaine Marque de mort.
     if (factor > 1 && perks.critMarkRefund) player.deathMarkCooldown = Math.max(0, player.deathMarkCooldown - perks.critMarkRefund);
     // Fils de Zeus : un coup sur quelques-uns appelle la foudre (le sang du Hanyō, lui, monte dans `emit`).
@@ -708,7 +752,7 @@ export class World {
   // --- Lame : poison et Frappe fantôme ------------------------------------------------
 
   /** Une charge de poison de plus (au plus `maxStacks`), et ses `duration` s relancées. */
-  private poison(enemy: Enemy, hero: Player): void {
+  poison(enemy: Enemy, hero: Player): void {
     const cfg = hero.cfg.blade.poison;
     enemy.poison = {
       stacks: Math.min(cfg.maxStacks, (enemy.poison?.stacks ?? 0) + 1),
@@ -748,13 +792,27 @@ export class World {
 
   /**
    * Clic droit de la Lame : elle apparaît sur l'ennemi le plus proche de la souris et le frappe, critique ×(1 + charges
-   * de poison), qu'elle consomme toutes. Renvoie la cible et vrai si elle l'a tuée, ou null s'il n'y a personne.
+   * de poison), qu'elle consomme toutes. Si elle l'achève, elle enchaîne sur le yokai le plus proche à portée,
+   * `ghost.chain` fois au plus. Renvoie la dernière cible et vrai si elle l'a tuée, ou null s'il n'y a personne.
    */
   ghostStrike(aim: Vec2): { target: Vec2; killed: boolean } | null {
     const player = this.player;
     const cfg = player.cfg.blade.ghost;
-    const target = closest(this.enemies.filter((e) => e.targetable && distance(e.pos, player.pos) <= cfg.range), aim);
+    const inRange = () => this.enemies.filter((e) => e.targetable && distance(e.pos, player.pos) <= cfg.range);
+    let target = closest(inRange(), aim);
     if (!target) return null;
+    for (let hop = 0; ; hop++) {
+      const killed = this.ghostHit(target);
+      const next = killed && hop < cfg.chain ? closest(inRange(), player.pos) : undefined;
+      if (!next) return { target: { ...target.pos }, killed };
+      target = next;
+    }
+  }
+
+  /** Un coup de la Frappe fantôme : la Lame reparaît derrière `target` et la frappe. Vrai si elle l'achève. */
+  private ghostHit(target: Enemy): boolean {
+    const player = this.player;
+    const cfg = player.cfg.blade.ghost;
     const stacks = target.poison?.stacks ?? 0;
     // Elle reparaît juste derrière sa proie.
     const from = { ...player.pos };
@@ -779,7 +837,7 @@ export class World {
     }
     // La Frappe consomme toutes les charges (une proie achevée les garde, pour le Festin toxique).
     if (!target.dead) target.poison = null;
-    return { target: { ...target.pos }, killed: target.dead };
+    return target.dead;
   }
 
   // --- Paladin : Égide --------------------------------------------------------------
@@ -891,8 +949,10 @@ export class World {
     const bond = this.player.cfg.bond;
     this.emit({ type: 'bondLand', pos: { ...center }, radius: bond.radius });
     this.shakePeaches(center, bond.radius);
+    let struck = false;
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > bond.radius) continue;
+      struck = true;
       enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback }, this);
       if (enemy.dead) this.player.onKill();
       else {
@@ -902,7 +962,8 @@ export class World {
       }
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
-    // Waraji de pèlerin : chaque atterrissage soigne le Guerrier.
+    // Un Bond qui porte soigne le Guerrier ; avec les Waraji de pèlerin, chaque atterrissage.
+    if (struck && bond.heal) this.player.heal(this.player.cfg.maxHp * bond.heal, this);
     const heal = this.player.cfg.perks?.bondHeal;
     if (heal) this.player.heal(this.player.cfg.maxHp * heal, this);
   }
@@ -1152,6 +1213,8 @@ export class World {
     const cfg = player.cfg.blade.smoke;
     player.smoke = new Decoy({ ...player.pos }, cfg.radius);
     this.emit({ type: 'smoke', pos: { ...player.pos }, radius: cfg.radius });
+    // La fumée empoisonne les yokai qui s'y trouvent.
+    this.poisonCloud(player.pos, cfg.radius, Math.max(cfg.duration, player.cfg.blade.cloud.life));
     // Kemuri-dama : la fumée rend un peu de vie.
     const heal = player.cfg.perks?.smokeHeal;
     if (heal) player.heal(player.cfg.maxHp * heal, this);

@@ -66,16 +66,22 @@ export interface PlayerConfig {
     cooldown: number;
     /** Secondes de ralentissement à l'atterrissage (0 sans le talent d'Héraclès). */
     slow: number;
+    /** Part des PV max rendue quand le Bond touche au moins un ennemi. */
+    heal: number;
   };
   /**
-   * Guerrier : postures. Garde : coups plus lents (`attackTimeFactor` > 1), dégâts subis réduits, blocage au clic droit
-   * tenu. Offensive : coups plus rapides, `reach` m d'allonge en plus. Un double clic droit (deux appuis en moins de
-   * `doubleTap` s) change de posture : un appui seul ne fait que lever la garde, pour ne pas gêner les parades parfaites.
+   * Guerrier : postures. Clic droit tenu : Garde, coups plus lents (`attackTimeFactor` > 1), dégâts subis réduits, et le
+   * héros bloque. Relâché : Offensive, coups plus rapides, `reach` m d'allonge, `lifesteal` de vol de vie en plus et un
+   * peu moins de dégâts subis. Un blocage parfait ouvre une riposte (`counter`) et rapproche la Frappe fracassante de
+   * `parrySmash` s. Les effets « au changement de posture » (objets, talents, tag) ne se déclenchent qu'une fois
+   * toutes les `effectCooldown` s.
    */
   stance: {
-    doubleTap: number;
     guard: { attackTimeFactor: number; damageTakenFactor: number };
-    offense: { attackTimeFactor: number; reach: number };
+    offense: { attackTimeFactor: number; reach: number; lifesteal: number; damageTakenFactor: number };
+    counter: { window: number; bonus: number; stun: number };
+    effectCooldown: number;
+    parrySmash: number;
   };
   /** R : on frappe plus vite, mais on encaisse plus. */
   frenzy: {
@@ -125,11 +131,22 @@ export interface BladeConfig {
   /** Multiplicateur des coups critiques. */
   critFactor: number;
   /**
+   * Combo : chaque coup d'arme enchaîné moins de `window` s après le précédent ajoute `bonus` de dégâts, jusqu'à `max`
+   * charges. Un coup reçu le remet à zéro ; une esquive non.
+   */
+  combo: { max: number; bonus: number; window: number };
+  /** Chaque coup critique rapproche l'esquive de ces secondes. */
+  critDodge: number;
+  /** Chaque coup critique rend `share` des PV max, au plus une fois toutes les `cooldown` s. */
+  critHeal: { share: number; cooldown: number };
+  /** Nuage de poison (esquive, Écran de fumée) : chaque seconde, une charge de poison aux yokai qui s'y trouvent. */
+  cloud: { radius: number; life: number };
+  /**
    * Clic droit : Frappe fantôme. La Lame apparaît sur l'ennemi le plus proche de la souris (à `range` m), frappe de
    * `damage` × les dégâts de son arme, critique ×(1 + charges de poison consommées), et revient en `cooldown` s
-   * (aussitôt si elle tue).
+   * (aussitôt si elle tue). Une proie achevée : elle enchaîne sur la suivante à portée, `chain` fois au plus.
    */
-  ghost: { range: number; cooldown: number; damage: number; invulnerable: number };
+  ghost: { range: number; cooldown: number; damage: number; invulnerable: number; chain: number };
   /**
    * Poison : chaque coup de la Lame qui touche ajoute une charge (`maxStacks` au plus) et relance les `duration` s.
    * Chaque seconde, chaque charge inflige `damage` × les dégâts de son arme.
@@ -138,8 +155,11 @@ export interface BladeConfig {
   /** A : tous les coups sur la cible sont critiques un moment. */
   deathMark: { cooldown: number; duration: number; range: number };
   /** E : nuage de fumée ; le héros disparaît, les yokai attaquent le nuage. */
-  /** `maxHidden` : invisibilité totale d'un nuage, prolongations de Métamorphe comprises. */
-  smoke: { cooldown: number; duration: number; radius: number; maxHidden: number };
+  /**
+   * `maxHidden` : invisibilité totale d'un nuage, prolongations de Métamorphe comprises. `armor` : part des dégâts
+   * retirée tant que la Lame est invisible. Le nuage empoisonne les yokai qui s'y trouvent.
+   */
+  smoke: { cooldown: number; duration: number; radius: number; maxHidden: number; armor: number };
   /** R : la Lame bondit d'ennemi en ennemi et frappe chacun. */
   dance: { cooldown: number; targets: number; range: number; damage: number; hop: number };
 }

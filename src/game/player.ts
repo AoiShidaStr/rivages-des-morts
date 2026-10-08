@@ -27,10 +27,11 @@ type Action =
 
 /**
  * Le héros : il frappe à l'arme et esquive, quelle que soit sa classe.
- * Guerrier (`cfg.kit`) : postures Garde et Offensive (double clic droit), Frappe fracassante (A), Bond (E), Frénésie (R).
+ * Guerrier (`cfg.kit`) : Garde au clic droit tenu, Offensive sinon, Frappe fracassante (A), Bond (E), Frénésie (R).
  * Sorcier : boules de feu guidées (clic gauche) et sorts payés en mana : sceau (clic droit), Bouclier de flammes (A),
  * Fuite de feu (E), grand météore (R).
- * Lame : empoisonne à chaque coup, Frappe fantôme (clic droit), Marque de mort (A), Écran de fumée (E), Danse des lames (R).
+ * Lame : empoisonne à chaque coup et en esquivant, enchaîne un combo, Frappe fantôme (clic droit), Marque de mort (A),
+ * Écran de fumée (E), Danse des lames (R).
  * Paladin : bouclier levé (clic droit), Aura de lumière (A), Marteau lancé (E), Égide (R).
  * Rôdeur : tire à l'arc, tir chargé (clic droit), Flèche-filet (A), Marque du chasseur (E), Recul (R).
  * Les talents, la race et les reliques arrivent par `cfg.perks`.
@@ -61,12 +62,16 @@ export class Player {
   frenzyCooldown = 0;
   smashCooldown = 0;
   /**
-   * Guerrier : posture. Garde : coups plus lents, dégâts subis réduits, et le clic droit tenu bloque. Offensive :
-   * coups très rapides, allonge accrue. Un appui court sur le clic droit change de posture.
+   * Guerrier : posture. Garde (clic droit tenu) : coups plus lents, dégâts subis réduits, et le héros bloque. Offensive
+   * (relâché) : coups très rapides, allonge accrue, vol de vie.
    */
-  stance: 'garde' | 'offensive' = 'garde';
-  /** Guerrier : secondes depuis le dernier appui sur le clic droit (un second appui assez tôt change de posture). */
-  private stanceTap = Infinity;
+  stance: 'garde' | 'offensive' = 'offensive';
+  /** Guerrier : secondes avant que les effets « au changement de posture » puissent se redéclencher. */
+  private stanceFxCooldown = 0;
+  /** Lame : charges de combo, secondes avant qu'il retombe, et recharge du soin sur critique. */
+  combo = 0;
+  private comboTime = 0;
+  private critHealCooldown = 0;
   /** Guerrier : coups d'arme portés en Offensive (Colère de la tempête), et critique d'Iaijutsu prêt. */
   private offenseHits = 0;
   stanceCritPrimed = false;
@@ -311,6 +316,8 @@ export class Player {
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
     if (this.furyTime > 0) factor += this.furyBonus;
+    // Lame : le combo monte à chaque coup enchaîné.
+    if (this.cfg.kit === 'lame') factor += this.combo * this.cfg.blade.combo.bonus;
     // Maîtrise du oni : transformé, le Hanyō guerrier frappe plus fort en Offensive.
     if (perks.yokaiOffense && this.transformed > 0 && this.cfg.kit === 'guerrier' && this.stance === 'offensive') factor += perks.yokaiOffense;
     // Masque de hannya : blessé, le Guerrier en Offensive frappe plus fort.
@@ -405,6 +412,8 @@ export class Player {
   private lifesteal(world: World): number {
     const perks = this.cfg.perks ?? {};
     let share = perks.lifesteal ?? 0;
+    // Guerrier en Offensive : il se nourrit de la mêlée.
+    if (this.cfg.kit === 'guerrier' && this.stance === 'offensive') share += this.cfg.stance.offense.lifesteal;
     if (perks.lowHpLifesteal && this.below(perks.lowHpLifesteal.threshold)) share += perks.lowHpLifesteal.bonus;
     const arena = perks.arenaHeart;
     if (arena) share += Math.min(arena.max, arena.perEnemy * world.enemiesNear(this.pos, arena.radius));
@@ -449,6 +458,10 @@ export class Player {
     this.counterWindow = Math.max(0, this.counterWindow - dt);
     this.rush = Math.max(0, this.rush - dt);
     this.furyTime = Math.max(0, this.furyTime - dt);
+    this.stanceFxCooldown = Math.max(0, this.stanceFxCooldown - dt);
+    this.critHealCooldown = Math.max(0, this.critHealCooldown - dt);
+    this.comboTime = Math.max(0, this.comboTime - dt);
+    if (this.comboTime <= 0) this.combo = 0;
     this.evadeTime = Math.max(0, this.evadeTime - dt);
     this.cheatCooldown = Math.max(0, this.cheatCooldown - dt);
     this.guardSaveCooldown = Math.max(0, this.guardSaveCooldown - dt);
@@ -476,7 +489,6 @@ export class Player {
 
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     const warrior = c.kit === 'guerrier';
-    if (warrior) this.updateStance(dt, input, world);
     if (warrior && input.skillRPressed && this.canFrenzy) {
       this.startFrenzy(world);
       this.showCast('ultimate');
@@ -516,18 +528,21 @@ export class Player {
         a.t += dt;
         // Seules les toiles freinent l'esquive : c'est elle qui permet de contourner une souche malgré le fil.
         this.pos = add(this.pos, scale(a.dir, (c.dodge.distance / c.dodge.duration) * this.resistSlow(world.slowAt(this.pos)) * dt));
-        // Talisman de l'ombre : chaque ennemi traversé rend un peu de vie.
+        // Lame : chaque ennemi traversé est empoisonné ; Talisman de l'ombre : il rend un peu de vie.
         const through = c.perks?.dodgeThroughHeal;
-        if (through) {
+        const venom = c.kit === 'lame';
+        if (through || venom) {
           for (const enemy of world.enemies) {
             if (!enemy.targetable || a.passed.has(enemy.id) || distance(enemy.pos, this.pos) > enemy.radius + this.radius) continue;
             a.passed.add(enemy.id);
-            this.heal(c.maxHp * through, world);
+            if (venom) world.poison(enemy, this);
+            if (through) this.heal(c.maxHp * through, world);
           }
         }
         if (a.t >= c.dodge.duration) {
           this.action = { kind: 'free' };
           if (embers) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
+          if (c.kit === 'lame') world.poisonCloud(this.pos, c.blade.cloud.radius, c.blade.cloud.life);
         }
         break;
       }
@@ -568,6 +583,8 @@ export class Player {
         break;
     }
 
+    // Guerrier : la posture suit la garde, levée tant que le clic droit est tenu.
+    if (warrior) this.setStance(this.blocking ? 'garde' : 'offensive', world);
     // Suneate de l'assaut : la marche se compte tant qu'on avance.
     if (!this.moving && this.action.kind === 'free') this.marchTime = 0;
     // Charme des bois : immobile un moment, le héros se soigne.
@@ -583,28 +600,10 @@ export class Player {
     world.clampToArena(this.pos, this.radius);
   }
 
-  /**
-   * Guerrier et Paladin lèvent leur garde, sauf quand celle du Paladin vient de se briser. Le Guerrier ne bloque
-   * qu'en posture de Garde (un appui sur le clic droit en Offensive l'y ramène aussitôt).
-   */
+  /** Guerrier et Paladin lèvent leur garde, sauf quand celle du Paladin vient de se briser. */
   get canGuard(): boolean {
-    if (this.cfg.kit === 'guerrier') return this.stance === 'garde';
+    if (this.cfg.kit === 'guerrier') return true;
     return this.cfg.kit === 'paladin' && this.guardBroken <= 0;
-  }
-
-  /**
-   * Postures du Guerrier : un double clic droit passe de l'une à l'autre. Un appui seul ne change rien (en Garde, il
-   * lève la garde), pour que les parades parfaites restent possibles.
-   */
-  private updateStance(dt: number, input: InputFrame, world: World): void {
-    this.stanceTap += dt;
-    if (!input.signaturePressed) return;
-    if (this.stanceTap > this.cfg.stance.doubleTap) {
-      this.stanceTap = 0;
-      return;
-    }
-    this.stanceTap = Infinity;
-    this.setStance(this.stance === 'garde' ? 'offensive' : 'garde', world);
   }
 
   /** Colère de la tempête : vrai pour le coup d'arme en Offensive qui appelle la foudre (un sur `every`). */
@@ -615,9 +614,16 @@ export class Player {
     return this.offenseHits % bolt.every === 0;
   }
 
+  /**
+   * Le Guerrier change de posture. Les effets qui s'y rattachent (objets, talents, tag) ne se déclenchent qu'une fois
+   * par `stance.effectCooldown`, pour qu'une garde levée puis baissée ne les enchaîne pas à chaque coup.
+   */
   private setStance(stance: 'garde' | 'offensive', world: World): void {
     if (this.stance === stance) return;
     this.stance = stance;
+    world.emit({ type: 'stance', pos: { ...this.pos }, hero: this.id, stance });
+    if (this.stanceFxCooldown > 0) return;
+    this.stanceFxCooldown = this.cfg.stance.effectCooldown;
     const perks = this.cfg.perks ?? {};
     // Naginata du Maître d'Armes : passer en Offensive prépare un coup qui fait saigner ; Iaijutsu, un critique.
     if (stance === 'offensive' && perks.stanceBleed) this.bleedPrimed = true;
@@ -626,7 +632,22 @@ export class Player {
     if (perks.stanceBolt) world.stanceBolt(this.pos, perks.stanceBolt);
     // Tag Guerrier : chaque changement de posture accélère les coups un instant.
     if (perks.stanceRush) this.setRush(perks.stanceRush);
-    world.emit({ type: 'stance', pos: { ...this.pos }, hero: this.id, stance });
+  }
+
+  /** Lame : un coup d'arme porté enchaîne le combo. */
+  comboHit(): void {
+    const combo = this.cfg.blade.combo;
+    this.combo = Math.min(combo.max, this.combo + 1);
+    this.comboTime = combo.window;
+  }
+
+  /** Lame : un critique rapproche l'esquive et rend un peu de vie (au plus une fois par recharge). */
+  critLanded(world: World): void {
+    const b = this.cfg.blade;
+    this.dodgeCooldown = Math.max(0, this.dodgeCooldown - b.critDodge);
+    if (this.critHealCooldown > 0) return;
+    this.critHealCooldown = b.critHeal.cooldown;
+    this.heal(this.cfg.maxHp * b.critHeal.share, world);
   }
 
   /** Paladin : la garde brisée se relève, puis la jauge remonte quand on ne bloque plus rien. */
@@ -665,8 +686,11 @@ export class Player {
     if (perfect) world.emit({ type: 'perfectGuard', pos: { ...this.pos }, hero: this.id });
     // Armure du Général Déchu : le blocage parfait repousse tout ce qui est collé au héros.
     if (perfect && perks.perfectPush) world.repel(this.pos, perks.perfectPush.radius, perks.perfectPush.knockback);
-    // Mempō de Contre-Attaque : le blocage parfait ouvre une riposte.
-    if (perfect && perks.counter) this.counterWindow = perks.counter.window;
+    // Guerrier : le blocage parfait ouvre une riposte (le Mempō de Contre-Attaque la renforce) et rapproche la Frappe.
+    if (perfect && this.cfg.kit === 'guerrier') {
+      this.counterWindow = Math.max(this.cfg.stance.counter.window, perks.counter?.window ?? 0);
+      this.smashCooldown = Math.max(0, this.smashCooldown - this.cfg.stance.parrySmash);
+    }
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
     const chip = parried ? 0 : amount * (1 - this.cfg.block.reduction);
     if (chip > 0) this.loseHp(chip * this.damageTakenFactor(), world, true);
@@ -756,6 +780,8 @@ export class Player {
     this.loseHp(taken, world, false);
     this.tyrHand(attacker, amount - taken, world);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
+    // Lame : un coup reçu brise le combo.
+    this.combo = 0;
     // Grèves du Colosse : chaque coup encaissé réveille le colosse.
     if (perks.hurtFury) this.fury(perks.hurtFury.bonus, perks.hurtFury.duration);
     this.invulnerable = this.cfg.invulnerableAfterHit;
@@ -769,7 +795,12 @@ export class Player {
   damageTakenFactor(): number {
     const perks = this.cfg.perks ?? {};
     let factor = this.cfg.damageTakenFactor ?? 1;
-    if (this.cfg.kit === 'guerrier' && this.stance === 'garde') factor *= this.cfg.stance.guard.damageTakenFactor * (1 - (perks.guardSkin ?? 0));
+    if (this.cfg.kit === 'guerrier') {
+      if (this.stance === 'garde') factor *= this.cfg.stance.guard.damageTakenFactor * (1 - (perks.guardSkin ?? 0));
+      else factor *= this.cfg.stance.offense.damageTakenFactor;
+    }
+    // Lame : invisible dans sa fumée, elle encaisse moins.
+    if (this.cfg.kit === 'lame' && this.hidden > 0) factor *= 1 - this.cfg.blade.smoke.armor;
     // Égide d'un Paladin : une Armure qui retire une part des dégâts avant les PV et la garde.
     factor *= 1 - this.aegisArmor;
     if (this.auraBuffTime > 0) factor *= 1 - this.auraArmor;
@@ -844,6 +875,7 @@ export class Player {
   private timing(): { windup: number; active: number; recovery: number; commit: number } {
     const a = this.cfg.attack;
     let f = this.frenzy > 0 ? this.cfg.frenzy.attackTimeFactor : 1;
+    // Garde levée, le Guerrier frappe lentement ; un coup lancé baisse la garde, donc part presque toujours en Offensive.
     if (this.cfg.kit === 'guerrier') f *= this.stance === 'garde' ? this.cfg.stance.guard.attackTimeFactor : this.cfg.stance.offense.attackTimeFactor;
     if (this.rush > 0) f /= 1 + this.rushBonus;
     // Gi de l'assassin : des coups plus vifs.
@@ -993,6 +1025,9 @@ export class Player {
     if (joren) world.setSnare(this.pos, joren);
     const embers = this.cfg.perks?.dodgeEmbers;
     if (embers) world.addEmber(this.pos, embers.radius, embers.burn, embers.life);
+    // Lame : l'esquive laisse un nuage de poison au départ, et un autre à l'arrivée.
+    const cloud = this.cfg.blade.cloud;
+    if (this.cfg.kit === 'lame') world.poisonCloud(this.pos, cloud.radius, cloud.life);
     this.action = { kind: 'dodge', t: 0, dir, passed: new Set() };
     this.blocking = false;
     // Bottes de Tengu : pendant la recharge, l'esquive gardée en réserve part à la place.

@@ -255,6 +255,7 @@ function heroSnaps(world: World): HeroSnap[] {
     smashCooldown: p.smashCooldown,
     stance: p.stance,
     ghostCooldown: p.ghostCooldown,
+    combo: p.combo,
     aegisOn: p.aegisOn,
     aegisCooldown: p.aegisCooldown,
     sealCooldown: p.sealCooldown,

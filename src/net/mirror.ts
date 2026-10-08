@@ -204,6 +204,7 @@ export class MirrorWorld implements WorldView {
       smashCooldown: 0,
       stance: 'garde',
       ghostCooldown: 0,
+      combo: 0,
       aegisOn: null,
       aegisCooldown: 0,
       dodgeCooldown: 0,

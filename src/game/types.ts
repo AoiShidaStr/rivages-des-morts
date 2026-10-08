@@ -124,5 +124,6 @@ export type GameEvent =
   | { type: 'saved'; pos: Vec2; label: string }
   | { type: 'shockwave'; pos: Vec2; radius: number }
   | { type: 'sanctuary'; id: number; pos: Vec2; radius: number; life: number }
+  | { type: 'cloud'; id: number; pos: Vec2; radius: number; life: number }
   | { type: 'lure'; pos: Vec2 }
   | { type: 'end'; outcome: Outcome };

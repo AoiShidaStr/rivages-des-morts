@@ -193,11 +193,11 @@
       "passives": [
         {
           "name": "Maître d'armes",
-          "description": "Deux postures, qu'un double clic droit échange. Garde : coups plus lents, 25 % de dégâts subis en moins, et le clic droit tenu bloque. Offensive : coups bien plus rapides et 0,4 m d'allonge. Tes armes de classe volent de la vie : tu survis en restant au cœur de la mêlée."
+          "description": "Deux postures. Clic droit tenu : Garde, coups plus lents, 25 % de dégâts subis en moins, et tu bloques. Relâché : Offensive, coups bien plus rapides, 0,4 m d'allonge, 10 % de vol de vie et 10 % de dégâts subis en moins. Tes armes de classe volent de la vie : tu survis en restant au cœur de la mêlée."
         }
       ],
       "actives": [
-        { "key": "Clic droit", "name": "Posture", "description": "Double clic : passe de la Garde à l'Offensive, ou l'inverse. En Garde, le clic droit tenu bloque 90 % d'un coup de face (levé juste avant le coup : blocage parfait)." },
+        { "key": "Clic droit", "name": "Posture", "description": "Tiens le clic droit pour passer en Garde et bloquer 90 % d'un coup de face ; relâche pour repasser en Offensive. Garde levée juste avant le coup : blocage parfait, ton coup suivant riposte (+35 % de dégâts, critique, étourdit) et la Frappe fracassante revient 2 s plus tôt." },
         { "key": "A", "name": "Frappe fracassante", "description": "Gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV. Revient en 6 s." },
         { "key": "E", "name": "Bond", "description": "Saute sur la zone visée et frappe à l'atterrissage. Revient en 5 s." },
         { "key": "R", "name": "Frénésie", "description": "Pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus. Revient en 14 s." }
@@ -536,17 +536,31 @@
         { "op": "add", "path": "dodge.invulnerable", "value": 0.06 },
         { "op": "set", "path": "perks.poisonKillHeal", "value": 4 }
       ],
+      "passives": [
+        {
+          "name": "Enchaînement",
+          "description": "Chaque coup enchaîné moins d'1,5 s après le précédent ajoute +6 % de dégâts, jusqu'à 5 charges (+30 %). Un coup reçu remet le combo à zéro ; une esquive non."
+        },
+        {
+          "name": "Sang-froid",
+          "description": "Chaque coup critique rapproche ton esquive de 0,3 s et te rend 1 % de tes PV max (au plus une fois par seconde)."
+        },
+        {
+          "name": "Nuées toxiques",
+          "description": "Ton esquive empoisonne les ennemis traversés et laisse un nuage de poison au départ et à l'arrivée. Dans un nuage, chaque yokai prend une charge de poison par seconde."
+        }
+      ],
       "actives": [
         {
           "key": "Clic droit",
           "name": "Frappe fantôme",
-          "description": "Tu apparais derrière l'ennemi le plus proche de la souris et le frappes, en consommant son poison : critique ×2, ×3 ou ×4 selon 1, 2 ou 3 charges. Revient en 6 s, aussitôt si elle tue. Chacun de tes coups empoisonne (3 charges au plus, 20 s)."
+          "description": "Tu apparais derrière l'ennemi le plus proche de la souris et le frappes, en consommant son poison : critique ×2, ×3 ou ×4 selon 1, 2 ou 3 charges. Revient en 6 s. Si elle tue, elle enchaîne aussitôt sur l'ennemi le plus proche, jusqu'à 3 fois. Chacun de tes coups empoisonne (3 charges au plus, 20 s)."
         },
         { "key": "A", "name": "Marque de mort", "description": "Pendant 5 s, tous tes coups sur l'ennemi le plus proche de la souris sont critiques." },
         {
           "key": "E",
           "name": "Écran de fumée",
-          "description": "Tu disparais 2,5 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique. Revient en 15 s."
+          "description": "Tu disparais 2,5 s dans un nuage : les yokai attaquent la fumée. Ton premier coup depuis l'ombre est critique, tu subis 30 % de dégâts en moins tant que tu es invisible, et la fumée empoisonne les yokai qui s'y trouvent. Revient en 15 s."
         },
         {
           "key": "R",

@@ -362,7 +362,7 @@
       "spec": "boss",
       "tags": ["Guerrier"],
       "bonus": { "maxHp": 10, "damage": 0.08 },
-      "summary": "Après un blocage parfait (garde levée juste avant le coup), ton premier coup dans la seconde est une riposte : +45 % de dégâts, et la cible est étourdie 0,5 s.",
+      "summary": "Ta riposte après un blocage parfait fait 45 % de dégâts en plus (+80 % en tout) et étourdit 0,5 s.",
       "effects": [{ "op": "set", "path": "perks.counter", "value": { "window": 1, "bonus": 0.45, "stun": 0.5 } }],
       "description": "Un masque de fer au rictus figé. Derrière, on ne voit pas venir la riposte."
     },
