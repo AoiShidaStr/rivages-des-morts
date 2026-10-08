@@ -169,3 +169,76 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 
 No text, no numbers, no letters, no grid lines.
 ```
+
+## À faire : icônes peintes à la place du pixel art
+
+37 objets du jeu n'ont encore qu'une icône en pixel art (`npm run icones-pixel`, dessins de `tools/pixel/objets.mjs`). Même méthode que les planches 3 et 4 : Gemini retouche une planche d'icônes réussie. Les cases sont déjà dans `tools/icones.json` ; une fois les images enregistrées, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art. (`objets_planche_2.jpg` n'étant plus dans le dossier, on joint la planche 3.)
+
+Trois icônes en pixel art restent sans objet (`geta-braise`, `geta-temple`, `pinceau-seimei` : objets retirés par la 0.11.0) : inutile de les repeindre.
+
+### Planche 5 : objets de classe (32 objets)
+
+**Joindre :** `Pictures\game visual\objets_planche_3.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_5.jpg`
+
+> Cases 1 à 4 : Guerrier · 5 et 6 : Sorcier · 7 à 14 : Lame · 15 à 23 : Paladin · 24 à 31 : Rôdeur · 32 : Corne d'oni (toutes classes). Les 32 cases sont remplies.
+
+```text
+Edit the attached image.
+
+Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same flat light grey background, lighting and hand-painted icon style. Replace all the objects: the 32 cells, read left to right then top to bottom, get these new objects, exactly one per cell, centered, the same size as the old ones, each one clearly readable as a small inventory icon. Paired items (sandals, socks, gaiters, thigh guards) are drawn as a pair in their single cell. Do not add, repeat or skip any object.
+
+1. a large sea-green dragon scale with a pearly sheen, small drops of sea water and a faint wisp of flame along its edge
+2. a heavy iron heart-shaped amulet bound with a thick braided white sumo rope, battered and scratched
+3. a red hannya demon mask with golden eyes, two sharp horns and a wide fanged grin
+4. a very long rusty nodachi greatsword in a cracked dark brown lacquered scabbard, its hilt wrapped in tattered cord, laid diagonally
+5. a folded dark grey haori jacket woven with shimmering silver fire-resistant threads, small scorch marks on the sleeves
+6. a red paper ofuda talisman painted with a black flame sigil, its corner smouldering with a small flame
+7. a samurai do chest armor made of pale ivory bone lamellae laced with violet cords
+8. a small black ink pot shaped like a skull, a thin brush resting across it, black ink dripping down its side
+9. a pair of ragged thigh guards of grey-green hide edged with small hooked claws
+10. a small round black smoke bomb with a short lit fuse and a violet paper seal
+11. a dark iron menpo face mask with a wide grinning mouth of crooked fangs
+12. a pair of black split-toe tabi socks with dark violet laces
+13. a chipped round iron sword guard (tsuba) with a crack across it and a violet cord through its center hole
+14. a pair of straw waraji sandals trimmed with grey wolf fur
+15. a large bronze temple bell with moss and small stones grown onto it
+16. a tall black eboshi court hat with a golden sun disc on the front
+17. a small bronze hanging incense burner with a curl of pale smoke rising from it
+18. a pair of white and gold lacquered haidate thigh guards
+19. a folded saffron-brown kesa monk's robe draped over a white under-robe, with a gold ring clasp
+20. a pair of leg wraps braided from thick straw shimenawa rope, hung with white zigzag paper streamers
+21. a small red taiko temple drum with brass studs and two wooden drumsticks crossed in front
+22. a long iron tetsubo war club covered in heavy studs, with a red-wrapped grip
+23. a white warrior-monk hood wrapped around an invisible head, leaving an opening for the face
+24. a dark violet longbow crackling with small yellow lightning sparks, a tiny red-and-gold drum hanging from its grip
+25. a black leather samurai do chest armor with dark green stitching
+26. two long arrows with white heavenly feathers and gleaming golden arrowheads
+27. a flat conical jingasa hat of glossy green lacquer with a gold crest
+28. a pair of beige cloth kyahan gaiters with green cords
+29. a long black crow feather with a golden sheen, three small golden marks at its base
+30. a pair of light tabi socks with a small winged crest embroidered on each
+31. a pair of straw waraji sandals with small iron cleats and a tiny green poison vial tied to the cords
+32. a broken red oni horn, cracked at its base, with a few tufts of black hair
+
+No text, no numbers, no letters, no grid lines.
+```
+
+### Planche 6 : objets communs (5 objets)
+
+**Joindre :** `Pictures\game visual\objets_planche_3.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_6.jpg`
+
+> Cases 1 à 5 ; les 27 autres cases restent vides.
+
+```text
+Edit the attached image.
+
+Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same flat light grey background, lighting and hand-painted icon style. Replace the objects: the first 5 cells of the top row, read left to right, get these new objects, exactly one per cell, centered, the same size as the old ones, each one clearly readable as a small inventory icon. All the other cells become plain empty background, the same color as the rest of the image (no darker squares). Do not add, repeat or skip any object.
+
+1. a small clay dogu figurine of the Jomon era with large closed slit eyes, a round body and engraved patterns
+2. a gohei: a short wooden Shinto wand with white zigzag paper streamers
+3. a mino straw raincoat, thick layers of straw hanging down
+4. a rusted iron sword guard (tsuba) with dried dark blood in its engravings, hanging from a frayed cord
+5. a small black lacquered bowl of dark steaming rice and pickled food from the underworld, a pair of chopsticks across it, a faint violet mist rising
+
+No text, no numbers, no letters, no grid lines.
+```

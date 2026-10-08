@@ -57,6 +57,28 @@
         "croc-loup", null, "charme-bois", "coeur-foret", "carquois-ouragan", null, null, null,
         null, null, null, null, null, null, null, null
       ]
+    },
+    {
+      "source": "objets_planche_5.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "ecaille-ryujin", "gourde-sake-oni", "masque-hannya", "nodachi-ikusa", "haori-ignifuge", "ofuda-kagutsuchi", "do-lamelles-os", "encre-shinigami",
+        "haidate-shikome", "kemuri-dama", "menpo-shikome", "tabi-shinobi", "tsuba-ebrechee", "waraji-meute", "cloche-grand-rocher", "eboshi-amaterasu",
+        "encensoir-moine", "haidate-temple", "kesa-sohei", "shimenawa-tressee", "tambour-temple", "tetsubo-guerre", "zukin-sohei", "arc-ikazuchi",
+        "do-cuir-noir", "fleches-hahaya", "jingasa-laque", "kyahan-eclaireur", "plume-yatagarasu", "tabi-messager", "waraji-eclaireur", "corne-oni"
+      ]
+    },
+    {
+      "source": "objets_planche_6.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "dogu-yeux-clos", "gohei-sanctuaire", "mino-paille", "tsuba-ronin-mort", "yomotsu-hegui", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ]
     }
   ],
   "icons": {
