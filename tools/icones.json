@@ -70,7 +70,7 @@
       ]
     },
     {
-      "source": "objets_planche_7.jpg",
+      "source": "objets_planche_7.png",
       "columns": 8,
       "rows": 4,
       "ids": [
@@ -99,6 +99,12 @@
     "arc-ikazuchi": { "fillHoles": true, "minHole": 60 },
     "ecaille-ryujin": { "fillHoles": true, "minHole": 60 },
     "kesa-sohei": { "fillHoles": true, "minHole": 60 },
-    "gohei-sanctuaire": { "fillHoles": true, "minHole": 60 }
+    "gohei-sanctuaire": { "fillHoles": true, "minHole": 60 },
+    "yumi-bambou": { "fillHoles": true, "minHole": 60 },
+    "hankyu": { "fillHoles": true, "minHole": 60 },
+    "arc-pecher": { "fillHoles": true, "minHole": 60 },
+    "kunai-jumeaux": { "fillHoles": true, "minHole": 60 },
+    "miroir-yata": { "fillHoles": true, "minHole": 60 },
+    "foudre": { "fillHoles": true, "minHole": 60 }
   }
 }

@@ -243,13 +243,13 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 No text, no numbers, no letters, no grid lines.
 ```
 
-## À faire : icônes peintes des objets de l'ancienne planche 2
+## Icônes peintes des objets de l'ancienne planche 2 (faites, dans le jeu)
 
-17 objets n'ont encore qu'une icône en pixel art : leur version peinte devait venir de `objets_planche_2.jpg`, qui n'est plus dans le dossier. On les refait sur une planche 7, avec la même méthode que les planches 5 et 6 : Gemini retouche la planche 3. Les cases sont déjà dans `tools/icones.json` ; une fois l'image enregistrée, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art.
+Ces 17 objets ont leur icône peinte depuis le 8 octobre 2026 (Gemini a doublé l'éclat de foudre : la case 18 est ignorée ; l'image est en `.png`). Leur version peinte devait venir de `objets_planche_2.jpg`, qui n'est plus dans le dossier. On les refait sur une planche 7, avec la même méthode que les planches 5 et 6 : Gemini retouche la planche 3. Les cases sont déjà dans `tools/icones.json` ; une fois l'image enregistrée, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art.
 
 ### Planche 7 : armes de départ, objets d'Izanami et matériaux (17 objets)
 
-**Joindre :** `Pictures\game visual\objets_planche_3.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_7.jpg`
+**Joindre :** `Pictures\game visual\objets_planche_3.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_7.png`
 
 > Cases 1 à 3 : Sorcier · 4 à 7 : Lame · 8 à 10 : Paladin · 11 à 13 : Rôdeur · 14 et 15 : toutes classes · 16 et 17 : matériaux. Les deux premières lignes sont pleines, la troisième n'a que sa première case ; les 15 autres cases restent vides. Si Gemini dessine un objet deux fois (comme sur la planche 6), dites-moi quelles cases ignorer.
 
