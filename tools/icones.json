@@ -35,6 +35,28 @@
         "tetsubo-cloche", "miroir-yata", "hankyu", "arc-soie", null, null, null, null,
         null, null, null, null, null, null, null, null
       ]
+    },
+    {
+      "source": "objets_planche_3.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "kabuto-fer", "do-cuir-yokai", "armure-general", "suneate-assaut", "greves-colosse", "waraji-course", "bottes-bastion", "talisman-ours",
+        "joyau-susanoo", "hakama-cendres", "geta-danseur-feu", "cristal-pyromancie", "baton-susanoo", "capuche-ascete", "robe-feu", "cape-phenix",
+        "hakama-cramoisi", "pantalon-esprit", "tabi-ombre", "geta-amaterasu", "pierre-sang", "coeur-cendres", "bandeau-vent", "masque-kitsune",
+        "gi-assassin", "manteau-ombre", "haidate-vipere", "jambieres-araignee", "bottes-tengu", "talisman-ombre", "lame-traitre", "coeur-assassin"
+      ]
+    },
+    {
+      "source": "objets_planche_4.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "couronne-juge", "do-fanatique", "greves-inquisiteur", "geta-aube", "geta-bastion", "geta-egide", "rosaire-jade", "marteau-divin",
+        "ecaille-dragon-or", "capuche-camouflage", "masque-traqueur", "do-archer-elite", "manteau-plumes", "jambieres-survie", "jambieres-vent", "waraji-esquive",
+        "croc-loup", "charme-bois", "coeur-foret", "carquois-ouragan", null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ]
     }
   ],
   "icons": {

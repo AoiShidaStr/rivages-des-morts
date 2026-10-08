@@ -82,29 +82,90 @@ Ce que joue chaque ligne pour chaque classe, et les tags du moteur : Charte 2D, 
 - **Ennemis et boss** : Izanami et les yokai du Palais sont dans le jeu en planches de 16 images par animation, les yokai des Rizières et la Jorōgumo en planches peintes plus anciennes ; tous sont à refaire en 8 × 8 chibi (lots de la Charte 2D, section 9).
 - **PNJ, décors de l'île et du donjon, sols, armes, équipement et reliques du premier donjon** : faits et dans le jeu. Les prompts remplis, avec l'image à joindre, sont dans `public/sprites/sprites/Prompts remplis.md` (dossier non versionné).
 
-## À faire : icônes des nouveaux objets
+## À faire : icônes des objets de la 0.11.0
 
-Une seconde planche, retouchée à partir de la première (même grille de 8 × 4), déjà déclarée dans `tools/icones.json`. Les armes qui n'ont qu'une icône en pixel art (`npm run icones-pixel`) y sont aussi : l'icône peinte la remplacera.
+Les 52 objets ajoutés par la 0.11.0 (équipement spécialisé par classe) n'ont pas encore d'icône : l'interface affiche une case vide. Ils tiennent sur deux planches de 8 × 4, rangées par classe. Comme pour la planche 2, Gemini **retouche** une planche d'icônes réussie en changeant les objets, ce qui garde la grille, le fond et le style des 51 icônes déjà en jeu. La correspondance des cases est déjà dans `tools/icones.json` : une fois les images enregistrées, lancer `npm run icones`.
 
-| Objet | Description |
-| --- | --- |
-| Grelots d'onmyōji | `a short dark wooden staff topped with a cluster of small golden bells and white zigzag paper streamers` |
-| Éventail de la Jorōgumo | `a black and crimson silk folding fan, half open, silver spider-web pattern, a few loose silk threads` |
-| Kunai jumeaux | `two blackened iron kunai daggers crossed, their ring pommels tied together by a red cord` |
-| Naginata et bouclier de temple | `a naginata with a curved blade lying across a small round wooden shield painted with a red sun` |
-| Yumi en bambou | `a tall asymmetric yumi bow of lacquered bamboo, grip placed low, one white-fletched arrow` |
-| Totsuka-no-tsurugi | `a long ancient straight double-edged bronze sword with a ring pommel, tiny lightning sparks along the blade` |
-| Kaiken d'Izanami | `a small kaiken dagger in a white lacquered sheath with pale silver fittings, a dark stain seeping from the sheath mouth` |
-| Arc du pêcher | `a curved bow carved from knotted peach wood, pink peach blossoms growing along it` |
-| Voile d'Izanami | `a white burial veil of thin gauze with a white triangular headband, draped over an invisible head` |
-| Dō de l'armée du Yomi | `a samurai do chest armor made of bone lamellae lacquered black, laced with red cords` |
-| Pêche Ōkamuzumi | `a single perfect ripe peach with two green leaves, soft golden glow` |
-| Peigne d'Izanagi | `a dark wooden Japanese comb with long teeth, small green bamboo shoots sprouting from the tips` |
-| Os de guerrier du Yomi | `a small bundle of old bones tied with a black lacquered armor lace` |
-| Éclat de foudre | `a jagged shard of solidified yellow lightning, crackling` |
-| Kusarigama des Oubliés | `a kusarigama: a rice farmer's sickle at the end of a long rusty chain coiled around it` |
-| Crocs de la Jorōgumo | `two curved black and crimson spider fangs mounted on handles wrapped in white silk, a drop of green venom` |
-| Tetsubō et bouclier-cloche | `a studded iron tetsubo club crossed over a cracked bronze temple bell used as a shield` |
-| Miroir de Yata | `a short spear crossed over the octagonal bronze Yata mirror, its polished face shining` |
-| Hankyū de chasse | `a short hankyu hunting bow of dark wood with two arrows` |
-| Arc de soie de la Jorōgumo | `a black wooden bow strung with a glistening white spider-silk string, a few sticky threads hanging` |
+Si un objet ressort mal (deux objets dans une case, objet coupé), relancer la même retouche en ne demandant que les cases ratées : leur numéro ne change pas.
+
+### Planche 3 : Guerrier, Sorcier, Lame (32 objets)
+
+**Joindre :** `Pictures\game visual\objets_planche_2.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_3.jpg`
+
+> Cases 1 à 9 : Guerrier · 10 à 22 : Sorcier · 23 à 32 : Lame. Les 32 cases sont remplies.
+
+```text
+Edit the attached image.
+
+Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same flat light grey background, lighting and hand-painted icon style. Replace all the objects: the 32 cells, read left to right then top to bottom, get these new objects, one per cell, centered, the same size as the old ones, each one clearly readable as a small inventory icon. Paired items (sandals, boots, greaves) are drawn as a pair in their single cell.
+
+1. a massive dark iron kabuto helmet with thick riveted plates, a wide neck guard and two short iron horns
+2. a samurai do chest armor made of dark green scaly yokai leather, stitched with bone toggles and dark brown-red cords
+3. a battered black and gold samurai general's chest armor with a broken crest and torn dark red silk lacing
+4. a pair of iron suneate shin guards with short forward spikes on the knee plates, tied with dark red cords
+5. a pair of huge heavy iron greaves, dented and scarred, with massive rounded knee plates
+6. a pair of light straw waraji sandals with red cords and small wing-shaped straw tufts at the heels
+7. a pair of heavy armored boots covered in thick iron plates, with wide flat soles
+8. a large brown bear claw hanging from a leather cord with one carved wooden bead
+9. a deep blue magatama jewel with a tiny storm cloud swirling inside it and small lightning sparks around it
+10. folded ash-grey hakama trousers, their hem charred black and dotted with dying embers
+11. a pair of red lacquered geta sandals with flame-shaped wooden teeth and small glowing embers on the straps
+12. a faceted orange crystal hanging from a thin gold chain, a small flame burning inside it
+13. a long staff of black storm-wood wrapped in a vermilion rope, its top a blazing orb of fire held in twisted branches
+14. a simple hooded cowl of rough undyed hemp with one white paper talisman pinned at the brow
+15. a folded vermilion and black onmyoji robe with flame patterns along its wide sleeves
+16. a cape of crimson and gold phoenix feathers, its hem ending in feather-shaped flames
+17. folded crimson hakama trousers with a black sash
+18. pale translucent white-blue spirit trousers, the legs fading into soft wisps
+19. a pair of black split-toe tabi boots trailing faint violet shadow wisps
+20. a pair of golden geta sandals with a radiant sun disc carved on each, a soft golden glow
+21. a heart-shaped dark red stone with black veins and a drop of blood on its surface
+22. a charred black heart-shaped stone cracked open, glowing orange embers inside
+23. a long pale grey headband with fluttering ends and a small swirling wind crest embroidered on it
+24. a white kitsune fox mask with pointed ears and red and violet markings
+25. a folded dark violet and black shinobi jacket with a cross-tied sash
+26. a black hooded cloak whose hem dissolves into dark violet smoke
+27. haidate thigh guards made of dark green snake-scale plates, closed by a small viper-head clasp
+28. black leg guards patterned with a silver spider web, with small spider-leg spikes on the knees
+29. a pair of tall red lacquered tengu geta with a single high wooden tooth, small black crow feathers on the straps
+30. a black paper talisman covered in violet brush strokes, tied with a violet cord
+31. a broken tanto dagger with a cracked blade, a dark stain on the steel and a hilt wrapped in frayed black cord
+32. a small heart-shaped violet glass vial filled with bright green poison
+
+No text, no numbers, no letters, no grid lines.
+```
+
+### Planche 4 : Paladin, Rôdeur (20 objets)
+
+**Joindre :** `Pictures\game visual\objets_planche_2.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_4.jpg`
+
+> Cases 1 à 9 : Paladin · 10 à 20 : Rôdeur. Les 12 dernières cases restent vides.
+
+```text
+Edit the attached image.
+
+Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same flat light grey background, lighting and hand-painted icon style. Replace the objects: the first 20 cells, read left to right then top to bottom, get these new objects, one per cell, centered, the same size as the old ones, each one clearly readable as a small inventory icon. Paired items (sandals, greaves) are drawn as a pair in their single cell. All the other cells become empty background.
+
+1. a golden crown-like headpiece with a sun disc at the front, a red jewel and short silk tassels
+2. a white and gold temple chest armor laced with red cords, white zigzag paper streamers hanging from the waist
+3. a pair of white lacquered greaves with gold trim and a small hammer emblem on each knee
+4. a pair of pale gold geta sandals with a rising sun painted on each, in soft dawn pink and gold
+5. a pair of heavy geta sandals with thick iron-banded teeth and gold straps
+6. a pair of gold geta sandals with a small hexagonal shield emblem on each, a faint golden shimmer
+7. a prayer rosary of green jade beads with a gold tassel
+8. a miniature golden war hammer with a sun emblem on its head and a short red-wrapped handle
+9. a single large shining golden dragon scale
+10. a green hunter's hood covered in leaves and small twigs for camouflage
+11. a dark wooden half-mask shaped like a wolf muzzle, with green painted markings
+12. a light green lacquered archer's chest armor with a leather chest strap
+13. a cloak made of brown and green hawk feathers with a feathered collar
+14. rugged leg wraps of hemp and leather with a small pouch and a coiled rope tied on
+15. light green leg guards with swirling wind patterns and fluttering cloth strips
+16. a pair of light straw waraji sandals with green cords
+17. a large wolf fang on a leather cord with two green beads
+18. a small wooden charm carved like a leaf, tied with a green cord, a tiny green sprout growing from it
+19. a heart-shaped knot of living wood covered in moss and small green leaves, a faint green glow
+20. a quiver of green lacquered bamboo full of white-fletched arrows, a spiral of wind swirling around it
+
+No text, no numbers, no letters, no grid lines.
+```
