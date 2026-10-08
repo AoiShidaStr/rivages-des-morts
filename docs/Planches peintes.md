@@ -11,7 +11,7 @@ Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game vi
 | `npm run poses -- <planche>` | une planche de poses clés (Nano Banana 2) | `poses/<planche>/pose-<n>.png`, une pose par image carrée | voir [Prompts des héros](Prompts%20h%C3%A9ros.md) |
 | `npm run kit-heros` | `~/Pictures/game visual/heros/<race>-<classe>/profil.jpg`, `face.jpg` | un dossier par animation : la pose à joindre et le prompt | `tools/prompts-heros.mjs` |
 
-> **Essai en cours :** pour les héros, une piste de squelette 2D à pièces séparées (équipement visible, genre) pourrait remplacer ces planches complètes. Voir la [section 11 de la Charte 2D](Charte%202D.md#11-héros-modulaire-paper-doll-piste-en-essai). Les ennemis et les boss restent en planches.
+> **Standard (octobre 2026) :** chaque personnage a une **planche complète** de 64 images, une grille 8 × 8 où chaque ligne est une animation, en personnages chibi de 3 têtes. Elle s'importe avec `layout` et `rows` (ordre des lignes et tags : [section 4 de la Charte 2D](Charte%202D.md#4-format-des-planches--une-grille-complète-de-64-images-8--8) ; import : section 8 ; modèle : l'entrée `heros-hanyo-paladin` de `tools/planches.json`). Les planches par animation décrites ci-dessous restent pour les personnages faits avant ce standard.
 
 On peut ne traiter qu'une entrée : `npm run sprites -- decor/ema`, `npm run planches -- heros`.
 

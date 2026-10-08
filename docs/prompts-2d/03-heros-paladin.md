@@ -1,8 +1,8 @@
 # Lot 3 : héros Paladin (série du Yomi, Hanyō)
 
-Phase 1 : les tenues du Yomi, avec la race Hanyō. Les autres races viendront plus tard.
+Phase 1 : les tenues du Yomi, avec la race Hanyō. Les cinq Hanyō ont leur planche complète dans le jeu depuis octobre 2026 ; ces prompts servent à en refaire une au format standard. Les autres races viendront plus tard.
 
-**Format de toutes les planches : image carrée 1 024 × 1 024 px, 16 images en grille 4 × 4 (cases de 256 px)**, fond gris uni (magenta pour l'Oublié). **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
+**Format : une planche complète par personnage, image carrée de 2 048 × 2 048 px si possible, 64 images en grille 8 × 8 (cases de 256 px), une ligne de 8 images par animation**, personnages chibi de 3 têtes, fond gris uni (magenta pour l'Oublié). Ordre des lignes : [Charte 2D](../Charte%202D.md), section 4. **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
 
 ## Hanyō Paladin
 
@@ -11,229 +11,41 @@ Phase 1 : les tenues du Yomi, avec la race Hanyō. Les autres races viendront pl
 **Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** `2d/hanyo-paladin/fiche-profil.png`
 
 ```text
-Character reference sheet for a 2D action RPG in which dead souls from every mythology fight across an archipelago of collapsed afterlives. One single character, shown once, full body, in three-quarter side view facing right. The character belongs to the Hanyō race and the Paladin class. BODY (the race): Hanyō (human-yokai hybrid): pointed yokai ears and two small horns, bright pale-gold eyes (flat painted irises, no glow), thin facial markings, slightly clawed hands, dark hair. OUTFIT (follows the culture of the race, nothing from any other culture): Japanese temple guardian gear: light cloth robes with gold trim and a sash, light armor pieces, a rope belt with paper shide streamers. ROLE (the class): Paladin (solar rampart): light cloth with gold trim, a rampart posture, gold accents. WEAPON: a naginata (long curved polearm) and a large round temple shield, the starting weapon. The race decides the body, the face and the clothing culture; the class only decides the role, the posture, the silhouette, the accent color and the weapon. Neutral calm idle stance.
-Realistic heroic proportions: the character is about 7 heads tall, slender and athletic, with a natural head size, and the weapon and class accessories at their real size but easy to read. Same art style and level of detail as our Hanyo Invocateur reference (attach heros-hanyo-invocateur.png as a style reference when it is not the character being drawn). Strong readable silhouette from far away. All twenty heroes of the game share exactly the same total height.
+Character reference sheet for a 2D action RPG in which dead souls from every mythology fight across an archipelago of collapsed afterlives. One single character, shown once, full body, in three-quarter side view facing right. The character belongs to the Hanyō race and the Paladin class. BODY (the race): Hanyō (human-yokai hybrid): pointed yokai ears and two small horns, bright pale-gold eyes (flat painted irises, no glow), thin facial markings, slightly clawed hands, dark hair. OUTFIT (follows the culture of the race, nothing from any other culture): Japanese temple guardian gear: light cloth robes with gold trim and a sash, light armor pieces, a rope belt with paper shide streamers. ROLE (the class): Paladin (solar rampart): light cloth with gold trim, a rampart posture, gold accents. WEAPON: an oversized naginata (long curved polearm) and a large temple shield almost as tall as the character, the starting weapon. The race decides the body, the face and the clothing culture; the class only decides the role, the posture, the silhouette, the accent color and the weapon. Neutral calm idle stance.
+Chibi proportions: the character is exactly 3 heads tall. A large head with big expressive eyes, broad shoulders so that every pose reads clearly, a compact body with short sturdy limbs, and the class weapon drawn oversized (clearly larger than life) so that it stays readable in a small sprite. Same art style and level of detail as our Hanyo complete sheets (attach one of them, for example the Hanyo Lame or Paladin sheet, as a style reference when it is not the character being drawn). Strong readable silhouette from far away. All twenty heroes of the game share exactly the same total height.
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Hanyō Paladin — profil — Attente
+### Hanyō Paladin — profil — planche complète (8 × 8)
 
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-attente.png`
+**Lignes :** 1 Attente · 2 Course · 3 Attaque principale (clic gauche) · 4 Action défensive (clic droit) : Garde au bouclier (clic droit) · 5 Compétences A et E : Marteau lancé (E) · 6 Dégâts · 7 Mort · 8 Compétence ultime (touche R) : Aura de lumière (A) et Égide (R).
+
+**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-planchecomplete.png`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a slow idle breathing loop: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the neutral ready pose of the reference figure, then the chest begins to swell.
-Frames 3 to 4: breathing in: the chest expands, the shoulders and the head rise slowly.
-Frames 5 to 6: top of the breath: the shoulders and head at their highest, the hair and cloth lifted slightly; the naginata and the shield shift slightly with the breath.
-Frames 7 to 8: a tiny pause, then breathing out begins: the shoulders settle and the head tilts very slightly.
-Frames 9 to 10: breathing out: the shoulders and the head sink, the knees give slightly, the hair and cloth sway the other way.
-Frames 11 to 12: bottom of the breath: the body at its lowest, the weight shifted onto one foot.
-Frames 13 to 14: the weight shifts back, the gaze moves a little, the hair and cloth settle.
-Frames 15 to 16: rising smoothly back toward frame 1; frame 16 is almost identical to frame 1.
-The motion is subtle but clearly visible: over the loop, the top of the head moves down and up by about a quarter of a head height, and the shoulders, hands, weapon, hair and cloth move with it.
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
+Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible). The image is divided into an invisible grid of 8 columns x 8 rows (64 equal square cells).
+Each row is one animation of 8 frames, read left to right. The 8 rows, from top to bottom, are always in this exact order:
+ROW 1, IDLE, a slow breathing loop, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: the neutral ready pose of the reference figure, then the chest begins to swell; frames 3 to 4: breathing in, up to the top of the breath: the shoulders and the head rise; the naginata and the shield shift slightly with the breath; frames 5 to 6: breathing out: the shoulders and the head sink, the knees give slightly, the hair and cloth sway the other way; frames 7 to 8: rising smoothly back toward frame 1; frame 8 is almost identical to frame 1.
+ROW 2, RUN, a running cycle on the spot (movement with the ZQSD keys), a seamless loop where frame 8 leads back to frame 1: frame 1: contact: the right leg reaches forward, the left arm forward; in every frame: the shield forward at chest height, the naginata held diagonally behind; frame 2: down: the right leg bends under the weight, the body at its lowest; frame 3: passing: the left leg swings forward past the right leg; frame 4: up: pushing off the right foot, the body at its highest; frame 5: contact: the left leg reaches forward, the right arm forward; frame 6: down: the left leg bends under the weight, the body at its lowest; frame 7: passing: the right leg swings forward past the left leg; frame 8: up: pushing off the left foot, the body at its highest.
+ROW 3, MAIN ATTACK (left click), a single fast attack, played once: frame 1: the ready pose of the reference figure, the weight shifting back; frames 2 to 3: wind-up: the naginata is drawn back over the shoulder while the shield rises; frame 4: the strike launches, very fast: a wide sweeping slash then a lunging thrust, the naginata at full extension forward, the shield pulled back, on its way; frame 5: IMPACT, the key frame of the attack: a wide sweeping slash then a lunging thrust, the naginata at full extension forward, the shield pulled back, at full extension; frame 6: follow-through: the momentum carries the body past the impact; frames 7 to 8: recovery: back to the ready pose of the reference figure.
+ROW 4, RIGHT-CLICK ACTION — Garde au bouclier (clic droit), played once: frame 1: the ready pose of the reference figure; frames 2 to 3: moving into position: the shield raised in front of the body, the character braced behind it, feet planted wide, the naginata held back, on its way; frames 4 to 5: the position fully reached: the shield raised in front of the body, the character braced behind it, feet planted wide, the naginata held back; frames 6 to 8: the position held: only tiny movements of the hair and cloth; frames 6 to 8 are nearly identical.
+ROW 5, SKILL (A and E keys) — Marteau lancé (E), played once: frames 1 to 2: gathering: draws a short war hammer from the belt and pulls it back behind the shoulder, the shield turned aside; frames 3 to 4: the tension builds, the movement clearly progressing in every frame; frame 5: RELEASE, the key pose: hurls the hammer forward with the whole body, the throwing arm fully extended (the hammer has left the hand and is not drawn); frame 6: the release pose held at full strength, the hair and cloth flaring; frame 7: starting to recover; frame 8: back to the ready pose of the reference figure.
+ROW 6, HURT, being hit and recovering, played once: frame 1: hit: the head snaps back, the torso recoils, the eyes squeezed shut; frames 2 to 3: maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held; frames 4 to 5: staggering, fighting to keep balance; frames 6 to 8: recovering, back to the ready pose of the reference figure, naginata and large shield in hand.
+ROW 7, DEATH, played once: frame 1: the fatal hit: the head snaps back, the body recoils; frames 2 to 3: staggers backward, the grip on the weapon loosening; frames 4 to 5: the knees buckle and the body falls, the naginata and large shield slipping from the hands; frame 6: lands on the ground with a small bounce, the naginata and large shield fallen beside the body; frames 7 to 8: lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid.
+ROW 8, ULTIMATE (R key) — Aura de lumière (A) et Égide (R), played once: frames 1 to 2: gathering: plants the naginata upright beside the body and raises the shield; frames 3 to 4: the tension builds, the movement clearly progressing in every frame; frames 5 to 6: RELEASE, the key pose: stands tall like a rampart, the chest out, the free hand raised palm up toward the sky, the head lifted (no light drawn); frame 7: the release pose held at full strength, the hair and cloth flaring; frame 8: back to the ready pose of the reference figure.
+Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
+The character stays exactly the same in all 64 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.
+Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.
+DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, except where a held pose is asked for.
 DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Course
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-course.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a running cycle on the spot: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: contact: the right leg reaches forward and the heel touches the ground, the left leg stretched behind, the left arm forward; the shield forward at chest height, the naginata held diagonally behind.
-Frames 3 to 4: down: the right leg bends under the weight, the body at its lowest; the shield forward at chest height, the naginata held diagonally behind.
-Frames 5 to 6: passing: the left leg swings forward past the right leg, the body rising; the shield forward at chest height, the naginata held diagonally behind.
-Frames 7 to 8: up: pushing off the right foot, the body at its highest, both feet almost off the ground; the shield forward at chest height, the naginata held diagonally behind.
-Frames 9 to 10: contact: the left leg reaches forward and the heel touches the ground, the right leg stretched behind, the right arm forward; the shield forward at chest height, the naginata held diagonally behind.
-Frames 11 to 12: down: the left leg bends under the weight, the body at its lowest; the shield forward at chest height, the naginata held diagonally behind.
-Frames 13 to 14: passing: the right leg swings forward past the left leg, the body rising; the shield forward at chest height, the naginata held diagonally behind.
-Frames 15 to 16: up: pushing off the left foot, the body at its highest, both feet almost off the ground; the shield forward at chest height, the naginata held diagonally behind.
-The character stays in place (no travelling across the cell). One full running cycle of 8 poses, each held for 2 frames; the legs and arms are in a different position in every pair of frames, the arms swinging opposite to the legs, the hair and cloth bouncing.
-It is a seamless loop: frame 16 leads smoothly back to frame 1.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Attaque
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-attaque.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a single attack: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the ready pose of the reference figure; the weight shifts back onto the rear foot.
-Frames 3 to 4: wind-up: the naginata is drawn back over the shoulder while the shield rises, on its way.
-Frames 5 to 6: wind-up complete and held: the naginata is drawn back over the shoulder while the shield rises, held with a slight tremble.
-Frames 7 to 8: the strike launches, very fast, the body and the weapon at a clearly different place in every frame: a long lunging thrust, the naginata at full extension forward, the shield pulled back, on its way.
-Frame 9: IMPACT, the key frame of the attack: a long lunging thrust, the naginata at full extension forward, the shield pulled back, at full extension.
-Frames 10 to 12: follow-through: the momentum carries the body past the impact, then slows down.
-Frames 13 to 16: recovery: back to balance and to the ready pose of the reference figure; frame 16 is close to frame 1.
-The weapon and the arms are at a clearly different place in every frame, following one continuous path.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Garde
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-garde.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing going into a defensive guard and holding it: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the ready pose of the reference figure.
-Frames 3 to 4: starting to move: the shield is raised in front of the body, the character braced behind it, feet planted wide, the naginata held back, one third of the way.
-Frames 5 to 6: almost in guard, two thirds of the way.
-Frames 7 to 10: full guard reached, braced and firm: the shield is raised in front of the body, the character braced behind it, feet planted wide, the naginata held back.
-Frames 11 to 16: the guard held: very slight breathing strain, only tiny movements of the hair and cloth; frames 11 to 16 are nearly identical.
-The weapon, the arms and the stance change a little more in every frame until the guard is reached.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Esquive
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-esquive.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a quick dodge: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: anticipation: the character crouches slightly, loading the weight.
-Frames 3 to 4: push-off: the dodge begins, the body launching.
-Frames 5 to 8: mid-dodge, the fastest moment, the peak around frame 6: a shield charge forward, shoulder low, then a sudden stop.
-Frames 9 to 11: end of the movement: decelerating, still in motion.
-Frames 12 to 13: landing: the knees bend to absorb the impact.
-Frames 14 to 16: recovery: rising back to the ready pose of the reference figure; frame 16 is close to frame 1.
-The body is at a clearly different place and shape in every frame.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Touché
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-touche.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing being hit and recovering: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: hit: the head snaps back, the torso recoils, the eyes squeezed shut.
-Frames 3 to 5: maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held.
-Frames 6 to 8: staggering backward, fighting to keep balance.
-Frames 9 to 12: recovering: straightening up, shaking it off.
-Frames 13 to 16: back to the ready pose of the reference figure, naginata and large shield in hand; frame 16 is close to frame 1.
-The body is at a clearly different place and shape in every frame.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Mort
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-mort.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a death animation: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 2: the fatal hit: the head snaps back, the body recoils.
-Frames 3 to 5: staggers backward, the grip on the weapon loosening.
-Frames 6 to 8: the knees buckle and the body sinks down, the naginata and large shield slipping from the hands.
-Frames 9 to 11: falls to the ground.
-Frames 12 to 14: settles lying on the ground with a small bounce, the naginata and large shield fallen beside the body, the cloth settling.
-Frames 15 to 16: lies completely still; frames 15 and 16 are identical. Do not draw any dissolving or fading: the body stays solid.
-The body is at a clearly different place and shape in every frame until it lies still.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
-No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
-```
-
-### Hanyō Paladin — profil — Compétence
-
-**Joindre :** `fiche-profil.png`. **Enregistrer :** `2d/hanyo-paladin/profil-competence.png`
-
-```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw a 2D sprite animation sheet of this exact character performing a class skill pose: same face, proportions, outfit, colors, naginata and large shield, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
-Output a square 1:1 image of 1024 x 1024 px. The image is divided into an invisible grid of 4 columns x 4 rows (16 equal square cells).
-The 16 frames are read left to right, then top to bottom: frames 1 to 4 on the top row, 5 to 8 on the second row, 9 to 12 on the third row, 13 to 16 on the bottom row.
-Frames 1 to 3: gathering: the body coils, the eyes focused; the naginata is lifted overhead in both hands, then slammed down vertically.
-Frames 4 to 7: peak tension held with a slight tremble, everything ready to be released.
-Frames 8 to 9: RELEASE, the key pose of the skill: the naginata planted in front of the character, the shield raised beside it, the chest out, standing tall like a rampart.
-Frames 10 to 12: the release pose held at full strength, the hair and cloth flaring.
-Frames 13 to 16: recovery: back to the ready pose of the reference figure; frame 16 is close to frame 1.
-The body, the arms and the weapon are at a clearly different place in every frame.
-It plays once, from frame 1 to frame 16.
-Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height in every cell. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
-The character stays exactly the same in all frames: same proportions, same head size, same face, same outfit, same colors, same weapon; only the pose changes.
-DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, even if the motion looks slightly exaggerated.
-DO NOT simply copy the reference figure into every cell.
-DO NOT change the camera angle, the facing direction or the design from one frame to the next.
-DO NOT move the character across the sheet: each frame stays centered in its own cell.
-Painted 2D action-RPG character illustration in a semi-realistic anime style (not cartoon): realistic proportions, soft painted gradients, clothing folds, embroidered motifs and accessories drawn clearly, a crisp dark ink-blue outline (about 1 to 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```

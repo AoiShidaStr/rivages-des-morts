@@ -1,75 +1,86 @@
-# Prompts visuels (Yomi, V1)
+# Prompts visuels (2D, Nano Banana 2)
 
-Un prompt prêt à l'emploi pour chaque élément du Yomi, écrit en anglais parce que les outils de génération répondent mieux ainsi.
+Comment écrire les prompts d'images du jeu. Les prompts sont en anglais, parce que Nano Banana les suit mieux ainsi. La référence artistique et technique est la [Charte 2D](Charte%202D.md) : en cas de doute, c'est elle qui fait foi.
 
-## Outils et pipeline
+## Outil et pipeline
 
-**Base : Nano Banana** (inclus dans l'abonnement Google AI Plus étudiant, via l'application Gemini) pour toutes les images 2D. **Puis [Tripo AI](https://www.tripo3d.ai)** pour passer de l'image à la 3D : 300 crédits gratuits par mois, plan Pro à 19,90 $/mois pour l'usage commercial, rigging automatique et plugin Blender.
+**Un seul outil : Nano Banana 2**, dans l'application Gemini (abonnement Google AI Plus étudiant, sans API : on colle le prompt et on joint les images à la main). La 3D (Tripo, Meshy, Rodin, Blender, export .glb) est abandonnée, comme le pantin articulé et le pixel art : **tout le jeu est en sprites 2D peints, en personnages chibi de 3 têtes, sur des planches complètes de 64 images (8 × 8)**.
 
-Nano Banana ne fait pas de 3D, mais c'est lui qui garantit la cohérence du style : il sait garder un même personnage d'une image à l'autre et retoucher une image existante. On valide le design en 2D, gratuitement et vite, avant de dépenser des crédits 3D.
+1. **Fiche** : un seul personnage, une seule vue (profil 3/4 tourné vers la droite), sur fond gris uni. Générer 2-3 variantes et garder la meilleure : elle fixe le design.
+2. **Planche complète** : joindre la fiche, coller le prompt de planche. Une seule image carrée contient les 8 animations du personnage, une ligne de 8 images par animation.
+3. **Import** : `npm run planches -- <nom>` découpe la planche (entrée `layout` et `rows` dans `tools/planches.json`), `npm run sprites -- <nom>` détoure la fiche, qui sert de portrait. Détails : [Charte 2D](Charte%202D.md), section 8, et [Planches peintes](Planches%20peintes.md).
 
-| Outil | Quand l'utiliser |
-| --- | --- |
-| [Tripo AI](https://www.tripo3d.ai) | Outil principal : objets, ennemis, décors |
-| [Meshy](https://www.meshy.ai) | Si on veut sa bibliothèque d'animations prêtes pour les ennemis |
-| [Rodin (Hyper3D)](https://hyper3d.ai) | Pour un asset « vitrine » très soigné (boss) |
-
-⚠️ Les sorties gratuites de Tripo et Meshy sont sous licence CC BY 4.0 : attribution obligatoire si on publie. Pour publier sans contrainte, passer au plan payant.
-
-**Pipeline**
-
-1. **Nano Banana, concept** : coller la bible de style puis le prompt de l'asset. Itérer jusqu'à ce que le design plaise.
-2. **Nano Banana, planche de vues** : demander le même asset de face, de profil et de dos (suffixe « planche de vues » ci-dessous).
-3. **Tripo, image vers 3D** : importer les vues (mode multi-vues), demander une version low-poly.
-4. **Blender** : réduire à quelques milliers de triangles (Decimate), vérifier qu'il n'y a pas d'ombres peintes dans la texture.
-5. **Rig et export** : rigger les ennemis dans Tripo, exporter en .glb pour Babylon.js.
-
-**Nano Banana seul suffit pour tout ce qui reste en 2D** : icônes d'inventaire, portraits de dialogue des PNJ, écran titre, cartes des îles, illustrations de lore.
+Les prompts prêts à coller de chaque personnage (fiche et planche complète, avec le nom de fichier) sont générés dans [`prompts-2d/`](prompts-2d/) par `npm run prompts-2d` (`tools/prompts-2d.mjs`). Pour changer un prompt, modifier le générateur puis relancer la commande : ne pas éditer les fichiers générés.
 
 ## Bible de style
 
-À coller au début de chaque prompt, sans le modifier, pour garder un style cohérent.
+À coller au début de chaque prompt d'image qui n'est pas déjà dans `prompts-2d/` (icônes, portraits, décor, PNJ), sans la modifier :
 
 ```
-Stylized low-poly 3D game asset, hand-painted texture, soft cel-shading, clean readable silhouette, vibrant but slightly muted colors, epic and colorful fantasy tone inspired by Japanese folklore and ukiyo-e, isometric game view, single object, centered, neutral grey background, no baked shadows, game-ready.
+Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified, a crisp dark ink-blue outline, two-tone cel shading where the shadow is tinted toward blue-violet (never black), a soft cool light coming from the upper left, characters more saturated and lighter than a muted world, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 ```
 
-**Palette du Yomi** : brume blanche et gris-bleu, rouge vermillon (torii, laques), vert tendre des rizières, lueurs bleu-cyan pour les esprits.
+**Palette du Yomi** (décor) : brume blanche et gris-bleu, rouge vermillon (torii, laques), vert tendre des rizières, lueurs bleu-cyan pour les esprits. Le vermillon vif signale le danger ennemi : jamais sur les héros, sauf la robe du Sorcier.
 
-À ajouter à la fin selon le cas :
+## Suffixes selon le cas
 
-- Personnage ou ennemi : `full body, T-pose, symmetrical, suitable for rigging`
-- Objet ou arme : `isolated item, no hands, front three-quarter view`
-- Décor : `modular environment piece, flat base`
-- Planche de vues (pour Tripo) : `character turnaround sheet, same character shown front view, side view and back view, consistent design, white background`
-- Icône d'inventaire : `2D game inventory icon, item centered, painted style, subtle dark vignette, square format`
-- Portrait de dialogue : `2D character bust portrait for a dialogue box, painted style, expressive face, transparent-looking plain background`
-- Sprite du prototype 2D (à détourer avec `npm run sprites`) : `flat uniform light grey background, no ground shadow, no glow, no particles, no mist, no outline, whole subject visible with margin around it`
+- **Personnage (fiche)** : `Chibi proportions: the character is exactly 3 heads tall. A large head with big expressive eyes, broad shoulders so that every pose reads clearly, a compact body with short sturdy limbs, and the weapon drawn oversized so that it stays readable in a small sprite. One single character, shown once, full body, in three-quarter side view facing right.`
+- **Planche complète** : voir le modèle ci-dessous.
+- **Sprite fixe** (PNJ immobile, décor, à détourer avec `npm run sprites`) : `Flat uniform medium grey background (#8f8f8f), no gradient, no ground shadow, no glow, no particles, no mist, whole subject visible with an empty margin around it.`
+- **Icône d'inventaire** : `2D game inventory icon, item centered, painted chibi-game style, subtle dark vignette, square format.`
+- **Portrait de dialogue** : `2D chibi character bust portrait for a dialogue box, painted style, big expressive eyes, plain flat background.`
 
-**Pour le prototype 2D**, finir chaque prompt par le suffixe « Sprite » : un fond gris uni et aucun effet peint autour du sujet (étincelles, aura, brume, ombre au sol). Le détourage garde tout ce qui n'est pas du fond gris, donc un effet peint reste collé au sprite ; les effets sont ajoutés par le jeu.
+Aucun effet dessiné autour d'un personnage (magie, lueur, traînée, fumée, étincelle, ombre au sol) : le détourage garderait l'effet collé au sprite. C'est le jeu qui dessine les effets (`npm run vfx`, Charte 2D section 11).
 
-**Noms de fichiers** : enregistrer l'image dans `~/Pictures/game visual` sous le nom indiqué dans `tools/sprites.json` (par exemple `decor_jizo.jpg`), puis lancer `npm run sprites -- jizo`. Une image absente est simplement ignorée : le jeu garde son dessin provisoire.
+## Modèle de planche complète (8 × 8)
+
+La structure de tous les prompts de planche de `prompts-2d/`. Les crochets se remplacent par le texte du personnage ; le générateur détaille en plus chaque image de chaque ligne (Charte 2D, section 7).
+
+```text
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, [weapon], nothing added or removed.
+Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible). The image is divided into an invisible grid of 8 columns x 8 rows (64 equal square cells).
+Each row is one animation of 8 frames, read left to right. The 8 rows, from top to bottom, are always in this exact order:
+ROW 1, IDLE, a seamless breathing loop.
+ROW 2, RUN, a running cycle on the spot, a seamless loop.
+ROW 3, MAIN ATTACK (left click): frame 1 ready, frames 2 to 3 wind-up, frame 4 the strike launches, frame 5 IMPACT, frame 6 follow-through, frames 7 to 8 recovery.
+ROW 4, RIGHT-CLICK ACTION — [block / shadow step / charged shot / seal].
+ROW 5, SKILL (A and E keys) — [the class skill].
+ROW 6, HURT, being hit and recovering.
+ROW 7, DEATH: frames 7 and 8 identical, lying still, the body stays solid (no dissolving).
+ROW 8, ULTIMATE (R key) — [the class ultimate].
+Each figure is centered in its own cell and drawn at the same scale in every cell: the standing character is about 78% of the cell height, feet on the same baseline at about 89% of the cell height; nothing touches or crosses a neighbouring cell.
+The character stays exactly the same in all 64 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.
+Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.
+[Bible de style]
+Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+```
+
+**Ordre des lignes, strict** (le moteur les lit dans cet ordre) :
+
+| Ligne | Héros | Ennemis et boss |
+| --- | --- | --- |
+| 1 | Attente (Idle) | Attente |
+| 2 | Course (déplacement ZQSD) | Déplacement |
+| 3 | Attaque principale (clic gauche) | Attaque |
+| 4 | Action défensive (clic droit : Blocage, Pas de l'ombre, Tir chargé, Sceau) | Anticipation tenue (télégraphe) |
+| 5 | Compétences A et E | Étourdi |
+| 6 | Dégâts (Hurt) | Dégâts |
+| 7 | Mort (Death) | Mort |
+| 8 | Compétence ultime (touche R) | Geste propre, ou seconde attaque |
+
+Ce que joue chaque ligne pour chaque classe, et les tags du moteur : Charte 2D, section 4.
+
+## Noms de fichiers
+
+- Planches et fiches des héros : `~/Pictures/game visual/2d/<race>-2D/<race>-<classe>-planchecomplete.jpg` et `<race>-<classe>-reference.jpg` (exemple : `2d/hanyo-2D/hanyo-paladin-planchecomplete.jpg`).
+- Images fixes : le nom indiqué dans `tools/sprites.json` (par exemple `decor_jizo.jpg`), puis `npm run sprites -- jizo`. Une image absente est simplement ignorée : le jeu garde son dessin provisoire.
 
 ## Où en sont les images
 
-Tout ce que décrivaient les anciens tableaux de cette page est fait et dans le jeu : le héros guerrier, les ennemis et le boss des Rizières (images fixes et animations), les PNJ, les décors de l'île et du donjon, les sols, les armes, l'équipement et les reliques du premier donjon. Leurs prompts ont été retirés.
-
-Les prompts prêts à coller, avec l'image à joindre et le nom de fichier, sont dans `public/sprites/sprites/Prompts remplis.md` (dossier non versionné). Le montage des planches est décrit dans [Planches peintes](Planches%20peintes.md). Les descriptions ci-dessous sont celles qu'ils reprennent.
-
-Le pantin articulé façon Wakfu et le pixel art sont abandonnés. Les héros passent par Nano Banana 2 (poses clés) puis Kling (mouvements) : voir [Prompts des héros](Prompts%20h%C3%A9ros.md). Les ennemis humanoïdes pourront suivre la même méthode.
-
-## À faire : Palais d'Izanami
-
-Shikome, guerrier du Yomi et Izanami : la fiche d'abord, puis leurs animations par la méthode des héros. L'ikazuchi et les pêchers se font entièrement.
-
-| Asset | Description |
-| --- | --- |
-| Shikome | `Yomotsu-shikome, a hag-like fury of Yomi: hunched and wiry, grey-green skin, long wild white hair, glowing red eyes, a wide fanged mouth, tattered dark grey rags, very long clawed fingers` |
-| Ikazuchi | `Ikazuchi, a small thunder god of Yomi: a floating storm-cloud body in dark violet with two golden horns, glowing golden eyes and a wide toothy grin, a ring of small red taiko drums circling its body, a zig-zag lightning tail instead of legs` |
-| Guerrier du Yomi | `a skeleton warrior of the Yomi army in black lacquered samurai armor laced with red cords, a dark kabuto helmet with a golden crescent crest, glowing red eye sockets, a long yari spear held forward with both hands` |
-| Izanami, voilée | `Izanami, queen of the dead, veiled form: a tall pale woman in a white burial kimono crossed right over left, a white triangular headband, very long straight black hair hiding her face, the hem fraying into thin white mist` |
-| Izanami, vrai visage | La même, retouchée : `her body rotten by the Yomi, violet-grey skin, the white kimono torn and stained dark, burning red eyes between the strands of hair, eight small crackling thunder gods clinging to her body` |
-| Pêcher (mûr, puis nu) | `a small old peach tree growing from a crack in dark violet stone, twisted dark trunk, a few pale pink blossoms, three big ripe golden-pink peaches` ; la version nue est une retouche sans les pêches |
+- **Héros** : les cinq Hanyō et les cinq Demi-dieux ont leur planche complète chibi dans le jeu (octobre 2026) ; les Einherjar et les Oushebti n'ont que le Guerrier de jouable en attendant leurs planches (Charte 2D, section 9). L'ancienne méthode des poses clés puis Kling ([Prompts des héros](Prompts%20h%C3%A9ros.md), `npm run kit-heros`) est remplacée par la planche complète.
+- **Ennemis et boss** : Izanami et les yokai du Palais sont dans le jeu en planches de 16 images par animation, les yokai des Rizières et la Jorōgumo en planches peintes plus anciennes ; tous sont à refaire en 8 × 8 chibi (lots de la Charte 2D, section 9).
+- **PNJ, décors de l'île et du donjon, sols, armes, équipement et reliques du premier donjon** : faits et dans le jeu. Les prompts remplis, avec l'image à joindre, sont dans `public/sprites/sprites/Prompts remplis.md` (dossier non versionné).
 
 ## À faire : icônes des nouveaux objets
 
