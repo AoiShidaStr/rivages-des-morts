@@ -119,4 +119,10 @@ export type GameEvent =
   // Rôdeur : filet qui s'ouvre, tir chargé plein
   | { type: 'netBurst'; pos: Vec2; radius: number }
   | { type: 'loose'; pos: Vec2; full: boolean }
+  // Objets (0.11.0) : coup évité, sauvetage, onde de choc, zone sacrée, leurre
+  | { type: 'evade'; pos: Vec2 }
+  | { type: 'saved'; pos: Vec2; label: string }
+  | { type: 'shockwave'; pos: Vec2; radius: number }
+  | { type: 'sanctuary'; id: number; pos: Vec2; radius: number; life: number }
+  | { type: 'lure'; pos: Vec2 }
   | { type: 'end'; outcome: Outcome };

@@ -10,7 +10,7 @@
 //   npm run equilibrage -- --mode kits --niveaux 10,30,50                        les 3 styles de chaque classe
 //
 // Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau (`--stuff complet` : le meilleur
-// équipement de sa classe, arme épique et relique comprises ; `--stuff survie`, `dps` ou `equilibre` : un des trois
+// équipement de sa classe, arme épique et relique comprises ; `--stuff survie`, `dps` ou `boss` : un des trois
 // styles de jeu de sa classe ; `--stuff nu` : son arme de départ jamais forgée, rien d'autre) ; au niveau 10 et plus,
 // il a ses 9 points de talents (deux branches pleines et un nœud). Le donjon est au niveau du héros, sauf avec
 // `--niveau-donjon`. Avec `--joueurs 2` ou `3`, les alliés sont d'autres classes (`--allies lame,rodeur` pour les
@@ -34,45 +34,45 @@ const TREE = { guerrier: ['susanoo', 'heracles', 'berserkir'], sorcier: ['kaguts
 const GEAR = { casque: 'chapeau-paille', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'magatama-fele' };
 /** `--stuff complet` : le meilleur équipement de chaque classe, forgé au niveau du héros (arme comprise). */
 const FULL = {
-  guerrier: { arme: 'totsuka-tsurugi', casque: 'kabuto-fendu', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'peche-okamuzumi', relique: 'coupelle-kappa' },
+  guerrier: { arme: 'nodachi-ikusa', casque: 'kabuto-fendu', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'peche-okamuzumi', relique: 'coupelle-kappa' },
   sorcier: { arme: 'eventail-jorogumo', casque: 'voile-izanami', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'magatama-fele', relique: 'magatama-yasakani' },
   lame: { arme: 'kaiken-izanami', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
   paladin: { arme: 'miroir-yata', casque: 'chapeau-paille', plastron: 'do-yomi', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
-  rodeur: { arme: 'arc-soie', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
+  rodeur: { arme: 'arc-pecher', casque: 'chapeau-paille', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'peche-okamuzumi', relique: 'fil-joren' },
 };
 /**
- * Les trois styles de jeu de chaque classe (GDD, « Styles de jeu par l'équipement ») : survie, dégâts, et l'équilibre
- * entre les deux. Les pièces d'un style se mélangent avec celles des autres.
+ * Les trois spécialités de l'équipement de chaque classe (0.11.0) : survie, dégâts, et les objets de boss. Toutes les
+ * pièces d'un kit sont celles de sa spécialité (le champ `spec` de items.json).
  */
 const KITS = {
   guerrier: {
-    survie: { arme: 'katana-ronin', casque: 'chapeau-paille', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'gourde-sake-oni', relique: 'ecaille-ryujin' },
-    dps: { arme: 'nodachi-ikusa', casque: 'masque-hannya', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'waraji-pelerin', amulette: 'lanterne-braise', relique: 'coupelle-kappa' },
-    equilibre: { arme: 'totsuka-tsurugi', casque: 'kabuto-fendu', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'waraji-pelerin', amulette: 'omamori-temple', relique: 'fil-joren' },
+    survie: { arme: 'katana-ronin', casque: 'kabuto-fer', plastron: 'carapace-kappa', jambieres: 'suneate-ecailles', bottes: 'bottes-bastion', amulette: 'talisman-ours', relique: 'gourde-sake-oni' },
+    dps: { arme: 'nodachi-ikusa', casque: 'masque-hannya', plastron: 'do-cuir-yokai', jambieres: 'suneate-assaut', bottes: 'waraji-course', amulette: 'lanterne-braise', relique: 'coupelle-kappa' },
+    boss: { arme: 'kanabo-demon-sang', casque: 'kabuto-fendu', plastron: 'armure-general', jambieres: 'greves-colosse', bottes: 'waraji-pelerin', amulette: 'ecaille-ryujin', relique: 'joyau-susanoo' },
   },
   lame: {
-    survie: { arme: 'kusarigama', casque: 'chapeau-paille', plastron: 'do-lamelles-os', jambieres: 'haidate-shikome', bottes: 'tabi-shinobi', amulette: 'kemuri-dama', relique: 'fil-joren' },
-    dps: { arme: 'kaiken-izanami', casque: 'menpo-shikome', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'tsuba-ebrechee', relique: 'encre-shinigami' },
-    equilibre: { arme: 'crocs-jorogumo', casque: 'chapeau-paille', plastron: 'do-lamelles-os', jambieres: 'hakama-soie', bottes: 'waraji-meute', amulette: 'omamori-temple', relique: 'fil-joren' },
+    survie: { arme: 'crocs-jorogumo', casque: 'bandeau-vent', plastron: 'do-lamelles-os', jambieres: 'haidate-shikome', bottes: 'tabi-shinobi', amulette: 'talisman-ombre', relique: 'coeur-assassin' },
+    dps: { arme: 'kaiken-izanami', casque: 'menpo-shikome', plastron: 'gi-assassin', jambieres: 'haidate-vipere', bottes: 'waraji-meute', amulette: 'tsuba-ebrechee', relique: 'lame-traitre' },
+    boss: { arme: 'kusarigama', casque: 'masque-kitsune', plastron: 'manteau-ombre', jambieres: 'jambieres-araignee', bottes: 'bottes-tengu', amulette: 'kemuri-dama', relique: 'encre-shinigami' },
   },
   paladin: {
-    survie: { arme: 'miroir-yata', casque: 'zukin-sohei', plastron: 'kesa-sohei', jambieres: 'haidate-temple', bottes: 'geta-kasa', amulette: 'omamori-temple', relique: 'fil-joren' },
-    dps: { arme: 'tetsubo-cloche', casque: 'eboshi-amaterasu', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-temple', amulette: 'encensoir-moine', relique: 'tambour-temple' },
-    equilibre: { arme: 'miroir-yata', casque: 'chapeau-paille', plastron: 'shimenawa-tressee', jambieres: 'suneate-ecailles', bottes: 'geta-temple', amulette: 'cloche-grand-rocher', relique: 'fil-joren' },
+    survie: { arme: 'naginata-temple', casque: 'zukin-sohei', plastron: 'do-yomi', jambieres: 'shimenawa-tressee', bottes: 'geta-bastion', amulette: 'rosaire-jade', relique: 'ecaille-dragon-or' },
+    dps: { arme: 'tetsubo-guerre', casque: 'eboshi-amaterasu', plastron: 'do-fanatique', jambieres: 'greves-inquisiteur', bottes: 'geta-aube', amulette: 'encensoir-moine', relique: 'marteau-divin' },
+    boss: { arme: 'miroir-yata', casque: 'couronne-juge', plastron: 'kesa-sohei', jambieres: 'haidate-temple', bottes: 'geta-egide', amulette: 'cloche-grand-rocher', relique: 'tambour-temple' },
   },
   sorcier: {
-    survie: { arme: 'eventail-jorogumo', casque: 'chapeau-paille', plastron: 'haori-ignifuge', jambieres: 'suneate-ecailles', bottes: 'geta-kasa', amulette: 'omamori-temple', relique: 'fil-joren' },
-    dps: { arme: 'grelots-onmyoji', casque: 'voile-izanami', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-kasa', amulette: 'ofuda-kagutsuchi', relique: 'magatama-yasakani' },
-    equilibre: { arme: 'pinceau-seimei', casque: 'masque-oublie', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'geta-braise', amulette: 'magatama-fele', relique: 'fil-joren' },
+    survie: { arme: 'grelots-onmyoji', casque: 'capuche-ascete', plastron: 'haori-ignifuge', jambieres: 'hakama-cendres', bottes: 'tabi-ombre', amulette: 'magatama-fele', relique: 'coeur-cendres' },
+    dps: { arme: 'eventail-jorogumo', casque: 'voile-izanami', plastron: 'robe-feu', jambieres: 'hakama-cramoisi', bottes: 'geta-danseur-feu', amulette: 'ofuda-kagutsuchi', relique: 'pierre-sang' },
+    boss: { arme: 'baton-susanoo', casque: 'masque-oublie', plastron: 'cape-phenix', jambieres: 'pantalon-esprit', bottes: 'geta-amaterasu', amulette: 'cristal-pyromancie', relique: 'magatama-yasakani' },
   },
   rodeur: {
-    survie: { arme: 'arc-pecher', casque: 'chapeau-paille', plastron: 'do-cuir-noir', jambieres: 'suneate-ecailles', bottes: 'geta-kasa', amulette: 'plume-yatagarasu', relique: 'fil-joren' },
-    dps: { arme: 'arc-ikazuchi', casque: 'jingasa-laque', plastron: 'shiroshozoku', jambieres: 'hakama-soie', bottes: 'tabi-messager', amulette: 'dent-kappa', relique: 'fleches-hahaya' },
-    equilibre: { arme: 'arc-soie', casque: 'jingasa-laque', plastron: 'shiroshozoku', jambieres: 'kyahan-eclaireur', bottes: 'waraji-eclaireur', amulette: 'omamori-temple', relique: 'fil-joren' },
+    survie: { arme: 'hankyu', casque: 'capuche-camouflage', plastron: 'do-cuir-noir', jambieres: 'jambieres-survie', bottes: 'waraji-esquive', amulette: 'charme-bois', relique: 'coeur-foret' },
+    dps: { arme: 'arc-pecher', casque: 'jingasa-laque', plastron: 'do-archer-elite', jambieres: 'kyahan-eclaireur', bottes: 'tabi-messager', amulette: 'croc-loup', relique: 'fleches-hahaya' },
+    boss: { arme: 'arc-ikazuchi', casque: 'masque-traqueur', plastron: 'manteau-plumes', jambieres: 'jambieres-vent', bottes: 'waraji-eclaireur', amulette: 'plume-yatagarasu', relique: 'carquois-ouragan' },
   },
 };
 
-const STYLES = ['survie', 'dps', 'equilibre'];
+const STYLES = ['survie', 'dps', 'boss'];
 const STUFF = option('stuff', 'typique');
 /** `--niveau-donjon 30` : niveau du donjon, celui du héros sinon. */
 const DUNGEON_LEVEL = Number(option('niveau-donjon', '0'));

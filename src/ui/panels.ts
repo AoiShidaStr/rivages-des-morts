@@ -118,9 +118,12 @@ function blockText(progress: Progress, def: ItemDef): string | null {
   return equipBlock(def, progress.state.hero, content.skills);
 }
 
-/** Étiquettes d'un objet : ses tags de classe, la race à qui il est réservé. */
+/** Rôle d'un objet pour sa classe, en une étiquette. */
+const SPEC_NAMES = { dps: 'DPS', survie: 'Survie', boss: 'Boss' } as const;
+
+/** Étiquettes d'un objet : ses tags de classe, son rôle, la race à qui il est réservé. */
 function itemTags(def: ItemDef): string[] {
-  return [...(def.tags ?? []), ...(def.races?.length ? [raceNames(content.skills, def)] : [])];
+  return [...(def.tags ?? []), ...(def.spec ? [SPEC_NAMES[def.spec]] : []), ...(def.races?.length ? [raceNames(content.skills, def)] : [])];
 }
 
 /** « (niv. 12) » pour une pièce que la forge peut améliorer. */

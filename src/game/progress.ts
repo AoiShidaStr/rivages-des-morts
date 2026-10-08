@@ -101,6 +101,8 @@ export interface Catalog {
   materialName(id: string): string;
   questName(id: string): string;
   itemSlot(id: string): Slot | undefined;
+  /** Vrai si l'objet existe encore dans le jeu. */
+  hasItem(id: string): boolean;
   /** Niveau atteint avec cette expérience. */
   levelFor(xp: number): number;
   /** Points de talent gagnés en tout à ce niveau. */
@@ -487,6 +489,9 @@ function migrate(saved: SavedState, catalog: Catalog): ProgressState {
     if (item && catalog.itemSlot(item) !== slot) delete state.equipped[slot];
   }
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
+  // 0.11.0 : les objets retirés du jeu (Kanabō d'oni, Arc de soie…) quittent l'inventaire, sans compensation.
+  state.items = state.items.filter((id) => catalog.hasItem(id));
+  for (const id of Object.keys(state.itemLevels)) if (!catalog.hasItem(id)) delete state.itemLevels[id];
   // Une Jorōgumo déjà vaincue compte comme une victoire au niveau 1.
   const rizieres = dungeon ?? (state.quests.dame === 'done' ? { unlocked: 2, best: 1 } : { unlocked: 1, best: 0 });
   state.dungeons = { rizieres, ...saved.dungeons };

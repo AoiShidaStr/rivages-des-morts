@@ -17,7 +17,7 @@
         { "if": [{ "class": "guerrier" }], "give": "katana-ronin" },
         { "if": [{ "class": "lame" }], "give": "crocs-jorogumo" },
         { "if": [{ "class": "paladin" }], "give": "miroir-yata" },
-        { "if": [{ "class": "rodeur" }], "give": "arc-soie" },
+        { "if": [{ "class": "rodeur" }], "give": "arc-pecher" },
         { "if": [{ "class": "sorcier" }], "give": "eventail-jorogumo" }
       ]
     },
