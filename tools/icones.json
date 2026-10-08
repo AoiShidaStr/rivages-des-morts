@@ -26,17 +26,6 @@
       ]
     },
     {
-      "source": "objets_planche_2.jpg",
-      "columns": 8,
-      "rows": 4,
-      "ids": [
-        "grelots-onmyoji", "eventail-jorogumo", "kunai-jumeaux", "naginata-temple", "yumi-bambou", "totsuka-tsurugi", "kaiken-izanami", "arc-pecher",
-        "voile-izanami", "do-yomi", "peche-okamuzumi", "peigne-izanagi", "os", "foudre", "kusarigama", "crocs-jorogumo",
-        "tetsubo-cloche", "miroir-yata", "hankyu", "arc-soie", null, null, null, null,
-        null, null, null, null, null, null, null, null
-      ]
-    },
-    {
       "source": "objets_planche_3.jpg",
       "columns": 8,
       "rows": 4,
@@ -77,6 +66,17 @@
         "dogu-yeux-clos", "gohei-sanctuaire", "mino-paille", null, null, "tsuba-ronin-mort", "yomotsu-hegui", null,
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ]
+    },
+    {
+      "source": "objets_planche_7.jpg",
+      "columns": 8,
+      "rows": 4,
+      "ids": [
+        "grelots-onmyoji", "eventail-jorogumo", "voile-izanami", "kunai-jumeaux", "kusarigama", "crocs-jorogumo", "kaiken-izanami", "naginata-temple",
+        "miroir-yata", "do-yomi", "yumi-bambou", "hankyu", "arc-pecher", "peche-okamuzumi", "peigne-izanagi", "os",
+        "foudre", null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null
       ]
     }

@@ -172,7 +172,7 @@ No text, no numbers, no letters, no grid lines.
 
 ## Icônes peintes à la place du pixel art (faites, dans le jeu)
 
-Les 37 objets qui n'avaient qu'une icône en pixel art ont leur icône peinte depuis le 8 octobre 2026 (planche 6 : Gemini a doublé le mino et la tsuba, les cases 4 et 5 sont ignorées). Même méthode que les planches 3 et 4 : Gemini retouche une planche d'icônes réussie. Les cases sont déjà dans `tools/icones.json` ; une fois les images enregistrées, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art. (`objets_planche_2.jpg` n'étant plus dans le dossier, on joint la planche 3.)
+Les 37 objets qui n'avaient qu'une icône en pixel art ont leur icône peinte depuis le 8 octobre 2026 (planche 6 : Gemini a doublé le mino et la tsuba, les cases 4 et 5 sont ignorées). Même méthode que les planches 3 et 4 : Gemini retouche une planche d'icônes réussie. Les cases sont déjà dans `tools/icones.json` ; une fois les images enregistrées, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art. (`objets_planche_2.jpg` n'étant plus dans le dossier, on joint la planche 3 ; ses 17 objets passent sur la planche 7, plus bas.)
 
 Trois icônes en pixel art restent sans objet (`geta-braise`, `geta-temple`, `pinceau-seimei` : objets retirés par la 0.11.0) : inutile de les repeindre.
 
@@ -239,6 +239,42 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 3. a mino straw raincoat, thick layers of straw hanging down
 4. a rusted iron sword guard (tsuba) with dried dark blood in its engravings, hanging from a frayed cord
 5. a small black lacquered bowl of dark steaming rice and pickled food from the underworld, a pair of chopsticks across it, a faint violet mist rising
+
+No text, no numbers, no letters, no grid lines.
+```
+
+## À faire : icônes peintes des objets de l'ancienne planche 2
+
+17 objets n'ont encore qu'une icône en pixel art : leur version peinte devait venir de `objets_planche_2.jpg`, qui n'est plus dans le dossier. On les refait sur une planche 7, avec la même méthode que les planches 5 et 6 : Gemini retouche la planche 3. Les cases sont déjà dans `tools/icones.json` ; une fois l'image enregistrée, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art.
+
+### Planche 7 : armes de départ, objets d'Izanami et matériaux (17 objets)
+
+**Joindre :** `Pictures\game visual\objets_planche_3.jpg`. **Enregistrer sous :** `Pictures\game visual\objets_planche_7.jpg`
+
+> Cases 1 à 3 : Sorcier · 4 à 7 : Lame · 8 à 10 : Paladin · 11 à 13 : Rôdeur · 14 et 15 : toutes classes · 16 et 17 : matériaux. Les deux premières lignes sont pleines, la troisième n'a que sa première case ; les 15 autres cases restent vides. Si Gemini dessine un objet deux fois (comme sur la planche 6), dites-moi quelles cases ignorer.
+
+```text
+Edit the attached image.
+
+Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same flat light grey background, lighting and hand-painted icon style. Replace the objects: the first 17 cells, read left to right then top to bottom (the two top rows, then only the first cell of the third row), get these new objects, exactly one per cell, centered, the same size as the old ones, each one clearly readable as a small inventory icon. All the other cells become plain empty background, the same color as the rest of the image (no darker squares). Do not add, repeat or skip any object.
+
+1. a short black lacquered onmyoji staff topped with a cluster of small golden bells, tiny blue-white fox-fire flames dancing around the bells
+2. an open folding fan of pale silk painted with a black and yellow spider, fine silk threads trailing from its edge
+3. a long white funeral veil, folded and draped, its lower edge slightly charred and faintly smoking
+4. two blackened iron kunai crossed, their ring pommels tied together with a red cord
+5. a rice farmer's sickle on a wooden handle, a long rusty chain coiled around it and ending in an iron weight
+6. two curved pale spider fangs mounted on handles wrapped in white silk, a drop of green venom at each tip
+7. a small dagger in a black lacquered sheath tied with a white funeral cord, a few drops of dark blood beneath it
+8. a naginata polearm laid diagonally behind a small round wooden shield bearing a golden sun emblem
+9. an octagonal bronze mirror with a polished shining face, a red and white cord tied to its back knob, a soft golden glow
+10. a samurai do chest armor of bone lamellae lacquered black, laced with dark red cords, a thin layer of frost on its edges
+11. a tall asymmetrical Japanese yumi longbow of lacquered bamboo with its grip placed low and its string drawn straight
+12. a short horseman's hankyu bow of dark wood with a leather-wrapped grip and a taut string
+13. a longbow of pinkish peach-tree wood with a few small pink peach blossoms and green leaves growing along it
+14. a single perfect golden-pink peach with two green leaves, a soft warm glow around it
+15. a dark wooden Japanese comb whose teeth sprout into small green bamboo shoots
+16. a weathered yellowish bone with a chip of black lacquer stuck to it and a faint cold blue mist
+17. a jagged shard of crystallised yellow-white lightning crackling with small sparks
 
 No text, no numbers, no letters, no grid lines.
 ```
