@@ -170,9 +170,9 @@ Keep exactly the same grid of 8 columns and 4 rows, the same cell size, the same
 No text, no numbers, no letters, no grid lines.
 ```
 
-## À faire : icônes peintes à la place du pixel art
+## Icônes peintes à la place du pixel art (faites, dans le jeu)
 
-37 objets du jeu n'ont encore qu'une icône en pixel art (`npm run icones-pixel`, dessins de `tools/pixel/objets.mjs`). Même méthode que les planches 3 et 4 : Gemini retouche une planche d'icônes réussie. Les cases sont déjà dans `tools/icones.json` ; une fois les images enregistrées, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art. (`objets_planche_2.jpg` n'étant plus dans le dossier, on joint la planche 3.)
+Les 37 objets qui n'avaient qu'une icône en pixel art ont leur icône peinte depuis le 8 octobre 2026 (planche 6 : Gemini a doublé le mino et la tsuba, les cases 4 et 5 sont ignorées). Même méthode que les planches 3 et 4 : Gemini retouche une planche d'icônes réussie. Les cases sont déjà dans `tools/icones.json` ; une fois les images enregistrées, `npm run icones` écrit les icônes peintes par-dessus celles en pixel art. (`objets_planche_2.jpg` n'étant plus dans le dossier, on joint la planche 3.)
 
 Trois icônes en pixel art restent sans objet (`geta-braise`, `geta-temple`, `pinceau-seimei` : objets retirés par la 0.11.0) : inutile de les repeindre.
 

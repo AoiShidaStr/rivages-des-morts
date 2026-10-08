@@ -74,7 +74,7 @@
       "columns": 8,
       "rows": 4,
       "ids": [
-        "dogu-yeux-clos", "gohei-sanctuaire", "mino-paille", "tsuba-ronin-mort", "yomotsu-hegui", null, null, null,
+        "dogu-yeux-clos", "gohei-sanctuaire", "mino-paille", null, null, "tsuba-ronin-mort", "yomotsu-hegui", null,
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null
@@ -92,6 +92,13 @@
     "cristal-pyromancie": { "fillHoles": true, "minHole": 150 },
     "couronne-juge": { "fillHoles": true, "minHole": 150 },
     "marteau-divin": { "fillHoles": true, "minHole": 60 },
-    "talisman-ours": { "fillHoles": true, "minHole": 150 }
+    "talisman-ours": { "fillHoles": true, "minHole": 150 },
+    "gourde-sake-oni": { "fillHoles": true, "minHole": 60 },
+    "tsuba-ebrechee": { "fillHoles": true, "minHole": 60 },
+    "tsuba-ronin-mort": { "fillHoles": true, "minHole": 60 },
+    "arc-ikazuchi": { "fillHoles": true, "minHole": 60 },
+    "ecaille-ryujin": { "fillHoles": true, "minHole": 60 },
+    "kesa-sohei": { "fillHoles": true, "minHole": 60 },
+    "gohei-sanctuaire": { "fillHoles": true, "minHole": 60 }
   }
 }
