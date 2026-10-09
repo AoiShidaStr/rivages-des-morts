@@ -299,5 +299,12 @@
       "boltCount": 2
     },
     "peach": { "stun": 4.5, "damageFactor": 1.6, "regrow": 14 }
+  },
+  "mannequin": {
+    "about": "Terrain d'entraînement (le billot de Tetsu) : une cible qui ne bouge pas, ne frappe pas, et qu'on peut frapper sans fin. `maxHp` haut pour ne pas se briser au milieu d'une mesure ; à sa chute, la vague le ramène à la même place (GameConfig.training). `knockbackFactor` nul : il ne recule pas d'un pouce.",
+    "maxHp": 4000,
+    "radius": 0.5,
+    "mass": 60,
+    "knockbackFactor": 0
   }
 }

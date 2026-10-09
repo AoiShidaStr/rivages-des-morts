@@ -1927,3 +1927,26 @@ export class Izanami extends Enemy {
     this.state = { kind: 'recover', t: this.cfg.pursuit.recover };
   }
 }
+
+/**
+ * Mannequin d'entraînement (le billot de Tetsu) : un poteau de bois, immobile et sans attaque.
+ * Il ne pense rien, ne recule pas (son `knockbackFactor` est nul) et ne riposte jamais : c'est une cible
+ * pour mesurer une classe ou un équipement. Le terrain d'entraînement (`GameConfig.training`) le fait
+ * revenir à sa place quand il tombe, si bien qu'une séance ne s'arrête jamais d'elle-même.
+ */
+export class Mannequin extends Enemy {
+  readonly kind = 'mannequin' as const;
+
+  get pose(): Pose {
+    return 'idle';
+  }
+
+  /** Le billot, dessiné avec la souche du décor : rien à animer. */
+  get sprite(): string {
+    return 'souche';
+  }
+
+  protected think(_dt: number, _world: World): void {
+    // Il ne fait rien : c'est tout son intérêt.
+  }
+}

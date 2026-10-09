@@ -1,6 +1,6 @@
-import type { GameConfig, HazardConfig } from './config';
+import type { GameConfig, HazardConfig, WaveConfig } from './config';
 import type { CurseId } from './difficulty';
-import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Oublie, Shikome, type Enemy } from './enemies';
+import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Shikome, type Enemy } from './enemies';
 import {
   add,
   angleOf,
@@ -1871,16 +1871,23 @@ export class World {
   private updateWaves(dt: number): void {
     if (this.enemies.length > 0) return;
     const waves = this.cfg.waves;
-    if (this.waveIndex >= waves.length - 1) {
+    // Terrain d'entraînement : sa vague ne s'épuise pas. Le mannequin tombé revient à sa place.
+    if (!this.cfg.training && this.waveIndex >= waves.length - 1) {
       this.finish('victory');
       return;
     }
     this.waveTimer -= dt;
     if (this.waveTimer > 0) return;
 
-    this.waveIndex++;
+    // La première vague s'annonce ; au terrain d'entraînement, les retours du mannequin se font sans bannière.
+    const first = this.waveIndex < 0;
+    this.waveIndex = this.cfg.training ? 0 : this.waveIndex + 1;
     this.waveTimer = WAVE_PAUSE;
-    const wave = waves[this.waveIndex];
+    this.spawnWave(waves[this.waveIndex], !this.cfg.training || first);
+  }
+
+  /** Fait apparaître la vague `wave` : ses yokai, ses souches, ses pêchers, et son annonce si `announce`. */
+  private spawnWave(wave: WaveConfig, announce: boolean): void {
     // Donjon infini : chaque palier a son niveau et ses modificateurs.
     if (wave.difficulty) this.cfg.difficulty = wave.difficulty;
     this.stumps = (wave.stumps ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
@@ -1888,7 +1895,9 @@ export class World {
     this.webs = [];
     for (const spawn of wave.spawns) {
       for (let i = 0; i < spawn.count; i++) {
-        const enemy = this.createEnemy(spawn.kind, this.spawnPoint());
+        // Lieu fixe quand la vague en donne un (le mannequin d'entraînement) : sinon, au hasard loin du héros.
+        const at = spawn.positions?.[i % spawn.positions.length];
+        const enemy = this.createEnemy(spawn.kind, at ? vec(at.x, at.z) : this.spawnPoint());
         if (spawn.elite) enemy.makeElite(this.cfg.champion);
         this.enemies.push(enemy);
       }
@@ -1908,7 +1917,9 @@ export class World {
     }
     const hint = wave.hints?.[this.player.cfg.kit] ?? wave.hint;
     for (const hero of this.players) hero.newWave();
-    this.emit({ type: 'wave', index: this.waveIndex, total: waves.length, label: wave.label, hint, step: wave.step, palier: wave.palier });
+    if (announce) {
+      this.emit({ type: 'wave', index: this.waveIndex, total: this.cfg.waves.length, label: wave.label, hint, step: wave.step, palier: wave.palier });
+    }
   }
 
   private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
@@ -1976,6 +1987,8 @@ export class World {
         return new Oublie(id, pos, cfg.ikusa, 'ikusa');
       case 'izanami':
         return new Izanami(id, pos, cfg.izanami);
+      case 'mannequin':
+        return new Mannequin(id, pos, cfg.mannequin);
     }
   }
 

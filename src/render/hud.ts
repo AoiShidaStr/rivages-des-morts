@@ -18,6 +18,12 @@ const RESOURCE: Record<Kit, { label: string; style: string }> = {
   rodeur: { label: 'Tir chargé', style: 'draw' },
 };
 
+/** « 1:07 » : durée d'une séance d'entraînement. */
+function clock(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
 interface SkillSlot {
   root: HTMLElement;
   name: HTMLElement;
@@ -61,6 +67,11 @@ export class Hud {
   private allyBars: { fill: HTMLElement; name: HTMLElement; label: string }[] = [];
   /** Coop en ligne : ping de chaque allié, dans l'ordre des alliés (inconnu : rien d'affiché). */
   pings: (number | undefined)[] = [];
+  /** Terrain d'entraînement : dégâts portés au mannequin, en haut de l'écran (voir `setTraining`). */
+  private readonly training: HTMLElement;
+  private readonly trainingDps: HTMLElement;
+  private readonly trainingTotal: HTMLElement;
+  private readonly trainingTime: HTMLElement;
   private bossTitle = 'Jorōgumo';
   private bossKind = '';
   private bannerTimer = 0;
@@ -96,6 +107,33 @@ export class Hud {
     this.boss.append(this.gaze);
     this.allyList = h('div', { class: 'allies' });
     find('.bar.hp').after(this.allyList);
+    this.trainingDps = h('strong', { class: 'dps' });
+    this.trainingTotal = h('span', { class: 'total' });
+    this.trainingTime = h('span', { class: 'time' });
+    this.training = h(
+      'div',
+      { class: 'training', title: 'Dégâts infligés au mannequin : la moyenne porte sur les dernières secondes de combat.' },
+      h('span', { class: 'title' }, 'Entraînement'),
+      this.trainingDps,
+      this.trainingTotal,
+      this.trainingTime,
+    );
+    find('#boss').after(this.training);
+  }
+
+  /**
+   * Terrain d'entraînement : les dégâts portés au mannequin depuis l'entrée, leur moyenne des dernières secondes
+   * et la durée de la séance. `null` retire le panneau (donjon ordinaire).
+   */
+  setTraining(stats: { total: number; dps: number; seconds: number } | null): void {
+    this.training.classList.toggle('visible', stats !== null);
+    if (!stats) return;
+    const dps = `${Math.round(stats.dps)} DPS`;
+    if (this.trainingDps.textContent !== dps) this.trainingDps.textContent = dps;
+    const total = `${Math.round(stats.total)} dégâts`;
+    if (this.trainingTotal.textContent !== total) this.trainingTotal.textContent = total;
+    const time = clock(stats.seconds);
+    if (this.trainingTime.textContent !== time) this.trainingTime.textContent = time;
   }
 
   /** Coop : noms des autres héros, dans l'ordre (aucun en solo). */

@@ -268,6 +268,15 @@
               ["tetsu", "Et je peux affûter tout ce que tu portes. Une lame qu'on entretient se souvient de son porteur."]
             ]
           },
+          {
+            "text": "Le billot, derrière la forge (t'entraîner)",
+            "reply": [
+              ["tetsu", "Derrière la forge, il y a un billot de paille et deux poteaux. Frappe-les tant que tu veux : ils ne rendent pas les coups, et rien ne se perd ici.", [{ "notFlag": "nom_tetsu" }]],
+              ["tetsu", "Mon vieux billot, derrière la forge. Vas-y : il a encaissé bien des lames avant de connaître la tienne.", [{ "flag": "nom_tetsu" }]],
+              ["tetsu", "Tes coups s'affichent en haut de l'écran, dégâts et moyenne : de quoi peser deux armes, ou deux vies. Pour sortir, Échap puis « Quitter l'entraînement »."]
+            ],
+            "then": [{ "train": true }]
+          },
           { "text": "Au revoir" }
         ]
       }

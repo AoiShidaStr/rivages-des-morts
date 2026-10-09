@@ -5,6 +5,7 @@ import rizieresJson from './data/dungeon.json';
 import type { Arena3dKind } from './render/arena3d';
 import palaisJson from './data/dungeon-palais.json';
 import dungeonsJson from './data/dungeons.json';
+import entrainementJson from './data/entrainement.json';
 import endlessJson from './data/donjon-infini.json';
 import islandJson from './data/island.json';
 import islandSpritesJson from './data/islandSprites.json';
@@ -15,6 +16,7 @@ import type { GameConfig } from './game/config';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { ArenaSource, EndlessData } from './game/infini';
 import type { UpgradeRules } from './game/forge';
+
 import type { IslandData, ScreenPoint } from './game/island';
 import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
 import type { DuplicateRules, ShopOffer } from './game/loot';
@@ -122,10 +124,24 @@ const ARENA_DEFAULTS = {
   champion: { hp: 1.8, damage: 1.3 },
 };
 
-function dungeon(id: 'rizieres' | 'palais', arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>): DungeonDef {
-  const meta = dungeonsJson[id] as unknown as Omit<DungeonDef, 'id' | 'arena'>;
+function dungeonFrom(id: string, meta: Omit<DungeonDef, 'id' | 'arena'>, arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>): DungeonDef {
   return { id, ...meta, arena: { ...ARENA_DEFAULTS, ...arena } };
 }
+
+function dungeon(id: 'rizieres' | 'palais', arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>): DungeonDef {
+  const meta = dungeonsJson[id] as unknown as Omit<DungeonDef, 'id' | 'arena'>;
+  return dungeonFrom(id, meta, arena);
+}
+
+/**
+ * Le terrain d'entraînement de Tetsu (src/data/entrainement.json) : une méta et une arène, comme un donjon,
+ * mais hors de `content.dungeons` — il n'a ni palier, ni quête, ni butin, et n'apparaît nulle part ailleurs
+ * (donjon infini, coop, records).
+ */
+const entrainement = entrainementJson as unknown as {
+  meta: Omit<DungeonDef, 'id' | 'arena'>;
+  arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>;
+};
 
 export interface QuestDef {
   name: string;
@@ -155,6 +171,8 @@ export const content = {
     rizieres: dungeon('rizieres', rizieresJson as unknown as ArenaConfig),
     palais: dungeon('palais', palaisJson as unknown as ArenaConfig),
   } as Record<string, DungeonDef>,
+  /** Le billot de Tetsu : on y frappe un mannequin immobile pour éprouver une classe ou un équipement. */
+  entrainement: dungeonFrom('entrainement', entrainement.meta, entrainement.arena),
   triggers: questsJson.triggers as unknown as Catalog['triggers'],
   /** Le Yomi sans fond (donjon infini), qui tire ses blocs des donjons ci-dessus. */
   endless: endlessJson as unknown as EndlessData,

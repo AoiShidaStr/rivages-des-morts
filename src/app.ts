@@ -55,6 +55,8 @@ const STEP = 1 / 60;
 const MAX_STEPS_PER_FRAME = 5;
 /** Centre du village, survolé par la caméra derrière l'écran titre. */
 const TITLE_ORBIT = { u: -4, v: 1, radius: 5, speed: 0.07 };
+/** Terrain d'entraînement : fenêtre du DPS affiché, en secondes de combat. */
+const DPS_WINDOW = 5;
 
 interface Loot {
   oboles: number;
@@ -148,6 +150,10 @@ export class App {
   /** Où l'on reparaît sur l'île en remontant (devant la cascade, après le donjon infini). */
   private exitAt: ScreenPoint | null = null;
   private outcome: Outcome | null = null;
+  /** Terrain d'entraînement : dégâts portés au mannequin depuis l'entrée, et leurs instants (DPS glissant). */
+  private trainingStats: { start: number; total: number; hits: { t: number; amount: number }[] } | null = null;
+  /** Un dialogue a demandé le terrain d'entraînement : on y descend une fois le dialogue refermé. */
+  private pendingTraining = false;
   /** Micro-pause d'impact (hitstop) sur les coups critiques et parades majeures pour le game feel. */
   private hitstop = 0;
   private readonly dialogue: DialogueBox;
@@ -448,6 +454,11 @@ export class App {
       this.dialogue.close();
       this.busy = false;
     }
+    // Le billot de Tetsu : on y descend une fois le dialogue refermé, et `busy` retombé.
+    if (this.pendingTraining) {
+      this.pendingTraining = false;
+      await this.descendTraining();
+    }
   }
 
   private async playLines(lines: Line[]): Promise<void> {
@@ -478,6 +489,10 @@ export class App {
         case 'changeHero':
           await this.changeHero();
           break;
+        case 'training':
+          // La descente attend la fin du dialogue : voir `interact`.
+          this.pendingTraining = true;
+          break;
         case 'dungeon': {
           // Le joueur choisit le niveau du donjon avant d'y entrer.
           const id = action.id;
@@ -490,6 +505,43 @@ export class App {
         }
       }
     }
+  }
+
+  /**
+   * Le terrain d'entraînement de Tetsu, derrière sa forge : une arène à part, sans palier, sans butin et sans
+   * risque, où deux mannequins immobiles encaissent les coups. On en ressort par la pause. Il sert à éprouver
+   * une classe ou un équipement : rien de ce qui s'y passe ne touche la sauvegarde.
+   */
+  private async descendTraining(): Promise<void> {
+    if (this.busy) return;
+    // En coop, le combat appartient à l'hôte : le terrain d'entraînement reste une affaire solitaire.
+    if (this.coop) {
+      this.screens.toast('Quitte la partie en coop avant de t’entraîner.');
+      return;
+    }
+    this.busy = true;
+    const terrain = content.entrainement;
+    const player = this.loadout().config;
+    await this.screens.transition(terrain.name, terrain.region, () => {
+      // `training` : la vague du mannequin ne s'épuise pas, il revient à sa place. Aucune difficulté n'est passée,
+      // donc aucune malédiction, aucun renfort de niveau, et rien à gagner.
+      const world = new World({ ...this.d.config, ...terrain.arena, player, training: true });
+      this.world = world;
+      this.mirror = null;
+      this.bots = [];
+      this.endless = null;
+      this.exitAt = null;
+      this.prepareDungeon(terrain, 1, []);
+      this.trainingStats = { start: 0, total: 0, hits: [] };
+    });
+    this.busy = false;
+  }
+
+  /** Sortie du terrain d'entraînement : retour sur l'île, devant la forge de Tetsu. Rien n'est gagné ni perdu. */
+  private async leaveTraining(): Promise<void> {
+    this.trainingStats = null;
+    this.d.hud.setTraining(null);
+    await this.returnToIsland();
   }
 
   /**
@@ -637,6 +689,8 @@ export class App {
     if (online) this.shareState(world, events);
     for (const event of events) {
       this.track(event);
+      // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
+      if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
       // Micro-pause d'impact, seul : en ligne, figer un joueur le décalerait des autres.
       if (online) continue;
       if (event.type === 'enemyHit' && event.crit) this.hitstop = 0.045;
@@ -646,6 +700,7 @@ export class App {
     dungeonRenderer.sync(world, events, dt);
     if (online) hud.pings = world.players.slice(1).map((hero) => this.remote.get(hero.id)?.ping);
     hud.update(world, events, dt);
+    if (this.trainingStats) hud.setTraining(this.trainingReport(world.time));
     // Onglet caché : l'hôte fait avancer le combat pour ses amis, sans rien dessiner.
     if (!document.hidden) dungeonRenderer.render();
     if (this.outcome) this.finishDungeon(this.outcome);
@@ -857,6 +912,9 @@ export class App {
     dungeonRenderer.setStyle(dungeon.style);
     hud.reset(level, dungeon.boss);
     hud.configure(heroClass(content.skills, this.d.progress.state.hero));
+    // Le compteur d'entraînement ne survit pas à une descente : chaque séance repart de zéro.
+    this.trainingStats = null;
+    hud.setTraining(null);
     if (!keepLoot) this.run = emptyLoot();
     this.outcome = null;
     this.accumulator = 0;
@@ -951,6 +1009,26 @@ export class App {
     }
   }
 
+  /** Un coup porté au mannequin : il entre dans le total, et dans la fenêtre glissante du DPS. */
+  private countDamage(amount: number, time: number): void {
+    const stats = this.trainingStats;
+    if (!stats) return;
+    stats.total += amount;
+    stats.hits.push({ t: time, amount });
+    const keep = time - DPS_WINDOW;
+    while (stats.hits.length > 0 && stats.hits[0].t < keep) stats.hits.shift();
+  }
+
+  /** Ce que le panneau d'entraînement affiche : dégâts totaux, DPS des dernières secondes, durée de la séance. */
+  private trainingReport(time: number): { total: number; dps: number; seconds: number } {
+    const stats = this.trainingStats;
+    if (!stats) return { total: 0, dps: 0, seconds: 0 };
+    // Aux tout premiers coups, la fenêtre est plus courte que le DPS_WINDOW : sinon la moyenne serait écrasée.
+    const span = Math.max(0.5, Math.min(DPS_WINDOW, time - stats.start));
+    const recent = stats.hits.reduce((sum, hit) => sum + hit.amount, 0);
+    return { total: stats.total, dps: recent / span, seconds: Math.max(0, time - stats.start) };
+  }
+
   /** Ce que rapporte le butin de la descente : chaque combat gagné laisse un coffre (pas la vague perdue). */
   private runTotals(victory: boolean): { oboles: number; xp: number; chests: number; materials: (string | Node)[] } {
     return {
@@ -977,6 +1055,11 @@ export class App {
   }
 
   private finishDungeon(outcome: Outcome): void {
+    // Terrain d'entraînement : ni butin, ni quête, ni écran de fin — on remonte sur l'île.
+    if (this.trainingStats) {
+      void this.leaveTraining();
+      return;
+    }
     if (this.endless) {
       this.finishEndless(outcome);
       return;
@@ -1244,11 +1327,15 @@ export class App {
     const session = this.coop;
     if (this.mode === 'dungeon') {
       options.push({
-        label: session ? 'Quitter la partie en coop' : 'Abandonner le donjon',
+        label: this.trainingStats ? 'Quitter l’entraînement' : session ? 'Quitter la partie en coop' : 'Abandonner le donjon',
         action: () => {
           this.screens.hidePause();
-          session?.leave();
-          if (this.mode === 'dungeon' && !this.outcome) this.finishDungeon('defeat');
+          // L'entraînement ne se termine pas par une défaite : on remonte, simplement.
+          if (this.trainingStats) void this.leaveTraining();
+          else {
+            session?.leave();
+            if (this.mode === 'dungeon' && !this.outcome) this.finishDungeon('defeat');
+          }
         },
       });
     } else if (this.mode === 'island') {
