@@ -77,7 +77,7 @@ export interface PlayerConfig {
   stance: {
     guard: { attackTimeFactor: number; damageTakenFactor: number };
     offense: { attackTimeFactor: number; reach: number; lifesteal: number; damageTakenFactor: number };
-    counter: { window: number; bonus: number; stun: number };
+    counter: { window: number; bonus: number; stun: number; heal: number };
     effectCooldown: number;
     parrySmash: number;
   };
@@ -117,7 +117,7 @@ export interface SorcierConfig {
    * A : Bouclier de flammes. En s'allumant, il repousse (`knockback`) les yokai à moins de `radius` m ; puis il absorbe
    * `shield` des PV max pendant `duration` s, et brûle ceux qui l'approchent.
    */
-  ward: { cost: number; cooldown: number; duration: number; shield: number; burn: number; radius: number; knockback: number };
+  ward: { cost: number; cooldown: number; duration: number; shield: number; heal: number; burn: number; radius: number; knockback: number };
   /** E : Fuite de feu. Un bond de `distance` m qui laisse une traînée brûlante (`burn` dégâts par seconde, `trailLife` s). */
   flight: { cost: number; cooldown: number; distance: number; duration: number; trailLife: number; trailRadius: number; burn: number };
   /** R : grand météore, sous le curseur (à `range` m au plus), qui s'écrase au bout de `delay` s. */
@@ -856,6 +856,8 @@ export interface EnemyConfigs {
   ikazuchi: IkazuchiConfig;
   ikusa: OublieConfig;
   izanami: IzanamiConfig;
+  /** Mannequin d'entraînement : immobile, sans attaque, il encaisse les coups tant qu'on veut. */
+  mannequin: EnemyBaseConfig;
 }
 
 export interface WaveConfig {
@@ -864,7 +866,13 @@ export interface WaveConfig {
   /** Conseil propre à une classe, à la place de `hint` (le Guerrier bloque, le Sorcier pose un sceau). */
   hints?: Partial<Record<Kit, string>>;
   /** `elite` : ce yokai est un champion (plus grand, plus résistant), quel que soit le niveau. */
-  spawns: { kind: EnemyKind; count: number; elite?: boolean }[];
+  spawns: {
+    kind: EnemyKind;
+    count: number;
+    elite?: boolean;
+    /** Places fixes, dans l'ordre (terrain d'entraînement) ; sans elles, l'apparition se fait au hasard loin du héros. */
+    positions?: { x: number; z: number }[];
+  }[];
   /** Souches placées dans l'arène pour cette vague (arène de la Jorōgumo). */
   stumps?: { x: number; z: number }[];
   /** Pêchers d'Izanagi placés dans l'arène pour cette vague (arène d'Izanami). */
@@ -890,4 +898,9 @@ export interface GameConfig {
   waves: WaveConfig[];
   /** Niveau du donjon choisi à l'entrée ; absent = niveau 1, sans renfort. */
   difficulty?: Difficulty;
+  /**
+   * Terrain d'entraînement : la vague ne se termine jamais — quand le mannequin tombe, un autre reprend sa place,
+   * sans annonce et sans butin. Le héros n'y gagne ni quête ni objet.
+   */
+  training?: boolean;
 }

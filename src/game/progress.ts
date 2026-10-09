@@ -85,6 +85,8 @@ export interface Effect {
   resetTalents?: boolean;
   /** Ouvre le choix d'une autre race et d'une autre classe (le moine du Rocher). */
   changeHero?: boolean;
+  /** Ouvre le terrain d'entraînement (le billot de Tetsu) : on y frappe un mannequin, sans butin ni risque. */
+  train?: boolean;
 }
 
 /** Ce que l'interface doit faire après une suite d'effets. */
@@ -94,7 +96,8 @@ export type Action =
   | { kind: 'forge' }
   | { kind: 'dungeon'; id: string }
   | { kind: 'chests' }
-  | { kind: 'changeHero' };
+  | { kind: 'changeHero' }
+  | { kind: 'training' };
 
 export interface Catalog {
   itemName(id: string): string;
@@ -440,6 +443,7 @@ export class Progress {
     if (e.enterDungeon) actions.push({ kind: 'dungeon', id: e.enterDungeon === true ? 'rizieres' : e.enterDungeon });
     if (e.openChests) actions.push({ kind: 'chests' });
     if (e.changeHero) actions.push({ kind: 'changeHero' });
+    if (e.train) actions.push({ kind: 'training' });
   }
 }
 

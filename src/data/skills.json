@@ -187,7 +187,7 @@
       "weapon": "nodachi",
       "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
       "effects": [
-        { "op": "mul", "path": "maxHp", "value": 1.4 },
+        { "op": "mul", "path": "maxHp", "value": 1.55 },
         { "op": "set", "path": "block.reduction", "value": 0.9 }
       ],
       "passives": [
@@ -197,10 +197,10 @@
         }
       ],
       "actives": [
-        { "key": "Clic droit", "name": "Posture", "description": "Tiens le clic droit pour passer en Garde et bloquer 90 % d'un coup de face ; relâche pour repasser en Offensive. Garde levée juste avant le coup : blocage parfait, ton coup suivant riposte (+35 % de dégâts, critique, étourdit) et la Frappe fracassante revient 2 s plus tôt." },
-        { "key": "A", "name": "Frappe fracassante", "description": "Gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV. Revient en 6 s." },
+        { "key": "Clic droit", "name": "Posture", "description": "Tiens le clic droit pour passer en Garde et bloquer 90 % d'un coup de face ; relâche pour repasser en Offensive. Garde levée juste avant le coup : blocage parfait, ton coup suivant riposte (+35 % de dégâts, critique, étourdit) et la Frappe fracassante revient 2 s plus tôt et tu récupères 3 % de tes PV." },
+        { "key": "A", "name": "Frappe fracassante", "description": "Gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV. Revient en 5 s." },
         { "key": "E", "name": "Bond", "description": "Saute sur la zone visée et frappe à l'atterrissage. Revient en 5 s." },
-        { "key": "R", "name": "Frénésie", "description": "Pendant 6 s, tu frappes bien plus vite mais subis 25 % de dégâts en plus. Revient en 14 s." }
+        { "key": "R", "name": "Frénésie", "description": "Pendant 6 s, tu frappes bien plus vite mais subis 10 % de dégâts en plus. Revient en 14 s." }
       ],
       "tag": {
         "name": "Guerrier",
@@ -367,7 +367,7 @@
           "name": "Sceau",
           "description": "Trace un sceau sous la souris (9 m au plus) : il explose au bout d’1 s, gros dégâts en zone, carapaces ignorées. 18 mana, revient en 2,5 s."
         },
-        { "key": "A", "name": "Bouclier de flammes", "description": "Un bouclier absorbe 40 % de tes PV max pendant 5 s, repousse les yokai proches et brûle ceux qui le touchent. 30 mana, revient en 10 s." },
+        { "key": "A", "name": "Bouclier de flammes", "description": "Un bouclier absorbe 40 % de tes PV max pendant 5 s, te rend 5 % de tes PV en s'allumant, repousse les yokai proches et brûle ceux qui le touchent. 30 mana, revient en 10 s." },
         {
           "key": "E",
           "name": "Fuite de feu",
@@ -532,7 +532,7 @@
         { "op": "set", "path": "kit", "value": "lame" },
         { "op": "mul", "path": "maxHp", "value": 0.9 },
         { "op": "mul", "path": "dodge.cooldown", "value": 0.8 },
-        { "op": "add", "path": "dodge.invulnerable", "value": 0.06 },
+        { "op": "add", "path": "dodge.invulnerable", "value": 0.1 },
         { "op": "set", "path": "perks.poisonKillHeal", "value": 4 }
       ],
       "passives": [
@@ -713,12 +713,12 @@
       "effects": [
         { "op": "set", "path": "kit", "value": "paladin" },
         { "op": "set", "path": "block.reduction", "value": 0.85 },
-        { "op": "mul", "path": "maxHp", "value": 1.15 },
-        { "op": "mul", "path": "moveSpeed", "value": 0.95 },
+        { "op": "mul", "path": "maxHp", "value": 1.25 },
+        { "op": "mul", "path": "moveSpeed", "value": 1 },
         { "op": "set", "path": "blockMoveFactor", "value": 0.45 }
       ],
       "passives": [
-        { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 6 % de tes PV rendus." }
+        { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 8 % de tes PV rendus." }
       ],
       "actives": [
         {
@@ -726,7 +726,7 @@
           "name": "Bouclier levé",
           "description": "Maintiens pour arrêter 85 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
         },
-        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend à toi et à tes alliés proches (âmes comprises) 25 % de leurs PV max, une part chaque seconde." },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend à toi et à tes alliés proches (âmes comprises) 30 % de leurs PV max, une part chaque seconde." },
         { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
         {
           "key": "R",

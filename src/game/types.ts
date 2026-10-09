@@ -13,7 +13,9 @@ export type EnemyKind =
   | 'shikome'
   | 'ikazuchi'
   | 'ikusa'
-  | 'izanami';
+  | 'izanami'
+  // Terrain d'entraînement de Tetsu : immobile, sans attaque.
+  | 'mannequin';
 /** `peach` : une pêche d'Izanagi a repoussé Izanami. */
 export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare' | 'net' | 'daze' | 'peach';
 /** Marques posées sur un ennemi : mort (Lame), chasseur (Rôdeur). */

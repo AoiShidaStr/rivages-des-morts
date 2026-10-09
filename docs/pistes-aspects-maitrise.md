@@ -1,6 +1,6 @@
 # Pistes : aspects d'arme et maîtrise de classe (9 octobre 2026)
 
-Étude, pas implémentation : aucun fichier de jeu n'est modifié par ce document. Il répond aux deux pistes que le plan d'équilibrage des classes laisse ouvertes (`docs/plan-equilibrage-classes.md`, section 4), à partir de l'état réel du dépôt au commit `cb48cd8`.
+Étude, pas implémentation : aucun fichier de jeu n'est modifié par ce document. Il répond aux deux pistes que le plan d'équilibrage des classes laisse ouvertes (`docs/plan-equilibrage-classes.md`, section 4), à partir de l'état réel du dépôt au commit `cb48cd8`. Les réponses du joueur au questionnaire, et ce qu’elles changent, sont en fin de document.
 
 Ce que l'autre agent garde, et que je ne touche pas : étape 0 (bot « humain », banc à cible mobile, journal de parties), sous-classes au niveau 25 ou 50, bonus de rôle en coop, bénédictions du Yomi sans fond, refonte du Paladin.
 
@@ -78,7 +78,7 @@ Valeurs à régler en jeu, une par une, sur le bot puis à la main.
 
 **À abandonner sous sa forme « variantes de l'arme de classe ».** Le système `spec` de la 0.11.0 (105 objets, 15 armes, paliers de forge, armes de boss) remplit déjà le rôle, et mieux : le joueur choisit *un objet*, pas *un mode*. Saupoudrer des variantes par-dessus rend le build illisible.
 
-**À reporter** pour la forme réduite « un aspect par classe posé sur l'arme équipée » — c'est la seule qui ne double rien — **mais après les sous-classes**, et seulement si le joueur juge que l'arbre de compétences ne suffit pas. Le gain attendu est du plaisir, pas de l'équilibrage. Si l'on veut améliorer l'existant avant tout nouvel axe, deux gestes moins chers le font : donner au Nodachi de l'Ikusa et au Katana de rōnin un effet de kit (pas seulement des chiffres), et remettre les armes `boss` dans le giron des boss (le Miroir de Yata distribué aux Rizières détruit la logique du `spec`).
+**À reporter** pour la forme réduite « un aspect par classe posé sur l'arme équipée » — c'est la seule qui ne double rien — **mais après les sous-classes**, et seulement si le joueur juge que l'arbre de compétences ne suffit pas. Le gain attendu est du plaisir, pas de l'équilibrage. Si l'on veut améliorer l'existant avant tout nouvel axe, deux gestes moins chers le font : donner au Nodachi de l'Ikusa et au Katana de rōnin un effet de kit (pas seulement des chiffres), et remettre les armes `boss` dans le giron des boss (le Miroir de Yata distribué aux Rizières détruit la logique du `spec`). Le joueur a répondu le 9 octobre : il garde le déblocage actuel, et la piste aspects pivote vers la personnalisation d’arme — voir « Réponses du joueur » en fin de document.
 
 ---
 
@@ -128,7 +128,7 @@ La maîtrise de classe (Darkest Dungeon, Vampire Survivors) promet une progressi
 
 **À reporter.** La bonne idée est la **progression par classe au long cours**, qui manque réellement après le niveau 10 ; mais la place est déjà prise par les sous-classes, que l'autre agent traite. Faire les deux, c'est trois axes de passifs pour la même classe.
 
-Si la maîtrise revient sur la table (après validation des sous-classes), prendre la **forme la moins chère et la plus utile** : **propositions 1 + 4** (paliers automatiques, sans écran, appliqués seulement sous le niveau 25), compteur dans un `flags` de la sauvegarde du personnage. Zéro migration, zéro réseau, un fichier de données et une fonction. Elle répond exactement au point faible mesuré du plan (le début de partie) sans gonfler la fin. La version « réserve partagée entre personnages » est à réserver à une 0.13, quand le donjon infini aura été relevé.
+Si la maîtrise revient sur la table (après validation des sous-classes), prendre la **forme la moins chère et la plus utile** : **propositions 1 + 4** (paliers automatiques, sans écran, appliqués seulement sous le niveau 25), compteur dans un `flags` de la sauvegarde du personnage. Zéro migration, zéro réseau, un fichier de données et une fonction. Elle répond exactement au point faible mesuré du plan (le début de partie) sans gonfler la fin. La version « réserve partagée entre personnages » est à réserver à une 0.13, quand le donjon infini aura été relevé. Le joueur demande, lui, un **arbre complet de styles de jeu**, par personnage : voir « Réponses du joueur », qui traite le recouvrement désormais certain avec les sous-classes.
 
 ---
 
@@ -153,3 +153,56 @@ Ce que je recommande à la place, si le vide gêne vraiment : confier le positio
 2. **Armes de boss** : veux-tu que je remette les armes `spec: "boss"` dans le giron des boss (le Miroir de Yata donné aux Rizières casse la logique), ou le déblocage actuel te convient ?
 3. **Maîtrise de classe** : si elle revient après les sous-classes, la veux-tu en **paliers automatiques sans écran** (la moins chère, appliquée seulement sous le niveau 25) ou en **arbre de 6 nœuds à choisir**, comme les talents ?
 4. **Progression de classe** : la maîtrise doit-elle être **par personnage** (rien à migrer) ou **partagée entre tous les personnages** (nouvelle sauvegarde de compte, export à faire évoluer) ?
+
+---
+
+## Réponses du joueur (9 octobre 2026)
+
+Le joueur a répondu aux quatre questions. Voici ce que chaque réponse change, et ce que je maintiens.
+
+### 1. Aspects d’arme : la piste n’est pas refermée, mais elle pivote
+
+Réponse : garder quelque chose, mais pas des variantes de moveset — plutôt un **système d’amélioration d’arme complexe** (mods à la Warframe, sublimations ou chasses à la Wakfu), avec peut-être un **inventaire géré** (capacité maximale, gestion).
+
+Ce que le code a déjà, et qui compte pour juger :
+
+- L’**axe d’amélioration existe** : la forge de Tetsu (`src/game/forge.ts`, règles `forge.upgrade` dans `items.json`) monte chaque pièce jusqu’au niveau du joueur (plafond 50), à 3,3 % de dégâts par niveau pour l’arme, avec les **paliers 10 / 25 / 50** propres à chaque arme, payés en oboles et en matériaux, plus un matériau de boss au-delà du seuil.
+- Les **doublons sont déjà traités** : `src/game/loot.ts` les fond en oboles et en matériaux selon la rareté. Un « sacrifice d’objet » a donc déjà une règle.
+- Le **modèle d’objet n’a pas d’identité**. `ProgressState.items` est une liste d’identifiants et `itemLevels` est indexé par identifiant : il existe **une seule instance par type d’objet**, avec un seul niveau. C’est le point dur : Warframe repose sur des instances (chaque arme porte ses propres mods), donc le système demandé suppose de réinventer la clé de sauvegarde (`id` → instance), ce qui touche `progress.ts`, `saves.ts`, l’export (`ExportFile.format`) et `migrate()`.
+- L’**inventaire n’a aucune gestion** : c’est une liste de rayons (ma classe, les autres, universels, raciaux) affichée par `openInventory` (`src/ui/panels.ts`). Pas de capacité, pas de place, pas de tri par le joueur — posséder est binaire.
+
+Trois formes possibles, chiffrées :
+
+1. **Sockets par type d’objet (le plus proche de Wakfu).** 2 emplacements de sceau sur une arme, 1 sur chaque pièce d’armure. Un sceau donne une ligne simple : +4 % dégâts, −3 % dégâts subis, +8 PV, +3 % vitesse, +6 % vol de vie. On le pose et on le retire contre des oboles (50 au retrait). Aucune instance à inventer : un `Record<string, (string | null)[]>` à côté de `itemLevels`. Coût : un fichier de données, `loadout.ts`, l’écran d’inventaire.
+2. **Forgemagie légère (Wakfu).** Aux paliers d’arme 25 et 50 seulement, un tirage de bonus secondaire, relançable contre 150 oboles et 2 matériaux : une des cinq lignes ci-dessus. Réutilise les paliers et les matériaux existants et ne crée rien de neuf — c’est la moins chère des trois et la plus lisible.
+3. **Mods libres à la Warframe (le plus cher).** 4 à 6 emplacements par arme, mods montés, coût en « capacité » selon la rareté du mod, fusion de mods. C’est le seul qui exige des instances d’objet, donc une migration de sauvegarde et un format d’export à faire évoluer. Je le déconseille.
+
+À part, la question de l’inventaire : une **capacité** de 60 objets, +10 par donjon vaincu jusqu’à 120, le surplus fondu d’office. C’est la seule proposition qui contredit la règle « aucun nerf » : elle retire du confort sans apporter de contenu tant qu’il n’y a que deux donjons, et un joueur à qui on détruit du butin le ressent comme une punition.
+
+Avis : **à reporter**, et pas dans la forme Warframe. La bonne forme est **2, puis 1** — elles donnent le goût de la personnalisation sans toucher à l’identité des objets ni à la sauvegarde. La capacité d’inventaire seule est **à abandonner** pour l’instant : elle ne crée pas de choix, elle crée une corvée. Et comme les aspects, ce système **n’équilibre aucune classe** : il ajoute une couche de puissance, donc il faudra relever les ennemis derrière (le plan le prévoit déjà).
+
+### 2. Armes de boss : déblocage actuel conservé
+
+Le joueur garde le déblocage actuel (« ça ne change pas grand chose pour le moment, il n’y a que 2 donjons »). C’est un raisonnement solide : l’étiquette `boss` ne sert encore qu’à distinguer un rôle d’objet, pas une provenance, et le Miroir de Yata continue d’arriver à la première victoire des Rizières. **Je retire donc ma proposition de correction** — l’incohérence est notée dans ce document, pas corrigée. Elle redeviendra urgente quand il y aura plus de deux boss, parce que l’étiquette annoncera alors une provenance fausse.
+
+### 3. Maîtrise de classe : arbre complet
+
+Réponse : pas des paliers automatiques, mais **un arbre complet, avec beaucoup de styles de jeu différents**. Je dois dire clairement ce qui cloche : c’est exactement le rôle des **sous-classes** de l’autre agent (trois passifs par classe au niveau 25 ou 50). Si les deux arrivent, la même classe reçoit trois axes de passifs — arbre de compétences, sous-classe, maîtrise — et le joueur ne saura plus quel axe compte. Le recouvrement signalé plus haut n’est plus un risque théorique : la réponse le rend certain.
+
+Deux issues honnêtes :
+
+- **La maîtrise prend l’axe, les sous-classes lâchent.** L’arbre de maîtrise devient *le* lieu des styles de jeu par classe : 8 nœuds par classe, 1 point tous les 5 niveaux joués avec elle, plus 1 par boss vaincu avec elle, deux voies qui ne se cumulent pas (Lame : poison contre burst ; Guerrier : blocage contre rage ; Rôdeur : portée contre mobilité). C’est un vrai écran, sur le modèle de `openSkills`. Mais il faut que l’autre agent renonce aux sous-classes : je n’y touche pas, c’est une décision d’organisation.
+- **La maîtrise reste dans son coin**, et alors elle doit se limiter à ce que les sous-classes ne font pas : un renfort de début de partie, sous le niveau 25, sans écran. C’est la position défendue plus haut, et elle est moins ambitieuse que la demande.
+
+Avis : **à faire seulement si le joueur tranche la question des sous-classes.** Si l’arbre de styles l’emporte, il doit **remplacer** les sous-classes, pas s’y ajouter. Si les deux doivent vivre, je reste sur la forme minimale (paliers sous le niveau 25, sans écran) : l’arbre complet à côté des sous-classes serait un troisième mur de cases.
+
+### 4. Par personnage
+
+Confirmé : la maîtrise reste **par personnage**. C’est la bonne option technique. Le compteur tient dans un `flags.maitrise_<classe>` de la sauvegarde du personnage : déjà sérialisé, déjà absorbé par `migrate()`, **aucune migration**, **aucune sauvegarde de compte**, **aucun changement à l’export**, et **aucun changement de `PROTOCOL`** tant que les passifs ne touchent que le `PlayerConfig`. Le prix à assumer : commencer un second personnage de la même classe remet la maîtrise à zéro — c’est cohérent avec « par personnage ».
+
+### Ce que je recommande, dans l’ordre
+
+1. **Rien de tout cela avant les sous-classes** (l’autre agent). Ces deux pistes sont des couches de puissance ; les empiler avant d’avoir mesuré le plan actuel, c’est mesurer du bruit.
+2. **Ensuite, la maîtrise**, sous la forme tranchée à l’étape 3 : l’arbre complet *à la place* des sous-classes, ou le renfort de début de partie *à côté*.
+3. **La personnalisation d’arme (formes 2 puis 1)** quand la forge actuelle sera épuisée : c’est du plaisir et de la rejouabilité, pas de l’équilibrage.
+4. **Jamais : la limite d’inventaire seule, et les mods à la Warframe avec instances.**

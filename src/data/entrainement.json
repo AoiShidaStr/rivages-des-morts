@@ -1,0 +1,58 @@
+{
+  "about": "Le terrain d'entraînement de Tetsu, derrière la forge : on n'y gagne rien, on n'y risque rien. `meta` a la forme d'un donjon (nom, région, décor) et `arena` celle de dungeon.json, mais ce terrain reste hors de content.dungeons : ni palier, ni quête, ni butin, ni donjon infini. La vague unique porte un mannequin (src/data/enemies.json) à des places fixes : il ne bouge pas, ne frappe pas, et revient à sa place quand on l'abat (GameConfig.training).",
+  "meta": {
+    "name": "Le billot de Tetsu",
+    "region": "Terrain d'entraînement · ni butin, ni dégâts",
+    "boss": "Mannequin",
+    "bossLabel": "le mannequin",
+    "victory": {
+      "title": "Fin de la séance",
+      "text": "Le billot n'a pas rendu les coups. Rien ne s'est perdu ici : ni oboles, ni expérience, ni objets."
+    },
+    "onVictory": [],
+    "firstVictory": { "if": [], "then": [] },
+    "shop": "",
+    "exit": { "u": 0.4, "v": 2.6 },
+    "style": {
+      "ground": [0.88, 0.84, 0.74],
+      "sky": "#b6bcbf",
+      "decor": [
+        { "sprite": "lanterneAllumee", "x": -4.5, "z": 10.5 },
+        { "sprite": "lanterneAllumee", "x": 4.5, "z": 10.5 },
+        { "sprite": "jizo", "x": -7.5, "z": 10.6 },
+        { "sprite": "jizo", "x": 7.5, "z": 10.6 },
+        { "sprite": "torii", "x": 12, "z": 12 }
+      ]
+    }
+  },
+  "arena": {
+    "arenaHalfSize": 9,
+    "stumpRadius": 0.6,
+    "webs": {
+      "radius": 1.3,
+      "maxWebs": 0,
+      "slowFactor": 1,
+      "igniteReach": 1,
+      "burnTime": 0.6,
+      "burnDamage": 0
+    },
+    "peachRadius": 0.7,
+    "champion": { "hp": 1.8, "damage": 1.3 },
+    "waves": [
+      {
+        "label": "Le billot de paille",
+        "hint": "Frappe tant que tu veux : il ne bouge pas, ne riposte pas, et rien de ce qui tombe ici ne se perd. Les dégâts s'affichent en haut de l'écran.",
+        "spawns": [
+          {
+            "kind": "mannequin",
+            "count": 2,
+            "positions": [
+              { "x": 1.6, "z": 1.6 },
+              { "x": 4.8, "z": 4.8 }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
