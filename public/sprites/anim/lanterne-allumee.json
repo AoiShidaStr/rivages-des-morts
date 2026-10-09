@@ -5,58 +5,58 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 200,
-    "h": 273
+    "w": 158,
+    "h": 272
    },
    "duration": 120
   },
   {
    "filename": "idle 1",
    "frame": {
-    "x": 200,
+    "x": 158,
     "y": 0,
-    "w": 200,
-    "h": 273
+    "w": 158,
+    "h": 272
    },
    "duration": 120
   },
   {
    "filename": "idle 2",
    "frame": {
-    "x": 400,
+    "x": 316,
     "y": 0,
-    "w": 200,
-    "h": 273
+    "w": 158,
+    "h": 272
    },
    "duration": 120
   },
   {
    "filename": "idle 3",
    "frame": {
-    "x": 600,
+    "x": 474,
     "y": 0,
-    "w": 200,
-    "h": 273
+    "w": 158,
+    "h": 272
    },
    "duration": 120
   },
   {
    "filename": "idle 4",
    "frame": {
-    "x": 800,
+    "x": 632,
     "y": 0,
-    "w": 200,
-    "h": 273
+    "w": 158,
+    "h": 272
    },
    "duration": 120
   },
   {
    "filename": "idle 5",
    "frame": {
-    "x": 1000,
+    "x": 790,
     "y": 0,
-    "w": 200,
-    "h": 273
+    "w": 158,
+    "h": 272
    },
    "duration": 120
   }
@@ -65,13 +65,13 @@
   "app": "tools/planches.mjs",
   "image": "lanterne-allumee.webp",
   "size": {
-   "w": 1200,
-   "h": 273
+   "w": 948,
+   "h": 272
   },
   "smooth": true,
   "bodyHeight": 256,
   "anchor": {
-   "x": 100,
+   "x": 79,
    "y": 264
   },
   "frameTags": [

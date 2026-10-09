@@ -5,58 +5,58 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 442,
-    "h": 401
+    "w": 338,
+    "h": 400
    },
    "duration": 150
   },
   {
    "filename": "idle 1",
    "frame": {
-    "x": 442,
+    "x": 338,
     "y": 0,
-    "w": 442,
-    "h": 401
+    "w": 338,
+    "h": 400
    },
    "duration": 150
   },
   {
    "filename": "idle 2",
    "frame": {
-    "x": 884,
+    "x": 676,
     "y": 0,
-    "w": 442,
-    "h": 401
+    "w": 338,
+    "h": 400
    },
    "duration": 150
   },
   {
    "filename": "idle 3",
    "frame": {
-    "x": 1326,
+    "x": 1014,
     "y": 0,
-    "w": 442,
-    "h": 401
+    "w": 338,
+    "h": 400
    },
    "duration": 150
   },
   {
    "filename": "idle 4",
    "frame": {
-    "x": 1768,
+    "x": 1352,
     "y": 0,
-    "w": 442,
-    "h": 401
+    "w": 338,
+    "h": 400
    },
    "duration": 150
   },
   {
    "filename": "idle 5",
    "frame": {
-    "x": 2210,
+    "x": 1690,
     "y": 0,
-    "w": 442,
-    "h": 401
+    "w": 338,
+    "h": 400
    },
    "duration": 150
   }
@@ -65,14 +65,14 @@
   "app": "tools/planches.mjs",
   "image": "torii.webp",
   "size": {
-   "w": 2652,
-   "h": 401
+   "w": 2028,
+   "h": 400
   },
   "smooth": true,
   "bodyHeight": 384,
   "anchor": {
-   "x": 221,
-   "y": 391
+   "x": 169,
+   "y": 392
   },
   "frameTags": [
    {
