@@ -19,7 +19,7 @@ import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawIslandGround, drawProp } from './pixelArt';
 import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
-import { SCENES_3D } from './flags';
+import { LOW_GRAPHICS, SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
 import { DecorSprites } from './decorSprites';
 import { IslandPainted, LOW_DECOR } from './islandPainted';
@@ -123,16 +123,19 @@ export class IslandRenderer {
     await this.buildGround(island);
     // Les planches des héros des autres races et classes ne se chargent qu'à la demande (setHero) :
     // chacune pèse plusieurs dizaines de Mo en mémoire graphique.
+    const interactableSprites = new Set(
+      island.data.interactables.flatMap((item) => [item.sprite, ...(item.spriteIf?.map((variant) => variant.sprite) ?? [])]),
+    );
     await Promise.all([
       ...Object.entries(this.manifest)
-        .filter(([name]) => !isHeroVariant(name))
+        .filter(([name]) => !isHeroVariant(name) && (!LOW_GRAPHICS || name === 'heros' || interactableSprites.has(name)))
         .map(async ([name, def]) => {
           const entry = await this.loadEntry(name, def);
           if (entry) this.sprites.set(name, entry);
         }),
       ...(isHeroVariant(this.wantedHero) ? [this.loadHero(this.wantedHero)] : []),
     ]);
-    for (const prop of island.data.props) {
+    for (const prop of LOW_GRAPHICS ? [] : island.data.props) {
       if (this.replaced.has(prop.sprite)) continue;
       const entry = this.entryFor(prop.sprite, prop.height);
       if (!entry) continue;
@@ -140,7 +143,7 @@ export class IslandRenderer {
       if (entry.anim) this.animatedProps.push(view);
     }
     // Les décors restent tant que l'île existe (toute la partie).
-    if (this.painted) await DecorSprites.build(this.scene, this.painted.decor, this.forward, LOW_DECOR);
+    if (this.painted && !LOW_GRAPHICS) await DecorSprites.build(this.scene, this.painted.decor, this.forward, LOW_DECOR);
     const hero = this.sprites.has(this.wantedHero) ? this.wantedHero : 'heros';
     this.player = this.billboard('player', this.required(hero), island.player.pos, 0.4, hero);
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
@@ -265,11 +268,10 @@ export class IslandRenderer {
   // --- Construction ----------------------------------------------------------
 
   /**
-   * Avec l'option « Scènes en 3D », l'île en 3D (src/render/islandScene3d.ts, chargée à la demande). Par défaut, ou si
-   * elle ne se construit pas : le sol peint (sols/ile.jpg, recalé sur le tracé de island.json) s'il existe, sinon le dessin en pixel art.
+   * En graphismes allégés, l'ancienne image unique de l'île, sans décor ajouté ; sinon, la carte peinte ou l'île 3D.
    */
   private async buildGround(island: Island): Promise<void> {
-    if (!SCENES_3D) {
+    if (!LOW_GRAPHICS && !SCENES_3D) {
       try {
         this.painted = await IslandPainted.build(this.scene, island.data);
         this.replaced = IslandPainted.replaces;

@@ -359,7 +359,6 @@
         { "op": "set", "path": "attack.active", "value": 0.05 },
         { "op": "set", "path": "attack.recovery", "value": 0.34 },
         { "op": "set", "path": "attack.commit", "value": 0.12 },
-        { "op": "set", "path": "attack.lunge", "value": 0 },
         { "op": "set", "path": "attack.knockback", "value": 0.5 }
       ],
       "actives": [

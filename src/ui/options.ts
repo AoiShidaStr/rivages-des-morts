@@ -1,4 +1,5 @@
 import type { Music } from '../audio/music';
+import { LOW_GRAPHICS, lowGraphics, setLowGraphics } from '../render/flags';
 import { h } from './dom';
 import type { PanelHost } from './panels';
 
@@ -23,6 +24,22 @@ export function openOptions(host: PanelHost, music: Music, onClose?: () => void)
   });
   sync();
 
+  // La carte se construit au chargement : le mode léger revient aux anciennes images fixes, sans décors ajoutés.
+  const low = h('input', { type: 'checkbox' });
+  low.checked = lowGraphics();
+  const reload = h('button', { class: 'btn small', type: 'button', onclick: () => location.reload() }, 'Recharger le jeu maintenant');
+  const pending = h('p', { class: 'note' }, "S'applique au prochain chargement du jeu. Une descente en cours serait perdue en rechargeant.");
+  const syncGraphics = () => {
+    const changed = low.checked !== LOW_GRAPHICS;
+    pending.hidden = !changed;
+    reload.hidden = !changed;
+  };
+  low.addEventListener('change', () => {
+    setLowGraphics(low.checked);
+    syncGraphics();
+  });
+  syncGraphics();
+
   host.show(
     'Options',
     'Réglages gardés dans ce navigateur',
@@ -32,6 +49,10 @@ export function openOptions(host: PanelHost, music: Music, onClose?: () => void)
       h('h3', {}, 'Musique'),
       h('div', { class: 'option-row' }, h('span', {}, 'Volume'), slider, value),
       h('label', { class: 'option-row' }, mute, h('span', {}, 'Couper la musique (touche M)')),
+      h('h3', {}, 'Graphismes'),
+      h('label', { class: 'option-row' }, low, h('span', {}, 'Low graphics : anciennes cartes en images fixes, sans décors ajoutés')),
+      pending,
+      reload,
     ),
     { onClose },
   );

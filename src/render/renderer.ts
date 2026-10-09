@@ -24,7 +24,7 @@ import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
-import { SCENES_3D } from './flags';
+import { LOW_GRAPHICS, SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import {
@@ -418,7 +418,7 @@ export class Renderer {
   };
   private groundMaterial: StandardMaterial | null = null;
   private groundMesh: Mesh | null = null;
-  /** Arène en 3D, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
+  /** Arène peinte ou en 3D, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
   private arena3d: { update(dt: number): void; dispose(): void } | null = null;
   private arena3dRequest = 0;
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
@@ -2223,7 +2223,7 @@ export class Renderer {
     const meshes: { dispose(): void }[] = [];
     const animated: { material: ShaderMaterial; anim: SheetAnimation; time: number }[] = [];
     const walled = SCENES_3D && !!style.scene3d;
-    style.decor.forEach((spot, i) => {
+    if (!LOW_GRAPHICS) style.decor.forEach((spot, i) => {
       const entry = this.sprites.get(spot.sprite);
       if (!entry) return;
       // Arène 3D : ce qui était posé derrière les murs du fond ne se verrait plus qu'à moitié.
@@ -2239,19 +2239,18 @@ export class Renderer {
       meshes.push(sprite, material);
     });
     this.decor = { meshes, animated };
-    this.buildArena3d(style);
+    this.buildArena(style);
   }
 
-  private buildArena3d(style: DungeonStyle): void {
+  private buildArena(style: DungeonStyle): void {
     const request = ++this.arena3dRequest;
     this.arena3d?.dispose();
     this.arena3d = null;
     this.groundMesh?.setEnabled(true);
-    if (!style.scene3d) return;
+    if (LOW_GRAPHICS || !style.scene3d) return;
     const kind = style.scene3d;
     const lanterns = style.decor.filter((spot) => spot.sprite.startsWith('lanterne'));
-    // Chargées à la demande : le chargeur glTF et les modèles n'alourdissent pas le premier chargement. Par
-    // défaut, l'arène en carte peinte (sol assemblé à partir des textures peintes, décors autour).
+    // Chargées à la demande : les scènes peintes ou 3D d'arène ne sont pas utiles si le style n'en fournit pas.
     const build = !SCENES_3D
       ? import('./arenaPainted').then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind, this.arenaHalfSize, style.decor, this.forward))
       : kind === 'palais'

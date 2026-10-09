@@ -121,17 +121,16 @@
       "slot": "arme",
       "rarity": "commune",
       "tags": ["Lame"],
-      "summary": "Arme de départ de la Lame : coups très rapides en arc serré (120°) ; on peut feinter et esquiver à tout moment.",
+      "summary": "Arme de départ de la Lame : coups très rapides en arc serré (120°), portée 2,1 m ; on peut feinter et esquiver à tout moment.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 8 },
-        { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.range", "value": 2.1 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 120 },
         { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.04 },
         { "op": "set", "path": "attack.recovery", "value": 0.13 },
-        { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0.3 }
+        { "op": "set", "path": "attack.knockback", "value": 1.5 }
       ],
       "paliers": [
         { "level": 10, "name": "Kunai équilibrés", "summary": "Frappe fantôme : revient 0,5 s plus vite", "effects": [{ "op": "add", "path": "blade.ghost.cooldown", "value": -0.5 }] },
@@ -156,8 +155,7 @@
         { "op": "set", "path": "attack.commit", "value": 0.3 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.3 },
-        { "op": "set", "path": "attack.knockback", "value": 4 },
-        { "op": "set", "path": "attack.lunge", "value": 0.25 }
+        { "op": "set", "path": "attack.knockback", "value": 4 }
       ],
       "paliers": [
         { "level": 10, "name": "Marteau lesté", "summary": "Marteau lancé : +25 % de dégâts", "effects": [{ "op": "mul", "path": "paladin.hammer.damage", "value": 1.25 }] },
@@ -178,8 +176,7 @@
         { "op": "set", "path": "attack.commit", "value": 0.1 },
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.22 },
-        { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0 }
+        { "op": "set", "path": "attack.knockback", "value": 1.5 }
       ],
       "paliers": [
         { "level": 10, "name": "Corde tendue", "summary": "Portée des flèches +2 m", "effects": [{ "op": "add", "path": "attack.range", "value": 2 }] },
@@ -195,17 +192,16 @@
       "spec": "boss",
       "tags": ["Lame"],
       "bonus": { "damage": 0.05, "maxHp": 5 },
-      "summary": "Faucille et chaîne : arc de 140° qui porte loin (2,3 m), annulable à tout moment ; la Frappe fantôme porte 2 m plus loin et ton poison dure 5 s de plus.",
+      "summary": "Faucille et chaîne : arc de 140° à portée 2,7 m, annulable à tout moment ; la Frappe fantôme porte 2 m plus loin et ton poison dure 5 s de plus.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
-        { "op": "set", "path": "attack.range", "value": 2.3 },
+        { "op": "set", "path": "attack.range", "value": 2.7 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 140 },
         { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.06 },
         { "op": "set", "path": "attack.recovery", "value": 0.2 },
         { "op": "set", "path": "attack.knockback", "value": 2.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0.2 },
         { "op": "add", "path": "blade.ghost.range", "value": 2 },
         { "op": "add", "path": "blade.poison.duration", "value": 5 }
       ],
@@ -223,17 +219,16 @@
       "spec": "survie",
       "tags": ["Lame"],
       "bonus": { "maxHp": 10 },
-      "summary": "Deux crocs venimeux en arc serré (120°), annulables à tout moment : chaque coup critique te rend 2 PV.",
+      "summary": "Deux crocs venimeux en arc serré (120°), portée 2,1 m, annulables à tout moment : chaque coup critique te rend 2 PV.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 9 },
-        { "op": "set", "path": "attack.range", "value": 1.7 },
+        { "op": "set", "path": "attack.range", "value": 2.1 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 120 },
         { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.04 },
         { "op": "set", "path": "attack.recovery", "value": 0.12 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0.3 },
         { "op": "set", "path": "perks.critHeal", "value": 2 }
       ],
       "paliers": [
@@ -260,7 +255,6 @@
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.3 },
         { "op": "set", "path": "attack.knockback", "value": 4 },
-        { "op": "set", "path": "attack.lunge", "value": 0.25 },
         { "op": "set", "path": "perks.auraWeaken", "value": 0.3 }
       ],
       "paliers": [
@@ -285,7 +279,6 @@
         { "op": "set", "path": "attack.windup", "value": 0.06 },
         { "op": "set", "path": "attack.recovery", "value": 0.15 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0 },
         { "op": "add", "path": "ranger.leap.cooldown", "value": -2.5 },
         { "op": "mul", "path": "ranger.arrow.speed", "value": 1.2 }
       ],
@@ -303,17 +296,16 @@
       "spec": "dps",
       "tags": ["Lame"],
       "bonus": { "damage": 0.08 },
-      "summary": "Estoc très rapide (portée 1,8), annulable à tout moment ; critiques +0,5.",
+      "summary": "Estoc très rapide (portée 2,2), annulable à tout moment ; critiques +0,5.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 8 },
-        { "op": "set", "path": "attack.range", "value": 1.8 },
+        { "op": "set", "path": "attack.range", "value": 2.2 },
         { "op": "set", "path": "attack.shape", "value": "line" },
         { "op": "set", "path": "attack.width", "value": 0.7 },
         { "op": "set", "path": "attack.commit", "value": 0 },
         { "op": "set", "path": "attack.windup", "value": 0.04 },
         { "op": "set", "path": "attack.recovery", "value": 0.12 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0.6 },
         { "op": "add", "path": "blade.critFactor", "value": 0.5 }
       ],
       "paliers": [
@@ -338,7 +330,6 @@
         { "op": "set", "path": "attack.windup", "value": 0.12 },
         { "op": "set", "path": "attack.recovery", "value": 0.28 },
         { "op": "set", "path": "attack.knockback", "value": 2 },
-        { "op": "set", "path": "attack.lunge", "value": 0 },
         { "op": "mul", "path": "ranger.charged.time", "value": 0.75 }
       ],
       "paliers": [
@@ -751,7 +742,6 @@
         { "op": "set", "path": "attack.windup", "value": 0.1 },
         { "op": "set", "path": "attack.recovery", "value": 0.24 },
         { "op": "set", "path": "attack.knockback", "value": 1.5 },
-        { "op": "set", "path": "attack.lunge", "value": 0 },
         { "op": "set", "path": "perks.chargedBolt", "value": { "damage": 20, "radius": 2, "stun": 0.6, "cooldown": 1.5 } }
       ],
       "paliers": [
@@ -1455,14 +1445,13 @@
       "summary": "Coups très lourds (18 dégâts) en arc de 170° ; le Marteau lancé fait 60 % de dégâts en plus.",
       "effects": [
         { "op": "set", "path": "attack.damage", "value": 18 },
-        { "op": "set", "path": "attack.range", "value": 1.9 },
+        { "op": "set", "path": "attack.range", "value": 2.3 },
         { "op": "set", "path": "attack.shape", "value": "arc" },
         { "op": "set", "path": "attack.arcDeg", "value": 170 },
         { "op": "set", "path": "attack.commit", "value": 0.26 },
         { "op": "set", "path": "attack.windup", "value": 0.14 },
         { "op": "set", "path": "attack.recovery", "value": 0.3 },
         { "op": "set", "path": "attack.knockback", "value": 6 },
-        { "op": "set", "path": "attack.lunge", "value": 0.25 },
         { "op": "mul", "path": "paladin.hammer.damage", "value": 1.6 }
       ],
       "paliers": [

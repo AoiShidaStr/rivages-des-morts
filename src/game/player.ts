@@ -990,7 +990,6 @@ export class Player {
     }
     const recoveryStart = time.windup + time.active;
     if (!ranged && a.t >= time.windup && a.t < recoveryStart) {
-      this.pos = add(this.pos, scale(a.dir, (c.lunge / time.active) * dt));
       world.strike(this.pos, a.dir, a.hit, a.crit);
     }
 

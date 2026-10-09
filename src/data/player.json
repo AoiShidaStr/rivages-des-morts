@@ -12,7 +12,6 @@
     "windup": 0.08,
     "active": 0.1,
     "recovery": 0.24,
-    "lunge": 0.35,
     "commit": 0.26,
     "knockback": 3
   },

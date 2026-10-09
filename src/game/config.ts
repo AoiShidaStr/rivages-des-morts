@@ -35,8 +35,6 @@ export interface PlayerConfig {
      * 0 : on peut feinter pendant l'élan ; la durée entière du coup : il va jusqu'au bout.
      */
     commit: number;
-    /** Distance parcourue en avant pendant le coup. */
-    lunge: number;
     knockback: number;
   };
   /** `reduction` : part d'un coup bloqué qui est arrêtée (1 : tout ; le reste passe quand même). */
