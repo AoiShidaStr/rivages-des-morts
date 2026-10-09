@@ -280,6 +280,7 @@ export class IslandRenderer {
     if (!LOW_GRAPHICS && !SCENES_3D) {
       try {
         this.painted = await IslandPainted.build(this.scene, island.data);
+        island.addSolids(this.painted.solids);
         this.replaced = IslandPainted.replaces;
         return;
       } catch (error) {

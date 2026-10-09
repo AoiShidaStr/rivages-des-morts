@@ -2,6 +2,7 @@
   "defaults": { "band": 6, "holeTolerance": 12, "minHole": 0 },
   "images": [
     { "file": "anim/charon.webp", "ref": [197, 197, 197], "band": 14, "minHole": 120, "holeTolerance": 24 },
-    { "file": "decor/argile.png", "ref": [201, 201, 201], "band": 10 }
+    { "file": "decor/argile.png", "ref": [201, 201, 201], "band": 8, "glow": 40 },
+    { "file": "decor/ile/herbes-de-rive.webp", "ref": [141, 141, 140], "band": 4, "minHole": 30, "holeTolerance": 22 }
   ]
 }

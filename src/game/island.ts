@@ -103,6 +103,11 @@ export class Island {
     this.placeAt(data.spawn);
   }
 
+  /** Obstacles ajoutés par le rendu (décors de la carte peinte posés près des zones praticables). */
+  addSolids(solids: readonly { pos: Vec2; r: number }[]): void {
+    this.staticSolids.push(...solids);
+  }
+
   placeAt(point: ScreenPoint): void {
     this.player.pos = toWorld(point);
     this.area = this.areaAt(point);

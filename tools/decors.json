@@ -23,6 +23,7 @@
       "source": "decors_arbres",
       "columns": 3,
       "rows": 3,
+      "defaults": { "defringe": 8 },
       "names": ["decor/ile/pin-tordu", "decor/ile/erable-rouge", "decor/ile/saule", "decor/ile/cerisier-pale", "decor/ile/bambous-hauts", "decor/ile/cedre", "decor/ile/ginkgo", "decor/ile/arbre-mort", "decor/ile/pin-sur-rocher"],
       "format": "webp"
     },
@@ -30,8 +31,10 @@
       "source": "decors_vegetation",
       "columns": 4,
       "rows": 4,
+      "defaults": { "defringe": 8 },
       "names": ["decor/ile/buisson-rond", "decor/ile/buisson-bas", "decor/ile/herbe-haute", "decor/ile/herbe-courte", "decor/ile/fougere", "decor/ile/roseaux", "decor/ile/bambous", "decor/ile/higanbana", "decor/ile/hortensias", "decor/ile/jeune-erable", "decor/ile/petit-pin", "decor/ile/azalee", "decor/ile/souche-moussue", "decor/ile/tronc-couche", "decor/ile/nenuphars", "decor/ile/herbes-de-rive"],
-      "format": "webp"
+      "format": "webp",
+      "options": { "decor/ile/higanbana": { "fillHoles": true, "minHole": 60 }, "decor/ile/herbe-haute": { "fillHoles": true, "minHole": 60 }, "decor/ile/herbes-de-rive": { "fillHoles": true, "minHole": 60 } }
     },
     {
       "source": "decors_rochers",

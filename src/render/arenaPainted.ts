@@ -10,7 +10,8 @@ import { Grid, PaintedGround, PaintedWater, loadImage, type GroundLayer, type Gr
  * - Rizières noyées (la Jorōgumo) : rizières inondées coupées de diguettes, talus d'herbe sombre, arbres morts et
  *   toiles autour, qui se perdent dans la brume.
  * - Palais d'Izanami : dallage de pierre sombre bordé de roche, eau noire et violette tout autour.
- * L'arène reste le carré de `arenaHalfSize` à y = 0.
+ * L'arène reste le carré de `arenaHalfSize` à y = 0. Sa limite se voit (voir `arenaEdge`) : une bordure de pierre claire
+ * exactement là où le joueur s'arrête, et tout ce qui est au-delà assombri.
  */
 
 export type ArenaKind = 'rizieres' | 'palais';
@@ -81,6 +82,57 @@ export class ArenaPainted {
     this.water.dispose();
     this.decor.dispose();
   }
+}
+
+/** Largeur de la bordure de pierre, posée juste au-delà de la limite de l'arène. */
+const CURB = 0.8;
+
+/**
+ * Bordure de l'arène, sur le carré exact où le combat est retenu (World.clampToArena) : ombre au pied côté intérieur,
+ * bordure de pierre claire, puis le dehors assombri.
+ */
+function arenaEdge(grid: Grid, arena: number, tex: HTMLImageElement, stone: string, dim: string, dimAlpha: number): GroundLayer[] {
+  const shadow = grid.layer();
+  const curb = grid.layer();
+  const outline = grid.layer();
+  const outside = grid.layer();
+  const band = (sq: number, from: number, to: number) => smoothstep(from - 0.03, from + 0.03, sq) * (1 - smoothstep(to - 0.03, to + 0.03, sq));
+  for (let j = 0; j < grid.h; j++) {
+    for (let i = 0; i < grid.w; i++) {
+      const k = j * grid.w + i;
+      const sq = Math.max(Math.abs(grid.x(i)), Math.abs(grid.z(j)));
+      curb[k] = band(sq, arena, arena + CURB);
+      // Liseré sombre des deux côtés de la bordure : elle se détache sur l'eau claire comme sur l'herbe.
+      outline[k] = Math.max(band(sq, arena - 0.1, arena + 0.04), band(sq, arena + CURB - 0.04, arena + CURB + 0.1));
+      shadow[k] = smoothstep(arena - 0.5, arena - 0.1, sq) * (sq < arena - 0.1 ? 1 : 0);
+      outside[k] = smoothstep(arena + CURB, arena + CURB + 0.8, sq);
+    }
+  }
+  return [
+    { weight: outside, color: dim, alpha: dimAlpha },
+    { weight: shadow, color: '#1c1a1f', alpha: 0.4 },
+    { weight: curb, texture: tex, tile: 1.6, tint: stone },
+    { weight: curb, color: stone, alpha: 0.45 },
+    { weight: outline, color: '#211d1a', alpha: 0.85 },
+  ];
+}
+
+/**
+ * Bornes plantées juste derrière la bordure, sur les côtés du fond (vers le haut de l'écran) : elles ne cachent rien de
+ * l'arène et rendent sa limite lisible de loin.
+ */
+function edgePosts(arena: number, forward: Vec2, file: (name: string) => string, names: readonly string[], heights: Record<string, number>): DecorSpot[] {
+  const spots: DecorSpot[] = [];
+  const at = arena + CURB + 0.35;
+  let n = 0;
+  for (let t = -at; t <= at + 0.01; t += 3) {
+    for (const [x, z] of [[t, at], [t, -at], [at, t], [-at, t]] as const) {
+      const name = names[n++ % names.length];
+      if (hidesArena(x, z, heights[name], arena, forward)) continue;
+      spots.push({ file: file(name), x, z, height: heights[name], flip: n % 2 === 0 });
+    }
+  }
+  return spots;
 }
 
 interface ArenaPaint {
@@ -178,6 +230,7 @@ function rizieres(
       { weight: w.bankVar, texture: tex.mousse, tile: 4, tint: '#c6ccbd', alpha: 0.7 },
       { weight: w.rock, texture: tex.roche, tile: 4 },
       { weight: w.path, texture: tex.chemin, tile: 3.5 },
+      ...arenaEdge(grid, arena, tex.dalles, '#f1e7cc', '#1f2822', 0.5),
       { weight: w.fog, color: mist },
     ],
     water: w.water,
@@ -209,6 +262,7 @@ function palais(grid: Grid, arena: number, tex: Record<'herbe' | 'mousse' | 'che
     layers: [
       { weight: w.rim, texture: tex.roche, tile: 4, tint: '#6f6579' },
       { weight: w.floor, texture: tex.dalles, tile: 5.5, tint: '#8e8499' },
+      ...arenaEdge(grid, arena, tex.dalles, '#e6dcf2', '#0d0912', 0.6),
       { weight: w.fog, color: mist },
     ],
     water: w.water,
@@ -253,6 +307,7 @@ function rizieresDecor(arena: number, props: readonly { sprite: string; x: numbe
       }
     }
   }
+  spots.push(...edgePosts(arena, forward, (n) => `decor/rizieres/${n}.webp`, ['piquets', 'lanterne-eteinte'], HEIGHTS));
   // Riz encore debout au bord des rizières, hors de l'arène de combat.
   for (let x = -paddies; x <= paddies; x += 0.75) {
     for (let z = -paddies; z <= paddies; z += 0.75) {
@@ -264,6 +319,9 @@ function rizieresDecor(arena: number, props: readonly { sprite: string; x: numbe
       const gx = Math.abs((((px + PADDY / 2) % PADDY) + PADDY) % PADDY - PADDY / 2);
       const gz = Math.abs((((pz + PADDY / 2) % PADDY) + PADDY) % PADDY - PADDY / 2);
       if (Math.max(gx, gz) > PADDY / 2 - 0.35) continue;
+      // Rien sur la bordure de l'arène : elle doit rester nette.
+      const exact = Math.max(Math.abs(px), Math.abs(pz));
+      if (exact > arena - 0.3 && exact < arena + CURB + 0.3) continue;
       add(inArena || random() < 0.75 ? 'riz' : random() < 0.5 ? 'riz-couche' : 'nenuphars-fanes', px, pz);
     }
   }
@@ -276,6 +334,7 @@ function palaisDecor(arena: number, props: readonly { sprite: string; x: number;
   const spots: DecorSpot[] = [];
   const clear = (x: number, z: number) =>
     props.every((p) => Math.hypot(p.x - x, p.z - z) > 2) && spots.every((s) => Math.hypot(s.x - x, s.z - z) > 1);
+  spots.push(...edgePosts(arena, forward, (n) => `decor/ile/${n}.webp`, ['petite-lanterne'], HEIGHTS));
   // Sur la bordure de roche : stèles, pierres dressées et lanternes éteintes.
   for (let tries = 0; tries < 400 && spots.length < 26; tries++) {
     const x = (random() * 2 - 1) * (floor + 2);

@@ -2,7 +2,8 @@
 //   - les poches de fond enfermées par le sujet (entre le bâton et la robe de Charon) deviennent transparentes ;
 //   - le liseré et les halos peints sur le gris (lanterne, aura) sont « dé-mélangés » du gris (voir `defringe`).
 // Les réglages sont dans tools/nettoyage.json : `ref`, le gris du fond de la planche d'origine ; `band`, la largeur
-// du bord traité (pixels) ; `minHole`, la taille minimale d'une poche de fond enfermée.
+// du bord traité (pixels) ; `minHole`, la taille minimale d'une poche de fond enfermée ; `glow`, la largeur du bord
+// où une lueur claire et peu colorée (aura, brume peinte sur le gris) est retirée tout à fait.
 //
 // À lancer une seule fois sur une image fraîchement découpée : une seconde passe rognerait encore le bord.
 //
@@ -33,6 +34,7 @@ for (const entry of config.images) {
     alpha[i] = rgba[i * 4 + 3] < 8 ? 0 : rgba[i * 4 + 3];
   }
   const holes = options.minHole ? clearHoles(rgb, alpha, w, h, options) : 0;
+  if (options.glow) dropGlow(rgb, alpha, w, h, options);
   defringe(rgb, alpha, w, h, options.band, options.ref);
   const out = Buffer.alloc(w * h * 4);
   for (let i = 0; i < w * h; i++) {
@@ -80,4 +82,31 @@ function clearHoles(rgb, alpha, w, h, { ref, holeTolerance, minHole }) {
     cleared += pocket.length;
   }
   return cleared;
+}
+
+/** Retire la lueur claire et peu colorée peinte autour du sujet, sur `glow` pixels depuis le bord. */
+function dropGlow(rgb, alpha, w, h, { ref, glow }) {
+  const depth = new Uint8Array(w * h);
+  const queue = new Int32Array(w * h);
+  let head = 0;
+  let tail = 0;
+  for (let i = 0; i < w * h; i++) if (!alpha[i]) queue[tail++] = i;
+  const light = (i) => {
+    const r = rgb[i * 3];
+    const g = rgb[i * 3 + 1];
+    const b = rgb[i * 3 + 2];
+    return Math.min(r, g, b) >= Math.min(...ref) - 25 && Math.max(r, g, b) - Math.min(r, g, b) <= 60;
+  };
+  while (head < tail) {
+    const i = queue[head++];
+    const d = alpha[i] ? depth[i] : 0;
+    if (d >= glow) continue;
+    const x = i % w;
+    for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i >= w ? i - w : -1, i < (h - 1) * w ? i + w : -1]) {
+      if (j < 0 || !alpha[j] || depth[j] || !light(j)) continue;
+      depth[j] = d + 1;
+      queue[tail++] = j;
+    }
+  }
+  for (let i = 0; i < w * h; i++) if (depth[i]) alpha[i] = 0;
 }

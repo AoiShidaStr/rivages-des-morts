@@ -1,7 +1,8 @@
 import type { Scene } from '@babylonjs/core';
 import { toScreen, toWorld, type Circle, type IslandData, type ScreenPoint } from '../game/island';
 import { distToPolyline, fbm, noise, rng, smoothstep } from './noise';
-import type { DecorSpot } from './decorSprites';
+import { decorName, type DecorSpot } from './decorSprites';
+import type { Vec2 } from '../game/math';
 import { Grid, PaintedGround, PaintedWater, loadImage, type GroundLayer, type GroundShadow } from './paintedGround';
 
 /**
@@ -72,7 +73,7 @@ const FLORA: Record<Biome, Flora> = {
     sprinkles: ['herbe-courte', 'galets'],
   },
   village: {
-    trees: ['erable-rouge', 'cerisier-pale', 'bambous-hauts'],
+    trees: ['erable-rouge', 'pin-tordu', 'bambous-hauts'],
     under: ['hortensias', 'azalee', 'buisson-rond', 'jeune-erable', 'bambous', 'petit-pin'],
     shore: ['galets', 'herbes-de-rive', 'rocher-plat'],
     sprinkles: ['herbe-courte'],
@@ -103,6 +104,20 @@ const FLORA: Record<Biome, Flora> = {
   },
 };
 const BANKS = ['roseaux', 'roseaux', 'herbes-de-rive', 'fougere'];
+
+/**
+ * Rayon de collision des décors qu'on ne traverse pas, quand ils sont posés près d'une zone praticable : le tronc
+ * d'un arbre, le pied d'un rocher. Les herbes, fleurs et petites pierres se traversent.
+ */
+const SOLID: Record<string, number> = {
+  'pin-tordu': 0.35, 'erable-rouge': 0.35, saule: 0.35, 'cerisier-pale': 0.35, 'bambous-hauts': 0.45, cedre: 0.4, ginkgo: 0.4,
+  'arbre-mort': 0.35, 'pin-sur-rocher': 0.6, 'buisson-rond': 0.45, 'jeune-erable': 0.2, 'petit-pin': 0.35, 'souche-moussue': 0.4,
+  'tronc-couche': 0.45, 'rocher-grand': 0.75, 'rocher-moyen': 0.5, 'rocher-moussu': 0.5, 'rocher-pointu': 0.55, cairn: 0.35,
+  'rochers-de-rive': 0.5, 'pierre-dressee': 0.4, 'rocher-fendu': 0.5, 'rocher-algues': 0.5, 'bloc-de-falaise': 0.9,
+  'pierre-du-jardin': 0.45, 'petite-lanterne': 0.25, 'cloture-bambou': 0.45, shimenawa: 0.3, panneau: 0.2, 'sacs-de-riz': 0.45,
+  'tas-de-bois': 0.45, jarres: 0.45, kitsune: 0.3, steles: 0.45, sotoba: 0.3, 'lanterne-papier': 0.2, banc: 0.4, offrandes: 0.35,
+  puits: 0.6, etendoir: 0.35, 'barque-echouee': 0.6,
+};
 
 /** Petits décors au ras du sol : regroupés en un seul maillage par image, dessinés avant les personnages. */
 export const LOW_DECOR = new Set(['riz', 'galets', 'eboulis', 'rocher-plat', 'rocher-petit', 'herbe-courte', 'nenuphars', 'pas-japonais']);
@@ -197,6 +212,8 @@ export class IslandPainted {
     private readonly ground: PaintedGround,
     private readonly water: PaintedWater,
     readonly decor: DecorSpot[],
+    /** Collisions des décors posés près des zones praticables, pour l'île (Island.addSolids). */
+    readonly solids: { pos: Vec2; r: number }[],
   ) {}
 
   static async build(scene: Scene, data: IslandData): Promise<IslandPainted> {
@@ -219,7 +236,7 @@ export class IslandPainted {
     }
     const grid = new Grid(Math.floor(minX - SEA_MARGIN), Math.ceil(maxX + SEA_MARGIN), Math.floor(minZ - SEA_MARGIN), Math.ceil(maxZ + SEA_MARGIN), GRID_PPU);
 
-    const decor = placeDecor(layout, data);
+    const { decor, solids } = placeDecor(layout, data);
     const shadows: GroundShadow[] = decor.map((d) => {
       const r = Math.min(1.5, Math.max(0.25, d.height * 0.32));
       // Lumière en haut à gauche de l'écran : l'ombre glisse vers le bas à droite.
@@ -272,7 +289,8 @@ export class IslandPainted {
         const rocky = smoothstep(0.5, 0.66, fbm(s.u * 0.12 + 20, s.v * 0.12 + 4)) * (1 - layout.nearPier(s));
         w.rock[k] = rocky * smoothstep(-0.25, 0.15, edge) * (1 - smoothstep(0.9, 1.6, edge));
         w.moss[k] = smoothstep(0.45, 1.1, edge + ragged * 0.5) * (1 - smoothstep(-0.7, 0, walk));
-        const grass = smoothstep(-0.55, -0.05, walk + ragged * 0.5);
+        // L'herbe s'arrête là où s'arrête le héros (son corps reste à 0,35 du bord des zones praticables).
+        const grass = smoothstep(-0.05, 0.3, walk + ragged * 0.25);
         w.grass[k] = grass;
         w.grassVar[k] = grass * smoothstep(0.5, 0.72, fbm(x * 0.18 + 40, z * 0.18)) * 0.45;
         w.path[k] = (1 - smoothstep(0.5, 0.85, layout.pathDist(s) + ragged * 0.35)) * landW;
@@ -319,7 +337,7 @@ export class IslandPainted {
     ];
     const ground = PaintedGround.build(scene, 'islandPainted', { grid, base, layers, shadows, outside: '#c3cbcf', ppu: PAINT_PPU });
     const water = new PaintedWater(scene, 'islandWater', grid, w.water);
-    return new IslandPainted(ground, water, decor);
+    return new IslandPainted(ground, water, decor, solids);
   }
 
   update(dt: number): void {
@@ -386,7 +404,7 @@ function streamAngle(data: IslandData): number {
 
 // --- Décors ---------------------------------------------------------------------
 
-function placeDecor(layout: Layout, data: IslandData): DecorSpot[] {
+function placeDecor(layout: Layout, data: IslandData): { decor: DecorSpot[]; solids: { pos: Vec2; r: number }[] } {
   const random = rng(17);
   const spots: (DecorSpot & { s: ScreenPoint })[] = [];
   const zones = data.zones;
@@ -515,6 +533,21 @@ function placeDecor(layout: Layout, data: IslandData): DecorSpot[] {
     }
   }
 
+  // Une haie basse au bord des zones praticables, là où elle ne cache rien : la limite se voit au lieu de se heurter.
+  for (const c of data.walkable) {
+    const steps = Math.ceil((2 * Math.PI * c.r) / 1.1);
+    for (let i = 0; i < steps; i++) {
+      const a = (i / steps) * Math.PI * 2 + random() * 0.3;
+      const s = { u: c.u + Math.cos(a) * (c.r + 0.25), v: c.v + Math.sin(a) * (c.r + 0.25) };
+      const w = layout.walk(s);
+      if (w > -0.05 || w < -0.6 || layout.reachable(s) > -0.05 || layout.pathDist(s) < 1.2 || layout.streamDist(s) < 1.2) continue;
+      if (layout.pierDist(s) < 1.8 || layout.edge(s) < 0.6 || random() < 0.25) continue;
+      const name = clustered(layout.flora(s).under.filter((n) => HEIGHTS[n] <= 1.4), s, 9);
+      if (!name || !clear(s, 0.1) || hides(s, HEIGHTS[name])) continue;
+      add(name, s, HEIGHTS[name] * (0.85 + random() * 0.25));
+    }
+  }
+
   // Rivage, berges du ruisseau, puis quelques touffes sur les zones praticables, loin des chemins.
   scatter(70, (s) => {
     const edge = layout.edge(s);
@@ -544,7 +577,11 @@ function placeDecor(layout: Layout, data: IslandData): DecorSpot[] {
     }
   }
 
-  return spots.map(({ s: _s, ...spot }) => spot);
+  const solids = spots
+    .map((spot) => ({ spot, r: SOLID[decorName(spot.file)] }))
+    .filter(({ spot, r }) => r && layout.reachable(spot.s) > -r - 0.4)
+    .map(({ spot, r }) => ({ pos: { x: spot.x, z: spot.z }, r: r * (spot.height / HEIGHTS[decorName(spot.file)]) }));
+  return { decor: spots.map(({ s: _s, ...spot }) => spot), solids };
 }
 
 /** Étendue des terres, en coordonnées d'écran. */
