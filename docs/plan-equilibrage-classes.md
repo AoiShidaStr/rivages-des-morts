@@ -31,6 +31,10 @@ Les chiffres du bot ne sont pas fiables pour le Guerrier : il pare parfaitement 
 - Journal de parties local (classe, niveau, donjon, issue, PV perdus par minute) pour comparer aux ressentis du joueur.
 - Nouvelle cible de victoire : **chaque classe ≥ 80 % au Palais en équipement complet, aux niveaux 1, 30 et 50**, avec le bot humain.
 
+### État au 9 octobre 2026
+
+Étape 0 faite (bot `--humain`, banc `--cible mobile`, journal `rdmJournal()`), étape 2 faite en 0.13.0 (renforts de données, à valider en jeu), étape 3 amorcée (Hâte légère au niveau 5). Reste : tes tests, puis sous-classes, rôle en coop, bénédictions du Yomi et refonte du Paladin.
+
 ### Étape 1 : valider la 0.12.0 (Guerrier, Lame)
 Rien à ajouter tant que le joueur n'a pas rejoué. Si le Guerrier reste sous 70 % : première réserve de renforts ci-dessous.
 

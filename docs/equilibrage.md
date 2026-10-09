@@ -10,6 +10,7 @@ npm run equilibrage -- --niveaux 30,50 --stuff complet           victoires et su
 npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3  coop à 3, alliés joués par le bot
 npm run equilibrage -- --mode kits --donjon palais --niveaux 30,50  les 3 styles de chaque classe : survie, DPS, victoires
 npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans objet contre un donjon plus bas
+npm run dps -- --niveaux 30,50 --stuff complet --cible mobile    banc de DPS, kodama qui court en cercle
 npm run equilibrage -- --niveaux 30 --stuff complet --humain      bots « humains » : réaction plus lente, attaques ratées, visée qui tremble
 ```
 
