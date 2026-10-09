@@ -74,6 +74,8 @@ const KITS = {
 
 const STYLES = ['survie', 'dps', 'boss'];
 const STUFF = option('stuff', 'typique');
+/** `--humain` : les bots imitent un joueur moyen (réaction plus lente, attaques ratées, visée qui tremble). */
+const HUMAN = process.argv.includes('--humain');
 /** `--niveau-donjon 30` : niveau du donjon, celui du héros sinon. */
 const DUNGEON_LEVEL = Number(option('niveau-donjon', '0'));
 /** `--objets a,b` : objets portés en plus par le héros testé (pas ses alliés), chacun à la place de celui de son emplacement. */
@@ -82,10 +84,11 @@ const OBJECTS = option('objets', '').split(',').filter(Boolean);
  * `--mode dps` (`npm run dps`) : banc de DPS. Chaque héros frappe pendant `--duree` secondes un kodama immobile et
  * inoffensif dont les PV remontent sans cesse (`--pv` : ses PV de base, pour les effets qui en dépendent). Toutes les
  * compétences qui font des dégâts partent dès qu'elles sont prêtes. Cible (GDD, plan de mise à jour) : en dégâts
- * par seconde, Sorcier 115 % (premier DPS du jeu), Lame 100 %, Rôdeur 95 %, Guerrier 75 %, Paladin 60 %.
+ * par seconde, en unités de banc (la Lame sert d'unité de mesure, pas de référence à battre) : Sorcier 115, Rôdeur 100,
+ * Lame 100, Guerrier 85, Paladin 80. Le DPS se compare à la survie (voir docs/plan-equilibrage-classes.md), jamais seul.
  */
 const MODE = option('mode', 'donjon');
-const DPS_TARGET = { sorcier: 1.15, lame: 1, rodeur: 1 / 1.05, guerrier: 0.75, paladin: 0.6 };
+const DPS_TARGET = { sorcier: 1.15, lame: 1, rodeur: 1, guerrier: 0.85, paladin: 0.8 };
 const DURATION = Number(option('duree', '60'));
 const DUMMY_HP = Number(option('pv', '750'));
 const PLAYERS = Math.max(1, Math.min(3, Number(option('joueurs', '1'))));
@@ -159,7 +162,7 @@ async function worker() {
         { ...base, enemies: dummyEnemies, player: cfg, waves: [{ label: 'Banc de DPS', spawns: [{ kind: 'kodama', count: 1 }] }], difficulty: difficultyFor(content.difficulty, job.level, 1, dungeon.strength) },
         0,
       );
-      const bot = new Bot(world, world.players[0], true);
+      const bot = new Bot(world, world.players[0], true, HUMAN);
       let t = 0;
       let dealt = 0;
       while (t < DURATION + 30) {
@@ -185,7 +188,7 @@ async function worker() {
       const waves = endless ? infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, PLAYERS) : null;
       const difficulty = waves ? waves[0].difficulty : difficultyFor(content.difficulty, DUNGEON_LEVEL || job.level, PLAYERS, dungeon.strength);
       const world = new World({ ...base, ...(waves ? { waves } : {}), player: cfg, allies, difficulty }, 0);
-      const bots = world.players.map((hero) => new Bot(world, hero));
+      const bots = world.players.map((hero) => new Bot(world, hero, false, HUMAN));
       let t = 0;
       let taken = 0;
       let healed = 0;
@@ -276,7 +279,7 @@ function report(rows, levels) {
   return lines.join('\n');
 }
 
-/** Dégâts par seconde de chaque classe, comparés à la Lame et à la cible du plan (écart toléré : 5 points). */
+/** Dégâts par seconde de chaque classe, mesurés en unités de banc (DPS de la Lame) et comparés à la cible du plan (écart toléré : 5 points). */
 function dpsReport(rows, levels) {
   const lines = [];
   const avg = (list) => list.reduce((s, r) => s + r.dps, 0) / list.length;
@@ -292,7 +295,7 @@ function dpsReport(rows, levels) {
     }
     const lame = avg(at.filter((r) => r.cls === 'lame'));
     lines.push('');
-    lines.push('| Classe | DPS moyen | Part de la Lame | Cible | Écart |');
+    lines.push('| Classe | DPS moyen | Unités de banc | Cible | Écart |');
     lines.push('|---|---|---|---|---|');
     for (const cls of CLASSES) {
       const list = at.filter((r) => r.cls === cls);
@@ -300,7 +303,7 @@ function dpsReport(rows, levels) {
       const share = lame ? avg(list) / lame : 0;
       const gap = share - DPS_TARGET[cls];
       lines.push(`| ${cls} | ${avg(list).toFixed(1)} | ${pct(share)} | ${pct(DPS_TARGET[cls])} | ${gap >= 0 ? '+' : ''}${Math.round(gap * 100)} pts |`);
-      if (Math.abs(gap) > 0.05) alerts.push(`niveau ${level} : ${cls} à ${pct(share).trim()} de la Lame (cible ${pct(DPS_TARGET[cls]).trim()})`);
+      if (Math.abs(gap) > 0.05) alerts.push(`niveau ${level} : ${cls} à ${pct(share).trim()} d'unités de banc (cible ${pct(DPS_TARGET[cls]).trim()})`);
     }
   }
   lines.push(alerts.length ? `\nHors des cibles (±5 points) :\n${alerts.map((a) => `- ${a}`).join('\n')}` : '\nToutes les cibles sont tenues.');

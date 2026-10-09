@@ -10,6 +10,7 @@ npm run equilibrage -- --niveaux 30,50 --stuff complet           victoires et su
 npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3  coop à 3, alliés joués par le bot
 npm run equilibrage -- --mode kits --donjon palais --niveaux 30,50  les 3 styles de chaque classe : survie, DPS, victoires
 npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans objet contre un donjon plus bas
+npm run equilibrage -- --niveaux 30 --stuff complet --humain      bots « humains » : réaction plus lente, attaques ratées, visée qui tremble
 ```
 
 `--stuff survie`, `dps` ou `equilibre` : un des trois styles de jeu de la classe (tableau `KITS` de `tools/equilibrage.mjs`, et GDD, « Styles de jeu par l'équipement »). `--stuff nu` : l'arme de départ jamais forgée, rien d'autre.
@@ -26,7 +27,7 @@ npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans o
 
 ## Cible du banc de DPS
 
-Sorcier 115 % (le premier DPS du jeu, 0.8.0), Lame 100 %, Rôdeur 95 %, Guerrier 75 %, Paladin 60 % (en part des dégâts de la Lame, écart toléré : 5 points). L'Invocateur, remplacé par le Sorcier, visait 75 %.
+Depuis le 9 octobre 2026, la Lame n'est plus « le premier DPS » : elle sert seulement d'unité de mesure du banc (100 %). Cibles, en unités de banc (écart toléré : 5 points) : Sorcier 115 % (premier DPS du jeu, 0.8.0), Rôdeur 100 %, Lame 100 %, Guerrier 85 %, Paladin 80 %. Les cibles du Guerrier et du Paladin montent (elles étaient à 75 % et 60 %) : aucun nerf, seulement des renforts, voir docs/plan-equilibrage-classes.md. Avant, le tableau disait « part de la Lame, Lame 100 % première » : les anciennes mesures ci-dessous gardent ce vocabulaire.
 
 ## Mesure de référence, 30 septembre 2026 (avant la 0.1.0)
 

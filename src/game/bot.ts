@@ -10,6 +10,8 @@ import type { World } from './world';
 const REACT = 0.28;
 /** Part des attaques annoncées qu'il remarque : il en rate une partie, comme un joueur moyen. */
 const SKILL = 0.75;
+/** Profil « humain » (`--humain` de l'équilibrage) : réaction plus lente, attaques moins souvent vues, visée qui tremble. */
+const HUMAN = { react: 0.18, skill: 0.6, aimError: 0.9, aimEvery: 0.4, missRate: 0.12 };
 
 /**
  * Ce que le bot lit des yokai au-delà de leur interface publique : leur état et leurs réglages.
@@ -44,6 +46,10 @@ export class Bot {
   private readonly seen = new WeakMap<object, boolean>();
   /** Face à Izanami : vrai tant qu'on détourne les yeux pour laisser retomber son regard. */
   private averting = false;
+  /** Visée bruitée du profil humain : décalage courant et temps avant d'en tirer un autre. */
+  private aimOffset = vec();
+  private aimTimer = 0;
+  private missTimer = 0;
 
   constructor(
     private readonly world: World,
@@ -53,10 +59,37 @@ export class Bot {
      * seule cible, pour mesurer les dégâts maximaux de la classe.
      */
     private readonly greedy = false,
+    /** Imite un joueur moyen plutôt qu'un bot : voir `HUMAN`. */
+    private readonly human = false,
   ) {}
 
   /** Les commandes du héros pour ce pas. */
   input(): InputFrame {
+    const input = this.plan();
+    if (!this.human || this.hero.dead) return input;
+    // Un joueur ne vise pas au pixel et rate parfois un coup : la visée dérive, et par instants l'attaque ne part pas.
+    const dt = 1 / 60;
+    this.aimTimer -= dt;
+    if (this.aimTimer <= 0) {
+      this.aimTimer = HUMAN.aimEvery;
+      const a = Math.random() * Math.PI * 2;
+      this.aimOffset = scale(fromAngle(a), Math.random() * HUMAN.aimError);
+      if (Math.random() < HUMAN.missRate) this.missTimer = 0.25;
+    }
+    this.missTimer -= dt;
+    input.aim = add(input.aim, this.aimOffset);
+    if (this.missTimer > 0) {
+      input.attackHeld = false;
+      input.attackPressed = false;
+    }
+    return input;
+  }
+
+  private get react(): number {
+    return this.human ? HUMAN.react : REACT;
+  }
+
+  private plan(): InputFrame {
     const w = this.world;
     const p = this.hero;
     const c = p.cfg;
@@ -303,7 +336,7 @@ export class Bot {
 
   /** Chaque attaque est vue ou non, une fois pour toutes. */
   private notices(attack: object): boolean {
-    if (!this.seen.has(attack)) this.seen.set(attack, Math.random() < SKILL);
+    if (!this.seen.has(attack)) this.seen.set(attack, Math.random() < (this.human ? HUMAN.skill : SKILL));
     return this.seen.get(attack) ?? false;
   }
 
@@ -336,9 +369,9 @@ export class Bot {
       // Colère d'Izanami : un cercle autour d'elle, annoncé quelques instants avant.
       if (s.kind === 'wrath' && enemy.kind === 'izanami') {
         const wrath = cfg.gaze.wrath;
-        if (wrath.warning - s.t < REACT + 0.4 && distance(enemy.pos, p.pos) < wrath.radius + p.radius + 0.5 && this.notices(s)) out.push({ type: 'land', at: enemy.pos });
+        if (wrath.warning - s.t < this.react + 0.4 && distance(enemy.pos, p.pos) < wrath.radius + p.radius + 0.5 && this.notices(s)) out.push({ type: 'land', at: enemy.pos });
       }
-      if (windup !== null && windup - s.t < REACT && distance(enemy.pos, p.pos) < range + p.radius + 0.7 && this.notices(s)) {
+      if (windup !== null && windup - s.t < this.react && distance(enemy.pos, p.pos) < range + p.radius + 0.7 && this.notices(s)) {
         out.push({ type: 'melee', src: enemy.pos });
       }
       // Charge annoncée (kappa, Jorōgumo araignée).
@@ -348,18 +381,18 @@ export class Bot {
         const across = Math.abs(rel.x * s.dir.z - rel.z * s.dir.x);
         const total = s.duration ?? (enemy.kind === 'jorogumo' ? cfg.spider.telegraph : enemy.kind === 'izanami' ? cfg.pursuit.telegraph : 0.7);
         const remain = s.kind === 'telegraph' ? total - s.t : 0;
-        if (along > -0.5 && along < 9 && across < enemy.radius + p.radius + 0.5 && remain < REACT + 0.1 && this.notices(s)) {
+        if (along > -0.5 && along < 9 && across < enemy.radius + p.radius + 0.5 && remain < this.react + 0.1 && this.notices(s)) {
           out.push({ type: 'charge', src: enemy.pos, dir: s.dir });
         }
       }
       // Chute du kasa-obake.
       if (enemy.kind === 'kasaObake' && (s.kind === 'hang' || s.kind === 'fall') && s.target) {
         const remain = s.kind === 'hang' ? cfg.hangTime - s.t + cfg.fallTime : cfg.fallTime - s.t;
-        if (remain < REACT + 0.15 && distance(s.target, p.pos) < cfg.landRadius + p.radius + 0.3 && this.notices(s)) out.push({ type: 'land', at: s.target });
+        if (remain < this.react + 0.15 && distance(s.target, p.pos) < cfg.landRadius + p.radius + 0.3 && this.notices(s)) out.push({ type: 'land', at: s.target });
       }
     }
     for (const h of this.world.dangers) {
-      if (h.cfg.warning - h.t < REACT + 0.15 && distance(h.pos, p.pos) < h.cfg.radius + p.radius + 0.3 && this.notices(h)) out.push({ type: 'land', at: h.pos });
+      if (h.cfg.warning - h.t < this.react + 0.15 && distance(h.pos, p.pos) < h.cfg.radius + p.radius + 0.3 && this.notices(h)) out.push({ type: 'land', at: h.pos });
     }
     return out;
   }
