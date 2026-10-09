@@ -26,7 +26,7 @@ npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans o
 
 ## Cible du banc de DPS
 
-Sorcier 115 % (le premier DPS du jeu, 0.8.0), Lame 100 %, Rôdeur 95 %, Guerrier 75 %, Paladin 60 % (en part des dégâts de la Lame, écart toléré : 5 points). L'Invocateur, remplacé par le Sorcier, visait 75 %.
+Depuis le 9 octobre 2026, la Lame n'est plus « le premier DPS » : elle sert seulement d'unité de mesure du banc (100 %). Cibles, en unités de banc (écart toléré : 5 points) : Sorcier 115 % (premier DPS du jeu, 0.8.0), Rôdeur 100 %, Lame 100 %, Guerrier 85 %, Paladin 80 %. Les cibles du Guerrier et du Paladin montent (elles étaient à 75 % et 60 %) : aucun nerf, seulement des renforts, voir docs/plan-equilibrage-classes.md. Avant, le tableau disait « part de la Lame, Lame 100 % première » : les anciennes mesures ci-dessous gardent ce vocabulaire.
 
 ## Mesure de référence, 30 septembre 2026 (avant la 0.1.0)
 

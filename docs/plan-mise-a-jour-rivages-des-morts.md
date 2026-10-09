@@ -102,11 +102,11 @@ L'équilibrage se joue surtout en fin de progression : chaque changement est mes
 
 Toutes les classes sont comparées face au même adversaire : un **kodama immobile aux PV infinis**, qui ne riposte pas. Chaque classe lance toutes ses compétences offensives dès qu'elles sont prêtes, et on mesure ses dégâts par seconde maximaux.
 
-Classement visé, en part des dégâts de la Lame :
+Cibles de la version d'origine, en part des dégâts de la Lame (**remplacées le 9 octobre 2026** : la Lame n'est plus la référence, voir docs/plan-equilibrage-classes.md et docs/equilibrage.md) :
 
 | Rang | Classe | DPS visé | Pourquoi |
 |---|---|---|---|
-| 1 | Lame | 100 % | Classe de dégâts pure, peu de PV |
+| 1 | Lame | 100 % | Unité de mesure du banc, peu de PV |
 | 2 | Rôdeur | ≈ 95 % | La Lame ne fait que 5 % de dégâts de plus que le Rôdeur |
 | 3 | Guerrier | 75 % | Meilleure survie : il échange des dégâts contre de la résistance |
 | 3 | Invocateur | 75 % | À égalité avec le Guerrier |
