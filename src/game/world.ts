@@ -1007,8 +1007,8 @@ export class World {
     const player = hero ?? this.player;
     const cfg = player.cfg.sorcier.ward;
     player.shield(player.cfg.maxHp * cfg.shield, cfg.duration);
-    // Capuche de l'ascète : le bouclier qui s'allume soigne.
-    const heal = player.cfg.perks?.wardHeal;
+    // Le bouclier qui s'allume soigne un peu ; la Capuche de l'ascète ajoute à ce soin.
+    const heal = cfg.heal + (player.cfg.perks?.wardHeal ?? 0);
     if (heal) player.heal(player.cfg.maxHp * heal, this);
     player.ward = cfg.duration;
     player.wardTick = 0;

@@ -76,6 +76,8 @@ const STYLES = ['survie', 'dps', 'boss'];
 const STUFF = option('stuff', 'typique');
 /** `--humain` : les bots imitent un joueur moyen (réaction plus lente, attaques ratées, visée qui tremble). */
 const HUMAN = process.argv.includes('--humain');
+/** `--cible mobile` : au banc de DPS, le kodama court en cercle (3 m/s, 5 m de rayon) au lieu de rester immobile : la mêlée perd le temps passé à le poursuivre. */
+const MOBILE = option('cible', 'fixe') === 'mobile';
 /** `--niveau-donjon 30` : niveau du donjon, celui du héros sinon. */
 const DUNGEON_LEVEL = Number(option('niveau-donjon', '0'));
 /** `--objets a,b` : objets portés en plus par le héros testé (pas ses alliés), chacun à la place de celui de son emplacement. */
@@ -165,10 +167,17 @@ async function worker() {
       const bot = new Bot(world, world.players[0], true, HUMAN);
       let t = 0;
       let dealt = 0;
+      let home = null;
+      let angle = 0;
       while (t < DURATION + 30) {
         world.update(1 / 60, bot.input());
         const dummy = world.enemies[0];
         if (dummy) dummy.hp = dummy.maxHp;
+        if (MOBILE && dummy?.active) {
+          home ??= { x: dummy.pos.x, z: dummy.pos.z };
+          angle += 3 / 5 / 60;
+          dummy.pos = { x: home.x + Math.cos(angle) * 5 - 5, z: home.z + Math.sin(angle) * 5 };
+        }
         for (const e of world.drainEvents()) if (e.type === 'enemyHit' && dummy) dealt += e.amount;
         // Le chrono part quand le kodama est là.
         if (dummy?.active) t += 1 / 60;

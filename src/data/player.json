@@ -33,7 +33,7 @@
     "recovery": 0.32,
     "knockback": 7,
     "stun": 0.8,
-    "cooldown": 6,
+    "cooldown": 5,
     "heal": 0.04
   },
   "bond": {
@@ -50,7 +50,7 @@
   "stance": {
     "guard": { "attackTimeFactor": 1.2, "damageTakenFactor": 0.75 },
     "offense": { "attackTimeFactor": 0.75, "reach": 0.4, "lifesteal": 0.1, "damageTakenFactor": 0.9 },
-    "counter": { "window": 1, "bonus": 0.35, "stun": 0.3 },
+    "counter": { "window": 1, "bonus": 0.35, "stun": 0.3, "heal": 0.03 },
     "effectCooldown": 1,
     "parrySmash": 2
   },
@@ -58,7 +58,7 @@
     "duration": 6,
     "cooldown": 14,
     "attackTimeFactor": 0.72,
-    "damageTakenFactor": 1.25
+    "damageTakenFactor": 1.1
   },
   "blade": {
     "critFactor": 2,
@@ -73,25 +73,25 @@
     "dance": { "cooldown": 16, "targets": 5, "range": 7, "damage": 14, "hop": 0.1 }
   },
   "paladin": {
-    "aura": { "cooldown": 16, "duration": 6, "radius": 3, "healShare": 0.25 },
+    "aura": { "cooldown": 14, "duration": 6, "radius": 3.6, "healShare": 0.3 },
     "aegis": { "range": 8, "armor": 0.6, "selfDamageMalus": 0.5, "cooldown": 15 },
-    "selfHeal": [0.75, 0.6, 0.5],
-    "judgement": { "max": 100, "perBlock": 20, "perHit": 5, "radius": 3, "damage": 45, "heal": 0.06 },
-    "guard": { "max": 100, "cost": 2.5, "minCost": 12, "regen": 30, "delay": 1, "breakTime": 1.5 },
-    "hammer": { "cooldown": 5, "damage": 20, "range": 7, "speed": 15, "radius": 0.6, "knockback": 4 }
+    "selfHeal": [1, 0.8, 0.65],
+    "judgement": { "max": 100, "perBlock": 20, "perHit": 5, "radius": 3, "damage": 55, "heal": 0.08 },
+    "guard": { "max": 100, "cost": 2.5, "minCost": 12, "regen": 38, "delay": 1, "breakTime": 1.5 },
+    "hammer": { "cooldown": 4, "damage": 24, "range": 7, "speed": 15, "radius": 0.6, "knockback": 4 }
   },
   "ranger": {
     "arrow": { "speed": 24, "radius": 0.25 },
     "charged": { "time": 0.9, "minFactor": 0.2, "maxFactor": 3, "moveFactor": 0.85, "fullMoveFactor": 0.3, "recover": 0.8, "rangeFactor": 1.3, "speedFactor": 1.4 },
-    "net": { "cooldown": 12, "stun": 2.5, "radius": 1.4, "range": 10 },
+    "net": { "cooldown": 10, "stun": 2.5, "radius": 1.7, "range": 10 },
     "huntMark": { "cooldown": 8, "duration": 6, "bonus": 0.3, "range": 12, "killHeal": 0.08 },
-    "leap": { "cooldown": 5, "distance": 4.5, "duration": 0.35, "height": 0.8, "arrows": 3, "spreadDeg": 14 }
+    "leap": { "cooldown": 4.2, "distance": 5, "duration": 0.35, "height": 0.8, "arrows": 3, "spreadDeg": 14 }
   },
   "sorcier": {
     "mana": { "max": 100, "regen": 5 },
     "fireball": { "count": 3, "spreadDeg": 16, "speed": 15, "turnRate": 9, "radius": 0.28, "seek": 3 },
     "seal": { "cost": 18, "cooldown": 2.5, "delay": 1, "radius": 2.2, "damage": 34, "range": 9 },
-    "ward": { "cost": 30, "cooldown": 10, "duration": 5, "shield": 0.4, "burn": 8, "radius": 1.6, "knockback": 7 },
+    "ward": { "cost": 30, "cooldown": 10, "duration": 5, "shield": 0.4, "heal": 0.05, "burn": 8, "radius": 1.6, "knockback": 7 },
     "flight": { "cost": 15, "cooldown": 5, "distance": 4.5, "duration": 0.22, "trailLife": 3, "trailRadius": 0.9, "burn": 10 },
     "meteor": { "cooldown": 18, "delay": 2, "radius": 3.6, "damage": 140, "range": 10, "knockback": 8 }
   }

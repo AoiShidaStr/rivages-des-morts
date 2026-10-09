@@ -10,7 +10,7 @@ import type { World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 9;
+export const PROTOCOL = 10;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */

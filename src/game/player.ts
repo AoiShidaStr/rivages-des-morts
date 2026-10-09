@@ -690,6 +690,7 @@ export class Player {
     if (perfect && this.cfg.kit === 'guerrier') {
       this.counterWindow = Math.max(this.cfg.stance.counter.window, perks.counter?.window ?? 0);
       this.smashCooldown = Math.max(0, this.smashCooldown - this.cfg.stance.parrySmash);
+      this.heal(this.cfg.maxHp * this.cfg.stance.counter.heal, world);
     }
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
     const chip = parried ? 0 : amount * (1 - this.cfg.block.reduction);

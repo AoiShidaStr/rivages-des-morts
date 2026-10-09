@@ -43,6 +43,7 @@ import {
 } from './ui/panels';
 import { openCoopMenu, openLobby } from './ui/coop';
 import { openEndlessEntry } from './ui/infini';
+import { logRun } from './game/journal';
 import { openOptions } from './ui/options';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
 import { Screens, type MenuOption } from './ui/screens';
@@ -984,6 +985,7 @@ export class App {
     this.outcome = null;
     this.setMode('result');
     const victory = outcome === 'victory';
+    logRun({ hero: heroLabel(content.skills, progress.state.hero), level: progress.level, dungeon: this.dungeon.id, dungeonLevel: this.dungeonLevel, victory, waves: this.run.waves, players: this.world?.players.length ?? 1 });
     const totals = this.runTotals(victory);
     const actions = this.grantRun(victory);
     let unlocked: number | undefined;
@@ -1048,6 +1050,7 @@ export class App {
     this.setMode('result');
     const session = this.coop;
     const last = firstPalier(data, endless.bloc) + data.palierStep - 1;
+    logRun({ hero: heroLabel(content.skills, progress.state.hero), level: progress.level, dungeon: 'infini', dungeonLevel: last, victory: outcome === 'victory', waves: this.run.waves, players: this.world?.players.length ?? 1 });
 
     if (outcome === 'victory') {
       const record = this.recordEndless(last);
