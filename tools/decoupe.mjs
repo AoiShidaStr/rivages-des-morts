@@ -10,7 +10,47 @@ export function alphaMask(data, w, h, options) {
   if (options.eraseLines) eraseLines(alpha, w, h, options.eraseLines === true ? {} : options.eraseLines);
   removeSmallParts(alpha, w, h, options.minPartRatio);
   softenEdges(alpha, w, h);
+  if (options.defringe) defringe(data, alpha, w, h, options.defringe);
   return alpha;
+}
+
+/**
+ * Retire le gris du fond resté au bord du sujet : liseré clair, halo d'une lanterne ou d'une aura peint sur le gris.
+ * Dans une bande de `band` pixels le long du fond, l'opacité suit l'écart de couleur au fond (un pixel du gris
+ * exact devient transparent), et la couleur est « dé-mélangée » du gris : le halo reste, en transparence.
+ * Plus on s'enfonce dans le sujet, plus le pixel redevient opaque : une pierre grise ne se perce pas.
+ * `ref` : le gris du fond, lu par défaut sur les bords de l'image. Modifie `data` (RVB) et `alpha` sur place.
+ */
+export function defringe(data, alpha, w, h, band, ref = borderMedian(data, w, h)) {
+  const depth = new Uint8Array(w * h);
+  const queue = new Int32Array(w * h);
+  let head = 0;
+  let tail = 0;
+  for (let i = 0; i < w * h; i++) if (!alpha[i]) queue[tail++] = i;
+  while (head < tail) {
+    const i = queue[head++];
+    const d = alpha[i] ? depth[i] : 0;
+    if (d >= band) continue;
+    const x = i % w;
+    for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i >= w ? i - w : -1, i < (h - 1) * w ? i + w : -1]) {
+      if (j < 0 || !alpha[j] || depth[j]) continue;
+      depth[j] = d + 1;
+      queue[tail++] = j;
+    }
+  }
+  for (let i = 0; i < w * h; i++) {
+    const d = depth[i];
+    if (!d || !alpha[i]) continue;
+    let gap = 0;
+    for (let c = 0; c < 3; c++) gap = Math.max(gap, Math.abs(data[i * 3 + c] - ref[c]));
+    const t = (d - 1) / band;
+    const floor = t * t * (3 - 2 * t);
+    const a = Math.max(floor, Math.min(1, Math.max(0, (gap - 6) / 54)));
+    if (a >= 1) continue;
+    alpha[i] = Math.round(Math.min(alpha[i], 255 * a));
+    if (a <= 0) continue;
+    for (let c = 0; c < 3; c++) data[i * 3 + c] = Math.max(0, Math.min(255, Math.round(ref[c] + (data[i * 3 + c] - ref[c]) / a)));
+  }
 }
 
 /** Vide des rectangles de l'image (en fractions de sa taille : [x0, y0, x1, y1]), là où Nano Banana a écrit du texte. */

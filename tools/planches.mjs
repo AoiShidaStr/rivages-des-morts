@@ -76,7 +76,7 @@ for (const entry of [...config.planches, ...heroes]) {
 
 /** Découpe une image une seule fois, même quand plusieurs animations y puisent (planches complètes). */
 function split(input, options) {
-  const keys = ['layout', 'count', 'crop', 'erase', 'eraseLines', 'tolerance', 'localTolerance', 'maxSaturation', 'minPartRatio', 'fillHoles', 'minHole', 'keyColor'];
+  const keys = ['layout', 'count', 'crop', 'erase', 'eraseLines', 'tolerance', 'localTolerance', 'maxSaturation', 'minPartRatio', 'fillHoles', 'minHole', 'keyColor', 'defringe'];
   const key = input + JSON.stringify(keys.map((k) => options[k]));
   if (!splitCache.has(key)) splitCache.set(key, splitFrames(input, options));
   return splitCache.get(key);

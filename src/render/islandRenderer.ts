@@ -45,6 +45,8 @@ interface SpriteEntry {
   below: number;
   facesRight: boolean;
   anim?: SheetAnimation;
+  still?: boolean;
+  motion?: SpriteDef['motion'];
 }
 
 interface Billboard {
@@ -140,7 +142,7 @@ export class IslandRenderer {
       const entry = this.entryFor(prop.sprite, prop.height);
       if (!entry) continue;
       const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
-      if (entry.anim) this.animatedProps.push(view);
+      if ((entry.anim && !entry.still) || entry.motion) this.animatedProps.push(view);
     }
     // Les décors restent tant que l'île existe (toute la partie).
     if (this.painted && !LOW_GRAPHICS) await DecorSprites.build(this.scene, this.painted.decor, this.forward, LOW_DECOR);
@@ -224,10 +226,14 @@ export class IslandRenderer {
       const toPlayer = { x: island.player.pos.x - it.pos.x, z: island.player.pos.z - it.pos.z };
       if (Math.hypot(toPlayer.x, toPlayer.z) < 4) this.face(view, toPlayer);
       // Une planche animée respire d'elle-même ; une image fixe s'étire un peu.
-      if (view.entry.anim) this.play(view, 'idle', dt);
-      else view.mesh.scaling.set(1, 1 + 0.012 * Math.sin((this.time + view.phase) * 2.5), 1);
+      if (view.entry.motion) this.sway(view);
+      else if (view.entry.anim && !view.entry.still) this.play(view, 'idle', dt);
+      else if (!view.entry.still) view.mesh.scaling.set(1, 1 + 0.012 * Math.sin((this.time + view.phase) * 2.5), 1);
     }
-    for (const view of this.animatedProps) this.play(view, 'idle', dt);
+    for (const view of this.animatedProps) {
+      if (view.entry.motion) this.sway(view);
+      else this.play(view, 'idle', dt);
+    }
     for (const [id, view] of this.npcs) {
       if (seen.has(id)) continue;
       this.disposeBillboard(view);
@@ -309,7 +315,7 @@ export class IslandRenderer {
     if (def.sheet) {
       try {
         const sheet = await loadSheet(this.scene, def.sheet.file, def.height, def.sheet.height);
-        return { ...sheet, body: def.height, facesRight: true };
+        return { ...sheet, body: def.height, facesRight: true, still: def.still, motion: def.motion };
       } catch {
         console.warn(`Planche introuvable : ${def.sheet.file}. L'image fixe la remplace.`);
       }
@@ -318,7 +324,7 @@ export class IslandRenderer {
       try {
         const texture = await loadTexture(this.scene, `${base}${def.file}`);
         const { width, height } = texture.getSize();
-        return { texture, aspect: width / height, height: def.height, body: def.height, below: 0, facesRight: def.facesRight };
+        return { texture, aspect: width / height, height: def.height, body: def.height, below: 0, facesRight: def.facesRight, motion: def.motion };
       } catch {
         console.warn(`Sprite de l'île introuvable : ${def.file}.${def.placeholder ? ' Le dessin provisoire le remplace.' : ''}`);
       }
@@ -375,14 +381,25 @@ export class IslandRenderer {
     shadow.position.set(pos.x, 0.01, pos.z);
     const phase = Math.random() * 10;
     const view = { sprite, mesh, material, shadow, entry, phase, faceRight: entry.facesRight, animTag: '', animTime: 0 };
-    // Les décors animés identiques (lanternes) ne battent pas tous en même temps.
-    if (entry.anim) this.play(view, 'idle', phase);
+    // Les décors animés identiques (lanternes) ne battent pas tous en même temps. Un décor fixe garde sa première image.
+    if (entry.anim) this.play(view, 'idle', entry.still ? 0 : phase);
     return view;
+  }
+
+  /** Mouvement lent de l'image entière d'un décor fixe. */
+  private sway(view: Billboard): void {
+    const t = this.time + view.phase;
+    if (view.entry.motion === 'flotte') {
+      view.mesh.position.y = 0.03 * Math.sin(t * 1.6);
+      view.mesh.scaling.set(1 + 0.008 * Math.sin(t * 1.6 + 1.2), 1, 1);
+    } else {
+      view.mesh.scaling.set(1, 1 + 0.006 * Math.sin(t * 0.8), 1);
+    }
   }
 
   private play(view: Billboard, tag: string, dt: number): void {
     const anim = view.entry.anim;
-    if (!anim) return;
+    if (!anim || (view.entry.still && view.animTag)) return;
     const name = anim.tags.has(tag) ? tag : 'idle';
     if (name !== view.animTag) {
       view.animTag = name;

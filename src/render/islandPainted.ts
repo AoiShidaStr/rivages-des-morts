@@ -46,17 +46,63 @@ const HEIGHTS: Record<string, number> = {
   etendoir: 1.7, 'barque-echouee': 0.8,
 };
 
-/** Les arbres peints de island.json, chacun d'une essence, à la même place (leur collision ne change pas). */
-const PROP_TREES = ['pin-tordu', 'erable-rouge', 'ginkgo', 'cedre', 'saule', 'pin-tordu', 'cerisier-pale', 'erable-rouge', 'bambous-hauts', 'ginkgo'];
-const FOREST_TREES = ['pin-tordu', 'pin-tordu', 'erable-rouge', 'cedre', 'cedre', 'ginkgo', 'saule', 'bambous-hauts', 'pin-sur-rocher'];
-const UNDERGROWTH = [
-  'buisson-rond', 'buisson-rond', 'buisson-bas', 'fougere', 'fougere', 'herbe-haute', 'herbe-haute', 'hortensias', 'azalee',
-  'bambous', 'petit-pin', 'jeune-erable', 'souche-moussue', 'tronc-couche', 'rocher-moussu', 'rocher-moyen', 'rocher-fendu',
-];
-const CURSED_GROWTH = ['arbre-mort', 'higanbana', 'higanbana', 'herbe-haute', 'sotoba', 'souche-moussue'];
-const SHORE = ['rochers-de-rive', 'rochers-de-rive', 'rocher-algues', 'galets', 'herbes-de-rive', 'rocher-plat', 'rocher-grand', 'eboulis'];
-const BANKS = ['roseaux', 'roseaux', 'herbes-de-rive', 'fougere', 'galets', 'rocher-petit'];
-const SPRINKLES = ['herbe-courte', 'herbe-courte', 'herbe-courte', 'galets', 'rocher-petit', 'higanbana'];
+type Biome = 'ponton' | 'village' | 'rizieres' | 'cascade' | 'rocher' | 'donjon';
+interface Flora {
+  /** Arbres : derrière les zones praticables, et à la place des arbres de island.json. */
+  trees: string[];
+  /** Sous-bois : buissons, herbes et pierres de la bande entre les zones praticables et le rivage. */
+  under: string[];
+  shore: string[];
+  /** Touffes sur les zones praticables, loin des chemins. */
+  sprinkles: string[];
+}
+
+/**
+ * Chaque coin de l'île a sa végétation, comme un vrai paysage : pins et rochers battus par la mer au ponton, jardin
+ * soigné au village, saules et hautes herbes autour des rizières, sous-bois humide et moussu à la cascade, pins, ginkgo
+ * et pierres autour du Grand Rocher, arbres morts et lys rouges à l'entrée du donjon. Chaque coin est une zone
+ * (`areas`) de island.json. Les listes se lisent par massifs (voir `clustered`) : une même plante sur des
+ * mètres plutôt qu'un mélange au hasard.
+ */
+const FLORA: Record<Biome, Flora> = {
+  ponton: {
+    trees: ['pin-tordu', 'pin-tordu', 'pin-sur-rocher'],
+    under: ['herbes-de-rive', 'herbe-haute', 'buisson-bas', 'rocher-moyen', 'rochers-de-rive'],
+    shore: ['rochers-de-rive', 'galets', 'herbes-de-rive', 'rocher-plat'],
+    sprinkles: ['herbe-courte', 'galets'],
+  },
+  village: {
+    trees: ['erable-rouge', 'cerisier-pale', 'bambous-hauts'],
+    under: ['hortensias', 'azalee', 'buisson-rond', 'jeune-erable', 'bambous', 'petit-pin'],
+    shore: ['galets', 'herbes-de-rive', 'rocher-plat'],
+    sprinkles: ['herbe-courte'],
+  },
+  rizieres: {
+    trees: ['saule', 'saule', 'bambous-hauts'],
+    under: ['herbe-haute', 'roseaux', 'buisson-bas', 'bambous'],
+    shore: ['roseaux', 'herbes-de-rive', 'galets'],
+    sprinkles: ['herbe-courte'],
+  },
+  cascade: {
+    trees: ['cedre', 'cedre', 'erable-rouge'],
+    under: ['fougere', 'rocher-moussu', 'souche-moussue', 'tronc-couche', 'hortensias'],
+    shore: ['rocher-algues', 'rochers-de-rive', 'eboulis'],
+    sprinkles: ['herbe-courte', 'rocher-petit'],
+  },
+  rocher: {
+    trees: ['pin-tordu', 'pin-tordu', 'ginkgo'],
+    under: ['rocher-moussu', 'rocher-pointu', 'rocher-moyen', 'petit-pin', 'cairn', 'fougere'],
+    shore: ['rochers-de-rive', 'rocher-grand', 'eboulis', 'rocher-algues'],
+    sprinkles: ['galets', 'rocher-petit'],
+  },
+  donjon: {
+    trees: ['arbre-mort'],
+    under: ['higanbana', 'herbe-haute', 'souche-moussue', 'sotoba', 'higanbana'],
+    shore: ['eboulis', 'rochers-de-rive'],
+    sprinkles: ['higanbana'],
+  },
+};
+const BANKS = ['roseaux', 'roseaux', 'herbes-de-rive', 'fougere'];
 
 /** Petits décors au ras du sol : regroupés en un seul maillage par image, dessinés avant les personnages. */
 export const LOW_DECOR = new Set(['riz', 'galets', 'eboulis', 'rocher-plat', 'rocher-petit', 'herbe-courte', 'nenuphars', 'pas-japonais']);
@@ -125,6 +171,21 @@ class Layout {
 
   paddyDist(s: ScreenPoint): number {
     return Math.min(...this.data.zones.paddies.map((c) => Layout.circle(s, c)));
+  }
+
+  /** Végétation du lieu : celle de la zone la plus proche (rapportée à sa taille), aux frontières un peu ondulées. */
+  flora(s: ScreenPoint): Flora {
+    const warp = (fbm(s.u * 0.3 + 11, s.v * 0.3 + 2) - 0.5) * 0.5;
+    let best: Flora = FLORA.village;
+    let bestD = Infinity;
+    for (const a of this.data.areas) {
+      const d = Math.hypot(s.u - a.u, s.v - a.v) / a.r + warp;
+      if (d < bestD && a.id in FLORA) {
+        bestD = d;
+        best = FLORA[a.id as Biome];
+      }
+    }
+    return best;
   }
 }
 
@@ -348,11 +409,15 @@ function placeDecor(layout: Layout, data: IslandData): DecorSpot[] {
     spots.push({ file: `decor/ile/${name}.webp`, x: w.x, z: w.z, height, flip: random() < 0.5, s });
   };
   const pick = (list: readonly string[]) => list[Math.floor(random() * list.length)];
+  // Par massifs : la plante suit un bruit lent, les voisins se ressemblent ; un peu de hasard pour le naturel.
+  const clustered = (list: readonly string[], s: ScreenPoint, salt: number) => {
+    if (random() < 0.12) return pick(list);
+    const t = (fbm(s.u * 0.22 + salt, s.v * 0.22 - salt) - 0.3) / 0.4;
+    return list[Math.min(list.length - 1, Math.max(0, Math.floor(t * list.length)))];
+  };
 
-  // Les arbres de island.json, chacun d'une essence.
-  data.props
-    .filter((p) => p.sprite === 'arbre')
-    .forEach((p, i) => add(PROP_TREES[i % PROP_TREES.length], p, p.height ?? 3.6));
+  // Les arbres de island.json, de l'essence du lieu.
+  for (const p of data.props.filter((p) => p.sprite === 'arbre')) add(clustered(layout.flora(p).trees, p, 3), p, p.height ?? 3.6);
 
   // Accents : quelques objets choisis près d'un repère, à la première place libre autour.
   const near = (name: string, at: ScreenPoint, where: (s: ScreenPoint) => boolean, radius = 3) => {
@@ -429,21 +494,23 @@ function placeDecor(layout: Layout, data: IslandData): DecorSpot[] {
     }
   }
 
-  // Sous-bois : arbres derrière les zones praticables, buissons et rochers ailleurs.
+  // Sous-bois : des bosquets d'arbres derrière les zones praticables, des massifs de buissons entre eux, et des
+  // clairières : la densité suit un bruit lent plutôt qu'un semis régulier.
   const [u0, u1, v0, v1] = bounds(data);
   for (let u = u0; u < u1; u += 1.15) {
     for (let v = v0; v < v1; v += 1.15) {
       const s = { u: u + (random() - 0.5) * 0.9, v: v + (random() - 0.5) * 0.9 };
       if (!inBand(s) || layout.pierDist(s) < 1.5 || Layout.circle(s, zones.pool) < 0.8) continue;
-      const density = 0.35 + 0.65 * fbm(s.u * 0.2 + 7, s.v * 0.2 + 1);
-      if (random() > density * 0.85 || !clear(s)) continue;
-      const cursed = Layout.circle(s, zones.cursed) < 3;
-      const tree = cursed ? 'arbre-mort' : pick(FOREST_TREES);
-      if (layout.edge(s) > 1 && random() < 0.4 && !hides(s, HEIGHTS[tree])) {
-        add(tree, s, HEIGHTS[tree] * (0.85 + random() * 0.3));
+      const density = fbm(s.u * 0.2 + 7, s.v * 0.2 + 1);
+      if (density < 0.38 || random() > 0.4 + density || !clear(s)) continue;
+      const flora = layout.flora(s);
+      const grove = fbm(s.u * 0.16 + 30, s.v * 0.16 - 4);
+      const tree = clustered(flora.trees, s, 3);
+      if (layout.edge(s) > 1 && grove > 0.5 && !hides(s, HEIGHTS[tree])) {
+        add(tree, s, HEIGHTS[tree] * (0.9 + random() * 0.2));
         continue;
       }
-      const name = pick(cursed ? CURSED_GROWTH : UNDERGROWTH);
+      const name = clustered(flora.under, s, 9);
       if (!hides(s, HEIGHTS[name])) add(name, s, HEIGHTS[name] * (0.85 + random() * 0.3));
     }
   }
@@ -451,17 +518,19 @@ function placeDecor(layout: Layout, data: IslandData): DecorSpot[] {
   // Rivage, berges du ruisseau, puis quelques touffes sur les zones praticables, loin des chemins.
   scatter(70, (s) => {
     const edge = layout.edge(s);
-    return edge > -0.3 && edge < 0.35 && layout.pierDist(s) > 2 ? pick(SHORE) : null;
+    return edge > -0.3 && edge < 0.35 && layout.pierDist(s) > 2 ? clustered(layout.flora(s).shore, s, 17) : null;
   });
   scatter(40, (s) => {
     const d = layout.streamDist(s);
     return d > 0.6 && d < 1.05 && layout.pathDist(s) > 1.1 ? pick(BANKS) : null;
   });
   for (let i = 0; i < 2; i++) near('nenuphars', { u: zones.pool.u + (i ? 0.5 : -0.4), v: zones.pool.v - 0.3 }, (s) => Layout.circle(s, zones.pool) < -0.6, 1);
-  scatter(60, (s) => {
+  // Les touffes poussent par plaques, pas une par mètre carré.
+  scatter(45, (s) => {
     if (layout.walk(s) < 0.4 || layout.pathDist(s) < 1.2 || layout.streamDist(s) < 1.1) return null;
     if (Layout.circle(s, zones.plaza) < 0.5 || Layout.circle(s, zones.gravel) < 0.4 || layout.paddyDist(s) < 0.4) return null;
-    return Layout.circle(s, zones.cursed) < 0 ? 'higanbana' : pick(SPRINKLES);
+    if (fbm(s.u * 0.35 + 50, s.v * 0.35) < 0.52) return null;
+    return clustered(layout.flora(s).sprinkles, s, 23);
   });
 
   function scatter(count: number, choose: (s: ScreenPoint) => string | null): void {

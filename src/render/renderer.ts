@@ -80,6 +80,10 @@ export interface SpriteDef {
   decor?: Vec2 | Vec2[];
   /** Décor de l'île : dessin provisoire (src/render/pixelArt.ts) affiché si l'image manque. */
   placeholder?: string;
+  /** Décor de l'île : planche gardée sur sa première image (l'animation peinte bougeait trop vite pour un objet). */
+  still?: boolean;
+  /** Décor de l'île : léger mouvement de l'image entière (la barque flotte, le rocher respire). */
+  motion?: 'flotte' | 'respire';
 }
 
 export type SpriteManifest = Record<string, SpriteDef>;
