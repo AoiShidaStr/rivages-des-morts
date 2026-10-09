@@ -10,6 +10,7 @@ npm run equilibrage -- --niveaux 30,50 --stuff complet           victoires et su
 npm run equilibrage -- --niveaux 30 --stuff complet --joueurs 3  coop à 3, alliés joués par le bot
 npm run equilibrage -- --mode kits --donjon palais --niveaux 30,50  les 3 styles de chaque classe : survie, DPS, victoires
 npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans objet contre un donjon plus bas
+npm run equilibrage -- --niveaux 30 --stuff complet --humain      bots « humains » : réaction plus lente, attaques ratées, visée qui tremble
 ```
 
 `--stuff survie`, `dps` ou `equilibre` : un des trois styles de jeu de la classe (tableau `KITS` de `tools/equilibrage.mjs`, et GDD, « Styles de jeu par l'équipement »). `--stuff nu` : l'arme de départ jamais forgée, rien d'autre.

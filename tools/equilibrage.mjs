@@ -74,6 +74,8 @@ const KITS = {
 
 const STYLES = ['survie', 'dps', 'boss'];
 const STUFF = option('stuff', 'typique');
+/** `--humain` : les bots imitent un joueur moyen (réaction plus lente, attaques ratées, visée qui tremble). */
+const HUMAN = process.argv.includes('--humain');
 /** `--niveau-donjon 30` : niveau du donjon, celui du héros sinon. */
 const DUNGEON_LEVEL = Number(option('niveau-donjon', '0'));
 /** `--objets a,b` : objets portés en plus par le héros testé (pas ses alliés), chacun à la place de celui de son emplacement. */
@@ -160,7 +162,7 @@ async function worker() {
         { ...base, enemies: dummyEnemies, player: cfg, waves: [{ label: 'Banc de DPS', spawns: [{ kind: 'kodama', count: 1 }] }], difficulty: difficultyFor(content.difficulty, job.level, 1, dungeon.strength) },
         0,
       );
-      const bot = new Bot(world, world.players[0], true);
+      const bot = new Bot(world, world.players[0], true, HUMAN);
       let t = 0;
       let dealt = 0;
       while (t < DURATION + 30) {
@@ -186,7 +188,7 @@ async function worker() {
       const waves = endless ? infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, PLAYERS) : null;
       const difficulty = waves ? waves[0].difficulty : difficultyFor(content.difficulty, DUNGEON_LEVEL || job.level, PLAYERS, dungeon.strength);
       const world = new World({ ...base, ...(waves ? { waves } : {}), player: cfg, allies, difficulty }, 0);
-      const bots = world.players.map((hero) => new Bot(world, hero));
+      const bots = world.players.map((hero) => new Bot(world, hero, false, HUMAN));
       let t = 0;
       let taken = 0;
       let healed = 0;
