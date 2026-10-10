@@ -21,7 +21,8 @@ import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMateri
 import { LOW_GRAPHICS } from './flags';
 import { isHeroVariant } from './heroes';
 import { DecorSprites } from './decorSprites';
-import { IslandMap, LOW_DECOR } from './islandMap';
+import { LOW_DECOR } from './islandDecor';
+import { IslandMap } from './islandMap';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 

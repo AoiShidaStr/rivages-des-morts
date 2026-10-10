@@ -12,6 +12,7 @@
     "planches": "node tools/planches.mjs",
     "sols": "node tools/sols.mjs",
     "carte": "node tools/carte.mjs",
+    "editeur": "vite --open /editeur.html",
     "decors": "node tools/decors.mjs",
     "nettoyer": "node tools/nettoyer.mjs",
     "objets": "node tools/collection-objets.mjs",

@@ -65,6 +65,9 @@ Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coord
 | `scenery` | eau des rizières (riz), bassin (nénuphars), bosquets et plages où l'on ne va pas (décors) |
 | `areas` | zones nommées ; chacune donne sa végétation aux décors autour |
 | `props`, `interactables` | bâtiments, PNJ, objets |
+| `decor` | décors posés à la main (facultatif) : sans lui, le code les pose lui-même par biome (`src/render/islandDecor.ts`) |
+
+**Éditeur de carte** : `npm run editeur` ouvre `editeur.html` (seulement en développement). On y déplace à la souris les zones de marche et leurs sommets, les obstacles, les zones nommées, les bâtiments, les PNJ, le départ et chaque décor, dessinés à leur taille dans le jeu ; une palette pose de nouveaux décors et bâtiments. Ctrl+S enregistre dans `island.json` (même format compact) et le jeu ouvert se recharge seul. Modifier un décor fige tous les décors automatiques dans `decor` ; « Revenir au placement du jeu » les retire. Le bouton « ? Aide » liste les commandes.
 
 `npm run carte` redessine l'image avec tout cela par-dessus (`ile_fond_carte.png`, grille tous les 64 pixels d'une image de 1024) pour retoucher à l'œil. Pour passer d'un pixel (px, py) de cette grille aux coordonnées du jeu : u = (px − 512) / 1024 × map.width, v = (512 − py) / 1024 × map.width / sin 35,26°.
 

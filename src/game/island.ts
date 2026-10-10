@@ -62,6 +62,16 @@ export interface IslandScenery {
   beaches: Polygon[];
 }
 
+/** Un décor peint posé sur la carte (island.json, `decor`) : image dans public/sprites/decor, sans l'extension. */
+export interface DecorItem extends ScreenPoint {
+  /** `ile/pin-tordu` : public/sprites/decor/ile/pin-tordu.webp. */
+  sprite: string;
+  /** Hauteur à l'écran, en unités du monde (le héros mesure 1,75). */
+  height: number;
+  /** Retourné de gauche à droite. */
+  flip?: boolean;
+}
+
 export interface IslandData {
   name: string;
   map: IslandMap;
@@ -76,6 +86,8 @@ export interface IslandData {
   areas: Area[];
   props: PropDef[];
   interactables: InteractableDef[];
+  /** Décors posés à la main (éditeur de carte) ; sans eux, le code les pose selon la carte (src/render/islandDecor.ts). */
+  decor?: DecorItem[];
 }
 
 export interface Interactable {

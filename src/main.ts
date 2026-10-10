@@ -79,6 +79,8 @@ async function start(): Promise<void> {
 
   // Accès à la partie depuis la console du navigateur, en développement seulement.
   if (import.meta.env.DEV) Object.assign(window, { rdm: app.debug() });
+  // L'éditeur de carte (editeur.html) a enregistré island.json : le jeu se recharge avec la nouvelle île.
+  import.meta.hot?.on('editeur:ile', () => location.reload());
 }
 
 start().catch((error: unknown) => {
