@@ -20,7 +20,7 @@ import {
   type Loadout,
   type SubclassDef,
 } from '../game/loadout';
-import { gravureCost, gravureLineDef, gravureLineText, gravureRank, rankOdds, rollGravure, type GravureData } from '../game/gravure';
+import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravureRank, gravureSealText, rankOdds, rollGravure, type GravureData } from '../game/gravure';
 import type { RolledOffer } from '../game/loot';
 import { SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
 import { keyName, withKeys } from '../keys';
@@ -619,11 +619,16 @@ function forgePick(ctx: UiContext, id: string, cap: number, selected: boolean, s
 
 // --- Gravure (riven) ----------------------------------------------------------
 
-/** Ce que coûte la prochaine gravure d'une arme, et si le joueur peut la payer. */
-function gravurePrice(progress: Progress, id: string): { oboles: number; materials: Record<string, number>; ok: boolean } {
-  const price = gravureCost(content.gravures, progress.gravureRolls(id));
-  const ok = progress.state.oboles >= price.oboles && Object.entries(price.materials).every(([m, n]) => progress.material(m) >= n);
-  return { ...price, ok };
+/**
+ * Ce que coûte la prochaine gravure d'une arme, et si le joueur peut la payer. `sealed` : l'arme n'a jamais été gravée,
+ * donc rien à vendre — sa première gravure s'arrache au sceau du Yomi (voir `rollSeal`, dans gravure.ts).
+ */
+function gravurePrice(progress: Progress, id: string): { oboles: number; materials: Record<string, number>; ok: boolean; sealed: boolean } {
+  const rolls = progress.gravureRolls(id);
+  const price = gravureCost(content.gravures, rolls);
+  const sealed = gravureNeedsSeal(rolls);
+  const ok = !sealed && progress.state.oboles >= price.oboles && Object.entries(price.materials).every(([m, n]) => progress.material(m) >= n);
+  return { ...price, ok, sealed };
 }
 
 /** Une arme de la liste des gravures : son nom, et son rang s'il y en a un. */
@@ -686,35 +691,42 @@ function gravureDetail(ctx: UiContext, id: string, rerender: () => void): HTMLEl
     h(
       'p',
       { class: 'note' },
-      rank?.summary ?? `Tetsu trempe la lame dans la poussière du Yomi : ce qui monte sur l’acier, personne ne le choisit. Le rang le plus courant ne donne que deux lignes basses.`,
+      rank?.summary ?? (price.sealed ? gravureSealText(data.sceau) : `Tetsu trempe la lame dans la poussière du Yomi : ce qui monte sur l’acier, personne ne le choisit. Le rang le plus courant ne donne que deux lignes basses.`),
     ),
     lines.length ? h('ul', { class: 'gravure-lines' }, ...lines) : null,
     h('div', { class: 'gravure-odds' }, 'Rangs : ', rankOdds(data).map((o) => `${o.name} ${Math.round(o.chance * 100)} %`).join(' · ')),
     h('p', { class: 'note' }, 'Le tirage remplace la gravure en place, et son prix monte à chaque relance. La soie de jorōgumo ne tombe que sur la Jorōgumo.'),
-    cost(progress, price.oboles, price.materials).node,
-    h(
-      'button',
-      {
-        class: 'btn primary',
-        disabled: !price.ok,
-        title: gravure ? 'Remplacera la gravure actuelle' : 'Pose une première gravure sur cette arme',
-        onclick: () => {
-          progress.gainOboles(-price.oboles);
-          for (const [m, n] of Object.entries(price.materials)) progress.gainMaterial(m, -n);
-          const drawn = rollGravure(data, def.tags ?? []);
-          progress.setGravure(id, drawn);
-          ctx.toast(`${def.name} · ${gravureRank(data, drawn)?.name ?? 'gravure'}`, 'loot', id);
-          for (const line of drawn.lines) {
-            const lineDef = gravureLineDef(data, line.id);
-            if (!lineDef) continue;
-            const contre = lineDef.kind === 'contrepartie';
-            ctx.toast(contre ? `Contrepartie · ${lineDef.summary}` : gravureLineText(line, lineDef), contre ? 'quest' : 'loot');
-          }
-          rerender();
-        },
-      },
-      gravure ? 'Relancer le tirage' : 'Graver l’arme',
-    ),
+    // La première gravure d'une arme ne s'achète pas : pas de prix à montrer, et le bouton reste fermé.
+    ...(price.sealed
+      ? [
+          h('button', { class: 'btn', disabled: true, title: data.sceau.summary }, `${data.sceau.name} requis`),
+        ]
+      : [
+          cost(progress, price.oboles, price.materials).node,
+          h(
+            'button',
+            {
+              class: 'btn primary',
+              disabled: !price.ok,
+              title: gravure ? 'Remplacera la gravure actuelle' : 'Pose une première gravure sur cette arme',
+              onclick: () => {
+                progress.gainOboles(-price.oboles);
+                for (const [m, n] of Object.entries(price.materials)) progress.gainMaterial(m, -n);
+                const drawn = rollGravure(data, def.tags ?? []);
+                progress.setGravure(id, drawn);
+                ctx.toast(`${def.name} · ${gravureRank(data, drawn)?.name ?? 'gravure'}`, 'loot', id);
+                for (const line of drawn.lines) {
+                  const lineDef = gravureLineDef(data, line.id);
+                  if (!lineDef) continue;
+                  const contre = lineDef.kind === 'contrepartie';
+                  ctx.toast(contre ? `Contrepartie · ${lineDef.summary}` : gravureLineText(line, lineDef), contre ? 'quest' : 'loot');
+                }
+                rerender();
+              },
+            },
+            gravure ? 'Relancer le tirage' : 'Graver l’arme',
+          ),
+        ]),
   );
 }
 

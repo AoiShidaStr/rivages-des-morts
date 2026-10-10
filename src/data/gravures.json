@@ -761,5 +761,11 @@
         "perRoll": 1
       }
     }
+  },
+  "sceau": {
+    "about": "Le sceau du Yomi : la première gravure d'une arme ne s'achète pas, elle se gagne. À la fin du bloc du Yomi sans fond (donjon-infini.json) qui se termine au palier `palier`, le sceau désigne une arme du sac jamais gravée, au hasard, et y pose son premier tirage — sans oboles ni soie. Une arme gravée une première fois se relance ensuite normalement, au prix de `cost`.",
+    "palier": 50,
+    "name": "Sceau du Yomi",
+    "summary": "La première gravure d'une arme ne s'achète pas : elle s'arrache au palier {palier} du Yomi sans fond, et c'est le sceau qui désigne l'arme."
   }
 }

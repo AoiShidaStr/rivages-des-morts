@@ -4,6 +4,7 @@ import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
+import { gravureRank, rollSeal, type Gravure } from './game/gravure';
 import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, rollEndlessItem, submitGlobalRecord } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
@@ -70,9 +71,11 @@ interface Loot {
   /** Objets déjà possédés tombés à nouveau : fondus en oboles et matériaux (déjà comptés ci-dessus). */
   duplicates: string[];
   waves: number;
+  /** Sceaux du Yomi gagnés dans la descente : la première gravure d'une arme, gardée en jeu jusqu'à l'encaissement. */
+  seals: { item: string; gravure: Gravure }[];
 }
 
-const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], duplicates: [], waves: 0 });
+const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], duplicates: [], waves: 0, seals: [] });
 export interface AppDeps {
   engine: Engine;
   input: Input;
@@ -1145,6 +1148,7 @@ export class App {
       xp: Math.round(this.run.xp),
       materials: [
         ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
+        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`)),
         ...this.duplicateLines(),
         ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
       ],
@@ -1158,6 +1162,8 @@ export class App {
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(this.run.materials)) progress.gainMaterial(id, amount);
     for (const item of this.run.items) progress.acquire(item, content.items[item]?.slot);
+    // Le sceau ne se pose qu'avec le reste : tomber avant de remonter le rend au Yomi, comme le butin en jeu.
+    if (victory) for (const seal of this.run.seals) progress.setGravure(seal.item, seal.gravure);
     progress.state.chests += chests;
     return progress.gainXp(xp);
   }
@@ -1247,6 +1253,11 @@ export class App {
       const record = this.recordEndless(last);
       const item = rollEndlessItem(data, last, content.items, progress.state.hero, content.skills, (id) => progress.has(id) || this.run.items.includes(id));
       if (item) this.gainRunItem(item, `Palier ${last}`);
+      const seal = this.drawSeal(last);
+      if (seal) {
+        this.run.seals.push(seal);
+        this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`, 'loot', seal.item);
+      }
       endless.awaiting = true;
       const next = endless.bloc + 1;
       const nextFirst = firstPalier(data, next);
@@ -1306,6 +1317,16 @@ export class App {
       },
       this.afterEndlessOptions(),
     );
+  }
+
+  /**
+   * Le sceau du Yomi (gravures.json) : la première gravure d'une arme ne s'achète pas. En finissant le bloc qui se
+   * termine au palier du sceau, une arme du sac jamais gravée est désignée au hasard et reçoit son premier tirage.
+   * Il rejoint le butin en jeu : tomber plus bas le perd, comme le reste.
+   */
+  private drawSeal(palier: number): { item: string; gravure: Gravure } | null {
+    const { progress } = this.d;
+    return rollSeal(content.gravures, palier, content.items, progress.state.items, (id) => progress.gravureRolls(id));
   }
 
   /** Encaisser : le butin en jeu rejoint la progression, et l'on remonte. */

@@ -12,7 +12,7 @@
 //   · rien ici ne crée d'état de combat : la gravure ne touche que le PlayerConfig, et ne demande donc aucune
 //     montée de PROTOCOL en coop.
 import { drawWeighted } from './loot';
-import type { ConfigEffect } from './loadout';
+import type { ConfigEffect, ItemDef } from './loadout';
 
 /** Comment afficher la valeur tirée : telle quelle, en pourcentage de 1 (0,02 → 2 %), ou en écart à 1 (0,88 → −12 %). */
 export type GravureShow = 'brut' | 'part' | 'ecart';
@@ -60,10 +60,22 @@ export interface GravureCostDef {
   materials: Record<string, { base: number; perRoll: number }>;
 }
 
+/**
+ * Le sceau du Yomi : la première gravure d'une arme se gagne (fin du bloc du palier `palier` du donjon infini), elle ne
+ * s'achète pas. Le sceau désigne lui-même l'arme, au hasard, parmi celles qui n'ont jamais été gravées.
+ */
+export interface GravureSealDef {
+  palier: number;
+  name: string;
+  /** Le texte montré au joueur, avec `{palier}` remplacé par le palier du sceau. */
+  summary: string;
+}
+
 export interface GravureData {
   ranks: GravureRankDef[];
   lines: GravureLineDef[];
   cost: GravureCostDef;
+  sceau: GravureSealDef;
 }
 
 /** Une ligne tirée : ce qu'elle vaut, figé au tirage (une relance remplace la gravure, elle ne la corrige pas). */
@@ -91,6 +103,43 @@ export function gravureCost(data: GravureData, rolls: number): { oboles: number;
   const materials: Record<string, number> = {};
   for (const [id, rule] of Object.entries(data.cost.materials)) materials[id] = rule.base + rule.perRoll * rolls;
   return { oboles: data.cost.oboles.base + data.cost.oboles.perRoll * rolls, materials };
+}
+
+/**
+ * Vrai tant qu'une arme n'a jamais été gravée : sa première gravure passe par le sceau du Yomi, et la bourse n'y peut
+ * rien. Un tirage suffit à débloquer la relance, qui se paie comme avant.
+ */
+export const gravureNeedsSeal = (rolls: number): boolean => rolls === 0;
+
+/**
+ * L'arme que le sceau désigne : une arme du sac jamais gravée, tirée au hasard — `null` quand le sac n'en a plus aucune
+ * à marquer. C'est le tirage qui fait la rareté : le sceau ne se choisit pas.
+ */
+export function rollSealTarget(weapons: readonly string[], rolls: (item: string) => number, random: () => number = Math.random): string | null {
+  const free = weapons.filter((id) => gravureNeedsSeal(rolls(id)));
+  return free.length > 0 ? free[Math.floor(random() * free.length)] : null;
+}
+
+/** Le texte du sceau, palier compris (« elle s'arrache au palier 50 du Yomi sans fond »). */
+export const gravureSealText = (sceau: GravureSealDef): string => sceau.summary.replace('{palier}', String(sceau.palier));
+
+/**
+ * Le sceau gagné en finissant le bloc qui se termine au palier `palier` : il désigne une arme du sac jamais gravée, au
+ * hasard, et renvoie son premier tirage. `null` si le palier n'est pas celui du sceau, ou si toutes les armes du sac
+ * sont déjà gravées — le sceau n'a alors rien à marquer. Comme le butin du donjon infini, il reste en jeu jusqu'à
+ * l'encaissement (voir `grantRun`, dans l'app).
+ */
+export function rollSeal(
+  data: GravureData,
+  palier: number,
+  items: Record<string, ItemDef>,
+  owned: readonly string[],
+  rolls: (item: string) => number,
+  random: () => number = Math.random,
+): { item: string; gravure: Gravure } | null {
+  if (palier !== data.sceau.palier) return null;
+  const item = rollSealTarget(owned.filter((id) => items[id]?.slot === 'arme'), rolls, random);
+  return item ? { item, gravure: rollGravure(data, items[item].tags ?? [], random) } : null;
 }
 
 /** Les lignes qu'une arme peut tirer : celles de sa classe, ou celles ouvertes à tout le monde. */

@@ -15,7 +15,8 @@
 //   6. `buildLoadout` pose la gravure de l'arme équipée, et d'elle seule : une gravure sur une arme non portée, ou
 //      sur une pièce d'armure, ne change rien ;
 //   7. au terrain d'entraînement, une gravure fait vraiment plus de dégâts qu'une arme nue, pour les cinq classes ;
-//   8. `Progress` range un tirage, compte la relance, et une vieille sauvegarde (sans `gravures`) se charge sans bruit.
+//   8. `Progress` range un tirage, compte la relance, et une vieille sauvegarde (sans `gravures`) se charge sans bruit ;
+//   9. le sceau du Yomi : sa première gravure se gagne (palier de donjon infini), il désigne une arme jamais gravée.
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 
@@ -102,7 +103,7 @@ async function main() {
   ]);
   const { Progress } = await load('/src/game/progress.ts');
 
-  const { rollGravure, gravureCost, gravureEffects, gravureLineText, gravureLineDef, formatGravureValue, rankOdds, gravureRank } = gravure;
+  const { rollGravure, gravureCost, gravureEffects, gravureLineText, gravureLineDef, formatGravureValue,    rankOdds, gravureRank, gravureNeedsSeal, gravureSealText, rollSealTarget, rollSeal } = gravure;
   const data = content.gravures;
   const base = player.default;
   const terrain = content.entrainement;
@@ -263,6 +264,39 @@ async function main() {
     check(`${w.id} · lignes de sa classe`, againstOk);
     rows.push({ arme: w.id, classe: w.cls, forme: pool.forme.length, maitrise: pool.maitrise.length, contreparties: contreparties.length });
   }
+
+  // --- 3 bis. Le sceau du Yomi : la première gravure se gagne, elle ne s'achète pas ---------------
+  check(
+    'sceau · palier sur un boss de bloc',
+    Number.isInteger(data.sceau.palier) && data.sceau.palier % content.endless.palierStep === 0,
+    `palier ${data.sceau.palier}, blocs de ${content.endless.palierStep}`,
+  );
+  check(
+    'sceau · nommé et lisible',
+    Boolean(data.sceau.name) && gravureSealText(data.sceau).includes(String(data.sceau.palier)) && !gravureSealText(data.sceau).includes('{palier}'),
+    gravureSealText(data.sceau),
+  );
+  check('sceau · la première gravure passe par lui', gravureNeedsSeal(0) && !gravureNeedsSeal(1), '0 tirage, puis 1');
+  // Le sceau désigne une arme jamais gravée, au hasard ; il rend la main quand le sac n'en a plus.
+  const rollsOf = new Map([['nue', 0], ['vierge', 0], ['gravee', 2]]);
+  const sealed = new Set();
+  for (let i = 0; i < 400; i++) sealed.add(rollSealTarget(['nue', 'vierge', 'gravee'], (id) => rollsOf.get(id), random));
+  check('sceau · désigne une arme jamais gravée', sealed.size === 2 && !sealed.has('gravee'), [...sealed].join(', '));
+  check('sceau · plus rien à marquer', rollSealTarget(['gravee'], (id) => rollsOf.get(id), random) === null && rollSealTarget([], () => 0, random) === null);
+  // Le sceau entier : au bon palier, une arme du sac jamais gravée (pas une pièce d'armure), gravée selon sa classe.
+  const sack = ['katana-ronin', 'yumi-bambou', 'chapeau-paille'];
+  const sackRolls = (id) => (id === 'katana-ronin' ? 1 : 0);
+  check('sceau · rien au palier voisin', rollSeal(data, data.sceau.palier + content.endless.palierStep, content.items, sack, sackRolls, random) === null);
+  check('sceau · rien quand tout est gravé', rollSeal(data, data.sceau.palier, content.items, sack, () => 1, random) === null);
+  const seal = rollSeal(data, data.sceau.palier, content.items, sack, sackRolls, random);
+  check('sceau · désigne l’arme jamais gravée du sac', seal?.item === 'yumi-bambou', seal?.item ?? 'rien');
+  const sealPool = pools(content.items[seal?.item ?? '']?.tags ?? []);
+  const sealLines = (seal?.gravure.lines ?? []).map((line) => gravureLineDef(data, line.id));
+  check(
+    'sceau · gravure tirée dans la classe de l’arme',
+    sealLines.length >= 2 && sealLines.every((def) => def && (def.effects || (def.kind === 'forme' ? sealPool.forme.includes(def) : sealPool.maitrise.includes(def)))),
+    sealLines.map((def) => def?.id ?? '?').join(', '),
+  );
 
   // --- 4. Répartition des rangs -----------------------------------------------------------------
   const BIG = 30000;

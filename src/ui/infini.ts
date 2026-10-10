@@ -26,6 +26,7 @@ export function openEndlessEntry(host: PanelHost, ctx: UiContext, onEnter: () =>
         h('li', {}, `Au palier ${data.doubleBossFrom}, Izanami et la Jorōgumo t’attendent ensemble.`),
         h('li', {}, `À la fin de chaque bloc : encaisse ton butin et remonte, ou continue. Si tu tombes, tu perds tout ce que tu n’as pas encaissé.`),
         h('li', {}, `À partir du palier ${data.rewards.itemsFrom}, chaque bloc franchi rapporte un objet rare, épique ou légendaire.`),
+        h('li', {}, `Au palier ${content.gravures.sceau.palier}, le sceau du Yomi marque une de tes armes au hasard : c'est la seule façon d'obtenir la première gravure d'une arme, elle ne s'achète pas.`),
       ),
       h('h3', {}, `Après le palier ${data.doubleBossFrom}`),
       h(
