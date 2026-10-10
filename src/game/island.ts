@@ -39,26 +39,41 @@ export interface InteractableDef extends ScreenPoint {
   if?: Condition[];
 }
 
-export interface IslandZones {
-  plaza: Circle;
-  paddies: Circle[];
-  stream: [number, number][];
-  bridge: ScreenPoint & { dir: number };
-  pool: Circle;
-  gravel: Circle;
-  cursed: Circle;
-  pier: [number, number][];
+/** Polygone en coordonnées d'écran : une suite de points [u, v]. */
+export type Polygon = [number, number][];
+
+/** La carte peinte de l'île : une image vue par la caméra du jeu, posée au sol. */
+export interface IslandMap {
+  /** Image, depuis public/sprites. */
+  image: string;
+  /** Largeur de l'image dans le monde ; sa hauteur à l'écran suit ses proportions. */
+  width: number;
+}
+
+/** Repères peints sur la carte, pour poser les décors (src/render/islandMap.ts). */
+export interface IslandScenery {
+  /** Eau des rizières : le riz y pousse. */
+  paddies: Polygon;
+  /** Bassin de la cascade : nénuphars. */
+  pool: Polygon;
+  /** Terrasses où l'on ne va pas : des bosquets. */
+  groves: Polygon[];
+  /** Plages où l'on ne va pas : rochers et herbes de rive. */
+  beaches: Polygon[];
 }
 
 export interface IslandData {
   name: string;
+  map: IslandMap;
   spawn: ScreenPoint;
   /** Retour de donjon : le ponton de Charon, pour ouvrir ses coffres sur la barque dès l'arrivée. */
   dungeonExit: ScreenPoint;
-  walkable: Circle[];
+  /** Zones où l'on marche (terrasses, chemins, escaliers, pont, ponton), tracées sur la carte. */
+  walk: Polygon[];
+  /** Obstacles dans les zones de marche (un muret peint). */
+  blocks: Polygon[];
+  scenery: IslandScenery;
   areas: Area[];
-  paths: [number, number][][];
-  zones: IslandZones;
   props: PropDef[];
   interactables: InteractableDef[];
 }
@@ -84,7 +99,26 @@ export function toScreen(p: Vec2): ScreenPoint {
   return { u: p.x * RIGHT.x + p.z * RIGHT.z, v: p.x * FORWARD.x + p.z * FORWARD.z };
 }
 
-const WALK_SPEED = 5;
+export function insidePolygon(s: ScreenPoint, poly: Polygon): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [ui, vi] = poly[i];
+    const [uj, vj] = poly[j];
+    if (vi > s.v !== vj > s.v && s.u < ((uj - ui) * (s.v - vi)) / (vj - vi) + ui) inside = !inside;
+  }
+  return inside;
+}
+
+/** Point où l'on peut se tenir : dans une zone de marche, hors des obstacles. */
+export function onWalk(data: IslandData, s: ScreenPoint): boolean {
+  return data.walk.some((p) => insidePolygon(s, p)) && !data.blocks.some((p) => insidePolygon(s, p));
+}
+
+/** Directions autour du héros où son corps doit lui aussi tenir sur une zone de marche. */
+const RIM = Array.from({ length: 8 }, (_, i) => vec(Math.cos((i * Math.PI) / 4), Math.sin((i * Math.PI) / 4)));
+
+/** Un peu plus vif qu'au combat : l'île est grande. */
+const WALK_SPEED = 6;
 /** Marge entre le héros et le bord de l'eau ou les obstacles. */
 const BODY_RADIUS = 0.35;
 const DEFAULT_REACH = 1.8;
@@ -161,8 +195,7 @@ export class Island {
   }
 
   private walkable(p: Vec2): boolean {
-    const s = toScreen(p);
-    return this.data.walkable.some((c) => Math.hypot(s.u - c.u, s.v - c.v) <= c.r - BODY_RADIUS);
+    return onWalk(this.data, toScreen(p)) && RIM.every((d) => onWalk(this.data, toScreen(add(p, scale(d, BODY_RADIUS)))));
   }
 
   private pushOut(p: Vec2): Vec2 {

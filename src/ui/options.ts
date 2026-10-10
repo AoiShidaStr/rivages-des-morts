@@ -24,7 +24,7 @@ export function openOptions(host: PanelHost, music: Music, onClose?: () => void)
   });
   sync();
 
-  // La carte se construit au chargement : le mode léger revient aux anciennes images fixes, sans décors ajoutés.
+  // La carte se construit au chargement : le mode léger garde les cartes peintes, sans décors ajoutés ni eau animée.
   const low = h('input', { type: 'checkbox' });
   low.checked = lowGraphics();
   const reload = h('button', { class: 'btn small', type: 'button', onclick: () => location.reload() }, 'Recharger le jeu maintenant');
@@ -50,7 +50,7 @@ export function openOptions(host: PanelHost, music: Music, onClose?: () => void)
       h('div', { class: 'option-row' }, h('span', {}, 'Volume'), slider, value),
       h('label', { class: 'option-row' }, mute, h('span', {}, 'Couper la musique (touche M)')),
       h('h3', {}, 'Graphismes'),
-      h('label', { class: 'option-row' }, low, h('span', {}, 'Low graphics : anciennes cartes en images fixes, sans décors ajoutés')),
+      h('label', { class: 'option-row' }, low, h('span', {}, 'Graphismes allégés : cartes sans décors ajoutés ni eau animée (pour les petites cartes graphiques)')),
       pending,
       reload,
     ),
