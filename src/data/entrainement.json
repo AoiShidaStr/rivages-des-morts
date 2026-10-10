@@ -1,5 +1,5 @@
 {
-  "about": "Le terrain d'entraînement de Tetsu, derrière la forge : on n'y gagne rien, on n'y risque rien. `meta` a la forme d'un donjon (nom, région, décor) et `arena` celle de dungeon.json, mais ce terrain reste hors de content.dungeons : ni palier, ni quête, ni butin, ni donjon infini. La vague unique porte un mannequin (src/data/enemies.json) à des places fixes : il ne bouge pas, ne frappe pas, et revient à sa place quand on l'abat (GameConfig.training).",
+  "about": "Le terrain d'entraînement de Tetsu, derrière la forge : on n'y gagne rien, on n'y risque rien. Deux poteaux sont fixes, deux autres défilent (`patrol`, en mètres) pour donner à la mêlée une proie qui bouge. `meta` a la forme d'un donjon (nom, région, décor) et `arena` celle de dungeon.json, mais ce terrain reste hors de content.dungeons : ni palier, ni quête, ni butin, ni donjon infini. La vague unique porte un mannequin (src/data/enemies.json) à des places fixes : il ne bouge pas, ne frappe pas, et revient à sa place quand on l'abat (GameConfig.training).",
   "meta": {
     "name": "Le billot de Tetsu",
     "region": "Terrain d'entraînement · ni butin, ni dégâts",
@@ -41,7 +41,7 @@
     "waves": [
       {
         "label": "Le billot de paille",
-        "hint": "Frappe tant que tu veux : il ne bouge pas, ne riposte pas, et rien de ce qui tombe ici ne se perd. Les dégâts s'affichent en haut de l'écran.",
+        "hint": "Frappe tant que tu veux : personne ne riposte, et rien de ce qui tombe ici ne se perd. Deux poteaux fixes et deux qui défilent — les dégâts s'affichent en haut de l'écran.",
         "spawns": [
           {
             "kind": "mannequin",
@@ -49,6 +49,15 @@
             "positions": [
               { "x": 1.6, "z": 1.6 },
               { "x": 4.8, "z": 4.8 }
+            ]
+          },
+          {
+            "kind": "mannequin",
+            "count": 2,
+            "patrol": 6,
+            "positions": [
+              { "x": 0, "z": 5.4 },
+              { "x": 0, "z": -4.2 }
             ]
           }
         ]

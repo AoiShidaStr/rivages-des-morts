@@ -1,4 +1,4 @@
-import type { GameConfig, HazardConfig, WaveConfig } from './config';
+import type { GameConfig, HazardConfig, SubclassActiveConfig, WaveConfig } from './config';
 import type { CurseId } from './difficulty';
 import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Shikome, type Enemy } from './enemies';
 import {
@@ -40,6 +40,9 @@ const REVIVE_RANGE = 1.6;
 const REVIVE_HP = 0.3;
 /** Les boss ne sont jamais doublés en coop. */
 const BOSS_KINDS = new Set<EnemyKind>(['jorogumo', 'izanami']);
+/** Salve d'une voie (Rôdeur : la Volée perçante) : vitesse d'un trait, en m/s, et écart en degrés entre deux traits. */
+const SALVE_SPEED = 24;
+const SALVE_SPREAD = 9;
 /** Secondes avant qu'un boss ne se choisisse une autre proie parmi les héros. */
 const PREY_TIME = 2;
 /** Répit après une immobilisation (filet, fil de Jōren, soie) : le yokai ne peut plus être immobilisé pendant ce temps. */
@@ -66,6 +69,7 @@ function idleInput(hero: Player): InputFrame {
     skillAPressed: false,
     skillEPressed: false,
     skillRPressed: false,
+    skillFPressed: false,
   };
 }
 
@@ -164,6 +168,8 @@ interface Blast {
   t: number;
   owner: number;
   echo: boolean;
+  /** Charges de poison posées par un sceau de voie (la Nuée virulente de la Lame) : 0 pour un sceau du Sorcier. */
+  poison: number;
 }
 
 /** Sol en feu (traînée de la Fuite de feu, Sol brûlant) : il brûle les yokai qui s'y tiennent. */
@@ -226,6 +232,9 @@ interface Sanctuary {
   heal: number;
   life: number;
   tick: number;
+  /** Dégâts par seconde subis par les yokai pris dedans (Sanctuaire d'aube) : 0 pour une zone de soin seule. */
+  burn: number;
+  owner: number;
 }
 
 /** Fil de Jōren laissé par une esquive : le premier ennemi qui le touche est immobilisé. */
@@ -419,14 +428,26 @@ export class World {
     this.lures = this.lures.filter((l) => (l.life -= dt) > 0);
   }
 
-  /** Zone sacrée qui soigne les héros qui s'y tiennent (Geta d'Amaterasu, Geta de l'Égide). */
-  addSanctuary(pos: Vec2, cfg: { heal: number; duration: number; radius: number }): void {
-    const zone: Sanctuary = { id: this.nextFxId--, pos: { ...pos }, radius: cfg.radius, heal: cfg.heal, life: cfg.duration, tick: 0 };
+  /**
+   * Zone sacrée qui soigne les héros qui s'y tiennent (Geta d'Amaterasu, Geta de l'Égide). `burn` y ajoute des
+   * dégâts sur les yokai pris dedans (Sanctuaire d'aube, une voie du Paladin).
+   */
+  addSanctuary(pos: Vec2, cfg: { heal: number; duration: number; radius: number; burn?: number }, owner?: Player): void {
+    const zone: Sanctuary = {
+      id: this.nextFxId--,
+      pos: { ...pos },
+      radius: cfg.radius,
+      heal: cfg.heal,
+      life: cfg.duration,
+      tick: 0,
+      burn: cfg.burn ?? 0,
+      owner: (owner ?? this.player).id,
+    };
     this.sanctuaries.push(zone);
     this.emit({ type: 'sanctuary', id: zone.id, pos: { ...pos }, radius: cfg.radius, life: cfg.duration });
   }
 
-  /** Une fois par seconde, la zone sacrée soigne ; puis elle s'efface. */
+  /** Une fois par seconde, la zone sacrée soigne et, si elle brûle, mord les yokai ; puis elle s'efface. */
   private updateSanctuaries(dt: number): void {
     for (const zone of [...this.sanctuaries]) {
       zone.life -= dt;
@@ -434,6 +455,7 @@ export class World {
       if (zone.tick <= 0 && zone.life > 0) {
         zone.tick += 1;
         for (const hero of this.standing) if (distance(hero.pos, zone.pos) <= zone.radius + hero.radius) hero.heal(zone.heal, this);
+        if (zone.burn) this.act(this.hero(zone.owner), () => this.burnAround(zone.pos, zone.radius, zone.burn, true));
       }
       if (zone.life > 0) continue;
       this.sanctuaries = this.sanctuaries.filter((z) => z !== zone);
@@ -1020,16 +1042,15 @@ export class World {
   }
 
   /** Le point visé, ramené à `range` m du héros et dans l'arène. */
-  private reach(aim: Vec2, range: number): Vec2 {
-    const player = this.player;
-    const to = sub(aim, player.pos);
-    const pos = add(player.pos, scale(normalize(to, player.facing), Math.min(range, length(to))));
+  private reach(aim: Vec2, range: number, hero: Player = this.player): Vec2 {
+    const to = sub(aim, hero.pos);
+    const pos = add(hero.pos, scale(normalize(to, hero.facing), Math.min(range, length(to))));
     this.clampToArena(pos, 0);
     return pos;
   }
 
-  private addBlast(kind: Blast['kind'], pos: Vec2, radius: number, damage: number, delay: number, echo = false): void {
-    const blast: Blast = { id: this.nextFxId--, kind, pos: { ...pos }, radius, damage, t: delay, owner: this.player.id, echo };
+  private addBlast(kind: Blast['kind'], pos: Vec2, radius: number, damage: number, delay: number, echo = false, owner?: Player, poison = 0): void {
+    const blast: Blast = { id: this.nextFxId--, kind, pos: { ...pos }, radius, damage, t: delay, owner: (owner ?? this.player).id, echo, poison };
     this.blasts.push(blast);
     this.emit({ type: 'blast', id: blast.id, kind, pos: { ...pos }, radius, delay });
   }
@@ -1045,7 +1066,8 @@ export class World {
 
   /** Un sceau ou un météore s'abat : tout ce qui est dessous est frappé, carapaces ignorées. */
   private detonate(blast: Blast): void {
-    const player = this.player;
+    // C'est le héros qui a posé le sceau qui compte ses victimes (en coop, ce n'est pas forcément le premier).
+    const player = this.hero(blast.owner);
     const perks = player.cfg.perks ?? {};
     const meteor = blast.kind === 'meteor';
     this.emit({ type: 'blastEnd', id: blast.id, kind: blast.kind, pos: { ...blast.pos }, radius: blast.radius });
@@ -1056,6 +1078,8 @@ export class World {
       const knockback = meteor ? player.cfg.sorcier.meteor.knockback : 2;
       enemy.burning = ON_FIRE;
       enemy.receiveHit({ amount: blast.damage * player.damageMultiplier(), from: blast.pos, knockback, ignoreShell: true }, this);
+      // Sceau d'une voie (Nuée virulente) : il empoisonne ceux qu'il prend, en plus de brûler.
+      if (blast.poison) for (let i = 0; i < blast.poison && !enemy.dead; i++) this.poison(enemy, player);
       if (enemy.dead) player.onKill();
       else if (!meteor && perks.sealSlow) enemy.slow(perks.sealSlow.amount, perks.sealSlow.duration, this);
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
@@ -1085,9 +1109,9 @@ export class World {
     return this.embers.some((e) => e.dome && distance(e.pos, pos) <= e.radius);
   }
 
-  /** Sol en feu sous `pos` (traînée de la Fuite de feu, Sol brûlant). */
-  addEmber(pos: Vec2, radius: number, burn: number, life: number): void {
-    const ember: Ember = { id: this.nextFxId--, pos: { ...pos }, radius, burn, life, tick: 0, owner: this.player.id };
+  /** Sol en feu sous `pos` (traînée de la Fuite de feu, Sol brûlant, sceau d'une voie). */
+  addEmber(pos: Vec2, radius: number, burn: number, life: number, owner?: Player): void {
+    const ember: Ember = { id: this.nextFxId--, pos: { ...pos }, radius, burn, life, tick: 0, owner: (owner ?? this.player).id };
     this.embers.push(ember);
     this.emit({ type: 'ember', id: ember.id, pos: { ...pos }, radius, life });
   }
@@ -1512,6 +1536,72 @@ export class World {
     return true;
   }
 
+  // --- Voies (sous-classes) --------------------------------------------------
+
+  /**
+   * F : la compétence de la voie (sous-classe), décrite par ses données. Six formes, une seule porte : une onde
+   * autour du héros, un sceau au sol (qui peut empoisonner), un sanctuaire (qui peut brûler), un filet qui
+   * immobilise, une salve de traits, ou rien du tout (le cri : c'est le héros qui se renforce, dans player.ts).
+   */
+  castSubclass(cfg: SubclassActiveConfig, aim: Vec2, aimGround: Vec2): void {
+    const player = this.player;
+    switch (cfg.kind) {
+      case 'onde': {
+        this.emit({ type: 'shockwave', pos: { ...player.pos }, radius: cfg.radius });
+        for (const enemy of [...this.enemies]) {
+          if (!enemy.targetable || distance(enemy.pos, player.pos) - enemy.radius > cfg.radius) continue;
+          enemy.receiveHit(
+            { amount: (cfg.damage ?? 0) * player.damageMultiplier(), from: player.pos, knockback: cfg.knockback ?? 4, ignoreShell: true },
+            this,
+          );
+          if (enemy.dead) player.onKill();
+          else if (cfg.stun) enemy.stun(Math.min(SMASH_STUN_MAX, cfg.stun), 'smash', this);
+          if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
+        }
+        break;
+      }
+      case 'sceau': {
+        const at = this.reach(aimGround, cfg.range ?? cfg.radius);
+        this.addBlast('seal', at, cfg.radius, cfg.damage ?? 0, cfg.delay ?? 0.6, false, player, cfg.poison ?? 0);
+        if (cfg.burn) this.addEmber(at, cfg.radius, cfg.burn, cfg.duration ?? 3, player);
+        break;
+      }
+      case 'sanctuaire': {
+        const at = this.reach(aimGround, cfg.range ?? cfg.radius);
+        this.addSanctuary(at, { heal: player.cfg.maxHp * (cfg.heal ?? 0), duration: cfg.duration ?? 5, radius: cfg.radius, burn: cfg.burn ?? 0 }, player);
+        break;
+      }
+      case 'filet': {
+        const at = this.reach(aimGround, cfg.range ?? cfg.radius);
+        this.emit({ type: 'netBurst', pos: { ...at }, radius: cfg.radius });
+        const stun = cfg.stun ?? 2;
+        for (const enemy of this.enemies) {
+          if (!enemy.targetable || distance(enemy.pos, at) > cfg.radius + enemy.radius) continue;
+          this.immobilize(enemy, enemy.boss ? stun / 2 : stun, 'net');
+        }
+        break;
+      }
+      case 'salve': {
+        const count = Math.max(1, Math.round(cfg.count ?? 3));
+        const dir = normalize(sub(aim, player.pos), player.facing);
+        for (let i = 0; i < count; i++) {
+          const spread = count === 1 ? 0 : (i / (count - 1) - 0.5) * 2;
+          this.launch('arrow', fromAngle(angleOf(dir) + degToRad(SALVE_SPREAD) * spread), {
+            speed: SALVE_SPEED,
+            range: player.cfg.attack.range * 1.3,
+            damage: cfg.damage ?? 0,
+            knockback: player.cfg.attack.knockback,
+            radius: 0.25,
+            pierce: true,
+          });
+        }
+        break;
+      }
+      case 'cri':
+        break;
+    }
+  }
+
   /** E : Marque du chasseur sur l'ennemi le plus proche de la souris, à portée. Faux s'il n'y a personne. */
   huntMark(aim: Vec2): boolean {
     const cfg = this.player.cfg.ranger.huntMark;
@@ -1897,7 +1987,7 @@ export class World {
       for (let i = 0; i < spawn.count; i++) {
         // Lieu fixe quand la vague en donne un (le mannequin d'entraînement) : sinon, au hasard loin du héros.
         const at = spawn.positions?.[i % spawn.positions.length];
-        const enemy = this.createEnemy(spawn.kind, at ? vec(at.x, at.z) : this.spawnPoint());
+        const enemy = this.createEnemy(spawn.kind, at ? vec(at.x, at.z) : this.spawnPoint(), spawn.patrol ?? 0);
         if (spawn.elite) enemy.makeElite(this.cfg.champion);
         this.enemies.push(enemy);
       }
@@ -1922,8 +2012,8 @@ export class World {
     }
   }
 
-  private createEnemy(kind: EnemyKind, pos: Vec2): Enemy {
-    const enemy = this.instantiate(kind, this.nextId++, pos);
+  private createEnemy(kind: EnemyKind, pos: Vec2, patrol = 0): Enemy {
+    const enemy = this.instantiate(kind, this.nextId++, pos, patrol);
     enemy.facing = normalize(sub(this.nearestHero(pos).pos, pos));
     // Niveau du donjon : tous les yokai sont renforcés ; le boss a sa propre base, et plus encore sous le « Regard d'Izanami ».
     const difficulty = this.cfg.difficulty;
@@ -1960,7 +2050,7 @@ export class World {
     }
   }
 
-  private instantiate(kind: EnemyKind, id: number, pos: Vec2): Enemy {
+  private instantiate(kind: EnemyKind, id: number, pos: Vec2, patrol = 0): Enemy {
     const cfg = this.cfg.enemies;
     switch (kind) {
       case 'hitodama':
@@ -1988,7 +2078,7 @@ export class World {
       case 'izanami':
         return new Izanami(id, pos, cfg.izanami);
       case 'mannequin':
-        return new Mannequin(id, pos, cfg.mannequin);
+        return new Mannequin(id, pos, cfg.mannequin, patrol);
     }
   }
 

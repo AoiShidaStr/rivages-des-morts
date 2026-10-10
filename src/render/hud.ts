@@ -50,6 +50,8 @@ export class Hud {
   private readonly rageLabel: HTMLElement;
   private readonly dodgeCooldown: HTMLElement;
   private readonly skills: Record<(typeof SKILL_KEYS)[number], SkillSlot>;
+  /** La compétence de la voie (sous-classe), sur F : cachée tant que le héros n'a pas choisi sa voie. */
+  private readonly voieSlot: SkillSlot;
   private readonly controls: HTMLElement;
   private readonly banner: HTMLElement;
   private readonly bannerStep: HTMLElement;
@@ -93,6 +95,7 @@ export class Hud {
       return { root: find(id), name: find(`${id} .name`), cooldown: find(`${id} .cooldown`) };
     };
     this.skills = { A: slot('A'), E: slot('E'), R: slot('R') };
+    this.voieSlot = slot('F');
     this.controls = find('.controls');
     this.banner = find('#banner');
     this.bannerStep = find('#banner small');
@@ -143,13 +146,19 @@ export class Hud {
     this.allyList.replaceChildren(...this.allyBars.map((bar) => h('div', { class: 'bar ally' }, bar.fill, bar.name)));
   }
 
-  /** Noms des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur. */
-  configure(cls: ClassDef): void {
+  /**
+   * Noms des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur. `voie` : la
+   * compétence de la voie (sous-classe), affichée sur F quand le héros en a choisi une.
+   */
+  configure(cls: ClassDef, voie?: string): void {
     const name = (key: string) => cls.actives.find((a) => a.key === key)?.name ?? '';
     for (const key of SKILL_KEYS) {
       this.skills[key].name.textContent = name(key);
       this.skills[key].root.querySelector('kbd')!.textContent = keyName(key);
     }
+    this.voieSlot.root.classList.toggle('hidden', !voie);
+    this.voieSlot.name.textContent = voie ?? '';
+    this.voieSlot.root.querySelector('kbd')!.textContent = keyName('F');
     for (const [kit, { style }] of Object.entries(RESOURCE)) {
       if (style) this.rageBar.classList.toggle(style, kit === cls.kit);
     }
@@ -161,6 +170,7 @@ export class Hud {
       ['Clic droit', name('Clic droit').toLowerCase()],
       ['Espace', 'esquiver'],
       ...SKILL_KEYS.map((key): [string, string] => [keyName(key), name(key).toLowerCase()]),
+      ...(voie ? [[keyName('F'), voie.toLowerCase()] as [string, string]] : []),
     ];
     this.controls.replaceChildren(...keys.flatMap(([key, label], i) => [i ? ' · ' : '', h('kbd', {}, key), ` ${label}`]));
   }
@@ -260,6 +270,13 @@ export class Hud {
       slot.root.classList.toggle('active', Boolean(view.active));
       slot.cooldown.style.transform = `scaleX(${view.cooldown})`;
     });
+    // La voie (sous-classe) : sa recharge se lit comme celle des autres compétences, sur sa propre touche.
+    const voie = cfg.sousClasse;
+    if (voie) {
+      this.voieSlot.root.classList.toggle('hidden', false);
+      this.voieSlot.root.classList.toggle('active', player.voieTime > 0);
+      this.voieSlot.cooldown.style.transform = `scaleX(${player.voieCooldown / voie.cooldown})`;
+    }
 
     // Deux boss à la fois (donjon infini) : la barre suit celui qui est le plus entamé.
     const bosses = world.enemies.filter((e) => e.boss && e.hp > 0);

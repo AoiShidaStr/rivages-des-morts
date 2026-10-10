@@ -141,10 +141,12 @@ const COOLDOWNS = {
   netCooldown: 0,
   huntCooldown: 0,
   leapCooldown: 0,
+  /** Voie (sous-classe) : la recharge de sa compétence, que seul son joueur lit (HUD). */
+  voieCooldown: 0,
 } as const;
 
 /** Champs du héros que seul son joueur reçoit. */
-const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'guardLeft', 'canSmash', 'drawProgress', 'mana', 'hammerOut'];
+const PRIVATE: readonly string[] = [...Object.keys(COOLDOWNS), 'guardLeft', 'canSmash', 'drawProgress', 'mana', 'hammerOut', 'voieTime'];
 
 const HERO_DEFAULTS: Partial<HeroSnap> = {
   pose: 'idle',
@@ -158,6 +160,7 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   aura: 0,
   ward: 0,
   mana: 0,
+  voieTime: 0,
   smoke: null,
   drawProgress: 0,
   canSmash: false,
@@ -246,6 +249,7 @@ function heroSnaps(world: World): HeroSnap[] {
     aura: p.aura,
     ward: p.ward,
     mana: p.mana,
+    voieTime: p.voieTime,
     smoke: p.smoke ? { pos: p.smoke.pos, cloud: p.smoke.cloud } : null,
     drawProgress: p.drawProgress,
     canSmash: p.canSmash,
@@ -274,6 +278,7 @@ function heroSnaps(world: World): HeroSnap[] {
     netCooldown: p.netCooldown,
     huntCooldown: p.huntCooldown,
     leapCooldown: p.leapCooldown,
+    voieCooldown: p.voieCooldown,
     hammerOut: world.hammerOutOf(p),
   }));
 }

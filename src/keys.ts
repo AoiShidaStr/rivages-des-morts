@@ -11,6 +11,7 @@ const CODES: Record<string, string> = {
   D: 'KeyD',
   E: 'KeyE',
   R: 'KeyR',
+  F: 'KeyF',
   I: 'KeyI',
   J: 'KeyJ',
   K: 'KeyK',
@@ -48,5 +49,5 @@ export function moveKeys(): string {
 
 /** Remplace {A}, {E}, {R}, {K}… par la touche du clavier du joueur. */
 export function withKeys(text: string): string {
-  return text.replace(/\{([AZQSDERIJK])\}/g, (_, letter: string) => keyName(letter));
+  return text.replace(/\{([AZQSDERFIJK])\}/g, (_, letter: string) => keyName(letter));
 }

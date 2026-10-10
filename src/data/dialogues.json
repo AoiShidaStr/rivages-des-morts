@@ -713,6 +713,12 @@
             "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
           },
+          {
+            "text": "Ma voie (choisir ma sous-classe)",
+            "if": [{ "level": 25 }],
+            "then": [{ "subclass": true }],
+            "reply": [["moine", "Personne ne t'ouvre la voie : c'est toi qui la portes. Ton art s'est assez aiguisé pour en choisir une seconde — choisis-la, et reviens quand tu voudras en changer."]]
+          },
           { "text": "Au revoir" }
         ]
       },
@@ -724,6 +730,12 @@
             "text": "Retrouver une autre vie (changer de race ou de classe)",
             "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
+          },
+          {
+            "text": "Ma voie (choisir ma sous-classe)",
+            "if": [{ "level": 25 }],
+            "then": [{ "subclass": true }],
+            "reply": [["moine", "Personne ne t'ouvre la voie : c'est toi qui la portes. Ton art s'est assez aiguisé pour en choisir une seconde — choisis-la, et reviens quand tu voudras en changer."]]
           },
           { "text": "Au revoir" }
         ]
@@ -737,6 +749,12 @@
             "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
           },
+          {
+            "text": "Ma voie (choisir ma sous-classe)",
+            "if": [{ "level": 25 }],
+            "then": [{ "subclass": true }],
+            "reply": [["moine", "Personne ne t'ouvre la voie : c'est toi qui la portes. Ton art s'est assez aiguisé pour en choisir une seconde — choisis-la, et reviens quand tu voudras en changer."]]
+          },
           { "text": "Au revoir" }
         ]
       },
@@ -747,6 +765,12 @@
             "text": "Retrouver une autre vie (changer de race ou de classe)",
             "then": [{ "changeHero": true }],
             "reply": [["moine", "Assieds-toi. Ferme les yeux. Ton âme a vécu plus d'une vie : laisse remonter celle dont tu as besoin."]]
+          },
+          {
+            "text": "Ma voie (choisir ma sous-classe)",
+            "if": [{ "level": 25 }],
+            "then": [{ "subclass": true }],
+            "reply": [["moine", "Personne ne t'ouvre la voie : c'est toi qui la portes. Ton art s'est assez aiguisé pour en choisir une seconde — choisis-la, et reviens quand tu voudras en changer."]]
           },
           { "text": "Au revoir" }
         ]

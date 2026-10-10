@@ -210,6 +210,13 @@ export class Player {
   private leapPrimed = false;
   /** Arc d'Ikazuchi : secondes avant que la foudre puisse retomber. */
   boltCooldown = 0;
+  /** Voie (sous-classe) : recharge de la compétence de touche F, et secondes restantes d'un cri qui renforce. */
+  voieCooldown = 0;
+  /** Secondes restantes d'un cri de voie (0 : aucun) : le HUD s'en sert pour l'allumer. */
+  voieTime = 0;
+  private voieDamage = 0;
+  private voieSpeed = 0;
+  private voieArmor = 0;
 
   /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
   constructor(
@@ -315,6 +322,8 @@ export class Player {
     if (perks.divineMight) factor += perks.divineMight;
     if (perks.yokaiBlood && this.transformed > 0) factor += perks.yokaiBlood.damage;
     if (perks.yomotsu) factor += perks.yomotsu.damage;
+    // Voie (sous-classe), Cri de guerre ou Onde du serment : les dégâts montent tant que le cri tient.
+    if (this.voieTime > 0) factor += this.voieDamage;
     if (this.furyTime > 0) factor += this.furyBonus;
     // Lame : le combo monte à chaque coup enchaîné.
     if (this.cfg.kit === 'lame') factor += this.combo * this.cfg.blade.combo.bonus;
@@ -360,9 +369,10 @@ export class Player {
     return 1 - (1 - factor) * (1 - (this.cfg.perks?.slowResist ?? 0));
   }
 
-  /** Vitesse de marche en plus : instinct et transformation du Hanyō. */
+  /** Vitesse de marche en plus : instinct et transformation du Hanyō, et le cri d'une voie. */
   private speedFactor(): number {
-    return walkFactor(this.cfg, this.hp, this.transformed) * this.shotSlow;
+    const voie = this.voieTime > 0 ? 1 + this.voieSpeed : 1;
+    return walkFactor(this.cfg, this.hp, this.transformed) * this.shotSlow * voie;
   }
 
   /** Soin goutte à goutte (vol de vie du Guerrier au bord du gouffre) : versé par petites gorgées, pour ne pas couvrir l'écran de chiffres. */
@@ -458,6 +468,7 @@ export class Player {
     this.counterWindow = Math.max(0, this.counterWindow - dt);
     this.rush = Math.max(0, this.rush - dt);
     this.furyTime = Math.max(0, this.furyTime - dt);
+    this.voieTime = Math.max(0, this.voieTime - dt);
     this.stanceFxCooldown = Math.max(0, this.stanceFxCooldown - dt);
     this.critHealCooldown = Math.max(0, this.critHealCooldown - dt);
     this.comboTime = Math.max(0, this.comboTime - dt);
@@ -507,6 +518,8 @@ export class Player {
     else if (c.kit === 'lame') this.bladeSkills(input, aimDir, world);
     else if (c.kit === 'paladin') this.paladinSkills(input, aimDir, world);
     else if (c.kit === 'rodeur') this.rangerSkills(input, aimDir, world);
+    // F : la compétence de la voie (sous-classe), la même touche pour les cinq classes.
+    if (input.skillFPressed && this.voieReady) this.startVoie(input, aimDir, world);
 
     const tether = this.tether;
     this.tether = null;
@@ -805,6 +818,7 @@ export class Player {
     // Égide d'un Paladin : une Armure qui retire une part des dégâts avant les PV et la garde.
     factor *= 1 - this.aegisArmor;
     if (this.auraBuffTime > 0) factor *= 1 - this.auraArmor;
+    if (this.voieTime > 0) factor *= 1 - this.voieArmor;
     if (this.frenzy > 0) factor *= this.cfg.frenzy.damageTakenFactor;
     if (perks.yokaiBlood && this.transformed > 0) factor *= 1 + perks.yokaiBlood.taken;
     // Talisman de l'Ours : au bord de la mort ; Cœur de la Forêt : l'arc bandé.
@@ -1068,6 +1082,35 @@ export class Player {
     this.cast = { tag, t: CAST_TIME[tag] };
   }
 
+  // --- Voie (sous-classe) -------------------------------------------------
+
+  /** La compétence de la voie est prête : il en faut une, et la fin d'un coup doit pouvoir être coupée. */
+  get voieReady(): boolean {
+    return Boolean(this.cfg.sousClasse) && this.voieCooldown <= 0 && this.canCancel();
+  }
+
+  /**
+   * F : la compétence de sa voie. Le cri ne touche personne (il renforce le héros) ; les autres formes passent par
+   * `world.castSubclass`, qui lit leurs données.
+   */
+  private startVoie(input: InputFrame, aimDir: Vec2, world: World): void {
+    const cfg = this.cfg.sousClasse;
+    if (!cfg) return;
+    this.voieCooldown = cfg.cooldown;
+    this.blocking = false;
+    this.facing = aimDir;
+    if (cfg.kind === 'cri') {
+      this.voieTime = cfg.duration ?? 5;
+      this.voieDamage = cfg.damageBonus ?? 0;
+      this.voieSpeed = cfg.speedBonus ?? 0;
+      this.voieArmor = cfg.armor ?? 0;
+      this.showCast('ultimate');
+      return;
+    }
+    world.castSubclass(cfg, input.aim, input.aimGround);
+    this.showCast(cfg.kind === 'onde' || cfg.kind === 'sanctuaire' ? 'skill' : 'ultimate');
+  }
+
   // --- Sorcier ---------------------------------------------------------------
 
   /** Sceau (clic droit), Bouclier de flammes (A), Fuite de feu (E), grand météore (R) : chacun coûte du mana. */
@@ -1207,6 +1250,7 @@ export class Player {
     this.auraCooldown = tick(this.auraCooldown);
     this.hammerCooldown = tick(this.hammerCooldown);
     this.netCooldown = tick(this.netCooldown);
+    this.voieCooldown = tick(this.voieCooldown);
     this.huntCooldown = tick(this.huntCooldown);
     this.leapCooldown = tick(this.leapCooldown);
     this.ghostCooldown = Math.max(0, this.ghostCooldown - dt * this.haste);

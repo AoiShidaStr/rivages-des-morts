@@ -1,0 +1,758 @@
+{
+  "about": "Les gravures : le tirage qui fait le build. Une gravure se pose sur une ARME, par type d'arme et non par copie (`progress.state.gravures[arme]`), chez Tetsu, contre des oboles et de la soie de jorōgumo — donc derrière la première victoire des Rizières, qui est la seule source de soie. Chaque tirage donne un rang (`ranks`) : le rang dit combien de lignes on reçoit (`lines`), jusqu'où elles peuvent monter (`floor` : 0 laisse la valeur libre dans [min, max], 1 la met au maximum), et si le tirage porte une contrepartie (`contrepartie`) — les rangs hauts en donnent une, et elle coûte vraiment quelque chose. Les lignes (`lines`) sont décrites par leur chemin de réglage (mêmes règles que skills.json et items.json) et leur bornage ; `kind` vaut `forme` (la ligne change la façon de frapper : portée, arc, recharge, rayon), `maitrise` (elle change les chiffres) ou `contrepartie` (un paquet fixe : un gros renfort contre une vraie perte, rien n'y est tiré au sort). `show` dit comment afficher la valeur tirée : `brut` (telle quelle), `part` (en pourcentage de 1 : 0,02 → 2 %) ou `ecart` (l'écart à 1 : 0,88 → −12 %). `tags` restreint une ligne à une classe (« Tous » : tout le monde), pour qu'un tirage ne donne pas une ligne inutile à l'arme qui la porte. `lines` compte les lignes de renfort (formes et maîtrise), la contrepartie non comprise : un tirage donne `lines - 1` lignes de forme, une de maîtrise, et — en plus, quand le rang en donne une — la contrepartie.",
+  "ranks": [
+    {
+      "id": "ebrechee",
+      "name": "Ébréchée",
+      "summary": "Deux lignes basses : la gravure se voit à peine.",
+      "lines": 2,
+      "floor": 0,
+      "weight": 34
+    },
+    {
+      "id": "nette",
+      "name": "Nette",
+      "summary": "Trois lignes, dont une déjà lisible.",
+      "lines": 3,
+      "floor": 0.15,
+      "weight": 33
+    },
+    {
+      "id": "trempee",
+      "name": "Trempée",
+      "summary": "Trois lignes solides : l'arme change de main.",
+      "lines": 3,
+      "floor": 0.35,
+      "weight": 24
+    },
+    {
+      "id": "kami",
+      "name": "Kami",
+      "summary": "Trois lignes hautes, et une contrepartie : le kami ne donne rien sans prendre.",
+      "lines": 3,
+      "floor": 0.6,
+      "contrepartie": true,
+      "weight": 8
+    },
+    {
+      "id": "vierge",
+      "name": "Vierge",
+      "summary": "Toutes les lignes au maximum, et une contrepartie : le tirage que l'on raconte.",
+      "lines": 3,
+      "floor": 1,
+      "contrepartie": true,
+      "weight": 1
+    }
+  ],
+  "lines": [
+    {
+      "id": "allonge",
+      "name": "Allonge",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "attack.range",
+      "min": 0.25,
+      "max": 0.5,
+      "step": 0.05,
+      "weight": 1,
+      "summary": "Portée des coups {v} m"
+    },
+    {
+      "id": "engagement",
+      "name": "Engagement court",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "attack.commit",
+      "min": 0.82,
+      "max": 0.93,
+      "step": 0.01,
+      "weight": 1,
+      "summary": "Temps d'engagement {v}"
+    },
+    {
+      "id": "releve",
+      "name": "Relevé vif",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "attack.recovery",
+      "min": 0.82,
+      "max": 0.93,
+      "step": 0.01,
+      "weight": 1,
+      "summary": "Temps de récupération {v}"
+    },
+    {
+      "id": "frappe-lourde",
+      "name": "Frappe lourde",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "attack.knockback",
+      "min": 1,
+      "max": 2.5,
+      "step": 0.5,
+      "weight": 0.8,
+      "summary": "Recul des coups {v}"
+    },
+    {
+      "id": "pas-leger",
+      "name": "Pas léger",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "moveSpeed",
+      "min": 1.03,
+      "max": 1.06,
+      "step": 0.01,
+      "weight": 1,
+      "summary": "Vitesse de marche {v}"
+    },
+    {
+      "id": "esquive-longue",
+      "name": "Esquive longue",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "dodge.distance",
+      "min": 0.3,
+      "max": 0.6,
+      "step": 0.1,
+      "weight": 0.8,
+      "summary": "Portée d'esquive {v} m"
+    },
+    {
+      "id": "souffle",
+      "name": "Second souffle",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "dodge.cooldown",
+      "min": 0.85,
+      "max": 0.95,
+      "step": 0.01,
+      "weight": 0.8,
+      "summary": "Recharge de l'esquive {v}"
+    },
+    {
+      "id": "fracas",
+      "name": "Fracas",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "smash.radius",
+      "min": 1.08,
+      "max": 1.18,
+      "step": 0.01,
+      "weight": 0.6,
+      "summary": "Rayon de la Frappe fracassante {v}"
+    },
+    {
+      "id": "arc-large",
+      "name": "Arc large",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "attack.arcDeg",
+      "min": 15,
+      "max": 30,
+      "step": 5,
+      "weight": 1,
+      "tags": [
+        "Guerrier"
+      ],
+      "summary": "Arc des coups {v}°"
+    },
+    {
+      "id": "rite",
+      "name": "Rite long",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "frenzy.duration",
+      "min": 1.15,
+      "max": 1.35,
+      "step": 0.05,
+      "weight": 0.8,
+      "tags": [
+        "Guerrier"
+      ],
+      "summary": "Durée de la Frénésie {v}"
+    },
+    {
+      "id": "posture-large",
+      "name": "Posture large",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "block.arcDeg",
+      "min": 12,
+      "max": 25,
+      "step": 1,
+      "weight": 0.6,
+      "tags": [
+        "Guerrier"
+      ],
+      "summary": "Arc de garde {v}°"
+    },
+    {
+      "id": "sceau-large",
+      "name": "Sceau large",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "sorcier.seal.radius",
+      "min": 1.08,
+      "max": 1.18,
+      "step": 0.01,
+      "weight": 1,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Rayon du sceau {v}"
+    },
+    {
+      "id": "mana-vif",
+      "name": "Mana vif",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "sorcier.mana.regen",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "weight": 1,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Mana rendu par seconde {v}"
+    },
+    {
+      "id": "boule-plus",
+      "name": "Boule de plus",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "sorcier.fireball.count",
+      "min": 1,
+      "max": 1,
+      "step": 1,
+      "weight": 0.7,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Boules de feu de plus {v}"
+    },
+    {
+      "id": "meteore-large",
+      "name": "Météore large",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "sorcier.meteor.radius",
+      "min": 1.08,
+      "max": 1.18,
+      "step": 0.01,
+      "weight": 0.6,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Rayon du météore {v}"
+    },
+    {
+      "id": "spectre-loin",
+      "name": "Spectre loin",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "blade.ghost.range",
+      "min": 1,
+      "max": 2,
+      "step": 0.5,
+      "weight": 1,
+      "tags": [
+        "Lame"
+      ],
+      "summary": "Portée de la Frappe fantôme {v} m"
+    },
+    {
+      "id": "venin-long",
+      "name": "Venin long",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "blade.poison.duration",
+      "min": 5,
+      "max": 10,
+      "step": 1,
+      "weight": 1,
+      "tags": [
+        "Lame"
+      ],
+      "summary": "Durée du poison {v} s"
+    },
+    {
+      "id": "crit-aigu",
+      "name": "Critique aigu",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "blade.critFactor",
+      "min": 0.2,
+      "max": 0.5,
+      "step": 0.1,
+      "weight": 0.8,
+      "tags": [
+        "Lame"
+      ],
+      "summary": "Multiplicateur des critiques {v}"
+    },
+    {
+      "id": "fumee-large",
+      "name": "Nuage large",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "blade.smoke.radius",
+      "min": 1.1,
+      "max": 1.2,
+      "step": 0.01,
+      "weight": 0.6,
+      "tags": [
+        "Lame"
+      ],
+      "summary": "Rayon du Nuage {v}"
+    },
+    {
+      "id": "aura-large",
+      "name": "Aura large",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "paladin.aura.radius",
+      "min": 1.08,
+      "max": 1.18,
+      "step": 0.01,
+      "weight": 1,
+      "tags": [
+        "Paladin"
+      ],
+      "summary": "Rayon de l'Aura {v}"
+    },
+    {
+      "id": "garde-vaste",
+      "name": "Garde vaste",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "paladin.guard.max",
+      "min": 15,
+      "max": 30,
+      "step": 5,
+      "weight": 1,
+      "tags": [
+        "Paladin"
+      ],
+      "summary": "Garde maximale {v}"
+    },
+    {
+      "id": "marteau-loin",
+      "name": "Marteau loin",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "paladin.hammer.range",
+      "min": 1,
+      "max": 2,
+      "step": 0.5,
+      "weight": 0.8,
+      "tags": [
+        "Paladin"
+      ],
+      "summary": "Portée du Marteau {v} m"
+    },
+    {
+      "id": "jugement-large",
+      "name": "Jugement large",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "paladin.judgement.radius",
+      "min": 1.1,
+      "max": 1.25,
+      "step": 0.01,
+      "weight": 0.6,
+      "tags": [
+        "Paladin"
+      ],
+      "summary": "Rayon du Jugement {v}"
+    },
+    {
+      "id": "filet-large",
+      "name": "Filet large",
+      "kind": "forme",
+      "show": "ecart",
+      "op": "mul",
+      "path": "ranger.net.radius",
+      "min": 1.08,
+      "max": 1.2,
+      "step": 0.01,
+      "weight": 1,
+      "tags": [
+        "Rôdeur"
+      ],
+      "summary": "Rayon du filet {v}"
+    },
+    {
+      "id": "marque-longue",
+      "name": "Marque longue",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "ranger.huntMark.duration",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "weight": 1,
+      "tags": [
+        "Rôdeur"
+      ],
+      "summary": "Durée de la Marque {v} s"
+    },
+    {
+      "id": "tir-charge",
+      "name": "Tir chargeant",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "ranger.charged.maxFactor",
+      "min": 0.2,
+      "max": 0.4,
+      "step": 0.1,
+      "weight": 0.8,
+      "tags": [
+        "Rôdeur"
+      ],
+      "summary": "Multiplicateur du tir chargé {v}"
+    },
+    {
+      "id": "bond-fleches",
+      "name": "Bond fourni",
+      "kind": "forme",
+      "show": "brut",
+      "op": "add",
+      "path": "ranger.leap.arrows",
+      "min": 1,
+      "max": 1,
+      "step": 1,
+      "weight": 0.6,
+      "tags": [
+        "Rôdeur"
+      ],
+      "summary": "Flèches du Bond de plus {v}"
+    },
+    {
+      "id": "violence",
+      "name": "Violence",
+      "kind": "maitrise",
+      "show": "ecart",
+      "op": "mul",
+      "path": "attack.damage",
+      "min": 1.06,
+      "max": 1.16,
+      "step": 0.01,
+      "weight": 1.4,
+      "summary": "Dégâts {v}"
+    },
+    {
+      "id": "vampire",
+      "name": "Soif",
+      "kind": "maitrise",
+      "show": "part",
+      "op": "add",
+      "path": "perks.lifesteal",
+      "min": 0.01,
+      "max": 0.02,
+      "step": 0.005,
+      "weight": 1,
+      "summary": "Vol de vie {v}"
+    },
+    {
+      "id": "endurance",
+      "name": "Endurance",
+      "kind": "maitrise",
+      "show": "ecart",
+      "op": "mul",
+      "path": "perks.maxHpFactor",
+      "min": 1.04,
+      "max": 1.09,
+      "step": 0.01,
+      "weight": 1.2,
+      "summary": "PV {v}"
+    },
+    {
+      "id": "reflet",
+      "name": "Reflet",
+      "kind": "maitrise",
+      "show": "brut",
+      "op": "add",
+      "path": "perks.riposte",
+      "min": 3,
+      "max": 8,
+      "step": 1,
+      "weight": 0.8,
+      "summary": "Dégâts renvoyés par coup bloqué {v}"
+    },
+    {
+      "id": "rancune",
+      "name": "Rancune",
+      "kind": "maitrise",
+      "show": "part",
+      "op": "add",
+      "path": "perks.lowHpDamage",
+      "min": 0.06,
+      "max": 0.12,
+      "step": 0.01,
+      "weight": 0.6,
+      "summary": "Dégâts sous la moitié des PV {v}"
+    },
+    {
+      "id": "braise",
+      "name": "Braise",
+      "kind": "maitrise",
+      "show": "part",
+      "op": "add",
+      "path": "perks.fireDamage",
+      "min": 0.08,
+      "max": 0.15,
+      "step": 0.01,
+      "weight": 0.8,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Dégâts de feu {v}"
+    },
+    {
+      "id": "cout-sort",
+      "name": "Économie",
+      "kind": "maitrise",
+      "show": "ecart",
+      "op": "mul",
+      "path": "perks.manaCost",
+      "min": 0.88,
+      "max": 0.94,
+      "step": 0.01,
+      "weight": 0.8,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Coût des sorts {v}"
+    },
+    {
+      "id": "sceau-mana",
+      "name": "Sceau avide",
+      "kind": "maitrise",
+      "show": "brut",
+      "op": "add",
+      "path": "perks.sealMana",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "weight": 0.6,
+      "tags": [
+        "Sorcier"
+      ],
+      "summary": "Mana rendu par yokai pris dans un sceau {v}"
+    },
+    {
+      "id": "mur-de-fer",
+      "name": "Mur de fer",
+      "kind": "maitrise",
+      "show": "part",
+      "op": "add",
+      "path": "perks.guardSkin",
+      "min": 0.03,
+      "max": 0.06,
+      "step": 0.01,
+      "weight": 0.8,
+      "tags": [
+        "Guerrier"
+      ],
+      "summary": "Dégâts subis en garde {v}"
+    },
+    {
+      "id": "paume-vive",
+      "name": "Paume vive",
+      "kind": "maitrise",
+      "show": "brut",
+      "op": "add",
+      "path": "perks.critHeal",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "weight": 0.8,
+      "tags": [
+        "Lame"
+      ],
+      "summary": "PV rendus par critique {v}"
+    },
+    {
+      "id": "embuscade",
+      "name": "Embuscade",
+      "kind": "maitrise",
+      "show": "ecart",
+      "op": "mul",
+      "path": "perks.ambush",
+      "min": 1.08,
+      "max": 1.15,
+      "step": 0.01,
+      "weight": 0.8,
+      "tags": [
+        "Lame"
+      ],
+      "summary": "Coup porté dans le dos {v}"
+    },
+    {
+      "id": "serment-vif",
+      "name": "Serment vif",
+      "kind": "maitrise",
+      "show": "part",
+      "op": "add",
+      "path": "perks.tyrHand",
+      "min": 0.06,
+      "max": 0.12,
+      "step": 0.02,
+      "weight": 0.8,
+      "tags": [
+        "Paladin"
+      ],
+      "summary": "Dégâts absorbés renvoyés {v}"
+    },
+    {
+      "id": "tir-charge-p",
+      "name": "Trait tendu",
+      "kind": "maitrise",
+      "show": "ecart",
+      "op": "mul",
+      "path": "perks.chargedDamage",
+      "min": 1.08,
+      "max": 1.16,
+      "step": 0.01,
+      "weight": 0.8,
+      "tags": [
+        "Rôdeur"
+      ],
+      "summary": "Dégâts des tirs chargés {v}"
+    },
+    {
+      "id": "serment-du-sang",
+      "name": "Serment du sang",
+      "kind": "contrepartie",
+      "weight": 1,
+      "summary": "Dégâts +30 %, mais PV −10 %",
+      "effects": [
+        {
+          "op": "mul",
+          "path": "attack.damage",
+          "value": 1.3
+        },
+        {
+          "op": "mul",
+          "path": "perks.maxHpFactor",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "id": "peau-nue",
+      "name": "Peau nue",
+      "kind": "contrepartie",
+      "weight": 1,
+      "summary": "Dégâts +25 %, mais tu subis 12 % de dégâts en plus",
+      "effects": [
+        {
+          "op": "mul",
+          "path": "attack.damage",
+          "value": 1.25
+        },
+        {
+          "op": "mul",
+          "path": "damageTakenFactor",
+          "value": 1.12
+        }
+      ]
+    },
+    {
+      "id": "pieds-agiles",
+      "name": "Pieds agiles",
+      "kind": "contrepartie",
+      "weight": 0.8,
+      "summary": "Vitesse +12 %, mais PV −8 %",
+      "effects": [
+        {
+          "op": "mul",
+          "path": "moveSpeed",
+          "value": 1.12
+        },
+        {
+          "op": "mul",
+          "path": "perks.maxHpFactor",
+          "value": 0.92
+        }
+      ]
+    },
+    {
+      "id": "soif-de-sang",
+      "name": "Soif de sang",
+      "kind": "contrepartie",
+      "weight": 0.8,
+      "summary": "Vol de vie +6 %, mais PV −8 %",
+      "effects": [
+        {
+          "op": "add",
+          "path": "perks.lifesteal",
+          "value": 0.06
+        },
+        {
+          "op": "mul",
+          "path": "perks.maxHpFactor",
+          "value": 0.92
+        }
+      ]
+    },
+    {
+      "id": "gardien-immobile",
+      "name": "Gardien immobile",
+      "kind": "contrepartie",
+      "weight": 0.8,
+      "summary": "Dégâts subis −15 %, mais vitesse −8 %",
+      "effects": [
+        {
+          "op": "mul",
+          "path": "damageTakenFactor",
+          "value": 0.85
+        },
+        {
+          "op": "mul",
+          "path": "moveSpeed",
+          "value": 0.92
+        }
+      ]
+    }
+  ],
+  "cost": {
+    "about": "Ce que coûte un tirage, et la relance : le prix monte à chaque fois (le compteur de relances est dans les drapeaux de la sauvegarde, `gravure_<arme>`). La soie ne tombe que sur la Jorōgumo, trois par victoire : c'est elle qui met la gravure derrière le premier donjon.",
+    "oboles": {
+      "base": 120,
+      "perRoll": 60
+    },
+    "materials": {
+      "soie": {
+        "base": 1,
+        "perRoll": 1
+      }
+    }
+  }
+}

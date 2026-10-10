@@ -88,6 +88,7 @@ export class Prediction {
         frame.skillAPressed ||
         frame.skillEPressed ||
         frame.skillRPressed ||
+        frame.skillFPressed ||
         (frame.signaturePressed && !guarding && c.kit !== 'rodeur') ||
         (frame.attackHeld && !frame.signatureHeld);
       if (acts) return { pos, facing, pose };

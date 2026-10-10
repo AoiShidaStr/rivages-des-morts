@@ -107,6 +107,7 @@ export class Bot {
       skillAPressed: false,
       skillEPressed: false,
       skillRPressed: false,
+      skillFPressed: false,
     };
     if (p.dead) return input;
 
@@ -280,6 +281,18 @@ export class Bot {
       if (p.netCooldown <= 0 && (shelled || near(2.5).length >= 1 || near(c.ranger.net.radius, target.pos).length >= 2)) input.skillAPressed = true;
       if (p.huntCooldown <= 0 && target.maxHp >= 30) input.skillEPressed = true;
       if (p.leapCooldown <= 0 && near(2).length >= 1) input.skillRPressed = true;
+    }
+
+    // Voie (sous-classe) : le bot s'en sert comme d'une compétence de classe, dès qu'il y a de quoi la rentabiliser.
+    const voie = c.sousClasse;
+    if (voie && p.voieReady) {
+      const reach = Math.max(voie.range ?? 0, voie.radius) + 1;
+      const crowd = near(reach).length;
+      const worth = voie.kind === 'cri' ? crowd >= 1 : crowd >= (this.greedy ? 1 : 2) || target.boss;
+      if (worth) {
+        input.skillFPressed = true;
+        input.aimGround = { ...target.pos };
+      }
     }
 
     // Déplacement et attaque. Le Sorcier garde ses distances et lance ses salves.

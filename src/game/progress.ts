@@ -1,6 +1,7 @@
 // Progression conservée entre les sessions : oboles, objets, matériaux, quêtes et drapeaux.
 // Les dialogues et les quêtes (src/data) la lisent avec des conditions et la modifient avec des effets.
 // Chaque personnage a son emplacement de sauvegarde (saves.ts) ; `Progress` tient celui qu'on joue.
+import type { Gravure } from './gravure';
 import { LocalSaveStore, newSlotId, type SaveStore } from './saves';
 
 import { keyName } from '../keys';
@@ -13,6 +14,11 @@ export interface Hero {
   race: string;
   parent?: string;
   class: string;
+  /**
+   * La voie du héros (sous-classe, src/data/sous-classes.json), choisie au niveau 25 et modifiable au Rocher.
+   * Absente avant ce niveau ; une voie appartient à une classe, donc un changement de classe la retire.
+   */
+  subclass?: string;
 }
 
 export interface ProgressState {
@@ -26,6 +32,11 @@ export interface ProgressState {
   equipped: Partial<Record<Slot, string>>;
   /** Niveau de forge de chaque pièce d'équipement possédée (forge de Tetsu). */
   itemLevels: Record<string, number>;
+  /**
+   * La gravure de chaque arme gravée (src/data/gravures.json), par identifiant d'arme : le tirage de Tetsu, qu'on
+   * relance. Une arme jamais gravée n'y figure pas ; une gravure se pose sur un type d'arme, jamais sur une copie.
+   */
+  gravures: Record<string, Gravure>;
   /** Par donjon (rizieres, palais…) : plus haut niveau ouvert, et plus haut niveau vaincu. */
   dungeons: Record<string, DungeonRecord>;
   materials: Record<string, number>;
@@ -57,6 +68,8 @@ export interface Condition {
   /** Race ou classe du héros : une réplique propre à chaque personnage, pour qui recommence avec un autre. */
   race?: string;
   class?: string;
+  /** La voie du héros (sous-classe). */
+  subclass?: string;
   /** Meilleure victoire dans un donjon (`*` : dans n'importe lequel) au moins à ce niveau. */
   dungeon?: [string, number];
   /** Une pièce d'équipement forgée au moins à ce niveau. */
@@ -85,6 +98,8 @@ export interface Effect {
   resetTalents?: boolean;
   /** Ouvre le choix d'une autre race et d'une autre classe (le moine du Rocher). */
   changeHero?: boolean;
+  /** Ouvre le choix de la voie (sous-classe, niveau 25) : le moine du Rocher, ou l'écran des compétences. */
+  subclass?: boolean;
   /** Ouvre le terrain d'entraînement (le billot de Tetsu) : on y frappe un mannequin, sans butin ni risque. */
   train?: boolean;
 }
@@ -97,6 +112,7 @@ export type Action =
   | { kind: 'dungeon'; id: string }
   | { kind: 'chests' }
   | { kind: 'changeHero' }
+  | { kind: 'subclass' }
   | { kind: 'training' };
 
 export interface Catalog {
@@ -137,6 +153,9 @@ interface ExportFile {
   sauvegarde: ProgressState;
 }
 
+/** Le niveau à partir duquel on choisit sa voie (sous-classe) : le second axe du personnage. */
+export const SUBCLASS_LEVEL = 25;
+
 /** L'arme de départ du Guerrier. */
 export const STARTING_WEAPON = 'nodachi';
 /** Le héros des parties commencées avant le choix de la race et de la classe. */
@@ -152,6 +171,7 @@ function fresh(): ProgressState {
     items: [STARTING_WEAPON],
     equipped: { arme: STARTING_WEAPON },
     itemLevels: { [STARTING_WEAPON]: 1 },
+    gravures: {},
     dungeons: {},
     materials: {},
     flags: {},
@@ -260,12 +280,45 @@ export class Progress {
    */
   changeHero(hero: Hero, weapon: string): void {
     const { state } = this;
-    state.hero = { ...hero };
+    // La voie appartient à la classe : changer de classe l'oublie, comme les talents de l'ancienne.
+    state.hero = { race: hero.race, class: hero.class, ...(hero.parent ? { parent: hero.parent } : {}) };
     state.talents = [];
     this.acquire(weapon);
     state.itemLevels[weapon] ??= 1;
     state.equipped.arme = weapon;
     this.save();
+  }
+
+  /**
+   * Choisit la voie du héros (`id`), ou l'oublie (`null`) : le joueur reste libre de revenir sur son choix.
+   * Renvoie faux tant que le héros n'a pas le niveau requis (25).
+   */
+  /** La gravure d'une arme, s'il y en a une. */
+  gravure(item: string): Gravure | undefined {
+    return this.state.gravures[item];
+  }
+
+  /** Combien de tirages Tetsu a déjà faits sur cette arme : le prix de la relance monte avec ce compte. */
+  gravureRolls(item: string): number {
+    return this.state.flags[`gravure_${item}`] ?? 0;
+  }
+
+  /**
+   * Range le tirage d'une arme et compte la relance. Rien n'est prélevé ici : le tirage se paie avant, comme la
+   * forge, dont l'écran fait ses comptes avant de ranger le niveau (`applyUpgrade`, dans panels.ts).
+   */
+  setGravure(item: string, gravure: Gravure): void {
+    this.state.gravures[item] = gravure;
+    this.state.flags[`gravure_${item}`] = this.gravureRolls(item) + 1;
+    this.save();
+  }
+
+  chooseSubclass(id: string | null): boolean {
+    if (id && this.level < SUBCLASS_LEVEL) return false;
+    if (id) this.state.hero.subclass = id;
+    else delete this.state.hero.subclass;
+    this.save();
+    return true;
   }
 
   quest(id: string): QuestStatus {
@@ -392,6 +445,7 @@ export class Progress {
     if (c.level !== undefined && this.level < c.level) return false;
     if (c.race !== undefined && this.state.hero.race !== c.race) return false;
     if (c.class !== undefined && this.state.hero.class !== c.class) return false;
+    if (c.subclass !== undefined && this.state.hero.subclass !== c.subclass) return false;
     if (c.dungeon !== undefined && this.record(c.dungeon[0]) < c.dungeon[1]) return false;
     if (c.forged !== undefined && this.forgeMax < c.forged) return false;
     return true;
@@ -443,6 +497,7 @@ export class Progress {
     if (e.enterDungeon) actions.push({ kind: 'dungeon', id: e.enterDungeon === true ? 'rizieres' : e.enterDungeon });
     if (e.openChests) actions.push({ kind: 'chests' });
     if (e.changeHero) actions.push({ kind: 'changeHero' });
+    if (e.subclass) actions.push({ kind: 'subclass' });
     if (e.train) actions.push({ kind: 'training' });
   }
 }
@@ -456,8 +511,8 @@ function levelUpToast(level: number, point: boolean): Action {
  * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
  * pas de héros (c'était toujours un Guerrier Einherjar).
  */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeons' | 'hero'> &
-  Partial<Pick<ProgressState, 'itemLevels' | 'dungeons' | 'hero'>> & {
+type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeons' | 'hero' | 'gravures'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'dungeons' | 'hero' | 'gravures'>> & {
     weaponLevel?: number;
     weaponLevels?: Record<string, number>;
     /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
@@ -493,6 +548,9 @@ function migrate(saved: SavedState, catalog: Catalog): ProgressState {
     if (item && catalog.itemSlot(item) !== slot) delete state.equipped[slot];
   }
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
+  // Une gravure survit à tout sauf à la disparition de son arme (`{ ...undefined }` vaut {} sur une vieille sauvegarde).
+  state.gravures = { ...state.gravures };
+  for (const id of Object.keys(state.gravures)) if (!catalog.hasItem(id)) delete state.gravures[id];
   // 0.11.0 : les objets retirés du jeu (Kanabō d'oni, Arc de soie…) quittent l'inventaire, sans compensation.
   state.items = state.items.filter((id) => catalog.hasItem(id));
   for (const id of Object.keys(state.itemLevels)) if (!catalog.hasItem(id)) delete state.itemLevels[id];
