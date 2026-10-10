@@ -10,11 +10,13 @@ import { Grid, PaintedGround, PaintedWater, loadImage, type GroundLayer, type Gr
  * - Rizières noyées (la Jorōgumo) : rizières inondées coupées de diguettes, talus d'herbe sombre, arbres morts et
  *   toiles autour, qui se perdent dans la brume.
  * - Palais d'Izanami : dallage de pierre sombre bordé de roche, eau noire et violette tout autour.
+ * - Yomi sans fond : une dalle de roche brûlée, fendue de braises, au-dessus du gouffre ; un champ de lys rouges, de
+ *   stèles et d'ossements tout autour, puis le noir et sa brume rouge.
  * L'arène reste le carré de `arenaHalfSize` à y = 0. Sa limite se voit (voir `arenaEdge`) : une bordure de pierre claire
  * exactement là où le joueur s'arrête, et tout ce qui est au-delà assombri.
  */
 
-export type ArenaKind = 'rizieres' | 'palais';
+export type ArenaKind = 'rizieres' | 'palais' | 'yomi';
 
 const SPRITES = `${import.meta.env.BASE_URL}sprites/`;
 const TEXTURES = `${SPRITES}sols/textures/`;
@@ -30,6 +32,7 @@ const HEIGHTS: Record<string, number> = {
   'arbre-mort': 3.2, 'arbre-mort-soie': 3.2, souche: 0.9, roseaux: 1.1, riz: 0.5, 'riz-couche': 0.45, 'toile-piquets': 1.8,
   cocon: 1.3, epouvantail: 1.9, piquets: 1.6, 'lanterne-eteinte': 1.2, 'rocher-vase': 0.7, ossements: 0.3,
   'nenuphars-fanes': 0.3, 'petit-jizo': 0.8, sandales: 0.25,
+  higanbana: 0.7, offrandes: 0.7, 'arbre-mort-ile': 3.4,
   steles: 0.9, sotoba: 1.5, 'pierre-dressee': 1.9, 'rocher-pointu': 1.7, eboulis: 0.6, 'rocher-grand': 1.6, 'petite-lanterne': 1.3,
 };
 /** Petits décors au ras du sol, regroupés et dessinés avant les personnages (decorSprites.ts). */
@@ -61,11 +64,12 @@ export class ArenaPainted {
     const images = await Promise.all(names.map((n) => loadImage(`${TEXTURES}${n}.jpg`)));
     const tex = Object.fromEntries(names.map((n, i) => [n, images[i]])) as Record<(typeof names)[number], HTMLImageElement>;
     const grid = new Grid(-HALF, HALF, -HALF, HALF, GRID_PPU);
-    const paint = kind === 'palais' ? palais(grid, arenaHalfSize, tex) : rizieres(grid, arenaHalfSize, props, tex);
-    const decor = kind === 'palais' ? palaisDecor(arenaHalfSize, props, forward) : rizieresDecor(arenaHalfSize, props, forward);
+    const paint = kind === 'palais' ? palais(grid, arenaHalfSize, tex) : kind === 'yomi' ? yomi(grid, arenaHalfSize, tex) : rizieres(grid, arenaHalfSize, props, tex);
+    const decor =
+      kind === 'palais' ? palaisDecor(arenaHalfSize, props, forward) : kind === 'yomi' ? yomiDecor(arenaHalfSize, props, forward) : rizieresDecor(arenaHalfSize, props, forward);
     const shadows: GroundShadow[] = decor.map((d) => {
       const r = Math.min(1.3, Math.max(0.2, d.height * 0.3));
-      return { x: d.x + 0.12 * r, z: d.z - 0.2 * r, rx: r, rz: r, alpha: kind === 'palais' ? 0.4 : 0.3 };
+      return { x: d.x + 0.12 * r, z: d.z - 0.2 * r, rx: r, rz: r, alpha: kind === 'rizieres' ? 0.3 : 0.4 };
     });
     const ground = PaintedGround.build(scene, `arena-${kind}`, { grid, base: paint.base, layers: paint.layers, shadows, outside: paint.mist, ppu: PAINT_PPU });
     const water = new PaintedWater(scene, `arena-${kind}-water`, grid, paint.water, paint.glint, paint.shade);
@@ -270,6 +274,94 @@ function palais(grid: Grid, arena: number, tex: Record<'herbe' | 'mousse' | 'che
     glint: new Color3(0.82, 0.72, 1),
     shade: new Color3(0.08, 0.05, 0.12),
   };
+}
+
+/**
+ * Le Yomi sans fond : une dalle de roche brûlée, fendue de veines de braise, posée au-dessus du gouffre ; autour, une
+ * lande de cendre où poussent les lys rouges des morts, puis le noir, où luisent des reflets rouges.
+ */
+function yomi(grid: Grid, arena: number, tex: Record<'herbe' | 'mousse' | 'chemin' | 'dalles' | 'vase' | 'roche', HTMLImageElement>): ArenaPaint {
+  const floor = arena + 1.6;
+  const ash = floor + 4.5;
+  const mist = '#160b0e';
+  const w = { floor: grid.layer(), cracks: grid.layer(), embers: grid.layer(), ash: grid.layer(), lilies: grid.layer(), rim: grid.layer(), fog: grid.layer(), water: grid.layer() };
+  for (let j = 0; j < grid.h; j++) {
+    for (let i = 0; i < grid.w; i++) {
+      const k = j * grid.w + i;
+      const x = grid.x(i);
+      const z = grid.z(j);
+      const sq = squareDistance(x, z, floor);
+      const ragged = noise(x * 0.8, z * 0.8) - 0.5;
+      const slab = 1 - smoothstep(floor - 0.15, floor + 0.15, sq);
+      w.floor[k] = slab;
+      // Veines : là où le bruit passe par sa valeur moyenne, un trait fin ; la braise autour, plus large et plus pâle.
+      const vein = Math.abs(fbm(x * 0.22 + 7, z * 0.22 + 3) - 0.5);
+      w.cracks[k] = slab * (1 - smoothstep(0.005, 0.012, vein));
+      w.embers[k] = slab * (1 - smoothstep(0.012, 0.045, vein)) * 0.6;
+      const land = 1 - smoothstep(ash - 0.6, ash + 0.6, sq + ragged * 2.2);
+      w.ash[k] = land * (1 - slab);
+      w.lilies[k] = w.ash[k] * smoothstep(0.55, 0.72, fbm(x * 0.45 + 11, z * 0.45 + 5));
+      w.rim[k] = w.ash[k] * smoothstep(floor + 0.2, floor + 1.2, sq) * (1 - smoothstep(floor + 1.2, floor + 2.4, sq)) * 0.7;
+      w.fog[k] = smoothstep(15, 21, sq);
+      w.water[k] = (1 - land) * (1 - w.fog[k]) * 0.8;
+    }
+  }
+  return {
+    base: baseColors(grid, '#24151a', mist, 15, 21, floor),
+    layers: [
+      { weight: w.ash, texture: tex.vase, tile: 4, tint: '#7a6466' },
+      { weight: w.rim, texture: tex.roche, tile: 3, tint: '#6e5a58' },
+      { weight: w.lilies, color: '#9e1f1c', alpha: 0.55 },
+      { weight: w.floor, texture: tex.roche, tile: 5, tint: '#8a7470' },
+      { weight: w.embers, color: '#a3321c', alpha: 0.4 },
+      { weight: w.cracks, color: '#ff8a3c', alpha: 0.85 },
+      ...arenaEdge(grid, arena, tex.dalles, '#e2d2c8', '#0b0507', 0.55),
+      { weight: w.fog, color: mist },
+    ],
+    water: w.water,
+    mist,
+    glint: new Color3(1, 0.45, 0.3),
+    shade: new Color3(0.06, 0.02, 0.03),
+  };
+}
+
+function yomiDecor(arena: number, props: readonly { sprite: string; x: number; z: number }[], forward: Vec2): DecorSpot[] {
+  const random = rng(53);
+  const floor = arena + 1.6;
+  const ash = floor + 4.5;
+  const spots: DecorSpot[] = [];
+  const folder: Record<string, string> = { ossements: 'rizieres', 'petit-jizo': 'rizieres', 'lanterne-eteinte': 'rizieres', 'arbre-mort-soie': 'rizieres' };
+  const add = (name: string, x: number, z: number) => {
+    const file = name === 'arbre-mort-ile' ? 'decor/ile/arbre-mort.webp' : `decor/${folder[name] ?? 'ile'}/${name}.webp`;
+    spots.push({ file, x, z, height: HEIGHTS[name] * (0.85 + random() * 0.3), flip: random() < 0.5 });
+  };
+  const clear = (x: number, z: number, room: number) =>
+    props.every((p) => Math.hypot(p.x - x, p.z - z) > 2) && spots.every((s) => Math.hypot(s.x - x, s.z - z) > room);
+  spots.push(...edgePosts(arena, forward, (n) => `decor/rizieres/${n}.webp`, ['lanterne-eteinte'], HEIGHTS));
+  // Le champ des morts : stèles, sotoba, jizō et offrandes, quelques arbres morts au loin.
+  for (let tries = 0; tries < 900 && spots.length < 60; tries++) {
+    const x = (random() * 2 - 1) * ash;
+    const z = (random() * 2 - 1) * ash;
+    const sq = squareDistance(x, z, floor);
+    if (sq < floor + 0.7 || sq > ash - 0.4) continue;
+    const tree = sq > floor + 2.5 && random() < 0.25;
+    const name = tree
+      ? random() < 0.5
+        ? 'arbre-mort-ile'
+        : 'arbre-mort-soie'
+      : ['steles', 'sotoba', 'petit-jizo', 'offrandes', 'ossements', 'rocher-pointu', 'pierre-dressee', 'eboulis'][Math.floor(random() * 8)];
+    if (!clear(x, z, tree ? 2.2 : 1.1) || hidesArena(x, z, HEIGHTS[name], arena, forward)) continue;
+    add(name, x, z);
+  }
+  // Les lys rouges, en touffes serrées.
+  for (let tries = 0; tries < 1400; tries++) {
+    const x = (random() * 2 - 1) * ash;
+    const z = (random() * 2 - 1) * ash;
+    const sq = squareDistance(x, z, floor);
+    if (sq < floor + 0.5 || sq > ash || fbm(x * 0.45 + 11, z * 0.45 + 5) < 0.55 || !clear(x, z, 0.45)) continue;
+    add('higanbana', x, z);
+  }
+  return spots;
 }
 
 /** Un décor haut cache ce qui est derrière lui à l'écran : pas devant l'arène. */

@@ -48,7 +48,7 @@ const PLATFORM_HALF = 12;
 const BAKE_SIZE = 2048;
 
 /** Arènes construites en 3D : le Palais ici, les Rizières dans rizieres3d.ts. */
-export type Arena3dKind = 'palais' | 'rizieres';
+export type Arena3dKind = 'palais' | 'rizieres' | 'yomi';
 
 /** Teinte de chaque famille de pièces : dallage, murs, accessoires, et fondations du bas, presque dans le noir. */
 type Finish = 'floor' | 'wall' | 'prop' | 'deep';

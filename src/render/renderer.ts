@@ -479,6 +479,10 @@ export class Renderer {
   private readonly onDemand: ReadonlySet<string>;
   /** Planches de héros remplacées : libérées une fois la vue du héros refaite (voir sync). */
   private retiredHeroTextures: BaseTexture[] = [];
+  /** Préchargement des yokai en cours (prefetch). */
+  private prefetching = false;
+  /** Le décor affiché : le même d'une descente à l'autre (blocs du donjon infini), il n'est pas refait. */
+  private shownStyle: DungeonStyle | null = null;
 
   constructor(
     readonly engine: Engine,
@@ -588,8 +592,9 @@ export class Renderer {
 
   /**
    * Charge les planches de la descente qui commence : ses yokai (`kinds` : ceux de ses vagues) et les effets des
-   * classes de ses héros (`kits`, le héros de ce joueur d'abord) ; libère celles d'un autre donjon ou d'une autre
-   * classe. À appeler après `reset`, pendant le fondu au noir : le combat commence avec ses planches prêtes.
+   * classes de ses héros (`kits`, le héros de ce joueur d'abord) ; libère les effets d'une autre classe. Les yokai
+   * déjà chargés restent : la descente suivante n'attend plus rien. À appeler après `reset`, pendant le fondu au
+   * noir : le combat commence avec ses planches prêtes.
    */
   async prepareDescent(kinds: Iterable<string>, kits: readonly string[]): Promise<void> {
     // Les feux follets peuvent naître de n'importe quel yokai (malédictions du donjon infini).
@@ -604,11 +609,34 @@ export class Renderer {
     const shown = new Set([...this.views.values(), ...this.dying].map((view) => view.spriteName));
     for (const name of this.onDemand) {
       const entry = this.sprites.get(name);
-      if (!entry || wanted.has(name) || shown.has(name)) continue;
+      if (!entry || wanted.has(name) || shown.has(name) || !effectKit(name)) continue;
       this.sprites.delete(name);
       entry.texture.dispose();
     }
     await Promise.all([...wanted].map((name) => this.loadOnDemand(name)));
+  }
+
+  /**
+   * Charge en arrière-plan, une à une et quand la page a le temps, les planches de tous les yokai et les effets des
+   * classes `kits` : pendant qu'on se promène sur l'île, pour que les descentes ne fassent plus attendre.
+   */
+  prefetch(kits: readonly string[]): void {
+    if (this.prefetching) return;
+    const queue = [...ENEMY_SHEETS, ...[...this.onDemand].filter((name) => kits.includes(effectKit(name) ?? ''))].filter((name) => !this.sprites.has(name));
+    if (!queue.length) return;
+    this.prefetching = true;
+    const idle = (next: () => void) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(next, { timeout: 2000 }) : setTimeout(next, 200));
+    const step = () => {
+      const name = queue.shift();
+      if (!name) {
+        this.prefetching = false;
+        return;
+      }
+      this.loadOnDemand(name)
+        .catch((error: unknown) => console.warn(`Préchargement de ${name} :`, error))
+        .finally(() => idle(step));
+    };
+    idle(step);
   }
 
   /** Planche d'effet ; absente (classe arrivée en cours de route), elle se charge pour la prochaine fois. */
@@ -2314,6 +2342,8 @@ export class Renderer {
 
   /** Arène du donjon : teinte du sol, couleur de la brume, décor posé autour (src/data/dungeons.json). */
   setStyle(style: DungeonStyle): void {
+    if (style === this.shownStyle) return;
+    this.shownStyle = style;
     if (this.groundMaterial) this.groundMaterial.emissiveColor = new Color3(...style.ground);
     this.scene.clearColor = Color4.FromHexString(`${style.sky}ff`);
     for (const mesh of this.decor.meshes) mesh.dispose();
@@ -2350,16 +2380,20 @@ export class Renderer {
     // Chargées à la demande : les scènes peintes ou 3D d'arène ne sont pas utiles si le style n'en fournit pas.
     const build = !SCENES_3D
       ? import('./arenaPainted').then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind, this.arenaHalfSize, style.decor, this.forward))
-      : kind === 'palais'
-        ? import('./arena3d').then(({ Arena3d }) => Arena3d.build(this.scene, lanterns))
-        : import('./rizieres3d').then(({ Rizieres3d }) => Rizieres3d.build(this.scene, style.decor));
+      : kind === 'rizieres'
+        ? import('./rizieres3d').then(({ Rizieres3d }) => Rizieres3d.build(this.scene, style.decor))
+        : import('./arena3d').then(({ Arena3d }) => Arena3d.build(this.scene, lanterns));
     build
       .then((arena) => {
         if (request !== this.arena3dRequest) return arena.dispose();
         this.arena3d = arena;
         this.groundMesh?.setEnabled(false);
       })
-      .catch((error: unknown) => console.warn('Arène indisponible, retour au sol en une image :', error));
+      .catch((error: unknown) => {
+        console.warn('Arène indisponible, retour au sol en une image :', error);
+        // La prochaine descente avec ce décor réessaiera.
+        if (request === this.arena3dRequest) this.shownStyle = null;
+      });
   }
 
   private async loadSprite(name: string, def: SpriteDef): Promise<SpriteEntry> {

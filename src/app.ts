@@ -245,6 +245,10 @@ export class App {
       get islandRenderer() {
         return app.d.islandRenderer;
       },
+      /** Descend dans le Yomi sans fond, au bloc `bloc` (0 : paliers 1 à 5), sans passer par la cascade. */
+      endless(bloc = 0) {
+        return app.descendEndless(bloc);
+      },
       /** Fait avancer le jeu sans attendre l'écran (onglet masqué, tests automatisés). */
       advance(seconds: number) {
         for (let i = 0; i < Math.round(seconds * 60); i++) app.step(1 / 60);
@@ -345,7 +349,7 @@ export class App {
     options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
     options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
-    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
     const record = globalRecord();
     this.screens.showTitle(options, latestVersion, record ? `Record du ${content.endless.name} : palier ${record.palier} (${record.hero})` : '');
   }
@@ -416,6 +420,8 @@ export class App {
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });
+    // Pendant la promenade, les planches des yokai se chargent : la prochaine descente n'attendra pas.
+    this.d.dungeonRenderer.prefetch([this.loadout().config.kit]);
     this.busy = false;
     // À l'arrivée, Charon accueille la nouvelle âme.
     if (newGame || this.d.progress.quest('passeur') === 'none') {
@@ -658,7 +664,7 @@ export class App {
     const cleared = keep && this.endless ? this.endless.cleared : 0;
     const player = this.loadout().config;
     const allies = this.botAllies();
-    const dungeon = content.dungeons[arenaOf(data, bloc)];
+    const dungeon = this.endlessDungeon(bloc);
     const waves = blocWaves(data, content.difficulty, bloc, endlessArenas, 1 + allies.length);
     const first = firstPalier(data, bloc);
     await this.screens.transition(data.name, this.endlessSubtitle(bloc, 1 + allies.length), () => {
@@ -666,11 +672,19 @@ export class App {
       this.world = world;
       this.mirror = null;
       this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
-      const ready = this.prepareDungeon(dungeon, levelAt(data, first), allies, keep);
+      const ready = this.prepareDungeon(dungeon, levelAt(data, first), allies, keep, true);
       this.endless = { bloc, cleared, awaiting: false };
       return ready;
     });
     this.busy = false;
+  }
+
+  /**
+   * Le donjon d'un bloc du Yomi sans fond : les vagues et les boss de celui dont le bloc est tiré, dans l'arène du Yomi,
+   * la même pour tous les blocs (elle n'est construite qu'une fois).
+   */
+  private endlessDungeon(bloc: number): DungeonDef {
+    return { ...content.dungeons[arenaOf(content.endless, bloc)], style: content.endless.style };
   }
 
   /** « Paliers 6 à 10 · niveau 60 », sous le nom du donjon infini. */
@@ -952,7 +966,7 @@ export class App {
     const bloc = endless ? blocOf(data, start.level) : 0;
     const keep = endless && bloc > 0 && this.endless !== null;
     const cleared = keep && this.endless ? this.endless.cleared : 0;
-    const dungeon = endless ? content.dungeons[arenaOf(data, bloc)] : (content.dungeons[start.dungeon] ?? content.dungeons.rizieres);
+    const dungeon = endless ? this.endlessDungeon(bloc) : (content.dungeons[start.dungeon] ?? content.dungeons.rizieres);
     const level = endless ? levelAt(data, start.level) : clampLevel(content.difficulty, start.level);
     const configs = start.heroes.map((hero) => hero.config);
     const others = start.heroes.filter((_, seat) => seat !== start.seat);
@@ -978,7 +992,7 @@ export class App {
         this.inbox = [];
       }
       this.bots = [];
-      const ready = this.prepareDungeon(dungeon, level, others, keep);
+      const ready = this.prepareDungeon(dungeon, level, others, keep, endless);
       this.endless = endless ? { bloc, cleared, awaiting: false } : null;
       return ready;
     });
@@ -986,11 +1000,12 @@ export class App {
   }
 
   /**
-   * Remet l'affichage à neuf pour une descente : décor, héros, alliés, HUD, et charge les planches de ses yokai
-   * (seulement celles-là : les deux donjons ensemble pèseraient des centaines de Mo en mémoire graphique). Le combat
+   * Remet l'affichage à neuf pour une descente : décor, héros, alliés, HUD, et charge les planches de ses yokai s'ils
+   * ne le sont pas déjà (réduites à la taille de l'écran, elles restent chargées d'une descente à l'autre). Le combat
    * attend qu'elles soient prêtes ; la promesse est tenue alors, pendant le fondu au noir.
+   * `allKinds` : les yokai de tous les donjons d'avance (donjon infini : aucun chargement d'un bloc à l'autre).
    */
-  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[], keepLoot = false): Promise<void> {
+  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[], keepLoot = false, allKinds = false): Promise<void> {
     const { dungeonRenderer, hud, islandRenderer } = this.d;
     this.screens.hideResult();
     this.panels.close();
@@ -1015,7 +1030,7 @@ export class App {
     islandRenderer.hideMarkers();
     this.setMode('dungeon');
     // Un invité ne connaît pas les vagues de l'hôte : celles du donjon, et le reste à la demande (Renderer.syncEntity).
-    const waves = this.world?.cfg.waves ?? dungeon.arena.waves;
+    const waves = allKinds ? Object.values(content.dungeons).flatMap((d) => d.arena.waves) : (this.world?.cfg.waves ?? dungeon.arena.waves);
     const view = this.world ?? this.mirror;
     const kits = view ? [view.player, ...view.players.filter((hero) => hero !== view.player)].map((hero) => hero.cfg.kit) : [];
     const preparing = dungeonRenderer
@@ -1445,6 +1460,8 @@ export class App {
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
     });
+    // Pendant la promenade, les planches des yokai se chargent : la prochaine descente n'attendra pas.
+    this.d.dungeonRenderer.prefetch([this.loadout().config.kit]);
     this.busy = false;
     if (progress.state.chests > 0) this.screens.toast('Des coffres t’attendent sur la barque de Charon.', 'loot');
   }
@@ -1487,7 +1504,7 @@ export class App {
         },
       });
     }
-    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
     options.push({
       label: 'Menu principal',
       action: () => {

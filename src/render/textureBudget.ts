@@ -14,6 +14,28 @@ const COMBAT_VIEW_HALF_HEIGHT = 6;
 const MARGIN = 1.3;
 /** En deçà de cette réduction, l'image reste telle quelle : le gain ne vaudrait pas le rééchantillonnage. */
 const MIN_GAIN = 0.85;
+const FULL_TEXTURES_KEY = 'rivages-textures';
+
+/** Textures en pleine définition (Options) : plus nettes de près, plus lourdes en mémoire graphique. */
+export function fullTextures(): boolean {
+  try {
+    return localStorage.getItem(FULL_TEXTURES_KEY) === 'pleines';
+  } catch {
+    return false;
+  }
+}
+
+export function setFullTextures(full: boolean): void {
+  try {
+    if (full) localStorage.setItem(FULL_TEXTURES_KEY, 'pleines');
+    else localStorage.removeItem(FULL_TEXTURES_KEY);
+  } catch {
+    // Stockage indisponible : le réglage ne survit pas au rechargement.
+  }
+}
+
+/** Lu une fois au chargement : les planches déjà chargées gardent leur taille. */
+const FULL = fullTextures();
 
 /** Pixels d'écran par unité du monde au combat, en plein écran (densité comprise, plafonnée comme le rendu). */
 export function screenPixelsPerUnit(): number {
@@ -24,7 +46,7 @@ export function screenPixelsPerUnit(): number {
 
 /** Facteur de réduction d'une image peinte à `texelsPerUnit` pixels par unité du monde (1 : telle quelle). */
 export function textureScale(texelsPerUnit: number): number {
-  if (!(texelsPerUnit > 0)) return 1;
+  if (FULL || !(texelsPerUnit > 0)) return 1;
   const scale = (screenPixelsPerUnit() * MARGIN) / texelsPerUnit;
   return scale < MIN_GAIN ? scale : 1;
 }

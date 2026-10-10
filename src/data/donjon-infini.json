@@ -1,5 +1,5 @@
 {
-  "about": "Le Yomi sans fond (donjon infini, 0.4.0) : caché derrière la cascade, ouvert au niveau 50. On le descend par blocs de 5 paliers dans une même arène, Rizières puis Palais, en alternance : 4 vagues tirées parmi celles du donjon, puis son boss au 5e palier. À partir de doubleBossFrom, la Jorōgumo et Izanami attendent ensemble. Niveau des yokai : baseLevel, +levelStep tous les palierStep paliers (palier 25 : niveau 100), plafonné à maxLevel. Au-delà du plafond, un modificateur s'ajoute tous les 5 paliers (modifiers, puis beyond qui se répète). À la fin de chaque bloc, on encaisse le butin et on remonte, ou on continue : mourir fait tout perdre. Récompense : à partir du palier itemsFrom, un objet tiré selon la rareté du palier atteint, à chaque fin de bloc.",
+  "about": "Le Yomi sans fond (donjon infini, 0.4.0) : caché derrière la cascade, ouvert au niveau 50. On le descend par blocs de 5 paliers dans son arène à lui (style : la dalle de braise du Yomi, chargée une fois pour toute la descente), avec les vagues des Rizières puis du Palais, en alternance : 4 vagues tirées parmi celles du donjon, puis son boss au 5e palier. À partir de doubleBossFrom, la Jorōgumo et Izanami attendent ensemble. Niveau des yokai : baseLevel, +levelStep tous les palierStep paliers (palier 25 : niveau 100), plafonné à maxLevel. Au-delà du plafond, un modificateur s'ajoute tous les 5 paliers (modifiers, puis beyond qui se répète). À la fin de chaque bloc, on encaisse le butin et on remonte, ou on continue : mourir fait tout perdre. Récompense : à partir du palier itemsFrom, un objet tiré selon la rareté du palier atteint, à chaque fin de bloc.",
   "name": "Le Yomi sans fond",
   "region": "Derrière la cascade",
   "unlockLevel": 50,
@@ -31,6 +31,16 @@
     "title": "Tu remontes du Yomi sans fond",
     "text": "La cascade se referme derrière toi. Ce que tu as arraché aux profondeurs est à toi."
   },
-  "exit": { "u": 23.4, "v": 27.9 },
+  "exit": { "u": 19.4, "v": 31 },
+  "style": {
+    "scene3d": "yomi",
+    "ground": [0.35, 0.22, 0.24],
+    "sky": "#160b0e",
+    "decor": [
+      { "sprite": "torii", "x": 12, "z": 12 },
+      { "sprite": "lanterneAllumee", "x": -10.5, "z": 10.5 },
+      { "sprite": "lanterneAllumee", "x": 10.5, "z": -10.5 }
+    ]
+  },
   "defeat": "Le Yomi sans fond garde ce que tu n'as pas encaissé."
 }

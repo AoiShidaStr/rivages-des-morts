@@ -181,8 +181,11 @@ export const content = {
   /** Le billot de Tetsu : on y frappe un mannequin immobile pour éprouver une classe ou un équipement. */
   entrainement: dungeonFrom('entrainement', entrainement.meta, entrainement.arena),
   triggers: questsJson.triggers as unknown as Catalog['triggers'],
-  /** Le Yomi sans fond (donjon infini), qui tire ses blocs des donjons ci-dessus. */
-  endless: endlessJson as unknown as EndlessData,
+  /**
+   * Le Yomi sans fond (donjon infini), qui tire ses blocs des donjons ci-dessus, mais les joue tous dans son arène à
+   * lui (`style`) : elle reste chargée d'un bloc à l'autre.
+   */
+  endless: endlessJson as unknown as EndlessData & { style: DungeonStyle },
 };
 
 /** Les donjons, tels que le donjon infini y puise ses vagues. */
