@@ -201,6 +201,7 @@ export class IslandRenderer {
   sync(island: Island, targetId: string | null, markers: ReadonlyMap<string, string>, dt: number, showPlayer = true): void {
     this.time += dt;
     this.map?.update(dt);
+    this.map?.showBridges(island.underBridge());
     const visible = island.interactables();
     const seen = new Set<string>();
     for (const it of visible) {

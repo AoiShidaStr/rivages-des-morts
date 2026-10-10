@@ -180,8 +180,10 @@ export class WalkField {
     // Comme onWalk, case par case, mais tracé ligne à ligne : quelques milliers d'opérations au lieu de dizaines de
     // millions (des secondes au démarrage sur un petit processeur).
     const inside = new Uint8Array(this.nu * this.nv);
+    // Le lit de la rivière compte aussi : on y marche.
     for (const p of data.walk) this.fill(inside, p, 1);
     for (const p of data.blocks) this.fill(inside, p, 0);
+    for (const p of data.river ?? []) this.fill(inside, p, 1);
     const toOutside = chamfer(inside, this.nu, this.nv, 1);
     const toInside = chamfer(inside, this.nu, this.nv, 0);
     this.dist = new Float32Array(this.nu * this.nv);

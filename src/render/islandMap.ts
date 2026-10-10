@@ -1,5 +1,5 @@
 import { Color3, DynamicTexture, MeshBuilder, StandardMaterial, Texture, type Mesh, type Scene } from '@babylonjs/core';
-import { insidePolygon, toScreen, toWorld, type IslandData } from '../game/island';
+import { insidePolygon, toScreen, toWorld, type IslandData, type Polygon } from '../game/island';
 import type { Vec2 } from '../game/math';
 import type { DecorSpot } from './decorSprites';
 import { decorSolids, islandDecor, MapImage, WalkField } from './islandDecor';
@@ -30,6 +30,8 @@ export class IslandMap {
     private readonly materials: StandardMaterial[],
     private readonly textures: Texture[],
     private readonly water: PaintedWater | null,
+    /** Tabliers des ponts, découpés dans la carte : montrés devant le héros qui passe dessous. */
+    private readonly bridges: Mesh[],
     /** Décors à poser (decorSprites.ts). */
     readonly decor: DecorSpot[],
     /** Collisions des décors posés dans les zones de marche, pour l'île (Island.addSolids). */
@@ -78,7 +80,14 @@ export class IslandMap {
     textures.push(texture, corner);
     flat('islandSea', screenPlane(scene, 'islandSea', width * 4, height * 4, -0.02), corner, sea);
     flat('islandMap', screenPlane(scene, 'islandMap', width, height, 0), texture, Color3.Black());
-    if (!rich) return new IslandMap(meshes, materials, textures, null, [], []);
+    const bridges = (data.bridges ?? []).map((poly, i) => {
+      const deck = bridgeDeck(scene, `islandBridge${i}`, texture, poly, width, height);
+      meshes.push(deck.mesh);
+      materials.push(deck.material);
+      textures.push(...deck.textures);
+      return deck.mesh;
+    });
+    if (!rich) return new IslandMap(meshes, materials, textures, null, bridges, [], []);
 
     const field = new WalkField(data, width, height);
     const items = islandDecor(data, map, field);
@@ -90,11 +99,16 @@ export class IslandMap {
     shade.opacityTexture = shadows;
     shade.disableDepthWrite = true;
     meshes[meshes.length - 1].alphaIndex = -150_000;
-    return new IslandMap(meshes, materials, textures, waterLayer(scene, data, map), decor, solids);
+    return new IslandMap(meshes, materials, textures, waterLayer(scene, data, map), bridges, decor, solids);
   }
 
   update(dt: number): void {
     this.water?.update(dt);
+  }
+
+  /** Le héros passe sous un pont : son tablier se dessine devant lui. */
+  showBridges(under: boolean): void {
+    for (const mesh of this.bridges) mesh.isVisible = under;
   }
 
   dispose(): void {
@@ -103,6 +117,56 @@ export class IslandMap {
     for (const texture of this.textures) texture.dispose();
     this.water?.dispose();
   }
+}
+
+/**
+ * Le tablier d'un pont : la même carte, recadrée sur le pont et découpée à sa forme (un masque), posée au même endroit
+ * mais dessinée après tout le reste (groupe de rendu 1). Elle ne change rien à l'image, sauf quand le héros est
+ * dessous : alors le pont passe devant lui.
+ */
+function bridgeDeck(scene: Scene, name: string, map: Texture, poly: Polygon, width: number, height: number) {
+  const us = poly.map(([u]) => u);
+  const vs = poly.map(([, v]) => v);
+  const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
+  const crop = map.clone();
+  crop.uScale = (u1 - u0) / width;
+  crop.uOffset = (u0 + width / 2) / width;
+  crop.vScale = (v1 - v0) / height;
+  crop.vOffset = (v0 + height / 2) / height;
+  const size = 256;
+  const mask = new DynamicTexture(`${name}Mask`, { width: size, height: size }, scene, true);
+  const ctx = mask.getContext() as CanvasRenderingContext2D;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  poly.forEach(([u, v], i) => {
+    const x = ((u - u0) / (u1 - u0)) * size;
+    const y = (1 - (v - v0) / (v1 - v0)) * size;
+    if (i) ctx.lineTo(x, y);
+    else ctx.moveTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fill();
+  mask.update();
+  mask.getAlphaFromRGB = true;
+  const mesh = MeshBuilder.CreateGround(name, { width: u1 - u0, height: v1 - v0 }, scene);
+  const center = toWorld({ u: (u0 + u1) / 2, v: (v0 + v1) / 2 });
+  mesh.position.set(center.x, 0.01, center.z);
+  mesh.rotation.y = Math.PI / 4;
+  mesh.isPickable = false;
+  mesh.renderingGroupId = 1;
+  mesh.isVisible = false;
+  mesh.freezeWorldMatrix();
+  const material = new StandardMaterial(name, scene);
+  material.disableLighting = true;
+  material.specularColor = Color3.Black();
+  material.diffuseTexture = crop;
+  material.emissiveColor = Color3.White();
+  material.opacityTexture = mask;
+  material.disableDepthWrite = true;
+  mesh.material = material;
+  return { mesh, material, textures: [crop, mask] };
 }
 
 /** Reflets animés sur l'eau peinte : la mer, la rivière, le bassin, et plus légers sur les rizières. */

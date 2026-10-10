@@ -62,6 +62,8 @@ Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coord
 | --- | --- |
 | `walk` | polygones des zones où l'on marche (terrasses, chemins, escaliers, pont, ponton) : ce sont les collisions |
 | `blocks` | obstacles peints à l'intérieur (un muret) |
+| `river` | lit de la rivière : on y marche en contrebas ; on y descend et on en remonte seulement là où il chevauche une zone de marche (escalier, berge), jamais depuis un pont |
+| `bridges` | tabliers des ponts tels qu'ils sont peints : ils passent devant le héros qui marche dessous (garder aussi une zone de marche dessus) |
 | `scenery` | eau des rizières (riz), bassin (nénuphars), bosquets et plages où l'on ne va pas (décors) |
 | `areas` | zones nommées ; chacune donne sa végétation aux décors autour |
 | `props`, `interactables` | bâtiments, PNJ, objets |

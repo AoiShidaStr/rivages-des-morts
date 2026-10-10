@@ -1,5 +1,6 @@
 // Redessine la carte de l'île avec ce que décrit src/data/island.json par-dessus, pour le retoucher à l'œil :
-//   - en vert, les zones où l'on marche ; en rouge, les obstacles ;
+//   - en vert, les zones où l'on marche ; en rouge, les obstacles ; en turquoise, le lit de la rivière (en contrebas) ;
+//     en brun, les tabliers des ponts ;
 //   - en bleu, l'eau des rizières et le bassin ; en jaune, les bosquets et plages où poser des décors ;
 //   - en cercles blancs, les zones nommées ; en points, les objets et les PNJ ;
 //   - une grille tous les 64 pixels (sur une image de 1024 de côté) pour lire les positions.
@@ -31,6 +32,8 @@ for (let g = 64; g < 1024; g += 64) {
 }
 for (const p of island.walk) svg += poly(p, '#00ff66', '#00ff66');
 for (const p of island.blocks) svg += poly(p, '#ff0033', '#ff0033');
+for (const p of island.river ?? []) svg += poly(p, '#22e0d0', '#22e0d0');
+for (const p of island.bridges ?? []) svg += poly(p, '#c98a4b', '#c98a4b');
 for (const p of [island.scenery.paddies, island.scenery.pool]) svg += poly(p, '#33aaff', '#33aaff');
 for (const p of [...island.scenery.groves, ...island.scenery.beaches]) svg += poly(p, '#ffdd00', '#ffdd00');
 for (const a of island.areas) {

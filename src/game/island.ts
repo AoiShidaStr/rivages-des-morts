@@ -84,6 +84,13 @@ export interface IslandData {
   walk: Polygon[];
   /** Obstacles dans les zones de marche (un muret peint). */
   blocks: Polygon[];
+  /**
+   * Lit de la rivière : on y marche en contrebas, et l'on passe sous les ponts. On y descend et l'on en remonte
+   * seulement là où il chevauche une zone de marche (un escalier, une berge en pente), jamais depuis un pont.
+   */
+  river?: Polygon[];
+  /** Tabliers des ponts, tracés sur la carte : dessinés par-dessus le héros quand il passe dessous. */
+  bridges?: Polygon[];
   scenery: IslandScenery;
   areas: Area[];
   props: PropDef[];
@@ -128,6 +135,14 @@ export function onWalk(data: IslandData, s: ScreenPoint): boolean {
   return data.walk.some((p) => insidePolygon(s, p)) && !data.blocks.some((p) => insidePolygon(s, p));
 }
 
+function inRiver(data: IslandData, s: ScreenPoint): boolean {
+  return !!data.river?.some((p) => insidePolygon(s, p));
+}
+
+function onBridge(data: IslandData, s: ScreenPoint): boolean {
+  return !!data.bridges?.some((p) => insidePolygon(s, p));
+}
+
 /** Directions autour du héros où son corps doit lui aussi tenir sur une zone de marche. */
 const RIM = Array.from({ length: 8 }, (_, i) => vec(Math.cos((i * Math.PI) / 4), Math.sin((i * Math.PI) / 4)));
 
@@ -139,7 +154,8 @@ const DEFAULT_REACH = 1.8;
 
 /** L'île d'exploration : pas de combat, seulement se déplacer, parler et fouiller. */
 export class Island {
-  readonly player = { pos: vec(), facing: vec(1, 0), moving: false };
+  /** `low` : dans le lit de la rivière, en contrebas (sous les ponts). */
+  readonly player = { pos: vec(), facing: vec(1, 0), moving: false, low: false };
   area: Area | null = null;
   private readonly staticSolids: { pos: Vec2; r: number }[];
 
@@ -158,6 +174,7 @@ export class Island {
 
   placeAt(point: ScreenPoint): void {
     this.player.pos = toWorld(point);
+    this.player.low = inRiver(this.data, point) && !onWalk(this.data, point);
     this.area = this.areaAt(point);
   }
 
@@ -188,6 +205,11 @@ export class Island {
         const pushed = this.pushOut(next);
         if (this.walkable(pushed)) player.pos = pushed;
       }
+      // On change de niveau en quittant tout à fait l'autre : au chevauchement (escalier, berge), on garde le sien.
+      const s = toScreen(player.pos);
+      const up = onWalk(this.data, s);
+      const down = inRiver(this.data, s);
+      if (up !== down) player.low = down;
     }
     const area = this.areaAt(toScreen(player.pos));
     const entered = area && area.id !== this.area?.id ? area : null;
@@ -208,8 +230,37 @@ export class Island {
     return best;
   }
 
+  /**
+   * Le héros sous un pont, ou juste derrière (plus haut à l'écran) : le tablier passe devant lui. Devant le pont, c'est
+   * lui qui passe devant.
+   */
+  underBridge(): boolean {
+    if (!this.player.low) return false;
+    const s = toScreen(this.player.pos);
+    return !!this.data.bridges?.some((p) => {
+      const us = p.map(([u]) => u);
+      const vs = p.map(([, v]) => v);
+      return s.u > Math.min(...us) - 1 && s.u < Math.max(...us) + 1 && s.v > Math.min(...vs) - 0.2 && s.v < Math.max(...vs) + 3;
+    });
+  }
+
+  /**
+   * Où le héros peut aller, selon son niveau. En haut : les zones de marche, et le lit de la rivière seulement depuis
+   * un endroit où les deux se chevauchent (jamais depuis un pont : on n'en saute pas). En bas : le lit, et les zones
+   * de marche seulement depuis un chevauchement (on ne grimpe pas sur un pont depuis l'eau).
+   */
   private walkable(p: Vec2): boolean {
-    return onWalk(this.data, toScreen(p)) && RIM.every((d) => onWalk(this.data, toScreen(add(p, scale(d, BODY_RADIUS)))));
+    const data = this.data;
+    const here = toScreen(this.player.pos);
+    const crossing = onWalk(data, here) && inRiver(data, here) && !onBridge(data, here);
+    const allowed = (s: ScreenPoint) =>
+      this.player.low ? inRiver(data, s) || (crossing && onWalk(data, s)) : onWalk(data, s) || (crossing && inRiver(data, s));
+    // Le corps : sur le pont, il reste sur le tablier ; dessous, dans le lit ; ailleurs, sur l'un ou l'autre niveau.
+    const body = (s: ScreenPoint) => {
+      if (onBridge(data, here)) return this.player.low ? inRiver(data, s) : onWalk(data, s);
+      return onWalk(data, s) || inRiver(data, s);
+    };
+    return allowed(toScreen(p)) && RIM.every((d) => body(toScreen(add(p, scale(d, BODY_RADIUS)))));
   }
 
   private pushOut(p: Vec2): Vec2 {
