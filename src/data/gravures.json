@@ -1,5 +1,5 @@
 {
-  "about": "Les gravures : le tirage qui fait le build. Une gravure se pose sur une ARME, par type d'arme et non par copie (`progress.state.gravures[arme]`), chez Tetsu, contre des oboles et de la soie de jorōgumo — donc derrière la première victoire des Rizières, qui est la seule source de soie. Chaque tirage donne un rang (`ranks`) : le rang dit combien de lignes on reçoit (`lines`), jusqu'où elles peuvent monter (`floor` : 0 laisse la valeur libre dans [min, max], 1 la met au maximum), et si le tirage porte une contrepartie (`contrepartie`) — les rangs hauts en donnent une, et elle coûte vraiment quelque chose. Les lignes (`lines`) sont décrites par leur chemin de réglage (mêmes règles que skills.json et items.json) et leur bornage ; `kind` vaut `forme` (la ligne change la façon de frapper : portée, arc, recharge, rayon), `maitrise` (elle change les chiffres) ou `contrepartie` (un paquet fixe : un gros renfort contre une vraie perte, rien n'y est tiré au sort). `show` dit comment afficher la valeur tirée : `brut` (telle quelle), `part` (en pourcentage de 1 : 0,02 → 2 %) ou `ecart` (l'écart à 1 : 0,88 → −12 %). `tags` restreint une ligne à une classe (« Tous » : tout le monde), pour qu'un tirage ne donne pas une ligne inutile à l'arme qui la porte. `lines` compte les lignes de renfort (formes et maîtrise), la contrepartie non comprise : un tirage donne `lines - 1` lignes de forme, une de maîtrise, et — en plus, quand le rang en donne une — la contrepartie.",
+  "about": "Les gravures : le tirage qui fait le build. Une gravure se pose sur une ARME, par type d'arme et non par copie (`progress.state.gravures[arme]`), chez Tetsu, contre des oboles et de la soie de jorōgumo — donc derrière la première victoire des Rizières, qui est la seule source de soie. Chaque tirage donne un rang (`ranks`) : le rang dit combien de lignes on reçoit (`lines`), jusqu'où elles peuvent monter (`floor` : 0 laisse la valeur libre dans [min, max], 1 la met au maximum), et si le tirage porte une contrepartie (`contrepartie`) — les rangs hauts en donnent une, et elle coûte vraiment quelque chose. Les lignes (`lines`) sont décrites par leur chemin de réglage (mêmes règles que skills.json et items.json) et leur bornage ; `kind` vaut `forme` (la ligne change la façon de frapper : portée, arc, recharge, rayon), `maitrise` (elle change les chiffres) ou `contrepartie` (un paquet fixe : un gros renfort contre une vraie perte, rien n'y est tiré au sort). `show` dit comment afficher la valeur tirée : `brut` (telle quelle), `part` (en pourcentage de 1 : 0,02 → 2 %) ou `ecart` (l'écart à 1 : 0,88 → −12 %). `tags` restreint une ligne à une classe (« Tous » : tout le monde), pour qu'un tirage ne donne pas une ligne inutile à l'arme qui la porte. `lines` compte les lignes de renfort (formes et maîtrise), la contrepartie non comprise : un tirage donne `lines - 1` lignes de forme, une de maîtrise, et — en plus, quand le rang en donne une — la contrepartie. Une ligne qui n'a de sens que pour certaines classes (renvoyer un coup bloqué, élargir la portée d'une compétence de classe) porte donc `tags` : `npm run gravures` refuse une ligne capable de tomber sur une arme qui ne pourrait pas s'en servir.",
   "ranks": [
     {
       "id": "ebrechee",
@@ -147,6 +147,9 @@
       "max": 1.18,
       "step": 0.01,
       "weight": 0.6,
+      "tags": [
+        "Guerrier"
+      ],
       "summary": "Rayon de la Frappe fracassante {v}"
     },
     {
@@ -503,6 +506,10 @@
       "max": 8,
       "step": 1,
       "weight": 0.8,
+      "tags": [
+        "Guerrier",
+        "Paladin"
+      ],
       "summary": "Dégâts renvoyés par coup bloqué {v}"
     },
     {

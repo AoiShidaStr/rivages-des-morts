@@ -714,6 +714,12 @@ export class Player {
       attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2 }, world);
       if (attacker.dead) this.onKill();
     }
+    // Reflet (gravure), Mur de fer (voie Rempart) : un coup bloqué renvoie des dégâts fixes à l'attaquant. Le Guerrier
+    // bloque comme le Paladin (`canGuard`), donc le renvoi vaut pour les deux — il vivait dans la suite du Paladin.
+    if (attacker && !attacker.dead && perks.riposte) {
+      attacker.receiveHit({ amount: perks.riposte * this.damageMultiplier(), from: this.pos, knockback: 4 }, world);
+      if (attacker.dead) this.onKill();
+    }
     // Écaille de Ryūjin : l'attaquant arrêté repart en feu.
     if (attacker && !attacker.dead && perks.blockBurn && amount > 0) world.scorch(attacker, this, perks.blockBurn.damage * this.damageMultiplier(), perks.blockBurn.duration);
     world.emit({ type: 'guard', pos: { ...this.pos } });
@@ -748,10 +754,6 @@ export class Player {
     }
     if (perks.shieldHeal) world.healAllies(this.pos, perks.shieldHeal.radius, perks.shieldHeal.amount, this);
     if (!attacker || attacker.dead) return;
-    if (perks.riposte) {
-      attacker.receiveHit({ amount: perks.riposte * this.damageMultiplier(), from: this.pos, knockback: 4 }, world);
-      if (attacker.dead) this.onKill();
-    }
     if (perks.gleipnir && !attacker.dead) attacker.slow(0.5, perks.gleipnir, world);
   }
 

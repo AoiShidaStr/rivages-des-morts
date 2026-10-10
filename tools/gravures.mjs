@@ -183,6 +183,34 @@ async function main() {
     check(`${w.id} (${w.cls}) · paquet de maîtrise`, pool.maitrise.length >= 1, `${pool.maitrise.length} lignes`);
   }
 
+  // --- 2 bis. Cohérence : pas de ligne inutile sur l'arme qui la porte ---------------------------
+  // Une ligne liée à une capacité de classe (bloquer, une compétence de classe) doit porter `tags`, sinon elle tombe
+  // sur une arme dont la classe ne peut rien en faire — vu en jeu : « Dégâts renvoyés par coup bloqué » sur un arc.
+  // Les classes capables sont lues dans le code (`canGuard`) et dans les données (les compétences), pas recopiées ici.
+  const classTag = (kit) => content.skills.classes[kit]?.tag?.name ?? kit;
+  const playerSource = readFileSync(new URL('../src/game/player.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+  const guardGetter = /get canGuard\(\): boolean \{([\s\S]*?)\n  \}/.exec(playerSource);
+  if (!guardGetter) throw new Error('canGuard introuvable dans src/game/player.ts');
+  const blockers = [...guardGetter[1].matchAll(/kit === '(\w+)'/g)].map((m) => classTag(m[1]));
+  const smashers = Object.entries(content.skills.classes)
+    .filter(([, cls]) => (cls.actives ?? []).some((skill) => skill.name === 'Frappe fracassante'))
+    .map(([kit]) => classTag(kit));
+  const capacites = [
+    { path: 'perks.riposte', capables: blockers, quoi: 'bloquer un coup' },
+    { path: 'smash.radius', capables: smashers, quoi: 'la Frappe fracassante' },
+  ];
+  for (const { path, capables, quoi } of capacites) {
+    if (!check(`capacité · une classe au moins sait ${quoi}`, capables.length > 0, 'aucune trouvée')) continue;
+    for (const line of data.lines.filter((l) => l.path === path)) {
+      const tags = line.tags ?? [];
+      check(
+        `ligne ${line.id} · réservée à ${capables.join(' et ')}`,
+        tags.length > 0 && tags.every((t) => capables.includes(t)),
+        tags.length ? `portée par ${tags.join(', ')}` : 'sans tags : elle peut tomber sur n’importe quelle arme',
+      );
+    }
+  }
+
   // --- 3. Structure du tirage, arme par arme -----------------------------------------------------
   const random = mulberry32(20261010);
   const rows = [];
