@@ -13,6 +13,7 @@ import { Input } from './input';
 import { loadKeyboardLayout } from './keys';
 import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
+import { SCENES_3D } from './render/flags';
 import { IslandRenderer } from './render/islandRenderer';
 import { Renderer, type SpriteManifest } from './render/renderer';
 
@@ -48,7 +49,10 @@ async function start(): Promise<void> {
   await loadKeyboardLayout();
   const canvas = element<HTMLCanvasElement>('game');
   const overlay = element('overlay');
-  const engine = new Engine(canvas, true, { stencil: false }, true);
+  // Sans anticrénelage (MSAA) : sur des images peintes, il ne lisse presque rien, et il coûtait plus de la moitié du
+  // temps de la carte graphique sur une puce Intel. Les arènes en 3D (?3d), elles, en ont besoin pour leurs arêtes.
+  // La densité de l'écran est gérée par la résolution adaptative (render/resolution.ts), pas par Babylon.
+  const engine = new Engine(canvas, SCENES_3D, { stencil: false }, false);
   const progress = Progress.load(catalog);
   const island = new Island(content.island, progress);
   const dungeonRenderer = new Renderer(engine, canvas, overlay, spriteManifest(sprites as SpriteManifest), config.arenaHalfSize);
@@ -79,6 +83,8 @@ async function start(): Promise<void> {
 
   // Accès à la partie depuis la console du navigateur, en développement seulement.
   if (import.meta.env.DEV) Object.assign(window, { rdm: app.debug() });
+  // L'éditeur de carte (editeur.html) a enregistré island.json : le jeu se recharge avec la nouvelle île.
+  import.meta.hot?.on('editeur:ile', () => location.reload());
 }
 
 start().catch((error: unknown) => {

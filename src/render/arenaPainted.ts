@@ -5,8 +5,8 @@ import { fbm, noise, rng, smoothstep } from './noise';
 import { Grid, PaintedGround, PaintedWater, loadImage, type GroundLayer, type GroundShadow } from './paintedGround';
 
 /**
- * Arènes des donjons en carte peinte : le sol est assemblé à partir des textures de sols/textures, comme l'île
- * (islandPainted.ts), et entouré de décors peints posés par le code.
+ * Arènes des donjons en carte peinte : le sol est assemblé à partir des textures de sols/textures
+ * (paintedGround.ts), et entouré de décors peints posés par le code.
  * - Rizières noyées (la Jorōgumo) : rizières inondées coupées de diguettes, talus d'herbe sombre, arbres morts et
  *   toiles autour, qui se perdent dans la brume.
  * - Palais d'Izanami : dallage de pierre sombre bordé de roche, eau noire et violette tout autour.

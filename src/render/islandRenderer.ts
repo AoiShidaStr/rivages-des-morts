@@ -9,7 +9,6 @@ import {
   Mesh,
   MeshBuilder,
   Scene,
-  StandardMaterial,
   Texture,
   Vector3,
   type BaseTexture,
@@ -17,20 +16,19 @@ import {
 } from '@babylonjs/core';
 import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
-import { drawIslandGround, drawProp } from './pixelArt';
-import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
-import { LOW_GRAPHICS, SCENES_3D } from './flags';
+import { drawProp } from './pixelArt';
+import { CAMERA_DISTANCE, PITCH, YAW, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
+import { loadFittedTexture } from './textureBudget';
+import { LOW_GRAPHICS } from './flags';
 import { isHeroVariant } from './heroes';
 import { DecorSprites } from './decorSprites';
-import { IslandPainted, LOW_DECOR } from './islandPainted';
-import type { IslandScene3d } from './islandScene3d';
+import { LOW_DECOR } from './islandDecor';
+import { IslandMap } from './islandMap';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 
-/** Assez grand pour que la caméra ne voie jamais le bord du sol, même au bout du ponton. */
-const WORLD_SIZE = 84;
-const PIXELS_PER_UNIT = 6;
-const VIEW_HALF_HEIGHT = 7;
+/** L'île est grande : la caméra la montre d'un peu plus haut qu'au combat, le héros y paraît plus petit. */
+const VIEW_HALF_HEIGHT = 8.5;
 const SPRITE_ORDER = 10_000;
 const MARKER_HEIGHT_MARGIN = 0.45;
 
@@ -91,10 +89,8 @@ export class IslandRenderer {
   private readonly markers = new Map<string, Marker>();
   private time = 0;
   /** L'île en 3D (relief, eau, végétation), et les décors peints qu'elle remplace. */
-  private scene3d: IslandScene3d | null = null;
   /** La carte peinte (sol assemblé, eau animée, décors posés par le code). */
-  private painted: IslandPainted | null = null;
-  private replaced: ReadonlySet<string> = new Set();
+  private map: IslandMap | null = null;
 
   constructor(
     private readonly engine: Engine,
@@ -105,6 +101,8 @@ export class IslandRenderer {
     registerShaders();
     this.scene = new Scene(engine);
     this.scene.clearColor = Color4.FromHexString('#c3cbcfff');
+    // On vise et on interagit sans chercher ce qui est sous la souris : Babylon n'a pas à le faire à chaque mouvement.
+    this.scene.skipPointerMovePicking = true;
     this.camera = new FreeCamera('islandCamera', Vector3.Zero(), this.scene);
     this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
     this.camera.minZ = 0.1;
@@ -138,14 +136,13 @@ export class IslandRenderer {
       ...(isHeroVariant(this.wantedHero) ? [this.loadHero(this.wantedHero)] : []),
     ]);
     for (const prop of LOW_GRAPHICS ? [] : island.data.props) {
-      if (this.replaced.has(prop.sprite)) continue;
       const entry = this.entryFor(prop.sprite, prop.height);
       if (!entry) continue;
       const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
       if ((entry.anim && !entry.still) || entry.motion) this.animatedProps.push(view);
     }
     // Les décors restent tant que l'île existe (toute la partie).
-    if (this.painted && !LOW_GRAPHICS) await DecorSprites.build(this.scene, this.painted.decor, this.forward, LOW_DECOR);
+    if (this.map?.decor.length) await DecorSprites.build(this.scene, this.map.decor, this.forward, LOW_DECOR);
     const hero = this.sprites.has(this.wantedHero) ? this.wantedHero : 'heros';
     this.player = this.billboard('player', this.required(hero), island.player.pos, 0.4, hero);
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
@@ -203,8 +200,8 @@ export class IslandRenderer {
 
   sync(island: Island, targetId: string | null, markers: ReadonlyMap<string, string>, dt: number, showPlayer = true): void {
     this.time += dt;
-    this.scene3d?.update(dt);
-    this.painted?.update(dt);
+    this.map?.update(dt);
+    this.map?.showBridges(island.underBridge());
     const visible = island.interactables();
     const seen = new Set<string>();
     for (const it of visible) {
@@ -273,41 +270,10 @@ export class IslandRenderer {
 
   // --- Construction ----------------------------------------------------------
 
-  /**
-   * En graphismes allégés, l'ancienne image unique de l'île, sans décor ajouté ; sinon, la carte peinte ou l'île 3D.
-   */
+  /** La carte peinte de l'île ; en graphismes allégés, sans eau animée, ombres ni décors. */
   private async buildGround(island: Island): Promise<void> {
-    if (!LOW_GRAPHICS && !SCENES_3D) {
-      try {
-        this.painted = await IslandPainted.build(this.scene, island.data);
-        island.addSolids(this.painted.solids);
-        this.replaced = IslandPainted.replaces;
-        return;
-      } catch (error) {
-        console.warn('Carte peinte indisponible, retour au sol en une image :', error);
-      }
-    }
-    if (SCENES_3D) {
-      try {
-        const { IslandScene3d } = await import('./islandScene3d');
-        this.scene3d = await IslandScene3d.build(this.scene, island.data);
-        this.replaced = IslandScene3d.replaces;
-        return;
-      } catch (error) {
-        console.warn('Île en 3D indisponible, retour au sol peint :', error);
-      }
-    }
-    const ground = MeshBuilder.CreateGround('islandGround', { width: WORLD_SIZE, height: WORLD_SIZE }, this.scene);
-    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/ile.jpg`).catch(() => null);
-    const texture = painted ?? this.canvasTexture('islandGroundTexture', drawIslandGround(island.data, WORLD_SIZE, PIXELS_PER_UNIT), true);
-    texture.hasAlpha = false;
-    const material = new StandardMaterial('islandGroundMaterial', this.scene);
-    material.diffuseTexture = texture;
-    material.disableLighting = true;
-    material.emissiveColor = Color3.White();
-    material.specularColor = Color3.Black();
-    ground.material = material;
-    ground.isPickable = false;
+    this.map = await IslandMap.build(this.scene, island.data, !LOW_GRAPHICS);
+    island.addSolids(this.map.solids);
   }
 
   /** Planche animée, image peinte, ou à défaut le dessin provisoire désigné par `placeholder`. */
@@ -323,7 +289,7 @@ export class IslandRenderer {
     }
     if (def.file) {
       try {
-        const texture = await loadTexture(this.scene, `${base}${def.file}`);
+        const texture = await loadFittedTexture(this.scene, `${base}${def.file}`, (_w, h) => h / def.height);
         const { width, height } = texture.getSize();
         return { texture, aspect: width / height, height: def.height, body: def.height, below: 0, facesRight: def.facesRight, motion: def.motion };
       } catch {

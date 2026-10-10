@@ -1,6 +1,6 @@
 /**
- * Graphismes allégés : l'ancienne carte peinte en une image, sans les décors ajoutés au rendu récent.
- * Le choix est gardé dans ce navigateur et s'applique au prochain chargement. `?3d` garde priorité pour comparer.
+ * Graphismes allégés : la carte de l'île sans eau animée, ombres ni décors, et les arènes sans leurs décors.
+ * Le choix est gardé dans ce navigateur et s'applique au prochain chargement. `?3d` (arènes en 3D) garde priorité pour comparer.
  */
 const LOW_GRAPHICS_KEY = 'rivages-graphismes';
 

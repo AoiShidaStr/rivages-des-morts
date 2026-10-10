@@ -25,6 +25,7 @@ import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import { AIM_HEIGHT, type Renderer } from './render/renderer';
+import { AdaptiveResolution } from './render/resolution';
 import { openCharacters } from './ui/characters';
 import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
@@ -138,6 +139,9 @@ export class App {
   private busy = false;
   private accumulator = 0;
   private last = performance.now();
+  private readonly resolution: AdaptiveResolution;
+  /** Descente en préparation : les planches de ses yokai se chargent, le combat attend (prepareDungeon). */
+  private preparing: Promise<void> | null = null;
   private titleAngle = 0;
   private run: Loot = emptyLoot();
   /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
@@ -176,6 +180,7 @@ export class App {
     this.creation = new CreationScreen(d.uiRoot);
     this.dialogue = new DialogueBox(d.uiRoot);
     this.panels = new PanelHost(d.uiRoot);
+    this.resolution = new AdaptiveResolution(d.engine);
     this.ui = {
       progress: d.progress,
       basePlayer: d.config.player,
@@ -227,6 +232,10 @@ export class App {
       get mode() {
         return app.mode;
       },
+      /** Vrai tant que les planches des yokai de la descente se chargent. */
+      get preparing() {
+        return app.preparing !== null;
+      },
       get renderer() {
         return app.d.dungeonRenderer;
       },
@@ -245,9 +254,11 @@ export class App {
 
   private frame(): void {
     const now = performance.now();
-    const dt = Math.min(0.1, (now - this.last) / 1000);
+    const elapsed = now - this.last;
+    const dt = Math.min(0.1, elapsed / 1000);
     this.last = now;
     this.step(dt);
+    if (!document.hidden) this.resolution.sample(elapsed, performance.now() - now);
   }
 
   private step(dt: number): void {
@@ -262,6 +273,10 @@ export class App {
         this.updateIsland(dt);
         break;
       case 'dungeon': {
+        if (this.preparing) {
+          this.d.input.flush();
+          break;
+        }
         this.updateDungeon(dt);
         const view = this.world ?? this.mirror;
         this.music.play(view?.enemies.some((e) => e.boss) ? 'boss' : 'combat');
@@ -550,8 +565,9 @@ export class App {
       this.bots = [];
       this.endless = null;
       this.exitAt = null;
-      this.prepareDungeon(terrain, 1, []);
+      const ready = this.prepareDungeon(terrain, 1, []);
       this.trainingStats = { start: 0, total: 0, hits: [] };
+      return ready;
     });
     this.busy = false;
   }
@@ -647,8 +663,9 @@ export class App {
       this.world = world;
       this.mirror = null;
       this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
-      this.prepareDungeon(dungeon, levelAt(data, first), allies, keep);
+      const ready = this.prepareDungeon(dungeon, levelAt(data, first), allies, keep);
       this.endless = { bloc, cleared, awaiting: false };
+      return ready;
     });
     this.busy = false;
   }
@@ -674,10 +691,10 @@ export class App {
       this.world = world;
       this.mirror = null;
       this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
-      this.prepareDungeon(dungeon, this.dungeonLevel, allies);
+      return this.prepareDungeon(dungeon, this.dungeonLevel, allies);
     };
     if (withTransition) await this.screens.transition(dungeon.name, `${dungeon.region} · niveau ${this.dungeonLevel}`, begin);
-    else begin();
+    else await begin();
   }
 
   private updateDungeon(dt: number): void {
@@ -958,14 +975,19 @@ export class App {
         this.inbox = [];
       }
       this.bots = [];
-      this.prepareDungeon(dungeon, level, others, keep);
+      const ready = this.prepareDungeon(dungeon, level, others, keep);
       this.endless = endless ? { bloc, cleared, awaiting: false } : null;
+      return ready;
     });
     this.busy = false;
   }
 
-  /** Remet l'affichage à neuf pour une descente : décor, héros, alliés, HUD. */
-  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[], keepLoot = false): void {
+  /**
+   * Remet l'affichage à neuf pour une descente : décor, héros, alliés, HUD, et charge les planches de ses yokai
+   * (seulement celles-là : les deux donjons ensemble pèseraient des centaines de Mo en mémoire graphique). Le combat
+   * attend qu'elles soient prêtes ; la promesse est tenue alors, pendant le fondu au noir.
+   */
+  private prepareDungeon(dungeon: DungeonDef, level: number, allies: { sprite: string; name: string }[], keepLoot = false): Promise<void> {
     const { dungeonRenderer, hud, islandRenderer } = this.d;
     this.screens.hideResult();
     this.panels.close();
@@ -989,6 +1011,23 @@ export class App {
     this.hitstop = 0;
     islandRenderer.hideMarkers();
     this.setMode('dungeon');
+    // Un invité ne connaît pas les vagues de l'hôte : celles du donjon, et le reste à la demande (Renderer.syncEntity).
+    const waves = this.world?.cfg.waves ?? dungeon.arena.waves;
+    const view = this.world ?? this.mirror;
+    const kits = view ? [view.player, ...view.players.filter((hero) => hero !== view.player)].map((hero) => hero.cfg.kit) : [];
+    const preparing = dungeonRenderer
+      .prepareDescent(
+        waves.flatMap((wave) => wave.spawns.map((spawn) => spawn.kind)),
+        kits,
+      )
+      .catch((error: unknown) => console.warn('Planches des yokai :', error))
+      .finally(() => {
+        if (this.preparing !== preparing) return;
+        this.preparing = null;
+        this.accumulator = 0;
+      });
+    this.preparing = preparing;
+    return preparing;
   }
 
   private readCombatInput(world: WorldView): InputFrame {

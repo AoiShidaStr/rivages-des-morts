@@ -1,6 +1,7 @@
 import { Matrix, Mesh, MeshBuilder, type Scene, type ShaderMaterial, type Texture } from '@babylonjs/core';
 import { dot, type Vec2 } from '../game/math';
-import { loadTexture, PITCH, spriteMaterial, YAW } from './renderer';
+import { PITCH, spriteMaterial, YAW } from './renderer';
+import { loadFittedTexture } from './textureBudget';
 
 /** Un décor peint posé par le code (carte peinte de l'île, arènes). */
 export interface DecorSpot {
@@ -34,11 +35,13 @@ export class DecorSprites {
   ) {}
 
   static async build(scene: Scene, spots: readonly DecorSpot[], forward: Vec2, low: ReadonlySet<string>): Promise<DecorSprites> {
-    const files = [...new Set(spots.map((s) => s.file))];
+    // Chaque image à la taille de son plus grand exemplaire à l'écran (textureBudget.ts).
+    const tallest = new Map<string, number>();
+    for (const s of spots) tallest.set(s.file, Math.max(s.height, tallest.get(s.file) ?? 0));
     const textures = new Map<string, Texture>();
     await Promise.all(
-      files.map((file) =>
-        loadTexture(scene, `${import.meta.env.BASE_URL}sprites/${file}`).then(
+      [...tallest].map(([file, height]) =>
+        loadFittedTexture(scene, `${import.meta.env.BASE_URL}sprites/${file}`, (_w, h) => h / height).then(
           (texture) => void textures.set(file, texture),
           () => console.warn(`Décor introuvable : ${file}`),
         ),

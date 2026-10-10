@@ -6,7 +6,8 @@ Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game vi
 | --- | --- | --- | --- |
 | `npm run sprites` | une image fixe (PNJ, décor) | `public/sprites/<nom>.png`, détourée | `tools/sprites.json` |
 | `npm run planches` | une planche d'animation (plusieurs images en grille) | `public/sprites/anim/<nom>.webp` + `.json` | `tools/planches.json`, et `tools/planches-heros.mjs` pour les héros |
-| `npm run sols` | `sol_ile.jpg`, `sol_rizieres.jpg` (vus de dessus) | `public/sprites/sols/` | `tools/sols.mjs` |
+| `npm run sols` | `ile_fond.png` (carte de l'île), `sol_rizieres.jpg` | `public/sprites/sols/` | `tools/sols.mjs` |
+| `npm run carte` | `ile_fond.png` et `src/data/island.json` | `ile_fond_carte.png` (contrôle) | `tools/carte.mjs` |
 | `npm run decors` | une planche de décors ou de textures de sol (grille) | `public/sprites/decor/…` détourés (`.webp` pour les planches de décors), `public/sprites/sols/textures/…` raccordées | `tools/decors.json`, prompts dans [Prompts visuels](Prompts%20visuels.md) |
 | `npm run icones` | `objets_planche.jpg` (tous les objets en grille) | `public/sprites/icones/<id>.png`, 128 × 128 | `tools/icones.json` |
 | `npm run poses -- <planche>` | une planche de poses clés (Nano Banana 2) | `poses/<planche>/pose-<n>.png`, une pose par image carrée | voir [Prompts des héros](Prompts%20h%C3%A9ros.md) |
@@ -51,11 +52,28 @@ L'outil retire le fond, coupe la grille là où il y a le moins de sujet (les im
 
 Dans `src/data/sprites.json` (donjon) ou `src/data/islandSprites.json` (île), la planche se branche par `"sheet": { "file": "anim/heros.json" }` ; `height` reste la taille du personnage dans le monde.
 
-## Sol de l'île
+## Carte de l'île
 
-> **Scènes en 3D (expérimental, octobre 2026) :** avec `?3d` dans l'adresse (plus d'option dans le jeu), l'île et les arènes sont construites en 3D (relief, eau, végétation) : `src/render/world3d.ts` (socle commun), `islandScene3d.ts`, `rizieres3d.ts`, `arena3d.ts` (Palais). Modèles KayKit Forest et Dungeon (CC0) dans `public/models/`, palette sourde du pack Forest refaite par `node tools/palette-foret.mjs`. Par défaut, le jeu est en carte peinte : le sol est assemblé au chargement à partir des 9 textures de `sols/textures` en suivant le tracé de la carte, l'eau est animée, et les décors des planches (`npm run decors`) sont posés par le code (`src/render/islandPainted.ts`, `arenaPainted.ts`). Les sols en une image ci-dessous ne servent plus que si les textures ne se chargent pas.
+L'île est une seule grande image peinte, vue par la caméra du jeu (isométrie, 35° de plongée) : `~/Pictures/game visual/ile_fond.png` (générée par Nano Banana à partir d'un schéma, agrandie ×2 par Real-ESRGAN). `npm run sols` en fait `public/sprites/sols/ile-fond.webp` (4096 de côté, bords fondus dans la couleur de la mer) et sa copie en 512, `ile-fond-512.webp`, où le jeu lit l'eau et l'herbe (`map.sample`) sans décoder la grande au démarrage. Le jeu la pose au sol, alignée sur l'écran et étirée en profondeur pour qu'on la retrouve telle quelle (`src/render/islandMap.ts`), avec la mer unie au-delà, les reflets animés sur l'eau peinte, les ombres et les décors des planches (`npm run decors`) posés par le code, par biome.
 
-Nano Banana ne garde pas l'échelle du tracé : `npm run sols` retrouve l'échelle et le décalage qui posent les terres peintes sur les cercles praticables de `src/data/island.json` (ce sont eux qui font les collisions), puis fond les bords de l'image dans la brume. La commande affiche le recouvrement obtenu ; en dessous de 80 %, le tracé peint s'écarte trop du jeu.
+Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coordonnées d'écran u, v ; `map.width` = largeur de l'image dans le monde) :
+
+| Champ | Rôle |
+| --- | --- |
+| `walk` | polygones des zones où l'on marche (terrasses, chemins, escaliers, pont, ponton) : ce sont les collisions |
+| `blocks` | obstacles peints à l'intérieur (un muret) |
+| `river` | lit de la rivière : on y marche en contrebas ; on y descend et on en remonte seulement là où il chevauche une zone de marche (escalier, berge), jamais depuis un pont |
+| `bridges` | tabliers des ponts tels qu'ils sont peints : ils passent devant le héros qui marche dessous (garder aussi une zone de marche dessus) |
+| `scenery` | eau des rizières (riz), bassin (nénuphars), bosquets et plages où l'on ne va pas (décors) |
+| `areas` | zones nommées ; chacune donne sa végétation aux décors autour |
+| `props`, `interactables` | bâtiments, PNJ, objets |
+| `decor` | décors posés à la main (facultatif) : sans lui, le code les pose lui-même par biome (`src/render/islandDecor.ts`) |
+
+**Éditeur de carte** : `npm run editeur` ouvre `editeur.html` (seulement en développement). On y déplace à la souris les zones de marche et leurs sommets, les obstacles, les zones nommées, les bâtiments, les PNJ, le départ et chaque décor, dessinés à leur taille dans le jeu ; une palette pose de nouveaux décors et bâtiments. Ctrl+S enregistre dans `island.json` (même format compact) et le jeu ouvert se recharge seul. Modifier un décor fige tous les décors automatiques dans `decor` ; « Revenir au placement du jeu » les retire. Le bouton « ? Aide » liste les commandes.
+
+`npm run carte` redessine l'image avec tout cela par-dessus (`ile_fond_carte.png`, grille tous les 64 pixels d'une image de 1024) pour retoucher à l'œil. Pour passer d'un pixel (px, py) de cette grille aux coordonnées du jeu : u = (px − 512) / 1024 × map.width, v = (512 − py) / 1024 × map.width / sin 35,26°.
+
+> **Scènes en 3D (expérimental, octobre 2026) :** avec `?3d` dans l'adresse, les arènes sont construites en 3D (`src/render/world3d.ts`, `rizieres3d.ts`, `arena3d.ts`), modèles KayKit (CC0) dans `public/models/`. L'île n'a plus de version 3D : sa carte peinte l'a remplacée.
 
 ## Icônes des objets
 
