@@ -62,8 +62,9 @@ Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coord
 | --- | --- |
 | `walk` | polygones des zones où l'on marche (terrasses, chemins, escaliers, pont, ponton) : ce sont les collisions |
 | `blocks` | obstacles à l'intérieur des zones de marche ou du lit de la rivière (un muret, un rocher) |
-| `river` | lit de la rivière : on y marche en contrebas ; on y descend et on en remonte seulement là où il chevauche une zone de marche (le bas des marches du quai), jamais depuis un pont ; partout ailleurs il reste à l'écart des zones de marche |
+| `river` | lit de la rivière : on y marche en contrebas ; on y descend et on en remonte seulement là où il chevauche une zone de marche (le bas des marches du quai, la rive du bassin de la cascade), jamais depuis un pont ; partout ailleurs il reste à l'écart des zones de marche |
 | `bridges` | tabliers des ponts tels qu'ils sont peints : ils passent devant le héros qui marche dessous (garder aussi une zone de marche dessus) |
+| `falls` | chutes d'eau telles qu'elles sont peintes : un peu transparentes, elles passent devant le héros qui marche derrière (le Yomi sans fond est derrière celle de la cascade) |
 | `scenery` | eau des rizières (riz), bassin (nénuphars), bosquets et plages où l'on ne va pas (décors) |
 | `areas` | zones nommées ; chacune donne sa végétation aux décors autour |
 | `props`, `interactables` | bâtiments, PNJ, objets |

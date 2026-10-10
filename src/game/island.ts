@@ -82,15 +82,17 @@ export interface IslandData {
   dungeonExit: ScreenPoint;
   /** Zones où l'on marche (terrasses, chemins, escaliers, pont, ponton), tracées sur la carte. */
   walk: Polygon[];
-  /** Obstacles dans les zones de marche (un muret peint). */
+  /** Obstacles dans les zones de marche ou le lit de la rivière (un muret, un rocher). */
   blocks: Polygon[];
   /**
    * Lit de la rivière : on y marche en contrebas, et l'on passe sous les ponts. On y descend et l'on en remonte
-   * seulement là où il chevauche une zone de marche (un escalier, une berge en pente), jamais depuis un pont.
+   * seulement là où il chevauche une zone de marche (les marches du quai, la rive du bassin), jamais depuis un pont.
    */
   river?: Polygon[];
   /** Tabliers des ponts, tracés sur la carte : dessinés par-dessus le héros quand il passe dessous. */
   bridges?: Polygon[];
+  /** Chutes d'eau, tracées sur la carte : dessinées par-dessus le héros (un peu transparentes) quand il passe derrière. */
+  falls?: Polygon[];
   scenery: IslandScenery;
   areas: Area[];
   props: PropDef[];
@@ -242,6 +244,16 @@ export class Island {
       const us = p.map(([u]) => u);
       const vs = p.map(([, v]) => v);
       return s.u > Math.min(...us) - 1 && s.u < Math.max(...us) + 1 && s.v > Math.min(...vs) - 0.2 && s.v < Math.max(...vs) + 3;
+    });
+  }
+
+  /** Le héros derrière une chute d'eau (son pied plus haut à l'écran que le bas de la chute) : elle passe devant lui. */
+  behindFall(): boolean {
+    const s = toScreen(this.player.pos);
+    return !!this.data.falls?.some((p) => {
+      const us = p.map(([u]) => u);
+      const vs = p.map(([, v]) => v);
+      return s.u > Math.min(...us) - 0.6 && s.u < Math.max(...us) + 0.6 && s.v > Math.min(...vs) - 0.2 && s.v < Math.max(...vs);
     });
   }
 

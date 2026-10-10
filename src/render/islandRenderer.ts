@@ -202,6 +202,7 @@ export class IslandRenderer {
     this.time += dt;
     this.map?.update(dt);
     this.map?.showBridges(island.underBridge());
+    this.map?.showFalls(island.behindFall());
     const visible = island.interactables();
     const seen = new Set<string>();
     for (const it of visible) {

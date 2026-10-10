@@ -5,8 +5,9 @@
 //     les rizières ; les falaises et les murets les bordent donc exactement, au pixel près ;
 //   - ce que les couleurs ne voient pas est tracé à la main ci-dessous : escaliers, quai, ponton, pont, et les coupures
 //     là où une herbe en touche une autre plus bas (COUPURES) ;
-//   - le lit de la rivière est l'eau et le sable de son couloir (de la sortie du bassin à la plage du sud, sous le pont),
-//     tenu à quelques pixels des zones d'en haut : on n'y descend et n'en remonte que par les marches du quai.
+//   - le lit de la rivière est l'eau et le sable de son couloir (du bassin de la cascade, jusque sous la chute, à la plage
+//     du sud, sous le pont), tenu à quelques pixels des zones d'en haut : on n'y descend et n'en remonte que par les
+//     marches du quai et la rive du bassin.
 //
 // Écrit walk, river et blocks dans src/data/island.json (le reste du fichier ne change pas). Attention : les
 // retouches faites à la main dans l'éditeur sur ces trois calques sont remplacées.
@@ -59,6 +60,7 @@ const STAIRS = [
   [[858, 258], [894, 274], [874, 330], [824, 312]], // chemin → corniche de la cascade
   [[205, 700], [255, 722], [118, 858], [66, 826]], // ponton
   [[62, 318], [88, 322], [112, 345], [122, 368], [100, 372], [70, 365]], // herbe sombre derrière les jizōs, au pied du volcan
+  [[750, 326], [792, 309], [802, 320], [760, 340]], // rive du bassin de la cascade, du chemin jusque dans l'eau
 ];
 /** Le tablier du pont, prolongé sur les berges, sans les garde-corps. */
 const BRIDGE_WALK = [[495.5, 480], [616.5, 524], [583.5, 563], [461.5, 512]];
@@ -68,10 +70,18 @@ const RIVER_CORRIDOR = [
   [600, 840], [600, 880], [470, 872], [380, 855], [330, 815], [300, 785], [315, 760], [338, 740], [345, 690], [360, 640],
   [395, 600], [430, 560], [455, 520], [470, 475], [520, 440], [575, 400], [610, 350],
 ];
+/** Le bassin de la cascade, jusque sous la chute (on passe derrière l'eau qui tombe : src/data/island.json `falls`). */
+const POOL = [
+  [650, 335], [628, 300], [634, 262], [662, 245], [700, 238], [724, 230], [745, 226], [778, 228], [790, 250], [800, 290], [804, 312],
+  [790, 330], [760, 345], [712, 360],
+];
 /** Sous le tablier, l'eau ne se voit pas : le lit y passe d'une berge à l'autre. */
 const UNDER_BRIDGE = [[515, 465], [605, 475], [560, 565], [462, 550]];
-/** Le seul passage entre les deux niveaux : le bas des marches du quai, dans l'eau. */
-const CROSSING = [[309, 751], [337, 716], [356, 738], [326, 778]];
+/** Les seuls passages entre les deux niveaux : le bas des marches du quai et la rive du bassin (aussi dans STAIRS). */
+const CROSSINGS = [
+  [[309, 751], [337, 716], [356, 738], [326, 778]],
+  [[742, 318], [785, 299], [802, 320], [760, 340]], // la rive, prolongée dans l'eau
+];
 const RIVER_SEEDS = [[470, 790], [560, 520], [620, 420]];
 /** Écart (pixels) entre le lit et les zones d'en haut, hors du passage : on ne remonte pas par une berge. */
 const RIVER_GAP = 3;
@@ -218,11 +228,12 @@ const walk = fillHoles(or(ground, bridge), 700);
 ground = minus(walk, minus(bridge, ground)); // tout sauf le tablier
 
 // --- En bas : le lit de la rivière ---
-const corridor = fillPx(RIVER_CORRIDOR);
+const corridor = or(fillPx(RIVER_CORRIDOR), fillPx(POOL));
 let river = corridor.map((v, i) => (v && kind[family[i]] !== 'relief' ? 1 : 0));
 river = or(smooth(river, 2), fillPx(UNDER_BRIDGE));
 river = minus(river, dilate(ground, RIVER_GAP));
-river = and(or(river, fillPx(CROSSING)), corridor);
+for (const crossing of CROSSINGS) river = or(river, fillPx(crossing));
+river = and(river, or(corridor, fillPx(CROSSINGS[1])));
 river = fillHoles(keepSeeds(river, RIVER_SEEDS), 150);
 
 // --- Contours (le long des bords de pixels), simplifiés ---

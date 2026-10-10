@@ -32,6 +32,8 @@ export class AdaptiveResolution {
   private calm = 0;
   /** Définition d'avant le dernier essai de remontée : on y revient s'il ralentit. */
   private trial: number | null = null;
+  /** Changement de définition en attente de la prochaine image. */
+  private pending = false;
 
   constructor(private readonly engine: Engine) {
     this.max = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
@@ -94,9 +96,18 @@ export class AdaptiveResolution {
     }
   }
 
+  /**
+   * Change la définition au début de l'image suivante, avant qu'elle soit dessinée : redimensionner le canevas
+   * l'efface, et juste après le rendu l'écran montrait une image vide (un éclair du fond gris de la page).
+   */
   private apply(): void {
-    // Babylon compte à l'envers : un niveau de 2 dessine un pixel pour deux pixels CSS.
-    this.engine.setHardwareScalingLevel(1 / this.ratio);
+    if (this.pending) return;
+    this.pending = true;
+    this.engine.onBeginFrameObservable.addOnce(() => {
+      this.pending = false;
+      // Babylon compte à l'envers : un niveau de 2 dessine un pixel pour deux pixels CSS.
+      this.engine.setHardwareScalingLevel(1 / this.ratio);
+    });
     try {
       localStorage.setItem(STORAGE_KEY, this.ratio.toFixed(3));
     } catch {
