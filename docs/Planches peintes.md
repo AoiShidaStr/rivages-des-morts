@@ -61,8 +61,8 @@ Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coord
 | Champ | Rôle |
 | --- | --- |
 | `walk` | polygones des zones où l'on marche (terrasses, chemins, escaliers, pont, ponton) : ce sont les collisions |
-| `blocks` | obstacles peints à l'intérieur (un muret) |
-| `river` | lit de la rivière : on y marche en contrebas ; on y descend et on en remonte seulement là où il chevauche une zone de marche (escalier, berge), jamais depuis un pont |
+| `blocks` | obstacles à l'intérieur des zones de marche ou du lit de la rivière (un muret, un rocher) |
+| `river` | lit de la rivière : on y marche en contrebas ; on y descend et on en remonte seulement là où il chevauche une zone de marche (le bas des marches du quai), jamais depuis un pont ; partout ailleurs il reste à l'écart des zones de marche |
 | `bridges` | tabliers des ponts tels qu'ils sont peints : ils passent devant le héros qui marche dessous (garder aussi une zone de marche dessus) |
 | `scenery` | eau des rizières (riz), bassin (nénuphars), bosquets et plages où l'on ne va pas (décors) |
 | `areas` | zones nommées ; chacune donne sa végétation aux décors autour |
@@ -70,6 +70,8 @@ Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coord
 | `decor` | décors posés à la main (facultatif) : sans lui, le code les pose lui-même par biome (`src/render/islandDecor.ts`) |
 
 **Éditeur de carte** : `npm run editeur` ouvre `editeur.html` (seulement en développement). On y déplace à la souris les zones de marche et leurs sommets, les obstacles, les zones nommées, les bâtiments, les PNJ, le départ et chaque décor, dessinés à leur taille dans le jeu ; une palette pose de nouveaux décors et bâtiments. Ctrl+S enregistre dans `island.json` (même format compact) et le jeu ouvert se recharge seul. Modifier un décor fige tous les décors automatiques dans `decor` ; « Revenir au placement du jeu » les retire. Le bouton « ? Aide » liste les commandes.
+
+**Zones tracées d'après la peinture** : `npm run zones` (`tools/zones-de-marche.mjs`) refait `walk`, `river` et `blocks` à partir de l'image : chaque pixel est classé par sa couleur et son grain (herbe, sable, dallage / falaise, rocher, muret / eau), les zones de marche suivent donc les bords des falaises et des murets au pixel près. Les escaliers, le quai, le ponton, le pont, le couloir de la rivière et les marches que les couleurs ne voient pas (herbe contre herbe plus basse) sont tracés à la main en tête du script, en pixels de la grille 1024. Il remplace les retouches faites dans l'éditeur sur ces trois calques.
 
 `npm run carte` redessine l'image avec tout cela par-dessus (`ile_fond_carte.png`, grille tous les 64 pixels d'une image de 1024) pour retoucher à l'œil. Pour passer d'un pixel (px, py) de cette grille aux coordonnées du jeu : u = (px − 512) / 1024 × map.width, v = (512 − py) / 1024 × map.width / sin 35,26°.
 

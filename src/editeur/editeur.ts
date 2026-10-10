@@ -999,9 +999,9 @@ function showSelection(): void {
     title(POLY_NAMES[s.name] ?? s.name);
     note(`${s.poly.length} sommets. Glisse un sommet carré pour le déplacer, double-clique sur un bord pour en ajouter un, Suppr pour enlever le sommet choisi. Glisse l'intérieur pour déplacer toute la zone.`);
     if (s.layer === 'walk') note('Le héros marche dedans. Prévois au moins 0,7 de large dans les passages (son corps fait 0,35 de rayon).');
-    if (s.layer === 'river') note('En contrebas : on y descend et on en remonte seulement là où il chevauche une zone de marche (escalier, berge), jamais depuis un pont.');
+    if (s.layer === 'river') note("En contrebas : on y descend et on en remonte seulement là où il chevauche une zone de marche (le bas de l'escalier du quai), jamais depuis un pont. Garde-le à l'écart des zones de marche partout ailleurs, sinon on remonte par la berge.");
     if (s.layer === 'bridges') note("Le tablier, tel qu'il est peint : il passe devant le héros qui marche dessous. Garde aussi une zone de marche dessus pour le traverser.");
-    if (s.layer === 'blocks') note('Le héros ne passe pas dedans, même au milieu d\'une zone de marche.');
+    if (s.layer === 'blocks') note('Le héros ne passe pas dedans, même au milieu d\'une zone de marche ou du lit de la rivière.');
     if (s.list) {
       const del = document.createElement('button');
       del.className = 'danger';

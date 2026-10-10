@@ -135,8 +135,9 @@ export function onWalk(data: IslandData, s: ScreenPoint): boolean {
   return data.walk.some((p) => insidePolygon(s, p)) && !data.blocks.some((p) => insidePolygon(s, p));
 }
 
+/** Dans le lit de la rivière, hors des obstacles (rochers du lit et de la plage). */
 function inRiver(data: IslandData, s: ScreenPoint): boolean {
-  return !!data.river?.some((p) => insidePolygon(s, p));
+  return !!data.river?.some((p) => insidePolygon(s, p)) && !data.blocks.some((p) => insidePolygon(s, p));
 }
 
 function onBridge(data: IslandData, s: ScreenPoint): boolean {
