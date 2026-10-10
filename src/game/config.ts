@@ -95,6 +95,47 @@ export interface PlayerConfig {
   sorcier: SorcierConfig;
   /** Effets venus des talents, de la race, des reliques et des paliers de tags. */
   perks?: Perks;
+  /**
+   * La compétence de la voie (sous-classe), lancée avec F : posée par `buildLoadout` quand le héros a choisi sa voie
+   * au niveau 25. Absente, la touche F ne fait rien.
+   */
+  sousClasse?: SubclassActiveConfig;
+}
+
+/**
+ * La compétence d'une voie (sous-classe), telle que le moteur la joue. Les valeurs viennent de
+ * src/data/sous-classes.json ; `buildLoadout` reporte ses dégâts à l'échelle des coups du héros.
+ */
+export interface SubclassActiveConfig {
+  name: string;
+  description: string;
+  /** Recharge, en secondes. */
+  cooldown: number;
+  /** Ce que le moteur en fait : une onde autour du héros, un sceau au sol, un sanctuaire, un filet, une salve, un cri. */
+  kind: 'onde' | 'sceau' | 'sanctuaire' | 'filet' | 'salve' | 'cri';
+  /** Rayon de l'effet (m). */
+  radius: number;
+  /** Portée de visée au sol (m) : sceau, sanctuaire et filet. */
+  range?: number;
+  /** Dégâts, déjà mis à l'échelle des coups du héros. */
+  damage?: number;
+  knockback?: number;
+  stun?: number;
+  /** Délai avant l'explosion d'un sceau (s). */
+  delay?: number;
+  /** Sanctuaire : soins par seconde, en part des PV max. */
+  heal?: number;
+  /** Sceau : charges de poison posées sur les yokai qu'il prend (Nuée virulente de la Lame : 2). */
+  poison?: number;
+  /** Brûlure, en dégâts par seconde. */
+  burn?: number;
+  duration?: number;
+  /** Salve : nombre de traits. */
+  count?: number;
+  /** Cri : dégâts et vitesse de marche en plus, en part ; armure, en part des dégâts retirés. */
+  damageBonus?: number;
+  speedBonus?: number;
+  armor?: number;
 }
 
 /**
@@ -872,6 +913,11 @@ export interface WaveConfig {
     elite?: boolean;
     /** Places fixes, dans l'ordre (terrain d'entraînement) ; sans elles, l'apparition se fait au hasard loin du héros. */
     positions?: { x: number; z: number }[];
+    /**
+     * Va-et-vient d'un mannequin, en mètres (terrain d'entraînement) : il marche de `patrol / 2` de part et d'autre
+     * de sa place, dans l'axe des x. Absent ou nul, le poteau ne bouge pas (cible fixe, pour une mesure au repos).
+     */
+    patrol?: number;
   }[];
   /** Souches placées dans l'arène pour cette vague (arène de la Jorōgumo). */
   stumps?: { x: number; z: number }[];

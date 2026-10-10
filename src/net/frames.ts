@@ -5,7 +5,9 @@ import type { Vec2 } from '../game/math';
 import type { InputFrame } from '../game/types';
 import type { InputPacket } from './protocol';
 
-const PRESSES = ['attackPressed', 'signaturePressed', 'dodgePressed', 'skillAPressed', 'skillEPressed', 'skillRPressed'] as const;
+// L'ordre compte : l'invité envoie le nombre d'appuis de chaque touche. Une touche ajoutée à la fin reste compatible
+// avec un paquet plus court (`presses[i] ?? 0`), donc la voie (skillF) s'ajoute ici sans changer le protocole.
+const PRESSES = ['attackPressed', 'signaturePressed', 'dodgePressed', 'skillAPressed', 'skillEPressed', 'skillRPressed', 'skillFPressed'] as const;
 
 /** Sans nouvelles d'un invité depuis ce temps (ms), son héros s'arrête : il a peut-être changé d'onglet. */
 const SILENCE = 500;
@@ -27,6 +29,7 @@ export function idleFrame(pos: Vec2): InputFrame {
     skillAPressed: false,
     skillEPressed: false,
     skillRPressed: false,
+    skillFPressed: false,
   };
 }
 

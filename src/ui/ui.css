@@ -1161,6 +1161,75 @@ body:not([data-mode='dungeon']) #hud {
   color: #4a4f52;
 }
 
+/* Voies (sous-classes) : deux cartes, et celle qui est choisie se voit tout de suite. */
+.tree.voies {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.branch.chosen {
+  border-color: var(--vermilion);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 1px var(--vermilion);
+}
+
+.branch .btn {
+  justify-self: start;
+}
+
+/* Gravures (rivens) : le rang par-dessus tout, les lignes, et la contrepartie qui se paie. */
+.gravure {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.gravure-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gravure-rank {
+  font-weight: 700;
+  color: var(--vermilion);
+}
+
+.gravure-lines {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gravure-line {
+  position: relative;
+  padding-left: 14px;
+}
+
+.gravure-line::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  color: #9aa0a4;
+}
+
+.gravure-line.contrepartie {
+  color: var(--vermilion-dark);
+}
+
+.gravure-line.contrepartie::before {
+  content: '!';
+  font-weight: 700;
+  color: var(--vermilion-dark);
+}
+
+.gravure-odds {
+  color: #6b7075;
+  font-size: 0.85em;
+}
+
 .node {
   position: relative;
   display: grid;

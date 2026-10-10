@@ -4,14 +4,15 @@ import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
+import { gravureRank, rollSeal, type Gravure } from './game/gravure';
 import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, rollEndlessItem, submitGlobalRecord } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
-import { buildLoadout, classWeapon, heroClass, heroLabel, levelProgress, type Loadout } from './game/loadout';
+import { buildLoadout, classWeapon, equipBlock, heroClass, heroLabel, heroSubclass, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, salvage, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
-import { MAX_CHARACTERS, bindSelf, type Action, type Progress } from './game/progress';
+import { MAX_CHARACTERS, STARTING_WEAPON, bindSelf, type Action, type Hero, type Progress, type ProgressState } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
 import type { WorldView } from './game/view';
 import { World } from './game/world';
@@ -39,7 +40,10 @@ import {
   openQuests,
   openShop,
   openSkills,
+  openSubclass,
+  openTrainingTrial,
   trackedQuest,
+  type TrialChoice,
   type UiContext,
 } from './ui/panels';
 import { openCoopMenu, openLobby } from './ui/coop';
@@ -67,9 +71,11 @@ interface Loot {
   /** Objets déjà possédés tombés à nouveau : fondus en oboles et matériaux (déjà comptés ci-dessus). */
   duplicates: string[];
   waves: number;
+  /** Sceaux du Yomi gagnés dans la descente : la première gravure d'une arme, gardée en jeu jusqu'à l'encaissement. */
+  seals: { item: string; gravure: Gravure }[];
 }
 
-const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], duplicates: [], waves: 0 });
+const emptyLoot = (): Loot => ({ oboles: 0, xp: 0, materials: {}, items: [], duplicates: [], waves: 0, seals: [] });
 export interface AppDeps {
   engine: Engine;
   input: Input;
@@ -156,6 +162,11 @@ export class App {
   private outcome: Outcome | null = null;
   /** Terrain d'entraînement : dégâts portés au mannequin depuis l'entrée, et leurs instants (DPS glissant). */
   private trainingStats: { start: number; total: number; hits: { t: number; amount: number }[] } | null = null;
+  /**
+   * La classe et la voie que le billot prête pour la séance (`null` : le vrai héros). Rien n'en touche la sauvegarde :
+   * c'est un essai, et il est oublié en sortant de l'arène ou en descendant dans un vrai donjon.
+   */
+  private trainingHero: Hero | null = null;
   /** Un dialogue a demandé le terrain d'entraînement : on y descend une fois le dialogue refermé. */
   private pendingTraining = false;
   /** Micro-pause d'impact (hitstop) sur les coups critiques et parades majeures pour le game feel. */
@@ -213,6 +224,13 @@ export class App {
       },
       get progress() {
         return app.d.progress;
+      },
+      /** Les fenêtres (forge, inventaire…) et leur contexte : de quoi ouvrir un écran depuis la console. */
+      get panels() {
+        return app.panels;
+      },
+      get ui() {
+        return app.ui;
       },
       get mode() {
         return app.mode;
@@ -504,6 +522,9 @@ export class App {
         case 'changeHero':
           await this.changeHero();
           break;
+        case 'subclass':
+          openSubclass(this.panels, this.ui);
+          break;
         case 'training':
           // La descente attend la fin du dialogue : voir `interact`.
           this.pendingTraining = true;
@@ -536,7 +557,8 @@ export class App {
     }
     this.busy = true;
     const terrain = content.entrainement;
-    const player = this.loadout().config;
+    // Le billot prête la classe essayée si l'on en a choisi une ; sinon, le héros du joueur.
+    const player = this.trainingLoadout().config;
     await this.screens.transition(terrain.name, terrain.region, () => {
       // `training` : la vague du mannequin ne s'épuise pas, il revient à sa place. Aucune difficulté n'est passée,
       // donc aucune malédiction, aucun renfort de niveau, et rien à gagner.
@@ -556,8 +578,19 @@ export class App {
   /** Sortie du terrain d'entraînement : retour sur l'île, devant la forge de Tetsu. Rien n'est gagné ni perdu. */
   private async leaveTraining(): Promise<void> {
     this.trainingStats = null;
+    // On sort du billot comme on y est entré : avec son propre héros.
+    this.trainingHero = null;
     this.d.hud.setTraining(null);
     await this.returnToIsland();
+  }
+
+  /**
+   * Le prêt du billot : on choisit une classe et une voie, et la séance reprend aussitôt avec elles (le compteur
+   * repart de zéro, comme à chaque entrée). `null` : on reprend son propre héros.
+   */
+  private tryOn(choice: TrialChoice | null): void {
+    this.trainingHero = choice ? { ...this.d.progress.state.hero, class: choice.class, subclass: choice.subclass ?? undefined } : null;
+    void this.descendTraining();
   }
 
   /**
@@ -728,9 +761,45 @@ export class App {
    * charge ainsi pendant qu'on est encore sur l'île.
    */
   private setHero(): void {
-    const sprite = heroSprite(this.d.progress.state.hero);
+    const sprite = heroSprite(this.trainingHero ?? this.d.progress.state.hero);
     this.d.islandRenderer.setHero(sprite);
     this.d.dungeonRenderer.setHero(sprite);
+  }
+
+  /**
+   * L'état du héros prêté par le billot : la classe essayée, sa voie, une arme maniable par elle, et l'arbre canonique
+   * du banc de mesure au niveau 10 et plus (deux branches pleines et un nœud), pour que deux classes se comparent à
+   * armes égales. L'équipement universel du personnage reste porté : c'est le joueur qu'on mesure, avec une autre classe.
+   */
+  private trialState(hero: Hero): ProgressState {
+    const { progress } = this.d;
+    const level = progress.level;
+    const theirs = progress.state.equipped.arme;
+    const def = theirs ? content.items[theirs] : undefined;
+    const usable = Boolean(theirs && def && !equipBlock(def, hero, content.skills));
+    const weapon = usable ? theirs! : (content.skills.classes[hero.class]?.weapon ?? STARTING_WEAPON);
+    const branches = content.skills.classes[hero.class]?.branches ?? [];
+    return {
+      ...progress.state,
+      hero,
+      talents: level >= 10 ? branches.flatMap((b) => b.nodes.map((n) => n.id)).slice(0, 9) : [],
+      items: [...new Set([...progress.state.items, weapon])],
+      equipped: { ...progress.state.equipped, arme: weapon },
+      itemLevels: { ...progress.state.itemLevels, [weapon]: Math.min(level, 50) },
+    };
+  }
+
+  /** Les réglages du héros pour la séance du billot : celui qu'on joue, ou la classe prêtée. */
+  private trainingLoadout(): Loadout {
+    const { config, progress } = this.d;
+    const hero = this.trainingHero;
+    if (!hero) return buildLoadout(config.player, progress.state, content, progress.level);
+    return buildLoadout(config.player, this.trialState(hero), content, progress.level);
+  }
+
+  /** La classe dont le HUD et la pause montrent les compétences : la classe prêtée pendant une séance. */
+  private shownHero(): Hero {
+    return this.trainingHero ?? this.d.progress.state.hero;
   }
 
   // --- Coop en ligne ---------------------------------------------------------------
@@ -933,7 +1002,9 @@ export class App {
     hud.setAllies(allies.map((a) => a.name));
     dungeonRenderer.setStyle(dungeon.style);
     hud.reset(level, dungeon.boss);
-    hud.configure(heroClass(content.skills, this.d.progress.state.hero));
+    hud.configure(heroClass(content.skills, this.shownHero()), heroSubclass(content.subclasses, this.shownHero())?.name);
+    // Un vrai donjon reprend le héros du joueur : le prêt du billot ne survit pas à une descente.
+    if (dungeon.id !== 'entrainement') this.trainingHero = null;
     // Le compteur d'entraînement ne survit pas à une descente : chaque séance repart de zéro.
     this.trainingStats = null;
     hud.setTraining(null);
@@ -979,6 +1050,7 @@ export class App {
       skillAPressed: input.consumeKey('KeyQ'), // touche A en AZERTY
       skillEPressed: input.consumeKey('KeyE'),
       skillRPressed: input.consumeKey('KeyR'),
+      skillFPressed: input.consumeKey('KeyF'),
     };
   }
 
@@ -1076,6 +1148,7 @@ export class App {
       xp: Math.round(this.run.xp),
       materials: [
         ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
+        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`)),
         ...this.duplicateLines(),
         ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
       ],
@@ -1089,6 +1162,8 @@ export class App {
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(this.run.materials)) progress.gainMaterial(id, amount);
     for (const item of this.run.items) progress.acquire(item, content.items[item]?.slot);
+    // Le sceau ne se pose qu'avec le reste : tomber avant de remonter le rend au Yomi, comme le butin en jeu.
+    if (victory) for (const seal of this.run.seals) progress.setGravure(seal.item, seal.gravure);
     progress.state.chests += chests;
     return progress.gainXp(xp);
   }
@@ -1178,6 +1253,11 @@ export class App {
       const record = this.recordEndless(last);
       const item = rollEndlessItem(data, last, content.items, progress.state.hero, content.skills, (id) => progress.has(id) || this.run.items.includes(id));
       if (item) this.gainRunItem(item, `Palier ${last}`);
+      const seal = this.drawSeal(last);
+      if (seal) {
+        this.run.seals.push(seal);
+        this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`, 'loot', seal.item);
+      }
       endless.awaiting = true;
       const next = endless.bloc + 1;
       const nextFirst = firstPalier(data, next);
@@ -1237,6 +1317,16 @@ export class App {
       },
       this.afterEndlessOptions(),
     );
+  }
+
+  /**
+   * Le sceau du Yomi (gravures.json) : la première gravure d'une arme ne s'achète pas. En finissant le bloc qui se
+   * termine au palier du sceau, une arme du sac jamais gravée est désignée au hasard et reçoit son premier tirage.
+   * Il rejoint le butin en jeu : tomber plus bas le perd, comme le reste.
+   */
+  private drawSeal(palier: number): { item: string; gravure: Gravure } | null {
+    const { progress } = this.d;
+    return rollSeal(content.gravures, palier, content.items, progress.state.items, (id) => progress.gravureRolls(id));
   }
 
   /** Encaisser : le butin en jeu rejoint la progression, et l'on remonte. */
@@ -1377,6 +1467,17 @@ export class App {
           }
         },
       });
+      // Au billot seulement : on essaie la classe et la voie que l'on veut, le temps d'une séance.
+      if (this.trainingStats) {
+        options.push({
+          label: 'Essayer une classe ou une voie',
+          action: () => {
+            this.screens.hidePause();
+            const hero = this.shownHero();
+            openTrainingTrial(this.panels, this.ui, { class: hero.class, subclass: hero.subclass ?? null }, (choice) => this.tryOn(choice));
+          },
+        });
+      }
     } else if (this.mode === 'island') {
       options.push({
         label: session ? 'Salon coop' : 'Coop en ligne',
@@ -1395,7 +1496,7 @@ export class App {
       },
     });
     // Les compétences de la classe du héros ; E sert aussi à parler sur l'île.
-    const cls = heroClass(content.skills, this.d.progress.state.hero);
+    const cls = heroClass(content.skills, this.shownHero());
     const skills = cls.actives.map((a): [string, string] => [a.key, `${a.name.toLowerCase()}${a.key === 'E' ? ' (au combat)' : ''}`]);
     this.screens.showPause(options, skills, cls.kit === 'rodeur');
   }

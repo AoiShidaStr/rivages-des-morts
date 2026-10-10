@@ -9,6 +9,7 @@ import {
   equipBlock,
   heroClass,
   heroRace,
+  heroSubclass,
   itemLevel,
   levelProgress,
   racePassives,
@@ -17,10 +18,12 @@ import {
   type BonusKind,
   type ItemDef,
   type Loadout,
+  type SubclassDef,
 } from '../game/loadout';
+import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravureRank, gravureSealText, rankOdds, rollGravure, type GravureData } from '../game/gravure';
 import type { RolledOffer } from '../game/loot';
-import type { Progress, Slot } from '../game/progress';
-import { keyName } from '../keys';
+import { SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
+import { keyName, withKeys } from '../keys';
 import { h, icon, obole, type Child } from './dom';
 
 /** Nombre à la française : « 1,35 ». */
@@ -225,7 +228,7 @@ function bySlot(ids: string[]): [Slot, string[]][] {
 
 /** Ce que le joueur a choisi dans les fenêtres, gardé d'une ouverture à l'autre. */
 const memory = {
-  forgeTab: 'upgrade' as 'upgrade' | 'craft',
+  forgeTab: 'upgrade' as 'upgrade' | 'craft' | 'gravure',
   /** La forge montre d'abord les pièces portées (`worn`), sinon un rayon. */
   forgeScope: 'worn' as Shelf,
   /** Rayon de l'onglet Fabriquer. */
@@ -233,6 +236,8 @@ const memory = {
   /** Rayon de l'inventaire : à l'ouverture, ce que le héros peut porter. */
   inventoryShelf: MINE,
   forgeItem: null as string | null,
+  /** L'arme choisie dans l'onglet Gravure. */
+  gravureItem: null as string | null,
   inventorySlot: 'arme' as Slot,
   /** Sections repliables ouvertes ou fermées par le joueur. */
   folds: new Map<string, boolean>(),
@@ -495,6 +500,8 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
   const def = content.items[id];
   const level = itemLevel(progress.state, id);
   const worn = progress.state.equipped[def.slot as Slot] === id;
+  const gravure = def.slot === 'arme' ? progress.gravure(id) : undefined;
+  const gravureName = gravure ? gravureRank(content.gravures, gravure)?.name : undefined;
   const maxed = level >= rules.maxLevel;
   const capped = !maxed && level >= cap;
   const one = planUpgrade(progress, def, level, cap, 1);
@@ -552,6 +559,7 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
     levelTrack(def, level, cap),
     maxed ? h('p', { class: 'note' }, 'Cette pièce est au niveau maximum.') : null,
     capped ? h('p', { class: 'note danger' }, `Tetsu ne dépasse pas ton niveau (${cap}) : gagne de l’expérience au donjon pour continuer.`) : null,
+    gravureName ? h('p', { class: 'note' }, `Gravure ${gravureName} · voir l’onglet Graver.`) : null,
     growth.length ? h('h3', {}, 'Au niveau suivant') : null,
     growth.length ? h('dl', { class: 'stats compare' }, ...growth) : null,
     def.slot === 'arme' && growth.length ? h('p', { class: 'note' }, 'Les compétences de ta classe et la foudre suivent les dégâts de l’arme.') : null,
@@ -609,6 +617,140 @@ function forgePick(ctx: UiContext, id: string, cap: number, selected: boolean, s
   );
 }
 
+// --- Gravure (riven) ----------------------------------------------------------
+
+/**
+ * Ce que coûte la prochaine gravure d'une arme, et si le joueur peut la payer. `sealed` : l'arme n'a jamais été gravée,
+ * donc rien à vendre — sa première gravure s'arrache au sceau du Yomi (voir `rollSeal`, dans gravure.ts).
+ */
+function gravurePrice(progress: Progress, id: string): { oboles: number; materials: Record<string, number>; ok: boolean; sealed: boolean } {
+  const rolls = progress.gravureRolls(id);
+  const price = gravureCost(content.gravures, rolls);
+  const sealed = gravureNeedsSeal(rolls);
+  const ok = !sealed && progress.state.oboles >= price.oboles && Object.entries(price.materials).every(([m, n]) => progress.material(m) >= n);
+  return { ...price, ok, sealed };
+}
+
+/** Une arme de la liste des gravures : son nom, et son rang s'il y en a un. */
+function gravurePick(ctx: UiContext, id: string, selected: boolean, rerender: () => void): HTMLElement {
+  const def = content.items[id];
+  const gravure = ctx.progress.gravure(id);
+  const rank = gravure ? gravureRank(content.gravures, gravure) : undefined;
+  return h(
+    'button',
+    {
+      class: `pick${selected ? ' selected' : ''}`,
+      title: rank?.summary,
+      onclick: () => {
+        memory.gravureItem = id;
+        rerender();
+      },
+    },
+    h('span', { class: 'pick-name' }, icon(id, 'small'), def.name, ctx.progress.state.equipped.arme === id ? h('i', { class: 'worn-dot', title: 'Portée' }) : null),
+    h('span', { class: 'pick-level' }, rank ? rank.name : '—'),
+  );
+}
+
+/**
+ * Une gravure : son rang, ses lignes — la contrepartie se lit en rouge —, les chances de chaque rang, et le tirage
+ * suivant. Le bouton prélève le prix et remplace la gravure en place : c'est un pari, et le texte le dit.
+ */
+function gravureDetail(ctx: UiContext, id: string, rerender: () => void): HTMLElement {
+  const { progress } = ctx;
+  const data: GravureData = content.gravures;
+  const def = content.items[id];
+  const gravure = progress.gravure(id);
+  const rank = gravure ? gravureRank(data, gravure) : undefined;
+  const rolls = progress.gravureRolls(id);
+  const price = gravurePrice(progress, id);
+
+  const lines = gravure
+    ? gravure.lines.flatMap((line) => {
+        const lineDef = gravureLineDef(data, line.id);
+        if (!lineDef) return [];
+        const contre = lineDef.kind === 'contrepartie';
+        return [
+          h(
+            'li',
+            { class: `gravure-line${contre ? ' contrepartie' : ''}`, title: lineDef.name },
+            contre ? `Contrepartie · ${lineDef.summary}` : gravureLineText(line, lineDef),
+          ),
+        ];
+      })
+    : [];
+
+  return h(
+    'div',
+    { class: 'gravure' },
+    h(
+      'div',
+      { class: 'gravure-head' },
+      h('span', { class: 'gravure-rank' }, rank ? rank.name : 'Aucune gravure'),
+      h('span', { class: 'note' }, rolls ? `${rolls} tirage${rolls > 1 ? 's' : ''} déjà fait${rolls > 1 ? 's' : ''}` : 'Jamais gravée'),
+    ),
+    h(
+      'p',
+      { class: 'note' },
+      rank?.summary ?? (price.sealed ? gravureSealText(data.sceau) : `Tetsu trempe la lame dans la poussière du Yomi : ce qui monte sur l’acier, personne ne le choisit. Le rang le plus courant ne donne que deux lignes basses.`),
+    ),
+    lines.length ? h('ul', { class: 'gravure-lines' }, ...lines) : null,
+    h('div', { class: 'gravure-odds' }, 'Rangs : ', rankOdds(data).map((o) => `${o.name} ${Math.round(o.chance * 100)} %`).join(' · ')),
+    h('p', { class: 'note' }, 'Le tirage remplace la gravure en place, et son prix monte à chaque relance. La soie de jorōgumo ne tombe que sur la Jorōgumo.'),
+    // La première gravure d'une arme ne s'achète pas : pas de prix à montrer, et le bouton reste fermé.
+    ...(price.sealed
+      ? [
+          h('button', { class: 'btn', disabled: true, title: data.sceau.summary }, `${data.sceau.name} requis`),
+        ]
+      : [
+          cost(progress, price.oboles, price.materials).node,
+          h(
+            'button',
+            {
+              class: 'btn primary',
+              disabled: !price.ok,
+              title: gravure ? 'Remplacera la gravure actuelle' : 'Pose une première gravure sur cette arme',
+              onclick: () => {
+                progress.gainOboles(-price.oboles);
+                for (const [m, n] of Object.entries(price.materials)) progress.gainMaterial(m, -n);
+                const drawn = rollGravure(data, def.tags ?? []);
+                progress.setGravure(id, drawn);
+                ctx.toast(`${def.name} · ${gravureRank(data, drawn)?.name ?? 'gravure'}`, 'loot', id);
+                for (const line of drawn.lines) {
+                  const lineDef = gravureLineDef(data, line.id);
+                  if (!lineDef) continue;
+                  const contre = lineDef.kind === 'contrepartie';
+                  ctx.toast(contre ? `Contrepartie · ${lineDef.summary}` : gravureLineText(line, lineDef), contre ? 'quest' : 'loot');
+                }
+                rerender();
+              },
+            },
+            gravure ? 'Relancer le tirage' : 'Graver l’arme',
+          ),
+        ]),
+  );
+}
+
+/** Onglet Gravure : les armes à gauche, le tirage de celle qu'on regarde à droite. */
+function gravureBody(ctx: UiContext, rerender: () => void): HTMLElement {
+  const weapons = ctx.progress.state.items.filter((id) => content.items[id]?.slot === 'arme');
+  if (!memory.gravureItem || !weapons.includes(memory.gravureItem)) memory.gravureItem = weapons[0] ?? null;
+  const selected = memory.gravureItem;
+  return h(
+    'div',
+    { class: 'forge' },
+    h(
+      'div',
+      { class: 'forge-side' },
+      h(
+        'div',
+        { class: 'pick-list', 'data-scroll': 'gravure-list' },
+        ...(weapons.length ? weapons.map((id) => gravurePick(ctx, id, id === selected, rerender)) : [h('p', { class: 'note' }, 'Aucune arme à graver.')]),
+      ),
+    ),
+    selected ? gravureDetail(ctx, selected, rerender) : h('p', { class: 'note' }, 'Aucune arme dans ton sac.'),
+  );
+}
+
 export function openForge(host: PanelHost, ctx: UiContext): void {
   const render = () => {
     const { progress } = ctx;
@@ -621,6 +763,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
       .sort((a, b) => slotOrder.indexOf(content.items[a].slot as Slot) - slotOrder.indexOf(content.items[b].slot as Slot));
     const worn = upgradable.filter((id) => state.equipped[content.items[id].slot as Slot] === id);
     const readyCount = upgradable.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
+    const gravable = state.items.filter((id) => content.items[id]?.slot === 'arme' && gravurePrice(progress, id).ok).length;
 
     const recipes = content.recipes.filter((r) => progress.check(r.if));
     const toForge = recipes.filter((r) => !progress.has(r.item));
@@ -634,6 +777,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         [
           { id: 'upgrade', label: 'Améliorer', count: readyCount },
           { id: 'craft', label: 'Fabriquer', count: craftable },
+          { id: 'gravure', label: 'Graver', count: gravable },
         ],
         memory.forgeTab,
         (tab) => {
@@ -690,6 +834,8 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         ),
         selected ? forgeDetail(ctx, selected, cap, render) : h('p', { class: 'note' }, 'Aucune pièce à améliorer pour le moment.'),
       );
+    } else if (memory.forgeTab === 'gravure') {
+      body = gravureBody(ctx, render);
     } else {
       // Ce qui reste à forger, les recettes payables d'abord ; les pièces déjà possédées sont repliées.
       const recipeRow = (recipe: (typeof recipes)[number]) => {
@@ -998,6 +1144,151 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
   render();
 }
 
+// --- Voie (sous-classe) ---------------------------------------------------------
+
+/**
+ * Le choix de la voie : deux voies par classe, ouvertes au niveau 25, et modifiable à volonté — un joueur qui se
+ * trompe ne perd rien (règle du joueur : aucun nerf, aucune punition). Les nombres d'une voie sont décrits dans
+ * l'écran (passif et compétence) : le joueur sait ce qu'il prend avant de cliquer.
+ */
+export function openSubclass(host: PanelHost, ctx: UiContext): void {
+  const render = () => {
+    const { progress } = ctx;
+    const { hero } = progress.state;
+    const cls = heroClass(content.skills, hero);
+    const voies = Object.entries(content.subclasses[hero.class] ?? {});
+    const chosen = heroSubclass(content.subclasses, hero);
+    const level = progress.level;
+    const unlocked = level >= SUBCLASS_LEVEL;
+
+    const card = ([id, voie]: [string, SubclassDef]) => {
+      const here = hero.subclass === id;
+      return h(
+        'div',
+        { class: `branch voie${here ? ' chosen' : ''}` },
+        h('h3', {}, voie.name),
+        h('div', { class: 'branch-sub' }, voie.subtitle),
+        h('p', { class: 'branch-lore' }, voie.lore),
+        h('div', { class: 'note' }, `Rôle : ${voie.role}`),
+        h('div', { class: 'passives' }, h('div', {}, h('strong', {}, `Passif · ${voie.passive.name}`), h('small', {}, voie.passive.description))),
+        h(
+          'div',
+          { class: 'passives' },
+          h('div', {}, h('strong', {}, h('kbd', {}, keyName('F')), ` ${voie.active.name}`), h('small', {}, withKeys(voie.active.description))),
+        ),
+        h(
+          'button',
+          {
+            class: `btn${here ? ' chosen' : ''}`,
+            disabled: !unlocked || here,
+            onclick: () => {
+              if (!progress.chooseSubclass(id)) return;
+              ctx.toast(`Voie choisie : ${voie.name} (appliquée à ta prochaine descente)`, 'quest');
+              render();
+            },
+          },
+          here ? 'Voie actuelle' : `Choisir ${voie.name}`,
+        ),
+      );
+    };
+
+    host.show(
+      'Ta voie',
+      unlocked
+        ? `Un second axe pour ton ${cls.name} · modifiable à volonté, sans rien reperdre`
+        : `Un second axe s'ouvre au niveau ${SUBCLASS_LEVEL} · tu es niveau ${level}`,
+      h(
+        'div',
+        { class: 'list' },
+        h(
+          'div',
+          { class: 'skills-header' },
+          h('div', {}, h('strong', {}, chosen ? `${cls.name} · ${chosen.name}` : `${cls.name} · aucune voie`), h('div', { class: 'note' }, `Niveau ${level}`)),
+          chosen
+            ? h(
+                'button',
+                {
+                  class: 'btn',
+                  onclick: () => {
+                    progress.chooseSubclass(null);
+                    ctx.toast('Voie abandonnée : tu retrouves ta classe seule.', 'quest');
+                    render();
+                  },
+                },
+                'Renoncer à ma voie',
+              )
+            : null,
+        ),
+        h('div', { class: 'tree voies' }, ...voies.map(card)),
+      ),
+      { wide: true },
+    );
+  };
+  render();
+}
+
+// --- Prêt du billot (essayer une classe, une voie) ------------------------------
+
+/** La classe et la voie que le billot prête pour une séance. */
+export interface TrialChoice {
+  class: string;
+  /** La voie essayée, ou null : la classe seule. */
+  subclass: string | null;
+}
+
+/**
+ * Le prêt du billot : Tetsu prête n'importe quelle classe et n'importe quelle voie le temps d'une séance, sans rien
+ * toucher à la sauvegarde. C'est le seul endroit du jeu où l'on mesure une classe qu'on ne joue pas encore — et le
+ * compteur de dégâts en haut de l'écran est là pour ça.
+ */
+export function openTrainingTrial(host: PanelHost, ctx: UiContext, current: TrialChoice, onPick: (choice: TrialChoice | null) => void): void {
+  const classes = Object.entries(content.skills.classes);
+  const card = ([id, cls]: [string, (typeof classes)[number][1]]) => {
+    const voies = Object.entries(content.subclasses[id] ?? {});
+    const here = current.class === id;
+    const pick = (subclass: string | null) => () => {
+      host.close();
+      onPick({ class: id, subclass });
+    };
+    return h(
+      'div',
+      { class: `branch${here ? ' chosen' : ''}` },
+      h('h3', {}, cls.name),
+      h('div', { class: 'branch-sub' }, `${cls.subtitle} · ${cls.role}`),
+      h('button', { class: `btn small${here && current.subclass === null ? ' chosen' : ''}`, onclick: pick(null) }, 'Sans voie'),
+      ...voies.map(([vid, voie]) =>
+        h(
+          'button',
+          { class: `btn small${here && current.subclass === vid ? ' chosen' : ''}`, onclick: pick(vid) },
+          `${voie.name} · ${voie.active.name}`,
+        ),
+      ),
+    );
+  };
+
+  host.show(
+    'Le billot prête',
+    'Une classe et une voie, le temps d’une séance : arme de départ forgée à ton niveau quand la tienne ne se manie pas, arbre canonique de la classe (deux branches pleines et un nœud) au niveau 10 et plus, et ton équipement universel gardé. Rien n’en touche ta sauvegarde.',
+    h(
+      'div',
+      { class: 'list' },
+      h(
+        'div',
+        { class: 'skills-header' },
+        h(
+          'div',
+          {},
+          h('strong', {}, current.class ? `Essai : ${content.skills.classes[current.class]?.name ?? current.class}${current.subclass ? ` · ${content.subclasses[current.class]?.[current.subclass]?.name ?? ''}` : ' (sans voie)'}` : 'Essai : aucune classe prêtée'),
+          h('div', { class: 'note' }, `Niveau ${ctx.progress.level} · ta classe : ${heroClass(content.skills, ctx.progress.state.hero).name}`),
+        ),
+        h('button', { class: 'btn', onclick: () => { host.close(); onPick(null); } }, 'Revenir à mon héros'),
+      ),
+      h('div', { class: 'tree voies' }, ...classes.map(card)),
+    ),
+    { wide: true },
+  );
+}
+
 // --- Arbre de compétences -------------------------------------------------------
 
 export function openSkills(host: PanelHost, ctx: UiContext): void {
@@ -1059,21 +1350,37 @@ export function openSkills(host: PanelHost, ctx: UiContext): void {
       ),
     );
 
+    const voie = heroSubclass(content.subclasses, state.hero);
     const passives = h(
       'div',
       { class: 'passives' },
       ...racePassives(skills, state.hero).map((p) => h('div', {}, h('strong', {}, p.name), h('small', {}, p.description))),
       ...cls.actives.map((a) => h('div', {}, h('strong', {}, h('kbd', {}, keyName(a.key)), ` ${a.name}`), h('small', {}, a.description))),
+      ...(voie ? [h('div', {}, h('strong', {}, h('kbd', {}, keyName('F')), ` ${voie.active.name} (voie ${voie.name})`), h('small', {}, withKeys(voie.active.description)))] : []),
       ...(cls.passives ?? []).map((p) => h('div', {}, h('strong', {}, h('kbd', {}, 'Passif'), ` ${p.name}`), h('small', {}, p.description))),
+    );
+
+    const voieBlock = h(
+      'div',
+      { class: 'skills-header' },
+      h(
+        'div',
+        {},
+        h('strong', {}, voie ? `Voie : ${voie.name}` : `Voie : aucune (niveau ${SUBCLASS_LEVEL})`),
+        h(
+          'div',
+          { class: 'note' },
+          voie ? withKeys(`Passif : ${voie.passive.name} · ${voie.active.name} sur {F}`) : 'Un second axe pour ta classe : deux voies à choisir au niveau 25, modifiables à volonté.',
+        ),
+      ),
+      h('button', { class: 'btn', onclick: () => openSubclass(host, ctx) }, voie ? 'Changer de voie' : 'Choisir ma voie'),
     );
 
     host.show(
       'Arbre de compétences',
-      `1 point par niveau jusqu’au niveau ${skills.levels.pointsUntil} · les nœuds d’une branche s’apprennent dans l’ordre · réinitialisation gratuite sur la barque de Charon`,
-      h(
-        'div',
-        { class: 'list' },
+      `1 point par niveau jusqu’au niveau ${skills.levels.pointsUntil} · les nœuds d’une branche s’apprennent dans l’ordre · réinitialisation gratuite sur la barque de Charon`,        h('div', { class: 'list' },
         header,
+        voieBlock,
         h('div', { class: 'tree' }, ...branches),
         h('h3', {}, 'Passifs et compétences'),
         passives,

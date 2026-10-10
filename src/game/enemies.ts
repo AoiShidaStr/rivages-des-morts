@@ -31,6 +31,8 @@ import {
 import type { EnemyKind, MarkKind, Pose, StunReason } from './types';
 import type { Foe, World } from './world';
 
+/** Vitesse d'un mannequin qui défile (le va-et-vient du billot), en m/s : lente, pour que le héros puisse la suivre. */
+const MANNEQUIN_WALK = 1.6;
 /** Temps d'apparition pendant lequel un ennemi ne peut ni agir ni être touché. */
 export const SPAWN_TIME = 0.6;
 /** Au-dessus de cette hauteur, un ennemi est hors d'atteinte et ne bloque plus le passage. */
@@ -1929,24 +1931,48 @@ export class Izanami extends Enemy {
 }
 
 /**
- * Mannequin d'entraînement (le billot de Tetsu) : un poteau de bois, immobile et sans attaque.
- * Il ne pense rien, ne recule pas (son `knockbackFactor` est nul) et ne riposte jamais : c'est une cible
- * pour mesurer une classe ou un équipement. Le terrain d'entraînement (`GameConfig.training`) le fait
- * revenir à sa place quand il tombe, si bien qu'une séance ne s'arrête jamais d'elle-même.
+ * Mannequin d'entraînement (le billot de Tetsu) : un poteau de bois, sans attaque.
+ * Immobile, il ne pense rien, ne recule pas (son `knockbackFactor` est nul) et ne riposte jamais : c'est une cible
+ * pour mesurer une classe ou un équipement. Avec un `patrol` (en mètres), il marche de `patrol / 2` de part et
+ * d'autre de sa place, dans l'axe des x : la même mesure, mais sur une proie qui bouge, pour la mêlée qui doit
+ * courir après elle. Non solide quand il défile, sinon il pousserait le héros et fausserait la séance.
+ * Le terrain d'entraînement (`GameConfig.training`) le fait revenir à sa place quand il tombe, si bien qu'une
+ * séance ne s'arrête jamais d'elle-même.
  */
 export class Mannequin extends Enemy {
   readonly kind = 'mannequin' as const;
+  /** Longueur du va-et-vient (0 : poteau fixe), son sens de marche, et sa place de départ. */
+  private readonly patrol: number;
+  private dir = 1;
+  private readonly home: Vec2;
 
-  get pose(): Pose {
-    return 'idle';
+  constructor(id: number, pos: Vec2, cfg: EnemyBaseConfig, patrol = 0) {
+    super(id, pos, cfg);
+    this.patrol = patrol;
+    this.home = { ...pos };
   }
 
-  /** Le billot, dessiné avec la souche du décor : rien à animer. */
+  get pose(): Pose {
+    return this.patrol > 0 ? 'move' : 'idle';
+  }
+
+  /** Le billot, dessiné avec la souche du décor : rien à animer, même quand il marche. */
   get sprite(): string {
     return 'souche';
   }
 
-  protected think(_dt: number, _world: World): void {
-    // Il ne fait rien : c'est tout son intérêt.
+  /** Celui qui défile ne repousse pas le héros : il le pousserait au lieu de lui servir de cible. */
+  get solid(): boolean {
+    return this.patrol <= 0 && super.solid;
+  }
+
+  protected think(dt: number, _world: World): void {
+    if (this.patrol <= 0) return;
+    const half = this.patrol / 2;
+    const walked = this.pos.x - this.home.x;
+    if (walked > half) this.dir = -1;
+    else if (walked < -half) this.dir = 1;
+    this.pos = add(this.pos, vec(this.dir * MANNEQUIN_WALK * dt, 0));
+    this.facing = vec(this.dir, 0);
   }
 }

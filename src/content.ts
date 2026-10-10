@@ -1,5 +1,6 @@
 // Contenu de l'île en données (src/data) : on l'ajoute ou le modifie sans toucher au code.
 import dialoguesJson from './data/dialogues.json';
+import gravuresJson from './data/gravures.json';
 import difficultyJson from './data/difficulty.json';
 import rizieresJson from './data/dungeon.json';
 import type { Arena3dKind } from './render/arena3d';
@@ -12,13 +13,15 @@ import islandSpritesJson from './data/islandSprites.json';
 import itemsJson from './data/items.json';
 import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
+import sousClassesJson from './data/sous-classes.json';
 import type { GameConfig } from './game/config';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { ArenaSource, EndlessData } from './game/infini';
 import type { UpgradeRules } from './game/forge';
 
 import type { IslandData, ScreenPoint } from './game/island';
-import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef } from './game/loadout';
+import type { GravureData } from './game/gravure';
+import { levelFor, talentPointsAt, type BonusKind, type ItemDef, type SkillsDef, type Subclasses } from './game/loadout';
 import type { DuplicateRules, ShopOffer } from './game/loot';
 import { STARTING_WEAPON, type Catalog, type Condition, type Effect, type Slot } from './game/progress';
 import { withHeroSprites } from './render/heroes';
@@ -165,6 +168,10 @@ export const content = {
   upgrade: itemsJson.forge.upgrade as unknown as UpgradeRules,
   difficulty: difficultyJson as unknown as DifficultyData,
   skills: skillsJson as unknown as SkillsDef,
+  /** Les voies (sous-classes) de chaque classe : le second axe, ouvert au niveau 25. */
+  subclasses: sousClassesJson.classes as unknown as Subclasses,
+  /** Les gravures : le tirage de Tetsu sur une arme, ses rangs et son prix (src/data/gravures.json). */
+  gravures: gravuresJson as unknown as GravureData,
   recipes: itemsJson.forge.recipes as unknown as RecipeDef[],
   quests: questsJson.quests as Record<string, QuestDef>,
   dungeons: {

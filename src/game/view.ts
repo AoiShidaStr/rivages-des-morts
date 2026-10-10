@@ -64,6 +64,9 @@ export interface HeroView {
   readonly netCooldown: number;
   readonly huntCooldown: number;
   readonly leapCooldown: number;
+  /** Voie (sous-classe) : recharge de sa compétence (touche F), et secondes restantes d'un cri qui renforce. */
+  readonly voieCooldown: number;
+  readonly voieTime: number;
 }
 
 export interface EnemyView {

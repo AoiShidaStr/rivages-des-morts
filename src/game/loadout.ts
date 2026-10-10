@@ -1,7 +1,8 @@
 // Du côté de l'île vers le combat : race, classe, équipement, niveau, talents et tags de classe
 // deviennent les réglages du héros pour une descente au donjon.
-import type { Kit, PlayerConfig } from './config';
+import type { Kit, PlayerConfig, SubclassActiveConfig } from './config';
 import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type Palier, type UpgradeRules } from './forge';
+import { gravureEffects, type GravureData } from './gravure';
 import type { Hero, ProgressState, Slot } from './progress';
 
 export type BonusKind = 'maxHp' | 'damage' | 'speed' | 'dodge' | 'armor' | 'oboles';
@@ -55,6 +56,36 @@ export interface ItemDef {
   paliers?: Palier[];
   description: string;
 }
+
+/**
+ * La compétence d'une voie (sous-classe) : un geste de plus, lancé avec F. `kind` dit ce que le moteur en fait
+ * (une onde autour du héros, un sceau au sol, un sanctuaire, un filet, une salve de traits, un cri qui le renforce) ;
+ * les autres champs sont ses réglages. Rien ici n'est propre à une classe : la même primitive sert à plusieurs voies,
+ * avec des nombres et des effets différents.
+ */
+export type SubclassKind = SubclassActiveConfig['kind'];
+
+/**
+ * La compétence d'une voie : la forme jouée par le moteur (config.ts). Dans les données, `damage` et `burn` s'expriment
+ * en part des dégâts d'une attaque de la classe ; `buildLoadout` les met à l'échelle au moment de la descente.
+ */
+export type SubclassActive = SubclassActiveConfig;
+
+/** Une voie (sous-classe) : le second axe d'une classe, ouvert au niveau 25. */
+export interface SubclassDef {
+  name: string;
+  subtitle: string;
+  role: string;
+  lore: string;
+  /** Passif signature, affiché avec les compétences de la voie. */
+  passive: Passive;
+  /** Réglages de base de la voie, appliqués après ceux de la classe. */
+  effects?: ConfigEffect[];
+  active: SubclassActive;
+}
+
+/** Les voies de chaque classe : `content.subclasses[classe][voie]`. */
+export type Subclasses = Record<string, Record<string, SubclassDef>>;
 
 export interface SkillNode {
   id: string;
@@ -120,6 +151,10 @@ export interface LoadoutData {
   items: Record<string, ItemDef>;
   upgrade: UpgradeRules;
   skills: SkillsDef;
+  /** Les voies (sous-classes), s'il y en a : sans elles, le héros se bat avec sa classe seule. */
+  subclasses?: Subclasses;
+  /** Les gravures (rivens) : sans elles, une arme gravée n'apporte rien de plus que ses propres effets. */
+  gravures?: GravureData;
 }
 
 export interface Loadout {
@@ -139,6 +174,11 @@ const ANY_CLASS = 'Tous';
 
 export const heroRace = (skills: SkillsDef, hero: Hero): RaceDef => skills.races[hero.race] ?? Object.values(skills.races)[0];
 export const heroClass = (skills: SkillsDef, hero: Hero): ClassDef => skills.classes[hero.class] ?? Object.values(skills.classes)[0];
+
+/** La voie du héros, ou null s'il n'en a pas choisi (avant le niveau 25) ou si elle n'existe plus. */
+export function heroSubclass(subclasses: Subclasses | undefined, hero: Hero): SubclassDef | null {
+  return (hero.subclass && subclasses?.[hero.class]?.[hero.subclass]) || null;
+}
 
 /** « Rôdeur Hanyō » : la classe puis la race, comme à la création. */
 export const heroLabel = (skills: SkillsDef, hero: Hero): string => `${heroClass(skills, hero).name} ${heroRace(skills, hero).name}`;
@@ -255,6 +295,9 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   const config = structuredClone(base);
   const cls = heroClass(data.skills, state.hero);
   for (const effect of cls.effects ?? []) applyEffect(config, effect);
+  // La voie (sous-classe) passe juste après la classe : c'est un réglage de base de plus, avant l'équipement.
+  const voie = heroSubclass(data.subclasses, state.hero);
+  for (const effect of [...(voie?.effects ?? []), ...(voie?.passive.effects ?? [])]) applyEffect(config, effect);
   const bonus: Required<Bonus> = { maxHp: 0, damage: 0, speed: 0, dodge: 0, armor: 0, oboles: 0 };
   let tagCount = 0;
   const className = cls.tag.name;
@@ -280,6 +323,10 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
       if (item.races?.length || c.if.races?.length) raceEffects.push(...(c.effects ?? []));
       else for (const effect of c.effects ?? []) applyEffect(config, effect);
     }
+    // La gravure de l'arme (src/data/gravures.json) se pose comme un effet de l'objet, donc avant les mises à
+    // l'échelle : ses lignes de dégâts suivent la puissance du héros, comme celles de l'arme qui la porte.
+    const gravure = item.slot === 'arme' ? state.gravures?.[id] : undefined;
+    if (gravure && data.gravures) for (const effect of gravureEffects(gravure, data.gravures)) applyEffect(config, effect);
     // Paliers de forge : « Âme liée » donne le tag « Tous », « Forgé par Tetsu » fait compter l'objet double.
     const reached = upgradable ? reachedPaliers(rules, item, lvl) : [];
     paliers.push(...reached);
@@ -357,6 +404,14 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   if (perks.chargedBolt) perks.chargedBolt = { ...perks.chargedBolt, damage: perks.chargedBolt.damage * damage };
   if (perks.sealBurn) perks.sealBurn = { ...perks.sealBurn, burn: perks.sealBurn.burn * damage };
   config.dodge.distance *= 1 + bonus.dodge;
+  // La compétence de la voie suit la puissance du héros : ses dégâts (et sa brûlure) sont ceux d'une attaque, à la
+  // même échelle que les coups d'arme. Les soins, eux, sont une part des PV max.
+  if (voie) {
+    const active = { ...voie.active };
+    active.damage = (active.damage ?? 0) * config.attack.damage;
+    if (active.burn) active.burn *= damage;
+    config.sousClasse = active;
+  }
   return { config, level, bonus, tagCount, tier };
 }
 

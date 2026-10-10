@@ -226,6 +226,8 @@ export class MirrorWorld implements WorldView {
       netCooldown: 0,
       huntCooldown: 0,
       leapCooldown: 0,
+      voieCooldown: 0,
+      voieTime: 0,
     };
     if (snap) {
       const { hammerOut: _hammer, ...fields } = snap;

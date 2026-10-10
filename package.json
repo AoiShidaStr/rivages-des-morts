@@ -28,7 +28,9 @@
     "prompts-2d": "node tools/prompts-2d.mjs",
     "perso-test": "node tools/perso-test.mjs",
     "equilibrage": "node tools/equilibrage.mjs",
-    "dps": "node tools/equilibrage.mjs --mode dps"
+    "dps": "node tools/equilibrage.mjs --mode dps",
+    "voies": "node tools/voies.mjs",
+    "gravures": "node tools/gravures.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^9.28.0",

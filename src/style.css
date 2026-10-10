@@ -293,6 +293,11 @@ kbd {
   opacity: 0.45;
 }
 
+/* Compétence de la voie (sous-classe) : cachée tant que le héros n'en a pas choisi une (voir Hud.configure). */
+.skill.hidden {
+  display: none;
+}
+
 .skill .cooldown {
   position: absolute;
   inset: 0;

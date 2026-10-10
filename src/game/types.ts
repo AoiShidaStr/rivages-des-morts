@@ -49,6 +49,8 @@ export interface InputFrame {
   skillAPressed: boolean;
   skillEPressed: boolean;
   skillRPressed: boolean;
+  /** F : la compétence de la voie (sous-classe), quand le héros en a choisi une au niveau 25. */
+  skillFPressed: boolean;
 }
 
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
