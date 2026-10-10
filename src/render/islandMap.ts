@@ -39,7 +39,7 @@ export class IslandMap {
   /** `rich` : eau animée, ombres et décors ; sans lui (graphismes allégés), la carte seule. */
   static async build(scene: Scene, data: IslandData, rich: boolean): Promise<IslandMap> {
     const url = `${SPRITES}${data.map.image}`;
-    const map = await MapImage.load(url, data.map.width);
+    const map = await MapImage.load(data.map.sample ? `${SPRITES}${data.map.sample}` : url, data.map.width);
     const { width, height } = map;
     const sea = Color3.FromInts(...map.sea());
     scene.clearColor = sea.toColor4(1);

@@ -1,4 +1,4 @@
-import { insidePolygon, onWalk, toWorld, type DecorItem, type IslandData, type Polygon, type ScreenPoint } from '../game/island';
+import { insidePolygon, toWorld, type DecorItem, type IslandData, type Polygon, type ScreenPoint } from '../game/island';
 import type { Vec2 } from '../game/math';
 import { fbm, rng } from './noise';
 
@@ -177,18 +177,37 @@ export class WalkField {
     const cell = WalkField.CELL;
     this.nu = Math.ceil(width / cell);
     this.nv = Math.ceil(height / cell);
+    // Comme onWalk, case par case, mais tracé ligne à ligne : quelques milliers d'opérations au lieu de dizaines de
+    // millions (des secondes au démarrage sur un petit processeur).
     const inside = new Uint8Array(this.nu * this.nv);
-    for (let j = 0; j < this.nv; j++) {
-      for (let i = 0; i < this.nu; i++) inside[j * this.nu + i] = onWalk(data, this.point(i, j)) ? 1 : 0;
-    }
+    for (const p of data.walk) this.fill(inside, p, 1);
+    for (const p of data.blocks) this.fill(inside, p, 0);
     const toOutside = chamfer(inside, this.nu, this.nv, 1);
     const toInside = chamfer(inside, this.nu, this.nv, 0);
     this.dist = new Float32Array(this.nu * this.nv);
     for (let k = 0; k < this.dist.length; k++) this.dist[k] = (inside[k] ? toOutside[k] : -toInside[k]) * cell;
   }
 
-  private point(i: number, j: number): ScreenPoint {
-    return { u: -this.width / 2 + (i + 0.5) * WalkField.CELL, v: -this.height / 2 + (j + 0.5) * WalkField.CELL };
+  /** Marque `value` les cases dont le centre est dans le polygone (même règle qu'insidePolygon). */
+  private fill(mask: Uint8Array, poly: Polygon, value: number): void {
+    const cell = WalkField.CELL;
+    const crossings: number[] = [];
+    for (let j = 0; j < this.nv; j++) {
+      const v = -this.height / 2 + (j + 0.5) * cell;
+      crossings.length = 0;
+      for (let i = 0, k = poly.length - 1; i < poly.length; k = i++) {
+        const [ui, vi] = poly[i];
+        const [uk, vk] = poly[k];
+        if (vi > v !== vk > v) crossings.push(((uk - ui) * (v - vi)) / (vk - vi) + ui);
+      }
+      crossings.sort((a, b) => a - b);
+      for (let c = 0; c + 1 < crossings.length; c += 2) {
+        // Centres de case u = -largeur/2 + (i + 0,5) × case, strictement entre deux croisements.
+        const first = Math.max(0, Math.floor((crossings[c] + this.width / 2) / cell - 0.5) + 1);
+        const last = Math.min(this.nu - 1, Math.ceil((crossings[c + 1] + this.width / 2) / cell - 0.5) - 1);
+        mask.fill(value, j * this.nu + first, j * this.nu + last + 1);
+      }
+    }
   }
 
   at(s: ScreenPoint): number {

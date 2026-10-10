@@ -54,7 +54,7 @@ Dans `src/data/sprites.json` (donjon) ou `src/data/islandSprites.json` (île), l
 
 ## Carte de l'île
 
-L'île est une seule grande image peinte, vue par la caméra du jeu (isométrie, 35° de plongée) : `~/Pictures/game visual/ile_fond.png` (générée par Nano Banana à partir d'un schéma, agrandie ×2 par Real-ESRGAN). `npm run sols` en fait `public/sprites/sols/ile-fond.webp` (4096 de côté, bords fondus dans la couleur de la mer). Le jeu la pose au sol, alignée sur l'écran et étirée en profondeur pour qu'on la retrouve telle quelle (`src/render/islandMap.ts`), avec la mer unie au-delà, les reflets animés sur l'eau peinte, les ombres et les décors des planches (`npm run decors`) posés par le code, par biome.
+L'île est une seule grande image peinte, vue par la caméra du jeu (isométrie, 35° de plongée) : `~/Pictures/game visual/ile_fond.png` (générée par Nano Banana à partir d'un schéma, agrandie ×2 par Real-ESRGAN). `npm run sols` en fait `public/sprites/sols/ile-fond.webp` (4096 de côté, bords fondus dans la couleur de la mer) et sa copie en 512, `ile-fond-512.webp`, où le jeu lit l'eau et l'herbe (`map.sample`) sans décoder la grande au démarrage. Le jeu la pose au sol, alignée sur l'écran et étirée en profondeur pour qu'on la retrouve telle quelle (`src/render/islandMap.ts`), avec la mer unie au-delà, les reflets animés sur l'eau peinte, les ombres et les décors des planches (`npm run decors`) posés par le code, par biome.
 
 Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coordonnées d'écran u, v ; `map.width` = largeur de l'image dans le monde) :
 

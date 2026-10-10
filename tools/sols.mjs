@@ -1,7 +1,9 @@
 // Prépare les sols peints pour le jeu, dans public/sprites/sols.
 //   - sols/rizieres.jpg : sol de secours de l'arène des Rizières, redimensionné ;
 //   - sols/ile-fond.webp : la carte de l'île (~/Pictures/game visual/ile_fond.png), en 4096 de côté, ses bords fondus
-//     dans la couleur de la mer pour qu'elle se prolonge sans couture au-delà de l'image (src/render/islandMap.ts).
+//     dans la couleur de la mer pour qu'elle se prolonge sans couture au-delà de l'image (src/render/islandMap.ts) ;
+//   - sols/ile-fond-512.webp : la même en 512, que le jeu lit pour savoir où sont l'eau et l'herbe (sans décoder la
+//     grande au démarrage).
 //
 // Les zones de marche et les positions de src/data/island.json se tracent sur cette carte : npm run carte la
 // redessine avec elles par-dessus.
@@ -46,6 +48,11 @@ await sharp(data, { raw: { width: ISLAND_SIZE, height: ISLAND_SIZE, channels: 3 
   .webp({ quality: 86 })
   .toFile(path.join(outDir, 'ile-fond.webp'));
 console.log(`sols/ile-fond.webp (mer #${sea.map((c) => c.toString(16).padStart(2, '0')).join('')})`);
+await sharp(data, { raw: { width: ISLAND_SIZE, height: ISLAND_SIZE, channels: 3 } })
+  .resize(512, 512, { kernel: 'lanczos3' })
+  .webp({ quality: 92 })
+  .toFile(path.join(outDir, 'ile-fond-512.webp'));
+console.log('sols/ile-fond-512.webp');
 
 /** Couleur médiane du bord de l'image : la mer. */
 function borderMedian(rgb, w, h) {

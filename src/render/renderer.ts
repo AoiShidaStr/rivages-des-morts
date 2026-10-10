@@ -27,6 +27,7 @@ import { REVIVE_TIME } from '../game/world';
 import { LOW_GRAPHICS, SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
+import { loadFittedTexture } from './textureBudget';
 import {
   drawArrow,
   drawCrescent,
@@ -281,6 +282,40 @@ const PROJECTILE_HEIGHT = AIM_HEIGHT;
 /** Épaisseur des fils tracés entre la Jorōgumo et le joueur. */
 const THREAD_WIDTH = 0.05;
 
+/**
+ * Images de chaque yokai : un boss change de forme en plein combat et invoque des renforts, qu'il faut avoir chargés
+ * avant. Ces planches (les plus lourdes du jeu) ne se chargent que pour la descente qui les montre (prepareEnemies).
+ */
+const ENEMY_SPRITES: Record<string, readonly string[]> = {
+  hitodama: ['hitodama'],
+  kodama: ['kodama'],
+  kappa: ['kappa'],
+  kappaRenforce: ['kappaRenforce'],
+  kasaObake: ['kasaObake'],
+  oublie: ['oublie'],
+  araignee: ['araignee'],
+  jorogumo: ['jorogumo', 'jorogumoAraignee', 'araignee'],
+  shikome: ['shikome'],
+  ikazuchi: ['ikazuchi'],
+  ikusa: ['ikusa'],
+  izanami: ['izanami', 'izanamiRevelee'],
+};
+const ENEMY_SHEETS = new Set(Object.values(ENEMY_SPRITES).flat());
+
+/**
+ * Classe à laquelle appartient un effet : les planches du Sorcier (flammes, sceaux, météore) et l'aura du Paladin
+ * sont parmi les plus lourdes ; elles ne se chargent que si un héros de la descente joue cette classe.
+ */
+function effectKit(name: string): string | null {
+  if (!name.startsWith('fx')) return null;
+  if (/Sorcier|^fxBrand/.test(name)) return 'sorcier';
+  if (/Paladin|^fxAura(Loop|Burst)$|^fxHammer$/.test(name)) return 'paladin';
+  if (/Rodeur/.test(name)) return 'rodeur';
+  if (/Guerrier/.test(name)) return 'guerrier';
+  if (/Lame/.test(name)) return 'lame';
+  return null;
+}
+
 /** Arène en 3D : ce qui était posé au-delà de cette distance finit derrière les murs du fond. */
 const ARENA_3D_WALL = 12;
 
@@ -439,6 +474,9 @@ export class Renderer {
   /** Le héros demandé, affiché dès que sa planche est chargée. */
   private wantedHero = 'heros';
   private readonly heroLoads = new Map<string, Promise<void>>();
+  private readonly onDemandLoads = new Map<string, Promise<void>>();
+  /** Planches chargées pour une descente seulement : yokai et effets de classe (prepareDescent). */
+  private readonly onDemand: ReadonlySet<string>;
   /** Planches de héros remplacées : libérées une fois la vue du héros refaite (voir sync). */
   private retiredHeroTextures: BaseTexture[] = [];
 
@@ -452,6 +490,8 @@ export class Renderer {
     registerShaders();
     this.scene = new Scene(this.engine);
     this.scene.clearColor = Color4.FromHexString('#c3cbcfff');
+    // La souris vise par un calcul de rayon (pickGround) : Babylon n'a pas à chercher sous elle à chaque mouvement.
+    this.scene.skipPointerMovePicking = true;
 
     this.camera = new FreeCamera('camera', Vector3.Zero(), this.scene);
     this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
@@ -484,6 +524,7 @@ export class Renderer {
       seal: this.canvasTexture('seal', drawSeal()),
     };
     this.threads = this.createThreads();
+    this.onDemand = new Set([...ENEMY_SHEETS, ...Object.keys(manifest).filter((name) => effectKit(name))]);
   }
 
   async load(): Promise<void> {
@@ -495,7 +536,7 @@ export class Renderer {
     // chacune pèse plusieurs dizaines de Mo en mémoire graphique.
     await Promise.all([
       ...Object.entries(this.manifest)
-        .filter(([name]) => !isHeroVariant(name))
+        .filter(([name]) => !isHeroVariant(name) && !this.onDemand.has(name))
         .map(async ([name, def]) => {
           this.sprites.set(name, await this.loadSprite(name, def));
         }),
@@ -541,6 +582,51 @@ export class Renderer {
         if (this.wantedHero === name) this.showHero(name);
       });
       this.heroLoads.set(name, pending);
+    }
+    return pending;
+  }
+
+  /**
+   * Charge les planches de la descente qui commence : ses yokai (`kinds` : ceux de ses vagues) et les effets des
+   * classes de ses héros (`kits`, le héros de ce joueur d'abord) ; libère celles d'un autre donjon ou d'une autre
+   * classe. À appeler après `reset`, pendant le fondu au noir : le combat commence avec ses planches prêtes.
+   */
+  async prepareDescent(kinds: Iterable<string>, kits: readonly string[]): Promise<void> {
+    // Les feux follets peuvent naître de n'importe quel yokai (malédictions du donjon infini).
+    const wanted = new Set<string>(ENEMY_SPRITES.hitodama);
+    for (const kind of kinds) for (const name of ENEMY_SPRITES[kind] ?? []) wanted.add(name);
+    const party = new Set(kits);
+    for (const name of this.onDemand) {
+      const kit = effectKit(name);
+      // Les traînées du style lumière ne suivent que les coups du héros de ce joueur (les alliés ont les coups au pinceau).
+      if (kit && (/^fxLight(Slash|Thrust)/.test(name) ? kit === kits[0] : party.has(kit))) wanted.add(name);
+    }
+    const shown = new Set([...this.views.values(), ...this.dying].map((view) => view.spriteName));
+    for (const name of this.onDemand) {
+      const entry = this.sprites.get(name);
+      if (!entry || wanted.has(name) || shown.has(name)) continue;
+      this.sprites.delete(name);
+      entry.texture.dispose();
+    }
+    await Promise.all([...wanted].map((name) => this.loadOnDemand(name)));
+  }
+
+  /** Planche d'effet ; absente (classe arrivée en cours de route), elle se charge pour la prochaine fois. */
+  private effect(name: string): SpriteEntry | undefined {
+    const entry = this.sprites.get(name);
+    if (!entry && this.onDemand.has(name)) void this.loadOnDemand(name);
+    return entry;
+  }
+
+  private loadOnDemand(name: string): Promise<void> {
+    const def = this.manifest[name];
+    if (this.sprites.has(name) || !def) return Promise.resolve();
+    let pending = this.onDemandLoads.get(name);
+    if (!pending) {
+      pending = this.loadSprite(name, def)
+        .then((entry) => void this.sprites.set(name, entry))
+        .finally(() => this.onDemandLoads.delete(name));
+      this.onDemandLoads.set(name, pending);
     }
     return pending;
   }
@@ -680,6 +766,13 @@ export class Renderer {
 
   private syncEntity(id: number, spriteName: string, s: Snapshot, dt: number): void {
     let view = this.views.get(id);
+    if (!this.sprites.has(spriteName)) {
+      // Planche pas encore là (un invité en coop ne connaît pas d'avance toutes les vagues) : elle se charge, et
+      // le yokai paraît dès qu'elle arrive ; un boss qui change de forme garde l'ancienne en attendant.
+      if (this.onDemand.has(spriteName)) void this.loadOnDemand(spriteName);
+      if (!view) return;
+      spriteName = view.spriteName;
+    }
     if (view && view.spriteName !== spriteName) {
       // Changement de forme (la Jorōgumo révèle son corps d'araignée) : on refait la vue.
       this.disposeView(view);
@@ -1984,7 +2077,7 @@ export class Renderer {
    * `life` secondes. Renvoie faux si la planche manque : l'appelant garde alors son effet de repli.
    */
   private sheetFx(name: string, tag: string, pos: Vec2, dir: Vec2, width: number, depth: number, life: number, y = 0.04, overSprites = false): boolean {
-    const sheet = this.sprites.get(name);
+    const sheet = this.effect(name);
     const anim = sheet?.anim;
     if (!sheet || !anim) return false;
     const tagInfo = anim.tags.get(tag);
@@ -2011,7 +2104,7 @@ export class Renderer {
    * sur le sol en `pos`, qui joue sa planche une fois sur `life` secondes. Renvoie faux si la planche manque.
    */
   private uprightFx(name: string, tag: string, pos: Vec2, width: number, height: number, life: number, options: { center?: number; flip?: boolean } = {}): boolean {
-    const sheet = this.sprites.get(name);
+    const sheet = this.effect(name);
     const anim = sheet?.anim;
     if (!sheet || !anim) return false;
     const tagInfo = anim.tags.get(tag);
@@ -2279,7 +2372,7 @@ export class Renderer {
     }
     if (def.file) {
       try {
-        const texture = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/${def.file}`);
+        const texture = await loadFittedTexture(this.scene, `${import.meta.env.BASE_URL}sprites/${def.file}`, (_w, h) => h / def.height);
         const { width, height } = texture.getSize();
         return { texture, aspect: width / height, height: def.height, facesRight: def.facesRight };
       } catch {

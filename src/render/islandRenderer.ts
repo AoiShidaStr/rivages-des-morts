@@ -17,7 +17,8 @@ import {
 import { toWorld, type Island } from '../game/island';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawProp } from './pixelArt';
-import { CAMERA_DISTANCE, PITCH, YAW, loadTexture, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
+import { CAMERA_DISTANCE, PITCH, YAW, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
+import { loadFittedTexture } from './textureBudget';
 import { LOW_GRAPHICS } from './flags';
 import { isHeroVariant } from './heroes';
 import { DecorSprites } from './decorSprites';
@@ -100,6 +101,8 @@ export class IslandRenderer {
     registerShaders();
     this.scene = new Scene(engine);
     this.scene.clearColor = Color4.FromHexString('#c3cbcfff');
+    // On vise et on interagit sans chercher ce qui est sous la souris : Babylon n'a pas à le faire à chaque mouvement.
+    this.scene.skipPointerMovePicking = true;
     this.camera = new FreeCamera('islandCamera', Vector3.Zero(), this.scene);
     this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
     this.camera.minZ = 0.1;
@@ -285,7 +288,7 @@ export class IslandRenderer {
     }
     if (def.file) {
       try {
-        const texture = await loadTexture(this.scene, `${base}${def.file}`);
+        const texture = await loadFittedTexture(this.scene, `${base}${def.file}`, (_w, h) => h / def.height);
         const { width, height } = texture.getSize();
         return { texture, aspect: width / height, height: def.height, body: def.height, below: 0, facesRight: def.facesRight, motion: def.motion };
       } catch {

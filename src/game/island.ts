@@ -48,6 +48,8 @@ export interface IslandMap {
   image: string;
   /** Largeur de l'image dans le monde ; sa hauteur à l'écran suit ses proportions. */
   width: number;
+  /** La même en petit (npm run sols) : le code y lit l'eau et l'herbe sans décoder la grande. */
+  sample?: string;
 }
 
 /** Repères peints sur la carte, pour poser les décors (src/render/islandMap.ts). */

@@ -1,5 +1,6 @@
 import { Vector4, type Scene, type ShaderMaterial, type Texture } from '@babylonjs/core';
 import { loadTexture } from './renderer';
+import { loadFittedTexture } from './textureBudget';
 
 /** Planche découpée : rectangle de chaque image (en UV) et plages d'images par posture. */
 export interface SheetAnimation {
@@ -45,8 +46,13 @@ export async function loadSheet(scene: Scene, jsonPath: string, bodyHeight: numb
   if (!response.ok) throw new Error(jsonPath);
   const sheet = (await response.json()) as AsepriteSheet;
   const dir = jsonPath.includes('/') ? jsonPath.slice(0, jsonPath.lastIndexOf('/') + 1) : '';
-  const texture = await loadTexture(scene, `${base}${dir}${sheet.meta.image}`, !sheet.meta.smooth);
   const { w: W, h: H } = sheet.meta.size;
+  const url = `${base}${dir}${sheet.meta.image}`;
+  // Planche peinte d'un personnage : réduite à ce que l'écran peut en montrer (textureBudget.ts). Les cases
+  // sont repérées en fractions de l'image : elles restent justes à toute taille.
+  const bodyPx = sheet.meta.bodyHeight;
+  const texture =
+    sheet.meta.smooth && bodyPx ? await loadFittedTexture(scene, url, (w) => ((bodyPx / bodyHeight) * w) / W) : await loadTexture(scene, url, !sheet.meta.smooth);
   // L'image est retournée à la lecture (v = 0 en bas) : la rangée du haut a le plus grand v.
   const frames = sheet.frames.map(({ frame: f, duration }) => ({
     rect: [f.x / W, 1 - (f.y + f.h) / H, f.w / W, f.h / H] as [number, number, number, number],
@@ -54,7 +60,7 @@ export async function loadSheet(scene: Scene, jsonPath: string, bodyHeight: numb
   }));
   const tags = new Map((sheet.meta.frameTags ?? []).map((t) => [t.name, { from: t.from, to: t.to, once: t.repeat === '1' }]));
   const first = sheet.frames[0].frame;
-  const { bodyHeight: bodyPx, anchor } = sheet.meta;
+  const { anchor } = sheet.meta;
   const height = bodyPx ? (bodyHeight * first.h) / bodyPx : (cellHeight ?? bodyHeight);
   const below = bodyPx && anchor ? (height * (first.h - anchor.y)) / first.h : 0;
   return { texture, aspect: first.w / first.h, height, below, anim: { frames, tags } };

@@ -1217,7 +1217,8 @@ async function start(): Promise<void> {
   data = island;
   allDecor = Object.entries(folders).flatMap(([folder, names]) => names.map((n) => `${folder}/${n}`));
   const url = `${SPRITES}${data.map.image}`;
-  [mapImage, sampler] = await Promise.all([loadImage(url), MapImage.load(url, data.map.width)]);
+  const sample = data.map.sample ? `${SPRITES}${data.map.sample}` : url;
+  [mapImage, sampler] = await Promise.all([loadImage(url), MapImage.load(sample, data.map.width)]);
   auto = data.decor ? [] : autoDecor(data, sampler, new WalkField(data, W(), H()));
   autoJson = JSON.stringify(auto);
   // Toute la carte dans la vue.

@@ -1,7 +1,7 @@
 {
   "name": "Yomotsu Hirasaka",
   "about": "Positions en coordonnées d'écran : u vers la droite, v vers le haut, en unités du monde (le héros mesure 1,75). La carte est une image peinte (map.image, dans public/sprites) de map.width unités de large ; npm run carte la redessine avec les zones de marche et les positions par-dessus, pour les retoucher.",
-  "map": { "image": "sols/ile-fond.webp", "width": 80 },
+  "map": { "image": "sols/ile-fond.webp", "sample": "sols/ile-fond-512.webp", "width": 80 },
   "spawn": { "u": -21.9, "v": -22.7 },
   "dungeonExit": { "u": -20.5, "v": -21.1 },
   "walk": [

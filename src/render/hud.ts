@@ -5,6 +5,23 @@ import type { WorldView } from '../game/view';
 import { keyName, moveKeys, withKeys } from '../keys';
 import { h } from '../ui/dom';
 
+/**
+ * Le HUD est mis à jour à chaque image : on n'écrit dans la page que ce qui a changé. Chaque écriture fait refaire au
+ * navigateur le calcul des styles et de la mise en page, même pour une valeur identique.
+ */
+const written = new WeakMap<HTMLElement, Partial<Record<'width' | 'left' | 'transform', string>>>();
+function setStyle(el: HTMLElement, prop: 'width' | 'left' | 'transform', value: string): void {
+  let cache = written.get(el);
+  if (!cache) written.set(el, (cache = {}));
+  if (cache[prop] === value) return;
+  cache[prop] = value;
+  el.style[prop] = value;
+}
+const percent = (fraction: number) => `${(fraction * 100).toFixed(1)}%`;
+function setText(el: HTMLElement, text: string): void {
+  if (el.textContent !== text) el.textContent = text;
+}
+
 const BANNER_TIME = 2.6;
 /** Au-delà de ce ping (ms), il s'affiche en couleur d'alerte. */
 const LAGGY = 150;
@@ -168,21 +185,21 @@ export class Hud {
   update(world: WorldView, events: readonly GameEvent[], dt: number): void {
     const player = world.player;
     const cfg = player.cfg;
-    this.hpFill.style.width = `${(player.hp / cfg.maxHp) * 100}%`;
+    setStyle(this.hpFill, 'width', percent(player.hp / cfg.maxHp));
     // Le bouclier prolonge la barre après les PV (sans dépasser le bout).
     const shield = Math.min(player.barrier, cfg.maxHp - Math.min(player.hp, cfg.maxHp * 0.9));
-    this.barrierFill.style.left = `${(Math.min(player.hp, cfg.maxHp * 0.9) / cfg.maxHp) * 100}%`;
-    this.barrierFill.style.width = `${(Math.max(0, shield) / cfg.maxHp) * 100}%`;
+    setStyle(this.barrierFill, 'left', percent(Math.min(player.hp, cfg.maxHp * 0.9) / cfg.maxHp));
+    setStyle(this.barrierFill, 'width', percent(Math.max(0, shield) / cfg.maxHp));
     const others = world.players.filter((hero) => hero !== player);
     this.allyBars.forEach((bar, i) => {
       const hero = others[i];
       if (!hero) return;
-      bar.fill.style.width = `${(Math.max(0, hero.hp) / hero.cfg.maxHp) * 100}%`;
+      setStyle(bar.fill, 'width', percent(Math.max(0, hero.hp) / hero.cfg.maxHp));
       const ping = this.pings[i];
-      bar.name.textContent = `${bar.label}${hero.dead ? ' · à terre' : ''}${ping ? ` · ${Math.round(ping)} ms` : ''}`;
+      setText(bar.name, `${bar.label}${hero.dead ? ' · à terre' : ''}${ping ? ` · ${Math.round(ping)} ms` : ''}`);
       bar.name.classList.toggle('lag', (ping ?? 0) > LAGGY);
     });
-    this.dodgeCooldown.style.transform = `scaleX(${player.dodgeCooldown / cfg.dodge.cooldown})`;
+    setStyle(this.dodgeCooldown, 'transform', `scaleX(${(player.dodgeCooldown / cfg.dodge.cooldown).toFixed(3)})`);
     let views: SkillView[];
     let fill = 0;
     let ready = false;
@@ -250,7 +267,7 @@ export class Hud {
         },
       ];
     }
-    this.rageFill.style.width = `${fill * 100}%`;
+    setStyle(this.rageFill, 'width', percent(fill));
     this.rageBar.classList.toggle('ready', ready);
     if (this.rageLabel.textContent !== label) this.rageLabel.textContent = label;
     SKILL_KEYS.forEach((key, i) => {
@@ -258,7 +275,7 @@ export class Hud {
       const view = views[i];
       slot.root.classList.toggle('locked', view.locked);
       slot.root.classList.toggle('active', Boolean(view.active));
-      slot.cooldown.style.transform = `scaleX(${view.cooldown})`;
+      setStyle(slot.cooldown, 'transform', `scaleX(${view.cooldown.toFixed(3)})`);
     });
 
     // Deux boss à la fois (donjon infini) : la barre suit celui qui est le plus entamé.
@@ -270,13 +287,13 @@ export class Hud {
       this.bossName.textContent = `${this.bossTitle} · niv. ${world.cfg.difficulty?.level ?? 1}`;
     }
     this.boss.classList.toggle('visible', Boolean(boss));
-    if (boss) this.bossFill.style.width = `${(Math.max(0, boss.hp) / boss.maxHp) * 100}%`;
+    if (boss) setStyle(this.bossFill, 'width', percent(Math.max(0, boss.hp) / boss.maxHp));
     // Izanami : la jauge de son regard, et l'alerte quand le héros la regarde.
     const izanami = boss?.kind === 'izanami' ? boss : null;
     this.gaze.classList.toggle('visible', izanami !== null);
     if (izanami) {
       const gaze = izanami.gaze ?? 0;
-      this.gazeFill.style.width = `${gaze * 100}%`;
+      setStyle(this.gazeFill, 'width', percent(gaze));
       this.gaze.classList.toggle('watched', Boolean(izanami.watched));
       this.gaze.classList.toggle('full', gaze > 0.75);
       const label = izanami.repelled ? 'Repoussée par la pêche !' : izanami.watched ? 'Elle te voit…' : 'Son regard';
