@@ -1,0 +1,122 @@
+{
+ "frames": [
+  {
+   "filename": "voie 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 1",
+   "frame": {
+    "x": 384,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 2",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 3",
+   "frame": {
+    "x": 1152,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 4",
+   "frame": {
+    "x": 1536,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 5",
+   "frame": {
+    "x": 1920,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 6",
+   "frame": {
+    "x": 2304,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 7",
+   "frame": {
+    "x": 2688,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 8",
+   "frame": {
+    "x": 3072,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  },
+  {
+   "filename": "voie 9",
+   "frame": {
+    "x": 3456,
+    "y": 0,
+    "w": 384,
+    "h": 384
+   },
+   "duration": 45
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "voie-croc-lame.webp",
+  "size": {
+   "w": 3840,
+   "h": 384
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "voie",
+    "from": 0,
+    "to": 9,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

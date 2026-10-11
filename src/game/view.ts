@@ -101,6 +101,8 @@ export interface ProjectileView {
   readonly pos: Vec2;
   readonly dir: Vec2;
   readonly full: boolean;
+  /** Rayon de contact : la boule de feu se dessine à sa taille (l'Orbe est cinq fois plus grosse). */
+  readonly radius: number;
 }
 
 export interface StumpView {

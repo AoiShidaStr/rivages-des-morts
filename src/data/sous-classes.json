@@ -132,12 +132,12 @@
         "lore": "Amaterasu ne lançait pas de flammes : elle en posait une, et attendait qu'on vienne s'y brûler.",
         "passive": {
           "name": "Lentille ardente",
-          "description": "Ton clic gauche ne lance plus trois boules guidées, mais un seul orbe qu'il faut viser : quatre fois les dégâts de ta salve, plus vite et plus loin, mais il met 1,2 s à revenir et ne suit plus personne. Un tir dans le vide ne coûte rien : un tir manqué coûte tout.",
+          "description": "Ton clic gauche ne lance plus trois boules guidées, mais un seul orbe, cinq fois plus gros, qu'il faut viser droit devant : quatre fois les dégâts de ta salve, plus vite et plus loin, mais il met 1,2 s à revenir et ne suit plus personne. Un tir dans le vide ne coûte rien : un tir manqué coûte tout.",
           "effects": [
             {
               "op": "set",
               "path": "perks.baseAttack",
-              "value": { "count": 1, "damageFactor": 12, "radius": 0.6, "speed": 18, "turnRate": 0, "seek": 0, "range": 12, "windup": 0.3, "active": 0.08, "recovery": 1.2, "commit": 0.5 }
+              "value": { "count": 1, "damageFactor": 12, "radius": 1.4, "speed": 18, "turnRate": 0, "seek": 0, "range": 12, "windup": 0.3, "active": 0.08, "recovery": 1.2, "commit": 0.5 }
             }
           ]
         },

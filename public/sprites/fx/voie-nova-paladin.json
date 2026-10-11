@@ -1,0 +1,122 @@
+{
+ "frames": [
+  {
+   "filename": "voie 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 1",
+   "frame": {
+    "x": 448,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 2",
+   "frame": {
+    "x": 896,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 3",
+   "frame": {
+    "x": 1344,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 4",
+   "frame": {
+    "x": 1792,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 5",
+   "frame": {
+    "x": 2240,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 6",
+   "frame": {
+    "x": 2688,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 7",
+   "frame": {
+    "x": 3136,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 8",
+   "frame": {
+    "x": 3584,
+    "y": 0,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  },
+  {
+   "filename": "voie 9",
+   "frame": {
+    "x": 0,
+    "y": 448,
+    "w": 448,
+    "h": 448
+   },
+   "duration": 50
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "voie-nova-paladin.webp",
+  "size": {
+   "w": 4032,
+   "h": 896
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "voie",
+    "from": 0,
+    "to": 9,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

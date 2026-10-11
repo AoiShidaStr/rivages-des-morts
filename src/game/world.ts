@@ -23,6 +23,8 @@ import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome, StunReason } 
 
 /** Pause entre deux vagues, en secondes. */
 const WAVE_PAUSE = 1.5;
+/** Rayon des boules de la Naissance du feu sous la voie de l'Orbe (celui de la salve de base, player.json). */
+const BURST_RADIUS = 0.28;
 /** Distance minimale entre le joueur et un ennemi qui apparaît. */
 const SPAWN_CLEARANCE = 5;
 /** Secondes sans être touché avant que la « Sève du Yomi » ne soigne un yokai. */
@@ -1406,10 +1408,14 @@ export class World {
       .filter((e) => e.targetable && distance(e.pos, from) <= attack.range)
       .sort((a, b) => distance(a.pos, from) - distance(b.pos, from));
     if (!near.length) return;
+    // Voie de l'Orbe : ces boules-là restent des boules de salve, ni douze fois plus fortes ni cinq fois plus grosses.
+    const orb = player.cfg.perks?.baseAttack;
+    const damage = attack.damage / (orb?.damageFactor ?? 1);
+    const radius = orb?.radius !== undefined ? BURST_RADIUS : sorcier.fireball.radius;
     for (let i = 0; i < count; i++) {
       const target = near[i % near.length];
       const dir = normalize(sub(target.pos, from), fromAngle((i * Math.PI * 2) / count));
-      this.launch('fireball', dir, { pos: { ...from }, speed: sorcier.fireball.speed, range: attack.range, damage: attack.damage, knockback: attack.knockback, radius: sorcier.fireball.radius, pierce: sorcier.fireball.pierce ?? false, target: target.id });
+      this.launch('fireball', dir, { pos: { ...from }, speed: sorcier.fireball.speed, range: attack.range, damage, knockback: attack.knockback, radius, pierce: sorcier.fireball.pierce ?? false, target: target.id });
     }
   }
 
@@ -1760,6 +1766,15 @@ export class World {
    */
   castSubclass(cfg: SubclassActiveConfig, aim: Vec2, aimGround: Vec2): void {
     const player = this.player;
+    this.emit({
+      type: 'voie',
+      voie: cfg.id ?? '',
+      pos: { ...player.pos },
+      at: this.reach(aimGround, cfg.range ?? cfg.radius),
+      dir: normalize(sub(aim, player.pos), player.facing),
+      radius: cfg.radius,
+      delay: cfg.delay ?? 0,
+    });
     switch (cfg.kind) {
       case 'onde': {
         this.emit({ type: 'shockwave', pos: { ...player.pos }, radius: cfg.radius });

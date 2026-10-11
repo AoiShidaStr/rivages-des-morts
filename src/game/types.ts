@@ -127,6 +127,8 @@ export type GameEvent =
   | { type: 'evade'; pos: Vec2 }
   | { type: 'saved'; pos: Vec2; label: string }
   | { type: 'shockwave'; pos: Vec2; radius: number }
+  // Compétence de voie (F) lancée : `at`, le point visé au sol (à portée) ; `delay`, l'attente d'un sceau.
+  | { type: 'voie'; voie: string; pos: Vec2; at: Vec2; dir: Vec2; radius: number; delay: number }
   | { type: 'sanctuary'; id: number; pos: Vec2; radius: number; life: number }
   | { type: 'cloud'; id: number; pos: Vec2; radius: number; life: number }
   | { type: 'lure'; pos: Vec2 }

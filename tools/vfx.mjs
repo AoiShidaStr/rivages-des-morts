@@ -1136,6 +1136,441 @@ function aegisDome() {
   });
 }
 
+// --- Compétences des voies (F) -----------------------------------------------------------------------------------
+//
+// Une planche par geste, aux couleurs de la classe : tourbillon de lames, croix, crocs, séisme, cri, déflagration,
+// lanterne, cercle de vigueur, volée. Toutes au sol (vues de dessus, la direction du geste vers +x), sauf la lanterne.
+
+const VOIE = {
+  lame: LIGHT.lame,
+  guerrier: LIGHT.guerrier,
+  paladin: LIGHT.paladin,
+  rodeur: LIGHT.rodeur,
+  // Frappe rouge : un carmin violacé, loin du vermillon des yokai.
+  carmin: { core: '#fff0f6', main: '#d8649a', deep: '#7c2a5c' },
+  venin: { core: '#f2ffe8', main: '#8fd65a', deep: '#3d7a2a' },
+  argile: { core: '#fff4e6', main: '#d29a62', deep: '#8a5530' },
+};
+
+/** Trait droit effilé, de (x0, y0) à (x1, y1), plus épais vers la tête (u = 1). */
+function stroke(x0, y0, x1, y1, width) {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const left = [];
+  const right = [];
+  for (let k = 0; k <= 16; k++) {
+    const u = k / 16;
+    const w = width(u) / 2;
+    left.push([x0 + dx * u + nx * w, y0 + dy * u + ny * w]);
+    right.push([x0 + dx * u - nx * w, y0 + dy * u - ny * w]);
+  }
+  return [...left, ...right.reverse()];
+}
+
+/**
+ * Tourbillon de lames : `blades` traits de pinceau tournent autour du héros en s'écartant (un tour et demi), un
+ * voile de mouvement les suit, puis ils s'effilochent en éclats projetés. `fangs` : des crocs sur le bord, et des
+ * gouttes de venin (Croc lente).
+ */
+function tourbillon(color, { blades = 3, fangs = false, seed = 1, arc = 110 } = {}) {
+  const S = 384;
+  const c = S / 2;
+  const R = 172;
+  const N = 10;
+  const rand = seeded(300 + seed);
+  const shards = [...Array(14)].map(() => ({ a: rand() * 360, len: 10 + rand() * 16, w: 1.8 + rand() * 1.8, d: 0.7 + rand() * 0.5, white: rand() < 0.35 }));
+  const drops = [...Array(10)].map(() => ({ a: rand() * 360, d: 0.75 + rand() * 0.3, r: 3 + rand() * 3 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const spin = 540 * easeOut(p / 0.7);
+    const radius = R * (0.5 + 0.5 * easeOut(p / 0.5));
+    const life = 1 - clamp01((p - 0.6) / 0.4);
+    const span = arc * (p < 0.7 ? 1 : life);
+    let body = '';
+    if (span > 4) {
+      for (let b = 0; b < blades; b++) {
+        const head = spin + (b * 360) / blades;
+        const tail = head - span;
+        const W = 22 * (0.5 + 0.5 * life);
+        body += polygon(arcBand(c, c, radius + 6, tail - 30, head, needle(W * 2.2, 0.75)), color.main, 'none', 0, 0.16 * life);
+        body += polygon(arcBand(c, c, radius, tail, head, needle(W)), color.main, INK, 2, 0.92 * life);
+        body += polygon(arcBand(c, c, radius - W * 0.15, tail + span * 0.35, head - 2, needle(W * 0.4)), color.core, 'none', 0, life);
+        body += polygon(arcBand(c, c, radius - W - 10, tail + span * 0.5, head - 6, needle(2.2, 0.8)), color.deep, 'none', 0, 0.8 * life);
+        if (fangs) {
+          for (let f = 0; f < 4; f++) {
+            const a = deg(tail + span * (0.35 + f * 0.17));
+            const r0 = radius - 2;
+            const tip = r0 + 16 * life;
+            body += polygon(
+              [[c + Math.cos(a - 0.05) * r0, c + Math.sin(a - 0.05) * r0], [c + Math.cos(a + 0.02) * tip, c + Math.sin(a + 0.02) * tip], [c + Math.cos(a + 0.06) * r0, c + Math.sin(a + 0.06) * r0]],
+              color.core, INK, 1.5, life,
+            );
+          }
+        }
+      }
+    }
+    // L'élan : des filets fins à l'extérieur, au départ, qui disent la vitesse.
+    if (i <= 3) body += polygon(arcBand(c, c, radius + 16, spin - 160, spin, needle(1.6, 0.85)), color.core, 'none', 0, 0.7);
+    if (p >= 0.45) {
+      const q = clamp01((p - 0.45) / 0.55);
+      for (const s of shards) {
+        const a = deg(s.a + spin * 0.15);
+        const r = R * (0.8 + 0.35 * q) * s.d;
+        body += sliver(c + Math.cos(a) * r, c + Math.sin(a) * r, s.len * (1 - q * 0.5), s.w, a + Math.PI / 2, s.white ? color.core : color.main, 1 - q);
+      }
+      if (fangs) for (const d of drops) {
+        const a = deg(d.a);
+        const r = R * d.d * (0.9 + 0.2 * q);
+        body += drop(c + Math.cos(a) * r, c + Math.sin(a) * r, d.r * (1 - 0.4 * q), color.main, 1 - q);
+      }
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Croix : deux grandes entailles se croisent sur le héros, puis quatre plus courtes, et tout éclate en éclats. */
+function croix(color) {
+  const S = 384;
+  const c = S / 2;
+  const L = 170;
+  const N = 9;
+  const rand = seeded(331);
+  const cuts = [
+    { a: deg(-45), at: 0, len: L, w: 26 },
+    { a: deg(45), at: 0.12, len: L, w: 26 },
+    ...[0, 90, 180, 270].map((d, k) => ({ a: deg(d + 22), at: 0.3 + k * 0.04, len: L * 0.55, w: 12 })),
+  ];
+  const shards = [...Array(16)].map(() => ({ a: rand() * Math.PI * 2, d: 0.4 + rand() * 0.6, len: 10 + rand() * 14, w: 2 + rand() * 1.5, white: rand() < 0.4 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    let body = '';
+    for (const cut of cuts) {
+      const t = clamp01((p - cut.at) / 0.22 + 0.3);
+      if (t <= 0) continue;
+      const fade = 1 - clamp01((p - cut.at - 0.3) / 0.35);
+      if (fade <= 0) continue;
+      const head = easeOut(t);
+      const cos = Math.cos(cut.a);
+      const sin = Math.sin(cut.a);
+      const x0 = c - cos * cut.len;
+      const y0 = c - sin * cut.len;
+      const x1 = c + cos * cut.len * (2 * head - 1);
+      const y1 = c + sin * cut.len * (2 * head - 1);
+      body += polygon(stroke(x0, y0, x1, y1, needle(cut.w * 2.2, 0.7)), color.main, 'none', 0, 0.15 * fade);
+      body += polygon(stroke(x0, y0, x1, y1, needle(cut.w * fade + 2, 0.7)), color.main, INK, 2, 0.95 * fade);
+      body += polygon(stroke(lerp(x0, x1, 0.3), lerp(y0, y1, 0.3), x1, y1, needle(cut.w * 0.35 * fade + 1, 0.7)), color.core, 'none', 0, fade);
+    }
+    // Le choc au croisement : une éclaboussure d'encre, puis un éclat blanc.
+    if (p >= 0.12 && p < 0.6) {
+      const q = clamp01((p - 0.12) / 0.48);
+      body += polygon(splat(c, c, 14 + 10 * q, 34 + 26 * q, 7, seeded(332)), color.deep, INK, 1.5, 0.85 * (1 - q));
+      body += `<circle cx="${c}" cy="${c}" r="${(12 * (1 - q) + 2).toFixed(1)}" fill="${color.core}" opacity="${(1 - q).toFixed(3)}"/>`;
+    }
+    if (p >= 0.4) {
+      const q = clamp01((p - 0.4) / 0.6);
+      for (const s of shards) {
+        const r = L * s.d * (0.6 + 0.6 * q);
+        body += sliver(c + Math.cos(s.a) * r, c + Math.sin(s.a) * r, s.len * (1 - 0.5 * q), s.w, s.a, s.white ? color.core : color.main, 1 - q);
+      }
+    }
+    return svg(S, S, body);
+  });
+}
+
+/**
+ * Séisme : le sol se fend en étoile autour du héros (des failles d'encre où luit l'accent de la classe), des éclats
+ * de roche sautent, un anneau de poussière part au ras du sol.
+ */
+function seisme(color) {
+  const S = 384;
+  const c = S / 2;
+  const R = 176;
+  const N = 10;
+  const rand = seeded(341);
+  const cracks = [...Array(9)].map((_, k) => {
+    const a = (k / 9) * Math.PI * 2 + (rand() - 0.5) * 0.4;
+    const len = R * (0.65 + rand() * 0.35);
+    return { a, len, path: zigzag(c, c, c + Math.cos(a) * len, c + Math.sin(a) * len, 6, 14, rand) };
+  });
+  const chips = [...Array(14)].map(() => ({ a: rand() * Math.PI * 2, d: 0.35 + rand() * 0.55, s: 5 + rand() * 6, rot: rand() * 6 }));
+  const cut = (list, t) => {
+    const n = Math.max(2, Math.ceil(list.length * t));
+    return list.slice(0, n);
+  };
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const grow = easeOut(p / 0.35);
+    const fade = 1 - clamp01((p - 0.55) / 0.45);
+    let body = '';
+    // Anneau de poussière : un trait de pinceau large et pâle qui file au ras du sol.
+    const ring = R * (0.3 + 0.75 * easeOut(p / 0.8));
+    body += polygon(arcBand(c, c, ring, 0, 359, (u) => 18 * (0.6 + 0.4 * Math.sin(u * Math.PI * 6)) * (1 - p * 0.7), 72), DUST, 'none', 0, 0.5 * (1 - p));
+    for (const k of cracks) {
+      const line = pts(cut(k.path, grow));
+      body += `<polyline points="${line}" fill="none" stroke="${INK}" stroke-width="${(9 * fade + 1).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round" opacity="${(0.9 * fade).toFixed(3)}"/>`;
+      body += `<polyline points="${line}" fill="none" stroke="${color.main}" stroke-width="${(3.5 * fade + 0.5).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round" opacity="${fade.toFixed(3)}"/>`;
+    }
+    // L'impact au centre : une tache d'encre, cœur de la classe.
+    body += polygon(splat(c, c, 20, 44 + 16 * grow, 8, seeded(342)), INK, 'none', 0, 0.75 * fade);
+    body += polygon(splat(c, c, 10, 24 + 8 * grow, 6, seeded(343)), color.main, 'none', 0, fade);
+    if (p < 0.4) body += `<circle cx="${c}" cy="${c}" r="${(30 * (1 - p / 0.4) + 4).toFixed(1)}" fill="${color.core}" opacity="${(1 - p / 0.4).toFixed(3)}"/>`;
+    for (const chip of chips) {
+      const d = R * chip.d * (0.3 + 0.9 * easeOut(p));
+      const x = c + Math.cos(chip.a) * d;
+      const y = c + Math.sin(chip.a) * d;
+      const s = chip.s * (1 - 0.4 * p);
+      const r = chip.rot + p * 4;
+      const corner = (k) => [x + Math.cos(r + k * 2.1) * s, y + Math.sin(r + k * 2.1) * s * 0.8];
+      body += polygon([corner(0), corner(1), corner(2)], '#b9ab8e', INK, 1.5, 1 - clamp01((p - 0.5) / 0.5));
+    }
+    return svg(S, S, body);
+  });
+}
+
+/**
+ * Cri : trois anneaux de pinceau partent du héros l'un après l'autre. `spikes` : des pointes d'encre (fureur) ;
+ * `rays` : des rayons fins (serment, chant) ; `swirl` : des volutes de souffle (chasseur).
+ */
+function cri(color, mode) {
+  const S = 384;
+  const c = S / 2;
+  const R = 170;
+  const N = 10;
+  const rand = seeded(350 + mode.length);
+  const starts = [rand() * 360, rand() * 360, rand() * 360];
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    let body = '';
+    starts.forEach((start, k) => {
+      const q = clamp01((p - k * 0.15) / 0.7);
+      if (q <= 0 || q >= 1) return;
+      const r = R * (0.2 + 0.8 * easeOut(q));
+      const w = 16 * (1 - q) + 2;
+      body += polygon(arcBand(c, c, r, start, start + 300, (u) => w * (0.35 + 0.65 * Math.sin(Math.PI * Math.min(1, u * 1.1))), 60), color.main, INK, 1.8, 0.9 * (1 - q));
+      body += polygon(arcBand(c, c, r - w * 0.2, start + 40, start + 260, (u) => w * 0.3 * Math.sin(Math.PI * u), 50), color.core, 'none', 0, 1 - q);
+    });
+    if (mode === 'spikes' && p < 0.6) {
+      const q = p / 0.6;
+      body += polygon(splat(c, c, 26 + 30 * q, 70 + 70 * easeOut(q), 11, seeded(351), q * 0.6), color.deep, INK, 2, 0.8 * (1 - q));
+    }
+    if (mode === 'rays') {
+      const q = clamp01(p / 0.8);
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2 + deg(15);
+        const r0 = 30 + 60 * easeOut(q);
+        const len = (k % 2 ? 40 : 70) * (1 - q * 0.5);
+        body += sliver(c + Math.cos(a) * (r0 + len / 2), c + Math.sin(a) * (r0 + len / 2), len, k % 2 ? 4 : 6, a, k % 2 ? color.main : color.core, 1 - q);
+      }
+    }
+    if (mode === 'swirl') {
+      const q = clamp01(p / 0.85);
+      for (let k = 0; k < 4; k++) {
+        const a0 = k * 90 + 200 * easeOut(q);
+        body += polygon(arcBand(c, c, 50 + 100 * easeOut(q) + k * 6, a0, a0 + 70, needle(8 * (1 - q) + 1.5, 0.8)), color.main, INK, 1.4, 0.9 * (1 - q));
+      }
+    }
+    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(26 * (1 - p / 0.3) + 4).toFixed(1)}" fill="${color.core}" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
+    return svg(S, S, body);
+  });
+}
+
+/** Déflagration de l'Orbe : l'orbe éclate autour du Sorcier, une couronne de flammes qui s'ouvre et s'éteint. */
+function novaFeu() {
+  const S = 448;
+  const c = S / 2;
+  const R = 190;
+  const N = 10;
+  const rand = seeded(361);
+  const tongues = [...Array(24)].map((_, k) => ({ a: (k / 24) * Math.PI * 2 + rand() * 0.2, len: 0.6 + rand() * 0.6, w: 18 + rand() * 10, ph: rand() * 6 }));
+  const sparks = [...Array(16)].map(() => ({ a: rand() * Math.PI * 2, d: 0.7 + rand() * 0.5, r: 2 + rand() * 2 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const grow = easeOut(p / 0.55);
+    const fade = 1 - clamp01((p - 0.45) / 0.55);
+    const r = R * (0.15 + 0.75 * grow);
+    let body = GLOW(10);
+    body += glowGroup(`<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="${FIRE.orange}" stroke-width="${(30 * fade + 4).toFixed(1)}"/>`, 0.55 * fade);
+    if (p < 0.35) body += hotDisc(c, c, 70 * (1 - p / 0.35) + 20, 1 - p / 0.35);
+    for (const t of tongues) {
+      const len = 70 * t.len * (0.5 + 0.5 * fade);
+      const x0 = c + Math.cos(t.a) * (r - 12);
+      const y0 = c + Math.sin(t.a) * (r - 12);
+      body += flame(x0, y0, c + Math.cos(t.a + 0.12) * (r + len), c + Math.sin(t.a + 0.12) * (r + len), t.w * (0.5 + 0.5 * fade), 8, t.ph + p * 5, fade);
+    }
+    body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="none" stroke="${FIRE.white}" stroke-width="${(4 * fade).toFixed(1)}" opacity="${(0.85 * fade).toFixed(3)}"/>`;
+    for (const s of sparks) {
+      const d = R * s.d * (0.4 + 0.8 * easeOut(p));
+      body += ember(c + Math.cos(s.a) * d, c + Math.sin(s.a) * d, s.r * (1 - 0.5 * p), 1 - p);
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Onde sacrée (Rupture, Jugement d'armes) : un anneau d'or qui se fend, et douze lames de lumière plantées autour. */
+function novaSacree(color) {
+  const S = 448;
+  const c = S / 2;
+  const R = 190;
+  const N = 10;
+  const rand = seeded(371);
+  const gaps = [...Array(6)].map((_, k) => k * 60 + rand() * 30);
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const grow = easeOut(p / 0.5);
+    const fade = 1 - clamp01((p - 0.5) / 0.5);
+    const r = R * (0.2 + 0.75 * grow);
+    let body = '';
+    body += `<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="${color.main}" opacity="${(0.12 * fade).toFixed(3)}"/>`;
+    // L'anneau, en six arcs : le serment se brise.
+    gaps.forEach((g, k) => {
+      const a0 = g + 6 * grow;
+      const a1 = gaps[(k + 1) % 6] + (k === 5 ? 360 : 0) - 6 * grow;
+      body += polygon(arcBand(c, c, r, a0, a1, (u) => (14 * fade + 2) * (0.4 + 0.6 * Math.sin(Math.PI * u)), 30), color.main, INK, 2, fade);
+      body += polygon(arcBand(c, c, r - 3, a0 + 4, a1 - 4, (u) => (4 * fade + 1) * Math.sin(Math.PI * u), 30), color.core, 'none', 0, fade);
+    });
+    // Les lames : elles tombent de l'extérieur et se plantent sur l'anneau.
+    const land = clamp01((p - 0.15) / 0.3);
+    if (land > 0) {
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2 + deg(15);
+        const rr = r + 70 * (1 - easeOut(land));
+        const x = c + Math.cos(a) * rr;
+        const y = c + Math.sin(a) * rr;
+        body += polygon(stroke(x + Math.cos(a) * 34, y + Math.sin(a) * 34, x - Math.cos(a) * 6, y - Math.sin(a) * 6, needle(11, 0.85)), color.main, INK, 1.6, fade);
+        body += sliver(x + Math.cos(a) * 18, y + Math.sin(a) * 18, 26, 3, a, color.core, fade);
+      }
+    }
+    if (p < 0.3) body += `<circle cx="${c}" cy="${c}" r="${(40 * (1 - p / 0.3) + 6).toFixed(1)}" fill="${color.core}" opacity="${(1 - p / 0.3).toFixed(3)}"/>`;
+    return svg(S, S, body);
+  });
+}
+
+/** Lampion (debout) : une lanterne de papier se pose, enfle et s'embrase de l'intérieur jusqu'à l'explosion. */
+function lanterne() {
+  const W = 160;
+  const H = 256;
+  const N = 12;
+  const cx = W / 2;
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const fall = easeOut(p / 0.3);
+    const swell = 1 + 0.22 * clamp01((p - 0.5) / 0.5) ** 2;
+    const shake = p > 0.7 ? Math.sin(i * 2.7) * 4 * (p - 0.7) / 0.3 : 0;
+    const cy = lerp(60, 150, fall);
+    const rx = 44 * swell;
+    const ry = 56 * swell;
+    const heat = 0.35 + 0.65 * clamp01(p / 0.9);
+    const x = cx + shake;
+    let body = GLOW(8);
+    body += `<line x1="${x}" y1="0" x2="${x}" y2="${(cy - ry - 8).toFixed(1)}" stroke="${INK}" stroke-width="2" opacity="${(1 - fall).toFixed(3)}"/>`;
+    body += glowGroup(`<ellipse cx="${x}" cy="${cy}" rx="${(rx + 14).toFixed(1)}" ry="${(ry + 14).toFixed(1)}" fill="${FIRE.orange}"/>`, 0.45 * heat);
+    body += `<ellipse cx="${x}" cy="${cy}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${PAPER}" stroke="${INK}" stroke-width="2.5"/>`;
+    body += `<ellipse cx="${x}" cy="${cy}" rx="${(rx * 0.75).toFixed(1)}" ry="${(ry * 0.8).toFixed(1)}" fill="url(#hot)" opacity="${heat.toFixed(3)}"/>`;
+    for (let k = -2; k <= 2; k++) {
+      const yy = cy + (k * ry) / 3;
+      const half = rx * Math.sqrt(Math.max(0, 1 - ((k * ry) / 3 / ry) ** 2));
+      body += `<path d="M ${(x - half).toFixed(1)} ${yy.toFixed(1)} Q ${x} ${(yy + 6).toFixed(1)} ${(x + half).toFixed(1)} ${yy.toFixed(1)}" fill="none" stroke="${INK}" stroke-width="1.4" opacity="0.7"/>`;
+    }
+    // Le mot « feu » (火) au pinceau sur le papier.
+    body += `<path d="M ${x - 12} ${cy - 6} L ${x - 6} ${cy + 2} M ${x + 12} ${cy - 6} L ${x + 6} ${cy + 2} M ${x} ${cy - 18} L ${x} ${cy + 2} L ${x - 14} ${cy + 20} M ${x} ${cy + 2} L ${x + 14} ${cy + 20}" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round" opacity="0.85"/>`;
+    body += `<rect x="${(x - rx * 0.45).toFixed(1)}" y="${(cy - ry - 6).toFixed(1)}" width="${(rx * 0.9).toFixed(1)}" height="9" rx="2" fill="${INK}"/>`;
+    body += `<rect x="${(x - rx * 0.45).toFixed(1)}" y="${(cy + ry - 3).toFixed(1)}" width="${(rx * 0.9).toFixed(1)}" height="9" rx="2" fill="${INK}"/>`;
+    if (p > 0.6) for (let k = 0; k < 5; k++) body += ember(x + Math.sin(k * 2.3 + i) * rx * 0.9, cy - ry - 10 - ((i * 9 + k * 17) % 50), 2.2, 0.9);
+    return svg(W, H, body);
+  });
+}
+
+/** Cercle de vigueur (dryade) : une liane trace le cercle, des feuilles y poussent, quelques pétales montent. */
+function feuillage() {
+  const S = 384;
+  const c = S / 2;
+  const R = 160;
+  const N = 10;
+  const rand = seeded(381);
+  const leaves = [...Array(22)].map((_, k) => ({ a: (k / 22) * 360 + rand() * 8, out: rand() < 0.5 ? 1 : -1, s: 12 + rand() * 9, at: k / 22 }));
+  const petals = [...Array(10)].map(() => ({ a: rand() * Math.PI * 2, d: rand() * 0.8, r: 3 + rand() * 2 }));
+  const leaf = (x, y, a, s, opacity) => {
+    const tip = [x + Math.cos(a) * s * 2, y + Math.sin(a) * s * 2];
+    const side = (k) => [x + Math.cos(a) * s + Math.cos(a + k * Math.PI / 2) * s * 0.55, y + Math.sin(a) * s + Math.sin(a + k * Math.PI / 2) * s * 0.55];
+    return `<path d="M ${x.toFixed(1)} ${y.toFixed(1)} Q ${side(1).map((v) => v.toFixed(1)).join(' ')} ${tip.map((v) => v.toFixed(1)).join(' ')} Q ${side(-1).map((v) => v.toFixed(1)).join(' ')} ${x.toFixed(1)} ${y.toFixed(1)} Z" fill="${JADE.mid}" stroke="${INK}" stroke-width="1.5" opacity="${opacity.toFixed(3)}"/>`
+      + `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${tip[0].toFixed(1)}" y2="${tip[1].toFixed(1)}" stroke="${JADE.light}" stroke-width="1.2" opacity="${opacity.toFixed(3)}"/>`;
+  };
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    const traced = easeOut(p / 0.6);
+    const head = -90 + 360 * traced;
+    let body = `<circle cx="${c}" cy="${c}" r="${R}" fill="${JADE.mid}" opacity="${(0.1 * traced).toFixed(3)}"/>`;
+    if (traced > 0.02) {
+      body += polygon(arcBand(c, c, R + 4, -90, head, (u) => 9 * (0.4 + 0.6 * Math.sin(Math.PI * Math.min(1, u * 0.95 + 0.05))), 60), JADE.mid, INK, 2, 1);
+      body += polygon(arcBand(c, c, R, -86, head - 4, (u) => 2.5 * u, 60), JADE.light, 'none', 0, 1);
+    }
+    for (const l of leaves) {
+      const grown = clamp01((traced - l.at) / 0.25);
+      if (grown <= 0) continue;
+      const a = deg(l.a - 90);
+      const x = c + Math.cos(a) * R;
+      const y = c + Math.sin(a) * R;
+      body += leaf(x, y, a + l.out * 0.9, l.s * easeOut(grown), 1);
+    }
+    if (p > 0.4) {
+      const q = clamp01((p - 0.4) / 0.6);
+      for (const pe of petals) {
+        const d = R * pe.d;
+        body += drop(c + Math.cos(pe.a) * d, c + Math.sin(pe.a) * d - 20 * q, pe.r, JADE.light, 1 - q);
+      }
+    }
+    return svg(S, S, body);
+  });
+}
+
+/** Volée : six traits partent en éventail du héros (à gauche, tir vers +x), un arc de détente claque à l'origine. */
+function volee(color, clay = false) {
+  const W = 448;
+  const H = 256;
+  const ox = 40;
+  const cy = H / 2;
+  const N = 8;
+  const rand = seeded(clay ? 392 : 391);
+  const spread = 9;
+  const shafts = [...Array(6)].map((_, k) => ({ a: deg((k / 5 - 0.5) * 2 * spread), lag: rand() * 0.12 }));
+  const chips = [...Array(10)].map(() => ({ a: deg((rand() - 0.5) * 50), d: 0.3 + rand() * 0.7, s: 3 + rand() * 3 }));
+  return [...Array(N)].map((_, i) => {
+    const p = i / (N - 1);
+    let body = '';
+    // Le claquement de la corde : un arc de pinceau devant le héros.
+    if (p < 0.45) {
+      const q = p / 0.45;
+      body += polygon(arcBand(ox, cy, 40 + 50 * q, -70, 70, (u) => 16 * (1 - q) * Math.sin(Math.PI * u) + 1), color.main, INK, 1.8, 1 - q);
+    }
+    for (const s of shafts) {
+      const q = clamp01((p - s.lag) / 0.75);
+      if (q <= 0 || q >= 1) continue;
+      const head = 40 + 380 * easeOut(q);
+      const tail = Math.max(0, head - 170 * (1 - q * 0.6));
+      const x0 = ox + Math.cos(s.a) * tail;
+      const y0 = cy + Math.sin(s.a) * tail;
+      const x1 = ox + Math.cos(s.a) * head;
+      const y1 = cy + Math.sin(s.a) * head;
+      body += polygon(stroke(x0, y0, x1, y1, needle(20 * (1 - q) + 4, 0.9)), color.main, 'none', 0, 0.18 * (1 - q));
+      body += polygon(stroke(x0, y0, x1, y1, needle(12 * (1 - q) + 3, 0.9)), color.main, INK, 1.5, 0.95 * (1 - q * 0.6));
+      body += polygon(stroke(lerp(x0, x1, 0.45), lerp(y0, y1, 0.45), x1, y1, needle(5 * (1 - q) + 1.5, 0.9)), color.core, 'none', 0, 1 - q * 0.5);
+    }
+    if (clay && p > 0.2) {
+      const q = clamp01((p - 0.2) / 0.8);
+      for (const ch of chips) {
+        const d = ox + 360 * ch.d * easeOut(q);
+        const x = ox + Math.cos(ch.a) * (d - ox);
+        const y = cy + Math.sin(ch.a) * (d - ox);
+        body += polygon([[x - ch.s, y], [x, y - ch.s * 0.8], [x + ch.s, y + ch.s * 0.3]], color.deep, INK, 1, 1 - q);
+      }
+    }
+    return svg(W, H, body);
+  });
+}
+
 // --- Écriture des planches ---------------------------------------------------------------------------------------
 
 /** name : fichier (sans extension) ; tag : nom de l'animation ; once : jouée une fois ; duration : ms par image. */
@@ -1177,6 +1612,21 @@ const EFFECTS = [
   // Remplacent les effets du Sorcier : mêmes fichiers et mêmes tags, déjà branchés dans le rendu.
   { name: 'fireball-sorcier', tag: 'flight', once: false, duration: 60, frames: fireball },
   { name: 'fire-wrath-sorcier', tag: 'wrath', once: true, duration: 45, frames: fireBurst },
+  // Compétences des voies (F), une planche par geste et par classe.
+  { name: 'voie-tourbillon-lame', tag: 'voie', once: true, duration: 45, frames: () => tourbillon(VOIE.lame, { blades: 2, seed: 1 }) },
+  { name: 'voie-croc-lame', tag: 'voie', once: true, duration: 45, frames: () => tourbillon(VOIE.venin, { blades: 2, fangs: true, seed: 2 }) },
+  { name: 'voie-croix-lame', tag: 'voie', once: true, duration: 45, frames: () => croix(VOIE.carmin) },
+  { name: 'voie-tourbillon-guerrier', tag: 'voie', once: true, duration: 45, frames: () => tourbillon(VOIE.guerrier, { blades: 1, seed: 3, arc: 230 }) },
+  { name: 'voie-seisme-guerrier', tag: 'voie', once: true, duration: 50, frames: () => seisme(VOIE.guerrier) },
+  { name: 'voie-cri-guerrier', tag: 'voie', once: true, duration: 55, frames: () => cri(VOIE.guerrier, 'spikes') },
+  { name: 'voie-cri-paladin', tag: 'voie', once: true, duration: 55, frames: () => cri(VOIE.paladin, 'rays') },
+  { name: 'voie-nova-paladin', tag: 'voie', once: true, duration: 50, frames: () => novaSacree(VOIE.paladin) },
+  { name: 'voie-cri-rodeur', tag: 'voie', once: true, duration: 55, frames: () => cri(VOIE.rodeur, 'swirl') },
+  { name: 'voie-volee-rodeur', tag: 'voie', once: true, duration: 40, frames: () => volee(VOIE.rodeur) },
+  { name: 'voie-argile-rodeur', tag: 'voie', once: true, duration: 40, frames: () => volee(VOIE.argile, true) },
+  { name: 'voie-nova-sorcier', tag: 'voie', once: true, duration: 45, frames: novaFeu },
+  { name: 'voie-lanterne-sorcier', tag: 'voie', once: true, duration: 80, frames: lanterne },
+  { name: 'voie-feuillage-sorcier', tag: 'voie', once: true, duration: 70, frames: feuillage },
 ];
 
 await mkdir(outDir, { recursive: true });

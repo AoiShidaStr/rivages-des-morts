@@ -107,6 +107,8 @@ export interface PlayerConfig {
  * src/data/sous-classes.json ; `buildLoadout` reporte ses dégâts à l'échelle des coups du héros.
  */
 export interface SubclassActiveConfig {
+  /** La voie qui la donne (« orbe », « fureur »…) : le rendu en tire son effet. */
+  id?: string;
   name: string;
   description: string;
   /** Recharge, en secondes. */

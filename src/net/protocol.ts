@@ -172,7 +172,7 @@ const HERO_DEFAULTS: Partial<HeroSnap> = {
   hammerOut: false,
 };
 const ENEMY_DEFAULTS: Partial<EnemyView> = { pose: 'idle', altitude: 0, spawnProgress: 1, elite: false, mark: null, dead: false, boss: false };
-const PROJECTILE_DEFAULTS: Partial<ProjectileView> = { full: false };
+const PROJECTILE_DEFAULTS: Partial<ProjectileView> = { full: false, radius: 0.28 };
 const WEB_DEFAULTS: Partial<WebView> = { burning: null };
 const NO_DEFAULTS = {};
 
@@ -321,7 +321,7 @@ export function shareSnapshot(world: World, tick: number): SharedSnap {
     rest: {
       e: packList(enemies, ENEMY_DEFAULTS),
       p: packList(
-        world.projectiles.map((p) => ({ id: p.id, kind: p.kind, pos: p.pos, dir: p.dir, full: p.full })),
+        world.projectiles.map((p) => ({ id: p.id, kind: p.kind, pos: p.pos, dir: p.dir, full: p.full, radius: p.radius })),
         PROJECTILE_DEFAULTS,
       ),
       t: packList(

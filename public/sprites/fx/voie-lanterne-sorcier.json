@@ -1,0 +1,142 @@
+{
+ "frames": [
+  {
+   "filename": "voie 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 1",
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 2",
+   "frame": {
+    "x": 320,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 3",
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 4",
+   "frame": {
+    "x": 640,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 5",
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 6",
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 7",
+   "frame": {
+    "x": 1120,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 8",
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 9",
+   "frame": {
+    "x": 1440,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 10",
+   "frame": {
+    "x": 1600,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 11",
+   "frame": {
+    "x": 1760,
+    "y": 0,
+    "w": 160,
+    "h": 256
+   },
+   "duration": 80
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx.mjs",
+  "image": "voie-lanterne-sorcier.webp",
+  "size": {
+   "w": 1920,
+   "h": 256
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "voie",
+    "from": 0,
+    "to": 11,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

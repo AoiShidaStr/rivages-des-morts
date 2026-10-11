@@ -44,6 +44,7 @@ import {
   drawRing,
   drawSpider,
   drawStreak,
+  drawLane,
   drawStump,
   drawTelegraph,
   drawWeb,
@@ -253,6 +254,8 @@ const SHADOW_STRIKE = new Color3(0.22, 0.16, 0.32);
 const DUST = new Color3(0.86, 0.78, 0.6);
 const SILK = new Color3(0.93, 0.95, 0.98);
 const FIRE = new Color3(1, 0.55, 0.2);
+/** Rayon de la boule de feu de base (player.json) : la taille dessinée des planches de flamme. */
+const FIREBALL_RADIUS = 0.28;
 /** Sceau du Sorcier : rouge vermillon des ofuda. */
 const SEAL = new Color3(1, 0.35, 0.25);
 const FRENZY_TINT = new Color3(1, 0.7, 0.6);
@@ -315,6 +318,33 @@ function effectKit(name: string): string | null {
   if (/Lame/.test(name)) return 'lame';
   return null;
 }
+
+/**
+ * Compétences des voies : la planche de chaque voie (tools/vfx.mjs), au sol autour du héros sauf mention.
+ * `size` : côté en m (sinon 2,3 × le rayon de l'effet) ; `from: 'at'` : au point visé ; `ahead` : part du héros
+ * dans la direction du geste (le pied du tir est à 40 px sur 448) ; `upright` : dressée face à la caméra, le
+ * temps de l'attente du sceau. La Colonne ardente et le Couloir gardent le cercle de runes et le filet.
+ */
+const VOIE_FX: Record<string, { sheet: string; life: number; size?: number; aspect?: number; from?: 'at'; ahead?: number; upright?: boolean; shake?: number }> = {
+  fureur: { sheet: 'fxVoieCriGuerrier', life: 0.55, size: 7, shake: 0.2 },
+  demuni: { sheet: 'fxVoieSeismeGuerrier', life: 0.5, shake: 0.35 },
+  cratere: { sheet: 'fxVoieSeismeGuerrier', life: 0.5, shake: 0.45 },
+  replique: { sheet: 'fxVoieTourbillonGuerrier', life: 0.45 },
+  orbe: { sheet: 'fxVoieNovaSorcier', life: 0.45, shake: 0.25 },
+  dryade: { sheet: 'fxVoieFeuillageSorcier', life: 0.8, from: 'at' },
+  lampion: { sheet: 'fxVoieLanterneSorcier', life: 1, upright: true },
+  ombre: { sheet: 'fxVoieTourbillonLame', life: 0.45 },
+  chair: { sheet: 'fxVoieTourbillonLame', life: 0.45 },
+  saigne: { sheet: 'fxVoieCrocLame', life: 0.5 },
+  voile: { sheet: 'fxVoieCroixLame', life: 0.45, shake: 0.15 },
+  serment: { sheet: 'fxVoieCriPaladin', life: 0.55, size: 7 },
+  chantre: { sheet: 'fxVoieCriPaladin', life: 0.55, size: 7 },
+  parjure: { sheet: 'fxVoieNovaPaladin', life: 0.5, shake: 0.3 },
+  eveque: { sheet: 'fxVoieNovaPaladin', life: 0.5, shake: 0.3 },
+  cuirasse: { sheet: 'fxVoieCriRodeur', life: 0.55, size: 6 },
+  tireur: { sheet: 'fxVoieVoleeRodeur', life: 0.32, size: 9, aspect: 256 / 448, ahead: 0.5 - 40 / 448 },
+  vigie: { sheet: 'fxVoieArgileRodeur', life: 0.32, size: 9, aspect: 256 / 448, ahead: 0.5 - 40 / 448 },
+};
 
 /** Arène en 3D : ce qui était posé au-delà de cette distance finit derrière les murs du fond. */
 const ARENA_3D_WALL = 12;
@@ -409,7 +439,7 @@ export class Renderer {
   private time = 0;
   private readonly sprites = new Map<string, SpriteEntry>();
   private readonly fxTextures: Record<
-    'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'arrow' | 'hammer' | 'seal',
+    'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'lane' | 'arrow' | 'hammer' | 'seal',
     BaseTexture
   >;
   private readonly views = new Map<number, EntityView>();
@@ -424,7 +454,7 @@ export class Renderer {
   private readonly blasts = new Map<number, Fx>();
   private readonly embers = new Map<number, Fx>();
   /** Flèches, marteau et boules de feu en vol. */
-  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number; fire?: boolean }>();
+  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number; fire?: boolean; size?: number; lead?: number }>();
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
@@ -523,6 +553,7 @@ export class Renderer {
       telegraph: this.canvasTexture('telegraph', drawTelegraph()),
       web: this.canvasTexture('web', drawWeb()),
       streak: this.canvasTexture('streak', drawStreak()),
+      lane: this.canvasTexture('lane', drawLane()),
       arrow: this.canvasTexture('arrow', drawArrow()),
       hammer: this.canvasTexture('hammer', drawHammer()),
       seal: this.canvasTexture('seal', drawSeal()),
@@ -1050,17 +1081,23 @@ export class Renderer {
                 ? (p.full ? [1.65, 0.85] : [1.25, 0.62])
                 : [1.1, 0.22];
         const color = effect ? WHITE : fire ? FIRE : p.full ? DRAW : WHITE;
+        // La boule de feu se dessine à la taille de son contact : l'Orbe, cinq fois plus grosse, l'est aussi à l'écran.
+        const size = fire ? Math.max(1, p.radius / FIREBALL_RADIUS) : 1;
         view = {
-          ...this.createDecal(`projectile-${p.id}`, texture, width, depth, color, 1, PROJECTILE_HEIGHT),
+          ...this.createDecal(`projectile-${p.id}`, texture, width * size, depth * size, color, 1, PROJECTILE_HEIGHT),
           anim: effect?.anim,
           animTime: 0,
           fire,
+          size,
+          // La planche de Brand a sa tête à 214 px sur 288 : on recule l'image pour que la tête soit sur le point
+          // de contact (sans quoi l'Orbe, cinq fois plus grosse, brûlerait 2 m derrière ce qu'elle montre).
+          lead: fxName === 'fxBrandFireball' ? (214 / 288 - 0.5) * width * size : 0,
         };
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
       }
-      view.mesh.position.x = p.pos.x;
-      view.mesh.position.z = p.pos.z;
+      view.mesh.position.x = p.pos.x - p.dir.x * (view.lead ?? 0);
+      view.mesh.position.z = p.pos.z - p.dir.z * (view.lead ?? 0);
       if (view.anim) {
         view.animTime += dt;
         showFrame(view.material, view.anim, frameAt(view.anim, 'flight', view.animTime));
@@ -1072,7 +1109,13 @@ export class Renderer {
     for (const [id, view] of this.projectiles) {
       if (seen.has(id)) continue;
       // La boule de feu éclate là où elle s'arrête (contact ou bout de course).
-      if (view.fire) this.uprightFx('fxBrandPop', 'pop', { x: view.mesh.position.x, z: view.mesh.position.z }, 1.5, 1.5, 0.28, { center: PROJECTILE_HEIGHT });
+      if (view.fire) {
+        const size = view.size ?? 1;
+        const lead = view.lead ?? 0;
+        const angle = -view.mesh.rotation.y;
+        const at = { x: view.mesh.position.x + Math.cos(angle) * lead, z: view.mesh.position.z + Math.sin(angle) * lead };
+        this.uprightFx('fxBrandPop', 'pop', at, 1.5 * size, 1.5 * size, 0.28 + 0.06 * (size - 1), { center: PROJECTILE_HEIGHT * Math.min(size, 2) });
+      }
       this.disposeFx(view);
       this.projectiles.delete(id);
     }
@@ -1988,6 +2031,9 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, event.radius * 2.2, DUST, 0.45));
         this.addShake(0.3);
         break;
+      case 'voie':
+        this.voieFx(event);
+        break;
       case 'lure':
         this.addFx(this.ringFx(event.pos, 2, SMOKE, 0.5));
         this.text(event.pos, 2.2, 'Leurre', 'mark', 0.9);
@@ -2180,6 +2226,43 @@ export class Renderer {
     this.effects.push(fx);
   }
 
+  /**
+   * L'effet propre à chaque compétence de voie (F), dessiné par tools/vfx.mjs : tourbillon de lames, séisme, cri,
+   * déflagration, lanterne… Tant que sa planche n'est pas chargée, seul l'effet générique (onde, sceau) se voit.
+   */
+  private voieFx(event: Extract<GameEvent, { type: 'voie' }>): void {
+    const spec = VOIE_FX[event.voie];
+    if (!spec) return;
+    if (spec.upright) {
+      this.uprightFx(spec.sheet, 'voie', event.at, 1.3, 2.1, Math.max(0.3, event.delay));
+      return;
+    }
+    const sheet = this.effect(spec.sheet);
+    const anim = sheet?.anim;
+    if (!sheet || !anim) return;
+    const tag = anim.tags.get('voie');
+    const span = tag ? anim.frames.slice(tag.from, tag.to + 1).reduce((sum, f) => sum + f.duration, 0) : spec.life;
+    const size = spec.size ?? event.radius * 2.3;
+    // La volée part du héros : l'image commence à son pied, et file dans le sens du tir.
+    const pos = spec.from === 'at'
+      ? event.at
+      : spec.ahead
+        ? { x: event.pos.x + event.dir.x * size * spec.ahead, z: event.pos.z + event.dir.z * size * spec.ahead }
+        : event.pos;
+    this.addFx({
+      texture: sheet.texture,
+      pos,
+      dir: spec.ahead ? event.dir : { x: 1, z: 0 },
+      width: size,
+      depth: size * (spec.aspect ?? 1),
+      color: WHITE,
+      life: spec.life,
+      y: 0.034,
+      update: (k, f) => showFrame(f.material, anim, frameAt(anim, 'voie', k * span)),
+    });
+    if (spec.shake) this.addShake(spec.shake);
+  }
+
   private ringFx(pos: Vec2, size: number, color: Color3, life: number): Parameters<Renderer['addFx']>[0] {
     return {
       texture: this.fxTextures.ring,
@@ -2251,14 +2334,18 @@ export class Renderer {
    * Repère au sol, très discret : la forme du coup de l'arme (arc ou estoc), tournée vers la souris.
    * Le héros ne se tourne qu'à gauche ou à droite à l'écran : sans lui, on devine mal où partira le coup.
    * Il s'éclaire pendant l'élan. Rien pour le Rôdeur (il a sa visée) ni pour un coup à 360°.
+   * Sorcier de la voie de l'Orbe : plus d'éventail, un seul orbe qui file droit sans suivre personne ; le repère
+   * devient le couloir qu'il balaiera, large comme l'orbe et long comme sa course.
    */
   private syncAttackGuide(world: WorldView): void {
     const player = world.player;
     const attack = player.cfg.attack;
-    const thrust = attack.shape === 'line';
+    const ball = player.cfg.sorcier.fireball;
+    const orb = player.cfg.kit === 'sorcier' && Math.round(ball.count) === 1 && ball.turnRate === 0 && !ball.seek;
+    const thrust = attack.shape === 'line' || orb;
     const shown = player.cfg.kit !== 'rodeur' && (thrust || attack.arcDeg < 360) && player.pose !== 'dash' && player.pose !== 'airborne' && !player.dead;
     if (!shown && !this.attackGuide) return;
-    const key = thrust ? 'line' : `arc-${attack.arcDeg}`;
+    const key = orb ? 'lane' : thrust ? 'line' : `arc-${attack.arcDeg}`;
     if (!this.attackGuide) {
       // Bleu-esprit, comme la garde : il se lit sur le vert des rizières comme sur le sol sombre du Palais.
       const decal = this.createDecal('attackGuide', this.fxTextures.streak, 1, 1, SPIRIT, 0.2, 0.022);
@@ -2269,14 +2356,14 @@ export class Renderer {
     guide.mesh.isVisible = shown;
     if (!shown) return;
     if (guide.key !== key) {
-      guide.material.setTexture('textureSampler', thrust ? this.fxTextures.streak : this.arcTexture(attack.arcDeg));
+      guide.material.setTexture('textureSampler', orb ? this.fxTextures.lane : thrust ? this.fxTextures.streak : this.arcTexture(attack.arcDeg));
       guide.key = key;
     }
     const dir = player.facing;
     if (thrust) {
       guide.mesh.position.x = player.pos.x + (dir.x * attack.range) / 2;
       guide.mesh.position.z = player.pos.z + (dir.z * attack.range) / 2;
-      guide.mesh.scaling.set(attack.range, 1, attack.width ?? 0.8);
+      guide.mesh.scaling.set(attack.range, 1, orb ? ball.radius * 2 : (attack.width ?? 0.8));
     } else {
       guide.mesh.position.x = player.pos.x;
       guide.mesh.position.z = player.pos.z;

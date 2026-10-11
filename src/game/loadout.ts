@@ -428,7 +428,7 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   // La compétence de la voie suit la puissance du héros : ses dégâts (et sa brûlure) sont ceux d'une attaque, à la
   // même échelle que les coups d'arme. Les soins, eux, sont une part des PV max.
   if (voie) {
-    const active = { ...voie.active };
+    const active = { ...voie.active, id: state.hero.subclass ?? undefined };
     active.damage = (active.damage ?? 0) * config.attack.damage;
     if (active.burn) active.burn *= damage;
     config.sousClasse = active;

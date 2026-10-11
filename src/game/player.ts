@@ -1138,6 +1138,8 @@ export class Player {
       this.voieSpeed = cfg.speedBonus ?? 0;
       this.voieArmor = cfg.armor ?? 0;
       this.showCast('ultimate');
+      // Le cri ne touche personne, mais il se voit : le monde l'annonce au rendu.
+      world.castSubclass(cfg, input.aim, input.aimGround);
       return;
     }
     world.castSubclass(cfg, input.aim, input.aimGround);
