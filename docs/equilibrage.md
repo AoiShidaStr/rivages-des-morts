@@ -12,7 +12,16 @@ npm run equilibrage -- --mode kits --donjon palais --niveaux 30,50  les 3 styles
 npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30  héros sans objet contre un donjon plus bas
 npm run dps -- --niveaux 30,50 --stuff complet --cible mobile    banc de DPS, kodama qui court en cercle
 npm run equilibrage -- --niveaux 30 --stuff complet --humain      bots « humains » : réaction plus lente, attaques ratées, visée qui tremble
+npm run equilibrage -- --mode infini --niveaux 50 --stuff complet  le Yomi sans fond d'un bout à l'autre : le palier où l'on s'arrête
+npm run equilibrage -- --mode infini --voie orbe --parties 4      la même chose avec une voie (sous-classe) choisie
+npm run equilibrage -- --donjon palais --supplement 1             sans le supplément ×1,5 des donjons ordinaires (difficulty.json, enemy.dungeons)
 ```
+
+`--mode infini` : le bot enchaîne les blocs du Yomi sans fond (`--blocs` pour borner, 12 par défaut), chaque bloc
+repartant à PV pleins et dans l'arène de son palier, comme le joueur. « Palier atteint » est le dernier palier franchi
+(boss compris) ; la moyenne sur plusieurs descentes est très bruitée par le bloc où le bot tombe, donc lire aussi les
+colonnes Pire/Meilleur. Le bot ne vise ni ne recule comme un joueur : ses chiffres sur le Rôdeur et le Sorcier sont à
+lire en relatif.
 
 `--stuff survie`, `dps` ou `equilibre` : un des trois styles de jeu de la classe (tableau `KITS` de `tools/equilibrage.mjs`, et GDD, « Styles de jeu par l'équipement »). `--stuff nu` : l'arme de départ jamais forgée, rien d'autre.
 
@@ -25,6 +34,20 @@ npm run equilibrage -- --niveaux 30 --stuff complet --humain      bots « humain
 | Lame | Kaiken d'Izanami | Chapeau de paille | Shiroshōzoku | Hakama de soie | Geta du kasa | Pêche d'Ōkamuzumi | Fil de Jōren |
 | Paladin | Miroir Yata | Chapeau de paille | Dō du Yomi | Hakama de soie | Geta du kasa | Pêche d'Ōkamuzumi | Fil de Jōren |
 | Rôdeur | Arc de soie | Chapeau de paille | Shiroshōzoku | Hakama de soie | Geta du kasa | Pêche d'Ōkamuzumi | Fil de Jōren |
+
+## Yomi sans fond et donjons ×1,5 (0.16.0), 11 octobre 2026
+
+Le joueur, à la main, jusqu'au palier 50 avec l'équipement complet : Rôdeur 50, Lame 49, Sorcier 40, Paladin 30,
+Guerrier 30. Le bot, au même niveau et au même équipement (`--mode infini`, sans voie, 6 descentes) : Guerrier 30,0 ·
+Paladin 18,3 · Lame 15,8 · Sorcier 5,0 · Rôdeur 2,5 — le bot ne sait pas jouer les classes à distance, la comparaison
+ne vaut qu'entre deux mesures du bot.
+
+Donjons ordinaires, victoires du bot au niveau du héros (6 descentes, Rizières) : au niveau 50, Guerrier 100 % ·
+Paladin 100 % · Sorcier 98 % · Lame 76 % · Rôdeur 40 % avec l'équipement typique (100 · 100 · 96 · 82 · 66 avant le
+×1,5) ; au niveau 1, Guerrier 100 % · Paladin 95 % · Lame 76 % · Sorcier 17 % · Rôdeur 10 %. Le ×1,5 se règle dans
+`difficulty.json` (`enemy.dungeons`) ; le Yomi sans fond ne le reçoit pas, il a ses propres chiffres.
+
+Mesures, réglages et critique complète : `docs/diagnostic-0.16.0.md`.
 
 ## Cible du banc de DPS
 

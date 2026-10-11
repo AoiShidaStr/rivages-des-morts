@@ -238,7 +238,9 @@ export abstract class Enemy {
   protected power(amount: number, world: World): number {
     const rancune = world.curse('rancune');
     const angry = rancune && this.hp < this.maxHp * 0.3 ? 1 + rancune : 1;
-    return amount * this.might * angry * (1 - world.dazzle(this.pos, this.marks.hunt > 0));
+    // Saigne (voie de la Lame) : chaque charge de poison affaiblit l'attaquant (jusqu'à 3 charges).
+    const weaken = this.poison ? Math.min(3, this.poison.stacks) * world.poisonWeaken(this.poison.hero) : 0;
+    return amount * this.might * angry * (1 - world.dazzle(this.pos, this.marks.hunt > 0)) * (1 - weaken);
   }
 
   /** Tout coup porté à un héros passe par ici ; `falling` : il tombe du ciel (Mino de paille). */

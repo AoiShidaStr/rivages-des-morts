@@ -217,6 +217,9 @@ export class Player {
   private voieDamage = 0;
   private voieSpeed = 0;
   private voieArmor = 0;
+  /** Filet d'une voie (le Couloir de l'Éclaireur) : vitesse de marche en plus pendant ces secondes. */
+  private netRush = 0;
+  private netRushBonus = 0;
 
   /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
   constructor(
@@ -372,10 +375,17 @@ export class Player {
     return 1 - (1 - factor) * (1 - (this.cfg.perks?.slowResist ?? 0));
   }
 
-  /** Vitesse de marche en plus : instinct et transformation du Hanyō, et le cri d'une voie. */
+  /** Vitesse de marche en plus : instinct et transformation du Hanyō, le cri d'une voie, le Couloir d'un filet. */
   private speedFactor(): number {
     const voie = this.voieTime > 0 ? 1 + this.voieSpeed : 1;
-    return walkFactor(this.cfg, this.hp, this.transformed) * this.shotSlow * voie;
+    const net = this.netRush > 0 ? 1 + this.netRushBonus : 1;
+    return walkFactor(this.cfg, this.hp, this.transformed) * this.shotSlow * voie * net;
+  }
+
+  /** Le Couloir de l'Éclaireur : un allié qui se tient dans le filet marche plus vite un moment. */
+  rushFromNet(amount: number, duration: number): void {
+    this.netRush = Math.max(this.netRush, duration);
+    this.netRushBonus = Math.max(this.netRushBonus, amount);
   }
 
   /** Soin goutte à goutte (vol de vie du Guerrier au bord du gouffre) : versé par petites gorgées, pour ne pas couvrir l'écran de chiffres. */
@@ -473,6 +483,7 @@ export class Player {
     this.rush = Math.max(0, this.rush - dt);
     this.furyTime = Math.max(0, this.furyTime - dt);
     this.voieTime = Math.max(0, this.voieTime - dt);
+    this.netRush = Math.max(0, this.netRush - dt);
     this.stanceFxCooldown = Math.max(0, this.stanceFxCooldown - dt);
     this.critHealCooldown = Math.max(0, this.critHealCooldown - dt);
     this.comboTime = Math.max(0, this.comboTime - dt);
@@ -719,6 +730,8 @@ export class Player {
       this.counterWindow = Math.max(this.cfg.stance.counter.window, perks.counter?.window ?? 0);
       this.smashCooldown = Math.max(0, this.smashCooldown - this.cfg.stance.parrySmash);
       this.heal(this.cfg.maxHp * this.cfg.stance.counter.heal, world);
+      // Réplique (voie équilibrée) : un blocage parfait déclenche aussitôt une Frappe fracassante gratuite.
+      if (perks.parrySmash) world.parrySmash(this, perks.parrySmash.damageFactor);
     }
     // La garde du Guerrier n'arrête pas tout : le reste du coup passe, sans recul ni invulnérabilité.
     const chip = parried ? 0 : amount * (1 - this.cfg.block.reduction);
@@ -782,6 +795,9 @@ export class Player {
     // Dôme de feu (Bâton de Susanoo) : ce qui tombe du ciel s'y consume.
     if (falling && world.insideDome(this.pos)) return false;
     const perks = this.cfg.perks ?? {};
+    // Garde spectral (voie de l'Évêque) : un héros à côté de lui subit `shield` de dégâts en moins tant qu'il vit.
+    const guardShield = world.guardShield(this.pos);
+    if (guardShield > 0) amount *= 1 - guardShield;
     // Bandeau du vent : juste après une esquive, un coup peut passer à côté.
     if (this.evadeTime > 0 && perks.evasion && Math.random() < perks.evasion.chance) {
       this.invulnerable = Math.max(this.invulnerable, 0.2);

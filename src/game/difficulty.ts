@@ -55,6 +55,11 @@ export interface Difficulty {
   extraSpawns: number;
   /** Donjon infini (Marée des morts) : yokai en plus par vague, même en solo. */
   soloExtra?: number;
+  /**
+   * Plafond de « la marée monte » propre à ce palier (0,3 par défaut). Le Yomi sans fond l'abaisse à 0,15 à partir
+   * du palier 40 : la marée punit les classes de soutien plus que les autres, et la descente doit rester faisable.
+   */
+  tideMax?: number;
 }
 
 /** Multiplicateurs du butin : oboles, expérience, chance des objets rares, matériaux en plus par drop. */

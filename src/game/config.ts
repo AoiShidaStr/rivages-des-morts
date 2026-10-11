@@ -136,6 +136,12 @@ export interface SubclassActiveConfig {
   damageBonus?: number;
   speedBonus?: number;
   armor?: number;
+  /** Onde : ralentissement infligé aux yokai pris (`slow` de la vitesse pendant `slowTime` s). */
+  slow?: number;
+  slowTime?: number;
+  /** Filet : les alliés qui s'y tiennent gagnent `allyRush` de vitesse pendant `allyRushTime` s. */
+  allyRush?: number;
+  allyRushTime?: number;
 }
 
 /**
@@ -361,6 +367,33 @@ export interface Perks {
     turnRate?: number;
     seek?: number;
   };
+
+  // --- Voies inverses & voies équilibrées (0.17.0) ---
+  /**
+   * Cratère : la Frappe fracassante pousse de `push` (part de plus) et étourdit `stun` s de plus. Le coût de la voie
+   * passe par `strikeDamage` négatif : les coups d'arme de base frappent moins fort.
+   */
+  smashControl?: { push?: number; stun?: number };
+  /** Réplique : un blocage parfait déclenche aussitôt une Frappe fracassante gratuite, `damageFactor` fois un coup d'arme. */
+  parrySmash?: { damageFactor: number };
+  /** Saigne : chaque charge de poison affaiblit le yokai qui la porte de `amount` (jusqu'à 3 charges : −36 %). */
+  poisonWeaken?: number;
+  /** Le Voile : le poison de tes nuages rend `hp` PV par tick (`updateClouds`). */
+  cloudHeal?: number;
+  /** Dryade : chaque yokai touché par ton feu te rend `hp` PV. */
+  fireHeal?: number;
+  /** L'Évêque : tu renonces à l'Égide (tout le groupe `aegis` tombe) ; à sa place, un garde spectral veille. */
+  renounceAegis?: boolean;
+  /**
+   * L'Évêque : un garde spectral apparaît au côté du Paladin. `hpShare` : part de ses PV max ; `damageFactor` : part
+   * d'une de ses attaques ; `interval` : secondes entre deux coups ; `taunt` : m dans lesquels il attire les yokai ;
+   * `shield` : dégâts en moins pour les héros proches tant qu'il vit ; `cycle` : secondes avant qu'un garde tombé revienne.
+   */
+  spectralGuard?: { hpShare: number; damageFactor: number; interval: number; taunt: number; shield: number; cycle: number };
+  /** Le Chantre : l'Égide protège aussi l'allié le plus proche, à `amount` de dégâts en moins. */
+  aegisAlly?: number;
+  /** L'Éclaireur : le Rôdeur marque pour l'équipe ; ses propres coups sur une proie marquée frappent `amount` de plus. */
+  huntMarkAll?: number;
 
   // --- Sorcier ---
   /** Part du coût en mana des sorts (paliers du tag Sorcier, Magatama de Yasakani). */

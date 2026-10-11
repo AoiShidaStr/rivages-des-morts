@@ -9,15 +9,15 @@
   "maxLevel": 100,
   "arenas": ["rizieres", "palais"],
   "wavesPerBloc": 4,
-  "doubleBossFrom": 25,
+  "doubleBossFrom": 30,
   "modifiers": [
     { "from": 30, "name": "Âmes d'élite III", "description": "Trois élites par vague.", "curses": { "elites": 3 } },
     { "from": 35, "name": "Marée des morts", "description": "Deux yokai de plus à chaque vague.", "extraSpawns": 2 },
     { "from": 40, "name": "Hâte des morts IV", "description": "Les yokai agissent 40 % plus vite.", "curses": { "hate": 0.4 } },
     { "from": 45, "name": "Rancune des noyés II", "description": "Sous 30 % de leurs PV, les yokai font 70 % de dégâts en plus.", "curses": { "rancune": 0.7 } },
-    { "from": 50, "name": "Chair du Yomi", "description": "Les yokai ont 25 % de PV et 15 % de dégâts en plus.", "hp": 1.25, "damage": 1.15 }
+    { "from": 50, "name": "Chair du Yomi", "description": "Les yokai ont 15 % de PV et 10 % de dégâts en plus.", "hp": 1.15, "damage": 1.1 }
   ],
-  "beyond": { "name": "Abîme", "description": "Encore 15 % de PV et 10 % de dégâts en plus pour les yokai.", "hp": 1.15, "damage": 1.1 },
+  "beyond": { "name": "Abîme", "description": "Encore 10 % de PV et 8 % de dégâts en plus pour les yokai.", "hp": 1.1, "damage": 1.08 },
   "rewards": {
     "itemsFrom": 10,
     "rarity": [

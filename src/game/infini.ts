@@ -87,6 +87,9 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
     extraSpawns: base.extraSpawns + extraSpawns,
     // Les yokai en plus de la Marée des morts viennent même en solo.
     soloExtra: extraSpawns,
+    // 0.17.0 : au palier 40+, le plafond de la marée tombe de +30 % à +15 % — la marée punit les classes à soin
+    // (Sorcier, Paladin) plus que les autres, et le palier 50 doit rester atteignable en solo.
+    tideMax: palier >= 40 ? 0.15 : undefined,
   };
 }
 

@@ -444,6 +444,8 @@ Le combat mélange arme au corps à corps, parade/esquive et invocations, en vue
 
 **Équilibrage des invocations** : pas de limite fixe stricte, mais chaque invocation active affaiblit le joueur (dégâts ou PV réduits). Un build d'invocations pur serait fort en groupe mais fragile seul, un build duelliste reste solide sans armée. Les armes sont détaillées dans « Armes, items & reliques ».
 
+**La marée monte (0.16.0)** : c'est la règle qui tient la difficulté du jeu. Tant qu'une vague dure, le temps des morts accélère — les yokai gagnent 0,7 % de vitesse par seconde, jusqu'à +30 % — et la **Saignée du Yomi** boit les soins, jusqu'à −35 % au plus haut de la marée. Autrement dit : un combat qu'on étire pour se soigner rend de moins en moins, et une classe de soutien finit par être mortelle comme les autres. La marée repart de zéro à chaque vague et s'annonce en jeu (« Les morts s'agitent… », « La marée monte ! », « Le Yomi boit tes soins… »). Elle ne s'applique pas au terrain d'entraînement de Tetsu. Voir `world.ts` (`tide`, `healFactor`) et docs/diagnostic-0.16.0.md.
+
 ## Structure du jeu
 
 Le jeu alterne exploration sans combat et donjons roguelite, comme dans Waven.
@@ -494,7 +496,7 @@ Du titre à la fin de la première descente : écran titre et création du héro
 
 | Sujet | Choix | Pourquoi |
 | --- | --- | --- |
-| Difficulté | Très dur, mais passable avec toutes les classes : les Rizières ont leur propre force de départ (yokai ×1,2 PV et ×1,35 dégâts, Jorōgumo ×0,85 et ×0,9), le Palais garde celle de `difficulty.json` | Un jeu exigeant accroche mieux qu'un jeu trop simple, mais aucune classe ne doit rester bloquée au premier boss |
+| Difficulté | Très dur, mais passable avec toutes les classes : les Rizières ont leur propre force de départ (yokai ×1,3 PV et ×1,45 dégâts, Jorōgumo ×0,95 et ×1,05 depuis la 0.16.0 ; ×1,2 et ×1,35 avant), le Palais garde celle de `difficulty.json` | Un jeu exigeant accroche mieux qu'un jeu trop simple, mais aucune classe ne doit rester bloquée au premier boss |
 | Île | Le joueur explore librement avant la première descente : tous les PNJ et leurs « ! » sont là dès l'arrivée | L'île fait partie de la découverte |
 | Retour de donjon | Tous les donjons ramènent au ponton de Charon | Les coffres s'ouvrent sur la barque, le hub : on les ouvre dès le retour, sans traverser l'île |
 | Butin | Tiré au sort, sauf à la première victoire contre la Jorōgumo : une arme de la classe du héros, tirée de sa table (Guerrier : katana de rōnin, Lame : crocs de la Jorōgumo, Paladin : miroir de Yata, Rôdeur : arc de soie, Sorcier : éventail de la Jorōgumo) | La première victoire se voit dans l'équipement ; ensuite, les tables de drop à la Warframe donnent leur sens au farming |

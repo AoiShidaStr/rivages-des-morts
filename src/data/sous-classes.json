@@ -1,32 +1,7 @@
 {
-  "about": "Les voies (sous-classes) : le second axe d'une classe, ouvert au niveau 25 et modifiable à volonté au Rocher. Trois voies par classe : deux renforts purs (aucun nerf) et, depuis la 0.16.0, une voie d'abandon — plus risquée et plus forte, qui renonce à un pilier de la classe (sa garde, ses PV, sa salve guidée) en échange de dégâts. Une voie d'abandon qui refait l'attaque de base passe par `perks.baseAttack`, posé après l'équipement. Chaque voie donne un passif signature (perks.*, comme les talents), quelques réglages de base, et une compétence de plus — la touche F. Une compétence est décrite par sa forme (`active.kind`) et ses nombres : `onde` frappe autour du héros, `sceau` pose une explosion au sol (avec poison s'il en porte), `sanctuaire` soigne et peut brûler, `filet` immobilise, `salve` tire des traits qui traversent, `cri` renforce le héros sans toucher personne. `damage` et `burn` s'expriment en part d'une attaque de la classe : le jeu les met à l'échelle au moment de la descente. `heal` est une part des PV max par seconde.",
+  "about": "Les voies (sous-classes) : le second axe d'une classe, ouvert au niveau 25 et modifiable à volonté au Rocher. Quatre voies par classe depuis la 0.17.0 : deux renforts purs (aucun nerf), une voie d'abandon (plus risquée, plus forte) et une voie équilibrée (un désavantage modéré contre une mécanique nouvelle). La voie inverse remplace le renfort le plus redondant : elle renonce aux dégâts ou à une faculté pour ce que la voie d'abandon n'a pas donné — contrôle, soin, défense, poison. Une voie qui refait l'attaque de base passe par `perks.baseAttack`, posé après l'équipement ; les dégâts fixes d'une voie suivent `perks.strikeDamage`. Chaque voie donne un passif signature (perks.*, comme les talents), quelques réglages de base, et une compétence de plus — la touche F. Une compétence est décrite par sa forme (`active.kind`) et ses nombres : `onde` frappe autour du héros (peut étourdir et/ou ralentir), `sceau` pose une explosion au sol (avec poison ou brûlure s'il en porte), `sanctuaire` soigne et peut brûler, `filet` immobilise (et fait aller plus vite les alliés qui s'y tiennent), `salve` tire des traits qui traversent, `cri` renforce le héros sans toucher personne. `damage` et `burn` s'expriment en part d'une attaque de la classe : le jeu les met à l'échelle au moment de la descente. `heal` est une part des PV max par seconde.",
   "classes": {
     "guerrier": {
-      "rempart": {
-        "name": "Rempart",
-        "subtitle": "Le mur qui avance",
-        "role": "Défense, riposte",
-        "lore": "Un mur ne cède pas : il attend que la vague se brise contre lui.",
-        "passive": {
-          "name": "Mur de fer",
-          "description": "En Garde, tu subis encore 15 % de dégâts en moins, et chaque coup bloqué renvoie 8 dégâts à l'attaquant.",
-          "effects": [
-            { "op": "set", "path": "perks.guardSkin", "value": 0.15 },
-            { "op": "set", "path": "perks.riposte", "value": 8 }
-          ]
-        },
-        "effects": [{ "op": "set", "path": "block.reduction", "value": 0.95 }],
-        "active": {
-          "name": "Bouclier de choc",
-          "kind": "onde",
-          "radius": 3.4,
-          "damage": 0.9,
-          "knockback": 9,
-          "stun": 0.8,
-          "cooldown": 14,
-          "description": "Tu frappes le sol du plat du bouclier : tout ce qui t'entoure est projeté et étourdi 0,8 s. Revient en 14 s."
-        }
-      },
       "fureur": {
         "name": "Fureur",
         "subtitle": "Celui qui saigne frappe plus fort",
@@ -76,6 +51,54 @@
           "cooldown": 12,
           "description": "Tu fonces dans le tas : tout ce qui t'entoure est fauché, projeté et sonné 0,7 s. Revient en 12 s."
         }
+      },
+      "cratere": {
+        "name": "Cratère",
+        "subtitle": "Le mur qui renverse",
+        "role": "Contrôle, poussée",
+        "lore": "Un mur ne cède pas : il renvoie la vague d'un coup d'épaule, et la vague se relève trop tard.",
+        "passive": {
+          "name": "Mur qui tourne",
+          "description": "Ta Frappe fracassante (R) pousse 50 % plus loin et étourdit 0,5 s de plus. En échange, tes coups d'arme de base font 20 % de dégâts en moins : la voie est un contrôleur, pas un casseur.",
+          "effects": [
+            { "op": "set", "path": "perks.smashControl", "value": { "push": 0.5, "stun": 0.5 } },
+            { "op": "set", "path": "perks.strikeDamage", "value": -0.2 }
+          ]
+        },
+        "active": {
+          "name": "Vague de bouclier",
+          "kind": "onde",
+          "radius": 3.8,
+          "damage": 0.8,
+          "knockback": 12,
+          "stun": 1,
+          "cooldown": 12,
+          "description": "Tu frappes le sol du bouclier : tout ce qui t'entoure est projeté loin et sonné une seconde. Revient en 12 s."
+        }
+      },
+      "replique": {
+        "name": "Réplique",
+        "subtitle": "La parade qui frappe",
+        "role": "Parade, riposte",
+        "lore": "Le meilleur bouclier n'arrête pas le coup : il le renvoie, et celui qui l'a porté ne s'en relève pas.",
+        "passive": {
+          "name": "Parade d'acier",
+          "description": "Un blocage parfait déclenche aussitôt une Frappe fracassante gratuite (sa recharge ne démarre pas), dont les dégâts valent 1,5 coup d'arme. En échange, le vol de vie de la posture Offensive tombe de 10 % à 6 %.",
+          "effects": [
+            { "op": "set", "path": "perks.parrySmash", "value": { "damageFactor": 1.5 } },
+            { "op": "set", "path": "stance.offense.lifesteal", "value": 0.06 }
+          ]
+        },
+        "active": {
+          "name": "Spirale",
+          "kind": "onde",
+          "radius": 3.4,
+          "damage": 1,
+          "knockback": 10,
+          "stun": 0.4,
+          "cooldown": 11,
+          "description": "Tu pivotes sur toi-même, bouclier tendu : tout ce qui t'entoure est fauché et projeté. Revient en 11 s."
+        }
       }
     },
     "sorcier": {
@@ -100,30 +123,6 @@
           "duration": 3,
           "cooldown": 12,
           "description": "Une colonne de feu s'abat sous la souris (9 m au plus) : gros dégâts en zone, et le sol reste brûlant 3 s. Revient en 12 s."
-        }
-      },
-      "sceaux": {
-        "name": "Sceaux",
-        "subtitle": "Le cercle qui tient",
-        "role": "Contrôle, mana",
-        "lore": "Abe no Seimei traçait une étoile que nul démon ne franchissait. L'élève apprend à la refermer.",
-        "passive": {
-          "name": "Trace sûre",
-          "description": "Tes sorts coûtent 10 % de mana en moins, tes sceaux couvrent 15 % de plus, et chaque yokai pris dans un sceau te rend 4 mana.",
-          "effects": [
-            { "op": "mul", "path": "perks.manaCost", "value": 0.9 },
-            { "op": "mul", "path": "sorcier.seal.radius", "value": 1.15 },
-            { "op": "set", "path": "perks.sealMana", "value": 4 }
-          ]
-        },
-        "active": {
-          "name": "Sceau d'entrave",
-          "kind": "filet",
-          "range": 10,
-          "radius": 3,
-          "stun": 2.4,
-          "cooldown": 14,
-          "description": "Un sceau d'entrave au sol : les yokai qu'il prend sont cloués sur place 2,4 s (1,2 s pour un boss). Revient en 14 s."
         }
       },
       "orbe": {
@@ -152,35 +151,60 @@
           "cooldown": 12,
           "description": "L'orbe éclate autour de toi : ce qui te colle est brûlé, projeté et sonné 0,4 s. Revient en 12 s."
         }
-      }
-    },
-    "lame": {
-      "venin": {
-        "name": "Venin",
-        "subtitle": "Le poison qui reste",
-        "role": "Poison, zones",
-        "lore": "La Jorōgumo ne mordait pas : elle attendait que le venin fasse le travail.",
+      },
+      "dryade": {
+        "name": "Dryade",
+        "subtitle": "Le feu qui soigne",
+        "role": "Soin, zones",
+        "lore": "Le feu du Yomi consume tout — mais il nourrit celui qui a appris à le respirer.",
         "passive": {
-          "name": "Nuées tenaces",
-          "description": "Tes nuages de poison durent 1,5 s de plus et couvrent 25 % de plus ; le poison que tu poses tient 10 s de plus.",
+          "name": "Flammes douces",
+          "description": "Toutes tes sources de feu (boules, sceaux, traînées, météore) te rendent 2 PV par yokai touché. En échange, tes boules de feu font 15 % de dégâts en moins.",
           "effects": [
-            { "op": "add", "path": "blade.cloud.life", "value": 1.5 },
-            { "op": "mul", "path": "blade.cloud.radius", "value": 1.25 },
-            { "op": "add", "path": "blade.poison.duration", "value": 10 }
+            { "op": "set", "path": "perks.fireHeal", "value": 2 },
+            { "op": "set", "path": "perks.strikeDamage", "value": -0.15 }
           ]
         },
         "active": {
-          "name": "Nuée virulente",
-          "kind": "sceau",
+          "name": "Sceau de vigueur",
+          "kind": "sanctuaire",
           "range": 8,
-          "radius": 2.6,
-          "damage": 1.5,
-          "delay": 0.5,
-          "poison": 2,
-          "cooldown": 12,
-          "description": "Une fiole brisée sous la souris (8 m au plus) : explosion toxique, et deux charges de poison sur chaque yokai pris. Revient en 12 s."
+          "radius": 3.2,
+          "heal": 0.03,
+          "burn": 6,
+          "duration": 5,
+          "cooldown": 14,
+          "description": "Un cercle de vigueur : les héros qui s'y tiennent récupèrent 3 % de leurs PV max par seconde — y compris l'allié que tu vises. Il brûle les yokai qui y passent. Revient en 14 s."
         }
       },
+      "lampion": {
+        "name": "Lampion",
+        "subtitle": "Je pose, je recule, j'attends",
+        "role": "Zones, feu au sol",
+        "lore": "On n'affronte pas le Yomi : on l'allume, et on laisse la nuit travailler.",
+        "passive": {
+          "name": "Héritage du feu",
+          "description": "Le sol brûlé par un sceau qui explose dure 3 s et brûle 10 dégâts par seconde. En échange, tes boules de feu ne suivent plus les cibles : elles partent droit devant.",
+          "effects": [
+            { "op": "set", "path": "perks.sealBurn", "value": { "burn": 10, "life": 3 } },
+            { "op": "set", "path": "perks.baseAttack", "value": { "seek": 0 } }
+          ]
+        },
+        "active": {
+          "name": "Lampion",
+          "kind": "sceau",
+          "range": 8,
+          "radius": 2.4,
+          "damage": 1.2,
+          "delay": 1,
+          "burn": 10,
+          "duration": 3,
+          "cooldown": 12,
+          "description": "Une lanterne posée sous la souris (8 m au plus) : elle explose au bout d'une seconde, et le sol reste brûlant 3 s. Revient en 12 s."
+        }
+      }
+    },
+    "lame": {
       "ombre": {
         "name": "Ombre",
         "subtitle": "Personne ne t'a vu venir",
@@ -230,35 +254,57 @@
           "cooldown": 12,
           "description": "Tes deux lames balaient autour de toi : tout ce qui t'entoure est coupé, projeté et sonné 0,5 s. Revient en 12 s."
         }
-      }
-    },
-    "paladin": {
-      "aube": {
-        "name": "Aube",
-        "subtitle": "La lumière qui soigne",
-        "role": "Soins, zones",
-        "lore": "Amaterasu laissait son Aura derrière elle : elle réchauffait même ceux qui l'avaient oubliée.",
+      },
+      "saigne": {
+        "name": "Saigne",
+        "subtitle": "Le venin qui affaiblit",
+        "role": "Poison, défense",
+        "lore": "La Jorōgumo ne mordait pas plus fort : elle attendait que la proie s'empoisonne à son propre venin.",
         "passive": {
-          "name": "Clarté",
-          "description": "Ton Aura dure 2 s de plus, couvre 25 % de plus, et rend 40 % des PV max au lieu de 30 %.",
+          "name": "Sang putride",
+          "description": "Chaque charge de poison que porte un yokai le fait frapper 12 % moins fort (jusqu'à 3 charges : −36 %). La voie n'amplifie pas ton poison, elle l'utilise autrement : chaque charge affaiblit. En échange, tous tes coups critiques frappent ×1,7 au lieu de ×2.",
           "effects": [
-            { "op": "add", "path": "paladin.aura.duration", "value": 2 },
-            { "op": "mul", "path": "paladin.aura.radius", "value": 1.25 },
-            { "op": "add", "path": "paladin.aura.healShare", "value": 0.1 }
+            { "op": "set", "path": "perks.poisonWeaken", "value": 0.12 },
+            { "op": "set", "path": "blade.critFactor", "value": 1.7 }
           ]
         },
         "active": {
-          "name": "Sanctuaire d'aube",
-          "kind": "sanctuaire",
-          "range": 4,
-          "radius": 3.6,
-          "duration": 6,
-          "heal": 0.03,
-          "burn": 8,
-          "cooldown": 16,
-          "description": "Une zone de lumière 6 s sous la souris (4 m au plus) : elle rend 3 % des PV max par seconde aux héros qui s'y tiennent, et brûle les yokai qui y passent (8 dégâts par seconde). Revient en 16 s."
+          "name": "Croc lente",
+          "kind": "onde",
+          "radius": 3.4,
+          "damage": 0.7,
+          "slow": 0.35,
+          "slowTime": 2,
+          "cooldown": 12,
+          "description": "Tes lames balaient : ce qui t'entoure n'est pas sonné, il est ralenti (35 % pendant 2 s) — il ne sortira pas avant d'avoir perdu son venin. Revient en 12 s."
         }
       },
+      "voile": {
+        "name": "Le Voile",
+        "subtitle": "Le poison qui te nourrit",
+        "role": "Poison, soin",
+        "lore": "La fumée ne cache pas la lame : elle la nourrit, une gorgée de venin à la fois.",
+        "passive": {
+          "name": "Manteau écarlate",
+          "description": "Le poison de tes nuages te rend 3 PV par tick (15 PV par nuage). En échange, l'Écran de fumée dure 2,5 → 1,5 s : la durée d'invisibilité tombe, la recharge reste.",
+          "effects": [
+            { "op": "set", "path": "perks.cloudHeal", "value": 3 },
+            { "op": "set", "path": "blade.smoke.duration", "value": 1.5 }
+          ]
+        },
+        "active": {
+          "name": "Frappe rouge",
+          "kind": "onde",
+          "radius": 3.6,
+          "damage": 1.2,
+          "knockback": 6,
+          "stun": 0.5,
+          "cooldown": 12,
+          "description": "Tes lames s'ouvrent en croix : tout ce qui t'entoure est coupé, projeté et sonné 0,5 s. Revient en 12 s."
+        }
+      }
+    },
+    "paladin": {
       "serment": {
         "name": "Serment",
         "subtitle": "Le serment tient plus que le bras",
@@ -307,33 +353,59 @@
           "cooldown": 13,
           "description": "Le serment cède : une onde sacrée fauche tout ce qui t'entoure, le projette et l'étourdit 0,6 s. Revient en 13 s."
         }
-      }
-    },
-    "rodeur": {
-      "piegeur": {
-        "name": "Piégeur",
-        "subtitle": "Le terrain travaille pour toi",
-        "role": "Contrôle, filets",
-        "lore": "On ne chasse pas le yokai : on choisit l'endroit où il tombera.",
+      },
+      "eveque": {
+        "name": "L'Évêque",
+        "subtitle": "Le garde du serment",
+        "role": "Invocation, protection",
+        "lore": "L'Égide s'en va : le serment, lui, reste. Il prend la forme d'un garde qui veille à ta place.",
         "passive": {
-          "name": "Traque patiente",
-          "description": "Ton filet couvre 30 % de plus et tient 0,5 s de plus ; ce qu'il prend est empoisonné deux fois.",
+          "name": "Garde du serment",
+          "description": "Tu renonces à l'Égide : tout le groupe tombe. À sa place, toutes les 12 s, un garde spectral apparaît à ton côté : il attire les yokai proches, et tous les héros à moins de 3 m de lui subissent 30 % de dégâts en moins tant qu'il vit. Il frappe pour 0,7 de ton attaque toutes les ~1,2 s et a 50 % de tes PV max. Une fois tombé, il revient avec son cycle de 12 s. En échange, tes soins personnels passent de 85 % à 60 %.",
           "effects": [
-            { "op": "mul", "path": "ranger.net.radius", "value": 1.3 },
-            { "op": "add", "path": "ranger.net.stun", "value": 0.5 },
-            { "op": "set", "path": "perks.netPoison", "value": 2 }
+            { "op": "set", "path": "perks.renounceAegis", "value": true },
+            { "op": "set", "path": "perks.spectralGuard", "value": { "hpShare": 0.5, "damageFactor": 0.7, "interval": 1.2, "taunt": 3, "shield": 0.3, "cycle": 12 } }
+          ]
+        },
+        "effects": [{ "op": "set", "path": "paladin.selfHeal", "value": [0.6, 0.7, 0.55] }],
+        "active": {
+          "name": "Jugement d'armes",
+          "kind": "onde",
+          "radius": 3.6,
+          "damage": 1.4,
+          "knockback": 7,
+          "stun": 0.6,
+          "cooldown": 13,
+          "description": "L'onde sacrée fauche tout ce qui t'entoure, et le garde frappe dans la même seconde. Revient en 13 s."
+        }
+      },
+      "chantre": {
+        "name": "Le Chantre",
+        "subtitle": "Le bouclier qui vole",
+        "role": "Soutien, Égide partagée",
+        "lore": "Amaterasu ne gardait pas sa lumière : elle la prêtait à qui se tenait près d'elle.",
+        "passive": {
+          "name": "Bouclier volant",
+          "description": "L'Égide protège aussi l'allié le plus proche (40 % de réduction, la moitié du tien). En échange, ton Aura rend 16 % des PV max au lieu de 22 %.",
+          "effects": [
+            { "op": "set", "path": "perks.aegisAlly", "value": 0.4 },
+            { "op": "set", "path": "paladin.aura.healShare", "value": 0.16 }
           ]
         },
         "active": {
-          "name": "Collet armé",
-          "kind": "filet",
-          "range": 11,
-          "radius": 2.4,
-          "stun": 3,
-          "cooldown": 11,
-          "description": "Tu poses un collet sous la souris (11 m au plus) : les yokai qui s'y trouvent sont pris 3 s (1,5 s pour un boss). Revient en 11 s."
+          "name": "Chant",
+          "kind": "cri",
+          "radius": 0,
+          "damageBonus": 0.15,
+          "speedBonus": 0,
+          "armor": 0.2,
+          "duration": 6,
+          "cooldown": 16,
+          "description": "Un chant de 6 s, pour toi et l'allié le plus proche : +15 % de dégâts et 20 % de dégâts subis en moins. Revient en 16 s."
         }
-      },
+      }
+    },
+    "rodeur": {
       "tireur": {
         "name": "Tireur d'élite",
         "subtitle": "Une flèche, une proie",
@@ -382,6 +454,56 @@
           "duration": 6,
           "cooldown": 15,
           "description": "Tu inspires une fois, et tout s'aligne : +40 % de dégâts et +10 % de vitesse de marche pendant 6 s. Revient en 15 s."
+        }
+      },
+      "eclaireur": {
+        "name": "L'Éclaireur",
+        "subtitle": "Le marqueur du groupe",
+        "role": "Contrôle, soutien",
+        "lore": "Un éclaireur ne tue pas seul : il montre où frapper, et l'équipe frappe.",
+        "passive": {
+          "name": "Flèche balise",
+          "description": "La Marque du chasseur dure 9 s au lieu de 6, et les yokai marqués subissent +15 % de dégâts de toute source (les tiens font 30 % de plus). En échange, tes PV tombent à ×0,85 : la voie se paie sur soi.",
+          "effects": [
+            { "op": "set", "path": "ranger.huntMark.duration", "value": 9 },
+            { "op": "set", "path": "ranger.huntMark.bonus", "value": 0.15 },
+            { "op": "set", "path": "perks.huntMarkAll", "value": 0.15 },
+            { "op": "set", "path": "perks.frailHp", "value": 0.85 }
+          ]
+        },
+        "active": {
+          "name": "Le Couloir",
+          "kind": "filet",
+          "range": 11,
+          "radius": 2.4,
+          "stun": 2,
+          "allyRush": 0.2,
+          "allyRushTime": 3,
+          "cooldown": 12,
+          "description": "Tu poses un couloir sous la souris (11 m au plus) : les yokai qui s'y trouvent sont cloués 2 s, et les alliés qui s'y tiennent vont 20 % plus vite — donc s'écartent vite. Revient en 12 s."
+        }
+      },
+      "vigie": {
+        "name": "Le Vigie",
+        "subtitle": "L'arc patient",
+        "role": "Dégâts à distance, contrôle",
+        "lore": "On ne bande pas un arc dans la précipitation : on choisit son instant, et on l'attend.",
+        "passive": {
+          "name": "Œil d'argile",
+          "description": "Tes tirs chargés pleins étourdissent 0,5 s. En échange, le Recul (Bond) recharge en 5 s au lieu de 3,6 s : la voie se joue à distance, pas en reculant.",
+          "effects": [
+            { "op": "set", "path": "perks.chargedStun", "value": 0.5 },
+            { "op": "set", "path": "ranger.leap.cooldown", "value": 5 }
+          ]
+        },
+        "active": {
+          "name": "Volée d'argile",
+          "kind": "salve",
+          "radius": 0,
+          "count": 6,
+          "damage": 0.9,
+          "cooldown": 13,
+          "description": "Six traits d'argile partent en éventail et traversent tout ce qu'ils touchent. Revient en 13 s."
         }
       }
     }

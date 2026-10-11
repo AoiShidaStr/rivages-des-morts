@@ -47,8 +47,8 @@ const SALVE_SPREAD = 9;
 const PREY_TIME = 2;
 /** Répit après une immobilisation (filet, fil de Jōren, soie) : le yokai ne peut plus être immobilisé pendant ce temps. */
 const IMMOBILIZE_RESPITE = 3;
-/** Étourdissement le plus long de la Frappe du Guerrier, le seul héros qui étourdit (hors filet du Rôdeur). */
-const SMASH_STUN_MAX = 0.8;
+/** Étourdissement le plus long d'une onde ou d'une Frappe de héros (hors filet du Rôdeur). */
+const SMASH_STUN_MAX = 1.3;
 /** Part de la vitesse que perdent les yokai frappés par le Bond (talent d'Héraclès). */
 const BOND_SLOW = 0.5;
 /** Un leurre (clone, plumes) attire les yokai à moins de ces mètres de lui. */
@@ -212,6 +212,41 @@ export class Decoy implements Foe {
   }
 }
 
+/**
+ * Garde spectral (voie de l'Évêque, 0.17.0) : un allié invoqué par le Paladin. Il attire les yokai proches, protège
+ * les héros qui l'entourent et frappe à sa place. Il peut tomber — ce que l'Égide ne faisait jamais — et revient
+ * après son cycle.
+ */
+export class SpectralGuard implements Foe {
+  knockback = vec();
+  readonly radius = 0.45;
+  hp: number;
+  dead = false;
+  /** Secondes avant son prochain coup. */
+  attack = 0;
+
+  constructor(
+    public pos: Vec2,
+    readonly maxHp: number,
+    readonly owner: number,
+  ) {
+    this.hp = maxHp;
+  }
+
+  isGuarding(): boolean {
+    return false;
+  }
+
+  guard(): void {}
+
+  takeHit(amount: number, dir: Vec2, knockback: number): boolean {
+    this.hp = Math.max(0, this.hp - amount);
+    this.knockback = add(this.knockback, scale(dir, knockback * 0.4));
+    if (this.hp <= 0) this.dead = true;
+    return false;
+  }
+}
+
 /** Leurre laissé par un objet (Masque du Kitsune, Manteau de Plumes) : il attire les yokai proches `life` secondes. */
 interface Lure {
   decoy: Decoy;
@@ -269,6 +304,12 @@ export class World {
   stumps: Stump[] = [];
   peaches: PeachTree[] = [];
   webs: Web[] = [];
+  /** Gardes spectraux en jeu (voie de l'Évêque) : ils attirent, protègent et frappent avec le Paladin. */
+  guards: SpectralGuard[] = [];
+  /** Secondes avant le retour d'un garde tombé, par propriétaire. */
+  private guardTimers = new Map<number, number>();
+  /** Plafond courant de « la marée monte » (0,3 ; abaissé par le Yomi sans fond aux paliers hauts). */
+  private tideMax = TIDE_MAX;
   state: 'playing' | Outcome = 'playing';
   time = 0;
   private waveIndex = -1;
@@ -381,14 +422,15 @@ export class World {
     return events;
   }
 
-  /** Tout ce que les yokai peuvent frapper : les héros debout. */
+  /** Tout ce que les yokai peuvent frapper : les héros debout, et les gardes spectraux. */
   foes(): Foe[] {
-    return this.standing;
+    return [...this.standing, ...this.guards];
   }
 
   /** Vrai tant que `foe` peut encore être attaqué (un héros à terre ou invisible ne l'est plus). */
   isFoe(foe: Foe | null): foe is Foe {
     if (foe instanceof Player) return this.players.includes(foe) && !foe.dead && foe.hidden <= 0;
+    if (foe instanceof SpectralGuard) return this.guards.includes(foe) && !foe.dead;
     return foe instanceof Decoy && (this.players.some((p) => p.smoke === foe && !p.dead) || this.lures.some((l) => l.decoy === foe));
   }
 
@@ -397,6 +439,12 @@ export class World {
    * nuage de fumée ; camouflé (Capuche de camouflage), il paraît plus loin qu'il n'est.
    */
   pickFoe(from: Vec2): Foe {
+    // Un garde spectral proche attire le yokai avant tout le reste : c'est son rôle de taunt.
+    for (const guard of this.guards) {
+      if (guard.dead) continue;
+      const cfg = this.hero(guard.owner).cfg.perks?.spectralGuard;
+      if (cfg && distance(from, guard.pos) <= cfg.taunt + guard.radius) return guard;
+    }
     const lure = closest(this.lures.map((l) => l.decoy), from);
     if (lure && distance(lure.pos, from) <= LURE_RANGE) return lure;
     let best: Foe = this.players[0];
@@ -434,6 +482,55 @@ export class World {
 
   private updateLures(dt: number): void {
     this.lures = this.lures.filter((l) => (l.life -= dt) > 0);
+  }
+
+  /**
+   * Garde spectral (voie de l'Évêque) : il suit son Paladin, taunt les yokai (par `pickFoe`), frappe ceux qui
+   * l'entourent, et revient après son cycle quand il tombe.
+   */
+  private updateGuards(dt: number): void {
+    for (const hero of this.players) {
+      const cfg = hero.cfg.perks?.spectralGuard;
+      if (!cfg) continue;
+      const guard = this.guards.find((g) => g.owner === hero.id && !g.dead);
+      if (!guard) {
+        // Pas de garde : un tombé attend son cycle, un absent apparaît aussitôt.
+        const wait = (this.guardTimers.get(hero.id) ?? 0) - dt;
+        this.guardTimers.set(hero.id, wait);
+        if (wait > 0 || hero.dead) continue;
+        this.guards = this.guards.filter((g) => g.owner !== hero.id);
+        const fresh = new SpectralGuard(add(hero.pos, vec(hero.radius + 0.7, hero.radius + 0.7)), hero.cfg.maxHp * cfg.hpShare, hero.id);
+        this.guards.push(fresh);
+        this.emit({ type: 'lure', pos: { ...fresh.pos } });
+        continue;
+      }
+      // Il suit son maître, à distance de bras.
+      const to = sub(hero.pos, guard.pos);
+      const gap = length(to);
+      if (gap > 1.6) guard.pos = add(guard.pos, scale(normalize(to), Math.min(gap - 1.6, 5 * dt)));
+      this.clampToArena(guard.pos, guard.radius);
+      // Il frappe tout ce qui passe à sa portée.
+      guard.attack -= dt;
+      if (guard.attack > 0) continue;
+      guard.attack = cfg.interval;
+      const reach = Math.max(1.6, cfg.taunt);
+      let struck = false;
+      this.act(hero, () => {
+        for (const enemy of [...this.enemies]) {
+          if (!enemy.targetable || distance(enemy.pos, guard.pos) - enemy.radius > reach) continue;
+          struck = true;
+          enemy.receiveHit({ amount: hero.cfg.attack.damage * cfg.damageFactor * hero.damageMultiplier(), from: guard.pos, knockback: 4, ignoreShell: true }, this);
+          if (enemy.dead) hero.onKill();
+        }
+      });
+      if (struck) this.emit({ type: 'smash', pos: { ...guard.pos }, radius: reach });
+    }
+    // Les gardes tombés laissent le temps de leur cycle avant de revenir.
+    const fallen = this.guards.filter((g) => g.dead);
+    if (fallen.length) {
+      this.guards = this.guards.filter((g) => !g.dead);
+      for (const guard of fallen) this.guardTimers.set(guard.owner, this.hero(guard.owner).cfg.perks?.spectralGuard?.cycle ?? 0);
+    }
   }
 
   /**
@@ -489,6 +586,8 @@ export class World {
         for (const enemy of this.enemies) {
           if (enemy.targetable && distance(enemy.pos, cloud.pos) - enemy.radius <= cloud.radius) this.poison(enemy, hero);
         }
+        // Le Voile (voie équilibrée) : le poison de ses nuages la nourrit.
+        if (hero.cfg.perks?.cloudHeal) hero.heal(hero.cfg.perks.cloudHeal, this);
       }
       if (cloud.life > 0) continue;
       this.clouds = this.clouds.filter((c) => c !== cloud);
@@ -512,6 +611,27 @@ export class World {
     return best;
   }
 
+  /**
+   * Saigne (voie de la Lame) : la part de dégâts qu'un yokai empoisonné perd, selon les charges qu'il porte. Le
+   * héros qui a posé le poison décide du taux (`poison.hero`), pas la victime : en coop, l'affaiblissement suit
+   * la Lame qui a mordu.
+   */
+  poisonWeaken(heroId: number): number {
+    const amount = this.hero(heroId).cfg.perks?.poisonWeaken ?? 0;
+    return amount;
+  }
+
+  /** Part des dégâts retirée à un héros par un garde spectral vivant (voie de l'Évêque). */
+  guardShield(pos: Vec2): number {
+    let best = 0;
+    for (const guard of this.guards) {
+      if (guard.dead) continue;
+      const cfg = this.hero(guard.owner).cfg.perks?.spectralGuard;
+      if (cfg && distance(pos, guard.pos) <= cfg.taunt) best = Math.max(best, cfg.shield);
+    }
+    return best;
+  }
+
   /** Valeur d'une malédiction du niveau de donjon (0 si elle n'est pas active). */
   curse(id: CurseId): number {
     return this.cfg.difficulty?.curses[id] ?? 0;
@@ -526,7 +646,7 @@ export class World {
    */
   tide(): number {
     if (this.cfg.training) return 0;
-    return Math.min(TIDE_MAX, Math.max(0, this.time - this.tideStart) * TIDE_PER_SECOND);
+    return Math.min(this.tideMax, Math.max(0, this.time - this.tideStart) * TIDE_PER_SECOND);
   }
 
   /**
@@ -540,7 +660,7 @@ export class World {
 
   /** Annonce la marée au joueur quand elle franchit un palier (10 %, 20 %, 30 %), une fois par vague. */
   private noticeTide(): void {
-    const step = Math.floor((this.tide() + 1e-6) / (TIDE_MAX / 3));
+    const step = Math.floor((this.tide() + 1e-6) / (this.tideMax / 3));
     if (step <= this.tideNotices || step <= 0) return;
     this.tideNotices = step;
     const label = step >= 3 ? 'Le Yomi boit tes soins…' : step === 2 ? 'La marée monte !' : 'Les morts s’agitent…';
@@ -571,6 +691,7 @@ export class World {
     this.updateSanctuaries(dt);
     this.updateClouds(dt);
     this.updateLures(dt);
+    this.updateGuards(dt);
     this.regenerate(dt);
     this.updateHazards(dt);
     this.updateWebs(dt);
@@ -709,6 +830,8 @@ export class World {
       player.marchPrimed = false;
       amount *= 1 + perks.marchStrike.bonus;
     }
+    // L'Éclaireur : ses propres coups sur une proie marquée frappent un peu plus fort (le marquage sert l'équipe).
+    if (perks.huntMarkAll && enemy.marks.hunt > 0) amount *= 1 + perks.huntMarkAll;
     // Cœur de l'Assassin : frapper une proie empoisonnée nourrit la Lame.
     if (perks.poisonHitHeal && enemy.poison) player.leech(perks.poisonHitHeal, this);
     const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
@@ -910,6 +1033,8 @@ export class World {
   castAegis(paladin: Player, aim: Vec2): void {
     const cfg = paladin.cfg.paladin.aegis;
     const perks = paladin.cfg.perks ?? {};
+    // L'Évêque : le Paladin a renoncé à l'Égide, tout le groupe tombe.
+    if (perks.renounceAegis) return;
     // Le héros (lui compris) le plus proche de la souris, parmi ceux à portée.
     const target = closest([paladin, ...this.standing.filter((h) => h !== paladin && distance(h.pos, paladin.pos) <= cfg.range)], aim) ?? paladin;
     // R sur un héros déjà protégé : l'Égide le quitte, sans attendre la recharge.
@@ -928,6 +1053,15 @@ export class World {
     target.aegisArmor = 1 - (1 - cfg.armor) / (perks.aegisAbsorb ?? 1);
     if (perks.aegisHeal) paladin.heal(perks.aegisHeal, this);
     this.emit({ type: 'aegis', hero: target.id, pos: { ...target.pos }, on: true });
+    // Le Chantre : l'Égide protège aussi l'allié le plus proche, à la moitié de la sienne.
+    if (perks.aegisAlly && (perks.aegisTargets ?? 1) < 2) {
+      const ally = closest(this.standing.filter((h) => h.id !== target.id), target.pos);
+      if (ally) {
+        paladin.aegisSecond = ally.id;
+        ally.aegisArmor = Math.max(ally.aegisArmor, perks.aegisAlly);
+        this.emit({ type: 'aegis', hero: ally.id, pos: { ...ally.pos }, on: true });
+      }
+    }
   }
 
   /** L'Égide de `paladin` quitte le héros `id`. */
@@ -945,16 +1079,20 @@ export class World {
   /** Frappe fracassante : dégâts de zone qui ignorent la carapace et étourdissent. */
   smash(center: Vec2): void {
     const smash = this.player.cfg.smash;
+    // Cratère (voie inverse) : la Frappe pousse plus loin et étourdit plus longtemps.
+    const control = this.player.cfg.perks?.smashControl;
+    const knockback = smash.knockback * (1 + (control?.push ?? 0));
+    const stun = Math.min(SMASH_STUN_MAX, smash.stun + (control?.stun ?? 0));
     this.emit({ type: 'smash', pos: center, radius: smash.radius });
     this.shakePeaches(center, smash.radius);
     let struck = false;
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
       struck = true;
-      enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback: smash.knockback, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback, ignoreShell: true }, this);
       if (!enemy.dead) {
-        // Seul étourdissement des héros, et il reste bref ; les objets ajoutent un ralentissement qui le suit.
-        enemy.stun(Math.min(SMASH_STUN_MAX, smash.stun), 'smash', this);
+        // Seul étourdissement des héros ; les objets ajoutent un ralentissement qui le suit.
+        enemy.stun(stun, 'smash', this);
         const trail = this.player.cfg.perks?.smashSlow;
         if (trail) enemy.slow(trail.amount, trail.duration, this);
       }
@@ -983,6 +1121,27 @@ export class World {
     }
     // Une Frappe qui porte soigne le Guerrier.
     if (struck && smash.heal) this.player.heal(this.player.cfg.maxHp * smash.heal, this);
+  }
+
+  /**
+   * Réplique (voie équilibrée du Guerrier) : un blocage parfait déclenche aussitôt une Frappe fracassante gratuite,
+   * `factor` fois un coup d'arme. Elle ne passe pas par la recharge et suit les mêmes réglages de zone.
+   */
+  parrySmash(player: Player, factor: number): void {
+    this.act(player, () => {
+      const smash = player.cfg.smash;
+      const control = player.cfg.perks?.smashControl;
+      const center = add(player.pos, scale(player.facing, smash.offset));
+      const knockback = smash.knockback * (1 + (control?.push ?? 0));
+      const stun = Math.min(SMASH_STUN_MAX, smash.stun + (control?.stun ?? 0));
+      this.emit({ type: 'smash', pos: { ...center }, radius: smash.radius });
+      for (const enemy of [...this.enemies]) {
+        if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
+        enemy.receiveHit({ amount: player.cfg.attack.damage * factor * player.damageMultiplier(), from: center, knockback, ignoreShell: true }, this);
+        if (enemy.dead) player.onKill();
+        else enemy.stun(stun, 'smash', this);
+      }
+    });
   }
 
   /** Armure du Général Déchu : le blocage parfait repousse les yokai autour du héros. */
@@ -1135,6 +1294,7 @@ export class World {
     if (meteor) return;
     // Étincelle : chaque yokai pris dans le sceau rend du mana ; Sol brûlant : le sceau laisse le sol en feu ;
     // Seiman : il explose une seconde fois, moins fort.
+    if (perks.fireHeal && touched) player.heal(perks.fireHeal * touched, this);
     if (perks.sealMana && touched) player.gainMana(perks.sealMana * touched);
     // Bâton de Susanoo : un sceau qui prend une grappe soigne le Sorcier.
     if (perks.sealHeal && touched >= perks.sealHeal.min) player.heal(player.cfg.maxHp * perks.sealHeal.share, this);
@@ -1206,12 +1366,15 @@ export class World {
   private fireBurst(center: Vec2, radius: number, damage: number): void {
     const player = this.player;
     this.emit({ type: 'blastEnd', id: this.nextFxId--, kind: 'seal', pos: { ...center }, radius });
+    let touched = 0;
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
+      touched++;
       enemy.burning = ON_FIRE;
       enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback: 4, ignoreShell: true }, this);
       if (enemy.dead) player.onKill();
     }
+    if (player.cfg.perks?.fireHeal && touched) player.heal(player.cfg.perks.fireHeal * touched, this);
   }
 
   /**
@@ -1221,14 +1384,18 @@ export class World {
   private burnAround(center: Vec2, radius: number, amount: number, ground = false): void {
     const player = this.player;
     const mana = ground ? (player.cfg.perks?.emberKillMana ?? 0) : 0;
+    let touched = 0;
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
+      touched++;
       enemy.burning = ON_FIRE;
       enemy.receiveHit({ amount: amount * player.damageMultiplier(), from: center, knockback: 0, ignoreShell: true }, this);
       if (enemy.dead) player.onKill();
       if (enemy.dead && mana) player.gainMana(mana);
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
+    // Dryade : le feu au sol nourrit aussi le Sorcier.
+    if (player.cfg.perks?.fireHeal && touched) player.heal(player.cfg.perks.fireHeal * touched, this);
   }
 
   /** Naissance du feu : `count` boules de feu partent de `from` vers les yokai les plus proches. */
@@ -1603,7 +1770,11 @@ export class World {
             this,
           );
           if (enemy.dead) player.onKill();
-          else if (cfg.stun) enemy.stun(Math.min(SMASH_STUN_MAX, cfg.stun), 'smash', this);
+          else {
+            if (cfg.stun) enemy.stun(Math.min(SMASH_STUN_MAX, cfg.stun), 'smash', this);
+            // Croc lente (voie inverse de la Lame) : l'onde ralentit au lieu d'étourdir.
+            if (cfg.slow) enemy.slow(cfg.slow, cfg.slowTime ?? 2, this);
+          }
           if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
         }
         break;
@@ -1626,6 +1797,12 @@ export class World {
         for (const enemy of this.enemies) {
           if (!enemy.targetable || distance(enemy.pos, at) > cfg.radius + enemy.radius) continue;
           this.immobilize(enemy, enemy.boss ? stun / 2 : stun, 'net');
+        }
+        // Le Couloir (voie inverse du Rôdeur) : les alliés qui s'y tiennent s'écartent vite.
+        if (cfg.allyRush) {
+          for (const hero of this.standing) {
+            if (distance(hero.pos, at) <= cfg.radius + hero.radius) hero.rushFromNet(cfg.allyRush, cfg.allyRushTime ?? 3);
+          }
         }
         break;
       }
@@ -1754,6 +1931,8 @@ export class World {
         // Les boules de feu sont l'attaque de base du Sorcier : des coups d'arme, critiques et talents compris.
         this.weaponHit(enemy, p.damage, from, p.knockback, 1);
         enemy.burning = ON_FIRE;
+        // Dryade (voie inverse) : chaque yokai touché par ton feu te rend des PV.
+        if (perks.fireHeal) player.heal(perks.fireHeal, this);
         const slow = perks.fireballSlow;
         if (slow && !enemy.dead) enemy.slow(slow.amount, slow.duration, this);
         return p.pierce;
@@ -2029,8 +2208,9 @@ export class World {
     // La marée repart de zéro à chaque vague : c'est la salle qu'on fait durer qui se durcit, pas la descente entière.
     this.tideStart = this.time;
     this.tideNotices = 0;
-    // Donjon infini : chaque palier a son niveau et ses modificateurs.
+    // Donjon infini : chaque palier a son niveau et ses modificateurs (et son plafond de marée, 0.17.0).
     if (wave.difficulty) this.cfg.difficulty = wave.difficulty;
+    this.tideMax = wave.difficulty?.tideMax ?? TIDE_MAX;
     this.stumps = (wave.stumps ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
     this.peaches = (wave.peaches ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.peachRadius, ripe: true, regrow: 0 }));
     this.webs = [];
