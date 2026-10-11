@@ -1,6 +1,6 @@
 import { content, type DungeonDef } from '../content';
 import type { PlayerConfig } from '../game/config';
-import { activeCurses, clampLevel, difficultyFor, nextCurse, rewardsFor, unlockAfter } from '../game/difficulty';
+import { activeCurses, clampLevel, dungeonDifficultyFor, nextCurse, rewardsFor, unlockAfter } from '../game/difficulty';
 import { isUpgradable, paliersOf, reachedPaliers, scaledBonus, upgradeCap, upgradeCost, weaponPower } from '../game/forge';
 import {
   buildLoadout,
@@ -1147,9 +1147,10 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
 // --- Voie (sous-classe) ---------------------------------------------------------
 
 /**
- * Le choix de la voie : deux voies par classe, ouvertes au niveau 25, et modifiable à volonté — un joueur qui se
- * trompe ne perd rien (règle du joueur : aucun nerf, aucune punition). Les nombres d'une voie sont décrits dans
- * l'écran (passif et compétence) : le joueur sait ce qu'il prend avant de cliquer.
+ * Le choix de la voie : trois voies par classe, ouvertes au niveau 25, et modifiable à volonté — un joueur qui se
+ * trompe ne perd rien (règle du joueur : aucun nerf, aucune punition). Depuis la 0.16.0, la troisième est une voie
+ * d'abandon : elle renonce à un pilier de la classe, et le dit dans son passif avant qu'on la choisisse. Les nombres
+ * d'une voie sont décrits dans l'écran (passif et compétence) : le joueur sait ce qu'il prend avant de cliquer.
  */
 export function openSubclass(host: PanelHost, ctx: UiContext): void {
   const render = () => {
@@ -1458,7 +1459,7 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, dungeon: Dunge
   slider.addEventListener('input', () => set(Number(slider.value)));
 
   const update = () => {
-    const d = difficultyFor(data, level, 1, dungeon.strength);
+    const d = dungeonDifficultyFor(data, level, 1, dungeon.strength);
     const r = rewardsFor(data, level);
     const curses = activeCurses(data, level);
     const next = nextCurse(data, level);

@@ -138,8 +138,8 @@
       "passives": [
         {
           "name": "Sang yokai",
-          "description": "Tes dégâts, de toutes les sources, remplissent une jauge. Pleine, elle te transforme 8 s : +35 % de dégâts et +15 % de vitesse, mais 10 % de dégâts subis en plus.",
-          "effects": [{ "op": "set", "path": "perks.yokaiBlood", "value": { "fill": 3, "duration": 8, "damage": 0.35, "speed": 0.15, "taken": 0.1 } }]
+          "description": "Tes dégâts, de toutes les sources, remplissent une jauge. Pleine, elle te transforme 8 s : +28 % de dégâts et +15 % de vitesse, mais 15 % de dégâts subis en plus.",
+          "effects": [{ "op": "set", "path": "perks.yokaiBlood", "value": { "fill": 3.5, "duration": 8, "damage": 0.28, "speed": 0.15, "taken": 0.15 } }]
         },
         {
           "name": "Instinct yokai",
@@ -185,19 +185,20 @@
       "playstyle": "Maître d'armes : alterne la Garde et l'Offensive, et survis en frappant.",
       "kit": "guerrier",
       "weapon": "nodachi",
-      "about": "Réglages de base de la classe : 115 PV et une garde qui arrête 90 % d'un coup de face (le premier donjon restait hors de portée d'un joueur moyen, selon les descentes simulées).",
+      "about": "Réglages de base de la classe : 115 PV, une garde qui arrête 80 % d'un coup de face, et des coups d'arme de base 40 % plus lourds que ceux des autres mêlées (0.16.0 : sans ça, ses attaques ne suivaient plus le rythme des yokai et la Frénésie ne rattrapait rien).",
       "effects": [
         { "op": "mul", "path": "maxHp", "value": 1.55 },
-        { "op": "set", "path": "block.reduction", "value": 0.9 }
+        { "op": "set", "path": "block.reduction", "value": 0.8 },
+        { "op": "set", "path": "perks.strikeDamage", "value": 0.4 }
       ],
       "passives": [
         {
           "name": "Maître d'armes",
-          "description": "Deux postures. Clic droit tenu : Garde, coups plus lents, 25 % de dégâts subis en moins, et tu bloques. Relâché : Offensive, coups bien plus rapides, 0,4 m d'allonge, 10 % de vol de vie et 10 % de dégâts subis en moins. Tes armes de classe volent de la vie : tu survis en restant au cœur de la mêlée."
+          "description": "Deux postures. Clic droit tenu : Garde, coups plus lents, 25 % de dégâts subis en moins, et tu bloques. Relâché : Offensive, coups bien plus rapides, 0,4 m d'allonge, 10 % de vol de vie et 10 % de dégâts subis en moins. Tes armes de classe volent de la vie et tes coups d'arme de base frappent 40 % plus fort : tu survis en restant au cœur de la mêlée."
         }
       ],
       "actives": [
-        { "key": "Clic droit", "name": "Posture", "description": "Tiens le clic droit pour passer en Garde et bloquer 90 % d'un coup de face ; relâche pour repasser en Offensive. Garde levée juste avant le coup : blocage parfait, ton coup suivant riposte (+35 % de dégâts, critique, étourdit) et la Frappe fracassante revient 2 s plus tôt et tu récupères 3 % de tes PV." },
+        { "key": "Clic droit", "name": "Posture", "description": "Tiens le clic droit pour passer en Garde et bloquer 80 % d'un coup de face ; relâche pour repasser en Offensive. Garde levée juste avant le coup : blocage parfait, ton coup suivant riposte (+35 % de dégâts, critique, étourdit) et la Frappe fracassante revient 2 s plus tôt et tu récupères 3 % de tes PV." },
         { "key": "A", "name": "Frappe fracassante", "description": "Gros dégâts de zone, ignore les carapaces, étourdit 0,8 s. Si elle touche, elle te rend 4 % de tes PV. Revient en 5 s." },
         { "key": "E", "name": "Bond", "description": "Saute sur la zone visée et frappe à l'atterrissage. Revient en 5 s." },
         { "key": "R", "name": "Frénésie", "description": "Pendant 6 s, tu frappes bien plus vite mais subis 10 % de dégâts en plus. Revient en 14 s." }
@@ -275,7 +276,7 @@
             {
               "id": "heracles-1",
               "name": "Garde du héros",
-              "description": "Ta garde arrête tout le coup, au lieu de 90 %, et couvre un angle bien plus large (130° → 180°).",
+              "description": "Ta garde arrête tout le coup, au lieu de 80 %, et couvre un angle bien plus large (130° → 180°).",
               "effects": [
                 { "op": "set", "path": "block.reduction", "value": 1 },
                 { "op": "set", "path": "block.arcDeg", "value": 180 }
@@ -349,7 +350,7 @@
       "kit": "sorcier",
       "weapon": "grelots-onmyoji",
       "growth": { "damagePerLevel": 0, "hpPerLevel": 2, "weaponPerLevel": 0.075 },
-      "about": "Réglages de base de la classe, appliqués avant l’équipement : le Sorcier a le moins de PV du jeu. Son clic gauche lance des boules de feu (attack.damage chacune, portée attack.range) ; ses sorts et son mana sont dans player.json (sorcier). Sa croissance (growth) lui est propre : son niveau ne lui donne aucun dégât, toute sa puissance vient de la forge de son catalyseur, et il gagne moins de PV par niveau. Sans équipement, il ne vaut guère mieux qu'au niveau 1.",
+      "about": "Réglages de base de la classe, appliqués avant l’équipement : le Sorcier a le moins de PV du jeu. Son clic gauche lance des boules de feu (attack.damage chacune, portée attack.range) ; son mana remonte de 6 par seconde depuis la 0.16.0 (5 avant : entre deux sceaux, il attendait plus qu'il ne lançait) ; ses sorts et son mana sont dans player.json (sorcier). Sa croissance (growth) lui est propre : son niveau ne lui donne aucun dégât, toute sa puissance vient de la forge de son catalyseur, et il gagne moins de PV par niveau. Sans équipement, il ne vaut guère mieux qu'au niveau 1.",
       "effects": [
         { "op": "set", "path": "kit", "value": "sorcier" },
         { "op": "mul", "path": "maxHp", "value": 0.8 },
@@ -367,7 +368,7 @@
           "name": "Sceau",
           "description": "Trace un sceau sous la souris (9 m au plus) : il explose au bout d’1 s, gros dégâts en zone, carapaces ignorées. 18 mana, revient en 2,5 s."
         },
-        { "key": "A", "name": "Bouclier de flammes", "description": "Un bouclier absorbe 40 % de tes PV max pendant 5 s, te rend 5 % de tes PV en s'allumant, repousse les yokai proches et brûle ceux qui le touchent. 30 mana, revient en 10 s." },
+        { "key": "A", "name": "Bouclier de flammes", "description": "Un bouclier absorbe 33 % de tes PV max pendant 5 s, te rend 5 % de tes PV en s'allumant, repousse les yokai proches et brûle ceux qui le touchent. 30 mana, revient en 10 s." },
         {
           "key": "E",
           "name": "Fuite de feu",
@@ -527,11 +528,12 @@
       "playstyle": "Empoisonne, plonge, achève : beaucoup de dégâts, peu de PV, aucune erreur permise.",
       "kit": "lame",
       "weapon": "kunai-jumeaux",
-      "about": "Réglages de base de la classe : un peu moins de PV que le Guerrier, une esquive plus longue qui revient plus vite, et 4 PV rendus par ennemi empoisonné abattu (Festin toxique).",
+      "about": "Réglages de base de la classe : un peu moins de PV que le Guerrier, 6 % plus rapide que les autres (c'est elle qui doit arriver au contact), une esquive plus longue qui revient plus vite, et 4 PV rendus par ennemi empoisonné abattu (Festin toxique).",
       "effects": [
         { "op": "set", "path": "kit", "value": "lame" },
-        { "op": "mul", "path": "maxHp", "value": 0.9 },
-        { "op": "mul", "path": "dodge.cooldown", "value": 0.8 },
+        { "op": "mul", "path": "maxHp", "value": 0.95 },
+        { "op": "mul", "path": "moveSpeed", "value": 1.06 },
+        { "op": "mul", "path": "dodge.cooldown", "value": 0.72 },
         { "op": "add", "path": "dodge.invulnerable", "value": 0.1 },
         { "op": "set", "path": "perks.poisonKillHeal", "value": 4 }
       ],
@@ -709,24 +711,27 @@
       "playstyle": "Bouclier levé, tu encaisses et tu soignes tes alliés mieux que toi-même : ménage ta garde.",
       "kit": "paladin",
       "weapon": "naginata-temple",
-      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 85 % d'un coup tant que sa garde tient (player.json, paladin.guard), et les alliés qu'il relève ne l'affaiblissent pas. La part de ses propres soins qu'il reçoit dépend de la taille de l'équipe (paladin.selfHeal : seul, deux, trois héros) : aux trois quarts en solo, où il n'a personne d'autre à soigner, à moitié à trois, où il soutient les autres.",
+      "about": "Réglages de base de la classe : un peu plus de PV, un peu plus lent ; son bouclier arrête 75 % d'un coup tant que sa garde tient, et ses coups d'arme, son Marteau et son Jugement frappent 20 à 30 % plus fort depuis la 0.16.0 (il ne faisait plus assez de dégâts pour finir une salle) ; les alliés qu'il relève ne l'affaiblissent pas. La part de ses propres soins qu'il reçoit dépend de la taille de l'équipe (paladin.selfHeal : seul, deux, trois héros) : aux trois quarts en solo, où il n'a personne d'autre à soigner, à moitié à trois, où il soutient les autres.",
       "effects": [
         { "op": "set", "path": "kit", "value": "paladin" },
-        { "op": "set", "path": "block.reduction", "value": 0.85 },
+        { "op": "set", "path": "block.reduction", "value": 0.75 },
         { "op": "mul", "path": "maxHp", "value": 1.25 },
         { "op": "mul", "path": "moveSpeed", "value": 1 },
-        { "op": "set", "path": "blockMoveFactor", "value": 0.45 }
+        { "op": "set", "path": "blockMoveFactor", "value": 0.45 },
+        { "op": "set", "path": "perks.strikeDamage", "value": 0.3 },
+        { "op": "mul", "path": "paladin.hammer.damage", "value": 1.25 },
+        { "op": "mul", "path": "paladin.judgement.damage", "value": 1.2 }
       ],
       "passives": [
-        { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 8 % de tes PV rendus." }
+        { "name": "Jugement", "description": "Chaque coup bloqué (deux fois plus en blocage parfait) et chaque coup porté remplissent ta ferveur. Pleine, ton coup suivant libère une onde sacrée : gros dégâts autour de toi, carapaces ignorées, et 6 % de tes PV rendus." }
       ],
       "actives": [
         {
           "key": "Clic droit",
           "name": "Bouclier levé",
-          "description": "Maintiens pour arrêter 85 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
+          "description": "Maintiens pour arrêter 75 % des coups de face, en avançant lentement. Chaque coup bloqué use ta garde, selon sa force ; vide, elle se brise 1,5 s. Elle remonte dès que tu ne bloques plus. Bloquer la charge d'un kappa renverse sa coupelle."
         },
-        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend à toi et à tes alliés proches (âmes comprises) 30 % de leurs PV max, une part chaque seconde." },
+        { "key": "A", "name": "Aura de lumière", "description": "Pendant 6 s, une aura te suit et rend à toi et à tes alliés proches (âmes comprises) 22 % de leurs PV max, une part chaque seconde." },
         { "key": "E", "name": "Marteau lancé", "description": "Le marteau part vers la souris et revient dans ta main, en frappant à l'aller et au retour." },
         {
           "key": "R",
@@ -871,10 +876,13 @@
       "playstyle": "Garde tes distances et vise juste : redoutable de loin, fragile au contact.",
       "kit": "rodeur",
       "weapon": "yumi-bambou",
-      "about": "Réglages de base de la classe : un peu moins de PV ; le clic gauche tire une flèche vers la souris, à la portée de l'arc.",
+      "about": "Réglages de base de la classe : le plus de PV après le Guerrier (il encaisse ce qu'il n'a pas pu esquiver, n'ayant ni garde ni soin), 10 % de dégâts subis en moins (il roule avec le coup), une esquive qui revient 15 % plus vite, et le clic gauche tire une flèche vers la souris, à la portée de l'arc.",
       "effects": [
         { "op": "set", "path": "kit", "value": "rodeur" },
-        { "op": "mul", "path": "maxHp", "value": 1.25 }
+        { "op": "mul", "path": "maxHp", "value": 1.3 },
+        { "op": "mul", "path": "damageTakenFactor", "value": 0.95 },
+        { "op": "mul", "path": "dodge.cooldown", "value": 0.85 },
+        { "op": "add", "path": "dodge.invulnerable", "value": 0.04 }
       ],
       "actives": [
         {

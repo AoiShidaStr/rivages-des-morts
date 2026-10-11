@@ -3,7 +3,7 @@ import { Music } from './audio/music';
 import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
-import { clampLevel, difficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
+import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { gravureRank, rollSeal, type Gravure } from './game/gravure';
 import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, rollEndlessItem, submitGlobalRecord } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
@@ -702,7 +702,7 @@ export class App {
     this.dungeon = dungeon;
     this.endless = null;
     this.dungeonLevel = clampLevel(content.difficulty, level);
-    const difficulty = difficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length, dungeon.strength);
+    const difficulty = dungeonDifficultyFor(content.difficulty, this.dungeonLevel, 1 + allies.length, dungeon.strength);
     const begin = () => {
       const world = new World({ ...config, ...dungeon.arena, player, allies: allies.map((a) => a.config), difficulty }, startWave);
       this.world = world;
@@ -976,7 +976,7 @@ export class App {
       this.coopRun = start.run;
       if (session.isHost) {
         const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length) : null;
-        const difficulty = waves ? waves[0].difficulty : difficultyFor(content.difficulty, level, configs.length, dungeon.strength);
+        const difficulty = waves ? waves[0].difficulty : dungeonDifficultyFor(content.difficulty, level, configs.length, dungeon.strength);
         this.world = new World({ ...this.d.config, ...dungeon.arena, ...(waves ? { waves } : {}), player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
         this.remote.clear();

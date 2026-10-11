@@ -19,7 +19,18 @@ export interface DifficultyData {
    * `base` : force des yokai dès le niveau 1, `bossBase` celle du boss (plus douce : une première victoire doit rester
    * à portée) ; puis ce qui s'ajoute à chaque niveau, pour tous.
    */
-  enemy: { base: { hp: number; damage: number }; bossBase: { hp: number; damage: number }; hpPerLevel: number; damagePerLevel: number };
+  enemy: {
+    base: { hp: number; damage: number };
+    bossBase: { hp: number; damage: number };
+    hpPerLevel: number;
+    damagePerLevel: number;
+    /**
+     * Supplément propre aux donjons ordinaires (Rizières, Palais) : la descente choisie à l'entrée est le curseur de
+     * difficulté du joueur expérimenté. Le Yomi sans fond, lui, ne le reçoit pas : c'est l'épreuve, elle garde ses
+     * propres chiffres (donjon-infini.json) et l'on ne veut pas la durcir en même temps.
+     */
+    dungeons?: { hp: number; damage: number };
+  };
   rewards: { obolesPerLevel: number; xpPerLevel: number; rareChancePerLevel: number; extraMaterialEvery: number };
   elite: { hp: number; damage: number };
   curses: CurseDef[];
@@ -101,6 +112,22 @@ export function difficultyFor(data: DifficultyData, level: number, heroes = 1, s
     },
     curses,
     elite: data.elite,
+  };
+}
+
+/**
+ * Difficulté d'un donjon ordinaire : celle de `difficultyFor`, plus le supplément `enemy.dungeons` (0.16.0 : ×1,5),
+ * appliqué aux yokai comme au boss. Le Yomi sans fond n'y touche pas : il appelle `difficultyFor` directement.
+ */
+export function dungeonDifficultyFor(data: DifficultyData, level: number, heroes = 1, strength: EnemyStrength = {}): Difficulty {
+  const diff = difficultyFor(data, level, heroes, strength);
+  const extra = data.enemy.dungeons;
+  if (!extra) return diff;
+  return {
+    ...diff,
+    hp: diff.hp * extra.hp,
+    damage: diff.damage * extra.damage,
+    boss: { hp: diff.boss.hp * extra.hp, damage: diff.boss.damage * extra.damage },
   };
 }
 

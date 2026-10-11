@@ -53,6 +53,10 @@ const SMASH_STUN_MAX = 0.8;
 const BOND_SLOW = 0.5;
 /** Un leurre (clone, plumes) attire les yokai à moins de ces mètres de lui. */
 const LURE_RANGE = 7;
+/** « La marée monte » : hâte gagnée par seconde de vague, plafond, et part des soins que la marée boit au plus haut. */
+const TIDE_PER_SECOND = 0.007;
+const TIDE_MAX = 0.3;
+const TIDE_HEAL_LOSS = 0.35;
 
 /** Commandes d'un héros sans joueur (entrée manquante) : il reste immobile. */
 function idleInput(hero: Player): InputFrame {
@@ -269,6 +273,10 @@ export class World {
   time = 0;
   private waveIndex = -1;
   private waveTimer = 1;
+  /** « La marée monte » : instant où la descente a commencé ; la hâte monte tant qu'elle dure. */
+  private tideStart = 0;
+  /** Paliers de marée déjà annoncés au joueur (1 : +15 %, 2 : +30 %). */
+  private tideNotices = 0;
   private nextId = 1;
   /** Les effets sans corps (toiles, chutes) ont des identifiants négatifs, distincts de ceux des ennemis. */
   private nextFxId = -1;
@@ -509,6 +517,36 @@ export class World {
     return this.cfg.difficulty?.curses[id] ?? 0;
   }
 
+  /**
+   * « La marée monte » (0.16.0) : plus une descente dure, plus les yokai s'agitent. Le temps des morts accélère de
+   * `TIDE_PER_SECOND` par seconde depuis l'entrée dans le donjon, jusqu'à `TIDE_MAX` — atteint vers la quarantième
+   * seconde, donc en plein milieu d'une descente normale. C'est le levier de difficulté qui ne s'achète pas : il punit
+   * la descente qu'on fait durer (soins, garde, kiting) au lieu de la récompenser. Le terrain d'entraînement, lui, ne
+   * bouge pas.
+   */
+  tide(): number {
+    if (this.cfg.training) return 0;
+    return Math.min(TIDE_MAX, Math.max(0, this.time - this.tideStart) * TIDE_PER_SECOND);
+  }
+
+  /**
+   * « Saignée du Yomi » : la marée boit les soins. Tant qu'une vague dure, tout ce qui rend des PV en rend moins —
+   * jusqu'à `TIDE_HEAL_LOSS` au plus haut de la marée. C'est ce qui rend les classes de soutien mortelles : soigner
+   * à l'infini dans un combat qui s'étire ne paie plus, il faut le finir.
+   */
+  healFactor(): number {
+    return 1 - (TIDE_HEAL_LOSS * this.tide()) / TIDE_MAX;
+  }
+
+  /** Annonce la marée au joueur quand elle franchit un palier (10 %, 20 %, 30 %), une fois par vague. */
+  private noticeTide(): void {
+    const step = Math.floor((this.tide() + 1e-6) / (TIDE_MAX / 3));
+    if (step <= this.tideNotices || step <= 0) return;
+    this.tideNotices = step;
+    const label = step >= 3 ? 'Le Yomi boit tes soins…' : step === 2 ? 'La marée monte !' : 'Les morts s’agitent…';
+    this.emit({ type: 'saved', pos: { ...this.players[0].pos }, label });
+  }
+
   /** Un pas de simulation ; `input` : les commandes de chaque héros, dans l'ordre (une seule en solo). */
   update(dt: number, input: InputFrame | readonly InputFrame[]): void {
     if (this.state !== 'playing') return;
@@ -517,8 +555,9 @@ export class World {
     for (const hero of this.players) {
       if (!hero.dead) this.act(hero, () => hero.update(dt, inputs[hero.id] ?? idleInput(hero), this));
     }
-    // « Hâte des morts » : le temps des yokai passe plus vite.
-    const haste = 1 + this.curse('hate');
+    // « Hâte des morts » et « la marée monte » : le temps des yokai passe plus vite.
+    const haste = 1 + this.curse('hate') + this.tide();
+    this.noticeTide();
     // Copie : un ennemi peut en faire apparaître d'autres pendant son tour (araignées, feux follets).
     for (const enemy of [...this.enemies]) this.act(this.chase(enemy, dt * haste), () => enemy.update(dt * haste, this));
     for (const hero of this.players) {
@@ -1000,12 +1039,21 @@ export class World {
     const player = this.player;
     const { attack, sorcier } = player.cfg;
     const cfg = sorcier.fireball;
+    // Voie de l'Orbe : une seule boule, mais `damageFactor` fois les dégâts d'une boule de la salve.
     const target = closest(this.enemies.filter((e) => e.targetable), aim);
     const count = Math.max(1, Math.round(cfg.count));
     for (let i = 0; i < count; i++) {
       const spread = count === 1 ? 0 : (i / (count - 1) - 0.5) * 2;
       const angle = angleOf(dir) + degToRad(cfg.spreadDeg) * spread;
-      this.launch('fireball', fromAngle(angle), { speed: cfg.speed, range: attack.range, damage: attack.damage, knockback: attack.knockback, radius: cfg.radius, pierce: cfg.pierce ?? false, target: target?.id });
+      this.launch('fireball', fromAngle(angle), {
+        speed: cfg.speed,
+        range: attack.range,
+        damage: attack.damage * (cfg.damageFactor ?? 1),
+        knockback: attack.knockback,
+        radius: cfg.radius,
+        pierce: cfg.pierce ?? false,
+        target: target?.id,
+      });
     }
   }
 
@@ -1978,6 +2026,9 @@ export class World {
 
   /** Fait apparaître la vague `wave` : ses yokai, ses souches, ses pêchers, et son annonce si `announce`. */
   private spawnWave(wave: WaveConfig, announce: boolean): void {
+    // La marée repart de zéro à chaque vague : c'est la salle qu'on fait durer qui se durcit, pas la descente entière.
+    this.tideStart = this.time;
+    this.tideNotices = 0;
     // Donjon infini : chaque palier a son niveau et ses modificateurs.
     if (wave.difficulty) this.cfg.difficulty = wave.difficulty;
     this.stumps = (wave.stumps ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));

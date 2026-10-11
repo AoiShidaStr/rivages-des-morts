@@ -150,8 +150,11 @@ export interface SorcierConfig {
    * éventail de `spreadDeg` puis guidées vers l'ennemi le plus proche du curseur au moment du clic (`turnRate` rad/s).
    * Si leur cible tombe, elles cherchent un autre yokai à moins de `seek` m.
    */
-  /** `pierce` : les boules de feu traversent les yokai (Bâton de Susanoo). */
-  fireball: { count: number; spreadDeg: number; speed: number; turnRate: number; radius: number; seek: number; pierce?: boolean };
+  /**
+   * `pierce` : les boules de feu traversent les yokai (Bâton de Susanoo). `damageFactor` multiplie les dégâts de
+   * chaque boule : la voie de l'Orbe en fait une seule grosse boule à viser, plusieurs salves en une.
+   */
+  fireball: { count: number; spreadDeg: number; speed: number; turnRate: number; radius: number; seek: number; pierce?: boolean; damageFactor?: number };
   /** Clic droit : un sceau tracé au sol, sous le curseur (à `range` m au plus), qui explose au bout de `delay` s. */
   seal: { cost: number; cooldown: number; delay: number; radius: number; damage: number; range: number };
   /**
@@ -324,6 +327,40 @@ export interface Perks {
   yokaiDraw?: number;
   /** Hanyō : sous `threshold` des PV, vitesse en plus et régénération. */
   yokaiInstinct?: { threshold: number; speed: number; regen: number };
+
+  // --- Voies d'abandon (0.16.0) ---
+  /**
+   * Ce qu'une voie d'abandon rend en échange de ce qu'elle lâche : `damage` et `attackSpeed` s'ajoutent aux dégâts et
+   * à la vitesse de frappe, `lifesteal` au vol de vie, et `perPerfectGuard` grandit de tant par blocage parfait,
+   * sans plafond, tant que la descente dure (voie du Parjure).
+   */
+  abandon?: { damage?: number; attackSpeed?: number; lifesteal?: number; perPerfectGuard?: number };
+  /** Le héros a renoncé à sa garde : le clic droit ne lève plus rien (voie du Démuni). */
+  noGuard?: boolean;
+  /**
+   * Voie d'abandon : part des PV max conservée (Chair : 0,65 ; Sans cuirasse : 0,8). Passe après les bonus de niveau
+   * et d'équipement, comme `maxHpFactor` — un `mul` sur `maxHp` dans les effets d'une voie ne toucherait que la base.
+   */
+  frailHp?: number;
+  /**
+   * Une voie qui refait l'attaque de base (l'Orbe du Sorcier) : ce que le clic gauche devient. Posé APRÈS
+   * l'équipement, parce qu'une arme pose ses propres réglages d'attaque et que ceux de la voie seraient écrasés.
+   * `count`, `radius`, `speed`, `turnRate` et `seek` ne concernent que la boule de feu du Sorcier ;
+   * `damageFactor` multiplie les dégâts d'un projectile (l'Orbe : 12, soit quatre salves en une boule).
+   */
+  baseAttack?: {
+    damageFactor?: number;
+    range?: number;
+    windup?: number;
+    active?: number;
+    recovery?: number;
+    commit?: number;
+    count?: number;
+    radius?: number;
+    speed?: number;
+    turnRate?: number;
+    seek?: number;
+  };
 
   // --- Sorcier ---
   /** Part du coût en mana des sorts (paliers du tag Sorcier, Magatama de Yasakani). */
@@ -535,6 +572,11 @@ export interface Perks {
   wardHeal?: number;
   /** Robe de feu : dégâts de feu en plus (tous les dégâts du Sorcier). */
   fireDamage?: number;
+  /**
+   * Coups appuyés : les dégâts de l'attaque de base, en plus. Appliqué après l'équipement (loadout.ts), parce qu'une
+   * arme pose ses propres dégâts : un `attack.damage` posé par la classe serait écrasé par elle.
+   */
+  strikeDamage?: number;
   /** Cape du Phénix : le Bouclier de flammes brisé explose. */
   wardBreakBlast?: { damage: number; radius: number };
   /** Hakama cramoisi : dégâts en plus sur les yokai en feu. */

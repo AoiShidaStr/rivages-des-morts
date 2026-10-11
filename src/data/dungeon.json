@@ -20,7 +20,7 @@
         "paladin": "Clic gauche pour frapper. Clic droit lève ton bouclier ; {A} t'entoure d'une aura qui soigne.",
         "rodeur": "Clic gauche pour tirer vers la souris. Maintiens le clic droit pour un tir chargé, et garde tes distances."
       },
-      "spawns": [{ "kind": "hitodama", "count": 4 }]
+      "spawns": [{ "kind": "hitodama", "count": 5 }]
     },
     {
       "label": "Le kodama",
@@ -39,7 +39,10 @@
         "paladin": "Sa carapace arrête les coups de face. Bloque sa charge pour renverser sa coupelle, ou lance ton marteau ({E}) : il le frappe dans le dos au retour.",
         "rodeur": "Sa carapace arrête les flèches de face. Immobilise-le avec la Flèche-filet ({A}), puis tire-lui dans le dos."
       },
-      "spawns": [{ "kind": "kappa", "count": 1 }]
+      "spawns": [
+        { "kind": "kappa", "count": 1 },
+        { "kind": "hitodama", "count": 1 }
+      ]
     },
     {
       "label": "Le kappa renforcé",
@@ -55,7 +58,7 @@
     {
       "label": "Les kasa-obake",
       "hint": "Quand un cercle rouge apparaît sous tes pieds, esquive : il va retomber dessus.",
-      "spawns": [{ "kind": "kasaObake", "count": 3 }]
+      "spawns": [{ "kind": "kasaObake", "count": 4 }]
     },
     {
       "label": "La mêlée",
@@ -67,8 +70,8 @@
         "rodeur": "Les Oubliés marquent une pause avant de frapper. Garde tes distances et prends-en plusieurs au filet ({A})."
       },
       "spawns": [
-        { "kind": "oublie", "count": 3 },
-        { "kind": "kappa", "count": 1 },
+        { "kind": "oublie", "count": 4 },
+        { "kind": "kappa", "count": 2 },
         { "kind": "kodama", "count": 1 },
         { "kind": "kasaObake", "count": 1 },
         { "kind": "hitodama", "count": 3 }

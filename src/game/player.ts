@@ -325,6 +325,9 @@ export class Player {
     // Voie (sous-classe), Cri de guerre ou Onde du serment : les dégâts montent tant que le cri tient.
     if (this.voieTime > 0) factor += this.voieDamage;
     if (this.furyTime > 0) factor += this.furyBonus;
+    // Voie d'abandon : ce qu'on a lâché, et les gardes parfaites du Parjure, qui s'empilent sans plafond.
+    const abandon = perks.abandon;
+    if (abandon) factor += (abandon.damage ?? 0) + (abandon.perPerfectGuard ?? 0) * this.perfectGuards;
     // Lame : le combo monte à chaque coup enchaîné.
     if (this.cfg.kit === 'lame') factor += this.combo * this.cfg.blade.combo.bonus;
     // Maîtrise du oni : transformé, le Hanyō guerrier frappe plus fort en Offensive.
@@ -390,7 +393,8 @@ export class Player {
 
   /** Soigne le héros ; renvoie les PV rendus. */
   heal(amount: number, world: World): number {
-    const gained = Math.min(amount * this.healFactor, this.cfg.maxHp - this.hp);
+    // « Saignée du Yomi » : la marée boit une part des soins tant que la vague dure (world.healFactor).
+    const gained = Math.min(amount * this.healFactor * world.healFactor(), this.cfg.maxHp - this.hp);
     if (gained <= 0) return 0;
     this.hp += gained;
     world.emit({ type: 'heal', id: 0, pos: { ...this.pos }, amount: gained });
@@ -421,7 +425,7 @@ export class Player {
   /** Vol de vie : armes du Guerrier, Sang du Gladiateur (blessé), Cœur de l'Arène (entouré). */
   private lifesteal(world: World): number {
     const perks = this.cfg.perks ?? {};
-    let share = perks.lifesteal ?? 0;
+    let share = (perks.lifesteal ?? 0) + (perks.abandon?.lifesteal ?? 0);
     // Guerrier en Offensive : il se nourrit de la mêlée.
     if (this.cfg.kit === 'guerrier' && this.stance === 'offensive') share += this.cfg.stance.offense.lifesteal;
     if (perks.lowHpLifesteal && this.below(perks.lowHpLifesteal.threshold)) share += perks.lowHpLifesteal.bonus;
@@ -615,6 +619,7 @@ export class Player {
 
   /** Guerrier et Paladin lèvent leur garde, sauf quand celle du Paladin vient de se briser. */
   get canGuard(): boolean {
+    if (this.cfg.perks?.noGuard) return false;
     if (this.cfg.kit === 'guerrier') return true;
     return this.cfg.kit === 'paladin' && this.guardBroken <= 0;
   }
@@ -663,6 +668,12 @@ export class Player {
     this.heal(this.cfg.maxHp * b.critHeal.share, world);
   }
 
+  /**
+   * Voie du Parjure : gardes parfaites réussies depuis le début de la descente. Elles nourrissent les dégâts du héros,
+   * sans plafond — une descente qui dure les accumule, et le Yomi ne les rend jamais.
+   */
+  perfectGuards = 0;
+
   /** Paladin : la garde brisée se relève, puis la jauge remonte quand on ne bloque plus rien. */
   private recoverGuard(dt: number): void {
     if (this.cfg.kit !== 'paladin') return;
@@ -696,7 +707,11 @@ export class Player {
     const perks = this.cfg.perks ?? {};
     // Blocage parfait : la garde levée juste avant le coup. En coop, la fenêtre s'élargit du retard de l'invité.
     const perfect = this.guardHeld <= PERFECT_GUARD + this.latency;
-    if (perfect) world.emit({ type: 'perfectGuard', pos: { ...this.pos }, hero: this.id });
+    if (perfect) {
+      world.emit({ type: 'perfectGuard', pos: { ...this.pos }, hero: this.id });
+      // Voie du Parjure : chaque garde parfaite reste, et pèse de plus en plus lourd jusqu'à la fin de la descente.
+      this.perfectGuards++;
+    }
     // Armure du Général Déchu : le blocage parfait repousse tout ce qui est collé au héros.
     if (perfect && perks.perfectPush) world.repel(this.pos, perks.perfectPush.radius, perks.perfectPush.knockback);
     // Guerrier : le blocage parfait ouvre une riposte (le Mempō de Contre-Attaque la renforce) et rapproche la Frappe.
@@ -895,8 +910,8 @@ export class Player {
     // Garde levée, le Guerrier frappe lentement ; un coup lancé baisse la garde, donc part presque toujours en Offensive.
     if (this.cfg.kit === 'guerrier') f *= this.stance === 'garde' ? this.cfg.stance.guard.attackTimeFactor : this.cfg.stance.offense.attackTimeFactor;
     if (this.rush > 0) f /= 1 + this.rushBonus;
-    // Gi de l'assassin : des coups plus vifs.
-    const quick = this.cfg.perks?.attackSpeed;
+    // Gi de l'assassin : des coups plus vifs. Voie du Démuni : la garde lâchée rend les coups plus vifs aussi.
+    const quick = (this.cfg.perks?.attackSpeed ?? 0) + (this.cfg.perks?.abandon?.attackSpeed ?? 0);
     if (quick) f /= 1 + quick;
     const hurried = this.cfg.perks?.lowHpAttackSpeed;
     if (hurried) {
