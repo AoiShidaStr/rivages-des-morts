@@ -8,6 +8,7 @@
 //   npm run equilibrage -- --classes lame --objets menpo-shikome,tsuba-ebrechee   le héros testé porte ces objets
 //   npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30            sans objet, contre un donjon plus bas
 //   npm run equilibrage -- --mode kits --niveaux 10,30,50                        les 3 styles de chaque classe
+//   npm run equilibrage -- --mode infini --niveaux 50 --stuff complet            le Yomi sans fond, bloc après bloc
 //
 // Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau (`--stuff complet` : le meilleur
 // équipement de sa classe, arme épique et relique comprises ; `--stuff survie`, `dps` ou `boss` : un des trois
@@ -82,14 +83,24 @@ const MOBILE = option('cible', 'fixe') === 'mobile';
 const DUNGEON_LEVEL = Number(option('niveau-donjon', '0'));
 /** `--objets a,b` : objets portés en plus par le héros testé (pas ses alliés), chacun à la place de celui de son emplacement. */
 const OBJECTS = option('objets', '').split(',').filter(Boolean);
+/** `--voie fureur` : la voie (sous-classe) du héros testé — ignorée par les classes qui ne la connaissent pas. */
+const VOIE = option('voie', '');
+/** `--supplement 1` : remplace le supplément de difficulté des donjons ordinaires (enemy.dungeons), pour comparer. */
+const SUPPLEMENT = option('supplement', '') ? Number(option('supplement', '')) : null;
 /**
  * `--mode dps` (`npm run dps`) : banc de DPS. Chaque héros frappe pendant `--duree` secondes un kodama immobile et
  * inoffensif dont les PV remontent sans cesse (`--pv` : ses PV de base, pour les effets qui en dépendent). Toutes les
  * compétences qui font des dégâts partent dès qu'elles sont prêtes. Cible (GDD, plan de mise à jour) : en dégâts
  * par seconde, en unités de banc (la Lame sert d'unité de mesure, pas de référence à battre) : Sorcier 115, Rôdeur 100,
  * Lame 100, Guerrier 85, Paladin 80. Le DPS se compare à la survie (voir docs/plan-equilibrage-classes.md), jamais seul.
+ *
+ * `--mode infini` : le Yomi sans fond joué d'un bout à l'autre, bloc après bloc, comme le joueur le descend — chaque
+ * bloc repart avec ses PV pleins et sa propre arène, jusqu'à la mort. C'est la seule mesure qui dise où s'arrête une
+ * classe ; `--blocs` borne la descente.
  */
 const MODE = option('mode', 'donjon');
+/** `--mode infini` : nombre de blocs joués au plus (le dernier palier atteint est celui qui compte). */
+const BLOCS = Number(option('blocs', '12'));
 const DPS_TARGET = { sorcier: 1.15, lame: 1, rodeur: 1, guerrier: 0.85, paladin: 0.8 };
 const DURATION = Number(option('duree', '60'));
 const DUMMY_HP = Number(option('pv', '750'));
@@ -100,7 +111,7 @@ const DUNGEON = option('donjon', 'rizieres');
 // Donjon infini (`--donjon infini`) : le bloc qui contient ce palier (le héros garde le niveau de `--niveaux`).
 const PALIER = Number(option('palier', '1'));
 /** Cibles de l'équilibrage (GDD) : écart de victoires entre classes et entre races, pire combinaison. */
-const TARGETS = { classSpread: 0.15, raceSpread: 0.1, worst: 0.5 };
+const TARGETS = { classSpread: 0.15, raceSpread: 0.1, worst: 0.5, palierSpread: 5, worstPalier: 40 };
 
 // --- Une descente, jouée dans un fil d'exécution à part ---------------------------------------------------------
 
@@ -108,7 +119,7 @@ async function worker() {
   const { createServer } = await import('vite');
   const server = await createServer({ root: ROOT, server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom', logLevel: 'error' });
   const load = (path) => server.ssrLoadModule(path);
-  const [{ World }, { Bot }, { buildLoadout }, { content, endlessArenas }, { difficultyFor }, player, enemies, infini] = await Promise.all([
+  const [{ World }, { Bot }, { buildLoadout }, { content, endlessArenas }, { difficultyFor, dungeonDifficultyFor }, player, enemies, infini] = await Promise.all([
     load('/src/game/world.ts'),
     load('/src/game/bot.ts'),
     load('/src/game/loadout.ts'),
@@ -118,6 +129,7 @@ async function worker() {
     load('/src/data/enemies.json'),
     load('/src/game/infini.ts'),
   ]);
+  if (SUPPLEMENT !== null) content.difficulty.enemy.dungeons = { hp: SUPPLEMENT, damage: SUPPLEMENT };
   const endless = DUNGEON === 'infini';
   const bloc = infini.blocOf(content.endless, PALIER);
   const dungeon = endless ? content.dungeons[infini.arenaOf(content.endless, bloc)] : (content.dungeons[DUNGEON] ?? content.dungeons.rizieres);
@@ -137,7 +149,7 @@ async function worker() {
     const talents = level >= 10 ? [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`) : [];
     const state = {
       version: 1,
-      hero: { race, class: cls, ...(parent ? { parent } : {}) },
+      hero: { race, class: cls, ...(parent ? { parent } : {}), ...(VOIE ? { subclass: VOIE } : {}) },
       oboles: 0,
       xp: 0,
       talents,
@@ -161,7 +173,7 @@ async function worker() {
     const results = [];
     for (let r = 0; r < runs; r++) {
       const world = new World(
-        { ...base, enemies: dummyEnemies, player: cfg, waves: [{ label: 'Banc de DPS', spawns: [{ kind: 'kodama', count: 1 }] }], difficulty: difficultyFor(content.difficulty, job.level, 1, dungeon.strength) },
+        { ...base, enemies: dummyEnemies, player: cfg, waves: [{ label: 'Banc de DPS', spawns: [{ kind: 'kodama', count: 1 }] }], difficulty: dungeonDifficultyFor(content.difficulty, job.level, 1, dungeon.strength) },
         0,
       );
       const bot = new Bot(world, world.players[0], true, HUMAN);
@@ -195,7 +207,7 @@ async function worker() {
     const out = [];
     for (let r = 0; r < runs; r++) {
       const waves = endless ? infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, PLAYERS) : null;
-      const difficulty = waves ? waves[0].difficulty : difficultyFor(content.difficulty, DUNGEON_LEVEL || job.level, PLAYERS, dungeon.strength);
+      const difficulty = waves ? waves[0].difficulty : dungeonDifficultyFor(content.difficulty, DUNGEON_LEVEL || job.level, PLAYERS, dungeon.strength);
       const world = new World({ ...base, ...(waves ? { waves } : {}), player: cfg, allies, difficulty }, 0);
       const bots = world.players.map((hero) => new Bot(world, hero, false, HUMAN));
       let t = 0;
@@ -230,10 +242,71 @@ async function worker() {
     };
   };
 
+  /**
+   * Le Yomi sans fond, joué d'un bout à l'autre : on enchaîne les blocs tant que le bot tient. Chaque bloc est une
+   * descente à part (PV pleins, arène de son palier, difficulté de son palier), comme dans le jeu.
+   */
+  const endlesRun = (job, runs) => {
+    const out = [];
+    for (let r = 0; r < runs; r++) {
+      let cleared = 0;
+      let blocs = 0;
+      let taken = 0;
+      let healed = 0;
+      let dealt = 0;
+      let t = 0;
+      let hpLeft = 0;
+      let fell = 0;
+      for (let bloc = 0; bloc < BLOCS; bloc++) {
+        const arena = content.dungeons[infini.arenaOf(content.endless, bloc)];
+        const cfg = heroConfig(job.cls, job.race, job.parent, job.level, true, job.stuff);
+        const allies = [];
+        const waves = infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, 1 + allies.length);
+        const world = new World({ ...arena.arena, player: cfg, allies, enemies: enemies.default, waves, difficulty: waves[0].difficulty }, 0);
+        const bots = world.players.map((hero) => new Bot(world, hero, false, HUMAN));
+        const start = t;
+        while (world.state === 'playing' && t - start < 900) {
+          world.update(1 / 60, bots[0].input());
+          for (const e of world.drainEvents()) {
+            if (e.type === 'playerHit' && (e.hero ?? 0) === 0) taken += e.amount;
+            else if (e.type === 'heal' && e.id === 0) healed += e.amount;
+            else if (e.type === 'enemyHit') dealt += e.amount;
+          }
+          t += 1 / 60;
+        }
+        blocs++;
+        if (world.state !== 'victory') {
+          fell = infini.firstPalier(content.endless, bloc);
+          break;
+        }
+        cleared = infini.firstPalier(content.endless, bloc) + content.endless.palierStep - 1;
+        hpLeft = Math.max(0, world.players[0].hp) / cfg.maxHp;
+      }
+      out.push({ cleared, blocs, t, taken, healed, dealt, hpLeft, fell, level: job.level });
+    }
+    const n = out.length;
+    const mean = (f) => out.reduce((s, x) => s + f(x), 0) / n;
+    return {
+      maxHp: Math.round(heroConfig(job.cls, job.race, job.parent, job.level, true, job.stuff).maxHp),
+      palier: mean((x) => x.cleared),
+      palierMin: Math.min(...out.map((x) => x.cleared)),
+      palierMax: Math.max(...out.map((x) => x.cleared)),
+      blocs: mean((x) => x.blocs),
+      fell: mean((x) => x.fell),
+      time: mean((x) => x.t / Math.max(1, x.blocs)),
+      total: mean((x) => x.t),
+      dps: mean((x) => x.dealt / x.t),
+      takenPerMin: mean((x) => (x.taken / x.t) * 60),
+      healPerMin: mean((x) => (x.healed / x.t) * 60),
+      hpLeft: mean((x) => x.hpLeft),
+    };
+  };
+
   parentPort.on('message', ({ job, runs }) => {
     if (MODE === 'dps') return parentPort.postMessage({ ...job, dps: bench(job, runs) });
     // Styles de jeu : la descente, puis le banc de DPS (6 essais suffisent, il varie peu).
     if (MODE === 'kits') return parentPort.postMessage({ ...job, ...descend(job, runs), bench: bench(job, Math.min(runs, 6)) });
+    if (MODE === 'infini') return parentPort.postMessage({ ...job, ...endlesRun(job, runs) });
     parentPort.postMessage({ ...job, ...descend(job, runs) });
   });
   parentPort.postMessage('prêt');
@@ -342,6 +415,41 @@ function kitsReport(rows, levels) {
   return lines.join('\n');
 }
 
+/**
+ * Le Yomi sans fond : jusqu'où va chaque classe, et à quel prix. « Palier atteint » est le dernier palier franchi
+ * (le boss du bloc compris), comme le record du jeu ; « mort au palier » dit où la descente s'arrête en moyenne.
+ */
+function endlessReport(rows, levels) {
+  const lines = [];
+  const avg = (list, f) => (list.length ? list.reduce((s, r) => s + f(r), 0) / list.length : 0);
+  const alerts = [];
+  for (const level of levels) {
+    const at = rows.filter((r) => r.level === level);
+    lines.push(`\n## Niveau ${level}\n`);
+    lines.push('| Classe | Palier atteint | Pire | Meilleur | Blocs franchis | Mort au palier | Temps par bloc | Dégâts/s | Subis/min | Soins/min | PV au dernier bloc | PV max |');
+    lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
+    const paliers = [];
+    for (const cls of CLASSES) {
+      const list = at.filter((r) => r.cls === cls);
+      if (!list.length) continue;
+      paliers.push(avg(list, (r) => r.palier));
+      lines.push(
+        `| ${cls} | ${avg(list, (r) => r.palier).toFixed(1)} | ${Math.min(...list.map((r) => r.palierMin))} | ${Math.max(...list.map((r) => r.palierMax))} | ` +
+          `${avg(list, (r) => r.blocs).toFixed(1)} | ${Math.round(avg(list, (r) => r.fell))} | ${Math.round(avg(list, (r) => r.time))} s | ` +
+          `${avg(list, (r) => r.dps).toFixed(0)} | ${Math.round(avg(list, (r) => r.takenPerMin))} | ${Math.round(avg(list, (r) => r.healPerMin))} | ` +
+          `${pct(avg(list, (r) => r.hpLeft))} | ${list[0].maxHp} |`,
+      );
+    }
+    const spread = Math.max(...paliers) - Math.min(...paliers);
+    lines.push('');
+    lines.push(`Écart entre classes : ${spread.toFixed(1)} paliers (cible ≤ ${TARGETS.palierSpread}) · la plus basse : ${Math.min(...paliers).toFixed(1)} (cible ≥ ${TARGETS.worstPalier})`);
+    if (spread > TARGETS.palierSpread) alerts.push(`niveau ${level} : écart entre classes ${spread.toFixed(1)} paliers`);
+    if (Math.min(...paliers) < TARGETS.worstPalier) alerts.push(`niveau ${level} : la plus basse à ${Math.min(...paliers).toFixed(1)} paliers`);
+  }
+  lines.push(alerts.length ? `\nHors des cibles :\n${alerts.map((a) => `- ${a}`).join('\n')}` : '\nToutes les cibles sont tenues.');
+  return lines.join('\n');
+}
+
 async function main() {
 
   const levels = option('niveaux', '1,10,20').split(',').map(Number);
@@ -380,11 +488,18 @@ async function main() {
   if (MODE === 'dps') {
     console.log(`# Banc de DPS : kodama immobile, ${DURATION} s, équipement ${STUFF}, ${runs} essais par combinaison`);
     console.log(dpsReport(rows, levels));
+  } else if (MODE === 'infini') {
+    console.log(`# Yomi sans fond : ${BLOCS} blocs au plus, équipement ${STUFF}, ${PLAYERS} joueur${PLAYERS > 1 ? 's' : ''}, ${runs} descentes par combinaison`);
+    console.log(endlessReport(rows, levels));
   } else if (MODE === 'kits') {
     console.log(`# Styles de jeu : ${DUNGEON}, ${runs} descentes par combinaison et par race`);
     console.log(kitsReport(rows, levels));
   } else {
-    console.log(`# Équilibrage : ${DUNGEON}${DUNGEON_LEVEL ? ` niveau ${DUNGEON_LEVEL}` : ''}, équipement ${STUFF}${OBJECTS.length ? ` + ${OBJECTS.join(', ')}` : ''}, ${PLAYERS} joueur${PLAYERS > 1 ? 's' : ''}, ${runs} descentes par combinaison`);
+    console.log(
+      `# Équilibrage : ${DUNGEON}${DUNGEON_LEVEL ? ` niveau ${DUNGEON_LEVEL}` : ''}, équipement ${STUFF}${VOIE ? ` + voie ${VOIE}` : ''}` +
+        `${OBJECTS.length ? ` + ${OBJECTS.join(', ')}` : ''}, ${PLAYERS} joueur${PLAYERS > 1 ? 's' : ''}, ${runs} descentes par combinaison`,
+    );
+    if (SUPPLEMENT !== null) console.log(`# Supplément des donjons forcé : ×${SUPPLEMENT}`);
     console.log(report(rows, levels));
   }
 

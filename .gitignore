@@ -1,4 +1,4 @@
-node_modules/
-dist/
-*.log
-public/sprites/sprites/
+/docs/island.json
+/docs/island.json
+/docs/editeur/
+/src/app.ts

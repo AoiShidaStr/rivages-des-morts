@@ -32,8 +32,6 @@ export class IslandMap {
     private readonly water: PaintedWater | null,
     /** Tabliers des ponts, découpés dans la carte : montrés devant le héros qui passe dessous. */
     private readonly bridges: Mesh[],
-    /** Chutes d'eau, découpées de même : montrées devant le héros qui passe derrière, un peu transparentes. */
-    private readonly falls: Mesh[],
     /** Décors à poser (decorSprites.ts). */
     readonly decor: DecorSpot[],
     /** Collisions des décors posés dans les zones de marche, pour l'île (Island.addSolids). */
@@ -82,17 +80,14 @@ export class IslandMap {
     textures.push(texture, corner);
     flat('islandSea', screenPlane(scene, 'islandSea', width * 4, height * 4, -0.02), corner, sea);
     flat('islandMap', screenPlane(scene, 'islandMap', width, height, 0), texture, Color3.Black());
-    const overlay = (name: string, poly: Polygon, alpha: number) => {
-      const piece = mapPiece(scene, name, texture, poly, width, height, alpha);
-      meshes.push(piece.mesh);
-      materials.push(piece.material);
-      textures.push(...piece.textures);
-      return piece.mesh;
-    };
-    const bridges = (data.bridges ?? []).map((poly, i) => overlay(`islandBridge${i}`, poly, 1));
-    // Assez d'eau pour qu'on la voie passer devant le héros, assez peu pour qu'on le devine derrière.
-    const falls = (data.falls ?? []).map((poly, i) => overlay(`islandFall${i}`, poly, 0.75));
-    if (!rich) return new IslandMap(meshes, materials, textures, null, bridges, falls, [], []);
+    const bridges = (data.bridges ?? []).map((poly, i) => {
+      const deck = bridgeDeck(scene, `islandBridge${i}`, texture, poly, width, height);
+      meshes.push(deck.mesh);
+      materials.push(deck.material);
+      textures.push(...deck.textures);
+      return deck.mesh;
+    });
+    if (!rich) return new IslandMap(meshes, materials, textures, null, bridges, [], []);
 
     const field = new WalkField(data, width, height);
     const items = islandDecor(data, map, field);
@@ -104,7 +99,7 @@ export class IslandMap {
     shade.opacityTexture = shadows;
     shade.disableDepthWrite = true;
     meshes[meshes.length - 1].alphaIndex = -150_000;
-    return new IslandMap(meshes, materials, textures, waterLayer(scene, data, map), bridges, falls, decor, solids);
+    return new IslandMap(meshes, materials, textures, waterLayer(scene, data, map), bridges, decor, solids);
   }
 
   update(dt: number): void {
@@ -116,11 +111,6 @@ export class IslandMap {
     for (const mesh of this.bridges) mesh.isVisible = under;
   }
 
-  /** Le héros passe derrière une chute d'eau : elle se dessine devant lui. */
-  showFalls(behind: boolean): void {
-    for (const mesh of this.falls) mesh.isVisible = behind;
-  }
-
   dispose(): void {
     for (const mesh of this.meshes) mesh.dispose();
     for (const material of this.materials) material.dispose();
@@ -130,11 +120,11 @@ export class IslandMap {
 }
 
 /**
- * Un morceau de la carte (le tablier d'un pont, une chute d'eau) : la même image, recadrée et découpée à sa forme (un
- * masque), posée au même endroit mais dessinée après tout le reste (groupe de rendu 1). Elle ne change rien à l'image,
- * sauf quand le héros est dessous ou derrière : alors le morceau passe devant lui (`alpha` < 1 : on le devine au travers).
+ * Le tablier d'un pont : la même carte, recadrée sur le pont et découpée à sa forme (un masque), posée au même endroit
+ * mais dessinée après tout le reste (groupe de rendu 1). Elle ne change rien à l'image, sauf quand le héros est
+ * dessous : alors le pont passe devant lui.
  */
-function mapPiece(scene: Scene, name: string, map: Texture, poly: Polygon, width: number, height: number, alpha: number) {
+function bridgeDeck(scene: Scene, name: string, map: Texture, poly: Polygon, width: number, height: number) {
   const us = poly.map(([u]) => u);
   const vs = poly.map(([, v]) => v);
   const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
@@ -174,7 +164,6 @@ function mapPiece(scene: Scene, name: string, map: Texture, poly: Polygon, width
   material.diffuseTexture = crop;
   material.emissiveColor = Color3.White();
   material.opacityTexture = mask;
-  material.alpha = alpha;
   material.disableDepthWrite = true;
   mesh.material = material;
   return { mesh, material, textures: [crop, mask] };

@@ -1161,9 +1161,15 @@ body:not([data-mode='dungeon']) #hud {
   color: #4a4f52;
 }
 
-/* Voies (sous-classes) : deux cartes, et celle qui est choisie se voit tout de suite. */
+/* Voies (sous-classes) : trois cartes, et celle qui est choisie se voit tout de suite. */
 .tree.voies {
-  grid-template-columns: repeat(2, 1fr);
+  /* Trois voies par classe (0.16.0) : trois colonnes quand la fenêtre les porte, deux sinon. */
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+/* Sans ça, une carte et son contenu refusent de se rétrécir sous la largeur de leur texte et débordent. */
+.tree.voies .branch * {
+  min-width: 0;
 }
 
 .branch.chosen {

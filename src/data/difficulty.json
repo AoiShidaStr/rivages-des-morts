@@ -1,15 +1,22 @@
 {
-  "about": "Niveau du donjon, choisi à l'entrée (GDD : « Difficulté à l'entrée », comme dans Waven). Chaque niveau au-dessus du premier ajoute des PV et des dégâts aux yokai ; à certains niveaux, une malédiction du Yomi s'ajoute. Une malédiction qui revient avec le même id remplace la précédente (Hâte II remplace Hâte). Les récompenses montent avec le niveau. Les yokai partent plus forts que le héros (×1,4 PV, ×1,6 dégâts ; la Jorōgumo ×1,1 et ×1,2) et gagnent +9 % de PV et +10 % de dégâts par niveau, plus vite que le héros ne progresse : à niveau égal, le donjon devient toujours plus dur. Une victoire ouvre les niveaux jusqu'au prochain multiple de 5 (gagner au niveau 1 ouvre jusqu'au 5, au 5 jusqu'au 10).",
+  "about": "Niveau du donjon, choisi à l'entrée (GDD : « Difficulté à l'entrée », comme dans Waven). Chaque niveau au-dessus du premier ajoute des PV et des dégâts aux yokai ; à certains niveaux, une malédiction du Yomi s'ajoute. Une malédiction qui revient avec le même id remplace la précédente (Hâte II remplace Hâte). Les récompenses montent avec le niveau. Les yokai partent plus forts que le héros (×1,4 PV, ×1,6 dégâts ; la Jorōgumo ×1,1 et ×1,2) et gagnent +9 % de PV et +10 % de dégâts par niveau, plus vite que le héros ne progresse : à niveau égal, le donjon devient toujours plus dur. Une victoire ouvre les niveaux jusqu'au prochain multiple de 5 (gagner au niveau 1 ouvre jusqu'au 5, au 5 jusqu'au 10). Depuis la 0.16.0, le niveau 1 lui-même porte sa malédiction (Souffle du Yomi, et une élite par vague dès le niveau 5), la marée monte en cours de vague (world.ts : les yokai accélèrent tant qu'un combat traîne, et les soins rendent de moins en moins) et les donjons ordinaires reçoivent le supplément `dungeons` (§ enemy, ×1,5) ; le Yomi sans fond, lui, ne le reçoit pas.",
   "maxLevel": 100,
   "unlockStep": 5,
-  "enemy": { "base": { "hp": 1.4, "damage": 1.6 }, "bossBase": { "hp": 1.1, "damage": 1.2 }, "hpPerLevel": 0.09, "damagePerLevel": 0.1 },
+  "enemy": {
+    "about": "`base` et `bossBase` : force des yokai au niveau 1 ; `dungeons` : le supplément propre aux donjons ordinaires, appliqué par-dessus (0,16.0, ×1,5) — le Yomi sans fond ne le reçoit pas, il garde les chiffres de donjon-infini.json.",
+    "base": { "hp": 1.4, "damage": 1.6 },
+    "bossBase": { "hp": 1.1, "damage": 1.2 },
+    "hpPerLevel": 0.09,
+    "damagePerLevel": 0.1,
+    "dungeons": { "hp": 1.5, "damage": 1.5 }
+  },
   "rewards": { "obolesPerLevel": 0.1, "xpPerLevel": 0.15, "rareChancePerLevel": 0.01, "extraMaterialEvery": 20 },
   "elite": { "hp": 1.8, "damage": 1.3 },
   "party": { "hp": [1, 1.8, 2.8], "bossHp": [1, 2.1, 3.3], "extraSpawns": 1 },
   "curses": [
-    { "id": "hate", "from": 5, "value": 0.05, "name": "Hâte des morts légère", "description": "Les yokai agissent 5 % plus vite." },
+    { "id": "hate", "from": 1, "value": 0.05, "name": "Souffle du Yomi", "description": "Les yokai agissent 5 % plus vite." },
     { "id": "hate", "from": 10, "value": 0.1, "name": "Hâte des morts", "description": "Les yokai agissent 10 % plus vite." },
-    { "id": "elites", "from": 20, "value": 1, "name": "Âmes d'élite", "description": "À chaque vague, le yokai le plus robuste devient une élite : PV ×1,8 et dégâts ×1,3." },
+    { "id": "elites", "from": 5, "value": 1, "name": "Âmes d'élite", "description": "À chaque vague, le yokai le plus robuste devient une élite : PV ×1,8 et dégâts ×1,3." },
     { "id": "feux", "from": 30, "value": 1, "name": "Feux follets vengeurs", "description": "Chaque yokai vaincu libère un feu follet." },
     { "id": "seve", "from": 40, "value": 0.03, "name": "Sève du Yomi", "description": "Un yokai épargné pendant 3 s régénère 3 % de ses PV par seconde." },
     { "id": "hate", "from": 50, "value": 0.2, "name": "Hâte des morts II", "description": "Les yokai agissent 20 % plus vite." },

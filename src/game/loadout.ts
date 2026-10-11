@@ -371,11 +371,32 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   if (tier >= 0) for (const effect of cls.tag.tiers[tier].effects) applyEffect(config, effect);
 
   config.maxHp += bonus.maxHp;
-  config.maxHp *= config.perks?.maxHpFactor ?? 1;
+  // Les deux réglages qui touchent aux PV finaux passent ici, après le niveau et l'équipement : `frailHp` est la part
+  // qu'une voie d'abandon garde (Chair 0,65 ; Sans cuirasse 0,8), `maxHpFactor` celle d'un plastron.
+  config.maxHp *= (config.perks?.maxHpFactor ?? 1) * (config.perks?.frailHp ?? 1);
   config.moveSpeed *= 1 + bonus.speed;
   config.damageTakenFactor = (config.damageTakenFactor ?? 1) * (1 - Math.min(rules.armorCap, bonus.armor));
   // Les dégâts fixes des talents et des objets (Riposte, Chaleur, foudre de Susanoo) suivent la puissance.
   const perks = config.perks ?? {};
+  // Les coups appuyés (Guerrier, Paladin) frappent plus fort, après l'équipement : une arme pose ses propres dégâts.
+  if (perks.strikeDamage) config.attack.damage *= 1 + perks.strikeDamage;
+  // Une voie qui refait l'attaque de base (l'Orbe du Sorcier) prend le même chemin : elle remplace le geste de l'arme.
+  const shape = perks.baseAttack;
+  if (shape) {
+    const attack = config.attack;
+    if (shape.damageFactor) attack.damage *= shape.damageFactor;
+    if (shape.range !== undefined) attack.range = shape.range;
+    if (shape.windup !== undefined) attack.windup = shape.windup;
+    if (shape.active !== undefined) attack.active = shape.active;
+    if (shape.recovery !== undefined) attack.recovery = shape.recovery;
+    if (shape.commit !== undefined) attack.commit = shape.commit;
+    const ball = config.sorcier.fireball;
+    if (shape.count !== undefined) ball.count = shape.count;
+    if (shape.radius !== undefined) ball.radius = shape.radius;
+    if (shape.speed !== undefined) ball.speed = shape.speed;
+    if (shape.turnRate !== undefined) ball.turnRate = shape.turnRate;
+    if (shape.seek !== undefined) ball.seek = shape.seek;
+  }
   // Robe de feu : tout le feu du Sorcier brûle plus fort.
   const fire = 1 + (perks.fireDamage ?? 0);
   if (config.kit === 'sorcier') config.attack.damage *= fire;
