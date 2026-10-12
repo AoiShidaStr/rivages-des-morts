@@ -23,8 +23,8 @@ import type { EnemyKind, GameEvent, InputFrame, MarkKind, Outcome, StunReason } 
 
 /** Pause entre deux vagues, en secondes. */
 const WAVE_PAUSE = 1.5;
-/** Rayon des boules de la Naissance du feu sous la voie de l'Orbe (celui de la salve de base, player.json). */
-const BURST_RADIUS = 0.28;
+/** Rayon des boules de la Naissance du feu sous la voie de l'Orbe : celui de l'orbe avant qu'il grossisse. */
+const ORB_BURST_RADIUS = 0.6;
 /** Distance minimale entre le joueur et un ennemi qui apparaît. */
 const SPAWN_CLEARANCE = 5;
 /** Secondes sans être touché avant que la « Sève du Yomi » ne soigne un yokai. */
@@ -1408,10 +1408,9 @@ export class World {
       .filter((e) => e.targetable && distance(e.pos, from) <= attack.range)
       .sort((a, b) => distance(a.pos, from) - distance(b.pos, from));
     if (!near.length) return;
-    // Voie de l'Orbe : ces boules-là restent des boules de salve, ni douze fois plus fortes ni cinq fois plus grosses.
-    const orb = player.cfg.perks?.baseAttack;
-    const damage = attack.damage / (orb?.damageFactor ?? 1);
-    const radius = orb?.radius !== undefined ? BURST_RADIUS : sorcier.fireball.radius;
+    // Voie de l'Orbe : ces boules gardent les dégâts de l'orbe, mais pas sa taille (elles se guident vers leur proie).
+    const damage = attack.damage;
+    const radius = player.cfg.perks?.baseAttack?.radius !== undefined ? ORB_BURST_RADIUS : sorcier.fireball.radius;
     for (let i = 0; i < count; i++) {
       const target = near[i % near.length];
       const dir = normalize(sub(target.pos, from), fromAngle((i * Math.PI * 2) / count));

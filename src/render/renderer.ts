@@ -44,7 +44,6 @@ import {
   drawRing,
   drawSpider,
   drawStreak,
-  drawLane,
   drawStump,
   drawTelegraph,
   drawWeb,
@@ -256,6 +255,10 @@ const SILK = new Color3(0.93, 0.95, 0.98);
 const FIRE = new Color3(1, 0.55, 0.2);
 /** Rayon de la boule de feu de base (player.json) : la taille dessinée des planches de flamme. */
 const FIREBALL_RADIUS = 0.28;
+/** Côté de l'image de l'orbe (m) : son cœur fait 1,3 m, sa couronne 2,3 m, pour un contact de 2,8 m de large. */
+const ORB_SIZE = 3.2;
+/** Largeur du trait de visée de l'Orbe (m), celle de la visée du Rôdeur. */
+const ORB_GUIDE_WIDTH = 0.3;
 /** Sceau du Sorcier : rouge vermillon des ofuda. */
 const SEAL = new Color3(1, 0.35, 0.25);
 const FRENZY_TINT = new Color3(1, 0.7, 0.6);
@@ -439,7 +442,7 @@ export class Renderer {
   private time = 0;
   private readonly sprites = new Map<string, SpriteEntry>();
   private readonly fxTextures: Record<
-    'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'lane' | 'arrow' | 'hammer' | 'seal',
+    'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'arrow' | 'hammer' | 'seal',
     BaseTexture
   >;
   private readonly views = new Map<number, EntityView>();
@@ -553,7 +556,6 @@ export class Renderer {
       telegraph: this.canvasTexture('telegraph', drawTelegraph()),
       web: this.canvasTexture('web', drawWeb()),
       streak: this.canvasTexture('streak', drawStreak()),
-      lane: this.canvasTexture('lane', drawLane()),
       arrow: this.canvasTexture('arrow', drawArrow()),
       hammer: this.canvasTexture('hammer', drawHammer()),
       seal: this.canvasTexture('seal', drawSeal()),
@@ -1068,7 +1070,9 @@ export class Renderer {
         const hammer = p.kind === 'hammer';
         const fire = p.kind === 'fireball';
         const arrow = p.kind === 'arrow';
-        const fxName = fire ? (this.sprites.get('fxBrandFireball') ? 'fxBrandFireball' : 'fxFireballSorcier') : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : hammer ? 'fxHammer' : '';
+        // L'Orbe (une boule bien plus grosse que celles de la salve) a son propre dessin : un petit soleil.
+        const orb = fire && p.radius > FIREBALL_RADIUS * 1.5 && Boolean(this.effect('fxBrandOrb'));
+        const fxName = orb ? 'fxBrandOrb' : fire ? (this.sprites.get('fxBrandFireball') ? 'fxBrandFireball' : 'fxFireballSorcier') : arrow ? (p.full ? 'fxProjectileRodeurCharge' : 'fxProjectileRodeur') : hammer ? 'fxHammer' : '';
         const effect = fxName ? this.sprites.get(fxName) : undefined;
         const texture = effect?.texture ?? (hammer ? this.fxTextures.hammer : p.kind === 'net' ? this.fxTextures.web : fire ? this.fxTextures.shadow : this.fxTextures.arrow);
         const [width, depth] = hammer
@@ -1076,22 +1080,23 @@ export class Renderer {
           : p.kind === 'net'
             ? [0.8, 0.8]
             : fire
-              ? (fxName === 'fxBrandFireball' ? [1.9, 0.85] : [1.4, 0.8])
+              ? (orb ? [ORB_SIZE, ORB_SIZE] : fxName === 'fxBrandFireball' ? [1.9, 0.85] : [1.4, 0.8])
               : arrow
                 ? (p.full ? [1.65, 0.85] : [1.25, 0.62])
                 : [1.1, 0.22];
         const color = effect ? WHITE : fire ? FIRE : p.full ? DRAW : WHITE;
-        // La boule de feu se dessine à la taille de son contact : l'Orbe, cinq fois plus grosse, l'est aussi à l'écran.
-        const size = fire ? Math.max(1, p.radius / FIREBALL_RADIUS) : 1;
+        // Une boule de feu grossie (sans planche d'orbe) se dessine à la taille de son contact ; l'orbe garde la sienne.
+        const size = fire && !orb ? Math.max(1, p.radius / FIREBALL_RADIUS) : 1;
         view = {
           ...this.createDecal(`projectile-${p.id}`, texture, width * size, depth * size, color, 1, PROJECTILE_HEIGHT),
           anim: effect?.anim,
           animTime: 0,
           fire,
-          size,
-          // La planche de Brand a sa tête à 214 px sur 288 : on recule l'image pour que la tête soit sur le point
-          // de contact (sans quoi l'Orbe, cinq fois plus grosse, brûlerait 2 m derrière ce qu'elle montre).
-          lead: fxName === 'fxBrandFireball' ? (214 / 288 - 0.5) * width * size : 0,
+          // L'éclat au contact suit la taille de la boule (l'orbe : deux fois celui d'une boule de salve).
+          size: orb ? 2 : size,
+          // La tête est en avant du milieu de l'image (Brand : 214 px sur 288 ; orbe : 150 sur 256) : on recule
+          // l'image pour qu'elle soit sur le point de contact.
+          lead: orb ? (150 / 256 - 0.5) * width : fxName === 'fxBrandFireball' ? (214 / 288 - 0.5) * width * size : 0,
         };
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
@@ -2335,7 +2340,8 @@ export class Renderer {
    * Le héros ne se tourne qu'à gauche ou à droite à l'écran : sans lui, on devine mal où partira le coup.
    * Il s'éclaire pendant l'élan. Rien pour le Rôdeur (il a sa visée) ni pour un coup à 360°.
    * Sorcier de la voie de l'Orbe : plus d'éventail, un seul orbe qui file droit sans suivre personne ; le repère
-   * devient le couloir qu'il balaiera, large comme l'orbe et long comme sa course.
+   * devient un trait fin, aussi fin que la visée du Rôdeur, long comme sa course (l'orbe est bien plus large : le
+   * trait dit où il part, pas ce qu'il couvre, pour ne pas manger l'écran).
    */
   private syncAttackGuide(world: WorldView): void {
     const player = world.player;
@@ -2345,7 +2351,7 @@ export class Renderer {
     const thrust = attack.shape === 'line' || orb;
     const shown = player.cfg.kit !== 'rodeur' && (thrust || attack.arcDeg < 360) && player.pose !== 'dash' && player.pose !== 'airborne' && !player.dead;
     if (!shown && !this.attackGuide) return;
-    const key = orb ? 'lane' : thrust ? 'line' : `arc-${attack.arcDeg}`;
+    const key = thrust ? 'line' : `arc-${attack.arcDeg}`;
     if (!this.attackGuide) {
       // Bleu-esprit, comme la garde : il se lit sur le vert des rizières comme sur le sol sombre du Palais.
       const decal = this.createDecal('attackGuide', this.fxTextures.streak, 1, 1, SPIRIT, 0.2, 0.022);
@@ -2356,14 +2362,14 @@ export class Renderer {
     guide.mesh.isVisible = shown;
     if (!shown) return;
     if (guide.key !== key) {
-      guide.material.setTexture('textureSampler', orb ? this.fxTextures.lane : thrust ? this.fxTextures.streak : this.arcTexture(attack.arcDeg));
+      guide.material.setTexture('textureSampler', thrust ? this.fxTextures.streak : this.arcTexture(attack.arcDeg));
       guide.key = key;
     }
     const dir = player.facing;
     if (thrust) {
       guide.mesh.position.x = player.pos.x + (dir.x * attack.range) / 2;
       guide.mesh.position.z = player.pos.z + (dir.z * attack.range) / 2;
-      guide.mesh.scaling.set(attack.range, 1, orb ? ball.radius * 2 : (attack.width ?? 0.8));
+      guide.mesh.scaling.set(attack.range, 1, orb ? ORB_GUIDE_WIDTH : (attack.width ?? 0.8));
     } else {
       guide.mesh.position.x = player.pos.x;
       guide.mesh.position.z = player.pos.z;

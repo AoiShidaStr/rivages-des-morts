@@ -759,6 +759,49 @@ function brandFireball() {
   });
 }
 
+/**
+ * Orbe (boucle) : un petit soleil, celui d'Amaterasu. Un cœur blanc où tournent deux arcs de plasma, un anneau
+ * clair (le miroir), une couronne de flammes courtes qui tourne, et une traîne brève de braises : rond et dense,
+ * rien de la comète de la boule de feu. Le centre est à x = 150 sur 256 (le rendu cale ce point sur le contact).
+ */
+function brandOrb() {
+  const S = 256;
+  const cx = 150;
+  const cy = S / 2;
+  const N = 12;
+  const rand = seeded(221);
+  const rays = [...Array(14)].map((_, k) => ({ a: (k / 14) * Math.PI * 2, len: k % 2 ? 22 : 34, w: k % 2 ? 11 : 15, ph: rand() * 6 }));
+  const sparks = [...Array(8)].map(() => ({ x: rand(), y: (rand() - 0.5) * 40, r: 1.5 + rand() * 1.8 }));
+  return [...Array(N)].map((_, i) => {
+    const t = i / N;
+    const ph = t * Math.PI * 2;
+    const spin = ph / 7;
+    let body = GLOW(8);
+    body += glowGroup(`<circle cx="${cx}" cy="${cy}" r="80" fill="${FIRE.orange}"/>`, 0.4);
+    // Traîne brève : trois flammes couchées vers l'arrière, qui ne dépassent pas la moitié de l'image.
+    for (let k = 0; k < 3; k++) {
+      body += flame(cx - 30, cy + (k - 1) * 14, cx - 120 - k * 6, cy + (k - 1) * 22 + Math.sin(ph + k) * 6, 22 - k * 3, 6, ph + k * 2, 0.7);
+    }
+    for (const r of rays) {
+      const a = r.a + spin;
+      const len = r.len * (0.8 + 0.2 * Math.sin(ph * 2 + r.ph));
+      body += flame(cx + Math.cos(a) * 40, cy + Math.sin(a) * 40, cx + Math.cos(a + 0.25) * (54 + len), cy + Math.sin(a + 0.25) * (54 + len), r.w, 5, r.ph + ph, 0.95);
+    }
+    body += hotDisc(cx, cy, 56);
+    body += `<circle cx="${cx}" cy="${cy}" r="62" fill="none" stroke="${FIRE.white}" stroke-width="2.5" opacity="0.7"/>`;
+    body += `<circle cx="${cx}" cy="${cy}" r="34" fill="${FIRE.white}"/>`;
+    for (let k = 0; k < 2; k++) {
+      const a0 = (spin * 2 * 180) / Math.PI * 4 + k * 180;
+      body += polygon(arcBand(cx, cy, 44, a0, a0 + 110, needle(7, 0.7)), FIRE.yellow, 'none', 0, 0.9);
+    }
+    for (const sp of sparks) {
+      const x = cx - 40 - ((sp.x * 100 + t * 60) % 100);
+      body += ember(x, cy + sp.y, sp.r, 0.85);
+    }
+    return svg(S, S, body);
+  });
+}
+
 /** Explosion de la boule de feu au contact (debout) : éclair chaud, langues de feu, braises, bouffée de fumée. */
 function brandPop() {
   const S = 192;
@@ -1596,6 +1639,7 @@ const EFFECTS = [
   // Sorcier : feu inspiré de Brand (League of Legends).
   { name: 'brand-fireball', tag: 'flight', once: false, duration: 50, frames: brandFireball },
   { name: 'brand-pop', tag: 'pop', once: true, duration: 40, frames: brandPop },
+  { name: 'brand-orb', tag: 'flight', once: false, duration: 55, frames: brandOrb },
   { name: 'brand-rune', tag: 'rune', once: true, duration: 60, frames: brandRune },
   { name: 'brand-pillar', tag: 'pillar', once: true, duration: 50, frames: brandPillar },
   { name: 'brand-scorch', tag: 'scorch', once: true, duration: 55, frames: brandScorch },

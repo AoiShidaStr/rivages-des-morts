@@ -197,27 +197,6 @@ export function drawStreak(width = 256, height = 64): HTMLCanvasElement {
   return canvas;
 }
 
-/**
- * Couloir vu de dessus, vers +X : une bande de largeur constante, voilée au milieu et nette sur ses deux bords,
- * qui naît sous le héros et s'arrête net au bout de la course (la visée de l'Orbe).
- */
-export function drawLane(width = 256, height = 64): HTMLCanvasElement {
-  const [canvas, ctx] = makeCanvas(width, height);
-  const along = ctx.createLinearGradient(0, 0, width, 0);
-  along.addColorStop(0, 'rgba(255, 255, 255, 0)');
-  along.addColorStop(0.12, 'rgba(255, 255, 255, 1)');
-  along.addColorStop(0.95, 'rgba(255, 255, 255, 1)');
-  along.addColorStop(1, 'rgba(255, 255, 255, 0)');
-  ctx.fillStyle = along;
-  ctx.globalAlpha = 0.35;
-  ctx.fillRect(0, height * 0.08, width, height * 0.84);
-  ctx.globalAlpha = 0.95;
-  ctx.fillRect(0, height * 0.04, width, height * 0.08);
-  ctx.fillRect(0, height * 0.88, width, height * 0.08);
-  ctx.globalAlpha = 1;
-  return canvas;
-}
-
 /** Flèche vue de dessus, pointe vers +X, avec son empennage blanc. */
 export function drawArrow(width = 128, height = 24): HTMLCanvasElement {
   const [canvas, ctx] = makeCanvas(width, height);

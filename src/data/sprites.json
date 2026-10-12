@@ -51,6 +51,7 @@
   "fxLightThrustSorcier": { "file": null, "sheet": { "file": "fx/light-thrust-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxBrandFireball": { "file": null, "sheet": { "file": "fx/brand-fireball.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxBrandPop": { "file": null, "sheet": { "file": "fx/brand-pop.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxBrandOrb": { "file": null, "sheet": { "file": "fx/brand-orb.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxBrandRune": { "file": null, "sheet": { "file": "fx/brand-rune.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxBrandPillar": { "file": null, "sheet": { "file": "fx/brand-pillar.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxBrandScorch": { "file": null, "sheet": { "file": "fx/brand-scorch.json", "height": 1 }, "height": 1, "facesRight": true },
