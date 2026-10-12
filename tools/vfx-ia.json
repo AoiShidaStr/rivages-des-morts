@@ -18,7 +18,6 @@
     { "name": "voie-lanterne-sorcier", "file": "sorcier/voie-lanterne-sorcier.png", "tag": "voie", "duration": 80, "gain": 3, "inset": 5 },
     { "name": "voie-blocage-paladin", "file": "paladin/voie-blocage-paladin.png", "tag": "voie", "duration": 40, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
     { "name": "voie-jugement-paladin", "file": "paladin/voie-jugement-paladin.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
-    { "name": "aura-loop", "file": "paladin/aura-loop.png", "tag": "aura", "loop": true, "duration": 90, "frames": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
     { "name": "hammer", "file": "paladin/hammer.png", "tag": "flight", "loop": true, "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
     { "name": "dome-aegis", "file": "paladin/dome-aegis.png", "tag": "dome", "duration": 50 },
     { "name": "voie-cri-paladin", "file": "paladin/voie-cri-paladin.png", "tag": "voie", "duration": 55 },
@@ -45,7 +44,6 @@
     { "name": "voie-danse-lame", "file": "lame/voie-danse-lame.png", "tag": "voie", "duration": 30, "inset": 4, "crop": [0, 64, 256, 128], "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
     { "name": "voie-tourbillon-lame", "file": "lame/voie-tourbillon-lame.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
     { "name": "voie-croc-lame", "file": "lame/voie-croc-lame.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
-    { "name": "voie-croix-lame", "file": "lame/voie-croix-lame.png", "tag": "voie", "duration": 40, "inset": 4, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
-    { "name": "portail-vortex", "file": "jorogumo/portail-vortex.png", "tag": "idle", "loop": true, "duration": 80, "rotate": 106.5, "size": [192, 244] }
+    { "name": "voie-croix-lame", "file": "lame/voie-croix-lame.png", "tag": "voie", "duration": 40, "inset": 4, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] }
   ]
 }

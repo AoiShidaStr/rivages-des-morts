@@ -326,6 +326,21 @@ body:not([data-mode='dungeon']) #hud {
   border-left-color: var(--gold);
 }
 
+/* Le butin s'empile à droite, sous la marge du haut, loin du centre du combat. */
+.toasts.loot-feed {
+  top: 30%;
+  left: auto;
+  right: 16px;
+  transform: none;
+  justify-items: end;
+  max-width: min(320px, 40vw);
+}
+
+.toasts.loot-feed .toast {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
 .toast.leaving {
   opacity: 0;
   transform: translateY(-6px);

@@ -4,6 +4,8 @@ import { h, icon, obole } from './dom';
 const FADE_MS = 450;
 const HOLD_MS = 700;
 const TOAST_MS = 3200;
+/** Lignes de butin affichées en même temps, au plus. */
+const LOOT_TOASTS_MAX = 3;
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -22,6 +24,8 @@ export class Screens {
   private readonly fadeTitle: HTMLDivElement;
   private readonly fadeSub: HTMLDivElement;
   private readonly toasts: HTMLDivElement;
+  /** Butin ramassé : une colonne à droite, trois lignes au plus (le combat reste lisible quand tout tombe d'un coup). */
+  private readonly lootToasts: HTMLDivElement;
   private readonly islandHud: HTMLDivElement;
   private readonly area: HTMLDivElement;
   private readonly purse: HTMLDivElement;
@@ -39,6 +43,7 @@ export class Screens {
     this.fadeSub = h('div', { class: 'fade-sub' });
     this.fade = h('div', { class: 'fade' }, this.fadeSub, this.fadeTitle);
     this.toasts = h('div', { class: 'toasts' });
+    this.lootToasts = h('div', { class: 'toasts loot-feed' });
     this.area = h('div', { class: 'area-name' });
     this.purse = h('div', { class: 'purse' });
     this.level = h('div', { class: 'level' });
@@ -69,7 +74,7 @@ export class Screens {
         ' menu',
       ),
     );
-    parent.append(this.islandHud, this.toasts, this.title, this.pause, this.result, this.fade);
+    parent.append(this.islandHud, this.toasts, this.lootToasts, this.title, this.pause, this.result, this.fade);
   }
 
   // --- Écran titre ------------------------------------------------------------
@@ -213,7 +218,16 @@ export class Screens {
   /** `item` : l'objet ou le matériau dont l'icône accompagne le texte. */
   toast(text: string, tone: 'quest' | 'loot' | 'info' = 'info', item?: string): void {
     const el = h('div', { class: `toast ${tone}${item ? ' with-icon' : ''}` }, item ? icon(item, 'small') : null, text);
-    this.toasts.append(el);
+    const feed = tone === 'loot' ? this.lootToasts : this.toasts;
+    feed.append(el);
+    if (tone === 'loot') {
+      // Au-delà de trois, les plus anciens laissent leur place tout de suite.
+      const shown = [...feed.children].filter((c) => !c.classList.contains('leaving'));
+      for (const old of shown.slice(0, Math.max(0, shown.length - LOOT_TOASTS_MAX))) {
+        old.classList.add('leaving');
+        setTimeout(() => old.remove(), 500);
+      }
+    }
     setTimeout(() => el.classList.add('leaving'), TOAST_MS);
     setTimeout(() => el.remove(), TOAST_MS + 500);
   }

@@ -22,7 +22,7 @@ import {
 import type { DungeonStyle } from '../content';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
-import type { HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
+import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
 import { LOW_GRAPHICS, SCENES_3D } from './flags';
 import { isHeroVariant } from './heroes';
@@ -479,7 +479,7 @@ export class Renderer {
   private readonly blasts = new Map<number, Fx>();
   private readonly embers = new Map<number, Fx>();
   /** Flèches, marteau et boules de feu en vol. */
-  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number; fire?: boolean; size?: number; lead?: number }>();
+  private readonly projectiles = new Map<number, { mesh: Mesh; material: ShaderMaterial; anim?: SheetAnimation; animTime: number; fire?: boolean; size?: number; lead?: number; radius?: number; pos?: Vec2 }>();
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
@@ -793,7 +793,7 @@ export class Renderer {
 
     this.updateGuard(player.pos, player.facing, player.pose, dt);
     this.syncAttackGuide(world);
-    this.syncProjectiles(world.projectiles, dt);
+    this.syncProjectiles(world.projectiles, world.enemies, dt);
     this.syncAura(world);
     this.syncWard(world);
     this.syncStateAuras(world, dt);
@@ -1103,7 +1103,7 @@ export class Renderer {
   // --- Classes : projectiles, aura, fumée ------------------------------------
 
   /** Flèches, marteau et boules de feu : un décalque qui vole à hauteur de poitrine, dans le sens de sa course. */
-  private syncProjectiles(projectiles: readonly ProjectileView[], dt: number): void {
+  private syncProjectiles(projectiles: readonly ProjectileView[], enemies: readonly EnemyView[], dt: number): void {
     const seen = new Set<number>();
     for (const p of projectiles) {
       seen.add(p.id);
@@ -1142,6 +1142,8 @@ export class Renderer {
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
       }
+      view.radius = p.radius;
+      view.pos = { x: p.pos.x, z: p.pos.z };
       view.mesh.position.x = p.pos.x - p.dir.x * (view.lead ?? 0);
       view.mesh.position.z = p.pos.z - p.dir.z * (view.lead ?? 0);
       if (view.anim) {
@@ -1159,7 +1161,17 @@ export class Renderer {
         const size = view.size ?? 1;
         const lead = view.lead ?? 0;
         const angle = -view.mesh.rotation.y;
-        const at = { x: view.mesh.position.x + Math.cos(angle) * lead, z: view.mesh.position.z + Math.sin(angle) * lead };
+        let at = view.pos ?? { x: view.mesh.position.x + Math.cos(angle) * lead, z: view.mesh.position.z + Math.sin(angle) * lead };
+        // Elle s'arrête au contact : l'éclat jaillit sur le bord du yokai touché, du côté d'où elle venait (l'Orbe
+        // touche jusqu'à 1,4 m plus loin que son centre).
+        const reach = (view.radius ?? FIREBALL_RADIUS) + 0.4;
+        const hit = enemies
+          .filter((e) => Math.hypot(e.pos.x - at.x, e.pos.z - at.z) <= e.radius + reach)
+          .sort((a, b) => Math.hypot(a.pos.x - at.x, a.pos.z - at.z) - Math.hypot(b.pos.x - at.x, b.pos.z - at.z))[0];
+        if (hit) {
+          const d = Math.hypot(at.x - hit.pos.x, at.z - hit.pos.z) || 1;
+          at = { x: hit.pos.x + ((at.x - hit.pos.x) / d) * hit.radius * 0.6, z: hit.pos.z + ((at.z - hit.pos.z) / d) * hit.radius * 0.6 };
+        }
         this.uprightFx('fxBrandPop', 'pop', at, 1.5 * size, 1.5 * size, 0.28 + 0.06 * (size - 1), { center: PROJECTILE_HEIGHT * Math.min(size, 2) });
       }
       this.disposeFx(view);
@@ -2408,7 +2420,12 @@ export class Renderer {
   }
 
   private updateEffects(dt: number): void {
-    this.effects = this.effects.filter((fx) => {
+    // Un effet peut en lancer un autre pendant sa mise à jour (le cercle du météore lance la comète) : il arrive dans
+    // la liste neuve, gardée à la suite des survivants. Avant, il se perdait (jamais mis à jour ni effacé : la comète
+    // restait figée sur le sol).
+    const current = this.effects;
+    this.effects = [];
+    const alive = current.filter((fx) => {
       fx.age += dt;
       if (fx.age >= fx.life) {
         this.disposeFx(fx);
@@ -2417,6 +2434,7 @@ export class Renderer {
       fx.update(fx.age / fx.life, fx);
       return true;
     });
+    this.effects = alive.concat(this.effects);
   }
 
   private disposeFx(fx: { mesh: Mesh; material: ShaderMaterial }): void {

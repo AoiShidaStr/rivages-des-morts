@@ -15,7 +15,6 @@
   "forge": { "file": null, "sheet": { "file": "anim/forge.json" }, "height": 3.2, "facesRight": true, "placeholder": "forge" },
   "arbre": { "file": "decor/arbre.png", "height": 3.6, "facesRight": true, "placeholder": "arbre" },
   "portail": { "file": null, "sheet": { "file": "anim/portail.json" }, "height": 4.4, "facesRight": true, "placeholder": "portail", "still": true },
-  "portailVortex": { "file": null, "sheet": { "file": "fx/portail-vortex.json" }, "height": 3, "facesRight": true },
   "cascade": { "file": null, "sheet": { "file": "anim/cascade.json" }, "height": 3.2, "facesRight": true, "placeholder": "cascade" },
   "jizo": { "file": "decor/jizo.png", "height": 1.1, "facesRight": true, "placeholder": "jizo" },
   "ema": { "file": "decor/ema.png", "height": 1.2, "facesRight": true, "placeholder": "ema" },

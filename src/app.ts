@@ -1454,6 +1454,8 @@ export class App {
       this.panels.close();
       this.world = null;
       this.mirror = null;
+      // Les étiquettes des alliés vivent par-dessus l'écran : sans ça, elles restent sur l'île après la coop.
+      this.d.dungeonRenderer.setAllies([]);
       island.placeAt(this.exitAt ?? this.dungeon.exit ?? content.island.dungeonExit);
       this.exitAt = null;
       this.setHero();
