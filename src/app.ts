@@ -1317,7 +1317,12 @@ export class App {
     const totals = this.runTotals(false);
     this.endless = null;
     this.exitAt = data.exit;
-    if (session?.isHost) session.backToLobby();
+    // En coop, le salon retient le dernier bloc lancé : on le ramène au début, pour qu'une
+    // relance reprenne au palier 1 au lieu de refiler le bloc perdu à l'équipe (palier 45 au lieu de 1).
+    if (session?.isHost) {
+      session.choose(ENDLESS, 1);
+      session.backToLobby();
+    }
     const best = progress.state.flags[ENDLESS_RECORD] ?? 0;
     this.screens.showResult(
       false,
