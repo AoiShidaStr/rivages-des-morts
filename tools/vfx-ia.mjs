@@ -68,6 +68,7 @@ for (const effect of config.effects) {
     const { data, info } = await sharp(file)
       .extract({ left: x, top: y, width: w, height: h })
       .resize(outW, outH)
+      .flop(Boolean(effect.flip))
       .ensureAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });

@@ -529,6 +529,8 @@ export class Renderer {
   private readonly onDemand: ReadonlySet<string>;
   /** Planches de héros remplacées : libérées une fois la vue du héros refaite (voir sync). */
   private retiredHeroTextures: BaseTexture[] = [];
+  /** Classe de chaque héros (par identifiant), relevée à chaque image : les événements ne disent que l'identifiant. */
+  private readonly heroKits = new Map<number, string>();
   /** Préchargement des yokai en cours (prefetch). */
   private prefetching = false;
   /** Le décor affiché : le même d'une descente à l'autre (blocs du donjon infini), il n'est pas refait. */
@@ -738,6 +740,7 @@ export class Renderer {
   }
 
   sync(world: WorldView, events: readonly GameEvent[], dt: number): void {
+    for (const hero of world.players) this.heroKits.set(hero.id, hero.cfg.kit);
     this.time += dt;
     this.arena3d?.update(dt);
     const player = world.player;
@@ -1603,6 +1606,10 @@ export class Renderer {
       case 'guard':
         this.guardPulse = 1;
         this.text(event.pos, 2.2, 'Paré', 'shield');
+        // Paladin : la lumière jaillit du bouclier qui arrête le coup (planche peinte).
+        if (event.hero !== undefined && this.heroKits.get(event.hero) === 'paladin') {
+          this.uprightFx('fxVoieBlocagePaladin', 'voie', event.pos, 1.7, 1.7, 0.35, { center: 1 });
+        }
         break;
       case 'parry':
         this.text(event.pos, 2.3, 'Coupelle renversée !', 'parry', 1.3);
@@ -1825,7 +1832,10 @@ export class Renderer {
         break;
       case 'guardNova':
         this.text(event.pos, 2.6, 'Onde de lumière', 'light', 1.2);
-        this.addFx(this.ringFx(event.pos, event.radius * 2.4, DIVINE, 0.5));
+        // Planche peinte : l'anneau est aux trois quarts du bord de l'image, ses glyphes au-delà.
+        if (!this.sheetFx('fxVoieJugementPaladin', 'voie', event.pos, { x: 1, z: 0 }, (event.radius * 2) / 0.75, (event.radius * 2) / 0.75, 0.6, 0.035)) {
+          this.addFx(this.ringFx(event.pos, event.radius * 2.4, DIVINE, 0.5));
+        }
         this.addShake(0.4);
         break;
       case 'divineAegis':

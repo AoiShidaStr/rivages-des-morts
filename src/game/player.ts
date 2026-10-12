@@ -750,7 +750,7 @@ export class Player {
     }
     // Écaille de Ryūjin : l'attaquant arrêté repart en feu.
     if (attacker && !attacker.dead && perks.blockBurn && amount > 0) world.scorch(attacker, this, perks.blockBurn.damage * this.damageMultiplier(), perks.blockBurn.duration);
-    world.emit({ type: 'guard', pos: { ...this.pos } });
+    world.emit({ type: 'guard', pos: { ...this.pos }, hero: this.id });
     if (this.cfg.kit !== 'paladin') {
       // Écaille de Ryūjin, Katana de rōnin : chaque coup arrêté rend un peu de vie.
       if (perks.blockHeal && amount > 0) this.heal(this.cfg.maxHp * perks.blockHeal, world);

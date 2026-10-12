@@ -1,6 +1,6 @@
 {
   "source": "~/Pictures/game visual/vfx-2d",
-  "notes": "Planches 4 x 4 de docs/prompts-vfx (npm run vfx-ia). crop : [x, y, largeur, hauteur] dans une case ramenée à 256 px ; frames : images gardées (0 à 15), dans l'ordre de lecture ; gain : opacité des parties sombres (1 : lumière pure, 2 à 3 : objets pleins comme la lanterne ou la roche) ; inset : px rognés au bord de chaque case (traits de grille de Gemini).",
+  "notes": "Planches 4 x 4 de docs/prompts-vfx (npm run vfx-ia). crop : [x, y, largeur, hauteur] dans une case ramenée à 256 px ; frames : images gardées (0 à 15), dans l'ordre de lecture ; gain : opacité des parties sombres (1 : lumière pure, 2 à 3 : objets pleins comme la lanterne ou la roche) ; inset : px rognés au bord de chaque case (traits de grille de Gemini) ; flip : miroir gauche-droite (arc dessiné du côté opposé au coup).",
   "effects": [
     { "name": "brand-fireball", "file": "sorcier/brand-fireball.png", "tag": "flight", "loop": true, "duration": 50, "crop": [0, 64, 256, 128] },
     { "name": "brand-orb", "file": "sorcier/brand-orb.png", "tag": "flight", "loop": true, "duration": 55, "crop": [0, 26, 256, 230] },
@@ -15,6 +15,17 @@
     { "name": "voie-nova-sorcier", "file": "sorcier/voie-nova-sorcier.png", "tag": "voie", "duration": 45 },
     { "name": "voie-colonne-sorcier", "file": "sorcier/voie-colonne-sorcier.png", "tag": "voie", "duration": 60 },
     { "name": "voie-feuillage-sorcier", "file": "sorcier/voie-feuillage-sorcier.png", "tag": "voie", "duration": 70, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
-    { "name": "voie-lanterne-sorcier", "file": "sorcier/voie-lanterne-sorcier.png", "tag": "voie", "duration": 80, "gain": 3, "inset": 5 }
+    { "name": "voie-lanterne-sorcier", "file": "sorcier/voie-lanterne-sorcier.png", "tag": "voie", "duration": 80, "gain": 3, "inset": 5 },
+    { "name": "light-slash-paladin-120", "file": "paladin/light-slash-paladin.png", "tag": "slash", "duration": 25, "flip": true, "frames": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    { "name": "light-slash-paladin-150", "file": "paladin/light-slash-paladin.png", "tag": "slash", "duration": 25, "flip": true, "frames": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    { "name": "light-slash-paladin-180", "file": "paladin/light-slash-paladin.png", "tag": "slash", "duration": 25, "flip": true, "frames": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    { "name": "light-slash-paladin-200", "file": "paladin/light-slash-paladin.png", "tag": "slash", "duration": 25, "flip": true, "frames": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    { "name": "voie-blocage-paladin", "file": "paladin/voie-blocage-paladin.png", "tag": "voie", "duration": 40, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    { "name": "voie-jugement-paladin", "file": "paladin/voie-jugement-paladin.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "aura-loop", "file": "paladin/aura-loop.png", "tag": "aura", "loop": true, "duration": 90, "frames": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "hammer", "file": "paladin/hammer.png", "tag": "flight", "loop": true, "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "dome-aegis", "file": "paladin/dome-aegis.png", "tag": "dome", "duration": 50 },
+    { "name": "voie-cri-paladin", "file": "paladin/voie-cri-paladin.png", "tag": "voie", "duration": 55 },
+    { "name": "voie-nova-paladin", "file": "paladin/voie-nova-paladin.png", "tag": "voie", "duration": 50, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] }
   ]
 }

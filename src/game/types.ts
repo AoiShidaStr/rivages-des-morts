@@ -63,7 +63,7 @@ export type GameEvent =
   /** Coop : un héros tombe à terre ; un allié qui reste à côté le relève. */
   | { type: 'heroDown'; hero: number; pos: Vec2 }
   | { type: 'heroRevived'; hero: number; pos: Vec2 }
-  | { type: 'guard'; pos: Vec2 }
+  | { type: 'guard'; pos: Vec2; hero?: number }
   /** La garde du Paladin se brise : sa jauge est vide. */
   | { type: 'guardBreak'; pos: Vec2 }
   /** Garde levée juste avant le coup. */
