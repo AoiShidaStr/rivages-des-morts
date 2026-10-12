@@ -5,85 +5,155 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   },
   {
    "filename": "pop 1",
    "frame": {
-    "x": 192,
+    "x": 256,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   },
   {
    "filename": "pop 2",
    "frame": {
-    "x": 384,
+    "x": 512,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   },
   {
    "filename": "pop 3",
    "frame": {
-    "x": 576,
+    "x": 768,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   },
   {
    "filename": "pop 4",
    "frame": {
-    "x": 768,
+    "x": 1024,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   },
   {
    "filename": "pop 5",
    "frame": {
-    "x": 960,
+    "x": 1280,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   },
   {
    "filename": "pop 6",
    "frame": {
-    "x": 1152,
+    "x": 1536,
     "y": 0,
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 7",
+   "frame": {
+    "x": 1792,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 8",
+   "frame": {
+    "x": 2048,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 9",
+   "frame": {
+    "x": 2304,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 10",
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 11",
+   "frame": {
+    "x": 2816,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 12",
+   "frame": {
+    "x": 3072,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 40
+  },
+  {
+   "filename": "pop 13",
+   "frame": {
+    "x": 3328,
+    "y": 0,
+    "w": 256,
+    "h": 256
    },
    "duration": 40
   }
  ],
  "meta": {
-  "app": "tools/vfx.mjs",
+  "app": "tools/vfx-ia.mjs",
   "image": "brand-pop.webp",
   "size": {
-   "w": 1344,
-   "h": 192
+   "w": 3584,
+   "h": 256
   },
   "smooth": true,
   "frameTags": [
    {
     "name": "pop",
     "from": 0,
-    "to": 6,
+    "to": 13,
     "direction": "forward",
     "repeat": "1"
    }

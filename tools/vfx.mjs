@@ -9,13 +9,17 @@
 //
 // Usage : npm run vfx            → tous les effets
 //         npm run vfx -- impact  → seulement les effets dont le nom commence par « impact »
-import { mkdir, writeFile } from 'node:fs/promises';
+//         npm run vfx -- --dessin → redessine aussi les effets remplacés par une planche peinte (tools/vfx-ia.json)
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const outDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'public', 'sprites', 'fx');
-const only = process.argv.slice(2);
+const drawAll = process.argv.includes('--dessin');
+const only = process.argv.slice(2).filter((a) => a !== '--dessin');
+// Les planches peintes par Nano Banana (npm run vfx-ia) remplacent les dessins du même nom : on ne les écrase pas.
+const painted = new Set(JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), 'vfx-ia.json'), 'utf8')).effects.map((e) => e.name));
 
 const INK = '#1f2638';
 const PAPER = '#fffaf0';
@@ -1676,6 +1680,10 @@ const EFFECTS = [
 await mkdir(outDir, { recursive: true });
 for (const effect of EFFECTS) {
   if (only.length && !only.some((o) => effect.name.startsWith(o))) continue;
+  if (painted.has(effect.name) && !drawAll) {
+    console.log(`${effect.name.padEnd(20)} peinte (npm run vfx-ia), gardée`);
+    continue;
+  }
   const images = effect.frames();
   const buffers = await Promise.all(images.map((s) => sharp(Buffer.from(s)).png().toBuffer()));
   const { width, height } = await sharp(buffers[0]).metadata();

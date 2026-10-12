@@ -5,7 +5,7 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -13,9 +13,9 @@
   {
    "filename": "flight 1",
    "frame": {
-    "x": 288,
+    "x": 256,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -23,9 +23,9 @@
   {
    "filename": "flight 2",
    "frame": {
-    "x": 576,
+    "x": 512,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -33,9 +33,9 @@
   {
    "filename": "flight 3",
    "frame": {
-    "x": 864,
+    "x": 768,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -43,9 +43,9 @@
   {
    "filename": "flight 4",
    "frame": {
-    "x": 1152,
+    "x": 1024,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -53,9 +53,9 @@
   {
    "filename": "flight 5",
    "frame": {
-    "x": 1440,
+    "x": 1280,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -63,9 +63,9 @@
   {
    "filename": "flight 6",
    "frame": {
-    "x": 1728,
+    "x": 1536,
     "y": 0,
-    "w": 288,
+    "w": 256,
     "h": 128
    },
    "duration": 50
@@ -73,19 +73,99 @@
   {
    "filename": "flight 7",
    "frame": {
-    "x": 2016,
+    "x": 1792,
     "y": 0,
-    "w": 288,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 8",
+   "frame": {
+    "x": 2048,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 9",
+   "frame": {
+    "x": 2304,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 10",
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 11",
+   "frame": {
+    "x": 2816,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 12",
+   "frame": {
+    "x": 3072,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 13",
+   "frame": {
+    "x": 3328,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 14",
+   "frame": {
+    "x": 3584,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 15",
+   "frame": {
+    "x": 3840,
+    "y": 0,
+    "w": 256,
     "h": 128
    },
    "duration": 50
   }
  ],
  "meta": {
-  "app": "tools/vfx.mjs",
+  "app": "tools/vfx-ia.mjs",
   "image": "brand-fireball.webp",
   "size": {
-   "w": 2304,
+   "w": 4096,
    "h": 128
   },
   "smooth": true,
@@ -93,7 +173,7 @@
    {
     "name": "flight",
     "from": 0,
-    "to": 7,
+    "to": 15,
     "direction": "forward"
    }
   ]

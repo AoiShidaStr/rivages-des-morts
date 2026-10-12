@@ -1,0 +1,20 @@
+{
+  "source": "~/Pictures/game visual/vfx-2d",
+  "notes": "Planches 4 x 4 de docs/prompts-vfx (npm run vfx-ia). crop : [x, y, largeur, hauteur] dans une case ramenée à 256 px ; frames : images gardées (0 à 15), dans l'ordre de lecture ; gain : opacité des parties sombres (1 : lumière pure, 2 à 3 : objets pleins comme la lanterne ou la roche) ; inset : px rognés au bord de chaque case (traits de grille de Gemini).",
+  "effects": [
+    { "name": "brand-fireball", "file": "sorcier/brand-fireball.png", "tag": "flight", "loop": true, "duration": 50, "crop": [0, 64, 256, 128] },
+    { "name": "brand-orb", "file": "sorcier/brand-orb.png", "tag": "flight", "loop": true, "duration": 55, "crop": [0, 26, 256, 230] },
+    { "name": "brand-pop", "file": "sorcier/brand-pop.png", "tag": "pop", "duration": 40, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    { "name": "brand-rune", "file": "sorcier/brand-rune.png", "tag": "rune", "duration": 60, "frames": [0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 7, 9] },
+    { "name": "brand-pillar", "file": "sorcier/brand-pillar.png", "tag": "pillar", "duration": 50, "crop": [48, 0, 208, 236], "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "brand-ring", "file": "sorcier/brand-ring.png", "tag": "ring", "loop": true, "duration": 60 },
+    { "name": "brand-embers", "file": "sorcier/brand-embers.png", "tag": "embers", "loop": true, "duration": 90, "gain": 2.2, "frames": [4, 5, 6, 7, 8, 9, 8, 7, 6, 5] },
+    { "name": "brand-comet", "file": "sorcier/brand-comet.png", "tag": "comet", "duration": 50, "gain": 2, "crop": [0, 0, 240, 175], "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+    { "name": "brand-trail", "file": "sorcier/brand-trail.png", "tag": "trail", "duration": 50, "crop": [0, 64, 256, 128] },
+    { "name": "brand-scorch", "file": "sorcier/brand-scorch.png", "tag": "scorch", "duration": 55, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "voie-nova-sorcier", "file": "sorcier/voie-nova-sorcier.png", "tag": "voie", "duration": 45 },
+    { "name": "voie-colonne-sorcier", "file": "sorcier/voie-colonne-sorcier.png", "tag": "voie", "duration": 60 },
+    { "name": "voie-feuillage-sorcier", "file": "sorcier/voie-feuillage-sorcier.png", "tag": "voie", "duration": 70, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "voie-lanterne-sorcier", "file": "sorcier/voie-lanterne-sorcier.png", "tag": "voie", "duration": 80, "gain": 3, "inset": 5 }
+  ]
+}

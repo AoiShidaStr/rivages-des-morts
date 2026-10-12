@@ -25,6 +25,7 @@
     "kit-heros": "node tools/kit-heros.mjs",
     "doc-heros": "node tools/doc-heros.mjs",
     "vfx": "node tools/vfx.mjs",
+    "vfx-ia": "node tools/vfx-ia.mjs",
     "prompts-2d": "node tools/prompts-2d.mjs",
     "prompts-vfx": "node tools/prompts-vfx.mjs",
     "perso-test": "node tools/perso-test.mjs",

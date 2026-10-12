@@ -237,8 +237,8 @@ type StateAura = 'fire' | 'rage' | 'yokai' | 'aegis';
 const STATE_AURA_SPRITE: Record<StateAura, string> = { fire: 'fxAuraStateFire', rage: 'fxAuraStateRage', yokai: 'fxAuraStateYokai', aegis: 'fxAuraStateAegis' };
 /** Taille de l'aura d'état (largeur, hauteur) et ce qui passe sous les pieds du héros. */
 const STATE_AURA_SIZE = { width: 2.1, height: 3.5, below: 0.3 };
-/** Anneau de flammes (brand-ring) : rayon du cercle dans l'image, en part de sa demi-largeur. */
-const BRAND_RING = 150 / 256;
+/** Anneau de flammes (brand-ring, peint) : rayon du cercle dans l'image, en part de sa demi-largeur. */
+const BRAND_RING = 90 / 128;
 /** Météore : la comète apparaît ce temps (s) avant l'impact. */
 const COMET_TIME = 0.3;
 /** Hauteur de la lame : les traînées du style lumière balaient à cette hauteur, pas au sol. */
@@ -255,8 +255,11 @@ const SILK = new Color3(0.93, 0.95, 0.98);
 const FIRE = new Color3(1, 0.55, 0.2);
 /** Rayon de la boule de feu de base (player.json) : la taille dessinée des planches de flamme. */
 const FIREBALL_RADIUS = 0.28;
-/** Côté de l'image de l'orbe (m) : son cœur fait 1,3 m, sa couronne 2,3 m, pour un contact de 2,8 m de large. */
-const ORB_SIZE = 3.2;
+/** Largeur de l'image de l'orbe (m, planche peinte de 256 × 230 px) : sphère d'environ 1,6 m pour un contact de 2,8 m. */
+const ORB_SIZE = 3;
+/** Têtes des projectiles de feu dans leur image, en part de la largeur (planches peintes, tools/vfx-ia.json). */
+const FIREBALL_HEAD = 190 / 256;
+const ORB_HEAD = 169 / 256;
 /** Largeur du trait de visée de l'Orbe (m), celle de la visée du Rôdeur. */
 const ORB_GUIDE_WIDTH = 0.3;
 /** Sceau du Sorcier : rouge vermillon des ofuda. */
@@ -326,16 +329,30 @@ function effectKit(name: string): string | null {
  * Compétences des voies : la planche de chaque voie (tools/vfx.mjs), au sol autour du héros sauf mention.
  * `size` : côté en m (sinon 2,3 × le rayon de l'effet) ; `from: 'at'` : au point visé ; `ahead` : part du héros
  * dans la direction du geste (le pied du tir est à 40 px sur 448) ; `upright` : dressée face à la caméra, le
- * temps de l'attente du sceau. La Colonne ardente et le Couloir gardent le cercle de runes et le filet.
+ * temps de l'attente du sceau. Le Couloir garde le filet.
  */
-const VOIE_FX: Record<string, { sheet: string; life: number; size?: number; aspect?: number; from?: 'at'; ahead?: number; upright?: boolean; shake?: number }> = {
+type VoieFx = {
+  sheet: string;
+  life: number;
+  size?: number;
+  aspect?: number;
+  from?: 'at';
+  ahead?: number;
+  /** Dressée face à la caméra au point visé : `h` sa hauteur (m), `center` la hauteur du milieu de l'image si le pied
+   * de l'effet n'est pas en bas, `delay` la durée en multiple de l'attente du sceau (l'explosion tombe avec lui). */
+  upright?: { h: number; center?: number; delay?: number };
+  shake?: number;
+};
+const VOIE_FX: Record<string, VoieFx> = {
   fureur: { sheet: 'fxVoieCriGuerrier', life: 0.55, size: 7, shake: 0.2 },
   demuni: { sheet: 'fxVoieSeismeGuerrier', life: 0.5, shake: 0.35 },
   cratere: { sheet: 'fxVoieSeismeGuerrier', life: 0.5, shake: 0.45 },
   replique: { sheet: 'fxVoieTourbillonGuerrier', life: 0.45 },
   orbe: { sheet: 'fxVoieNovaSorcier', life: 0.45, shake: 0.25 },
   dryade: { sheet: 'fxVoieFeuillageSorcier', life: 0.8, from: 'at' },
-  lampion: { sheet: 'fxVoieLanterneSorcier', life: 1, upright: true },
+  // La lanterne éclate à l'image 13 sur 16, la colonne s'écrase vers l'image 6 : au moment où le sceau explose.
+  lampion: { sheet: 'fxVoieLanterneSorcier', life: 1, size: 2, upright: { h: 2, delay: 16 / 12 } },
+  embrasement: { sheet: 'fxVoieColonneSorcier', life: 2, size: 3.2, upright: { h: 3.2, center: 0.65, delay: 16 / 6 } },
   ombre: { sheet: 'fxVoieTourbillonLame', life: 0.45 },
   chair: { sheet: 'fxVoieTourbillonLame', life: 0.45 },
   saigne: { sheet: 'fxVoieCrocLame', life: 0.5 },
@@ -1080,7 +1097,7 @@ export class Renderer {
           : p.kind === 'net'
             ? [0.8, 0.8]
             : fire
-              ? (orb ? [ORB_SIZE, ORB_SIZE] : fxName === 'fxBrandFireball' ? [1.9, 0.85] : [1.4, 0.8])
+              ? (orb ? [ORB_SIZE, (ORB_SIZE * 230) / 256] : fxName === 'fxBrandFireball' ? [1.9, 0.95] : [1.4, 0.8])
               : arrow
                 ? (p.full ? [1.65, 0.85] : [1.25, 0.62])
                 : [1.1, 0.22];
@@ -1094,9 +1111,8 @@ export class Renderer {
           fire,
           // L'éclat au contact suit la taille de la boule (l'orbe : deux fois celui d'une boule de salve).
           size: orb ? 2 : size,
-          // La tête est en avant du milieu de l'image (Brand : 214 px sur 288 ; orbe : 150 sur 256) : on recule
-          // l'image pour qu'elle soit sur le point de contact.
-          lead: orb ? (150 / 256 - 0.5) * width : fxName === 'fxBrandFireball' ? (214 / 288 - 0.5) * width * size : 0,
+          // La tête est en avant du milieu de l'image : on recule l'image pour qu'elle soit sur le point de contact.
+          lead: orb ? (ORB_HEAD - 0.5) * width : fxName === 'fxBrandFireball' ? (FIREBALL_HEAD - 0.5) * width * size : 0,
         };
         view.mesh.alphaIndex = SPRITE_ORDER * 2;
         this.projectiles.set(p.id, view);
@@ -1850,7 +1866,7 @@ export class Renderer {
               f.mesh.rotation.y = f.age * 0.4;
               if (!comet && f.age >= duration - COMET_TIME) {
                 comet = true;
-                this.uprightFx('fxBrandComet', 'comet', event.pos, 2.2, 5.8, COMET_TIME);
+                this.uprightFx('fxBrandComet', 'comet', event.pos, 4.4, 3.2, COMET_TIME);
               }
             },
           });
@@ -1883,7 +1899,7 @@ export class Renderer {
         this.endTracked(this.blasts, event.id);
         const meteor = event.kind === 'meteor';
         // Feu de Brand : un pilier de flammes jaillit, une onde de feu s'ouvre au sol et laisse des fissures en fusion.
-        const pillar = meteor ? { w: 3, h: 6.4 } : { w: 2, h: 4.3 };
+        const pillar = meteor ? { w: 4.4, h: 5 } : { w: 2.6, h: 3 };
         if (this.uprightFx('fxBrandPillar', 'pillar', event.pos, pillar.w, pillar.h, meteor ? 0.7 : 0.55)) {
           this.sheetFx('fxBrandScorch', 'scorch', event.pos, { x: 1, z: 0 }, event.radius * (meteor ? 2.7 : 2.3), event.radius * (meteor ? 2.7 : 2.3), meteor ? 0.75 : 0.55, 0.035);
           this.addShake(meteor ? 0.9 : 0.3);
@@ -2239,7 +2255,9 @@ export class Renderer {
     const spec = VOIE_FX[event.voie];
     if (!spec) return;
     if (spec.upright) {
-      this.uprightFx(spec.sheet, 'voie', event.at, 1.3, 2.1, Math.max(0.3, event.delay));
+      const { h, center, delay } = spec.upright;
+      const life = delay && event.delay > 0 ? event.delay * delay : spec.life;
+      this.uprightFx(spec.sheet, 'voie', event.at, spec.size ?? h, h, life, center === undefined ? {} : { center });
       return;
     }
     const sheet = this.effect(spec.sheet);

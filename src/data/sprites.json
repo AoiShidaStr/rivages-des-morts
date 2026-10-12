@@ -82,6 +82,7 @@
   "fxVoieNovaSorcier": { "file": null, "sheet": { "file": "fx/voie-nova-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxVoieLanterneSorcier": { "file": null, "sheet": { "file": "fx/voie-lanterne-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
   "fxVoieFeuillageSorcier": { "file": null, "sheet": { "file": "fx/voie-feuillage-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
+  "fxVoieColonneSorcier": { "file": null, "sheet": { "file": "fx/voie-colonne-sorcier.json", "height": 1 }, "height": 1, "facesRight": true },
   "hitodama": { "file": "hitodama.png", "sheet": { "file": "anim/hitodama.json" }, "height": 0.9, "facesRight": false, "lift": 0.45 },
   "kodama": { "file": "kodama.png", "sheet": { "file": "anim/kodama.json" }, "height": 1.15, "facesRight": true, "lift": 0.15 },
   "kappa": { "file": "kappa.png", "sheet": { "file": "anim/kappa.json" }, "height": 1.45, "facesRight": true },
