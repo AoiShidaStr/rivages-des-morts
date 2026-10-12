@@ -237,8 +237,8 @@ type StateAura = 'fire' | 'rage' | 'yokai' | 'aegis';
 const STATE_AURA_SPRITE: Record<StateAura, string> = { fire: 'fxAuraStateFire', rage: 'fxAuraStateRage', yokai: 'fxAuraStateYokai', aegis: 'fxAuraStateAegis' };
 /** Taille de l'aura d'état (largeur, hauteur) et ce qui passe sous les pieds du héros. */
 const STATE_AURA_SIZE = { width: 2.1, height: 3.5, below: 0.3 };
-/** Auras d'état plus larges que la taille commune : la Frénésie peinte (224 × 256 px). */
-const STATE_AURA_WIDEN: Partial<Record<StateAura, number>> = { rage: (224 / 256) * (3.5 / 2.1) };
+/** Auras d'état plus larges que la taille commune (planche peinte plus large que 0,6 × sa hauteur). */
+const STATE_AURA_WIDEN: Partial<Record<StateAura, number>> = {};
 /** Anneau de flammes (brand-ring, peint) : rayon du cercle dans l'image, en part de sa demi-largeur. */
 const BRAND_RING = 90 / 128;
 /** Météore : la comète apparaît ce temps (s) avant l'impact. */

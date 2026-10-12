@@ -59,73 +59,13 @@
     "h": 256
    },
    "duration": 25
-  },
-  {
-   "filename": "slash 6",
-   "frame": {
-    "x": 1536,
-    "y": 0,
-    "w": 256,
-    "h": 256
-   },
-   "duration": 25
-  },
-  {
-   "filename": "slash 7",
-   "frame": {
-    "x": 1792,
-    "y": 0,
-    "w": 256,
-    "h": 256
-   },
-   "duration": 25
-  },
-  {
-   "filename": "slash 8",
-   "frame": {
-    "x": 2048,
-    "y": 0,
-    "w": 256,
-    "h": 256
-   },
-   "duration": 25
-  },
-  {
-   "filename": "slash 9",
-   "frame": {
-    "x": 2304,
-    "y": 0,
-    "w": 256,
-    "h": 256
-   },
-   "duration": 25
-  },
-  {
-   "filename": "slash 10",
-   "frame": {
-    "x": 2560,
-    "y": 0,
-    "w": 256,
-    "h": 256
-   },
-   "duration": 25
-  },
-  {
-   "filename": "slash 11",
-   "frame": {
-    "x": 2816,
-    "y": 0,
-    "w": 256,
-    "h": 256
-   },
-   "duration": 25
   }
  ],
  "meta": {
-  "app": "tools/vfx-ia.mjs",
+  "app": "tools/vfx.mjs",
   "image": "light-slash-guerrier-200.webp",
   "size": {
-   "w": 3072,
+   "w": 1536,
    "h": 256
   },
   "smooth": true,
@@ -133,7 +73,7 @@
    {
     "name": "slash",
     "from": 0,
-    "to": 11,
+    "to": 5,
     "direction": "forward",
     "repeat": "1"
    }
