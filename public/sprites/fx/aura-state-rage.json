@@ -5,115 +5,135 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 1",
    "frame": {
-    "x": 192,
+    "x": 224,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 2",
    "frame": {
-    "x": 384,
+    "x": 448,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 3",
    "frame": {
-    "x": 576,
+    "x": 672,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 4",
    "frame": {
-    "x": 768,
+    "x": 896,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 5",
    "frame": {
-    "x": 960,
+    "x": 1120,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 6",
    "frame": {
-    "x": 1152,
+    "x": 1344,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 7",
    "frame": {
-    "x": 1344,
+    "x": 1568,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 8",
    "frame": {
-    "x": 1536,
+    "x": 1792,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   },
   {
    "filename": "aura 9",
    "frame": {
-    "x": 1728,
+    "x": 2016,
     "y": 0,
-    "w": 192,
-    "h": 320
+    "w": 224,
+    "h": 256
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 10",
+   "frame": {
+    "x": 2240,
+    "y": 0,
+    "w": 224,
+    "h": 256
+   },
+   "duration": 75
+  },
+  {
+   "filename": "aura 11",
+   "frame": {
+    "x": 2464,
+    "y": 0,
+    "w": 224,
+    "h": 256
    },
    "duration": 75
   }
  ],
  "meta": {
-  "app": "tools/vfx.mjs",
+  "app": "tools/vfx-ia.mjs",
   "image": "aura-state-rage.webp",
   "size": {
-   "w": 1920,
-   "h": 320
+   "w": 2688,
+   "h": 256
   },
   "smooth": true,
   "frameTags": [
    {
     "name": "aura",
     "from": 0,
-    "to": 9,
+    "to": 11,
     "direction": "forward"
    }
   ]

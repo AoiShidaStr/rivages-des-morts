@@ -5,115 +5,165 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 1",
    "frame": {
-    "x": 384,
+    "x": 256,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 2",
    "frame": {
-    "x": 768,
+    "x": 512,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 3",
    "frame": {
-    "x": 1152,
+    "x": 768,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 4",
    "frame": {
-    "x": 1536,
+    "x": 1024,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 5",
    "frame": {
-    "x": 1920,
+    "x": 1280,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 6",
    "frame": {
-    "x": 2304,
+    "x": 1536,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 7",
    "frame": {
-    "x": 2688,
+    "x": 1792,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 8",
    "frame": {
-    "x": 3072,
+    "x": 2048,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   },
   {
    "filename": "voie 9",
    "frame": {
-    "x": 3456,
+    "x": 2304,
     "y": 0,
-    "w": 384,
-    "h": 384
+    "w": 256,
+    "h": 256
+   },
+   "duration": 55
+  },
+  {
+   "filename": "voie 10",
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 55
+  },
+  {
+   "filename": "voie 11",
+   "frame": {
+    "x": 2816,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 55
+  },
+  {
+   "filename": "voie 12",
+   "frame": {
+    "x": 3072,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 55
+  },
+  {
+   "filename": "voie 13",
+   "frame": {
+    "x": 3328,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 55
+  },
+  {
+   "filename": "voie 14",
+   "frame": {
+    "x": 3584,
+    "y": 0,
+    "w": 256,
+    "h": 256
    },
    "duration": 55
   }
  ],
  "meta": {
-  "app": "tools/vfx.mjs",
+  "app": "tools/vfx-ia.mjs",
   "image": "voie-cri-guerrier.webp",
   "size": {
    "w": 3840,
-   "h": 384
+   "h": 256
   },
   "smooth": true,
   "frameTags": [
    {
     "name": "voie",
     "from": 0,
-    "to": 9,
+    "to": 14,
     "direction": "forward",
     "repeat": "1"
    }

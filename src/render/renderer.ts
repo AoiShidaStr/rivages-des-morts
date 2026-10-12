@@ -237,6 +237,8 @@ type StateAura = 'fire' | 'rage' | 'yokai' | 'aegis';
 const STATE_AURA_SPRITE: Record<StateAura, string> = { fire: 'fxAuraStateFire', rage: 'fxAuraStateRage', yokai: 'fxAuraStateYokai', aegis: 'fxAuraStateAegis' };
 /** Taille de l'aura d'état (largeur, hauteur) et ce qui passe sous les pieds du héros. */
 const STATE_AURA_SIZE = { width: 2.1, height: 3.5, below: 0.3 };
+/** Auras d'état plus larges que la taille commune : la Frénésie peinte (224 × 256 px). */
+const STATE_AURA_WIDEN: Partial<Record<StateAura, number>> = { rage: (224 / 256) * (3.5 / 2.1) };
 /** Anneau de flammes (brand-ring, peint) : rayon du cercle dans l'image, en part de sa demi-largeur. */
 const BRAND_RING = 90 / 128;
 /** Météore : la comète apparaît ce temps (s) avant l'impact. */
@@ -1285,7 +1287,10 @@ export class Renderer {
       }
       // Fondu d'entrée et de sortie ; la dernière aura reste affichée le temps de s'effacer.
       if (kind && sheet?.anim) {
-        if (aura.kind !== kind) aura.material.setTexture('textureSampler', sheet.texture);
+        if (aura.kind !== kind) {
+          aura.material.setTexture('textureSampler', sheet.texture);
+          aura.mesh.scaling.x = STATE_AURA_WIDEN[kind] ?? 1;
+        }
         aura.kind = kind;
       }
       aura.level = Math.max(0, Math.min(1, aura.level + (kind ? dt * 5 : -dt * 4)));
@@ -1787,15 +1792,19 @@ export class Renderer {
         this.addShake(0.35);
         break;
       case 'smash':
-        this.addFx(this.ringFx(event.pos, event.radius * 2, RAGE, 0.35));
+        if (!this.sheetFx('fxVoieFracasGuerrier', 'voie', event.pos, { x: 1, z: 0 }, (event.radius * 2) / 0.85, (event.radius * 2) / 0.85, 0.6, 0.035)) {
+          this.addFx(this.ringFx(event.pos, event.radius * 2, RAGE, 0.35));
+        }
         this.addShake(0.6);
         break;
       case 'death':
         for (const tracked of [this.telegraphs, this.channels, this.landings]) this.endTracked(tracked, event.id);
         break;
       case 'bondLand':
-        this.addFx(this.ringFx(event.pos, event.radius * 2, RAGE, 0.35));
-        this.addFx(this.ringFx(event.pos, event.radius * 2.6, DUST, 0.45));
+        if (!this.sheetFx('fxVoieBondGuerrier', 'voie', event.pos, { x: 1, z: 0 }, (event.radius * 2) / 0.85, (event.radius * 2) / 0.85, 0.6, 0.035)) {
+          this.addFx(this.ringFx(event.pos, event.radius * 2, RAGE, 0.35));
+          this.addFx(this.ringFx(event.pos, event.radius * 2.6, DUST, 0.45));
+        }
         this.addShake(0.45);
         break;
       case 'frenzy':
@@ -1844,7 +1853,9 @@ export class Renderer {
       case 'perfectGuard':
         // Blocage parfait : un éclair blanc autour du bouclier, et un mot au-dessus du texte de la garde.
         this.text(event.pos, 2.8, 'Parfait !', 'parry', 1);
-        this.addFx(this.ringFx(event.pos, 2.2, DIVINE, 0.25));
+        if (!(this.heroKits.get(event.hero) === 'guerrier' && this.uprightFx('fxVoieGardeGuerrier', 'voie', event.pos, 2, 2, 0.4, { center: 1 }))) {
+          this.addFx(this.ringFx(event.pos, 2.2, DIVINE, 0.25));
+        }
         if (event.hero === this.localId) this.addShake(0.3);
         break;
       case 'guardNova':
