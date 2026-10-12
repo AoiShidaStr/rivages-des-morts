@@ -5,65 +5,95 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 256,
+    "h": 128
    },
-   "duration": 55
+   "duration": 50
   },
   {
    "filename": "flight 1",
    "frame": {
-    "x": 200,
+    "x": 256,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 256,
+    "h": 128
    },
-   "duration": 55
+   "duration": 50
   },
   {
    "filename": "flight 2",
    "frame": {
-    "x": 400,
+    "x": 512,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 256,
+    "h": 128
    },
-   "duration": 55
+   "duration": 50
   },
   {
    "filename": "flight 3",
    "frame": {
-    "x": 600,
+    "x": 768,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 256,
+    "h": 128
    },
-   "duration": 55
+   "duration": 50
   },
   {
    "filename": "flight 4",
    "frame": {
-    "x": 800,
+    "x": 1024,
     "y": 0,
-    "w": 200,
-    "h": 200
+    "w": 256,
+    "h": 128
    },
-   "duration": 55
+   "duration": 50
+  },
+  {
+   "filename": "flight 5",
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 6",
+   "frame": {
+    "x": 1536,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
+  },
+  {
+   "filename": "flight 7",
+   "frame": {
+    "x": 1792,
+    "y": 0,
+    "w": 256,
+    "h": 128
+   },
+   "duration": 50
   }
  ],
  "meta": {
-  "app": "Rivages des morts asset effects",
+  "app": "tools/vfx-ia.mjs",
   "image": "projectile-rodeur-charge.webp",
   "size": {
-   "w": 1000,
-   "h": 200
+   "w": 2048,
+   "h": 128
   },
   "smooth": true,
   "frameTags": [
    {
     "name": "flight",
     "from": 0,
-    "to": 4,
+    "to": 7,
     "direction": "forward"
    }
   ]

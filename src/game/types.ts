@@ -122,6 +122,8 @@ export type GameEvent =
   | { type: 'aura'; pos: Vec2; radius: number }
   // Rôdeur : filet qui s'ouvre, tir chargé plein
   | { type: 'netBurst'; pos: Vec2; radius: number }
+  // Recul du Rôdeur : la volée part de `pos` vers `dir`.
+  | { type: 'leapVolley'; pos: Vec2; dir: Vec2 }
   | { type: 'loose'; pos: Vec2; full: boolean }
   // Objets (0.11.0) : coup évité, sauvetage, onde de choc, zone sacrée, leurre
   | { type: 'evade'; pos: Vec2 }

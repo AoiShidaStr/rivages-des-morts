@@ -153,7 +153,7 @@ interface EntityView {
   animTag: string;
   animTime: number;
   /** Anneau des marques, créé à la première marque. */
-  markRing?: { mesh: Mesh; material: ShaderMaterial };
+  markRing?: { mesh: Mesh; material: ShaderMaterial; painted?: boolean };
   /** Style lumière : temps avant la prochaine image rémanente pendant une esquive. */
   ghostTimer?: number;
 }
@@ -329,7 +329,7 @@ function effectKit(name: string): string | null {
  * Compétences des voies : la planche de chaque voie (tools/vfx.mjs), au sol autour du héros sauf mention.
  * `size` : côté en m (sinon 2,3 × le rayon de l'effet) ; `from: 'at'` : au point visé ; `ahead` : part du héros
  * dans la direction du geste (le pied du tir est à 40 px sur 448) ; `upright` : dressée face à la caméra, le
- * temps de l'attente du sceau. Le Couloir garde le filet.
+ * temps de l'attente du sceau.
  */
 type VoieFx = {
   sheet: string;
@@ -362,8 +362,9 @@ const VOIE_FX: Record<string, VoieFx> = {
   parjure: { sheet: 'fxVoieNovaPaladin', life: 0.5, shake: 0.3 },
   eveque: { sheet: 'fxVoieNovaPaladin', life: 0.5, shake: 0.3 },
   cuirasse: { sheet: 'fxVoieCriRodeur', life: 0.55, size: 6 },
-  tireur: { sheet: 'fxVoieVoleeRodeur', life: 0.32, size: 9, aspect: 256 / 448, ahead: 0.5 - 40 / 448 },
-  vigie: { sheet: 'fxVoieArgileRodeur', life: 0.32, size: 9, aspect: 256 / 448, ahead: 0.5 - 40 / 448 },
+  tireur: { sheet: 'fxVoieVoleeRodeur', life: 0.45, size: 7, ahead: 0.5 - 80 / 256 },
+  vigie: { sheet: 'fxVoieArgileRodeur', life: 0.45, size: 7, ahead: 0.5 - 30 / 256 },
+  eclaireur: { sheet: 'fxVoieCouloirRodeur', life: 1.2, from: 'at' },
 };
 
 /** Arène en 3D : ce qui était posé au-delà de cette distance finit derrière les murs du fond. */
@@ -1069,9 +1070,25 @@ export class Renderer {
       view.markRing.mesh.parent = view.node;
       view.markRing.mesh.alphaIndex = DECAL_ORDER + 3;
     }
-    const { mesh, material } = view.markRing;
+    const ring = view.markRing;
+    const { mesh, material } = ring;
     mesh.isVisible = mark !== null;
     if (!mark) return;
+    // Proie marquée par le Rôdeur : la cible peinte (planche Nano Banana) remplace l'anneau teinté.
+    const sheet = mark === 'hunt' ? this.sprites.get('fxVoieChasseRodeur') : undefined;
+    if (Boolean(sheet?.anim) !== Boolean(ring.painted)) {
+      material.setTexture('textureSampler', sheet?.anim ? sheet.texture : this.fxTextures.ring);
+      if (!sheet?.anim) material.setVector4('frameRect', new Vector4(0, 0, 1, 1));
+      ring.painted = Boolean(sheet?.anim);
+    }
+    if (sheet?.anim) {
+      showFrame(material, sheet.anim, frameAt(sheet.anim, 'voie', t));
+      material.setColor3('tint', WHITE);
+      material.setFloat('alpha', 0.95);
+      mesh.rotation.y = 0;
+      mesh.scaling.setAll(1);
+      return;
+    }
     material.setColor3('tint', MARK_COLORS[mark]);
     material.setFloat('alpha', 0.65 + 0.25 * Math.sin(t * 6));
     mesh.rotation.y = t * 2;
@@ -2065,6 +2082,14 @@ export class Renderer {
       case 'voie':
         this.voieFx(event);
         break;
+      case 'leapVolley': {
+        // Recul : un tourbillon de vent là où le Rôdeur bondit, les traits partent vers la souris (le tourbillon est au
+        // tiers gauche de l'image).
+        const size = 5;
+        const at = { x: event.pos.x + event.dir.x * size * 0.2, z: event.pos.z + event.dir.z * size * 0.2 };
+        this.sheetFx('fxVoieReculRodeur', 'voie', at, event.dir, size, size, 0.5, 0.034);
+        break;
+      }
       case 'lure':
         this.addFx(this.ringFx(event.pos, 2, SMOKE, 0.5));
         this.text(event.pos, 2.2, 'Leurre', 'mark', 0.9);
@@ -2137,6 +2162,7 @@ export class Renderer {
         this.text(event.pos, 2.4, 'Aura de lumière', 'light', 1.1);
         break;
       case 'netBurst':
+        if (this.sheetFx('fxVoieFiletRodeur', 'voie', event.pos, { x: 1, z: 0 }, (event.radius * 2) / 0.88, (event.radius * 2) / 0.88, 0.8, 0.03)) break;
         this.addFx({
           texture: this.fxTextures.web,
           pos: event.pos,

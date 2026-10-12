@@ -1702,6 +1702,7 @@ export class World {
   /** Recul : une volée de flèches en éventail vers la souris. */
   volley(dir: Vec2): void {
     const cfg = this.player.cfg.ranger.leap;
+    this.emit({ type: 'leapVolley', pos: { ...this.player.pos }, dir: normalize(dir) });
     for (let i = 0; i < cfg.arrows; i++) {
       const offset = cfg.arrows > 1 ? (i / (cfg.arrows - 1) - 0.5) * cfg.spreadDeg : 0;
       this.loose(fromAngle(angleOf(dir) + degToRad(offset)));

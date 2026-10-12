@@ -26,6 +26,15 @@
     { "name": "hammer", "file": "paladin/hammer.png", "tag": "flight", "loop": true, "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
     { "name": "dome-aegis", "file": "paladin/dome-aegis.png", "tag": "dome", "duration": 50 },
     { "name": "voie-cri-paladin", "file": "paladin/voie-cri-paladin.png", "tag": "voie", "duration": 55 },
-    { "name": "voie-nova-paladin", "file": "paladin/voie-nova-paladin.png", "tag": "voie", "duration": 50, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] }
+    { "name": "voie-nova-paladin", "file": "paladin/voie-nova-paladin.png", "tag": "voie", "duration": 50, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "projectile-rodeur", "file": "rodeur/projectile-rodeur.png", "tag": "flight", "loop": true, "duration": 60, "crop": [0, 64, 256, 128], "frames": [0, 1, 2, 13, 14, 15] },
+    { "name": "projectile-rodeur-charge", "file": "rodeur/projectile-rodeur.png", "tag": "flight", "loop": true, "duration": 50, "crop": [0, 64, 256, 128], "frames": [4, 5, 6, 7, 8, 9, 10, 11] },
+    { "name": "voie-filet-rodeur", "file": "rodeur/voie-filet-rodeur.png", "tag": "voie", "duration": 55, "frames": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "voie-chasse-rodeur", "file": "rodeur/voie-chasse-rodeur.png", "tag": "voie", "loop": true, "duration": 70 },
+    { "name": "voie-recul-rodeur", "file": "rodeur/voie-recul-rodeur.png", "tag": "voie", "duration": 40, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    { "name": "voie-volee-rodeur", "file": "rodeur/voie-volee-rodeur.png", "tag": "voie", "duration": 40, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    { "name": "voie-cri-rodeur", "file": "rodeur/voie-cri-rodeur.png", "tag": "voie", "duration": 55 },
+    { "name": "voie-couloir-rodeur", "file": "rodeur/voie-couloir-rodeur.png", "tag": "voie", "duration": 70, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "voie-argile-rodeur", "file": "rodeur/voie-argile-rodeur.png", "tag": "voie", "duration": 40, "gain": 1.5, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] }
   ]
 }
