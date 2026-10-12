@@ -116,7 +116,7 @@ export type GameEvent =
   | { type: 'noMana'; pos: Vec2 }
   // Lame : marques, traînées de la Frappe fantôme et de la Danse des lames, fumée
   | { type: 'mark'; id: number; pos: Vec2; mark: MarkKind }
-  | { type: 'streak'; from: Vec2; to: Vec2 }
+  | { type: 'streak'; from: Vec2; to: Vec2; kind?: 'ghost' | 'dance' }
   | { type: 'smoke'; pos: Vec2; radius: number }
   // Paladin
   | { type: 'aura'; pos: Vec2; radius: number }

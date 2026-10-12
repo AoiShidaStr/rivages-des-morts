@@ -37,6 +37,15 @@
     { "name": "voie-bond-guerrier", "file": "guerrier/voie-bond-guerrier.png", "tag": "voie", "duration": 45, "gain": 1.4, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
     { "name": "voie-cri-guerrier", "file": "guerrier/voie-cri-guerrier.png", "tag": "voie", "duration": 55, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
     { "name": "voie-seisme-guerrier", "file": "guerrier/voie-seisme-guerrier.png", "tag": "voie", "duration": 50, "gain": 1.4, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
-    { "name": "voie-tourbillon-guerrier", "file": "guerrier/voie-tourbillon-guerrier.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] }
+    { "name": "voie-tourbillon-guerrier", "file": "guerrier/voie-tourbillon-guerrier.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    { "name": "voie-fantome-lame", "file": "lame/voie-fantome-lame.png", "tag": "voie", "duration": 35, "gain": 1.3, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "voie-marque-lame", "file": "lame/voie-marque-lame.png", "tag": "voie", "loop": true, "duration": 70, "inset": 4 },
+    { "name": "voie-fumee-lame", "file": "lame/voie-fumee-lame.png", "tag": "voie", "loop": true, "duration": 80, "gain": 1.5, "frames": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    { "name": "voie-nuee-lame", "file": "lame/voie-nuee-lame.png", "tag": "voie", "loop": true, "duration": 90, "gain": 1.3 },
+    { "name": "voie-danse-lame", "file": "lame/voie-danse-lame.png", "tag": "voie", "duration": 30, "inset": 4, "crop": [0, 64, 256, 128], "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+    { "name": "voie-tourbillon-lame", "file": "lame/voie-tourbillon-lame.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+    { "name": "voie-croc-lame", "file": "lame/voie-croc-lame.png", "tag": "voie", "duration": 45, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    { "name": "voie-croix-lame", "file": "lame/voie-croix-lame.png", "tag": "voie", "duration": 40, "inset": 4, "frames": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    { "name": "portail-vortex", "file": "jorogumo/portail-vortex.png", "tag": "idle", "loop": true, "duration": 80, "rotate": 106.5, "size": [192, 244] }
   ]
 }

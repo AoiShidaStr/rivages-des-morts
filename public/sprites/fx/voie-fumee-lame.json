@@ -1,0 +1,131 @@
+{
+ "frames": [
+  {
+   "filename": "voie 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 1",
+   "frame": {
+    "x": 256,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 2",
+   "frame": {
+    "x": 512,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 3",
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 4",
+   "frame": {
+    "x": 1024,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 5",
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 6",
+   "frame": {
+    "x": 1536,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 7",
+   "frame": {
+    "x": 1792,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 8",
+   "frame": {
+    "x": 2048,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 9",
+   "frame": {
+    "x": 2304,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  },
+  {
+   "filename": "voie 10",
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "duration": 80
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx-ia.mjs",
+  "image": "voie-fumee-lame.webp",
+  "size": {
+   "w": 2816,
+   "h": 256
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "voie",
+    "from": 0,
+    "to": 10,
+    "direction": "forward"
+   }
+  ]
+ }
+}

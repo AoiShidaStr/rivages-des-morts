@@ -48,6 +48,38 @@ for (const effect of config.effects) {
   }
   const image = sharp(file);
   const { width, height } = await image.metadata();
+  // `rotate` (degrés, sens horaire) : chaque case entière est tournée, puis toutes sont recadrées sur la même boîte
+  // (l'union de ce qui n'est pas noir) et étirées à `size` — un vortex dessiné couché, à redresser dans une porte.
+  // Les cases peuvent alors être rectangulaires (image non carrée).
+  if (effect.rotate !== undefined) {
+    const cw = Math.floor(width / 4);
+    const chh = Math.floor(height / 4);
+    const turned = [];
+    for (const index of effect.frames ?? [...Array(16).keys()]) {
+      const piece = await sharp(file).extract({ left: (index % 4) * cw, top: Math.floor(index / 4) * chh, width: cw, height: chh }).png().toBuffer();
+      turned.push(await sharp(piece).rotate(effect.rotate, { background: { r: 0, g: 0, b: 0, alpha: 1 } }).removeAlpha().raw().toBuffer({ resolveWithObject: true }));
+    }
+    const box = [Infinity, Infinity, -1, -1];
+    for (const { data, info } of turned) {
+      for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) {
+        const i = (y * info.width + x) * 3;
+        if (Math.max(data[i], data[i + 1], data[i + 2]) <= 40) continue;
+        box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y); box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y);
+      }
+    }
+    effect.prepared = [];
+    const [outW, outH] = effect.size;
+    for (const { data, info } of turned) {
+      const { data: px, info: o } = await sharp(data, { raw: info })
+        .extract({ left: box[0], top: box[1], width: box[2] - box[0] + 1, height: box[3] - box[1] + 1 })
+        .resize(outW, outH, { fit: 'fill' })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      keyBlack(px, effect.gain ?? 1);
+      effect.prepared.push(await sharp(px, { raw: { width: o.width, height: o.height, channels: 4 } }).png().toBuffer());
+    }
+  }
   const cell = Math.floor(Math.min(width, height) / 4);
   const k = cell / CELL;
   const inset = Math.round((effect.inset ?? 0) * k);
@@ -58,10 +90,10 @@ for (const effect of config.effects) {
   const w = Math.min(cx + cw, cell - inset) - left;
   const h = Math.min(cy + ch, cell - inset) - top;
   // Sortie à l'échelle de la case de référence (256 px) : les grandes images ne pèsent pas plus lourd en jeu.
-  const outW = Math.round(w / k);
-  const outH = Math.round(h / k);
-  const frames = effect.frames ?? [...Array(16).keys()];
-  const buffers = [];
+  const outW = effect.prepared ? effect.size[0] : Math.round(w / k);
+  const outH = effect.prepared ? effect.size[1] : Math.round(h / k);
+  const frames = effect.prepared ? [] : (effect.frames ?? [...Array(16).keys()]);
+  const buffers = effect.prepared ?? [];
   for (const index of frames) {
     const x = (index % 4) * cell + left;
     const y = Math.floor(index / 4) * cell + top;

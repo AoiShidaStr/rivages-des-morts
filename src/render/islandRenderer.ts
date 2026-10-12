@@ -78,6 +78,8 @@ export class IslandRenderer {
   readonly right: Vec2;
   private readonly sprites = new Map<string, SpriteEntry>();
   private readonly npcs = new Map<string, Billboard>();
+  /** Vortex peints (tools/vfx-ia.mjs) qui tournent dans l'ouverture du torii du portail. */
+  private readonly vortices: { material: ReturnType<typeof spriteMaterial>; anim: SheetAnimation }[] = [];
   /** Décors animés (cascade, portail…), qui bouclent sur leur animation d'attente. */
   private readonly animatedProps: Billboard[] = [];
   private player: Billboard | null = null;
@@ -140,6 +142,7 @@ export class IslandRenderer {
       if (!entry) continue;
       const view = this.billboard(`prop-${prop.sprite}-${prop.u}`, entry, toWorld(prop), prop.solid ?? 0, prop.sprite);
       if ((entry.anim && !entry.still) || entry.motion) this.animatedProps.push(view);
+      if (prop.sprite === 'portail') this.addVortex(view);
     }
     // Les décors restent tant que l'île existe (toute la partie).
     if (this.map?.decor.length) await DecorSprites.build(this.scene, this.map.decor, this.forward, LOW_DECOR);
@@ -232,6 +235,7 @@ export class IslandRenderer {
       if (view.entry.motion) this.sway(view);
       else this.play(view, 'idle', dt);
     }
+    for (const vortex of this.vortices) showFrame(vortex.material, vortex.anim, frameAt(vortex.anim, 'idle', this.time));
     for (const [id, view] of this.npcs) {
       if (seen.has(id)) continue;
       this.disposeBillboard(view);
@@ -352,6 +356,27 @@ export class IslandRenderer {
     // Les décors animés identiques (lanternes) ne battent pas tous en même temps. Un décor fixe garde sa première image.
     if (entry.anim) this.play(view, 'idle', entry.still ? 0 : phase);
     return view;
+  }
+
+  /**
+   * Le vortex de Jorōgumo (planche peinte) posé sur l'ouverture du torii du portail : un plan enfant du décor, qui
+   * le suit face à la caméra. L'ouverture est mesurée sur la planche du portail : centre à 54 % de sa largeur et
+   * 51 % de sa hauteur depuis le haut, 42 % de large et 47 % de haut.
+   */
+  private addVortex(portal: Billboard): void {
+    const entry = this.sprites.get('portailVortex');
+    if (!entry?.anim) return;
+    const height = portal.entry.height;
+    const width = height * portal.entry.aspect;
+    const mesh = MeshBuilder.CreatePlane('portail-vortex', { width: width * 0.42, height: height * 0.47 }, this.scene);
+    mesh.isPickable = false;
+    mesh.parent = portal.mesh;
+    mesh.position.set(width * 0.04, height * 0.49 - portal.entry.below, -0.05);
+    mesh.alphaIndex = portal.mesh.alphaIndex + 1;
+    const material = spriteMaterial(this.scene, 'portail-vortex', entry.texture);
+    material.disableDepthWrite = true;
+    mesh.material = material;
+    this.vortices.push({ material, anim: entry.anim });
   }
 
   /** Mouvement lent de l'image entière d'un décor fixe. */

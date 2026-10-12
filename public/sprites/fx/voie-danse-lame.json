@@ -1,0 +1,152 @@
+{
+ "frames": [
+  {
+   "filename": "voie 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 1",
+   "frame": {
+    "x": 248,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 2",
+   "frame": {
+    "x": 496,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 3",
+   "frame": {
+    "x": 744,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 4",
+   "frame": {
+    "x": 992,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 5",
+   "frame": {
+    "x": 1240,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 6",
+   "frame": {
+    "x": 1488,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 7",
+   "frame": {
+    "x": 1736,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 8",
+   "frame": {
+    "x": 1984,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 9",
+   "frame": {
+    "x": 2232,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 10",
+   "frame": {
+    "x": 2480,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 11",
+   "frame": {
+    "x": 2728,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  },
+  {
+   "filename": "voie 12",
+   "frame": {
+    "x": 2976,
+    "y": 0,
+    "w": 248,
+    "h": 128
+   },
+   "duration": 30
+  }
+ ],
+ "meta": {
+  "app": "tools/vfx-ia.mjs",
+  "image": "voie-danse-lame.webp",
+  "size": {
+   "w": 3224,
+   "h": 128
+  },
+  "smooth": true,
+  "frameTags": [
+   {
+    "name": "voie",
+    "from": 0,
+    "to": 12,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}

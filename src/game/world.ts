@@ -1005,7 +1005,7 @@ export class World {
     const behind = normalize(sub(target.pos, player.pos), player.facing);
     player.pos = add(target.pos, scale(behind, target.radius + player.radius + 0.2));
     this.clampToArena(player.pos, player.radius);
-    this.emit({ type: 'streak', from, to: { ...player.pos } });
+    this.emit({ type: 'streak', from, to: { ...player.pos }, kind: 'ghost' });
     this.weaponHit(target, player.cfg.attack.damage * cfg.damage, player.pos, 3, 1 + stacks);
     // Jambières de l'Araignée : la Lame immobilise sa proie et ce qu'elle traverse.
     const root = player.cfg.perks?.ghostRoot;
@@ -1499,7 +1499,7 @@ export class World {
     const dir = normalize(sub(enemy.pos, from), player.facing);
     const to = add(enemy.pos, scale(dir, enemy.radius + player.radius + 0.1));
     this.clampToArena(to, player.radius);
-    this.emit({ type: 'streak', from: { ...from }, to: { ...to } });
+    this.emit({ type: 'streak', from: { ...from }, to: { ...to }, kind: 'dance' });
     this.emit({ type: 'swing', pos: { ...to }, dir: scale(dir, -1), range: enemy.radius + 1.2, arcDeg: 120 });
     this.weaponHit(enemy, player.cfg.blade.dance.damage, to, 3, 1);
     return to;

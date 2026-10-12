@@ -279,6 +279,8 @@ const SMOKE = new Color3(0.16, 0.14, 0.22);
 const VENOM = new Color3(0.42, 0.85, 0.3);
 const HIDDEN_TINT = new Color3(0.45, 0.4, 0.6);
 const DRAW = new Color3(0.85, 1, 0.6);
+/** Marques dessinées par une planche peinte au lieu de l'anneau teinté. */
+const PAINTED_MARKS: Partial<Record<MarkKind, string>> = { hunt: 'fxVoieChasseRodeur', death: 'fxVoieMarqueLame' };
 const MARK_COLORS: Record<MarkKind, Color3> = {
   death: new Color3(0.85, 0.2, 0.45),
   hunt: new Color3(1, 0.6, 0.3),
@@ -1076,8 +1078,9 @@ export class Renderer {
     const { mesh, material } = ring;
     mesh.isVisible = mark !== null;
     if (!mark) return;
-    // Proie marquée par le Rôdeur : la cible peinte (planche Nano Banana) remplace l'anneau teinté.
-    const sheet = mark === 'hunt' ? this.sprites.get('fxVoieChasseRodeur') : undefined;
+    // Proie du Rôdeur, marque de mort de la Lame : la cible peinte (planche Nano Banana) remplace l'anneau teinté.
+    const painted = PAINTED_MARKS[mark];
+    const sheet = painted ? this.sprites.get(painted) : undefined;
     if (Boolean(sheet?.anim) !== Boolean(ring.painted)) {
       material.setTexture('textureSampler', sheet?.anim ? sheet.texture : this.fxTextures.ring);
       if (!sheet?.anim) material.setVector4('frameRect', new Vector4(0, 0, 1, 1));
@@ -1372,8 +1375,11 @@ export class Renderer {
       const smoke = hero.smoke;
       let decal = this.smokeDecals.get(hero.id);
       if (!smoke && !decal) continue;
+      const painted = this.sprites.get('fxVoieFumeeLame');
       if (!decal) {
-        decal = this.createDecal(`smoke-${hero.id}`, this.fxTextures.shadow, 2, 2, SMOKE, 0.6, 0.04);
+        decal = painted?.anim
+          ? this.createDecal(`smoke-${hero.id}`, painted.texture, 2, 2, WHITE, 0.9, 0.04)
+          : this.createDecal(`smoke-${hero.id}`, this.fxTextures.shadow, 2, 2, SMOKE, 0.6, 0.04);
         decal.mesh.alphaIndex = DECAL_ORDER + 1;
         this.smokeDecals.set(hero.id, decal);
       }
@@ -1384,6 +1390,7 @@ export class Renderer {
       mesh.position.z = smoke.pos.z;
       mesh.scaling.setAll(smoke.cloud * 1.2 * (1 + 0.06 * Math.sin(this.time * 3)));
       mesh.rotation.y = this.time * 0.4;
+      if (painted?.anim && material.getActiveTextures()[0] === painted.texture) showFrame(material, painted.anim, frameAt(painted.anim, 'voie', this.time));
       material.setFloat('alpha', 0.85 * Math.min(1, hero.hidden * 2));
     }
   }
@@ -2108,6 +2115,26 @@ export class Renderer {
       case 'cloud': {
         // Nuage de poison : une brume verte qui ondule tant qu'elle empoisonne.
         const life = event.life;
+        const mist = this.sprites.get('fxVoieNueeLame');
+        if (mist?.anim) {
+          const anim = mist.anim;
+          const fx = this.addFx({
+            texture: mist.texture,
+            pos: event.pos,
+            dir: { x: Math.random() - 0.5, z: Math.random() - 0.5 },
+            width: event.radius * 2.2,
+            depth: event.radius * 2.2,
+            color: WHITE,
+            life: life + 1,
+            y: 0.028,
+            update: (_k, f) => {
+              showFrame(f.material, anim, frameAt(anim, 'voie', f.age));
+              f.material.setFloat('alpha', 0.85 * Math.min(1, f.age * 5, (life - f.age) * 1.5));
+            },
+          });
+          this.embers.set(event.id, fx);
+          break;
+        }
         const fx = this.addFx({
           texture: this.fxTextures.shadow,
           pos: event.pos,
@@ -2148,7 +2175,16 @@ export class Renderer {
       case 'streak': {
         const dir = { x: event.to.x - event.from.x, z: event.to.z - event.from.z };
         const len = Math.hypot(dir.x, dir.z);
+        // Frappe fantôme : l'ombre se déchire là où la Lame reparaît, puis la croix de la coupe (planche peinte).
+        if (event.kind === 'ghost') this.uprightFx('fxVoieFantomeLame', 'voie', event.to, 2.2, 2.2, 0.45, { center: 1 });
         if (len < 0.1) break;
+        // Danse des lames : le trait peint part de 4 % de l'image et éclate en étoile à 72 % (planche de 256 × 128).
+        if (event.kind === 'dance') {
+          const width = len / 0.68;
+          const ahead = (0.5 - 0.04) * width;
+          const at = { x: event.from.x + (dir.x / len) * ahead, z: event.from.z + (dir.z / len) * ahead };
+          if (this.sheetFx('fxVoieDanseLame', 'voie', at, dir, width, width / 2, 0.3, BLADE_HEIGHT, true)) break;
+        }
         this.addFx({
           texture: this.fxTextures.streak,
           pos: { x: (event.from.x + event.to.x) / 2, z: (event.from.z + event.to.z) / 2 },
