@@ -1,0 +1,6 @@
+# Le HTTPS du jeu sur un VPS (service « caddy » de docker-compose.yml, profil https). DOMAINE vient du fichier .env.
+# Caddy obtient et renouvelle seul le certificat, et passe aussi le WebSocket du jeu (/ws).
+{$DOMAINE} {
+	encode zstd gzip
+	reverse_proxy rivages:8080
+}

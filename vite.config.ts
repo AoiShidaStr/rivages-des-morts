@@ -74,6 +74,12 @@ function formatJson(v: unknown, indent = ''): string {
   return JSON.stringify(v);
 }
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [mapEditor()],
-});
+  // Le serveur (`npm run serveur:build`) : un seul fichier pour Node, avec le moteur du jeu pour les parties qu'il
+  // tient. Les images du jeu restent dans dist/.
+  build: isSsrBuild ? { copyPublicDir: false, target: 'node22' } : undefined,
+  // `npm run serveur` à côté de `npm run dev` : la coop et les comptes du serveur marchent aussi en développement
+  // (`?reseau=serveur`).
+  server: { proxy: { '/ws': { target: 'ws://localhost:8080', ws: true }, '/api': 'http://localhost:8080' } },
+}));

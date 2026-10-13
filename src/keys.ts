@@ -15,6 +15,7 @@ const CODES: Record<string, string> = {
   I: 'KeyI',
   J: 'KeyJ',
   K: 'KeyK',
+  O: 'KeyO',
 };
 
 /** Disposition du clavier donnée par le navigateur (Chrome, Edge) ; sinon, on suppose un clavier AZERTY. */

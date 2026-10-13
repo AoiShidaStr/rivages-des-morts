@@ -19,7 +19,10 @@ import { World } from './game/world';
 import { InputSender, RemoteInput, idleFrame } from './net/frames';
 import { MirrorWorld } from './net/mirror';
 import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
-import type { CoopSession } from './net/session';
+import { IslandPresence, sharedIsland, type Profile } from './net/presence';
+import { CoopSession } from './net/session';
+import { SocialClient, type Goods } from './net/social';
+import { restartWith, type AccountSaveStore } from './net/account';
 import { traffic, type Network } from './net/transport';
 import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
@@ -27,6 +30,7 @@ import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import { AIM_HEIGHT, type Renderer } from './render/renderer';
 import { AdaptiveResolution } from './render/resolution';
+import { openAccount } from './ui/account';
 import { openCharacters } from './ui/characters';
 import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
@@ -46,7 +50,10 @@ import {
   type TrialChoice,
   type UiContext,
 } from './ui/panels';
-import { openCoopMenu, openLobby } from './ui/coop';
+import { openCoopMenu, openLobby, pseudo } from './ui/coop';
+import { ChatBox, openSocial } from './ui/social';
+import { openMarket, openPlayerShop, openTrade } from './ui/trade';
+import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
 import { logRun } from './game/journal';
 import { openOptions } from './ui/options';
@@ -94,8 +101,14 @@ export interface AppDeps {
   devDungeon: string;
   /** `?coop=N` : nombre de héros, les alliés étant joués par l'ordinateur (tests de la coop sans réseau). */
   devCoop: number;
-  /** Coop en ligne : Trystero (WebRTC entre navigateurs), ou `?reseau=local` entre onglets (tests). */
+  /** Coop en ligne : Trystero (WebRTC entre navigateurs), le serveur du jeu (`?reseau=serveur`), ou `?reseau=local` entre onglets (tests). */
   network: Network;
+  /** Le compte connecté (jeu servi par son serveur), ou null : les personnages sont alors ceux du navigateur. */
+  account: AccountSaveStore | null;
+  /** Le jeu est servi par son serveur : on peut se connecter à un compte. */
+  accounts: boolean;
+  /** Messages à montrer au démarrage (compte injoignable…). */
+  notices: string[];
 }
 
 /** Un allié de la descente : ses réglages, son apparence et son nom. */
@@ -177,8 +190,24 @@ export class App {
   private readonly screens: Screens;
   private readonly creation: CreationScreen;
   private readonly ui: UiContext;
+  /** L'île partagée (jeu servi par son serveur) : les autres joueurs qui s'y promènent. */
+  private readonly presence: IslandPresence | null;
+  /** Le menu social et le chat (jeu hébergé, avec un compte). */
+  private readonly social: SocialClient | null;
+  private readonly chat: ChatBox | null;
 
   constructor(private readonly d: AppDeps) {
+    this.presence = sharedIsland(d.network) ? new IslandPresence(d.network) : null;
+    this.social = d.account ? new SocialClient(d.account.session.jeton) : null;
+    // Avec un compte, la coop propose son pseudo, si l'on n'en a pas choisi d'autre.
+    try {
+      if (d.account && !localStorage.getItem('rivages-des-morts:pseudo')) localStorage.setItem('rivages-des-morts:pseudo', d.account.session.pseudo);
+    } catch {
+      // Stockage indisponible : la coop proposera le nom du héros.
+    }
+    this.chat = this.social
+      ? new ChatBox(d.uiRoot, this.social, { joinGame: (code) => this.joinGame(code), openSocial: () => this.openSocialPanel() })
+      : null;
     this.screens = new Screens(d.uiRoot);
     this.creation = new CreationScreen(d.uiRoot);
     this.dialogue = new DialogueBox(d.uiRoot);
@@ -190,12 +219,41 @@ export class App {
       loadout: () => this.loadout(),
       toast: (text, tone, icon) => this.screens.toast(text, tone, icon),
     };
+    if (this.social) {
+      const social = this.social;
+      social.onTradeStart = () => openTrade(this.panels, social, this.d.progress);
+      social.onGoods = (goods) => this.receiveGoods(goods);
+    }
+  }
+
+  /** Le serveur conclut un échange, une mise en vente, un achat… : on range (ou retire) dans le personnage. */
+  private receiveGoods(goods: Goods): void {
+    const progress = this.d.progress;
+    let notes: string[] = [];
+    if (goods.kind === 'echange') {
+      give(progress, goods.donne);
+      notes = [`Échange conclu avec ${goods.avec} : tu reçois ${describeLot(goods.recoit)}.`, ...receive(progress, goods.recoit)];
+    } else if (goods.kind === 'mis') {
+      give(progress, goods.lot);
+      notes = [`En vente : ${describeLot(goods.lot)}.`];
+    } else if (goods.kind === 'achat') {
+      progress.gainOboles(-goods.prix);
+      notes = [`Acheté pour ${goods.prix} oboles : ${describeLot(goods.lot)}.`, ...receive(progress, goods.lot)];
+    } else if (goods.kind === 'rendu') {
+      notes = [`Retiré de la vente : ${describeLot(goods.lot)}.`, ...receive(progress, goods.lot)];
+    } else {
+      progress.gainOboles(goods.oboles);
+      notes = [`Tu encaisses ${goods.oboles} oboles de tes ventes.`];
+    }
+    progress.save();
+    for (const note of notes) this.screens.toast(note, 'loot');
   }
 
   start(): void {
     if (this.d.devWave !== null && this.d.devDungeon === ENDLESS) void this.descendEndless(blocOf(content.endless, this.d.devLevel ?? 1));
     else if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
+    for (const notice of this.d.notices) this.screens.toast(notice);
     this.d.engine.runRenderLoop(() => this.frame());
     // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
     whileHidden(() => {
@@ -314,7 +372,7 @@ export class App {
       this.screens.toast(this.music.settings.muted ? 'Musique coupée (M)' : 'Musique remise (M)');
     }
     if (this.panels.open) {
-      if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK')) this.panels.close();
+      if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK') || key('KeyO')) this.panels.close();
       return;
     }
     if (this.screens.paused) {
@@ -329,9 +387,12 @@ export class App {
       } else if (key('KeyI')) openInventory(this.panels, this.ui);
       else if (key('KeyJ')) openQuests(this.panels, this.ui);
       else if (key('KeyK')) openSkills(this.panels, this.ui);
+      else if (key('KeyO') && this.d.accounts) this.openSocialPanel();
+      else if (key('Enter')) this.chat?.focus();
       else if (key('Escape')) this.openPause();
-    } else if (this.mode === 'dungeon' && key('Escape')) {
-      this.openPause();
+    } else if (this.mode === 'dungeon') {
+      if (key('Escape')) this.openPause();
+      else if (key('Enter')) this.chat?.focus();
     }
   }
 
@@ -348,6 +409,13 @@ export class App {
     if (last) options.push({ label: 'Coop en ligne', action: () => this.play(last.id, () => this.openCoop()) });
     options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
+    if (this.d.accounts) {
+      const account = this.d.account;
+      options.push({
+        label: account ? `Compte : ${account.session.pseudo}` : 'Se connecter',
+        action: () => openAccount(this.panels, { account, restart: (notice) => restartWith(notice) }, () => this.showTitle()),
+      });
+    }
     options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
     options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
     const record = globalRecord();
@@ -370,6 +438,7 @@ export class App {
         },
       },
       () => this.showTitle(),
+      this.d.account ? `sur le compte ${this.d.account.session.pseudo}` : 'sauvegardés dans ce navigateur',
     );
   }
 
@@ -440,6 +509,11 @@ export class App {
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
+    if (this.presence) {
+      this.presence.enter(this.islandProfile());
+      this.presence.update(dt, island.player);
+      islandRenderer.syncVisitors(this.presence.visitors(), dt);
+    }
     islandRenderer.render();
     this.screens.updateIslandHud({
       area: island.area?.name ?? island.data.name,
@@ -449,6 +523,37 @@ export class App {
       quest: trackedQuest(progress),
       prompt: target ? { verb: target.verb ?? 'Parler à', name: target.name } : null,
     });
+  }
+
+  /** Le menu social : groupe, amis, joueurs de l'île. */
+  private openSocialPanel(): void {
+    openSocial(this.panels, {
+      social: this.social,
+      visitors: () => this.presence?.visitors().map((v) => v.name) ?? [],
+      gameCode: () => this.coop?.code ?? null,
+      whisper: (name) => {
+        this.panels.close();
+        this.chat?.focus(`/m ${name} `);
+      },
+      shop: (name) => this.social && openPlayerShop(this.panels, this.social, this.d.progress, name),
+      market: () => this.social && openMarket(this.panels, this.social, this.d.progress, (name) => this.social && openPlayerShop(this.panels, this.social, this.d.progress, name)),
+    });
+  }
+
+  /** Un joueur du groupe nous invite dans sa partie en coop. */
+  private joinGame(code: string): void {
+    if (this.coop) this.screens.toast('Tu es déjà dans une partie en coop.');
+    else if (this.mode !== 'island' || this.busy) this.screens.toast('Reviens sur l’île pour rejoindre la partie.');
+    else this.joinSession(CoopSession.join(this.d.network, code, this.member(this.d.account?.session.pseudo ?? pseudo(this.d.progress))));
+  }
+
+  /** Ce que les autres joueurs de l'île voient de nous : le pseudo du compte (sinon celui de la coop), le héros. */
+  private islandProfile(): Profile {
+    return {
+      name: this.d.account?.session.pseudo ?? pseudo(this.d.progress),
+      sprite: heroSprite(this.shownHero()),
+      level: this.d.progress.level,
+    };
   }
 
   /** « ! » ou « ? » au-dessus des PNJ, selon la variante de dialogue qui serait jouée. */
@@ -864,7 +969,7 @@ export class App {
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
       // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
-      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 ? session?.ping : undefined));
+      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 && !session?.dedicated ? session?.ping : undefined));
       hud.update(mirror, events, dt);
     }
     dungeonRenderer.render();
@@ -929,6 +1034,7 @@ export class App {
     this.refreshLobby = openLobby(this.panels, session, this.d.progress, {
       launch: () => {
         if (session.isHost && session.allReady) void this.startCoop(session.start(this.member()));
+        else if (session.leads && session.allReady) session.launch(this.member());
       },
       quit: () => {
         this.panels.close();
@@ -996,6 +1102,7 @@ export class App {
       this.endless = endless ? { bloc, cleared, awaiting: false } : null;
       return ready;
     });
+    if (!session.isHost) session.loaded(start.run);
     this.busy = false;
   }
 
@@ -1540,9 +1647,15 @@ export class App {
 
   private setMode(mode: Mode): void {
     this.mode = mode;
+    // Hors de l'île (donjon, écran titre), on n'y est plus visible ; on y réapparaît au prochain passage.
+    if (mode !== 'island' && this.presence) {
+      this.presence.leave();
+      this.d.islandRenderer.hideVisitors();
+    }
     if (mode === 'title') this.music.play('menu');
     else if (mode === 'island') this.music.play('ile');
     document.body.dataset.mode = mode;
     this.screens.showIslandHud(mode === 'island');
+    this.chat?.show(mode === 'island' || mode === 'dungeon');
   }
 }

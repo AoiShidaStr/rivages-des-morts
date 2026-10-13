@@ -1,0 +1,52 @@
+# Lancer le jeu et son serveur : `docker compose up -d --build`, puis http://localhost:8080 (ou le port de PORT).
+# Pour le déplacer sur un VPS ou une autre machine : copier le dépôt et le dossier donnees/, puis relancer
+# la même commande. Les réglages vont dans un fichier .env à côté de ce fichier (voir .env.exemple).
+#
+# Mettre le jeu sur Internet (voir le README, « Jouer avec ses amis sur Internet ») :
+# - depuis son PC, sans ouvrir de port : `docker compose --profile tunnel up -d --build` (tunnel gratuit de
+#   Cloudflare, adresse en https://….trycloudflare.com affichée dans le menu social) ;
+# - sur un VPS avec un nom de domaine : DOMAINE dans .env, puis `docker compose --profile https up -d --build`
+#   (Caddy fait le HTTPS tout seul, avec un certificat Let's Encrypt).
+services:
+  rivages:
+    build: .
+    image: rivages-des-morts
+    restart: unless-stopped
+    ports:
+      - "${HOTE:-0.0.0.0}:${PORT:-8080}:8080"
+    environment:
+      CODE_INVITATION: ${CODE_INVITATION:-}
+      DOMAINE: ${DOMAINE:-}
+      PROXY: ${PROXY:-0}
+      # Le tunnel, s'il tourne, donne au jeu son adresse publique.
+      TUNNEL: http://tunnel:2000
+    # Les comptes et leurs personnages (donnees/rivages.db) : le dossier survit aux mises à jour de l'image.
+    volumes:
+      - ./donnees:/jeu/donnees
+
+  # Tunnel gratuit, sans compte : Cloudflare donne une adresse https au hasard, nouvelle à chaque démarrage.
+  tunnel:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:2024.12.2
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --metrics 0.0.0.0:2000 --url http://rivages:8080
+    depends_on: [rivages]
+
+  # HTTPS sur un VPS : Caddy reçoit les joueurs sur les ports 80 et 443 et les passe au jeu.
+  caddy:
+    profiles: [https]
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAINE: ${DOMAINE:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy:/data
+    depends_on: [rivages]
+
+volumes:
+  caddy:
