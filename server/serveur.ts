@@ -1,18 +1,22 @@
-// Le serveur de Rivages des Morts : il sert le jeu construit (dist/) et relie les joueurs par WebSocket, sur le même
-// port. Pour l'instant il ne fait que relayer : chaque page ouvre des salons (`openRoom` dans src/net/transport.ts),
-// et le serveur transmet les messages d'un salon à ses autres membres. La partie elle-même tourne encore chez l'hôte.
+// Le serveur de Rivages des Morts : il sert le jeu construit (dist/), garde les comptes et leurs personnages
+// (comptes.ts, sous /api), et relie les joueurs par WebSocket, sur le même port. Pour la coop, il ne fait que
+// relayer : chaque page ouvre des salons (`openRoom` dans src/net/transport.ts), et le serveur transmet les messages
+// d'un salon à ses autres membres. La partie elle-même tourne encore chez l'hôte.
 //
 // Lancement : `npm run serveur` (Node 22.18 ou plus récent lit le TypeScript directement), ou `docker compose up`.
-// Réglages par variables d'environnement : PORT (8080), DIST (dist/ à côté du dossier server/).
-import { createReadStream } from 'node:fs';
+// Réglages par variables d'environnement : PORT (8080), DIST (dist/ à côté du dossier server/), DONNEES (donnees/
+// à côté du dossier server/ : la base des comptes).
+import { chownSync, createReadStream, mkdirSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
+import { Comptes } from './comptes.ts';
 
 const PORT = Number(process.env.PORT) || 8080;
 const DIST = path.resolve(process.env.DIST ?? fileURLToPath(new URL('../dist', import.meta.url)));
+const DONNEES = path.resolve(process.env.DONNEES ?? fileURLToPath(new URL('../donnees', import.meta.url)));
 /** Un message plus gros est refusé : le plus gros du jeu (le départ d'une descente, avec les héros) fait quelques Ko. */
 const MAX_MESSAGE = 1024 * 1024;
 /** Noms de salon et identifiants de joueur : courts, sans caractères bizarres. */
@@ -44,13 +48,14 @@ const TYPES: Record<string, string> = {
 // --- Les fichiers du jeu ---------------------------------------------------------------
 
 async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const url = new URL(req.url ?? '/', 'http://serveur');
+  if (await comptes.handle(req, res, url.pathname)) return;
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.writeHead(405).end();
     return;
   }
-  const url = new URL(req.url ?? '/', 'http://serveur');
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total }));
     return;
   }
   let relative: string;
@@ -167,6 +172,18 @@ function receive(client: Client, raw: string): void {
 
 // --- Démarrage -------------------------------------------------------------------------------
 
+// Dans l'image Docker, le serveur démarre en root pour pouvoir écrire dans le dossier donnees/ monté depuis la
+// machine (Docker le crée en root), puis il lui en donne la propriété et continue en utilisateur ordinaire (UTILISATEUR,
+// « 1000:1000 », l'utilisateur node de l'image).
+const utilisateur = process.env.UTILISATEUR?.split(':').map(Number);
+if (utilisateur && process.getuid?.() === 0) {
+  mkdirSync(DONNEES, { recursive: true });
+  chownSync(DONNEES, utilisateur[0], utilisateur[1] ?? utilisateur[0]);
+  process.setgid?.(utilisateur[1] ?? utilisateur[0]);
+  process.setuid?.(utilisateur[0]);
+}
+const comptes = new Comptes(DONNEES);
+
 const server = createServer((req, res) => {
   serveFile(req, res).catch((error: unknown) => {
     console.error(error);
@@ -201,7 +218,7 @@ setInterval(() => {
   }
 }, HEARTBEAT).unref();
 
-server.listen(PORT, () => console.log(`Rivages des Morts : http://localhost:${PORT} (jeu servi depuis ${DIST})`));
+server.listen(PORT, () => console.log(`Rivages des Morts : http://localhost:${PORT} (jeu : ${DIST}, données : ${DONNEES})`));
 
 const stop = () => {
   sockets.close();

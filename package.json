@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && tsc -p server && vite build",
-    "serveur": "node server/serveur.ts",
+    "serveur": "node --disable-warning=ExperimentalWarning server/serveur.ts",
     "preview": "vite preview",
     "typecheck": "tsc && tsc -p server",
     "sprites": "node tools/detourer.mjs",

@@ -14,7 +14,7 @@ export interface CharacterActions {
  * Les personnages sauvegardés dans ce navigateur, depuis l'écran titre : en reprendre un, en créer un autre,
  * exporter un fichier (copie de secours, autre ordinateur), importer un fichier, supprimer.
  */
-export function openCharacters(host: PanelHost, ctx: UiContext, actions: CharacterActions, onClose: () => void): void {
+export function openCharacters(host: PanelHost, ctx: UiContext, actions: CharacterActions, onClose: () => void, where = 'sauvegardés dans ce navigateur'): void {
   const { progress } = ctx;
   /** Personnage dont on demande la confirmation de suppression. */
   let confirming: string | null = null;
@@ -110,7 +110,7 @@ export function openCharacters(host: PanelHost, ctx: UiContext, actions: Charact
     const characters = progress.characters();
     host.show(
       'Personnages',
-      `${characters.length} sur ${MAX_CHARACTERS} · sauvegardés dans ce navigateur`,
+      `${characters.length} sur ${MAX_CHARACTERS} · ${where}`,
       h(
         'div',
         { class: 'list' },

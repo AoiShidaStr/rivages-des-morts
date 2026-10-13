@@ -20,6 +20,7 @@ import { InputSender, RemoteInput, idleFrame } from './net/frames';
 import { MirrorWorld } from './net/mirror';
 import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
 import type { CoopSession } from './net/session';
+import { restartWith, type AccountSaveStore } from './net/account';
 import { traffic, type Network } from './net/transport';
 import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
@@ -27,6 +28,7 @@ import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import { AIM_HEIGHT, type Renderer } from './render/renderer';
 import { AdaptiveResolution } from './render/resolution';
+import { openAccount } from './ui/account';
 import { openCharacters } from './ui/characters';
 import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
@@ -96,6 +98,12 @@ export interface AppDeps {
   devCoop: number;
   /** Coop en ligne : Trystero (WebRTC entre navigateurs), le serveur du jeu (`?reseau=serveur`), ou `?reseau=local` entre onglets (tests). */
   network: Network;
+  /** Le compte connecté (jeu servi par son serveur), ou null : les personnages sont alors ceux du navigateur. */
+  account: AccountSaveStore | null;
+  /** Le jeu est servi par son serveur : on peut se connecter à un compte. */
+  accounts: boolean;
+  /** Messages à montrer au démarrage (compte injoignable…). */
+  notices: string[];
 }
 
 /** Un allié de la descente : ses réglages, son apparence et son nom. */
@@ -196,6 +204,7 @@ export class App {
     if (this.d.devWave !== null && this.d.devDungeon === ENDLESS) void this.descendEndless(blocOf(content.endless, this.d.devLevel ?? 1));
     else if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
+    for (const notice of this.d.notices) this.screens.toast(notice);
     this.d.engine.runRenderLoop(() => this.frame());
     // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
     whileHidden(() => {
@@ -348,6 +357,13 @@ export class App {
     if (last) options.push({ label: 'Coop en ligne', action: () => this.play(last.id, () => this.openCoop()) });
     options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
+    if (this.d.accounts) {
+      const account = this.d.account;
+      options.push({
+        label: account ? `Compte : ${account.session.pseudo}` : 'Se connecter',
+        action: () => openAccount(this.panels, { account, restart: (notice) => restartWith(notice) }, () => this.showTitle()),
+      });
+    }
     options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
     options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
     const record = globalRecord();
@@ -370,6 +386,7 @@ export class App {
         },
       },
       () => this.showTitle(),
+      this.d.account ? `sur le compte ${this.d.account.session.pseudo}` : 'sauvegardés dans ce navigateur',
     );
   }
 

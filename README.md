@@ -133,10 +133,13 @@ docker compose up -d --build
 
 Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machine>:8080`. La coop se lance comme d'habitude (code ou parties publiques), mais tout passe par le serveur.
 
+**Comptes** : sur un jeu hébergé, l'écran titre propose « Se connecter ». Avec un compte, les personnages sont gardés sur le serveur et on les retrouve depuis n'importe quel ordinateur. Sans compte, ils restent dans le navigateur, comme avant ; une fois connecté, le panneau du compte propose de les recopier dessus. Les comptes sont dans `donnees/rivages.db`.
+
 - **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.
 - **Mettre à jour** : `git pull`, puis la même commande.
+- **Sauvegarder** : copie le dossier `donnees/` (les comptes et leurs personnages).
 - **Déménager** sur un VPS ou une autre machine : copie le dépôt et le dossier `donnees/`, puis la même commande. Sur Internet, mets un proxy HTTPS devant (Caddy, par exemple) : le jeu passe alors en `wss://` tout seul.
-- **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…}`.
+- **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`.
 
 Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur`. En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
 

@@ -1,5 +1,5 @@
 # Lancer le jeu et son serveur : `docker compose up -d --build`, puis http://localhost:8080 (ou le port de PORT).
-# Pour le déplacer sur un VPS ou une autre machine : copier le dépôt (et plus tard le dossier donnees/), puis relancer
+# Pour le déplacer sur un VPS ou une autre machine : copier le dépôt et le dossier donnees/, puis relancer
 # la même commande. Les réglages vont dans un fichier .env à côté de ce fichier (voir .env.exemple).
 services:
   rivages:
@@ -8,6 +8,6 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8080}:8080"
-    # Les comptes et sauvegardes du serveur iront ici (étape 3 du plan) : le dossier survit aux mises à jour de l'image.
+    # Les comptes et leurs personnages (donnees/rivages.db) : le dossier survit aux mises à jour de l'image.
     volumes:
       - ./donnees:/jeu/donnees

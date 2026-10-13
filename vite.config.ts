@@ -76,6 +76,7 @@ function formatJson(v: unknown, indent = ''): string {
 
 export default defineConfig({
   plugins: [mapEditor()],
-  // `npm run serveur` à côté de `npm run dev` : la coop par le serveur marche aussi en développement (`?reseau=serveur`).
-  server: { proxy: { '/ws': { target: 'ws://localhost:8080', ws: true } } },
+  // `npm run serveur` à côté de `npm run dev` : la coop et les comptes du serveur marchent aussi en développement
+  // (`?reseau=serveur`).
+  server: { proxy: { '/ws': { target: 'ws://localhost:8080', ws: true }, '/api': 'http://localhost:8080' } },
 });

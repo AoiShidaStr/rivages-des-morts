@@ -11,13 +11,13 @@ RUN VITE_RESEAU=serveur npm run build
 # 2. L'image finale : Node, le serveur, le jeu construit, et la seule dépendance du serveur (ws).
 FROM node:22-slim
 WORKDIR /jeu
-ENV NODE_ENV=production PORT=8080
+ENV NODE_ENV=production PORT=8080 UTILISATEUR=1000:1000
 COPY --from=build /jeu/node_modules/ws ./node_modules/ws
 COPY --from=build /jeu/dist ./dist
-COPY server/serveur.ts ./server/serveur.ts
+COPY server/*.ts ./server/
 COPY package.json ./
-USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD node -e "fetch('http://localhost:' + process.env.PORT + '/sante').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
-CMD ["node", "server/serveur.ts"]
+# Le serveur démarre en root le temps de prendre le dossier donnees/, puis continue en utilisateur node (UTILISATEUR).
+CMD ["node", "--disable-warning=ExperimentalWarning", "server/serveur.ts"]
