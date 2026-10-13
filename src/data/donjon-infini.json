@@ -25,7 +25,7 @@
       { "id": "sang", "name": "Pacte du sang", "description": "Les yokai gardent 20 % de PV de moins ; en échange, la marée ramène une bête de plus par vague.", "hp": 0.8, "extraSpawns": 1 },
       { "id": "abondance", "name": "Pacte d'abondance", "description": "Les yokai frappent 25 % de moins ; en échange, ils tiennent le coup 20 % plus longtemps.", "damage": 0.75, "hp": 1.2 },
       { "id": "fureur", "name": "Pacte de la fureur", "description": "Les yokai frappent 10 % de plus ; en échange, la marée ramène une bête de moins par vague.", "damage": 1.1, "extraSpawns": -1 },
-      { "id": "creneau", "name": "Pacte du créneau", "description": "Les élites tombent à une seule par vague (contrepartie du plafond) ; en échange, chaque vague ramène deux bêtes de plus.", "curses": { "elites": 1 }, "extraSpawns": 2 }
+      { "id": "creneau", "name": "Pacte du créneau", "description": "Une seule élite par vague au lieu de trois ; en échange, chaque vague ramène deux bêtes de plus.", "curses": { "elites": 1 }, "extraSpawns": 2 }
     ]
   },
   "rewards": {

@@ -36,9 +36,9 @@
           ["narrateur", "Entre les tiges de riz, une silhouette se tient sans bouger : trop grande pour un kodama, trop calme pour un yokai."],
           ["gardien", "Tu as des yeux qui voient. La rizière est aux morts, l'île aux vivants : entre les deux, je marche depuis l'effondrement."],
           ["heros", "Tu gardes quelque chose ?"],
-          ["gardien", "Un souvenir. J'attends qu'on vienne le porter. Ce peigne a chevauché de longues chevelures avant d'attendre ici. Prends-le, et prends cet éclat des Tablettes : un jour, il fera chanter une relique de trou au forgeur."],
+          ["gardien", "Un souvenir. J'attends qu'on vienne le porter. Ce peigne a chevauché de longues chevelures avant d'attendre ici. Prends-le, et prends cet éclat des Tablettes : un jour, le forgeron s'en servira pour éveiller une relique."],
           ["narrateur", "Le gardien s'incline, et n'est plus — les tiges se referment derrière lui."],
-          ["heros", "(Tu gardes l'éclat : « un jour, il fera chanter une relique ».)"]
+          ["heros", "(Tu gardes l'éclat. Tetsu saura peut-être quoi en faire.)"]
         ],
         "then": [{ "give": "peigne-izanagi" }, { "oboles": 180 }, { "material": ["eclat-tablettes", 1] }, { "set": "gardien_rencontre" }]
       }

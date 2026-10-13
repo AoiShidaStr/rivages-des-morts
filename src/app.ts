@@ -865,10 +865,10 @@ export class App {
     } else {
       input.flush();
     }
-      const events = world.drainEvents();
-      if (online) this.shareState(world, events);
-      for (const event of events) {
-        this.sfxEvent(event);
+    const events = world.drainEvents();
+    if (online) this.shareState(world, events);
+    for (const event of events) {
+      this.sfxEvent(event, world.player.id);
       this.track(event);
       // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
       if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
@@ -936,19 +936,24 @@ export class App {
   // --- Coop en ligne ---------------------------------------------------------------
 
   /**
-   * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
-   * depuis le précédent (canal sûr).
+   * Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts).
+   * En coop, seuls mes coups et les coups que je reçois sonnent : ceux des alliés passeraient en rafale continue.
    */
-  /** Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts). */
-  private sfxEvent(event: GameEvent): void {
+  private sfxEvent(event: GameEvent, me: number): void {
     if (event.type === 'enemyHit') {
+      if (event.owner >= 0 && event.owner !== me) return;
       this.sfx.play(event.crit ? 'crit' : 'coup');
       return;
     }
+    if (event.type === 'playerHit' && event.hero !== me) return;
     const id = SFX_DES_EVENTS[event.type];
     if (id) this.sfx.play(id);
   }
 
+  /**
+   * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
+   * depuis le précédent (canal sûr).
+   */
   private shareState(world: World, events: GameEvent[]): void {
     const session = this.coop;
     if (!session) return;
@@ -989,7 +994,7 @@ export class App {
     this.inbox = [];
     for (const event of events) {
       this.track(event);
-      this.sfxEvent(event);
+      this.sfxEvent(event, mirror.player.id);
     }
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
@@ -1512,7 +1517,8 @@ export class App {
 
   /**
    * Continuer plus bas : les pactes d'abord, si le bloc suivant les réclame (premier palier ≥ 51), puis la descente ;
-   * en coop, l'hôte scelle un pacte et relance tout le monde. Les invités ne passent jamais ici (ils encasissent). */
+   * en coop, l'hôte scelle un pacte et relance tout le monde. Les invités ne passent jamais ici (ils encaissent).
+   */
   private continueEndless(bloc: number): void {
     const relance = () => {
       const session = this.coop;
@@ -1526,7 +1532,7 @@ export class App {
     };
     const drafts = pacteDraft(content.endless, bloc);
     if (drafts) {
-      openPactDraft(this.panels, firstPalier(content.endless, bloc), drafts, (pacte) => {
+      openPactDraft(this.panels, firstPalier(content.endless, bloc), content.endless.palierStep, drafts, (pacte) => {
         this.pactesEncours = [...this.pactesEncours, pacte];
         this.screens.toast(`Pacte scellé : ${pacte.name}`, 'quest');
         relance();

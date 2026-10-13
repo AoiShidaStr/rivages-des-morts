@@ -32,6 +32,8 @@ export interface InteractableDef extends ScreenPoint {
   sprite?: string;
   /** Image qui remplace `sprite` sous condition (lanterne allumée…). */
   spriteIf?: { if: Condition[]; sprite: string }[];
+  /** Hauteur de l'image, quand elle diffère de celle du sprite (le gardien errant, plus grand qu'un Oublié). */
+  height?: number;
   /** Dialogue à jouer (par défaut, celui qui porte l'identifiant de l'objet). */
   dialogue?: string;
   solid?: number;

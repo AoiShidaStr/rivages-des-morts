@@ -77,8 +77,12 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
   let hp = 1;
   let damage = 1;
   let extraSpawns = 0;
-  for (const m of [...modifiersAt(data, palier), ...pactes]) {
-    for (const [id, value] of Object.entries(m.curses ?? {}) as [CurseId, number][]) curses[id] = Math.max(curses[id] ?? 0, value);
+  const modifiers = modifiersAt(data, palier);
+  for (const m of [...modifiers, ...pactes]) {
+    // Les paliers montent les malédictions (on garde la plus forte) ; un pacte, lui, les fixe : le Pacte du créneau
+    // ramène les élites à une seule par vague, même quand les paliers en demandent trois.
+    const pacte = !modifiers.includes(m as EndlessModifier);
+    for (const [id, value] of Object.entries(m.curses ?? {}) as [CurseId, number][]) curses[id] = pacte ? value : Math.max(curses[id] ?? 0, value);
     hp *= m.hp ?? 1;
     damage *= m.damage ?? 1;
     extraSpawns += m.extraSpawns ?? 0;

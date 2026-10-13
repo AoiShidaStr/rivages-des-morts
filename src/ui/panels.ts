@@ -772,7 +772,11 @@ function eveilBody(ctx: UiContext, rerender: () => void): HTMLElement {
   return h(
     'div',
     { class: 'list' },
-    h('p', { class: 'note' }, rules.about),
+    h(
+      'p',
+      { class: 'note' },
+      `${matCount} × ${content.materials[matId] ?? matId} et ${rules.oboles} oboles éveillent une relique : portée, elle te donne ${eveilCharge(rules.bonus)} en plus de ses effets.`,
+    ),
     ...(relics.length
       ? relics.map((id) => {
           const def = content.items[id];
@@ -828,14 +832,20 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
     const worn = upgradable.filter((id) => state.equipped[content.items[id].slot as Slot] === id);
     const readyCount = upgradable.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
     const gravable = state.items.filter((id) => content.items[id]?.slot === 'arme' && gravurePrice(progress, id).ok).length;
-    // Tetsu a signalé la gravure à la première soie (réplique « tetsu_graver_vue ») : on souligne l'onglet tant que le joueur n'est pas passé le voir.
-    const gravureIndice = !!state.flags.premiere_soie && !state.flags.tetsu_graver_vue;
+    // À la première soie, l'onglet « Graver » se souligne jusqu'à ce que le joueur l'ouvre une fois.
+    if (memory.forgeTab === 'gravure' && state.flags.premiere_soie && !state.flags.onglet_graver_vu) {
+      state.flags.onglet_graver_vu = 1;
+      progress.save();
+    }
+    const gravureIndice = Boolean(state.flags.premiere_soie && !state.flags.onglet_graver_vu);
     // L'Éveil des Tablettes (GDD) : reliques possédées, non éveillées, dont le prix (oboles + Éclat) est payable.
     const [eveilMatId, eveilMatCount] = content.eveil.material;
     const eveilMateriaux: Record<string, number> = { [eveilMatId]: eveilMatCount };
-    const eveilable = state.items
-      .filter((id) => content.items[id]?.slot === 'relique' && progress.eveil(id) < content.eveil.max)
-      .filter(() => cost(progress, content.eveil.oboles, eveilMateriaux).ok).length;
+    // Le badge compte les éveils payables tout de suite : autant que de reliques à éveiller, d'Éclats et d'oboles.
+    const eveilAttente = state.items.filter((id) => content.items[id]?.slot === 'relique' && progress.eveil(id) < content.eveil.max).length;
+    const eveilable = cost(progress, content.eveil.oboles, eveilMateriaux).ok
+      ? Math.min(eveilAttente, Math.floor(progress.material(eveilMatId) / eveilMatCount), Math.floor(state.oboles / content.eveil.oboles))
+      : 0;
 
     const recipes = content.recipes.filter((r) => progress.check(r.if));
     const toForge = recipes.filter((r) => !progress.has(r.item));
@@ -1670,7 +1680,7 @@ export function openRecords(host: PanelHost): void {
  * Les pactes du Yomi sans fond : à chaque bloc au-delà du palier 50, deux ou trois offres sont tirées (src/data/
  * donjon-infini.json) ; l'hôte en scelle une, qui tient pour toute la descente et s'ajoute aux précédentes.
  */
-export function openPactDraft(host: PanelHost, premier: number, drafts: EndlessModifierSeed[], onPick: (pacte: EndlessModifierSeed) => void): void {
+export function openPactDraft(host: PanelHost, premier: number, palierStep: number, drafts: EndlessModifierSeed[], onPick: (pacte: EndlessModifierSeed) => void): void {
   const carte = (pacte: EndlessModifierSeed) =>
     h(
       'div',
@@ -1680,7 +1690,7 @@ export function openPactDraft(host: PanelHost, premier: number, drafts: EndlessM
       h('button', { class: 'btn small', onclick: () => { host.close(); onPick(pacte); } }, 'Sceller'),
     );
   host.show(
-    `Pacte du Yomi — bloc des paliers ${premier}`,
+    `Pacte du Yomi — paliers ${premier} à ${premier + palierStep - 1}`,
     'Un pacte par bloc, scellé pour toute la descente : ils s’ajoutent. En coop, l’hôte scelle seul.',
     h('div', { class: 'list' }, h('div', { class: 'tree voies' }, ...drafts.map(carte))),
     { wide: true },
@@ -1709,13 +1719,13 @@ const YOKAI_NOMS: Record<string, string> = {
   mannequin: 'Mannequin de Tetsu',
 };
 
-/** Les sources de l'objet : les yokai qui le lâchent (taux par coup), les boutiques pondérées (taux par visite), le Yomi sans fond. */
+/** Les sources de l'objet : les yokai qui le lâchent (taux par yokai vaincu), les boutiques pondérées (taux par visite), le Yomi sans fond. */
 function dropSources(id: string): string[] {
   const def = content.items[id];
   const sources: string[] = [];
   for (const [kind, drop] of Object.entries(content.drops)) {
     const entry = drop.items?.find((e) => e.item === id);
-    if (entry) sources.push(`${YOKAI_NOMS[kind] ?? kind} · ${Math.round(entry.chance * 100)} % par coup`);
+    if (entry) sources.push(`${YOKAI_NOMS[kind] ?? kind} · ${Math.round(entry.chance * 100)} % par yokai vaincu`);
   }
   for (const shop of Object.values(content.shops)) {
     const mine = shop.pool?.filter((o) => o.item === id) ?? [];
@@ -1758,12 +1768,14 @@ export function openCodex(host: PanelHost, ctx: UiContext): void {
             const wasSeen = owned || seen.has(id);
             return h(
               'div',
-              { class: `codex-item${owned ? ' owned' : ''}${wasSeen ? '' : ' faint'}` },
+              { class: `codex-item${wasSeen ? '' : ' faint'}` },
               icon(id, 'small'),
-              h('span', {}, def.name),
+              h('span', { class: 'codex-name' }, def.name),
               h('small', { class: 'tags' }, [def.rarity, ...(def.tags ?? [])].filter(Boolean).join(' · ')),
-              owned ? h('span', { class: 'badge' }, 'Possédé') : wasSeen ? h('span', { class: 'note' }, 'Déjà vu') : h('span', { class: 'note' }, 'Jamais croisé'),
-              h('small', { class: 'sources' }, dropSources(id).join(' · ') || 'Aucune source tracée — la forge et les coffres le feront tomber'),
+              owned
+                ? h('span', { class: 'badge codex-state' }, 'Possédé')
+                : h('span', { class: 'note codex-state' }, wasSeen ? 'Déjà vu' : 'Jamais croisé'),
+              h('small', { class: 'sources' }, dropSources(id).join(' · ') || 'Ni yokai ni boutique : forge de Tetsu, coffres ou arme de départ'),
             );
           }),
         ),
@@ -1775,7 +1787,7 @@ export function openCodex(host: PanelHost, ctx: UiContext): void {
       h(
         'div',
         { class: 'list' },
-        h('p', { class: 'note' }, 'Un objet crois, une fois, reste compté sur ce navigateur, pour tous les personnages.'),
+        h('p', { class: 'note' }, 'Un objet croisé une fois reste compté sur ce navigateur, pour tous les personnages.'),
         ...((Object.entries(content.slots) as [Slot, string][]).map(([slot, label]) => rayon(slot, label)).filter(Boolean) as HTMLElement[]),
         rayon(null, 'Objets de quête') as HTMLElement | null,
       ),
