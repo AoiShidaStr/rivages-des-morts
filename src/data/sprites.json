@@ -102,7 +102,7 @@
   "kappa": { "file": "kappa.png", "sheet": { "file": "anim/kappa.json" }, "height": 1.45, "facesRight": true },
   "kappaRenforce": { "file": "kappa-renforce.png", "sheet": { "file": "anim/kappa-renforce.json" }, "height": 1.85, "facesRight": true },
   "kasaObake": { "file": "kasa-obake.png", "sheet": { "file": "anim/kasa-obake.json" }, "height": 1.6, "facesRight": false },
-  "oublie": { "file": "oublie.png", "sheet": { "file": "anim/oublie.json" }, "height": 2, "facesRight": true },
+  "oublie": { "file": "oublie.png", "sheet": { "file": "anim/oublie.json" }, "height": 2.4, "facesRight": true },
   "araignee": { "file": "araignee.png", "sheet": { "file": "anim/araignee.json" }, "height": 0.8, "facesRight": true },
   "jorogumo": { "file": "jorogumo.png", "sheet": { "file": "anim/jorogumo.json" }, "height": 2.4, "facesRight": true },
   "jorogumoAraignee": { "file": "jorogumo-araignee.png", "sheet": { "file": "anim/jorogumo-araignee.json" }, "height": 2.9, "facesRight": true },
