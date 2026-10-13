@@ -15,20 +15,20 @@ import sharp from 'sharp';
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packDir = process.argv[2] ?? path.join(os.homedir(), 'Downloads', 'kenney_fantasy-ui-borders');
 // Pour essayer une autre palette sans toucher aux cadres du jeu : CADRES_SORTIE=<dossier> et
-// CADRES_COULEURS='{"trait":"#…",…}' (clés ci-dessous).
+// CADRES_COULEURS='{"fenetre":"#…",…}' (clés ci-dessous).
 const outDir = process.env.CADRES_SORTIE ?? path.join(projectDir, 'public', 'ui', 'cadres');
 
-// Couleurs de src/ui/ui.css (:root).
+// Palette « sumi et vermillon » (src/ui/ui.css, :root).
 const colors = {
-  fenetre: '#1d2226', // trait des fenêtres, encarts, séparateur
-  dialogue: '#d9b45a', // double trait de la boîte de dialogue
-  bouton: '#1d2226', // fond des boutons
-  boutonTrait: '#d9b45a',
+  fenetre: '#c8412f', // trait des fenêtres, encarts, séparateur
+  dialogue: '#c8412f', // double trait de la boîte de dialogue
+  bouton: '#26292d', // fond des boutons
+  boutonTrait: '#c8412f',
   survol: '#c8412f', // bouton survolé ou principal
   survolTrait: '#f1ece2',
   survolSombre: '#9b2f22', // bouton principal survolé, bouton dangereux
-  case: '#1d2226', // bouton fermer
-  accent: '#c8412f', // onglet actif, carte choisie
+  case: '#c8412f', // bouton fermer
+  accent: '#e8e2d4', // onglet actif, carte choisie
   ...JSON.parse(process.env.CADRES_COULEURS ?? '{}'),
 };
 
@@ -36,18 +36,18 @@ const border = (n) => `PNG/Default/Border/panel-border-${n}.png`;
 const panel = (n) => `PNG/Default/Panel/panel-${n}.png`;
 
 const frames = [
-  // Fenêtres, cartes de pause et de fin : grecque aux coins, à l'encre sur le papier.
+  // Fenêtres, cartes de pause et de fin : grecque aux coins, vermillon sur l'anthracite.
   { name: 'fenetre', line: [border('007'), colors.fenetre] },
-  // Boîte de dialogue et bannière de lieu (fond sombre) : double trait doré.
+  // Boîte de dialogue et bannière de lieu : double trait vermillon.
   { name: 'dialogue', line: [border('003'), colors.dialogue] },
-  // Boutons : coins en carrés, trait doré ou papier, fond plein.
+  // Boutons : coins en carrés, trait vermillon ou papier, fond plein.
   { name: 'bouton', line: [border('009'), colors.boutonTrait], fill: [panel('009'), colors.bouton] },
   { name: 'bouton-vermillon', line: [border('009'), colors.survolTrait], fill: [panel('009'), colors.survol] },
   { name: 'bouton-vermillon-sombre', line: [border('009'), colors.survolTrait], fill: [panel('009'), colors.survolSombre] },
-  // Fermer, onglet actif, carte choisie : trait fin à l'encre.
+  // Fermer (vermillon), onglet actif et carte choisie (papier) : trait fin.
   { name: 'case', line: [border('001'), colors.case] },
   { name: 'case-vermillon', line: [border('001'), colors.accent] },
-  // Suivi de quête et petits encarts sur papier.
+  // Suivi de quête et petits encarts.
   { name: 'encart', line: [border('012'), colors.fenetre] },
 ];
 

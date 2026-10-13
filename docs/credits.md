@@ -4,7 +4,7 @@
 
 - Auteur : Kenney (www.kenney.nl), pack créé le 03-12-2023.
 - Licence : Creative Commons Zero (CC0), http://creativecommons.org/publicdomain/zero/1.0/ : usage personnel, éducatif et commercial libre, sans obligation de crédit (on le crédite quand même, c'est ce qu'il demande en échange).
-- Dans le dépôt : `public/ui/cadres/*.png`, seulement les cadres utilisés, recolorés aux teintes de l'interface (encre, papier, vermillon, or) par `npm run cadres` (`tools/cadres.mjs`). Le pack complet n'est pas copié ; l'outil le lit depuis `~/Downloads/kenney_fantasy-ui-borders` ou le dossier passé en argument.
+- Dans le dépôt : `public/ui/cadres/*.png`, seulement les cadres utilisés, recolorés aux teintes de l'interface « sumi et vermillon » (anthracite, vermillon, papier) par `npm run cadres` (`tools/cadres.mjs`). Le pack complet n'est pas copié ; l'outil le lit depuis `~/Downloads/kenney_fantasy-ui-borders` ou le dossier passé en argument.
 - Planches d'origine :
 
 | Fichier du jeu | Planche du pack (PNG/Default) | Usage |
