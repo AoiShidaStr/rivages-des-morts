@@ -1,5 +1,7 @@
 # Sons à produire
 
+**Déjà en jeu** (public/audio/sfx, refaits par `tools/sons.sh <dossier>`) : coup, crit, recu, garde, parade, vague, a-terre, releve, butin. Ils viennent de packs libres CC0, sans crédit obligatoire mais crédités ici : Kenney « RPG Audio » et « Impact Sounds » (kenney.nl), StarNinjas « 20 sword sound effects » (opengameart.org).
+
 Format conseillé : `.ogg` (ou `.mp3`), mono, 44,1 kHz, sans silence au début. Plusieurs variantes (×3) pour les sons fréquents, marqués *(var.)*.
 
 ## Interface
