@@ -98,7 +98,6 @@ export class IslandRenderer {
   private readonly markers = new Map<string, Marker>();
   private readonly visitors = new Map<string, VisitorView>();
   private time = 0;
-  /** L'île en 3D (relief, eau, végétation), et les décors peints qu'elle remplace. */
   /** La carte peinte (sol assemblé, eau animée, décors posés par le code). */
   private map: IslandMap | null = null;
 

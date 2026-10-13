@@ -22,11 +22,6 @@
     "icones": "node tools/icones.mjs",
     "cadres": "node tools/cadres.mjs",
     "icones-pixel": "node tools/icones-pixel.mjs",
-    "pixel": "node tools/pixel.mjs",
-    "anims-heros": "node tools/generate-all-hero-16frames.mjs",
-    "poses": "node tools/poses.mjs",
-    "kit-heros": "node tools/kit-heros.mjs",
-    "doc-heros": "node tools/doc-heros.mjs",
     "vfx": "node tools/vfx.mjs",
     "vfx-ia": "node tools/vfx-ia.mjs",
     "prompts-2d": "node tools/prompts-2d.mjs",
@@ -39,7 +34,6 @@
   },
   "dependencies": {
     "@babylonjs/core": "^9.28.0",
-    "@babylonjs/loaders": "^9.28.0",
     "trystero": "^0.25.4",
     "ws": "^8.22.0"
   },

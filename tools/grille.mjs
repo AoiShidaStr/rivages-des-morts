@@ -1,5 +1,5 @@
 // Découpe des planches peintes : sépare les images rangées en grille sur fond gris et trouve leurs repères
-// (ligne des pieds, axe du corps). Partagé par `npm run planches` et `npm run poses`.
+// (ligne des pieds, axe du corps). Partagé par `npm run planches` et les autres outils de découpe.
 import sharp from 'sharp';
 import { alphaMask, components } from './decoupe.mjs';
 

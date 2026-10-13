@@ -78,7 +78,7 @@ Ce que joue chaque ligne pour chaque classe, et les tags du moteur : Charte 2D, 
 
 ## Où en sont les images
 
-- **Héros** : les cinq Hanyō et les cinq Demi-dieux ont leur planche complète chibi dans le jeu (octobre 2026) ; les Einherjar et les Oushebti n'ont que le Guerrier de jouable en attendant leurs planches (Charte 2D, section 9). L'ancienne méthode des poses clés puis Kling ([Prompts des héros](Prompts%20h%C3%A9ros.md), `npm run kit-heros`) est remplacée par la planche complète.
+- **Héros** : les cinq Hanyō et les cinq Demi-dieux ont leur planche complète chibi dans le jeu (octobre 2026) ; les Einherjar et les Oushebti n'ont que le Guerrier de jouable en attendant leurs planches (Charte 2D, section 9). L'ancienne méthode des poses clés puis Kling a été retirée au profit de la planche complète.
 - **Ennemis et boss** : Izanami et les yokai du Palais sont dans le jeu en planches de 16 images par animation, les yokai des Rizières et la Jorōgumo en planches peintes plus anciennes ; tous sont à refaire en 8 × 8 chibi (lots de la Charte 2D, section 9).
 - **PNJ, décors de l'île et du donjon, sols, armes, équipement et reliques du premier donjon** : faits et dans le jeu. Les prompts remplis, avec l'image à joindre, sont dans `public/sprites/sprites/Prompts remplis.md` (dossier non versionné).
 

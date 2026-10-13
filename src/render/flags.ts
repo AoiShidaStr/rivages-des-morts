@@ -1,6 +1,6 @@
 /**
  * Graphismes allégés : la carte de l'île sans eau animée, ombres ni décors, et les arènes sans leurs décors.
- * Le choix est gardé dans ce navigateur et s'applique au prochain chargement. `?3d` (arènes en 3D) garde priorité pour comparer.
+ * Le choix est gardé dans ce navigateur et s'applique au prochain chargement.
  */
 const LOW_GRAPHICS_KEY = 'rivages-graphismes';
 
@@ -21,7 +21,4 @@ export function setLowGraphics(low: boolean): void {
   }
 }
 
-const params = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
-
-export const LOW_GRAPHICS = !params.has('3d') && lowGraphics();
-export const SCENES_3D = params.has('3d');
+export const LOW_GRAPHICS = lowGraphics();
