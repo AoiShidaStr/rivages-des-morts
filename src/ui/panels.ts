@@ -21,7 +21,9 @@ import {
   type SubclassDef,
 } from '../game/loadout';
 import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravureRank, gravureSealText, rankOdds, rollGravure, type GravureData } from '../game/gravure';
+import type { EndlessModifierSeed } from '../game/infini';
 import type { RolledOffer } from '../game/loot';
+import { readJournal, seenItems } from '../game/journal';
 import { SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
 import { keyName, withKeys } from '../keys';
 import { h, icon, obole, type Child } from './dom';
@@ -228,7 +230,7 @@ function bySlot(ids: string[]): [Slot, string[]][] {
 
 /** Ce que le joueur a choisi dans les fenêtres, gardé d'une ouverture à l'autre. */
 const memory = {
-  forgeTab: 'upgrade' as 'upgrade' | 'craft' | 'gravure',
+  forgeTab: 'upgrade' as 'upgrade' | 'craft' | 'gravure' | 'eveil',
   /** La forge montre d'abord les pièces portées (`worn`), sinon un rayon. */
   forgeScope: 'worn' as Shelf,
   /** Rayon de l'onglet Fabriquer. */
@@ -751,6 +753,68 @@ function gravureBody(ctx: UiContext, rerender: () => void): HTMLElement {
   );
 }
 
+/** Ce que l'éveil charge sur le héros, en clair : « +20 PV max, +4 % de dégâts » (forge.eveil, bonus). */
+function eveilCharge(bonus: { maxHp?: number; damage?: number }): string {
+  const parts: string[] = [];
+  if (bonus.maxHp) parts.push(`+${bonus.maxHp} PV max`);
+  if (bonus.damage) parts.push(`+${Math.round(bonus.damage * 100)} % de dégâts`);
+  return parts.join(', ');
+}
+
+/** L'onglet Éveil des Tablettes : une relique possédée par ligne, éveillée ou à éveiller. */
+function eveilBody(ctx: UiContext, rerender: () => void): HTMLElement {
+  const { progress } = ctx;
+  const rules = content.eveil;
+  const [matId, matCount] = rules.material;
+  const materials: Record<string, number> = { [matId]: matCount };
+  const relics = progress.state.items.filter((id) => content.items[id]?.slot === 'relique');
+  const atMax = (id: string) => progress.eveil(id) >= rules.max;
+  return h(
+    'div',
+    { class: 'list' },
+    h('p', { class: 'note' }, rules.about),
+    ...(relics.length
+      ? relics.map((id) => {
+          const def = content.items[id];
+          const price = cost(progress, rules.oboles, materials);
+          return h(
+            'div',
+            { class: 'row recipe' },
+            itemBlock(
+              id,
+              h(
+                'div',
+                { class: 'item-head' },
+                h('strong', { title: def.description }, def.name),
+                ...itemTags(def).map((t) => h('span', { class: 'tag' }, t)),
+              ),
+              h('div', { class: 'item-meta' }, `Relique · ${def.summary ?? def.description}`),
+            ),
+            atMax(id) ? h('span', { class: 'note' }, `Éveillée : ${eveilCharge(rules.bonus)} gagnés`) : price.node,
+            atMax(id)
+              ? null
+              : h(
+                  'button',
+                  {
+                    class: 'btn',
+                    disabled: !price.ok,
+                    onclick: () => {
+                      progress.gainOboles(-rules.oboles);
+                      progress.gainMaterial(matId, -matCount);
+                      progress.state.eveils[id] = progress.eveil(id) + 1;
+                      progress.save();
+                      ctx.toast(`Relique éveillée : ${def.name}`, 'loot', id);
+                      rerender();
+                    },
+                  },
+                  'Éveiller',
+                ),
+          );
+        })
+      : [h('p', { class: 'note' }, 'Aucune relique dans ton sac.')]),
+  );
+}
+
 export function openForge(host: PanelHost, ctx: UiContext): void {
   const render = () => {
     const { progress } = ctx;
@@ -764,6 +828,14 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
     const worn = upgradable.filter((id) => state.equipped[content.items[id].slot as Slot] === id);
     const readyCount = upgradable.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
     const gravable = state.items.filter((id) => content.items[id]?.slot === 'arme' && gravurePrice(progress, id).ok).length;
+    // Tetsu a signalé la gravure à la première soie (réplique « tetsu_graver_vue ») : on souligne l'onglet tant que le joueur n'est pas passé le voir.
+    const gravureIndice = !!state.flags.premiere_soie && !state.flags.tetsu_graver_vue;
+    // L'Éveil des Tablettes (GDD) : reliques possédées, non éveillées, dont le prix (oboles + Éclat) est payable.
+    const [eveilMatId, eveilMatCount] = content.eveil.material;
+    const eveilMateriaux: Record<string, number> = { [eveilMatId]: eveilMatCount };
+    const eveilable = state.items
+      .filter((id) => content.items[id]?.slot === 'relique' && progress.eveil(id) < content.eveil.max)
+      .filter(() => cost(progress, content.eveil.oboles, eveilMateriaux).ok).length;
 
     const recipes = content.recipes.filter((r) => progress.check(r.if));
     const toForge = recipes.filter((r) => !progress.has(r.item));
@@ -777,7 +849,8 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         [
           { id: 'upgrade', label: 'Améliorer', count: readyCount },
           { id: 'craft', label: 'Fabriquer', count: craftable },
-          { id: 'gravure', label: 'Graver', count: gravable },
+          { id: 'gravure', label: gravureIndice ? 'Graver !' : 'Graver', count: gravable },
+          { id: 'eveil', label: 'Éveil', count: eveilable },
         ],
         memory.forgeTab,
         (tab) => {
@@ -834,6 +907,8 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
         ),
         selected ? forgeDetail(ctx, selected, cap, render) : h('p', { class: 'note' }, 'Aucune pièce à améliorer pour le moment.'),
       );
+    } else if (memory.forgeTab === 'eveil') {
+      body = eveilBody(ctx, render);
     } else if (memory.forgeTab === 'gravure') {
       body = gravureBody(ctx, render);
     } else {
@@ -1104,6 +1179,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           { class: 'col' },
           h('h3', {}, 'Porté'),
           h('div', { class: 'slots' }, ...slotButtons),
+          h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets'),
           fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${Math.round(cfg.attack.damage)} dégâts`, stats),
           fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
           fold(
@@ -1559,4 +1635,152 @@ export function openDungeonEntry(host: PanelHost, ctx: UiContext, dungeon: Dunge
 
 export function openLoot(host: PanelHost, title: string, lines: (string | Node)[], onClose?: () => void): void {
   host.show(title, null, h('div', { class: 'list' }, h('ul', { class: 'loot' }, ...lines.map((l) => h('li', {}, l)))), { onClose });
+}
+
+/**
+ * La stèle des records du ponton : les paliers franchis dans le Yomi sans fond, lus dans le journal de descentes
+ * (src/game/journal.ts, rien n'en sort de l'ordinateur). Le héros du journal porte déjà son libellé (`heroLabel`).
+ */
+export function openRecords(host: PanelHost): void {
+  const runs = readJournal();
+  const perHero = new Map<string, { best: number; wins: number; total: number }>();
+  let cooperative = 0;
+  for (const run of runs) {
+    const stat = perHero.get(run.hero) ?? { best: 0, wins: 0, total: 0 };
+    stat.total += 1;
+    if (run.victory) stat.wins += 1;
+    if (run.dungeon === 'infini' && run.victory) stat.best = Math.max(stat.best, run.dungeonLevel);
+    perHero.set(run.hero, stat);
+    if (run.players > 1) cooperative += 1;
+  }
+  const ranked = [...perHero.entries()].sort((a, b) => b[1].best - a[1].best || b[1].total - a[1].total);
+  const lines: (string | Node)[] = ranked.map(([name, stat]) =>
+    h('div', { class: 'records-line' },
+      h('span', {}, name),
+      h('span', { class: 'note' },
+        stat.best > 0 ? `palier ${stat.best}` : 'aucun palier franchi',
+        ` · ${stat.wins} victoire${stat.wins > 1 ? 's' : ''} sur ${stat.total} descente${stat.total > 1 ? 's' : ''}`)),
+  );
+  if (cooperative > 0) lines.push(h('div', { class: 'note' }, `${cooperative} descente${cooperative > 1 ? 's' : ''} en coop dans le journal.`));
+  if (runs.length === 0) lines.push(h('p', { class: 'note' }, 'Aucune descente enregistrée. La stèle attend ton premier palier.'));
+  openLoot(host, 'Stèle des records — Yomi sans fond', lines);
+}
+
+/**
+ * Les pactes du Yomi sans fond : à chaque bloc au-delà du palier 50, deux ou trois offres sont tirées (src/data/
+ * donjon-infini.json) ; l'hôte en scelle une, qui tient pour toute la descente et s'ajoute aux précédentes.
+ */
+export function openPactDraft(host: PanelHost, premier: number, drafts: EndlessModifierSeed[], onPick: (pacte: EndlessModifierSeed) => void): void {
+  const carte = (pacte: EndlessModifierSeed) =>
+    h(
+      'div',
+      { class: 'branch' },
+      h('h3', {}, pacte.name),
+      h('p', { class: 'note' }, pacte.description),
+      h('button', { class: 'btn small', onclick: () => { host.close(); onPick(pacte); } }, 'Sceller'),
+    );
+  host.show(
+    `Pacte du Yomi — bloc des paliers ${premier}`,
+    'Un pacte par bloc, scellé pour toute la descente : ils s’ajoutent. En coop, l’hôte scelle seul.',
+    h('div', { class: 'list' }, h('div', { class: 'tree voies' }, ...drafts.map(carte))),
+    { wide: true },
+  );
+}
+
+/**
+ * Le codex des objets : les 129 objets, groupés par emplacement (puis les objets de quête), avec leur rareté et leur
+ * état — possédé, déjà vu (journal d'objets, localStorage), ou jamais croisé. Les taux de drop par source sont des
+ * données d'autres documents (donjons, boutique de fin, Yomi) : le codex en rend lisible l'inventaire complet.
+ */
+/** Les noms des sources du codex : ce sont les clés de `drops` (items.json), où l'on ne dit pas qui frappe. */
+const YOKAI_NOMS: Record<string, string> = {
+  hitodama: 'Hitodama',
+  kodama: 'Kodama',
+  kappa: 'Kappa',
+  kappaRenforce: 'Kappa renforcé',
+  kasaObake: 'Kasa-obake',
+  oublie: 'Oublié',
+  araignee: 'Araignée',
+  jorogumo: 'Jorōgumo',
+  shikome: 'Shikome',
+  ikazuchi: 'Ikazuchi',
+  ikusa: 'Ikusa',
+  izanami: 'Izanami',
+  mannequin: 'Mannequin de Tetsu',
+};
+
+/** Les sources de l'objet : les yokai qui le lâchent (taux par coup), les boutiques pondérées (taux par visite), le Yomi sans fond. */
+function dropSources(id: string): string[] {
+  const def = content.items[id];
+  const sources: string[] = [];
+  for (const [kind, drop] of Object.entries(content.drops)) {
+    const entry = drop.items?.find((e) => e.item === id);
+    if (entry) sources.push(`${YOKAI_NOMS[kind] ?? kind} · ${Math.round(entry.chance * 100)} % par coup`);
+  }
+  for (const shop of Object.values(content.shops)) {
+    const mine = shop.pool?.filter((o) => o.item === id) ?? [];
+    if (mine.length > 0 && shop.pool) {
+      const weight = mine.reduce((sum, o) => sum + (o.weight ?? 1), 0);
+      const total = shop.pool.reduce((sum, o) => sum + (o.weight ?? 1), 0);
+      const perVisit = Math.round(((shop.offers?.items ?? 1) * weight * 100) / total);
+      sources.push(`${shop.name} · ${perVisit} % par visite`);
+    }
+  }
+  const tier = def?.spec === 'boss' ? undefined : content.endless.rewards.rarity.find((t) => def?.rarity && t.weights[def.rarity]);
+  if (tier) sources.push(`${content.endless.name} · dès le palier ${tier.from}`);
+  return sources;
+}
+
+export function openCodex(host: PanelHost, ctx: UiContext): void {
+  const render = () => {
+    const { progress } = ctx;
+    const seen = new Set<string>(seenItems());
+    const all = Object.entries(content.items);
+    const total = all.length;
+    let possessed = 0;
+    let glimpsed = 0;
+    for (const [id] of all) {
+      if (progress.has(id)) possessed++;
+      else if (seen.has(id)) glimpsed++;
+    }
+    const rayon = (slot: Slot | null, label: string): HTMLElement | null => {
+      const items = all.filter(([, def]) => (def.slot ?? null) === slot);
+      if (items.length === 0) return null;
+      return h(
+        'div',
+        { class: 'codex-rayon' },
+        h('h3', {}, `${label} · ${items.length}`),
+        h(
+          'div',
+          { class: 'owned-list' },
+          ...items.map(([id, def]) => {
+            const owned = progress.has(id);
+            const wasSeen = owned || seen.has(id);
+            return h(
+              'div',
+              { class: `codex-item${owned ? ' owned' : ''}${wasSeen ? '' : ' faint'}` },
+              icon(id, 'small'),
+              h('span', {}, def.name),
+              h('small', { class: 'tags' }, [def.rarity, ...(def.tags ?? [])].filter(Boolean).join(' · ')),
+              owned ? h('span', { class: 'badge' }, 'Possédé') : wasSeen ? h('span', { class: 'note' }, 'Déjà vu') : h('span', { class: 'note' }, 'Jamais croisé'),
+              h('small', { class: 'sources' }, dropSources(id).join(' · ') || 'Aucune source tracée — la forge et les coffres le feront tomber'),
+            );
+          }),
+        ),
+      );
+    };
+    host.show(
+      'Codex des objets',
+      `${possessed} possédé${possessed > 1 ? 's' : ''} · ${glimpsed} déjà croisé${glimpsed > 1 ? 's' : ''} · ${total} en tout`,
+      h(
+        'div',
+        { class: 'list' },
+        h('p', { class: 'note' }, 'Un objet crois, une fois, reste compté sur ce navigateur, pour tous les personnages.'),
+        ...((Object.entries(content.slots) as [Slot, string][]).map(([slot, label]) => rayon(slot, label)).filter(Boolean) as HTMLElement[]),
+        rayon(null, 'Objets de quête') as HTMLElement | null,
+      ),
+      { wide: true },
+    );
+  };
+  render();
 }

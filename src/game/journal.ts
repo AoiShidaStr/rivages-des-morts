@@ -49,3 +49,27 @@ export function journalSummary(): Record<string, { runs: number; wins: number; r
 }
 
 if (typeof window !== 'undefined') (window as unknown as { rdmJournal: () => unknown }).rdmJournal = () => ({ bilan: journalSummary(), descentes: readJournal() });
+
+// Le codex des objets : les identifiants déjà obtenus au moins une fois, sur ce navigateur (ils disent « déjà vu » au
+// panneau). Rien n'en sort de l'ordinateur ; une fois possédé, l'objet l'est pour tous les emplacements de sauvegarde.
+const SEEN_KEY = 'rdm.codex.seen';
+const SEEN_MAX = 600;
+
+export function seenItems(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+export function markSeen(id: string): void {
+  try {
+    const list = seenItems();
+    if (list.includes(id)) return;
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...list, id].slice(-SEEN_MAX)));
+  } catch {
+    // Stockage indisponible (navigation privée, quota) : le jeu continue sans codex.
+  }
+}

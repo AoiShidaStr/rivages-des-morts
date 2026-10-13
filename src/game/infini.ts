@@ -16,6 +16,9 @@ export interface EndlessModifier {
   damage?: number;
 }
 
+/** Un pacte est un modificateur sans palier d'entrée : on l'enchâsse au fil de la descente et il s'ajoute aux précédents. */
+export type EndlessModifierSeed = Omit<EndlessModifier, 'from'>;
+
 export interface EndlessData {
   name: string;
   region: string;
@@ -29,6 +32,8 @@ export interface EndlessData {
   doubleBossFrom: number;
   modifiers: EndlessModifier[];
   beyond: Omit<EndlessModifier, 'from'>;
+  /** Les pactes du Yomi : à chaque bloc à partir de `from` (premier palier du bloc), l'hôte en scelle un parmi un tirage. */
+  pactes?: { from: number; options: EndlessModifierSeed[] };
   rewards: { itemsFrom: number; rarity: { from: number; weights: Record<string, number> }[] };
   victory: { title: string; text: string };
   defeat: string;
@@ -66,13 +71,13 @@ export function modifiersAt(data: EndlessData, palier: number): EndlessModifier[
 }
 
 /** Difficulté d'un palier : le niveau du donjon, puis les modificateurs de l'infini par-dessus. */
-export function difficultyAt(data: EndlessData, difficulty: DifficultyData, palier: number, heroes: number, strength?: EnemyStrength): Difficulty {
+export function difficultyAt(data: EndlessData, difficulty: DifficultyData, palier: number, heroes: number, strength?: EnemyStrength, pactes: EndlessModifierSeed[] = []): Difficulty {
   const base = difficultyFor(difficulty, levelAt(data, palier), heroes, strength);
   const curses = { ...base.curses };
   let hp = 1;
   let damage = 1;
   let extraSpawns = 0;
-  for (const m of modifiersAt(data, palier)) {
+  for (const m of [...modifiersAt(data, palier), ...pactes]) {
     for (const [id, value] of Object.entries(m.curses ?? {}) as [CurseId, number][]) curses[id] = Math.max(curses[id] ?? 0, value);
     hp *= m.hp ?? 1;
     damage *= m.damage ?? 1;
@@ -84,9 +89,9 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
     damage: base.damage * damage,
     boss: { hp: base.boss.hp * hp, damage: base.boss.damage * damage },
     curses,
-    extraSpawns: base.extraSpawns + extraSpawns,
+    extraSpawns: Math.max(0, base.extraSpawns + extraSpawns),
     // Les yokai en plus de la Marée des morts viennent même en solo.
-    soloExtra: extraSpawns,
+    soloExtra: Math.max(0, extraSpawns),
     // 0.17.0 : au palier 40+, le plafond de la marée tombe de +30 % à +15 % — la marée punit les classes à soin
     // (Sorcier, Paladin) plus que les autres, et le palier 50 doit rester atteignable en solo.
     tideMax: palier >= 40 ? 0.15 : undefined,
@@ -105,27 +110,39 @@ export function blocWaves(
   arenas: Record<string, ArenaSource>,
   heroes: number,
   random: () => number = Math.random,
+  pactes: EndlessModifierSeed[] = [],
 ): WaveConfig[] {
   const arena = arenas[arenaOf(data, bloc)];
   const bossWave = arena.waves[arena.waves.length - 1];
   const pool = arena.waves.slice(1, -1).map((wave, i) => ({ wave, i, roll: random() }));
   const picked = pool.sort((a, b) => a.roll - b.roll).slice(0, data.wavesPerBloc).sort((a, b) => a.i - b.i).map((p) => p.wave);
   const first = firstPalier(data, bloc);
-  const waves = picked.map((wave, i) => palierWave(data, difficulty, wave, first + i, heroes, arena.strength));
+  const waves = picked.map((wave, i) => palierWave(data, difficulty, wave, first + i, heroes, arena.strength, pactes));
   const last = first + data.palierStep - 1;
   const boss = last >= data.doubleBossFrom ? doubleBoss(arenas) : bossWave;
-  waves.push(palierWave(data, difficulty, boss, last, heroes, arena.strength));
+  waves.push(palierWave(data, difficulty, boss, last, heroes, arena.strength, pactes));
   return waves;
 }
 
-function palierWave(data: EndlessData, difficulty: DifficultyData, wave: WaveConfig, palier: number, heroes: number, strength?: EnemyStrength): WaveConfig {
+function palierWave(data: EndlessData, difficulty: DifficultyData, wave: WaveConfig, palier: number, heroes: number, strength?: EnemyStrength, pactes: EndlessModifierSeed[] = []): WaveConfig {
   const level = levelAt(data, palier);
+  // Les pactes scellés se lisent au pas de la vague : l'étiquette dit aussi qui a payé quoi.
+  const notes = pactes.length ? ` · ${pactes.map((m) => m.name).join(' · ')}` : '';
   return {
     ...wave,
-    step: `Palier ${palier} · Niveau ${level}`,
+    step: `Palier ${palier} · Niveau ${level}${notes}`,
     palier,
-    difficulty: difficultyAt(data, difficulty, palier, heroes, strength),
+    difficulty: difficultyAt(data, difficulty, palier, heroes, strength, pactes),
   };
+}
+
+/** Les pactes du bloc : deux ou trois tirés sans doublon parmi les options, ou null avant le premier bloc pacté. */
+export function pacteDraft(data: EndlessData, bloc: number, random: () => number = Math.random): EndlessModifierSeed[] | null {
+  if (firstPalier(data, bloc) < (data.pactes?.from ?? Infinity)) return null;
+  const pool = data.pactes?.options ?? [];
+  if (pool.length === 0) return null;
+  const shuffled = [...pool].sort(() => random() - 0.5);
+  return shuffled.slice(0, Math.min(3, pool.length));
 }
 
 /** La Jorōgumo et Izanami ensemble : souches des Rizières (pour le fil de Jōren) et pêchers du Palais. */
