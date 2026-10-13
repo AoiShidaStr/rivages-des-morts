@@ -18,8 +18,19 @@
     { "from": 50, "name": "Chair du Yomi", "description": "Les yokai ont 15 % de PV et 10 % de dégâts en plus.", "hp": 1.15, "damage": 1.1 }
   ],
   "beyond": { "name": "Abîme", "description": "Encore 10 % de PV et 8 % de dégâts en plus pour les yokai.", "hp": 1.1, "damage": 1.08 },
+  "pactes": {
+    "about": "À chaque bloc à partir de `from` (premier palier du bloc >= 51), on tire deux ou trois pactes ; l'hôte en scelle un, qui tient pour toute la descente et s'ajoute aux précédents. Chiffres cumulables avec les modificateurs ci-dessus.",
+    "from": 51,
+    "options": [
+      { "id": "sang", "name": "Pacte du sang", "description": "Les yokai gardent 20 % de PV de moins ; en échange, la marée ramène une bête de plus par vague.", "hp": 0.8, "extraSpawns": 1 },
+      { "id": "abondance", "name": "Pacte d'abondance", "description": "Les yokai frappent 25 % de moins ; en échange, ils tiennent le coup 20 % plus longtemps.", "damage": 0.75, "hp": 1.2 },
+      { "id": "fureur", "name": "Pacte de la fureur", "description": "Les yokai frappent 10 % de plus ; en échange, la marée ramène une bête de moins par vague.", "damage": 1.1, "extraSpawns": -1 },
+      { "id": "creneau", "name": "Pacte du créneau", "description": "Une seule élite par vague au lieu de trois ; en échange, chaque vague ramène deux bêtes de plus.", "curses": { "elites": 1 }, "extraSpawns": 2 }
+    ]
+  },
   "rewards": {
     "itemsFrom": 10,
+    "eclat": { "about": "L'Éclat des Tablettes (l'Éveil, chez Tetsu) : le boss de chaque bloc en laisse un dès le palier `from`.", "from": 50, "material": "eclat-tablettes", "count": 1 },
     "rarity": [
       { "from": 10, "weights": { "rare": 70, "épique": 25, "légendaire": 5 } },
       { "from": 20, "weights": { "rare": 40, "épique": 45, "légendaire": 15 } },

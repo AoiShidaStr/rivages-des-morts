@@ -1,0 +1,14 @@
+{
+  "about": "Le registre des sons courts (SFX) : chaque identifiant correspond à public/audio/sfx/<id>-1.mp3, -2.mp3, -3.mp3 — deux ou trois variantes, une seule suffit. Le gestionnaire (src/audio/sfx.ts) précharge tout et ignore ce qui manque ; la vitesse de lecture est tirée au hasard (±7 %) à chaque joue, et un même son ne se répète pas derrière lui-même (90 ms au moins avec un autre). Ses fichiers attendent le cahier de production détaillé : docs/sons-a-produire.md. Les musiques des amis (les pistes du menu, de l'île et des combats) ne passent pas par ici : src/audio/music.ts seulement.",
+  "sons": {
+    "coup": "Un coup de héros sur un yokai : whoosh sec puis l'impact, chair ou carapace. Les critiques passent par « crit », pas ici.",
+    "crit": "L'accent du coup critique : l'impact plus long, métallique, une note qui remonte.",
+    "recu": "Un coup reçu par le héros : blunt et sourd, un souffle court.",
+    "garde": "La garde du Guerrier ou du Paladin qui encaisse : acier tamisé.",
+    "parade": "La parade parfaite ou la riposte : un tintement aigu qui rebondit, presque une cloche.",
+    "vague": "Le début d'une vague : un souffle sombre, un tambour grave, sans mélodie (les musiques des amis ouvrent le combat).",
+    "a-terre": "Un héros tombé ; les « Allié à terre » et « À terre ! » partagent le son.",
+    "releve": "Le relevé d'un héros : une respiration qui repart, légère, une clochette de temple (suzu).",
+    "butin": "Un objet rare en poche : la lumière qui se pose, trois notes de koto."
+  }
+}

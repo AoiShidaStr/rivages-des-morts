@@ -14,9 +14,35 @@
     "kawataro": { "name": "Kawatarō", "sprite": "kappa" },
     "nanashi": { "name": "L'âme sans visage", "sprite": "oublie" },
     "isamu": { "name": "Isamu", "sprite": "oublie" },
-    "voyageur": { "name": "L'homme d'argile" }
+    "voyageur": { "name": "L'homme d'argile" },
+    "stele": { "name": "La stèle des records" },
+    "gardien": { "name": "Le gardien errant" }
   },
   "dialogues": {
+    "stele": [
+      {
+        "lines": [
+          ["stele", "Des paliers sont gravés pierre après pierre : ceux qui ont descendu le Yomi sans fond."],
+          ["stele", "Pose ta main sur la pierre : la stèle relit le journal de tes descentes."]
+        ],
+        "then": [{ "records": true }]
+      }
+    ],
+    "gardien": [
+      {
+        "if": [{ "notFlag": "gardien_rencontre" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Entre les tiges de riz, une silhouette se tient sans bouger : trop grande pour un kodama, trop calme pour un yokai."],
+          ["gardien", "Tu as des yeux qui voient. La rizière est aux morts, l'île aux vivants : entre les deux, je marche depuis l'effondrement."],
+          ["heros", "Tu gardes quelque chose ?"],
+          ["gardien", "Un souvenir. J'attends qu'on vienne le porter. Ce peigne a chevauché de longues chevelures avant d'attendre ici. Prends-le, et prends cet éclat des Tablettes : un jour, le forgeron s'en servira pour éveiller une relique."],
+          ["narrateur", "Le gardien s'incline, et n'est plus — les tiges se referment derrière lui."],
+          ["heros", "(Tu gardes l'éclat. Tetsu saura peut-être quoi en faire.)"]
+        ],
+        "then": [{ "give": "peigne-izanagi" }, { "oboles": 180 }, { "material": ["eclat-tablettes", 1] }, { "set": "gardien_rencontre" }]
+      }
+    ],
     "charon": [
       {
         "if": [{ "quest": "passeur", "is": "none" }],
@@ -194,6 +220,15 @@
       }
     ],
     "tetsu": [
+      {
+        "if": [{ "flag": "premiere_soie" }, { "notFlag": "tetsu_graver_vue" }, { "flag": "forge_ouverte" }],
+        "marker": "!",
+        "lines": [
+          ["heros", "(Une soie luisante au fond du sac, qui frémit comme si elle cherchait une lame.)"],
+          ["tetsu", "Une soie de jorōgumo, hein ? Ne la range pas : c’est l’encre des lames. Ouvre ma forge, onglet « Graver », et je ferai chanter ton acier d’une marque à ta façon."]
+        ],
+        "then": [{ "set": "tetsu_graver_vue" }]
+      },
       {
         "if": [{ "quest": "forgeron", "is": "none" }],
         "marker": "!",

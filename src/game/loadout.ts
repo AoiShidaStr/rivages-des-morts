@@ -1,7 +1,7 @@
 // Du côté de l'île vers le combat : race, classe, équipement, niveau, talents et tags de classe
 // deviennent les réglages du héros pour une descente au donjon.
 import type { Kit, PlayerConfig, SubclassActiveConfig } from './config';
-import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type Palier, type UpgradeRules } from './forge';
+import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type EveilRules, type Palier, type UpgradeRules } from './forge';
 import { gravureEffects, type GravureData } from './gravure';
 import type { Hero, ProgressState, Slot } from './progress';
 
@@ -54,6 +54,8 @@ export interface ItemDef {
   summary?: string;
   /** Passifs débloqués à certains niveaux de forge (armes). */
   paliers?: Palier[];
+  /** L'Éveil des Tablettes (reliques) : le pouvoir que l'éveil ajoute, posé après les effets de la relique. */
+  eveil?: { summary: string; bonus?: Bonus; effects?: ConfigEffect[] };
   description: string;
 }
 
@@ -155,6 +157,8 @@ export interface LoadoutData {
   subclasses?: Subclasses;
   /** Les gravures (rivens) : sans elles, une arme gravée n'apporte rien de plus que ses propres effets. */
   gravures?: GravureData;
+  /** L'Éveil des Tablettes : sans lui, une relique éveillée ne charge rien. */
+  eveil?: EveilRules;
 }
 
 export interface Loadout {
@@ -316,9 +320,14 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     for (const b of [item.bonus, ...active.map((c) => c.bonus)]) {
       for (const [key, value] of Object.entries(scaled(b)) as [BonusKind, number][]) bonus[key] += value;
     }
+    // L'Éveil des Tablettes : une relique éveillée gagne son propre pouvoir (items.json, `eveil` de la relique), posé
+    // après ses effets pour les renforcer ; une relique sans pouvoir écrit charge le bonus commun (forge.eveil).
+    const awake = item.slot === 'relique' && (state.eveils?.[id] ?? 0) > 0;
+    const power = awake ? (item.eveil ?? (data.eveil ? { summary: '', bonus: data.eveil.bonus } : undefined)) : undefined;
+    for (const [key, value] of Object.entries(power?.bonus ?? {}) as [BonusKind, number][]) bonus[key] += value;
     // Un objet de race, ou un effet réservé à une race, modifie les passifs de la race : il passe après eux.
-    if (item.races?.length) raceEffects.push(...(item.effects ?? []));
-    else for (const effect of item.effects ?? []) applyEffect(config, effect);
+    if (item.races?.length) raceEffects.push(...(item.effects ?? []), ...(power?.effects ?? []));
+    else for (const effect of [...(item.effects ?? []), ...(power?.effects ?? [])]) applyEffect(config, effect);
     for (const c of active) {
       if (item.races?.length || c.if.races?.length) raceEffects.push(...(c.effects ?? []));
       else for (const effect of c.effects ?? []) applyEffect(config, effect);

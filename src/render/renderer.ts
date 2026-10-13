@@ -1612,16 +1612,19 @@ export class Renderer {
       case 'enemyHit': {
         const view = this.views.get(event.id);
         if (view) view.flash = event.shielded ? 0.35 : 1;
+        // Coop : « owner » dit quel joueur a frappé ; les chiffres des alliés reculent au second plan.
+        const far = event.owner >= 0 && event.owner !== this.localId;
         // Style lumière : pas d'éclaboussure, le flash blanc de l'ennemi suffit.
         if (!event.shielded && !LIGHT_STYLE[this.localKit]) {
           const size = event.crit ? 1.9 : 1.35;
           const turn = Math.random() * Math.PI * 2;
           this.sheetFx('fxImpact', 'impact', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, size, size, 0.24, 0.05);
         }
-        if (event.shielded) this.text(event.pos, 1.9, 'Bloqué', 'shield');
-        else if (event.crit) this.text(event.pos, 2, `${Math.round(event.amount)} !`, 'crit');
-        else this.text(event.pos, 1.7, String(Math.round(event.amount)), 'dmg');
-        this.addShake(event.shielded ? 0.25 : event.crit ? 0.3 : 0.15);
+        if (event.shielded) this.text(event.pos, 1.9, 'Bloqué', 'shield', 0.9, far);
+        else if (event.crit) this.text(event.pos, 2, `${Math.round(event.amount)} !`, 'crit', 0.9, far);
+        else this.text(event.pos, 1.7, String(Math.round(event.amount)), 'dmg', 0.9, far);
+        // Seuls mes coups (et les coups sans joueur, brûlure de toile…) secouent l'écran.
+        if (!far) this.addShake(event.shielded ? 0.25 : event.crit ? 0.3 : 0.15);
         break;
       }
       case 'playerHit': {
@@ -1629,7 +1632,7 @@ export class Renderer {
         const view = this.views.get(mine ? PLAYER_ID : ALLY_ID - event.hero);
         if (view) view.flash = event.blocked ? 0.4 : 1;
         // Ce qui passe la garde se lit plus discrètement qu'un coup reçu de plein fouet.
-        this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, event.blocked ? 'shield' : 'hurt');
+        this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, event.blocked ? 'shield' : 'hurt', 0.9, !mine);
         // Seuls les coups reçus par son propre héros secouent l'écran.
         if (mine) this.addShake(event.blocked ? 0.2 : 0.5);
         break;
@@ -2655,9 +2658,9 @@ export class Renderer {
     this.shake = Math.min(1, Math.max(this.shake, amount));
   }
 
-  private text(pos: Vec2, height: number, label: string, kind: string, life = 0.9): void {
+  private text(pos: Vec2, height: number, label: string, kind: string, life = 0.9, far = false): void {
     const el = document.createElement('div');
-    el.className = `float ${kind}`;
+    el.className = `float ${kind}${far ? ' far' : ''}`;
     el.textContent = label;
     this.overlay.append(el);
     const vx = (Math.random() - 0.5) * (kind === 'crit' ? 0.7 : 0.4);

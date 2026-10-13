@@ -11,6 +11,8 @@ import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
 import { loadKeyboardLayout } from './keys';
+import { openSaves, takeNotice } from './net/account';
+import { chooseNetwork } from './net/transport';
 import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { IslandRenderer } from './render/islandRenderer';
@@ -52,7 +54,14 @@ async function start(): Promise<void> {
   // temps de la carte graphique sur une puce Intel.
   // La densité de l'écran est gérée par la résolution adaptative (render/resolution.ts), pas par Babylon.
   const engine = new Engine(canvas, false, { stencil: false }, false);
-  const progress = Progress.load(catalog);
+  // Avec le serveur du jeu, les personnages peuvent vivre sur un compte : on les recopie avant de charger le dernier joué.
+  const network = chooseNetwork(params);
+  const notices: string[] = [];
+  const accounts = network === 'serveur';
+  const { store, account } = await openSaves(accounts, (text) => notices.push(text));
+  const notice = takeNotice();
+  if (notice) notices.push(notice);
+  const progress = Progress.load(catalog, store);
   const island = new Island(content.island, progress);
   const dungeonRenderer = new Renderer(engine, canvas, overlay, spriteManifest(sprites as SpriteManifest), config.arenaHalfSize);
   const islandRenderer = new IslandRenderer(engine, canvas, overlay, spriteManifest(content.islandSprites as SpriteManifest));
@@ -76,7 +85,10 @@ async function start(): Promise<void> {
     devLevel,
     devDungeon,
     devCoop,
-    network: params.get('reseau') === 'local' ? 'local' : 'trystero',
+    network,
+    account,
+    accounts,
+    notices,
   });
   app.start();
 

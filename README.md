@@ -37,7 +37,7 @@ Pendant la descente :
 - Le **ping** de chacun s'affiche à côté de son nom, sous ta barre de vie. Il passe en orange au-delà de 150 ms.
 - Ton héros répond tout de suite à tes déplacements, même quand tu n'es pas l'hôte. Les coups, les esquives et les compétences partent chez l'hôte : leur retard dépend du ping.
 - Pour une partie fluide, l'hôte doit être le joueur qui a la meilleure connexion, idéalement en câble plutôt qu'en Wi-Fi. La puissance de l'ordinateur compte peu. Chaque ami coûte environ 15 Ko/s d'envoi à l'hôte.
-- Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas.
+- Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas, sauf sur un jeu hébergé avec son serveur (voir « Héberger le jeu et sa coop »).
 
 ### Races et classes
 
@@ -122,6 +122,56 @@ Deux options d'URL pour tester :
 
 - `?vague=7` lance directement le donjon à la septième vague (le boss), sans passer par l'île.
 - `?coop=2` ou `?coop=3` ajoute un ou deux alliés joués par l'ordinateur.
+
+## Héberger le jeu et sa coop (Docker)
+
+Le jeu peut tourner sur ta machine ou sur un serveur, avec son propre serveur de coop : les joueurs passent alors par lui au lieu de se relier directement, et la coop marche sur tous les réseaux. Il faut [Docker](https://docs.docker.com/get-docker/).
+
+```sh
+docker compose up -d --build
+```
+
+Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machine>:8080`. La coop se lance comme d'habitude (code ou parties publiques), mais tout passe par le serveur, et c'est lui qui fait tourner le combat : la descente continue même si un joueur part. Le premier arrivé dans le salon choisit le donjon et lance la descente (le Yomi sans fond reste réservé à la coop entre navigateurs).
+
+**Île partagée** : sur un jeu hébergé, les joueurs qui se promènent sur l'île se voient en temps réel, avec leur pseudo au-dessus de la tête. En entrant dans un donjon, on disparaît de l'île des autres.
+
+**Social** : avec un compte, la touche O ouvre le menu social (demandes d'ami, groupe de trois joueurs au plus, joueurs de l'île) et Entrée ouvre le chat (onglets Général, Groupe, Privé ; `/m pseudo message` pour un message privé, `/g` pour le groupe, `/r` pour répondre). Le chef d'un groupe qui a créé une partie en coop peut y inviter son groupe d'un clic.
+
+**Échanges** : depuis le menu social, « Échanger » ouvre un échange direct avec un joueur connecté (équipement non porté, matériaux, oboles) ; changer son lot retire les deux validations, et l'échange se fait quand les deux ont validé. « Hôtel des ventes » met des lots en vente pour tout le monde, avec une taxe de 5 % sur les ventes ; en mode marchand, le lot va dans sa boutique, sans taxe, et les autres l'achètent depuis « Boutique ». Les oboles d'une vente attendent à l'hôtel jusqu'à ce qu'on les encaisse, même si l'on était hors ligne.
+
+**Comptes** : sur un jeu hébergé, l'écran titre propose « Se connecter ». Avec un compte, les personnages sont gardés sur le serveur et on les retrouve depuis n'importe quel ordinateur. Sans compte, ils restent dans le navigateur, comme avant ; une fois connecté, le panneau du compte propose de les recopier dessus. Les comptes sont dans `donnees/rivages.db`.
+
+### Jouer avec ses amis sur Internet
+
+Les réglages vont dans un fichier `.env` (copie de `.env.exemple`). Avant d'ouvrir le jeu à Internet, choisis un `CODE_INVITATION` : seuls ceux qui le connaissent pourront créer un compte. Mets aussi `PROXY=1` et `HOTE=127.0.0.1`.
+
+**Depuis ton PC, sans ouvrir de port (gratuit)** :
+
+```sh
+docker compose --profile tunnel up -d --build
+```
+
+Un tunnel gratuit de Cloudflare donne au jeu une adresse en `https://….trycloudflare.com`. Elle s'affiche en haut du menu social (O), avec un bouton « Copier » : donne-la à tes amis, avec le code d'invitation. L'adresse change à chaque redémarrage du tunnel, et le jeu n'est joignable que tant que ton PC est allumé.
+
+**Sur un VPS, avec un nom de domaine** : fais pointer le domaine vers le VPS, mets-le dans `DOMAINE`, puis :
+
+```sh
+docker compose --profile https up -d --build
+```
+
+Caddy obtient seul un certificat HTTPS pour ce domaine, et l'adresse `https://<domaine>` s'affiche dans le menu social. Les ports 80 et 443 du VPS doivent être ouverts. Pour rester à 0 € : une machine « Always Free » d'Oracle Cloud, et un sous-domaine gratuit chez DuckDNS, par exemple.
+
+### Entretien
+
+- **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.
+- **Mettre à jour** : `git pull`, puis la même commande.
+- **Sauvegarder** : copie le dossier `donnees/` (les comptes et leurs personnages).
+- **Déménager** sur un VPS ou une autre machine : copie le dépôt, le dossier `donnees/` et le fichier `.env`, puis la même commande.
+- **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`.
+
+Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur` (il réunit le serveur et le moteur du jeu dans `dist-server/serveur.js`, puis le lance). En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
+
+La version GitHub Pages, elle, n'a pas de serveur : elle garde la coop en WebRTC.
 
 ## Pour aller plus loin
 

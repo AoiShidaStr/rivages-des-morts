@@ -17,7 +17,7 @@ import sousClassesJson from './data/sous-classes.json';
 import type { GameConfig } from './game/config';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { ArenaSource, EndlessData } from './game/infini';
-import type { UpgradeRules } from './game/forge';
+import type { EveilRules, UpgradeRules } from './game/forge';
 
 import type { IslandData, ScreenPoint } from './game/island';
 import type { GravureData } from './game/gravure';
@@ -166,6 +166,8 @@ export const content = {
   shops: itemsJson.shops as unknown as Record<string, ShopDef>,
   duplicates: itemsJson.duplicates as DuplicateRules,
   upgrade: itemsJson.forge.upgrade as unknown as UpgradeRules,
+  /** L'Éveil des Tablettes : le prix d'un éveil de relique et son bonus de charge (src/data/items.json, forge.eveil). */
+  eveil: itemsJson.forge.eveil as unknown as EveilRules,
   difficulty: difficultyJson as unknown as DifficultyData,
   skills: skillsJson as unknown as SkillsDef,
   /** Les voies (sous-classes) de chaque classe : le second axe, ouvert au niveau 25. */

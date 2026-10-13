@@ -1,7 +1,7 @@
 // Où vivent les sauvegardes : un personnage par emplacement.
-// Le jeu ne parle qu'à `SaveStore`. Aujourd'hui, tout est dans le navigateur (localStorage). Une sauvegarde en ligne
-// (Supabase…) se branchera ici sans toucher au jeu : le navigateur restera la copie de travail, recopiée depuis le
-// compte à la connexion et renvoyée vers lui à chaque écriture.
+// Le jeu ne parle qu'à `SaveStore`. Sans compte, tout est dans le navigateur (localStorage). Avec un compte sur le
+// serveur du jeu (`AccountSaveStore`, src/net/account.ts), le navigateur reste la copie de travail, recopiée depuis le
+// compte à l'ouverture et renvoyée vers lui à chaque écriture.
 
 export interface SlotInfo {
   id: string;
@@ -27,11 +27,17 @@ type Index = Record<string, number>;
 
 /**
  * Sauvegardes dans le navigateur. Navigation privée ou stockage plein : la liste reste vide et les écritures
- * échouent sans bruit, la partie continue sans sauvegarde.
+ * échouent sans bruit, la partie continue sans sauvegarde. `space` sépare les copies de travail de chaque compte de
+ * celles du navigateur sans compte (l'espace par défaut).
  */
 export class LocalSaveStore implements SaveStore {
-  constructor() {
-    this.adoptLegacy();
+  private readonly prefix: string;
+  private readonly indexKey: string;
+
+  constructor(space?: string) {
+    this.prefix = space ? `rivages-des-morts:${space}:perso:` : PREFIX;
+    this.indexKey = space ? `rivages-des-morts:${space}:persos` : INDEX_KEY;
+    if (!space) this.adoptLegacy();
   }
 
   list(): SlotInfo[] {
@@ -42,25 +48,30 @@ export class LocalSaveStore implements SaveStore {
 
   read(id: string): unknown {
     try {
-      const raw = localStorage.getItem(PREFIX + id);
+      const raw = localStorage.getItem(this.prefix + id);
       return raw ? (JSON.parse(raw) as unknown) : null;
     } catch {
       return null;
     }
   }
 
-  write(id: string, data: unknown): void {
+  write(id: string, data: unknown, savedAt = Date.now()): void {
     try {
-      localStorage.setItem(PREFIX + id, JSON.stringify(data));
-      this.setIndex({ ...this.index(), [id]: Date.now() });
+      localStorage.setItem(this.prefix + id, JSON.stringify(data));
+      this.setIndex({ ...this.index(), [id]: savedAt });
     } catch {
       // Stockage indisponible : on continue sans sauvegarde.
     }
   }
 
+  /** Heure de la dernière écriture de cet emplacement, ou 0 s'il est vide. */
+  savedAt(id: string): number {
+    return this.index()[id] ?? 0;
+  }
+
   remove(id: string): void {
     try {
-      localStorage.removeItem(PREFIX + id);
+      localStorage.removeItem(this.prefix + id);
       const index = this.index();
       delete index[id];
       this.setIndex(index);
@@ -71,7 +82,7 @@ export class LocalSaveStore implements SaveStore {
 
   private index(): Index {
     try {
-      const raw = localStorage.getItem(INDEX_KEY);
+      const raw = localStorage.getItem(this.indexKey);
       return raw ? (JSON.parse(raw) as Index) : {};
     } catch {
       return {};
@@ -79,7 +90,7 @@ export class LocalSaveStore implements SaveStore {
   }
 
   private setIndex(index: Index): void {
-    localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+    localStorage.setItem(this.indexKey, JSON.stringify(index));
   }
 
   private adoptLegacy(): void {

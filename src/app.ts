@@ -4,13 +4,13 @@ import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
-import { gravureRank, rollSeal, type Gravure } from './game/gravure';
-import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, rollEndlessItem, submitGlobalRecord } from './game/infini';
+import { rollSeal, type Gravure } from './game/gravure';
+import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
 import { buildLoadout, classWeapon, equipBlock, heroClass, heroLabel, heroSubclass, levelProgress, type Loadout } from './game/loadout';
-import { drawWeighted, salvage, type RolledOffer } from './game/loot';
+import { drawWeighted, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
 import { MAX_CHARACTERS, STARTING_WEAPON, bindSelf, type Action, type Hero, type Progress, type ProgressState } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
@@ -19,7 +19,10 @@ import { World } from './game/world';
 import { InputSender, RemoteInput, idleFrame } from './net/frames';
 import { MirrorWorld } from './net/mirror';
 import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
-import type { CoopSession } from './net/session';
+import { IslandPresence, sharedIsland, type Profile } from './net/presence';
+import { CoopSession } from './net/session';
+import { SocialClient, type Goods } from './net/social';
+import { restartWith, type AccountSaveStore } from './net/account';
 import { traffic, type Network } from './net/transport';
 import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
@@ -27,6 +30,7 @@ import type { Hud } from './render/hud';
 import type { IslandRenderer } from './render/islandRenderer';
 import { AIM_HEIGHT, type Renderer } from './render/renderer';
 import { AdaptiveResolution } from './render/resolution';
+import { openAccount } from './ui/account';
 import { openCharacters } from './ui/characters';
 import { CreationScreen } from './ui/creation';
 import { DialogueBox } from './ui/dialogue';
@@ -37,7 +41,9 @@ import {
   openForge,
   openInventory,
   openLoot,
+  openPactDraft,
   openQuests,
+  openRecords,
   openShop,
   openSkills,
   openSubclass,
@@ -46,9 +52,14 @@ import {
   type TrialChoice,
   type UiContext,
 } from './ui/panels';
-import { openCoopMenu, openLobby } from './ui/coop';
+import { openCoopMenu, openLobby, pseudo } from './ui/coop';
+import { ChatBox, openSocial } from './ui/social';
+import { openMarket, openPlayerShop, openTrade } from './ui/trade';
+import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
-import { logRun } from './game/journal';
+import { logRun, markSeen } from './game/journal';
+import { stockItem } from './game/reserve';
+import { SFX_DES_EVENTS, Sfx } from './audio/sfx';
 import { openOptions } from './ui/options';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
 import { Screens, type MenuOption } from './ui/screens';
@@ -94,8 +105,14 @@ export interface AppDeps {
   devDungeon: string;
   /** `?coop=N` : nombre de héros, les alliés étant joués par l'ordinateur (tests de la coop sans réseau). */
   devCoop: number;
-  /** Coop en ligne : Trystero (WebRTC entre navigateurs), ou `?reseau=local` entre onglets (tests). */
+  /** Coop en ligne : Trystero (WebRTC entre navigateurs), le serveur du jeu (`?reseau=serveur`), ou `?reseau=local` entre onglets (tests). */
   network: Network;
+  /** Le compte connecté (jeu servi par son serveur), ou null : les personnages sont alors ceux du navigateur. */
+  account: AccountSaveStore | null;
+  /** Le jeu est servi par son serveur : on peut se connecter à un compte. */
+  accounts: boolean;
+  /** Messages à montrer au démarrage (compte injoignable…). */
+  notices: string[];
 }
 
 /** Un allié de la descente : ses réglages, son apparence et son nom. */
@@ -147,6 +164,8 @@ export class App {
   private preparing: Promise<void> | null = null;
   private titleAngle = 0;
   private run: Loot = emptyLoot();
+  /** Les sons courts (SFX) : les événements de combat et les gains d'objets ; les musiques restent celles des amis. */
+  private readonly sfx: Sfx = new Sfx();
   /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
   private endShop: RolledOffer[] = [];
   /** Donjon en cours, et son niveau (choisi à l'entrée). */
@@ -157,6 +176,8 @@ export class App {
    * choisi d'encaisser ou de continuer. Le butin de `run` court de bloc en bloc tant qu'il n'est pas encaissé.
    */
   private endless: { bloc: number; cleared: number; awaiting: boolean } | null = null;
+  /** Les pactes scellés dans la descente en cours du Yomi sans fond (un de plus à chaque bloc à partir du palier 51). */
+  private pactesEncours: EndlessModifierSeed[] = [];
   /** Où l'on reparaît sur l'île en remontant (devant la cascade, après le donjon infini). */
   private exitAt: ScreenPoint | null = null;
   private outcome: Outcome | null = null;
@@ -177,8 +198,24 @@ export class App {
   private readonly screens: Screens;
   private readonly creation: CreationScreen;
   private readonly ui: UiContext;
+  /** L'île partagée (jeu servi par son serveur) : les autres joueurs qui s'y promènent. */
+  private readonly presence: IslandPresence | null;
+  /** Le menu social et le chat (jeu hébergé, avec un compte). */
+  private readonly social: SocialClient | null;
+  private readonly chat: ChatBox | null;
 
   constructor(private readonly d: AppDeps) {
+    this.presence = sharedIsland(d.network) ? new IslandPresence(d.network) : null;
+    this.social = d.account ? new SocialClient(d.account.session.jeton) : null;
+    // Avec un compte, la coop propose son pseudo, si l'on n'en a pas choisi d'autre.
+    try {
+      if (d.account && !localStorage.getItem('rivages-des-morts:pseudo')) localStorage.setItem('rivages-des-morts:pseudo', d.account.session.pseudo);
+    } catch {
+      // Stockage indisponible : la coop proposera le nom du héros.
+    }
+    this.chat = this.social
+      ? new ChatBox(d.uiRoot, this.social, { joinGame: (code) => this.joinGame(code), openSocial: () => this.openSocialPanel() })
+      : null;
     this.screens = new Screens(d.uiRoot);
     this.creation = new CreationScreen(d.uiRoot);
     this.dialogue = new DialogueBox(d.uiRoot);
@@ -190,12 +227,41 @@ export class App {
       loadout: () => this.loadout(),
       toast: (text, tone, icon) => this.screens.toast(text, tone, icon),
     };
+    if (this.social) {
+      const social = this.social;
+      social.onTradeStart = () => openTrade(this.panels, social, this.d.progress);
+      social.onGoods = (goods) => this.receiveGoods(goods);
+    }
+  }
+
+  /** Le serveur conclut un échange, une mise en vente, un achat… : on range (ou retire) dans le personnage. */
+  private receiveGoods(goods: Goods): void {
+    const progress = this.d.progress;
+    let notes: string[] = [];
+    if (goods.kind === 'echange') {
+      give(progress, goods.donne);
+      notes = [`Échange conclu avec ${goods.avec} : tu reçois ${describeLot(goods.recoit)}.`, ...receive(progress, goods.recoit)];
+    } else if (goods.kind === 'mis') {
+      give(progress, goods.lot);
+      notes = [`En vente : ${describeLot(goods.lot)}.`];
+    } else if (goods.kind === 'achat') {
+      progress.gainOboles(-goods.prix);
+      notes = [`Acheté pour ${goods.prix} oboles : ${describeLot(goods.lot)}.`, ...receive(progress, goods.lot)];
+    } else if (goods.kind === 'rendu') {
+      notes = [`Retiré de la vente : ${describeLot(goods.lot)}.`, ...receive(progress, goods.lot)];
+    } else {
+      progress.gainOboles(goods.oboles);
+      notes = [`Tu encaisses ${goods.oboles} oboles de tes ventes.`];
+    }
+    progress.save();
+    for (const note of notes) this.screens.toast(note, 'loot');
   }
 
   start(): void {
     if (this.d.devWave !== null && this.d.devDungeon === ENDLESS) void this.descendEndless(blocOf(content.endless, this.d.devLevel ?? 1));
     else if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
+    for (const notice of this.d.notices) this.screens.toast(notice);
     this.d.engine.runRenderLoop(() => this.frame());
     // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
     whileHidden(() => {
@@ -314,7 +380,7 @@ export class App {
       this.screens.toast(this.music.settings.muted ? 'Musique coupée (M)' : 'Musique remise (M)');
     }
     if (this.panels.open) {
-      if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK')) this.panels.close();
+      if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK') || key('KeyO')) this.panels.close();
       return;
     }
     if (this.screens.paused) {
@@ -329,9 +395,12 @@ export class App {
       } else if (key('KeyI')) openInventory(this.panels, this.ui);
       else if (key('KeyJ')) openQuests(this.panels, this.ui);
       else if (key('KeyK')) openSkills(this.panels, this.ui);
+      else if (key('KeyO') && this.d.accounts) this.openSocialPanel();
+      else if (key('Enter')) this.chat?.focus();
       else if (key('Escape')) this.openPause();
-    } else if (this.mode === 'dungeon' && key('Escape')) {
-      this.openPause();
+    } else if (this.mode === 'dungeon') {
+      if (key('Escape')) this.openPause();
+      else if (key('Enter')) this.chat?.focus();
     }
   }
 
@@ -348,8 +417,15 @@ export class App {
     if (last) options.push({ label: 'Coop en ligne', action: () => this.play(last.id, () => this.openCoop()) });
     options.push({ label: 'Nouveau personnage', primary: !last, action: () => this.createHero() });
     options.push({ label: last ? `Personnages (${characters.length})` : 'Importer une sauvegarde', action: () => this.openCharacters() });
+    if (this.d.accounts) {
+      const account = this.d.account;
+      options.push({
+        label: account ? `Compte : ${account.session.pseudo}` : 'Se connecter',
+        action: () => openAccount(this.panels, { account, restart: (notice) => restartWith(notice) }, () => this.showTitle()),
+      });
+    }
     options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
-    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.sfx, this.resolution) });
     const record = globalRecord();
     this.screens.showTitle(options, latestVersion, record ? `Record du ${content.endless.name} : palier ${record.palier} (${record.hero})` : '');
   }
@@ -370,6 +446,7 @@ export class App {
         },
       },
       () => this.showTitle(),
+      this.d.account ? `sur le compte ${this.d.account.session.pseudo}` : 'sauvegardés dans ce navigateur',
     );
   }
 
@@ -440,6 +517,11 @@ export class App {
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
+    if (this.presence) {
+      this.presence.enter(this.islandProfile());
+      this.presence.update(dt, island.player);
+      islandRenderer.syncVisitors(this.presence.visitors(), dt);
+    }
     islandRenderer.render();
     this.screens.updateIslandHud({
       area: island.area?.name ?? island.data.name,
@@ -449,6 +531,37 @@ export class App {
       quest: trackedQuest(progress),
       prompt: target ? { verb: target.verb ?? 'Parler à', name: target.name } : null,
     });
+  }
+
+  /** Le menu social : groupe, amis, joueurs de l'île. */
+  private openSocialPanel(): void {
+    openSocial(this.panels, {
+      social: this.social,
+      visitors: () => this.presence?.visitors().map((v) => v.name) ?? [],
+      gameCode: () => this.coop?.code ?? null,
+      whisper: (name) => {
+        this.panels.close();
+        this.chat?.focus(`/m ${name} `);
+      },
+      shop: (name) => this.social && openPlayerShop(this.panels, this.social, this.d.progress, name),
+      market: () => this.social && openMarket(this.panels, this.social, this.d.progress, (name) => this.social && openPlayerShop(this.panels, this.social, this.d.progress, name)),
+    });
+  }
+
+  /** Un joueur du groupe nous invite dans sa partie en coop. */
+  private joinGame(code: string): void {
+    if (this.coop) this.screens.toast('Tu es déjà dans une partie en coop.');
+    else if (this.mode !== 'island' || this.busy) this.screens.toast('Reviens sur l’île pour rejoindre la partie.');
+    else this.joinSession(CoopSession.join(this.d.network, code, this.member(this.d.account?.session.pseudo ?? pseudo(this.d.progress))));
+  }
+
+  /** Ce que les autres joueurs de l'île voient de nous : le pseudo du compte (sinon celui de la coop), le héros. */
+  private islandProfile(): Profile {
+    return {
+      name: this.d.account?.session.pseudo ?? pseudo(this.d.progress),
+      sprite: heroSprite(this.shownHero()),
+      level: this.d.progress.level,
+    };
   }
 
   /** « ! » ou « ? » au-dessus des PNJ, selon la variante de dialogue qui serait jouée. */
@@ -521,6 +634,9 @@ export class App {
           break;
         case 'forge':
           openForge(this.panels, this.ui);
+          break;
+        case 'records':
+          openRecords(this.panels, this.social);
           break;
         case 'chests':
           this.openChests();
@@ -661,11 +777,12 @@ export class App {
     this.busy = true;
     const data = content.endless;
     const keep = bloc > 0 && this.endless !== null;
+    if (!keep) this.pactesEncours = [];
     const cleared = keep && this.endless ? this.endless.cleared : 0;
     const player = this.loadout().config;
     const allies = this.botAllies();
     const dungeon = this.endlessDungeon(bloc);
-    const waves = blocWaves(data, content.difficulty, bloc, endlessArenas, 1 + allies.length);
+    const waves = blocWaves(data, content.difficulty, bloc, endlessArenas, 1 + allies.length, undefined, this.pactesEncours);
     const first = firstPalier(data, bloc);
     await this.screens.transition(data.name, this.endlessSubtitle(bloc, 1 + allies.length), () => {
       const world = new World({ ...this.d.config, ...dungeon.arena, waves, player, allies: allies.map((a) => a.config), difficulty: waves[0].difficulty });
@@ -752,6 +869,7 @@ export class App {
     const events = world.drainEvents();
     if (online) this.shareState(world, events);
     for (const event of events) {
+      this.sfxEvent(event, world.player.id);
       this.track(event);
       // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
       if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
@@ -819,6 +937,21 @@ export class App {
   // --- Coop en ligne ---------------------------------------------------------------
 
   /**
+   * Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts).
+   * En coop, seuls mes coups et les coups que je reçois sonnent : ceux des alliés passeraient en rafale continue.
+   */
+  private sfxEvent(event: GameEvent, me: number): void {
+    if (event.type === 'enemyHit') {
+      if (event.owner >= 0 && event.owner !== me) return;
+      this.sfx.play(event.crit ? 'crit' : 'coup');
+      return;
+    }
+    if (event.type === 'playerHit' && event.hero !== me) return;
+    const id = SFX_DES_EVENTS[event.type];
+    if (id) this.sfx.play(id);
+  }
+
+  /**
    * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
    * depuis le précédent (canal sûr).
    */
@@ -860,11 +993,14 @@ export class App {
     mirror.update(now);
     const events = this.inbox;
     this.inbox = [];
-    for (const event of events) this.track(event);
+    for (const event of events) {
+      this.track(event);
+      this.sfxEvent(event, mirror.player.id);
+    }
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
       // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
-      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 ? session?.ping : undefined));
+      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 && !session?.dedicated ? session?.ping : undefined));
       hud.update(mirror, events, dt);
     }
     dungeonRenderer.render();
@@ -929,6 +1065,7 @@ export class App {
     this.refreshLobby = openLobby(this.panels, session, this.d.progress, {
       launch: () => {
         if (session.isHost && session.allReady) void this.startCoop(session.start(this.member()));
+        else if (session.leads && session.allReady) session.launch(this.member());
       },
       quit: () => {
         this.panels.close();
@@ -965,6 +1102,7 @@ export class App {
     const endless = start.dungeon === ENDLESS;
     const bloc = endless ? blocOf(data, start.level) : 0;
     const keep = endless && bloc > 0 && this.endless !== null;
+    if (endless && !keep) this.pactesEncours = [];
     const cleared = keep && this.endless ? this.endless.cleared : 0;
     const dungeon = endless ? this.endlessDungeon(bloc) : (content.dungeons[start.dungeon] ?? content.dungeons.rizieres);
     const level = endless ? levelAt(data, start.level) : clampLevel(content.difficulty, start.level);
@@ -975,7 +1113,7 @@ export class App {
     await this.screens.transition(title, subtitle, () => {
       this.coopRun = start.run;
       if (session.isHost) {
-        const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length) : null;
+        const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length, undefined, this.pactesEncours) : null;
         const difficulty = waves ? waves[0].difficulty : dungeonDifficultyFor(content.difficulty, level, configs.length, dungeon.strength);
         this.world = new World({ ...this.d.config, ...dungeon.arena, ...(waves ? { waves } : {}), player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
@@ -996,6 +1134,7 @@ export class App {
       this.endless = endless ? { bloc, cleared, awaiting: false } : null;
       return ready;
     });
+    if (!session.isHost) session.loaded(start.run);
     this.busy = false;
   }
 
@@ -1119,19 +1258,19 @@ export class App {
     }
   }
 
-  /** Un objet rejoint le butin de la descente ; déjà possédé, il est fondu en ressources plutôt que perdu. */
+  /** Un objet rejoint le butin de la descente ; déjà possédé, son exemplaire ira dans la réserve à l'encaissement. */
   private gainRunItem(id: string, label = 'Butin rare'): void {
     const def = content.items[id];
     if (!def) return;
     if (!this.d.progress.has(id) && !this.run.items.includes(id)) {
       this.run.items.push(id);
+      markSeen(id);
+      this.sfx.play('butin');
       this.screens.toast(`${label} : ${def.name}`, 'loot', id);
     } else if (def.slot) {
-      const s = salvage(content.duplicates, content.upgrade, def);
       this.run.duplicates.push(id);
-      this.run.oboles += s.oboles;
-      if (s.material) this.run.materials[s.material] = (this.run.materials[s.material] ?? 0) + s.count;
-      this.screens.toast(`Doublon : ${def.name}, fondu en ressources`, 'loot', id);
+      markSeen(id);
+      this.screens.toast(`Doublon : ${def.name}, pour ta réserve`, 'loot', id);
     }
   }
 
@@ -1163,7 +1302,7 @@ export class App {
       xp: Math.round(this.run.xp),
       materials: [
         ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
-        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`)),
+        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure scellée, dans ta réserve`)),
         ...this.duplicateLines(),
         ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
       ],
@@ -1177,8 +1316,10 @@ export class App {
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(this.run.materials)) progress.gainMaterial(id, amount);
     for (const item of this.run.items) progress.acquire(item, content.items[item]?.slot);
-    // Le sceau ne se pose qu'avec le reste : tomber avant de remonter le rend au Yomi, comme le butin en jeu.
-    if (victory) for (const seal of this.run.seals) progress.setGravure(seal.item, seal.gravure);
+    // Les doublons et les sceaux vont dans la réserve. Le sceau ne compte qu'avec le reste : tomber avant de remonter
+    // le rend au Yomi, comme le butin en jeu.
+    for (const item of this.run.duplicates) stockItem(progress, item);
+    if (victory) for (const seal of this.run.seals) stockItem(progress, seal.item, 1, seal.gravure, true);
     progress.state.chests += chests;
     return progress.gainXp(xp);
   }
@@ -1268,10 +1409,15 @@ export class App {
       const record = this.recordEndless(last);
       const item = rollEndlessItem(data, last, content.items, progress.state.hero, content.skills, (id) => progress.has(id) || this.run.items.includes(id));
       if (item) this.gainRunItem(item, `Palier ${last}`);
+      const eclat = data.rewards.eclat;
+      if (eclat && last >= eclat.from) {
+        this.run.materials[eclat.material] = (this.run.materials[eclat.material] ?? 0) + eclat.count;
+        this.screens.toast(`Palier ${last} : ${eclat.count} × ${content.materials[eclat.material] ?? eclat.material}`, 'loot');
+      }
       const seal = this.drawSeal(last);
       if (seal) {
         this.run.seals.push(seal);
-        this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`, 'loot', seal.item);
+        this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure scellée`, 'loot', seal.item);
       }
       endless.awaiting = true;
       const next = endless.bloc + 1;
@@ -1375,16 +1521,31 @@ export class App {
     void this.runActions(actions);
   }
 
-  /** Continuer plus bas : en solo, le bloc suivant ; en coop, l'hôte relance tout le monde. */
+  /**
+   * Continuer plus bas : les pactes d'abord, si le bloc suivant les réclame (premier palier ≥ 51), puis la descente ;
+   * en coop, l'hôte scelle un pacte et relance tout le monde. Les invités ne passent jamais ici (ils encaissent).
+   */
   private continueEndless(bloc: number): void {
-    const session = this.coop;
-    if (!session) {
-      void this.descendEndless(bloc);
+    const relance = () => {
+      const session = this.coop;
+      if (!session) {
+        void this.descendEndless(bloc);
+        return;
+      }
+      if (!session.isHost) return;
+      session.choose(ENDLESS, firstPalier(content.endless, bloc));
+      void this.startCoop(session.start(this.member()));
+    };
+    const drafts = pacteDraft(content.endless, bloc, Math.random, this.pactesEncours.map((p) => p.id ?? p.name));
+    if (drafts) {
+      openPactDraft(this.panels, firstPalier(content.endless, bloc), content.endless.palierStep, drafts, (pacte) => {
+        this.pactesEncours = [...this.pactesEncours, pacte];
+        this.screens.toast(`Pacte scellé : ${pacte.name}`, 'quest');
+        relance();
+      });
       return;
     }
-    if (!session.isHost) return;
-    session.choose(ENDLESS, firstPalier(content.endless, bloc));
-    void this.startCoop(session.start(this.member()));
+    relance();
   }
 
   private afterEndlessOptions(): MenuOption[] {
@@ -1410,22 +1571,19 @@ export class App {
     const { progress } = this.d;
     const best = progress.state.flags[ENDLESS_RECORD] ?? 0;
     submitGlobalRecord(palier, `${heroLabel(content.skills, progress.state.hero)}, niv. ${progress.level}`);
+    // Sur le serveur du jeu, avec un compte : le palier se grave aussi sur la stèle partagée.
+    this.social?.submitRecord(heroLabel(content.skills, progress.state.hero), palier);
     if (palier <= best) return false;
     progress.state.flags[ENDLESS_RECORD] = palier;
     progress.save();
     return true;
   }
 
-  /** « Doublon fondu : Katana de rōnin ×2 (+80 oboles, +6 Écaille de kappa) », un par objet. */
+  /** « Doublon : Katana de rōnin ×2, dans ta réserve », un par objet. */
   private duplicateLines(): HTMLElement[] {
     const counts = new Map<string, number>();
     for (const id of this.run.duplicates) counts.set(id, (counts.get(id) ?? 0) + 1);
-    return [...counts].map(([id, n]) => {
-      const def = content.items[id];
-      const s = salvage(content.duplicates, content.upgrade, def);
-      const gain = [`+${s.oboles * n} oboles`, s.material ? `+${s.count * n} ${content.materials[s.material]}` : null].filter(Boolean).join(', ');
-      return lootLine(id, `Doublon fondu : ${def.name}${n > 1 ? ` ×${n}` : ''} (${gain})`);
-    });
+    return [...counts].map(([id, n]) => lootLine(id, `Doublon : ${content.items[id]?.name ?? id}${n > 1 ? ` ×${n}` : ''}, dans ta réserve`));
   }
 
   /**
@@ -1511,7 +1669,7 @@ export class App {
         },
       });
     }
-    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.sfx, this.resolution) });
     options.push({
       label: 'Menu principal',
       action: () => {
@@ -1540,9 +1698,15 @@ export class App {
 
   private setMode(mode: Mode): void {
     this.mode = mode;
+    // Hors de l'île (donjon, écran titre), on n'y est plus visible ; on y réapparaît au prochain passage.
+    if (mode !== 'island' && this.presence) {
+      this.presence.leave();
+      this.d.islandRenderer.hideVisitors();
+    }
     if (mode === 'title') this.music.play('menu');
     else if (mode === 'island') this.music.play('ile');
     document.body.dataset.mode = mode;
     this.screens.showIslandHud(mode === 'island');
+    this.chat?.show(mode === 'island' || mode === 'dungeon');
   }
 }

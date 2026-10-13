@@ -15,7 +15,7 @@ import {
   type Snapshot,
   type Start,
 } from './protocol';
-import { openRoom, type Json, type Network, type Room } from './transport';
+import { openRoom, serverPost, type Json, type Network, type Room } from './transport';
 
 /** Lettres des codes : ni 0 ni O, ni 1 ni I, pour qu'on ne les confonde pas en les dictant. */
 const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -97,6 +97,16 @@ export class CoopSession {
     return session;
   }
 
+  /**
+   * Ouvre une partie tenue par le serveur du jeu (src/net/dedicated.ts) : le combat tourne chez lui, et l'on y entre
+   * comme invité, en premier, donc pour mener le salon.
+   */
+  static hostOnServer(network: Network, me: Member, options: { open: boolean }): CoopSession {
+    const code = newCode();
+    serverPost({ t: 'heberger', code, open: options.open });
+    return CoopSession.join(network, code, me);
+  }
+
   /** Rejoint la partie de ce code. */
   static join(network: Network, code: string, me: Member): CoopSession {
     const session = new CoopSession('guest', code, network, me, openRoom(network, roomOf(code)));
@@ -117,8 +127,22 @@ export class CoopSession {
     return this.lobby.players.length;
   }
 
-  /** Tous les invités sont prêts (et il y en a au moins un). */
+  /** Partie tenue par le serveur : pas d'hôte joueur. */
+  get dedicated(): boolean {
+    return Boolean(this.lobby.dedicated);
+  }
+
+  /** Celui qui choisit le donjon et lance la descente : l'hôte, ou le meneur d'une partie du serveur. */
+  get leads(): boolean {
+    return this.isHost || (this.dedicated && this.lobby.leader === this.selfId);
+  }
+
+  /**
+   * Tous les autres sont prêts. Chez un hôte, il faut au moins un invité ; une partie du serveur peut descendre
+   * avec son seul meneur.
+   */
   get allReady(): boolean {
+    if (this.dedicated) return this.lobby.players.every((p) => p.peer === this.lobby.leader || p.ready);
     const guests = this.lobby.players.filter((p) => !p.host);
     return guests.length > 0 && guests.every((p) => p.ready);
   }
@@ -174,8 +198,12 @@ export class CoopSession {
     this.announce();
   }
 
-  /** Hôte : donjon et niveau de la prochaine descente. */
+  /** Hôte (ou meneur d'une partie du serveur) : donjon et niveau de la prochaine descente. */
   choose(dungeon: string, level: number): void {
+    if (!this.isHost) {
+      if (this.leads && this.hostPeer) this.room.send('choose', { dungeon, level }, this.hostPeer);
+      return;
+    }
     this.lobby.dungeon = dungeon;
     this.lobby.level = level;
     this.broadcastLobby();
@@ -183,6 +211,10 @@ export class CoopSession {
 
   /** Hôte : la partie paraît (ou non) dans la liste des parties publiques. */
   setOpen(open: boolean): void {
+    if (!this.isHost) {
+      if (this.leads && this.hostPeer) this.room.send('choose', { open }, this.hostPeer);
+      return;
+    }
     this.lobby.open = open;
     window.clearInterval(this.announcer);
     if (open && !this.board) {
@@ -291,6 +323,17 @@ export class CoopSession {
   setReady(ready: boolean, me?: Member): void {
     if (me) Object.assign(this.me, me);
     if (this.hostPeer) this.room.send('ready', { ready, member: this.me } as unknown as Json, this.hostPeer);
+  }
+
+  /** Invité : la descente `run` est chargée chez nous (une partie du serveur attend tout le monde pour commencer). */
+  loaded(run: number): void {
+    if (this.hostPeer) this.room.send('charge', run, this.hostPeer);
+  }
+
+  /** Meneur d'une partie du serveur : lance la descente, avec son héros tel qu'il est maintenant. */
+  launch(me: Member): void {
+    Object.assign(this.me, me);
+    if (this.hostPeer) this.room.send('launch', { member: this.me } as unknown as Json, this.hostPeer);
   }
 
   /** Invité : ses commandes de ce pas, pour l'hôte. */

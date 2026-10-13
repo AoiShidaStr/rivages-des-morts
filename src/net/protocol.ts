@@ -45,6 +45,10 @@ export interface Lobby {
   level: number;
   open: boolean;
   inGame: boolean;
+  /** Partie tenue par le serveur du jeu (src/net/dedicated.ts) : pas d'hôte joueur, le meneur choisit et lance. */
+  dedicated?: boolean;
+  /** Partie du serveur : le joueur qui mène le salon. */
+  leader?: string;
 }
 
 /** Début d'une descente : son numéro, le donjon, son niveau, les héros dans l'ordre et la place de celui qui reçoit. */

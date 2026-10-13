@@ -41,6 +41,7 @@
   ],
   "interactables": [
     { "id": "charon", "name": "Charon", "sprite": "charon", "u": -19.4, "v": -23.3, "solid": 0.45 },
+    { "id": "stele-records", "name": "Stèle des records", "verb": "Lire", "dialogue": "stele", "u": -22.4, "v": -21.7, "reach": 2.2, "solid": 0.25 },
     { "id": "barque", "name": "Barque de Charon", "verb": "Examiner", "sprite": "barque", "u": -29.32, "v": -24.63, "reach": 2.6 },
     { "id": "obaa", "name": "Obaa Kiku", "sprite": "obaaKiku", "u": -13.7, "v": 4.1, "solid": 0.4 },
     { "id": "tetsu", "name": "Le forgeron", "nameIf": [{ "if": [{ "flag": "nom_tetsu" }], "name": "Tetsu" }], "sprite": "tetsu", "u": -3.23, "v": 10.11, "solid": 0.45 },
@@ -54,6 +55,7 @@
     { "id": "jizo-5", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -33.57, "v": 20.2, "solid": 0.3 },
     { "id": "jizo-6", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -33.92, "v": 20.86, "solid": 0.3 },
     { "id": "ema", "name": "Plaque votive", "verb": "Examiner", "sprite": "ema", "u": 16.08, "v": -3.3, "solid": 0.3, "if": [{ "quest": "forgeron", "is": "active" }, { "notFlag": "ema_trouvee" }] },
+    { "id": "gardien-errant", "name": "Le gardien errant", "verb": "Contempler", "dialogue": "gardien", "sprite": "gardien", "u": 17.8, "v": -1.9, "reach": 2.4, "solid": 0.35, "if": [{ "notFlag": "gardien_rencontre" }] },
     { "id": "coffre-pont", "name": "Coffre caché", "verb": "Ouvrir", "sprite": "coffre", "u": -1.42, "v": -25.31, "if": [{ "notFlag": "coffre_pont" }] },
     { "id": "faille-cascade", "name": "Faille derrière la cascade", "verb": "Entrer", "u": 19.4, "v": 37.9, "reach": 1.8, "if": [{ "level": 50 }] },
     { "id": "coffre-cascade", "name": "Coffre moussu", "verb": "Ouvrir", "sprite": "coffre", "u": 31.5, "v": 34.4, "if": [{ "notFlag": "coffre_cascade" }] },
@@ -72,6 +74,7 @@
     { "id": "sutra-3", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 7.68, "v": 57.22, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-3" }] }
   ],
   "decor": [
+    { "sprite": "ile/pierre-dressee", "u": -22.4, "v": -21.7, "height": 1.7 },
     { "sprite": "ile/pierre-dressee", "u": -3.27, "v": 25.17, "height": 1.8 },
     { "sprite": "ile/puits", "u": 3.11, "v": 28.14, "height": 2.2 },
     { "sprite": "rizieres/riz", "u": 14.58, "v": 7.66, "height": 0.55 },

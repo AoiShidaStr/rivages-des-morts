@@ -61,8 +61,8 @@ export interface GravureCostDef {
 }
 
 /**
- * Le sceau du Yomi : la première gravure d'une arme se gagne (fin du bloc du palier `palier` du donjon infini), elle ne
- * s'achète pas. Le sceau désigne lui-même l'arme, au hasard, parmi celles qui n'ont jamais été gravées.
+ * Le sceau du Yomi : un exemplaire d'arme à la gravure cachée (fin du bloc du palier `palier` du donjon infini). Le sceau
+ * désigne l'arme, d'abord parmi celles jamais gravées, sinon parmi tout le sac ; on le brise dans la réserve.
  */
 export interface GravureSealDef {
   palier: number;
@@ -124,10 +124,10 @@ export function rollSealTarget(weapons: readonly string[], rolls: (item: string)
 export const gravureSealText = (sceau: GravureSealDef): string => sceau.summary.replace('{palier}', String(sceau.palier));
 
 /**
- * Le sceau gagné en finissant le bloc qui se termine au palier `palier` : il désigne une arme du sac jamais gravée, au
- * hasard, et renvoie son premier tirage. `null` si le palier n'est pas celui du sceau, ou si toutes les armes du sac
- * sont déjà gravées — le sceau n'a alors rien à marquer. Comme le butin du donjon infini, il reste en jeu jusqu'à
- * l'encaissement (voir `grantRun`, dans l'app).
+ * Le sceau gagné en finissant le bloc qui se termine au palier `palier` : il désigne une arme du sac (jamais gravée
+ * de préférence), au hasard, et renvoie un tirage pour elle — tiré tout de suite, mais caché jusqu'à ce qu'on brise
+ * le sceau. `null` si le palier n'est pas celui du sceau, ou si le sac n'a aucune arme. Comme le butin du donjon
+ * infini, il reste en jeu jusqu'à l'encaissement (voir `grantRun`, dans l'app).
  */
 export function rollSeal(
   data: GravureData,
@@ -138,7 +138,10 @@ export function rollSeal(
   random: () => number = Math.random,
 ): { item: string; gravure: Gravure } | null {
   if (palier !== data.sceau.palier) return null;
-  const item = rollSealTarget(owned.filter((id) => items[id]?.slot === 'arme'), rolls, random);
+  // 0.19.0 : le sceau se farme. Il vise d'abord une arme jamais gravée ; quand toutes le sont, n'importe quelle arme
+  // du sac — l'exemplaire scellé part dans la réserve, à ouvrir, poser ou revendre.
+  const weapons = owned.filter((id) => items[id]?.slot === 'arme');
+  const item = rollSealTarget(weapons, rolls, random) ?? (weapons.length ? weapons[Math.floor(random() * weapons.length)] : null);
   return item ? { item, gravure: rollGravure(data, items[item].tags ?? [], random) } : null;
 }
 

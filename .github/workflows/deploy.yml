@@ -27,7 +27,9 @@ jobs:
           cache: npm
       - run: npm ci
       # Base relative : le jeu marche sous /rivages-des-morts/ comme sur n'importe quel autre hébergement.
-      - run: npm run build -- --base=./
+      # Seulement le jeu (pas son serveur, qui ne sert pas sur GitHub Pages) : sans serveur, il garde la coop en WebRTC.
+      - run: npm run typecheck
+      - run: npx vite build --base=./
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

@@ -108,7 +108,13 @@ export function openCoopMenu(host: PanelHost, deps: CoopDeps): void {
       { class: 'list coop' },
       h('label', { class: 'coop-field' }, h('span', {}, 'Ton pseudo'), name),
       h('h3', {}, 'Créer une partie'),
-      h('p', { class: 'note' }, 'Tu es l’hôte : le combat tourne sur ton ordinateur. Donne le code à tes amis.'),
+      h(
+        'p',
+        { class: 'note' },
+        deps.network === 'serveur'
+          ? 'Le combat tourne sur le serveur du jeu : il continue même si un joueur part. Donne le code à tes amis.'
+          : 'Tu es l’hôte : le combat tourne sur ton ordinateur. Donne le code à tes amis.',
+      ),
       h('label', { class: 'coop-check' }, open, h('span', {}, 'Partie publique : elle apparaît dans la liste des autres joueurs')),
       h(
         'div',
@@ -120,7 +126,9 @@ export function openCoopMenu(host: PanelHost, deps: CoopDeps): void {
             onclick: () => {
               host.close();
               const record = deps.progress.dungeon('rizieres');
-              deps.opened(CoopSession.host(deps.network, deps.member(who()), { open: open.checked, dungeon: 'rizieres', level: Math.max(1, Math.min(record.unlocked, deps.progress.level)) }));
+              // Sur un jeu hébergé, c'est le serveur qui tient la partie ; sinon, ce navigateur.
+              if (deps.network === 'serveur') deps.opened(CoopSession.hostOnServer(deps.network, deps.member(who()), { open: open.checked }));
+              else deps.opened(CoopSession.host(deps.network, deps.member(who()), { open: open.checked, dungeon: 'rizieres', level: Math.max(1, Math.min(record.unlocked, deps.progress.level)) }));
             },
           },
           'Créer la partie',
@@ -157,14 +165,15 @@ export function openLobby(
         'div',
         { class: `coop-player${p.peer === session.selfId ? ' me' : ''}` },
         h('div', {}, h('strong', {}, p.name), h('small', {}, `${raceName(p.race)} · ${className(p.cls)} · niv. ${p.level}`)),
-        h('span', { class: `coop-status${p.ready ? ' ready' : ''}` }, p.host ? 'Hôte' : p.ready ? 'Prêt' : 'Pas prêt'),
+        h('span', { class: `coop-status${p.ready || p.peer === lobby.leader ? ' ready' : ''}` }, p.host ? 'Hôte' : p.peer === lobby.leader ? 'Meneur' : p.ready ? 'Prêt' : 'Pas prêt'),
       ),
     );
     for (let i = lobby.players.length; i < MAX_PLAYERS; i++) rows.push(h('div', { class: 'coop-player empty' }, h('small', {}, 'Place libre')));
 
     const settings: HTMLElement[] = [];
-    if (session.isHost) {
-      const dungeons = openDungeons(progress);
+    if (session.leads) {
+      // Le serveur ne tient pas le Yomi sans fond : ses blocs se décident chez un hôte joueur.
+      const dungeons = openDungeons(progress).filter((id) => !session.dedicated || id !== ENDLESS);
       const endless = lobby.dungeon === ENDLESS;
       const unlocked = endless ? 1 : clampLevel(content.difficulty, progress.dungeon(lobby.dungeon).unlocked);
       const set = (level: number) => session.choose(lobby.dungeon, Math.max(1, Math.min(unlocked, level)));
@@ -208,10 +217,11 @@ export function openLobby(
       );
     } else {
       const where = lobby.dungeon === ENDLESS ? `${dungeonName(lobby.dungeon)}, palier ${lobby.level}` : `${dungeonName(lobby.dungeon)}, niveau ${lobby.level}`;
-      settings.push(h('p', { class: 'note' }, `${where} : c’est l’hôte qui choisit.`));
+      settings.push(h('p', { class: 'note' }, `${where} : c’est ${session.dedicated ? 'le meneur' : 'l’hôte'} qui choisit.`));
     }
 
-    const waiting = session.isHost && !session.allReady;
+    const waiting = session.leads && !session.allReady;
+    const alone = !session.dedicated && lobby.players.length < 2;
     const parts: (HTMLElement | null)[] = [
       h(
         'div',
@@ -227,16 +237,16 @@ export function openLobby(
         'div',
         { class: 'entry-actions' },
         h('button', { class: 'btn', onclick: () => actions.quit() }, session.isHost ? 'Fermer la partie' : 'Quitter la partie'),
-        session.isHost
+        session.leads
           ? h(
               'button',
               {
                 class: 'btn primary',
                 disabled: waiting || lobby.inGame,
-                title: waiting ? (lobby.players.length < 2 ? 'Attends qu’un ami rejoigne la partie' : 'Attends que tout le monde soit prêt') : '',
+                title: waiting ? (alone ? 'Attends qu’un ami rejoigne la partie' : 'Attends que tout le monde soit prêt') : '',
                 onclick: () => actions.launch(),
               },
-              lobby.players.length < 2 ? 'En attente de joueurs…' : waiting ? 'En attente des joueurs prêts…' : 'Descendre ensemble',
+              alone ? 'En attente de joueurs…' : waiting ? 'En attente des joueurs prêts…' : lobby.players.length < 2 ? 'Descendre' : 'Descendre ensemble',
             )
           : h(
               'button',
@@ -248,7 +258,11 @@ export function openLobby(
     body.replaceChildren(...parts.filter((part): part is HTMLElement => part !== null));
   };
 
-  const subtitle = session.isHost ? 'Tu es l’hôte. Tes amis rejoignent avec le code.' : 'En attente de l’hôte…';
+  const subtitle = session.isHost
+    ? 'Tu es l’hôte. Tes amis rejoignent avec le code.'
+    : session.network === 'serveur'
+      ? 'Partie tenue par le serveur : le combat continue même si un joueur part.'
+      : 'En attente de l’hôte…';
   host.show('Salon coop', subtitle, body, { onClose: () => actions.closed() });
   if (session.lobby.players.length) render(session.lobby);
   else body.replaceChildren(h('p', { class: 'note' }, `Connexion à la partie ${session.code}…`));

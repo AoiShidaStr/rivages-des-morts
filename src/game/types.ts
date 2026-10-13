@@ -57,7 +57,7 @@ export interface InputFrame {
 export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string; step?: string; palier?: number }
   | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number }
-  | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean }
+  | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean; /** Coop : index du joueur qui a frappé (0 en solo, -1 si le coup vient de l'environnement). */ owner: number }
   /** `blocked` : ce qui a traversé la garde du Guerrier. */
   | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean; hero: number }
   /** Coop : un héros tombe à terre ; un allié qui reste à côté le relève. */

@@ -117,7 +117,7 @@ La Marque du chasseur remplace la Mine spirituelle prévue au départ, pour gard
 - Tous ses dégâts (boules, sceaux, braises, bouclier, météore) suivent la puissance de l'arme, comme les coups des autres classes.
 - **Équilibrage** (bot, 0.8.0) : au banc, le Sorcier fait 110 à 119 % des dégâts de la meilleure autre classe, et en donjon il a le plus de dégâts par seconde à tous les niveaux. Il a aussi la pire survie : 67, 46 et 30 % de victoires au Palais aux niveaux 10, 30 et 50, et 100 % aux Rizières. Sa croissance lui est propre : son niveau ne lui donne aucun dégât et 2 PV au lieu de 3, et son catalyseur forgé fait toute sa puissance. Sans objet au niveau 50, il ne gagne que 22 % des descentes contre un donjon niveau 30. Détail dans `docs/equilibrage.md`.
 - **Sauvegardes** : un héros Invocateur devient Sorcier, ses points de talent lui sont rendus et son compagnon disparaît. Les âmes alliées ne restent qu'au Paladin, avec Relever.
-- **Apparence** : de nouveaux sprites sont à dessiner (prompts dans le dossier partagé du projet, `prompts-animations/`). En attendant, le Sorcier reprend ceux de l'Invocateur (`src/render/heroes.ts`, `BORROWED`).
+- **Apparence** : de nouveaux sprites sont à dessiner (prompts dans `docs/prompts-2d/03-heros-sorcier.md`, vues de face et de dos dans `plus-tard/`). En attendant, le Sorcier reprend ceux de l'Invocateur (`src/render/heroes.ts`, `BORROWED`).
 
 ### Arbres de compétences (V1)
 

@@ -11,7 +11,23 @@ export function alphaMask(data, w, h, options) {
   removeSmallParts(alpha, w, h, options.minPartRatio);
   softenEdges(alpha, w, h);
   if (options.defringe) defringe(data, alpha, w, h, options.defringe);
+  if (options.despill) despill(data, alpha, w * h, options.despill === true ? 8 : options.despill);
   return alpha;
+}
+
+/**
+ * Retire la teinte du fond magenta déteinte sur le sujet (bords, contours, traînées) : ce que le rouge et le bleu
+ * ont tous deux en plus du vert (au-delà de `excess`) leur est retiré. Le gris bleuté de l'Oublié, où le rouge
+ * reste sous le vert, n'est pas touché ; le liseré rose redevient gris. Modifie `data` (RVB) sur place.
+ */
+function despill(data, alpha, count, excess) {
+  for (let i = 0; i < count; i++) {
+    if (!alpha[i]) continue;
+    const spill = Math.min(data[i * 3], data[i * 3 + 2]) - data[i * 3 + 1] - excess;
+    if (spill <= 0) continue;
+    data[i * 3] -= spill;
+    data[i * 3 + 2] -= spill;
+  }
 }
 
 /**
@@ -126,13 +142,16 @@ export function floodBackground(data, w, h, options) {
   let head = 0;
   let tail = 0;
 
+  // Fond coloré (le magenta de l'Oublié, une créature grise qui se confondrait avec le fond gris) : seule compte
+  // la distance à la couleur du fond, pas la saturation.
+  const colored = Math.max(...ref) - Math.min(...ref) > 64;
   const greyNear = (i, color, maxGap, maxSat) => {
     const r = data[i * 3];
     const g = data[i * 3 + 1];
     const b = data[i * 3 + 2];
     const saturation = Math.max(r, g, b) - Math.min(r, g, b);
     const gap = Math.abs(r - color[0]) + Math.abs(g - color[1]) + Math.abs(b - color[2]);
-    return saturation <= maxSat && gap <= maxGap * 3;
+    return (colored || saturation <= maxSat) && gap <= maxGap * 3;
   };
   const greyWithin = (i, maxGap, maxSat) => greyNear(i, ref, maxGap, maxSat);
 

@@ -521,7 +521,7 @@ export class World {
         for (const enemy of [...this.enemies]) {
           if (!enemy.targetable || distance(enemy.pos, guard.pos) - enemy.radius > reach) continue;
           struck = true;
-          enemy.receiveHit({ amount: hero.cfg.attack.damage * cfg.damageFactor * hero.damageMultiplier(), from: guard.pos, knockback: 4, ignoreShell: true }, this);
+          enemy.receiveHit({ amount: hero.cfg.attack.damage * cfg.damageFactor * hero.damageMultiplier(), from: guard.pos, knockback: 4, ignoreShell: true, owner: hero.id }, this);
           if (enemy.dead) hero.onKill();
         }
       });
@@ -836,7 +836,7 @@ export class World {
     if (perks.huntMarkAll && enemy.marks.hunt > 0) amount *= 1 + perks.huntMarkAll;
     // Cœur de l'Assassin : frapper une proie empoisonnée nourrit la Lame.
     if (perks.poisonHitHeal && enemy.poison) player.leech(perks.poisonHitHeal, this);
-    const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1 }, this);
+    const shielded = enemy.receiveHit({ amount, from, knockback, crit: factor > 1, owner: player.id }, this);
     if (!shielded) player.gainFervor(player.cfg.paladin.judgement.perHit);
     if (factor > 1 && perks.critHeal) player.heal(perks.critHeal, this);
     // Lame : chaque coup nourrit le combo ; chaque critique rapproche l'esquive et soigne un peu.
@@ -850,7 +850,7 @@ export class World {
     const bolt = player.landHit();
     if (bolt && !enemy.dead) {
       this.emit({ type: 'lightning', pos: { ...enemy.pos } });
-      enemy.receiveHit({ amount: bolt, from, knockback: 1, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: bolt, from, knockback: 1, ignoreShell: true, owner: player.id }, this);
     }
     if (enemy.dead) player.onKill();
     else if (player.cfg.kit === 'lame') this.poison(enemy, player);
@@ -858,7 +858,7 @@ export class World {
     // Colère de la tempête : en Offensive, un coup sur quelques-uns appelle la foudre de Susanoo.
     if (player.offenseStrike() && !enemy.dead) {
       this.emit({ type: 'lightning', pos: { ...enemy.pos } });
-      enemy.receiveHit({ amount: (perks.offenseBolt?.damage ?? 0) * player.damageMultiplier(), from, knockback: 1, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: (perks.offenseBolt?.damage ?? 0) * player.damageMultiplier(), from, knockback: 1, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
     }
     // Naginata du Maître d'Armes : le coup préparé en passant en Offensive fait saigner.
@@ -882,7 +882,7 @@ export class World {
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center.pos) - enemy.radius > cfg.radius) continue;
       if (enemy !== center) {
-        enemy.receiveHit({ amount: base * cfg.damage * player.damageMultiplier(), from: center.pos, knockback: 2 }, this);
+        enemy.receiveHit({ amount: base * cfg.damage * player.damageMultiplier(), from: center.pos, knockback: 2, owner: player.id }, this);
         if (enemy.dead) player.onKill();
       }
       if (!enemy.dead) this.bleed(enemy, player, base * cfg.bleed, cfg.duration);
@@ -912,7 +912,7 @@ export class World {
       dot.tick += BURN_TICK;
       const hero = this.hero(dot.hero);
       this.act(hero, () => {
-        enemy.receiveHit({ amount: dot.perSecond * BURN_TICK, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
+        enemy.receiveHit({ amount: dot.perSecond * BURN_TICK, from: enemy.pos, knockback: 0, ignoreShell: true, owner: dot.hero }, this);
         if (enemy.dead) hero.onKill();
       });
     }
@@ -925,7 +925,7 @@ export class World {
     this.emit({ type: 'lightning', pos: { ...center } });
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
-      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 2, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 2, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
     }
   }
@@ -968,7 +968,7 @@ export class World {
         // Haidate de la vipère : le poison mord plus vite.
         poison.tick += 1 / (hero.cfg.perks?.poisonHaste ?? 1);
         this.act(hero, () => {
-          enemy.receiveHit({ amount: poison.damage * poison.stacks, from: enemy.pos, knockback: 0, ignoreShell: true }, this);
+          enemy.receiveHit({ amount: poison.damage * poison.stacks, from: enemy.pos, knockback: 0, ignoreShell: true, owner: poison.hero }, this);
           if (enemy.dead) hero.onKill();
         });
       }
@@ -1091,7 +1091,7 @@ export class World {
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
       struck = true;
-      enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: smash.damage * this.player.damageMultiplier(), from: center, knockback, ignoreShell: true, owner: this.player.id }, this);
       if (!enemy.dead) {
         // Seul étourdissement des héros ; les objets ajoutent un ralentissement qui le suit.
         enemy.stun(stun, 'smash', this);
@@ -1106,7 +1106,7 @@ export class World {
     const bolted = perks.smashBolt ? closest(this.enemies.filter((e) => e.targetable && distance(e.pos, center) - e.radius <= smash.radius), center) : undefined;
     if (bolted && perks.smashBolt) {
       this.emit({ type: 'lightning', pos: { ...bolted.pos } });
-      bolted.receiveHit({ amount: perks.smashBolt * this.player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true }, this);
+      bolted.receiveHit({ amount: perks.smashBolt * this.player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true, owner: this.player.id }, this);
       if (bolted.dead) this.player.onKill();
     }
     // Kanabō du Démon-Sang : une onde de choc part de l'impact et frappe plus loin.
@@ -1116,7 +1116,7 @@ export class World {
       for (const enemy of this.enemies) {
         const gap = distance(enemy.pos, center) - enemy.radius;
         if (!enemy.targetable || gap <= smash.radius || gap > wave.radius) continue;
-        enemy.receiveHit({ amount: smash.damage * wave.damage * this.player.damageMultiplier(), from: center, knockback: wave.knockback, ignoreShell: true }, this);
+        enemy.receiveHit({ amount: smash.damage * wave.damage * this.player.damageMultiplier(), from: center, knockback: wave.knockback, ignoreShell: true, owner: this.player.id }, this);
         if (enemy.dead) this.player.onKill();
         else if (perks.smashSlow) enemy.slow(perks.smashSlow.amount, perks.smashSlow.duration, this);
       }
@@ -1139,7 +1139,7 @@ export class World {
       this.emit({ type: 'smash', pos: { ...center }, radius: smash.radius });
       for (const enemy of [...this.enemies]) {
         if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > smash.radius) continue;
-        enemy.receiveHit({ amount: player.cfg.attack.damage * factor * player.damageMultiplier(), from: center, knockback, ignoreShell: true }, this);
+        enemy.receiveHit({ amount: player.cfg.attack.damage * factor * player.damageMultiplier(), from: center, knockback, ignoreShell: true, owner: player.id }, this);
         if (enemy.dead) player.onKill();
         else enemy.stun(stun, 'smash', this);
       }
@@ -1161,7 +1161,7 @@ export class World {
     this.emit({ type: 'shockwave', pos: { ...center }, radius });
     for (const enemy of [...this.enemies]) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
-      enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
     }
   }
@@ -1175,7 +1175,7 @@ export class World {
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > bond.radius) continue;
       struck = true;
-      enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback }, this);
+      enemy.receiveHit({ amount: bond.damage * this.player.damageMultiplier(), from: center, knockback: bond.knockback, owner: this.player.id }, this);
       if (enemy.dead) this.player.onKill();
       else {
         if (bond.slow > 0) enemy.slow(BOND_SLOW, bond.slow, this);
@@ -1286,7 +1286,7 @@ export class World {
       touched++;
       const knockback = meteor ? player.cfg.sorcier.meteor.knockback : 2;
       enemy.burning = ON_FIRE;
-      enemy.receiveHit({ amount: blast.damage * player.damageMultiplier(), from: blast.pos, knockback, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: blast.damage * player.damageMultiplier(), from: blast.pos, knockback, ignoreShell: true, owner: player.id }, this);
       // Sceau d'une voie (Nuée virulente) : il empoisonne ceux qu'il prend, en plus de brûler.
       if (blast.poison) for (let i = 0; i < blast.poison && !enemy.dead; i++) this.poison(enemy, player);
       if (enemy.dead) player.onKill();
@@ -1373,7 +1373,7 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
       touched++;
       enemy.burning = ON_FIRE;
-      enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback: 4, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: damage * player.damageMultiplier(), from: center, knockback: 4, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
     }
     if (player.cfg.perks?.fireHeal && touched) player.heal(player.cfg.perks.fireHeal * touched, this);
@@ -1391,7 +1391,7 @@ export class World {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > radius) continue;
       touched++;
       enemy.burning = ON_FIRE;
-      enemy.receiveHit({ amount: amount * player.damageMultiplier(), from: center, knockback: 0, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: amount * player.damageMultiplier(), from: center, knockback: 0, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
       if (enemy.dead && mana) player.gainMana(mana);
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
@@ -1603,7 +1603,7 @@ export class World {
     const burn = (perks.auraBurn ?? 0) + (player.transformed > 0 ? (perks.yokaiAuraBurn ?? 0) : 0);
     if (!burn) return;
     for (const enemy of inside) {
-      enemy.receiveHit({ amount: burn * player.damageMultiplier(), from: player.pos, knockback: 0, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: burn * player.damageMultiplier(), from: player.pos, knockback: 0, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
     }
   }
@@ -1639,7 +1639,7 @@ export class World {
     this.emit({ type: 'guardNova', pos: { ...center }, radius: cfg.radius });
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
-      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 5, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 5, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
       if (enemy.kind === 'hitodama') this.igniteNear(enemy.pos);
     }
@@ -1781,7 +1781,7 @@ export class World {
         for (const enemy of [...this.enemies]) {
           if (!enemy.targetable || distance(enemy.pos, player.pos) - enemy.radius > cfg.radius) continue;
           enemy.receiveHit(
-            { amount: (cfg.damage ?? 0) * player.damageMultiplier(), from: player.pos, knockback: cfg.knockback ?? 4, ignoreShell: true },
+            { amount: (cfg.damage ?? 0) * player.damageMultiplier(), from: player.pos, knockback: cfg.knockback ?? 4, ignoreShell: true, owner: player.id },
             this,
           );
           if (enemy.dead) player.onKill();
@@ -1926,7 +1926,7 @@ export class World {
         this.netBurst(p.pos);
         return false;
       case 'hammer':
-        enemy.receiveHit({ amount: p.damage * player.damageMultiplier(), from, knockback: p.knockback }, this);
+        enemy.receiveHit({ amount: p.damage * player.damageMultiplier(), from, knockback: p.knockback, owner: player.id }, this);
         if (enemy.dead) player.onKill();
         else if (perks.hammerStun) enemy.slow(0.4, perks.hammerStun, this);
         else if (perks.slowedBonus) enemy.slow(0.4, 1, this);
@@ -1978,7 +1978,7 @@ export class World {
     this.emit({ type: 'lightning', pos: { ...center } });
     for (const enemy of this.enemies) {
       if (!enemy.targetable || distance(enemy.pos, center) - enemy.radius > cfg.radius) continue;
-      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: cfg.damage * player.damageMultiplier(), from: center, knockback: 1, ignoreShell: true, owner: player.id }, this);
       if (enemy.dead) player.onKill();
       else enemy.slow(0.5, cfg.stun, this);
     }
@@ -2181,7 +2181,7 @@ export class World {
     for (const enemy of this.enemies) {
       if (!enemy.targetable || enemy.kind === 'hitodama') continue;
       if (distance(enemy.pos, web.pos) > web.radius + enemy.radius) continue;
-      enemy.receiveHit({ amount: this.cfg.webs.burnDamage, from: web.pos, knockback: 2, ignoreShell: true }, this);
+      enemy.receiveHit({ amount: this.cfg.webs.burnDamage, from: web.pos, knockback: 2, ignoreShell: true, owner: -1 }, this);
     }
   }
 
