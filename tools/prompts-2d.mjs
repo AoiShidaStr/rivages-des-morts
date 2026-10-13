@@ -636,12 +636,20 @@ function checkBeats(beats, label) {
 
 const frameRange = (from, to) => (from === to ? `frame ${from}` : `frames ${from} to ${to}`);
 
-/** Planche complète : 64 images, grille 8 × 8 de cases carrées, une ligne de 8 images par animation. */
+/**
+ * Planche complète : 64 images, grille 8 × 8 de cases carrées, une ligne de 8 images par animation.
+ * Avec 4 lignes (`rows`), la planche de 32 images en image 2:1 (format du 13 octobre 2026, voir LOT_4X8).
+ */
 function sheetPrompt({ intro, rows, ch, bg, label }) {
+  const n = rows.length;
+  const cells = n * COLUMNS;
+  const format = n === COLUMNS
+    ? 'Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible).'
+    : 'Output a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible).';
   const lines = [
     intro,
-    'Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible). The image is divided into an invisible grid of 8 columns x 8 rows (64 equal square cells).',
-    'Each row is one animation of 8 frames, read left to right. The 8 rows, from top to bottom, are always in this exact order:',
+    `${format} The image is divided into an invisible grid of 8 columns x ${n} rows (${cells} equal square cells).`,
+    `Each row is one animation of 8 frames, read left to right. The ${n} rows, from top to bottom, are always in this exact order:`,
   ];
   rows.forEach((row, r) => {
     const beats = row.beats(ch);
@@ -654,7 +662,7 @@ function sheetPrompt({ intro, rows, ch, bg, label }) {
   });
   lines.push(
     'Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.',
-    'The character stays exactly the same in all 64 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.',
+    `The character stays exactly the same in all ${cells} frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.`,
     'Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.',
     'DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, except where a held pose is asked for.',
     'DO NOT simply copy the reference figure into every cell.',
@@ -835,6 +843,151 @@ const LOTS = [
 ];
 
 // ---------------------------------------------------------------------------------------------------------------
+// Planches de 4 lignes (format du 13 octobre 2026) : image 2:1, 4 lignes de 8 cases carrées, une animation par ligne.
+// Nano Banana tient mieux 32 images que 64. Un yokai tient sur une planche ; un héros ou un boss sur deux.
+
+/** Le gardien errant de l'île (PNJ, dialogue « gardien ») : il n'avait jusqu'ici que l'image de l'Oublié. */
+const GARDIEN = {
+  name: 'Gardien errant',
+  look:
+    'the Wandering Guardian, a calm mysterious spirit who walks between the drowned rice fields of the dead and the island of the living: a tall gentle figure in a long shaggy straw rain cape (mino) over faded indigo robes, a very wide woven straw hat (sugegasa) that hides the upper face in shadow, two small pale calm eyes visible under the brim, a few rice stalks caught in the straw, a long weathered bamboo staff with a tiny bronze bell, and an ornate many-toothed wooden comb tucked at the belt (the comb of Izanagi). Serene, patient, ancient.',
+  idle: 'standing perfectly still, both hands resting on the staff, the straw cape stirring, the hat tilting slowly, the tiny bell swaying',
+};
+
+/** Lignes propres au gardien : il attend, parle, offre le peigne et s'incline, et marche (il erre). */
+const GARDIEN_ROWS = [
+  CREATURE_ROWS[0],
+  {
+    fr: 'Parole',
+    en: 'TALK, speaking calmly',
+    loop: true,
+    beats: () => [
+      [1, 2, 'the idle pose, the head lifting slightly toward the listener'],
+      [3, 4, 'the free hand rising in a slow open gesture, the hat tilting'],
+      [5, 6, 'the hand turning palm up, the head nodding gently'],
+      [7, 8, 'the hand lowering back toward the staff, leading back to frame 1'],
+    ],
+  },
+  {
+    fr: 'Offrande et salut',
+    en: 'OFFERING AND BOW',
+    loop: false,
+    beats: () => [
+      [1, 2, 'the free hand takes the ornate wooden comb from the belt'],
+      [3, 4, 'the comb held out forward on the open palm, offered, the arm fully extended'],
+      [5, 6, 'the hand empty, the guardian bowing deeply, the hat brim lowering in front of the face'],
+      [7, 8, 'the deep bow held, motionless; frames 7 and 8 are identical'],
+    ],
+  },
+  {
+    fr: 'Marche',
+    en: 'WALK, a slow wandering walk on the spot',
+    loop: true,
+    beats: () =>
+      [
+        'the right foot steps forward, the staff planted ahead',
+        'the weight on the right foot, the body at its lowest',
+        'the left foot passing, the cape swinging',
+        'pushing off, the body at its highest',
+        'the left foot steps forward, the staff planted again',
+        'the weight on the left foot, the body at its lowest',
+        'the right foot passing, the cape swinging the other way',
+        'pushing off, leading back to frame 1',
+      ].map((p, i) => [i + 1, i + 1, p]),
+  },
+];
+
+/**
+ * Ce qui manque au 13 octobre 2026. Chaque planche : son nom de fichier (à ranger dans ~/Pictures/gamevisual),
+ * ses lignes, et le découpage attendu à l'import (tags de tools/planches.json).
+ */
+function lot4x8() {
+  const C = CREATURE_ROWS;
+  const H = HERO_ROWS;
+  const sheet = (ch, file, rows, tags, second) => ({ ch, file, rows, tags, second });
+  const items = [];
+  const gardien = { ...creature('gardien-errant', GARDIEN, 'enemy'), rows: GARDIEN_ROWS, data: GARDIEN };
+  items.push({
+    ch: gardien,
+    folder: 'ile',
+    fiche: true,
+    note: 'PNJ de l\'île : le jeu ne joue que l\'attente pour l\'instant ; la parole, le salut et la marche sont prêts pour la suite.',
+    sheets: [sheet(gardien, 'gardien-errant-planche', GARDIEN_ROWS, 'idle · talk · bow · move')],
+  });
+  const spider = creature('jorogumoAraignee', BOSSES.jorogumoAraignee, 'boss');
+  items.push({
+    ch: spider,
+    folder: 'yokai-des-rizière',
+    fiche: false,
+    note: 'La planche 1 est faite (course, attaque, télégraphe, charge). Joindre aussi la planche 1 pour garder le même dessin.',
+    sheets: [sheet(spider, 'jorogumo-araignee-planche2', [C[4], C[5], C[7], C[6]], 'stunned · hurt · airborne (au plafond) · death', true)],
+  });
+  for (const k of ['hitodama', 'oublie', 'araignee']) {
+    const ch = creature(k, ENEMIES[k], 'enemy');
+    items.push({
+      ch,
+      folder: 'yokai-des-rizière',
+      fiche: true,
+      note: 'Pas d\'attente dessinée : le jeu prend la première image de la course.',
+      sheets: [sheet(ch, `${k}-planche`, [C[1], C[2], C[6], C[4]], 'move · windup 1-3 / strike 4-8 · death · stunned')],
+    });
+  }
+  for (const rk of ['einherjar', 'oushebti']) {
+    for (const ck of ['sorcier', 'lame', 'paladin', 'rodeur']) {
+      const ch = hero(rk, ck);
+      items.push({
+        ch,
+        folder: 'heros',
+        fiche: true,
+        note: 'Tags par classe : docs/Charte 2D.md, section 4.',
+        sheets: [
+          sheet(ch, `${rk}-${ck}-planche1`, H.slice(0, 4), 'idle · move · windup 1-3 / strike 4-8 · clic droit'),
+          sheet(ch, `${rk}-${ck}-planche2`, H.slice(4, 8), 'compétences · hurt · death · ultimate', true),
+        ],
+      });
+    }
+  }
+
+  const out = [
+    '# Lot 6 : ce qui manque (planches 4 × 8, format du 13 octobre 2026)',
+    '',
+    'Par ordre de priorité : le gardien errant (nouveau PNJ de l\'île), la seconde planche de la Jorōgumo araignée, les trois yokai des Rizières pas encore refaits (hitodama, Oublié, petite araignée), puis les héros Einherjar et Oushebti qui ne sont pas encore jouables (Sorcier, Lame, Paladin, Rôdeur). Déjà faits : kasa-obake, ikusa, Jorōgumo humaine.',
+    '',
+    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, personnages chibi de 3 têtes, fond gris uni #8f8f8f (magenta #ff00ff pour l\'Oublié). Ranger chaque image dans `~/Pictures/gamevisual/<dossier>/` sous le nom indiqué. ' + REGLAGES,
+    '',
+    '**Si Nano Banana dessine une grille, du texte ou une ligne de plus ou de moins**, garder quand même l\'image : l\'import s\'adapte au nombre d\'images par ligne. Seuls le texte incrusté et les personnages qui débordent de leur case la rendent inutilisable.',
+    '',
+  ];
+  for (const item of items) {
+    const { ch } = item;
+    out.push(`## ${ch.name}`, '', item.note, '');
+    if (item.fiche) {
+      out.push(
+        `### ${ch.name} — fiche de référence`,
+        '',
+        `**Générer 2 ou 3 variantes** et garder la meilleure (inutile si tu l'as déjà). **Enregistrer :** \`gamevisual/${item.folder}/${ch.id}-reference.jpg\``,
+        '',
+        fence(fichePrompt({ subject: ch.subject, proportions: ch.proportions, bg: ch.bg, wide: ch.wide })),
+      );
+    }
+    item.sheets.forEach((s, i) => {
+      const intro = sheetIntro('profil', ch.who, ch.tail) +
+        (s.second ? ' The second attached image is the first sheet of this same character: match its scale, design and colors exactly.' : '');
+      out.push(
+        `### ${ch.name} — planche${item.sheets.length > 1 || s.second ? ` ${s.second ? 2 : i + 1}` : ''}`,
+        '',
+        `**Lignes :** ${s.rows.map((row, r) => `${r + 1} ${row.fr}${row.name ? ` : ${row.name(ch.data)}` : ''}`).join(' · ')}. **Import :** ${s.tags}.`,
+        '',
+        `**Joindre :** la fiche de référence${s.second ? ' et la planche 1' : ''}. **Enregistrer :** \`gamevisual/${item.folder}/${s.file}.jpg\``,
+        '',
+        fence(sheetPrompt({ intro, rows: s.rows, ch: ch.data, bg: ch.bg, label: `${ch.id}/${s.file}` })),
+      );
+    });
+  }
+  return out.join('\n');
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Fichiers
 
 rmSync(OUT, { recursive: true, force: true });
@@ -873,6 +1026,12 @@ for (const lot of LOTS) {
     }
   }
   write('plus-tard/01-fiches-autres-races.md', out.join('\n'));
+}
+
+{
+  const text = lot4x8();
+  write('06-ce-qui-manque-4x8.md', text);
+  total += count(text);
 }
 
 console.log(`docs/prompts-2d/ écrit : ${total} prompts à faire maintenant (fiches et planches de profil).`);
