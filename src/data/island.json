@@ -55,7 +55,7 @@
     { "id": "jizo-5", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -33.57, "v": 20.2, "solid": 0.3 },
     { "id": "jizo-6", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -33.92, "v": 20.86, "solid": 0.3 },
     { "id": "ema", "name": "Plaque votive", "verb": "Examiner", "sprite": "ema", "u": 16.08, "v": -3.3, "solid": 0.3, "if": [{ "quest": "forgeron", "is": "active" }, { "notFlag": "ema_trouvee" }] },
-    { "id": "gardien-errant", "name": "Le gardien errant", "verb": "Contempler", "dialogue": "gardien", "sprite": "oublie", "height": 2.4, "u": 17.8, "v": -1.9, "reach": 2.4, "solid": 0.35, "if": [{ "notFlag": "gardien_rencontre" }] },
+    { "id": "gardien-errant", "name": "Le gardien errant", "verb": "Contempler", "dialogue": "gardien", "sprite": "gardien", "u": 17.8, "v": -1.9, "reach": 2.4, "solid": 0.35, "if": [{ "notFlag": "gardien_rencontre" }] },
     { "id": "coffre-pont", "name": "Coffre caché", "verb": "Ouvrir", "sprite": "coffre", "u": -1.42, "v": -25.31, "if": [{ "notFlag": "coffre_pont" }] },
     { "id": "faille-cascade", "name": "Faille derrière la cascade", "verb": "Entrer", "u": 19.4, "v": 37.9, "reach": 1.8, "if": [{ "level": 50 }] },
     { "id": "coffre-cascade", "name": "Coffre moussu", "verb": "Ouvrir", "sprite": "coffre", "u": 31.5, "v": 34.4, "if": [{ "notFlag": "coffre_cascade" }] },
