@@ -937,7 +937,7 @@ export class App {
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
       // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
-      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 ? session?.ping : undefined));
+      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 && !session?.dedicated ? session?.ping : undefined));
       hud.update(mirror, events, dt);
     }
     dungeonRenderer.render();
@@ -1002,6 +1002,7 @@ export class App {
     this.refreshLobby = openLobby(this.panels, session, this.d.progress, {
       launch: () => {
         if (session.isHost && session.allReady) void this.startCoop(session.start(this.member()));
+        else if (session.leads && session.allReady) session.launch(this.member());
       },
       quit: () => {
         this.panels.close();
@@ -1069,6 +1070,7 @@ export class App {
       this.endless = endless ? { bloc, cleared, awaiting: false } : null;
       return ready;
     });
+    if (!session.isHost) session.loaded(start.run);
     this.busy = false;
   }
 

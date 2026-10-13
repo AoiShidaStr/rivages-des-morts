@@ -1,10 +1,12 @@
 // Le serveur de Rivages des Morts : il sert le jeu construit (dist/), garde les comptes et leurs personnages
 // (comptes.ts, sous /api), et relie les joueurs par WebSocket, sur le même port. Le même WebSocket porte le menu
-// social (social.ts : amis, groupes, chat). Pour la coop, il ne fait que
+// social (social.ts : amis, groupes, chat). Il tient aussi des parties en coop sans hôte joueur : le combat tourne
+// ici (src/net/dedicated.ts), et tous les joueurs y sont des invités. Pour la coop, il ne fait que
 // relayer : chaque page ouvre des salons (`openRoom` dans src/net/transport.ts), et le serveur transmet les messages
 // d'un salon à ses autres membres. La partie elle-même tourne encore chez l'hôte.
 //
-// Lancement : `npm run serveur` (Node 22.18 ou plus récent lit le TypeScript directement), ou `docker compose up`.
+// Lancement : `npm run serveur` (réunit le serveur et le moteur du jeu dans dist-server/serveur.js, puis le lance),
+// ou `docker compose up`.
 // Réglages par variables d'environnement : PORT (8080), DIST (dist/ à côté du dossier server/), DONNEES (donnees/
 // à côté du dossier server/ : la base des comptes).
 import { chownSync, createReadStream, mkdirSync } from 'node:fs';
@@ -15,6 +17,8 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { Comptes } from './comptes.ts';
 import { Social, type Page } from './social.ts';
+import { DedicatedHost } from '../src/net/dedicated.ts';
+import type { Json, Room } from '../src/net/transport.ts';
 
 const PORT = Number(process.env.PORT) || 8080;
 const DIST = path.resolve(process.env.DIST ?? fileURLToPath(new URL('../dist', import.meta.url)));
@@ -59,7 +63,7 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
     return;
   }
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size }));
     return;
   }
   let relative: string;
@@ -101,7 +105,9 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
 
 /** Une page du jeu : son identifiant (celui que le jeu appelle `selfId`) et les salons où elle est. */
 interface Client {
-  socket: WebSocket;
+  /** La connexion de la page ; aucune pour une partie tenue par le serveur, qui vit ici. */
+  socket?: WebSocket;
+  send(text: string): void;
   id: string;
   rooms: Set<string>;
   alive: boolean;
@@ -114,14 +120,15 @@ type Incoming =
   | { t: 'hi'; id: string }
   | { t: 'join'; r: string }
   | { t: 'leave'; r: string }
-  | { t: 'msg'; r: string; a: string; d: unknown; to?: string };
+  | { t: 'msg'; r: string; a: string; d: unknown; to?: string }
+  | { t: 'heberger'; code: string; open?: boolean };
 
 const clients = new Set<Client>();
 /** Membres de chaque salon, par identifiant. */
 const rooms = new Map<string, Map<string, Client>>();
 
 function post(client: Client, message: unknown): void {
-  if (client.socket.readyState === client.socket.OPEN) client.socket.send(JSON.stringify(message));
+  client.send(JSON.stringify(message));
 }
 
 function join(client: Client, name: string): void {
@@ -155,7 +162,7 @@ function relay(client: Client, message: Extract<Incoming, { t: 'msg' }>): void {
   const text = JSON.stringify({ t: 'msg', r: message.r, a: message.a, d: message.d ?? null, from: client.id });
   const targets = message.to ? [members.get(message.to)] : [...members.values()];
   for (const target of targets) {
-    if (target && target !== client && target.socket.readyState === target.socket.OPEN) target.socket.send(text);
+    if (target && target !== client) target.send(text);
   }
 }
 
@@ -167,6 +174,10 @@ function receive(client: Client, raw: string): void {
     return;
   }
   if (!message || typeof message !== 'object') return;
+  if (message.t === 'heberger') {
+    host(message.code, message.open === true);
+    return;
+  }
   if (message.t !== 'hi' && message.t !== 'join' && message.t !== 'leave' && message.t !== 'msg') {
     social.recevoir(client.page, message as Record<string, unknown>);
     return;
@@ -180,6 +191,61 @@ function receive(client: Client, raw: string): void {
   if (message.t === 'join') join(client, message.r);
   else if (message.t === 'leave') leave(client, message.r);
   else if (message.t === 'msg') relay(client, message);
+}
+
+// --- Parties tenues par le serveur ---------------------------------------------------------
+
+/** Au plus autant de parties à la fois : chacune fait tourner un combat. */
+const MAX_PARTIES = 20;
+/** Une partie que personne ne rejoint se ferme au bout de ce délai. */
+const UNUSED_PARTY = 30_000;
+const CODE = /^[A-Z0-9]{4}$/;
+const parties = new Map<string, DedicatedHost>();
+
+/**
+ * Un salon vu depuis le serveur lui-même : la même interface que dans le jeu (src/net/transport.ts), mais sans
+ * WebSocket. Les messages des autres membres lui arrivent directement.
+ */
+function serverRoom(name: string, id: string): Room {
+  const handlers = new Map<string, ((data: Json, from: string) => void)[]>();
+  const joins: ((peer: string) => void)[] = [];
+  const leaves: ((peer: string) => void)[] = [];
+  const client: Client = {
+    id,
+    rooms: new Set(),
+    alive: true,
+    page: { compte: null, envoyer: () => undefined, surIle: () => false },
+    send: (text) => {
+      const m = JSON.parse(text) as { t: string; r: string; id?: string; ids?: string[]; a?: string; d?: Json; from?: string };
+      if (m.r !== name) return;
+      if (m.t === 'peers') for (const peer of m.ids ?? []) joins.forEach((f) => f(peer));
+      else if (m.t === 'join' && m.id) joins.forEach((f) => f(m.id!));
+      else if (m.t === 'leave' && m.id) leaves.forEach((f) => f(m.id!));
+      else if (m.t === 'msg' && m.a && m.from) handlers.get(m.a)?.forEach((handler) => handler(m.d ?? null, m.from!));
+    },
+  };
+  join(client, name);
+  const send = (action: string, data: Json, to?: string) => relay(client, { t: 'msg', r: name, a: action, d: data, to });
+  return {
+    selfId: id,
+    send,
+    sendFast: send,
+    on: (action, handler) => void handlers.set(action, [...(handlers.get(action) ?? []), handler]),
+    onPeerJoin: (f) => void joins.push(f),
+    onPeerLeave: (f) => void leaves.push(f),
+    leave: () => leave(client, name),
+  };
+}
+
+/** Une page demande une partie tenue par le serveur, sous ce code ; elle la rejoint juste après, comme invitée. */
+function host(code: unknown, open: boolean): void {
+  if (typeof code !== 'string' || !CODE.test(code) || parties.has(code) || parties.size >= MAX_PARTIES) return;
+  const id = `serveur-${code.toLowerCase()}`;
+  const party = new DedicatedHost(serverRoom(`partie-${code}`, id), serverRoom('annonces', id), code, { open }, () => parties.delete(code));
+  parties.set(code, party);
+  setTimeout(() => {
+    if (!party.size) party.close();
+  }, UNUSED_PARTY).unref();
 }
 
 // --- Démarrage -------------------------------------------------------------------------------
@@ -209,6 +275,9 @@ const sockets = new WebSocketServer({ server, path: '/ws', maxPayload: MAX_MESSA
 sockets.on('connection', (socket) => {
   const client: Client = {
     socket,
+    send: (text) => {
+      if (socket.readyState === socket.OPEN) socket.send(text);
+    },
     id: '',
     rooms: new Set(),
     alive: true,
@@ -230,11 +299,11 @@ sockets.on('connection', (socket) => {
 setInterval(() => {
   for (const client of clients) {
     if (!client.alive) {
-      client.socket.terminate();
+      client.socket?.terminate();
       continue;
     }
     client.alive = false;
-    client.socket.ping();
+    client.socket?.ping();
   }
 }, HEARTBEAT).unref();
 

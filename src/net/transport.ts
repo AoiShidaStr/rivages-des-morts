@@ -294,6 +294,11 @@ function serverLink(): ServerLink {
   return current;
 }
 
+/** Un message pour le serveur lui-même (hors des salons), avant ceux qui suivent : ils arrivent dans l'ordre. */
+export function serverPost(message: Json): void {
+  serverLink().post(message);
+}
+
 /** Le menu social : écoute ce que le serveur dit hors des salons, et lui écrit. */
 export function serverChannel(listener: ServerListener): { post(message: Json): void; close(): void } {
   serverListeners.add(listener);

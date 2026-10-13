@@ -131,7 +131,7 @@ Le jeu peut tourner sur ta machine ou sur un serveur, avec son propre serveur de
 docker compose up -d --build
 ```
 
-Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machine>:8080`. La coop se lance comme d'habitude (code ou parties publiques), mais tout passe par le serveur.
+Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machine>:8080`. La coop se lance comme d'habitude (code ou parties publiques), mais tout passe par le serveur, et c'est lui qui fait tourner le combat : la descente continue même si un joueur part. Le premier arrivé dans le salon choisit le donjon et lance la descente (le Yomi sans fond reste réservé à la coop entre navigateurs).
 
 **Île partagée** : sur un jeu hébergé, les joueurs qui se promènent sur l'île se voient en temps réel, avec leur pseudo au-dessus de la tête. En entrant dans un donjon, on disparaît de l'île des autres.
 
@@ -145,7 +145,7 @@ Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machin
 - **Déménager** sur un VPS ou une autre machine : copie le dépôt et le dossier `donnees/`, puis la même commande. Sur Internet, mets un proxy HTTPS devant (Caddy, par exemple) : le jeu passe alors en `wss://` tout seul.
 - **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`.
 
-Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur`. En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
+Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur` (il réunit le serveur et le moteur du jeu dans `dist-server/serveur.js`, puis le lance). En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
 
 La version GitHub Pages, elle, n'a pas de serveur : elle garde la coop en WebRTC.
 

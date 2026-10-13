@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && tsc -p server && vite build",
-    "serveur": "node --disable-warning=ExperimentalWarning server/serveur.ts",
+    "build": "tsc && tsc -p server && vite build && npm run serveur:build",
+    "serveur": "npm run serveur:build && node --disable-warning=ExperimentalWarning dist-server/serveur.js",
+    "serveur:build": "vite build --ssr server/serveur.ts --outDir dist-server --emptyOutDir",
     "preview": "vite preview",
     "typecheck": "tsc && tsc -p server",
     "sprites": "node tools/detourer.mjs",
