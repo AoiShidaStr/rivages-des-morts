@@ -23,6 +23,8 @@ import { DedicatedHost } from '../src/net/dedicated.ts';
 import type { Json, Room } from '../src/net/transport.ts';
 
 const PORT = Number(process.env.PORT) || 8080;
+/** Le commit construit (lancer.bat / lancer.sh le donnent à l'image). */
+const VERSION = process.env.VERSION || 'inconnue';
 const DIST = path.resolve(process.env.DIST ?? fileURLToPath(new URL('../dist', import.meta.url)));
 const DONNEES = path.resolve(process.env.DONNEES ?? fileURLToPath(new URL('../donnees', import.meta.url)));
 /** Un message plus gros est refusé : le plus gros du jeu (le départ d'une descente, avec les héros) fait quelques Ko. */
@@ -65,7 +67,7 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
     return;
   }
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique() }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique(), version: VERSION }));
     return;
   }
   let relative: string;
@@ -310,7 +312,7 @@ setInterval(() => {
 }, HEARTBEAT).unref();
 
 suivreTunnel();
-server.listen(PORT, () => console.log(`Rivages des Morts : http://localhost:${PORT} (jeu : ${DIST}, données : ${DONNEES})`));
+server.listen(PORT, () => console.log(`Rivages des Morts (version ${VERSION}) : http://localhost:${PORT} (jeu : ${DIST}, données : ${DONNEES})`));
 
 const stop = () => {
   sockets.close();

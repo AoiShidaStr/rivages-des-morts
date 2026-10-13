@@ -151,7 +151,7 @@ Les réglages vont dans un fichier `.env` (copie de `.env.exemple`). Avant d'ouv
 docker compose --profile tunnel up -d --build
 ```
 
-Un tunnel gratuit de Cloudflare donne au jeu une adresse en `https://….trycloudflare.com`. Elle s'affiche en haut du menu social (O), avec un bouton « Copier » : donne-la à tes amis, avec le code d'invitation. L'adresse change à chaque redémarrage du tunnel, et le jeu n'est joignable que tant que ton PC est allumé.
+(ou `lancer.bat`, qui fait la même chose après avoir récupéré la dernière version.) Un tunnel gratuit de Cloudflare donne au jeu une adresse en `https://….trycloudflare.com`. Elle s'affiche en haut du menu social (O), avec un bouton « Copier » : donne-la à tes amis, avec le code d'invitation. L'adresse change à chaque redémarrage du tunnel, et le jeu n'est joignable que tant que ton PC est allumé.
 
 **Sur un VPS, avec un nom de domaine** : fais pointer le domaine vers le VPS, mets-le dans `DOMAINE`, puis :
 
@@ -164,7 +164,8 @@ Caddy obtient seul un certificat HTTPS pour ce domaine, et l'adresse `https://<d
 ### Entretien
 
 - **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.
-- **Mettre à jour** : `git pull`, puis la même commande.
+- **Mettre à jour et lancer** : sous Windows, double-clique sur `lancer.bat` ; ailleurs, `./lancer.sh`. Le script passe sur `main`, récupère les nouveautés de GitHub, reconstruit l'image si besoin et démarre le tunnel (`lancer.bat https` pour Caddy sur un VPS, `lancer.bat local` sans l'un ni l'autre). Relancer seulement le conteneur, depuis Docker Desktop par exemple, garde l'ancienne version.
+- **Voir la version servie** : http://localhost:8080/sante (champ `version`, le commit construit), ou la première ligne des journaux du conteneur.
 - **Sauvegarder** : copie le dossier `donnees/` (les comptes et leurs personnages).
 - **Déménager** sur un VPS ou une autre machine : copie le dépôt, le dossier `donnees/` et le fichier `.env`, puis la même commande.
 - **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`.

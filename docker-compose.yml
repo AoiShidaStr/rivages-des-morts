@@ -9,7 +9,10 @@
 #   (Caddy fait le HTTPS tout seul, avec un certificat Let's Encrypt).
 services:
   rivages:
-    build: .
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-inconnue}
     image: rivages-des-morts
     restart: unless-stopped
     ports:
