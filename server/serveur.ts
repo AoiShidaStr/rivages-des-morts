@@ -1,5 +1,6 @@
 // Le serveur de Rivages des Morts : il sert le jeu construit (dist/), garde les comptes et leurs personnages
-// (comptes.ts, sous /api), et relie les joueurs par WebSocket, sur le même port. Pour la coop, il ne fait que
+// (comptes.ts, sous /api), et relie les joueurs par WebSocket, sur le même port. Le même WebSocket porte le menu
+// social (social.ts : amis, groupes, chat). Pour la coop, il ne fait que
 // relayer : chaque page ouvre des salons (`openRoom` dans src/net/transport.ts), et le serveur transmet les messages
 // d'un salon à ses autres membres. La partie elle-même tourne encore chez l'hôte.
 //
@@ -13,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { Comptes } from './comptes.ts';
+import { Social, type Page } from './social.ts';
 
 const PORT = Number(process.env.PORT) || 8080;
 const DIST = path.resolve(process.env.DIST ?? fileURLToPath(new URL('../dist', import.meta.url)));
@@ -21,6 +23,8 @@ const DONNEES = path.resolve(process.env.DONNEES ?? fileURLToPath(new URL('../do
 const MAX_MESSAGE = 1024 * 1024;
 /** Noms de salon et identifiants de joueur : courts, sans caractères bizarres. */
 const NAME = /^[\w:-]{1,64}$/;
+/** Le salon de l'île partagée (src/net/presence.ts) : le menu social dit qui s'y promène. */
+const ILE = 'ile';
 /** Une page qui ne répond plus à ce rythme est considérée partie (onglet fermé sans prévenir, coupure réseau). */
 const HEARTBEAT = 30_000;
 
@@ -55,7 +59,7 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
     return;
   }
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes }));
     return;
   }
   let relative: string;
@@ -101,6 +105,8 @@ interface Client {
   id: string;
   rooms: Set<string>;
   alive: boolean;
+  /** La page pour le menu social (son compte, une fois identifiée). */
+  page: Page;
 }
 
 /** Messages de la page vers le serveur. */
@@ -129,10 +135,12 @@ function join(client: Client, name: string): void {
   for (const other of members.values()) post(other, { t: 'join', r: name, id: client.id });
   members.set(client.id, client);
   client.rooms.add(name);
+  if (name === ILE) social.bouger(client.page);
 }
 
 function leave(client: Client, name: string): void {
   if (!client.rooms.delete(name)) return;
+  if (name === ILE) social.bouger(client.page);
   const members = rooms.get(name);
   if (!members || members.get(client.id) !== client) return;
   members.delete(client.id);
@@ -159,6 +167,10 @@ function receive(client: Client, raw: string): void {
     return;
   }
   if (!message || typeof message !== 'object') return;
+  if (message.t !== 'hi' && message.t !== 'join' && message.t !== 'leave' && message.t !== 'msg') {
+    social.recevoir(client.page, message as Record<string, unknown>);
+    return;
+  }
   if (message.t === 'hi') {
     // L'identifiant se choisit une fois, avant d'entrer dans un salon.
     if (!client.id && typeof message.id === 'string' && NAME.test(message.id)) client.id = message.id;
@@ -183,6 +195,7 @@ if (utilisateur && process.getuid?.() === 0) {
   process.setuid?.(utilisateur[0]);
 }
 const comptes = new Comptes(DONNEES);
+const social = new Social(comptes);
 
 const server = createServer((req, res) => {
   serveFile(req, res).catch((error: unknown) => {
@@ -194,7 +207,13 @@ const server = createServer((req, res) => {
 
 const sockets = new WebSocketServer({ server, path: '/ws', maxPayload: MAX_MESSAGE });
 sockets.on('connection', (socket) => {
-  const client: Client = { socket, id: '', rooms: new Set(), alive: true };
+  const client: Client = {
+    socket,
+    id: '',
+    rooms: new Set(),
+    alive: true,
+    page: { compte: null, envoyer: (message) => post(client, message), surIle: () => client.rooms.has(ILE) },
+  };
   clients.add(client);
   socket.on('pong', () => (client.alive = true));
   socket.on('message', (data, binary) => {
@@ -203,6 +222,7 @@ sockets.on('connection', (socket) => {
   socket.on('close', () => {
     for (const name of [...client.rooms]) leave(client, name);
     clients.delete(client);
+    social.quitter(client.page);
   });
   socket.on('error', () => socket.terminate());
 });

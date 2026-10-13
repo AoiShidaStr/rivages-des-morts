@@ -35,7 +35,8 @@ const FENETRE = 10 * 60_000;
 type Ligne = Record<string, unknown>;
 
 export class Comptes {
-  private readonly db: DatabaseSync;
+  /** La base, partagée avec le menu social (social.ts : les amis). */
+  readonly db: DatabaseSync;
   private readonly essais = new Map<string, number[]>();
 
   constructor(dossier: string) {
@@ -163,11 +164,26 @@ export class Comptes {
 
   private compte(req: IncomingMessage): { id: number; pseudo: string } {
     const valeur = jeton(req);
-    const ligne = valeur
-      ? (this.db.prepare('SELECT comptes.id, comptes.pseudo FROM jetons JOIN comptes ON comptes.id = jetons.compte WHERE empreinte = ?').get(empreinte(valeur)) as Ligne | undefined)
-      : undefined;
-    if (!ligne) throw new Refus(401, 'Connecte-toi d’abord.');
-    return { id: Number(ligne.id), pseudo: String(ligne.pseudo) };
+    const compte = valeur ? this.parJeton(valeur) : null;
+    if (!compte) throw new Refus(401, 'Connecte-toi d’abord.');
+    return compte;
+  }
+
+  /** Le compte d'un jeton de connexion (le menu social s'identifie ainsi sur le WebSocket). */
+  parJeton(valeur: string): { id: number; pseudo: string } | null {
+    const ligne = this.db.prepare('SELECT comptes.id, comptes.pseudo FROM jetons JOIN comptes ON comptes.id = jetons.compte WHERE empreinte = ?').get(empreinte(valeur)) as Ligne | undefined;
+    return ligne ? { id: Number(ligne.id), pseudo: String(ligne.pseudo) } : null;
+  }
+
+  /** Un compte par son pseudo (sans tenir compte des majuscules). */
+  parPseudo(pseudo: string): { id: number; pseudo: string } | null {
+    const ligne = this.db.prepare('SELECT id, pseudo FROM comptes WHERE pseudo = ?').get(pseudo) as Ligne | undefined;
+    return ligne ? { id: Number(ligne.id), pseudo: String(ligne.pseudo) } : null;
+  }
+
+  /** Le pseudo d'un compte. */
+  pseudo(id: number): string {
+    return String((this.db.prepare('SELECT pseudo FROM comptes WHERE id = ?').get(id) as Ligne | undefined)?.pseudo ?? '?');
   }
 
   /** Freine qui devine les mots de passe : `ESSAIS` tentatives par adresse toutes les dix minutes. */

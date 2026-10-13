@@ -135,6 +135,8 @@ Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machin
 
 **Île partagée** : sur un jeu hébergé, les joueurs qui se promènent sur l'île se voient en temps réel, avec leur pseudo au-dessus de la tête. En entrant dans un donjon, on disparaît de l'île des autres.
 
+**Social** : avec un compte, la touche O ouvre le menu social (demandes d'ami, groupe de trois joueurs au plus, joueurs de l'île) et Entrée ouvre le chat (onglets Général, Groupe, Privé ; `/m pseudo message` pour un message privé, `/g` pour le groupe, `/r` pour répondre). Le chef d'un groupe qui a créé une partie en coop peut y inviter son groupe d'un clic.
+
 **Comptes** : sur un jeu hébergé, l'écran titre propose « Se connecter ». Avec un compte, les personnages sont gardés sur le serveur et on les retrouve depuis n'importe quel ordinateur. Sans compte, ils restent dans le navigateur, comme avant ; une fois connecté, le panneau du compte propose de les recopier dessus. Les comptes sont dans `donnees/rivages.db`.
 
 - **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.
