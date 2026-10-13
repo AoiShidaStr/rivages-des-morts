@@ -1,10 +1,12 @@
 # Rivages des Morts — Charte 2D
 
-Charte de la refonte graphique : **toutes les animations sont dessinées en 2D par Nano Banana 2** (application Gemini, sans API), **en personnages chibi de 3 têtes**, sur **une planche complète de 64 images (grille 8 × 8) par personnage**. La 3D, Blender et la pipeline GLB sont abandonnés : ce document remplace [Charte 3D](Charte%203D.md) et [pipeline](pipeline.md) pour le rendu des personnages. Les prompts correspondants sont dans [`prompts-2d/`](prompts-2d/) et se régénèrent avec `npm run prompts-2d` (`tools/prompts-2d.mjs`).
+Charte de la refonte graphique : **toutes les animations sont dessinées en 2D par Nano Banana 2** (application Gemini, sans API), **en personnages chibi de 3 têtes**, sur **une planche complète de 64 images (grille 8 × 8) par personnage**. La 3D et le pixel art sont abandonnés.
+
+> **Mise à jour du 13 octobre 2026 : planches de 4 lignes × 8 images.** Les mobs ont une planche sans attente (déplacement, attaque, mort, geste propre), les boss deux planches, et dans chaque prompt les yeux regardent toujours dans le sens du corps. Les sections 4 et 9 ci-dessous décrivent encore l'ancien format 8 × 8 et sont à réécrire. Les prompts à jour sont dans le dossier partagé du projet (`prompts-animations/`) ; les anciens prompts 8 × 8 (`docs/prompts-2d/`) ont été retirés du dépôt.
 
 **Décision du 8 octobre 2026 : retour officiel au chibi en grille 8 × 8.** Les autres proportions et les autres grilles essayées avant ont été abandonnées. Sur une grille dense, Nano Banana 2 garde bien mieux l'anatomie et l'équipement d'un personnage chibi : un corps compact, une grosse tête et une arme exagérée restent cohérents d'une case à l'autre, alors que des corps élancés se disloquent (membres en trop, arme qui change de main ou de forme). Les références de style sont les planches complètes Hanyō d'octobre 2026, en particulier la Lame et le Paladin (`2d/hanyo-2D/`, portraits `public/sprites/heros-hanyo-<classe>.png`).
 
-Ce que la charte 3D garde comme valeur : la lumière froide, la règle « rouge = danger ennemi », l'anneau clair sous les héros, les hauteurs relatives des créatures (hitodama 0,6 m, kappa 1,3 m, héros 1,8 m…). Tout cela est reproduit ici ou dans le jeu, pas dans les planches.
+Ce que l'ancienne direction garde comme valeur : la lumière froide, la règle « rouge = danger ennemi », l'anneau clair sous les héros, les hauteurs relatives des créatures (hitodama 0,6 m, kappa 1,3 m, héros 1,8 m…). Tout cela est reproduit ici ou dans le jeu, pas dans les planches.
 
 **Le GDD d'origine prime.** Le jeu est un archipel d'au-delà (Yomi, Hadès, Duat, Helheim, puis la Mésopotamie) : les personnages ne sont pas « du Yomi ». Seuls les yokai et les boss du Yomi le sont. Les héros, eux, doivent rester cohérents sur toutes les îles : **la race fixe le corps et la culture du vêtement, la classe fixe seulement le rôle, la posture, la silhouette, la couleur d'accent et l'arme** (voir 2).
 
@@ -100,7 +102,7 @@ Ce tableau suit le code tel qu'il est : l'Aura de lumière (A) du Paladin et la 
 | Guerrier et Rôdeur Hanyō | 12 images par ligne (deux animations sur certaines lignes) |
 | Lame et Sorcier Hanyō | 8 × 8, mais une ligne de 7 images |
 | Demi-dieux | grilles d'avant le standard, au nombre d'images variable selon la classe |
-| Invocateur Hanyō, héros des autres races | planches par animation (outil `kit-heros`) |
+| Invocateur Hanyō, héros des autres races | planches par animation (ancien outil `kit-heros`, retiré) |
 | Izanami, yokai du Palais | une planche de 16 images (4 × 4) par animation |
 
 ## 5. Fond et détourage
@@ -117,7 +119,7 @@ Ce tableau suit le code tel qu'il est : l'Aura de lumière (A) du Paladin et la 
 | Face | 3/4 de face, vers le bas-droite | plus tard |
 | Dos | 3/4 de dos, vers le haut-droite | plus tard |
 
-Nano Banana 2 ne réussit pas une fiche qui montre les trois vues d'un coup. **Chaque vue a donc sa propre fiche, d'une seule figure, et sa propre planche complète** : on fait d'abord le profil (de zéro), et la face et le dos se font ensuite à partir de la fiche de profil jointe (dossier [`plus-tard/`](prompts-2d/plus-tard/)).
+Nano Banana 2 ne réussit pas une fiche qui montre les trois vues d'un coup. **Chaque vue a donc sa propre fiche, d'une seule figure, et sa propre planche complète** : on fait d'abord le profil (de zéro), et la face et le dos se font ensuite à partir de la fiche de profil jointe .
 
 Le côté gauche est le **miroir du droit** : le jeu retourne l'image. Les armes et détails asymétriques (yumi, bouclier) sont donc toujours dessinés du même côté. Héros : profil, face et dos (les deux dernières plus tard). Ennemis et boss : profil, puis face.
 
@@ -156,16 +158,16 @@ Les tenues propres à chaque race multiplient par 4 le nombre de planches de hé
 
 | Lot | Contenu | Fichier | Prompts |
 | --- | --- | --- | --- |
-| 1. Izanami | les deux formes du boss (voilée, vrai visage) et le pêcher de son arène (2 états) : dans le jeu en planches 4 × 4, à refaire en 8 × 8 chibi | [`01-izanami.md`](prompts-2d/01-izanami.md) | 6 |
-| 2. Yokai du Palais | shikome, ikazuchi, ikusa : dans le jeu en planches 4 × 4, à refaire en 8 × 8 chibi | [`02-yokai-du-palais.md`](prompts-2d/02-yokai-du-palais.md) | 6 |
+| 1. Izanami | les deux formes du boss (voilée, vrai visage) et le pêcher de son arène (2 états) : dans le jeu en planches 4 × 4, à refaire en 8 × 8 chibi | `01-izanami.md` (retiré) | 6 |
+| 2. Yokai du Palais | shikome, ikazuchi, ikusa : dans le jeu en planches 4 × 4, à refaire en 8 × 8 chibi | `02-yokai-du-palais.md` (retiré) | 6 |
 | **3. Héros Hanyō** | les cinq Hanyō ont leur planche complète chibi dans le jeu depuis octobre 2026 (Guerrier, Lame, Paladin et Rôdeur le 8 octobre), avec leur portrait ; à refaire au format 8 × 8 strict quand une planche est hors standard (section 4) | `03-heros-<classe>.md` | 10 (2 par classe) |
-| 4. Yokai des Rizières | hitodama, kodama, kappa, kappa renforcé, kasa-obake, Oublié, petite araignée : déjà peints, à refaire pour l'harmonie | [`04-yokai-des-rizieres.md`](prompts-2d/04-yokai-des-rizieres.md) | 14 |
-| 5. Jorōgumo | le premier boss, déjà peint, à refaire au format chibi 8 × 8 | [`05-jorogumo.md`](prompts-2d/05-jorogumo.md) | 4 |
+| 4. Yokai des Rizières | hitodama, kodama, kappa, kappa renforcé, kasa-obake, Oublié, petite araignée : déjà peints, à refaire pour l'harmonie | `04-yokai-des-rizieres.md` (retiré) | 14 |
+| 5. Jorōgumo | le premier boss, déjà peint, à refaire au format chibi 8 × 8 | `05-jorogumo.md` (retiré) | 4 |
 
 Soit **40 prompts** pour la première vue. Ensuite :
 
 - **Face et dos** de chaque lot : `plus-tard/<lot>-face-dos-…md`.
-- **Autres races** (Einherjar, Oushebti, Demi-dieu : tenues nordique, égyptienne, grecque), de préférence en **rhabillant** la planche complète de la série du Yomi (on joint la planche finie et la fiche de la race) plutôt qu'en redessinant chaque animation : [`plus-tard/01-fiches-autres-races.md`](prompts-2d/plus-tard/01-fiches-autres-races.md).
+- **Autres races** (Einherjar, Oushebti, Demi-dieu : tenues nordique, égyptienne, grecque), de préférence en **rhabillant** la planche complète de la série du Yomi (on joint la planche finie et la fiche de la race) plutôt qu'en redessinant chaque animation : `plus-tard/01-fiches-autres-races.md` (retiré).
 - **Autres îles** : yokai et boss de l'Hadès, de la Duat, du Helheim.
 
 **Héros jouables en attendant.** Les planches des Einherjar et des Oushebti sont mauvaises, sauf celles du Guerrier : à la création du personnage (et chez le moine), seuls l'**Einherjar Guerrier** et l'**Oushebti Guerrier** se choisissent, les autres classes de ces deux races sont grisées (« Bientôt »). La liste est `PLAYABLE` dans `src/render/heroes.ts` : y ajouter une classe dès que sa planche est refaite. Un héros déjà créé garde sa race et sa classe. Hanyō et Demi-dieu restent ouverts dans toutes les classes.

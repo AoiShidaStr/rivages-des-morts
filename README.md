@@ -58,7 +58,7 @@ Chaque classe a aussi sa façon de se soigner, sauf le Sorcier, qui se protège 
 - **Paladin** : tank et soutien. Bouclier levé, il arrête 85 % des coups de face tant que sa **garde** tient (chaque coup bloqué l'use ; vide, elle se brise un instant). Il soigne ses alliés deux fois mieux que lui-même, et relève les alliés tombés.
 - **Rôdeur** : combat à distance. Clic gauche pour tirer, clic droit maintenu pour un tir chargé ; garde tes distances. Abattre la cible de sa Marque du chasseur le soigne.
 
-Chaque race et chaque classe a son apparence en pixel art : casque viking, némès égyptien, laurier grec ou cornes d'oni, avec l'arme et la cape de la classe.
+Chaque race et chaque classe a son apparence peinte, en chibi : tenue de la race, arme et gestes de la classe.
 
 ### Équipement
 
@@ -121,12 +121,12 @@ Puis ouvre http://localhost:5173 dans le navigateur.
 Deux options d'URL pour tester :
 
 - `?vague=7` lance directement le donjon à la septième vague (le boss), sans passer par l'île.
-- `?pixel=0` remplace le pixel art par les images peintes.
+- `?coop=2` ou `?coop=3` ajoute un ou deux alliés joués par l'ordinateur.
 
 ## Pour aller plus loin
 
 - [Game Design Document](<docs/Rivages des Morts — Game Design Document.md>) : univers, races, classes, progression prévue.
-- [Pixel art](<docs/Pixel art.md>) et [prompts visuels](<docs/Prompts visuels.md>) : la direction artistique.
+- [Charte 2D](<docs/Charte 2D.md>) et [prompts visuels](<docs/Prompts visuels.md>) : la direction artistique.
 
 Le code est en TypeScript avec [Babylon.js](https://www.babylonjs.com/) et [Vite](https://vite.dev/). Les ennemis, vagues, quêtes, dialogues et objets sont décrits dans `src/data/*.json`.
 

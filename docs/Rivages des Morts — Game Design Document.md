@@ -117,7 +117,7 @@ La Marque du chasseur remplace la Mine spirituelle prévue au départ, pour gard
 - Tous ses dégâts (boules, sceaux, braises, bouclier, météore) suivent la puissance de l'arme, comme les coups des autres classes.
 - **Équilibrage** (bot, 0.8.0) : au banc, le Sorcier fait 110 à 119 % des dégâts de la meilleure autre classe, et en donjon il a le plus de dégâts par seconde à tous les niveaux. Il a aussi la pire survie : 67, 46 et 30 % de victoires au Palais aux niveaux 10, 30 et 50, et 100 % aux Rizières. Sa croissance lui est propre : son niveau ne lui donne aucun dégât et 2 PV au lieu de 3, et son catalyseur forgé fait toute sa puissance. Sans objet au niveau 50, il ne gagne que 22 % des descentes contre un donjon niveau 30. Détail dans `docs/equilibrage.md`.
 - **Sauvegardes** : un héros Invocateur devient Sorcier, ses points de talent lui sont rendus et son compagnon disparaît. Les âmes alliées ne restent qu'au Paladin, avec Relever.
-- **Apparence** : de nouveaux sprites sont à dessiner (prompts dans `docs/prompts-2d/03-heros-sorcier.md`, vues de face et de dos dans `plus-tard/`). En attendant, le Sorcier reprend ceux de l'Invocateur (`src/render/heroes.ts`, `BORROWED`).
+- **Apparence** : de nouveaux sprites sont à dessiner (prompts dans le dossier partagé du projet, `prompts-animations/`). En attendant, le Sorcier reprend ceux de l'Invocateur (`src/render/heroes.ts`, `BORROWED`).
 
 ### Arbres de compétences (V1)
 
@@ -215,7 +215,7 @@ Victoires du bot, 40 descentes par combinaison :
 - Le premier donjon est donc devenu plus facile pour le Guerrier, l'Invocateur et le Rôdeur, qui rejoignent la Lame, et plus difficile pour le Paladin.
 - Reste à confirmer en jouant : le bot ne joue pas chaque classe aussi bien qu'un humain.
 
-**Apparence** : chaque combinaison de race et de classe a son héros en pixel art (`tools/pixel/heros.mjs`) : la race donne la tête, la peau et la tenue (casque viking, némès égyptien, laurier grec, cornes d'oni), la classe l'arme, la couleur de la cape et les gestes (arc bandé du Rôdeur, bouclier levé du Paladin). L'Einherjar guerrier garde sa planche peinte.
+**Apparence** : chaque combinaison de race et de classe a son héros peint en chibi (planche `public/sprites/anim/heros-<race>-<classe>`) : la race donne la tête, la peau et la tenue (casque viking, némès égyptien, laurier grec, cornes d'oni), la classe l'arme, la couleur de la cape et les gestes (arc bandé du Rôdeur, bouclier levé du Paladin). L'Einherjar guerrier garde sa planche peinte.
 
 **Alliés relevés** : il ne reste des invocations que Relever, du Paladin. Un allié relevé a des PV et frappe le yokai le plus proche ; chaque yokai s'en prend à la cible la plus proche, mais le héros compte comme 1,5 fois plus proche qu'un allié : les yokai le préfèrent. Réglages dans `src/data/player.json` (bloc `summon`). L'Invocateur, qui liait l'âme des yokai vaincus, a été remplacé par le Sorcier en 0.8.0 : son gameplay n'était pas assez amusant.
 
@@ -713,10 +713,9 @@ Les compétences et passifs se débloquent en montant de niveau, dans un arbre d
 
 Le ton est épique mais coloré, dans l'esprit de Waven : des enjeux mythologiques, sans noirceur écrasante.
 
-- **Rendu** : 3D low-poly, caméra fixe isométrique, shader stylisé de type cel-shading pour l'effet « fausse 3D ».
-- **Personnages** : un squelette d'animation commun, des modèles différents par race. Les armes et items se voient sur le personnage.
+- **Rendu** : 2D peinte, caméra fixe isométrique : sols et décors peints, personnages chibi animés en planches dessinées par Nano Banana 2 (voir [Charte 2D](Charte%202D.md)).
+- **Personnages** : une planche d'animation par race et par classe ; l'arme de la classe se voit sur le personnage.
 - **Îles** : chaque au-delà a sa palette propre (brume et rouge pour le Yomi, or et sable pour la Duat, etc.).
-- **Assets** : packs libres de droits (Kenney, Quaternius, KayKit) comme base, retouchés pour l'identité du jeu.
 
 Les prompts de génération par IA de chaque asset sont dans l'onglet Prompts visuels.
 
@@ -764,7 +763,7 @@ On construit la zone en cinq étapes, du papier au jeu, en validant chaque étap
 
 1. **Plan sur papier** : 3 ou 4 lieux reliés, à l'échelle d'une île de Waven. Par exemple le ponton de la barque, un village d'âmes (PNJ, marchand), les rizières à explorer (secrets), et l'entrée du donjon.
 2. **Graybox dans Babylon.js** : poser le terrain avec de simples cubes et plans, pour tester les distances, la caméra et le temps de trajet. On ne passe à l'étape suivante que quand on s'y déplace avec plaisir.
-3. **Habillage** : remplacer les cubes par des assets modulaires (Kenney, Quaternius, KayKit), assemblés dans Blender puis exportés en glTF (.glb), le format que Babylon.js charge nativement. L'éditeur communautaire Babylon.js Editor peut aussi servir à placer les éléments.
+3. **Habillage** : remplacer les cubes par la carte peinte et les décors peints (voir [Planches peintes](Planches%20peintes.md)), placés avec l'éditeur de l'île (`npm run editeur`).
 4. **PNJ et quêtes en données** : dialogues et quêtes décrits en JSON, ou écrits avec Ink (un langage de dialogue qui a un moteur JavaScript, inkjs). On ajoute une quête sans toucher au code du jeu.
 5. **Secrets** : quelques coffres cachés et passages discrets, placés en dernier une fois la zone jouable.
 

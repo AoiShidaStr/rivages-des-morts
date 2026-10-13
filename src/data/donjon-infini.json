@@ -33,7 +33,7 @@
   },
   "exit": { "u": 19.4, "v": 31 },
   "style": {
-    "scene3d": "yomi",
+    "arena": "yomi",
     "ground": [0.35, 0.22, 0.24],
     "sky": "#160b0e",
     "decor": [

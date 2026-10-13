@@ -1,6 +1,6 @@
 # Sprites peints (Nano Banana)
 
-Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Cinq commandes les préparent pour le jeu ; deux autres préparent les animations des héros (voir [Prompts des héros](Prompts%20h%C3%A9ros.md)).
+Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game visual`, sur un fond gris uni. Ces commandes les préparent pour le jeu.
 
 | Commande | Entrée | Sortie | Réglages |
 | --- | --- | --- | --- |
@@ -10,8 +10,6 @@ Les images peintes générées par Nano Banana arrivent dans `~/Pictures/game vi
 | `npm run carte` | `ile_fond.png` et `src/data/island.json` | `ile_fond_carte.png` (contrôle) | `tools/carte.mjs` |
 | `npm run decors` | une planche de décors ou de textures de sol (grille) | `public/sprites/decor/…` détourés (`.webp` pour les planches de décors), `public/sprites/sols/textures/…` raccordées | `tools/decors.json`, prompts dans [Prompts visuels](Prompts%20visuels.md) |
 | `npm run icones` | `objets_planche.jpg` (tous les objets en grille) | `public/sprites/icones/<id>.png`, 128 × 128 | `tools/icones.json` |
-| `npm run poses -- <planche>` | une planche de poses clés (Nano Banana 2) | `poses/<planche>/pose-<n>.png`, une pose par image carrée | voir [Prompts des héros](Prompts%20h%C3%A9ros.md) |
-| `npm run kit-heros` | `~/Pictures/game visual/heros/<race>-<classe>/profil.jpg`, `face.jpg` | un dossier par animation : la pose à joindre et le prompt | `tools/prompts-heros.mjs` |
 
 > **Standard (octobre 2026) :** chaque personnage a une **planche complète** de 64 images, une grille 8 × 8 où chaque ligne est une animation, en personnages chibi de 3 têtes. Elle s'importe avec `layout` et `rows` (ordre des lignes et tags : [section 4 de la Charte 2D](Charte%202D.md#4-format-des-planches--une-grille-complète-de-64-images-8--8) ; import : section 8 ; modèle : l'entrée `heros-hanyo-paladin` de `tools/planches.json`). Les planches par animation décrites ci-dessous restent pour les personnages faits avant ce standard.
 
@@ -75,8 +73,6 @@ Tout ce qui fait le jeu se trace sur l'image, dans `src/data/island.json` (coord
 **Zones tracées d'après la peinture** : `npm run zones` (`tools/zones-de-marche.mjs`) refait `walk`, `river` et `blocks` à partir de l'image : chaque pixel est classé par sa couleur et son grain (herbe, sable, dallage / falaise, rocher, muret / eau), les zones de marche suivent donc les bords des falaises et des murets au pixel près. Les escaliers, le quai, le ponton, le pont, le couloir de la rivière et les marches que les couleurs ne voient pas (herbe contre herbe plus basse) sont tracés à la main en tête du script, en pixels de la grille 1024. Il remplace les retouches faites dans l'éditeur sur ces trois calques.
 
 `npm run carte` redessine l'image avec tout cela par-dessus (`ile_fond_carte.png`, grille tous les 64 pixels d'une image de 1024) pour retoucher à l'œil. Pour passer d'un pixel (px, py) de cette grille aux coordonnées du jeu : u = (px − 512) / 1024 × map.width, v = (512 − py) / 1024 × map.width / sin 35,26°.
-
-> **Scènes en 3D (expérimental, octobre 2026) :** avec `?3d` dans l'adresse, les arènes sont construites en 3D (`src/render/world3d.ts`, `rizieres3d.ts`, `arena3d.ts`), modèles KayKit (CC0) dans `public/models/`. L'île n'a plus de version 3D : sa carte peinte l'a remplacée.
 
 ## Icônes des objets
 

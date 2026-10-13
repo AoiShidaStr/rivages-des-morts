@@ -10,11 +10,11 @@ Comment écrire les prompts d'images du jeu. Les prompts sont en anglais, parce 
 2. **Planche complète** : joindre la fiche, coller le prompt de planche. Une seule image carrée contient les 8 animations du personnage, une ligne de 8 images par animation.
 3. **Import** : `npm run planches -- <nom>` découpe la planche (entrée `layout` et `rows` dans `tools/planches.json`), `npm run sprites -- <nom>` détoure la fiche, qui sert de portrait. Détails : [Charte 2D](Charte%202D.md), section 8, et [Planches peintes](Planches%20peintes.md).
 
-Les prompts prêts à coller de chaque personnage (fiche et planche complète, avec le nom de fichier) sont générés dans [`prompts-2d/`](prompts-2d/) par `npm run prompts-2d` (`tools/prompts-2d.mjs`). Pour changer un prompt, modifier le générateur puis relancer la commande : ne pas éditer les fichiers générés.
+Les prompts d'animation à jour (planches 4 × 8, octobre 2026) sont dans le dossier partagé du projet (`prompts-animations/`). Les descriptions des personnages et des tenues viennent de `tools/prompts-2d.mjs`.
 
 ## Bible de style
 
-À coller au début de chaque prompt d'image qui n'est pas déjà dans `prompts-2d/` (icônes, portraits, décor, PNJ), sans la modifier :
+À coller au début de chaque prompt d'image qui n'est pas déjà dans les prompts d'animation (icônes, portraits, décor, PNJ), sans la modifier :
 
 ```
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified, a crisp dark ink-blue outline, two-tone cel shading where the shadow is tinted toward blue-violet (never black), a soft cool light coming from the upper left, characters more saturated and lighter than a muted world, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
@@ -34,7 +34,7 @@ Aucun effet dessiné autour d'un personnage (magie, lueur, traînée, fumée, é
 
 ## Modèle de planche complète (8 × 8)
 
-La structure de tous les prompts de planche de `prompts-2d/`. Les crochets se remplacent par le texte du personnage ; le générateur détaille en plus chaque image de chaque ligne (Charte 2D, section 7).
+La structure des prompts de planche. Les crochets se remplacent par le texte du personnage ; le générateur détaille en plus chaque image de chaque ligne (Charte 2D, section 7).
 
 ```text
 The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, [weapon], nothing added or removed.
