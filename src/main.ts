@@ -11,6 +11,7 @@ import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
 import { loadKeyboardLayout } from './keys';
+import { chooseNetwork } from './net/transport';
 import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { SCENES_3D } from './render/flags';
@@ -77,7 +78,7 @@ async function start(): Promise<void> {
     devLevel,
     devDungeon,
     devCoop,
-    network: params.get('reseau') === 'local' ? 'local' : 'trystero',
+    network: chooseNetwork(params),
   });
   app.start();
 

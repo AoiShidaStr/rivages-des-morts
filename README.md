@@ -37,7 +37,7 @@ Pendant la descente :
 - Le **ping** de chacun s'affiche à côté de son nom, sous ta barre de vie. Il passe en orange au-delà de 150 ms.
 - Ton héros répond tout de suite à tes déplacements, même quand tu n'es pas l'hôte. Les coups, les esquives et les compétences partent chez l'hôte : leur retard dépend du ping.
 - Pour une partie fluide, l'hôte doit être le joueur qui a la meilleure connexion, idéalement en câble plutôt qu'en Wi-Fi. La puissance de l'ordinateur compte peu. Chaque ami coûte environ 15 Ko/s d'envoi à l'hôte.
-- Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas.
+- Certains réseaux d'entreprise ou d'école bloquent les connexions directes entre navigateurs. La coop n'y fonctionne pas, sauf sur un jeu hébergé avec son serveur (voir « Héberger le jeu et sa coop »).
 
 ### Races et classes
 
@@ -122,6 +122,25 @@ Deux options d'URL pour tester :
 
 - `?vague=7` lance directement le donjon à la septième vague (le boss), sans passer par l'île.
 - `?pixel=0` remplace le pixel art par les images peintes.
+
+## Héberger le jeu et sa coop (Docker)
+
+Le jeu peut tourner sur ta machine ou sur un serveur, avec son propre serveur de coop : les joueurs passent alors par lui au lieu de se relier directement, et la coop marche sur tous les réseaux. Il faut [Docker](https://docs.docker.com/get-docker/).
+
+```sh
+docker compose up -d --build
+```
+
+Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machine>:8080`. La coop se lance comme d'habitude (code ou parties publiques), mais tout passe par le serveur.
+
+- **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.
+- **Mettre à jour** : `git pull`, puis la même commande.
+- **Déménager** sur un VPS ou une autre machine : copie le dépôt et le dossier `donnees/`, puis la même commande. Sur Internet, mets un proxy HTTPS devant (Caddy, par exemple) : le jeu passe alors en `wss://` tout seul.
+- **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…}`.
+
+Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur`. En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
+
+La version GitHub Pages, elle, n'a pas de serveur : elle garde la coop en WebRTC.
 
 ## Pour aller plus loin
 

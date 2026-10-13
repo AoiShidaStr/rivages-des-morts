@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && tsc -p server && vite build",
+    "serveur": "node server/serveur.ts",
     "preview": "vite preview",
-    "typecheck": "tsc",
+    "typecheck": "tsc && tsc -p server",
     "sprites": "node tools/detourer.mjs",
     "planches": "node tools/planches.mjs",
     "sols": "node tools/sols.mjs",
@@ -37,9 +38,12 @@
   "dependencies": {
     "@babylonjs/core": "^9.28.0",
     "@babylonjs/loaders": "^9.28.0",
-    "trystero": "^0.25.4"
+    "trystero": "^0.25.4",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
     "sharp": "^0.35.4",
     "typescript": "^7.0.2",
     "vite": "^8.3.1"

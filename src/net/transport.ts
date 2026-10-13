@@ -1,6 +1,8 @@
 // Liaison entre navigateurs. En ligne, Trystero relie les joueurs en WebRTC, sans serveur à nous : la mise en
 // relation passe par des relais Nostr publics et gratuits, puis les données vont directement d'un navigateur à
-// l'autre. Pour les tests (`?reseau=local`), un BroadcastChannel relie les onglets d'un même navigateur.
+// l'autre. Quand le jeu est servi par son propre serveur (server/serveur.ts, `docker compose up`), tout passe par lui
+// en WebSocket : ça marche aussi sur les réseaux qui bloquent le WebRTC. Pour les tests (`?reseau=local`), un
+// BroadcastChannel relie les onglets d'un même navigateur.
 //
 // Deux sortes de messages. Les messages sûrs (salon, événements du combat) arrivent tous et dans l'ordre : un paquet
 // perdu est renvoyé, et ceux qui le suivent l'attendent. Les messages rapides (instantanés, commandes) partent sur un
@@ -25,13 +27,23 @@ export interface Room {
   leave(): void;
 }
 
-export type Network = 'trystero' | 'local';
+export type Network = 'trystero' | 'serveur' | 'local';
 
 /** Octets envoyés et reçus depuis l'ouverture de la page (messages rapides et, en test, tous les messages). */
 export const traffic = { up: 0, down: 0 };
 
 export function openRoom(network: Network, name: string): Room {
-  return network === 'local' ? localRoom(name) : trysteroRoom(name);
+  if (network === 'local') return localRoom(name);
+  return network === 'serveur' ? serverRoom(name) : trysteroRoom(name);
+}
+
+/**
+ * Le réseau à utiliser : `?reseau=local|serveur|trystero` d'abord, sinon celui choisi à la construction du jeu
+ * (`VITE_RESEAU=serveur` dans l'image Docker), sinon Trystero (la version GitHub Pages n'a pas de serveur).
+ */
+export function chooseNetwork(params: URLSearchParams): Network {
+  const asked = params.get('reseau') ?? import.meta.env.VITE_RESEAU;
+  return asked === 'local' || asked === 'serveur' ? asked : 'trystero';
 }
 
 // --- En ligne ---------------------------------------------------------------------
@@ -157,6 +169,137 @@ function trysteroRoom(name: string): Room {
     leave: () => {
       if (fastRooms.get(name) === dispatch) fastRooms.delete(name);
       void room.leave();
+    },
+  };
+}
+
+// --- Par le serveur ----------------------------------------------------------------------
+
+/**
+ * Une seule connexion WebSocket par page, partagée par tous ses salons. Le serveur relaie les messages d'un salon à
+ * ses autres membres. Tout y arrive dans l'ordre : les messages rapides passent par le même chemin, mais on les
+ * abandonne quand la connexion prend du retard, pour que le suivant arrive plus frais.
+ */
+interface ServerLink {
+  readonly selfId: string;
+  post(message: Json): void;
+  /** Les salons ouverts par cette page, avec leurs membres (hors soi) et ceux qui les écoutent. */
+  readonly rooms: Map<string, { peers: Set<string>; listeners: Set<RoomListener> }>;
+  /** Octets qui attendent encore de partir. */
+  backlog(): number;
+}
+
+interface RoomListener {
+  join(peer: string): void;
+  leave(peer: string): void;
+  message(action: string, data: Json, from: string): void;
+}
+
+let link: ServerLink | null = null;
+
+/** Adresse du serveur : `?serveur=ws://…` pour les tests, sinon `ws` à côté de la page (wss:// en HTTPS). */
+function serverUrl(): string {
+  const asked = new URLSearchParams(location.search).get('serveur');
+  if (asked) return asked;
+  const url = new URL('ws', location.href);
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  url.search = '';
+  return url.href;
+}
+
+function serverLink(): ServerLink {
+  if (link) return link;
+  const self = Math.random().toString(36).slice(2, 12);
+  const socket = new WebSocket(serverUrl());
+  const rooms: ServerLink['rooms'] = new Map();
+  /** Messages écrits avant l'ouverture de la connexion. */
+  const waiting: string[] = [JSON.stringify({ t: 'hi', id: self })];
+  const current: ServerLink = {
+    selfId: self,
+    rooms,
+    post: (message) => {
+      const text = JSON.stringify(message);
+      traffic.up += text.length;
+      if (socket.readyState === WebSocket.OPEN) socket.send(text);
+      else if (socket.readyState === WebSocket.CONNECTING) waiting.push(text);
+    },
+    backlog: () => socket.bufferedAmount,
+  };
+  socket.onopen = () => {
+    for (const text of waiting.splice(0)) socket.send(text);
+  };
+  socket.onmessage = (e: MessageEvent) => {
+    if (typeof e.data !== 'string') return;
+    traffic.down += e.data.length;
+    let m: { t: string; r: string; id?: string; ids?: string[]; a?: string; d?: Json; from?: string };
+    try {
+      m = JSON.parse(e.data);
+    } catch {
+      return;
+    }
+    const room = rooms.get(m.r);
+    if (!room) return;
+    if (m.t === 'peers' || m.t === 'join') {
+      for (const peer of m.ids ?? (m.id ? [m.id] : [])) {
+        if (room.peers.has(peer)) continue;
+        room.peers.add(peer);
+        room.listeners.forEach((l) => l.join(peer));
+      }
+    } else if (m.t === 'leave' && m.id) {
+      if (room.peers.delete(m.id)) room.listeners.forEach((l) => l.leave(m.id!));
+    } else if (m.t === 'msg' && m.a && m.from) {
+      room.listeners.forEach((l) => l.message(m.a!, m.d ?? null, m.from!));
+    }
+  };
+  // Connexion perdue : tous les autres partent d'un coup. Le prochain salon ouvert repart sur une connexion neuve.
+  socket.onclose = () => {
+    if (link === current) link = null;
+    for (const room of rooms.values()) {
+      for (const peer of [...room.peers]) {
+        room.peers.delete(peer);
+        room.listeners.forEach((l) => l.leave(peer));
+      }
+    }
+  };
+  link = current;
+  return current;
+}
+
+function serverRoom(name: string): Room {
+  const net = serverLink();
+  const handlers = new Map<string, ((data: Json, from: string) => void)[]>();
+  const joins: ((peer: string) => void)[] = [];
+  const leaves: ((peer: string) => void)[] = [];
+  const listener: RoomListener = {
+    // Les écouteurs se branchent juste après l'ouverture du salon : on les laisse s'installer.
+    join: (peer) => setTimeout(() => joins.forEach((f) => f(peer)), 0),
+    leave: (peer) => leaves.forEach((f) => f(peer)),
+    message: (action, data, from) => handlers.get(action)?.forEach((handler) => handler(data, from)),
+  };
+  let room = net.rooms.get(name);
+  if (!room) {
+    room = { peers: new Set(), listeners: new Set() };
+    net.rooms.set(name, room);
+    net.post({ t: 'join', r: name });
+  }
+  room.listeners.add(listener);
+  // Le même salon déjà ouvert par cette page (la liste des parties publiques, par exemple) : on connaît ses membres.
+  for (const peer of room.peers) listener.join(peer);
+  const send = (action: string, data: Json, to?: string) => net.post(to ? { t: 'msg', r: name, a: action, d: data, to } : { t: 'msg', r: name, a: action, d: data });
+  return {
+    selfId: net.selfId,
+    send,
+    sendFast: (action, data, to) => {
+      if (net.backlog() <= FAST_BACKLOG) send(action, data, to);
+    },
+    on: (action, handler) => handlers.set(action, [...(handlers.get(action) ?? []), handler]),
+    onPeerJoin: (f) => joins.push(f),
+    onPeerLeave: (f) => leaves.push(f),
+    leave: () => {
+      const known = net.rooms.get(name);
+      if (!known?.listeners.delete(listener) || known.listeners.size) return;
+      net.rooms.delete(name);
+      net.post({ t: 'leave', r: name });
     },
   };
 }

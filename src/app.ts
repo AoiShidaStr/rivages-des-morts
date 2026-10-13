@@ -94,7 +94,7 @@ export interface AppDeps {
   devDungeon: string;
   /** `?coop=N` : nombre de héros, les alliés étant joués par l'ordinateur (tests de la coop sans réseau). */
   devCoop: number;
-  /** Coop en ligne : Trystero (WebRTC entre navigateurs), ou `?reseau=local` entre onglets (tests). */
+  /** Coop en ligne : Trystero (WebRTC entre navigateurs), le serveur du jeu (`?reseau=serveur`), ou `?reseau=local` entre onglets (tests). */
   network: Network;
 }
 
