@@ -3,6 +3,7 @@
 // Le chat reste en bas à gauche sur l'île et en donjon : Entrée pour écrire, Échap pour refermer. Il écrit sur
 // l'onglet choisi (Général, Groupe, Privé). Raccourcis : « /m pseudo texte » (privé), « /g texte » (groupe),
 // « /r texte » (répondre au dernier message privé). Un clic sur un nom prépare un message privé.
+import { serverSettings } from '../net/account';
 import type { Canal, ChatLine, SocialClient } from '../net/social';
 import { keyName } from '../keys';
 import { h } from './dom';
@@ -196,6 +197,17 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
   pseudo.addEventListener('keydown', (e) => {
     if ((e as KeyboardEvent).key === 'Enter') add();
   });
+  // L'adresse du jeu sur Internet (tunnel ou VPS), à donner à ses amis : la même ligne, d'un rendu à l'autre.
+  const address = h('div', { class: 'social-row', style: 'display: none' });
+  void serverSettings().then(({ adresse }) => {
+    if (!adresse) return;
+    const copy = h('button', { class: 'btn small' }, 'Copier');
+    copy.addEventListener('click', () => {
+      void navigator.clipboard?.writeText(adresse).then(() => (copy.textContent = 'Copiée'), () => undefined);
+    });
+    address.replaceChildren(h('div', {}, h('small', {}, 'Adresse à donner à tes amis : '), h('strong', {}, adresse)), copy);
+    address.style.display = '';
+  });
   livePanel(host, social, () => {
     const state = social.state;
     const moi = state?.moi ?? '';
@@ -216,6 +228,7 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
       'div',
       { class: 'list coop social' },
       social.connected ? null : h('p', { class: 'note danger' }, 'Connexion au serveur…'),
+      address,
       h('div', { class: 'entry-actions' }, button('Hôtel des ventes', () => deps.market(), true)),
       ...(social.tradeOffers.length
         ? [

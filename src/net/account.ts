@@ -66,10 +66,21 @@ async function api<T>(path: string, options: { method?: string; body?: Json; jet
 }
 
 /** Crée un compte, ou s'y connecte ; le compte reste connecté dans ce navigateur. */
-export async function signIn(kind: 'inscription' | 'connexion', pseudo: string, motDePasse: string): Promise<AccountSession> {
-  const session = await api<AccountSession>(`compte/${kind}`, { method: 'POST', body: { pseudo, motDePasse } });
+export async function signIn(kind: 'inscription' | 'connexion', pseudo: string, motDePasse: string, code = ''): Promise<AccountSession> {
+  const session = await api<AccountSession>(`compte/${kind}`, { method: 'POST', body: code ? { pseudo, motDePasse, code } : { pseudo, motDePasse } });
   keepSession({ pseudo: session.pseudo, jeton: session.jeton });
   return session;
+}
+
+/** Ce que le serveur dit de lui : s'il demande un code d'invitation, et l'adresse à donner à ses amis. */
+export interface ServerSettings {
+  invitation: boolean;
+  adresse: string | null;
+}
+
+export async function serverSettings(): Promise<ServerSettings> {
+  const settings = await api<Partial<ServerSettings>>('reglages').catch(() => ({}) as Partial<ServerSettings>);
+  return { invitation: Boolean(settings.invitation), adresse: typeof settings.adresse === 'string' ? settings.adresse : null };
 }
 
 /** Se déconnecte. La copie de travail des personnages reste dans le navigateur, pour la prochaine connexion. */

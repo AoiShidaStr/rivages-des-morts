@@ -8,13 +8,15 @@
 // Lancement : `npm run serveur` (réunit le serveur et le moteur du jeu dans dist-server/serveur.js, puis le lance),
 // ou `docker compose up`.
 // Réglages par variables d'environnement : PORT (8080), DIST (dist/ à côté du dossier server/), DONNEES (donnees/
-// à côté du dossier server/ : la base des comptes).
+// à côté du dossier server/ : la base des comptes), et pour la mise en ligne (voir server/adresse.ts et le README) :
+// DOMAINE ou TUNNEL (l'adresse à donner à ses amis), PROXY=1 (derrière le tunnel ou Caddy), CODE_INVITATION.
 import { chownSync, createReadStream, mkdirSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
+import { adressePublique, suivreTunnel } from './adresse.ts';
 import { Comptes } from './comptes.ts';
 import { Social, type Page } from './social.ts';
 import { DedicatedHost } from '../src/net/dedicated.ts';
@@ -63,7 +65,7 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
     return;
   }
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique() }));
     return;
   }
   let relative: string;
@@ -307,6 +309,7 @@ setInterval(() => {
   }
 }, HEARTBEAT).unref();
 
+suivreTunnel();
 server.listen(PORT, () => console.log(`Rivages des Morts : http://localhost:${PORT} (jeu : ${DIST}, données : ${DONNEES})`));
 
 const stop = () => {

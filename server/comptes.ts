@@ -7,10 +7,12 @@
 // contenu), pour qu'un autre ordinateur resté hors ligne ne le fasse pas revenir.
 //
 // L'API, sous /api :
-//   POST   /api/compte/inscription  { pseudo, motDePasse }  → { pseudo, jeton }
+//   POST   /api/compte/inscription  { pseudo, motDePasse, code? }  → { pseudo, jeton }
+//          (code : le code d'invitation, si le serveur en a un, CODE_INVITATION)
 //   POST   /api/compte/connexion    { pseudo, motDePasse }  → { pseudo, jeton }
 //   POST   /api/compte/deconnexion                          → { ok }
 //   GET    /api/compte                                      → { pseudo }
+//   GET    /api/reglages                                    → { invitation, adresse }
 //   GET    /api/personnages                                 → [{ id, sauve, efface }]
 //   GET    /api/personnages/:id                             → { id, sauve, donnees }
 //   PUT    /api/personnages/:id     { sauve, donnees }      → { sauve }
@@ -20,6 +22,7 @@ import { mkdirSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { adressePublique, adresseDe } from './adresse.ts';
 
 /** Autant que le jeu en permet (`MAX_CHARACTERS`, src/game/progress.ts). */
 const MAX_PERSONNAGES = 6;
@@ -30,6 +33,8 @@ const SLOT = /^[a-z0-9]{1,32}$/;
 const MOT_DE_PASSE_MIN = 8;
 /** Essais de connexion ou d'inscription par adresse, sur `FENETRE` ms. */
 const ESSAIS = 10;
+/** Sur Internet, seuls ceux qui ont ce code créent un compte (vide : tout le monde). */
+const CODE_INVITATION = process.env.CODE_INVITATION?.trim() ?? '';
 const FENETRE = 10 * 60_000;
 
 type Ligne = Record<string, unknown>;
@@ -90,6 +95,7 @@ export class Comptes {
   private async route(req: IncomingMessage, pathname: string): Promise<{ status: number; corps: unknown }> {
     const method = req.method ?? 'GET';
     const ok = (corps: unknown) => ({ status: 200, corps });
+    if (pathname === '/api/reglages' && method === 'GET') return ok({ invitation: Boolean(CODE_INVITATION), adresse: adressePublique() });
     if (pathname === '/api/compte/inscription' && method === 'POST') return ok(await this.inscription(req));
     if (pathname === '/api/compte/connexion' && method === 'POST') return ok(await this.connexion(req));
     const compte = this.compte(req);
@@ -136,7 +142,11 @@ export class Comptes {
 
   private async inscription(req: IncomingMessage): Promise<{ pseudo: string; jeton: string }> {
     this.limiter(req);
-    const { pseudo, motDePasse } = identifiants(await lire(req));
+    const corps = await lire(req);
+    const { pseudo, motDePasse } = identifiants(corps);
+    if (CODE_INVITATION && !memeTexte(String((corps as { code?: unknown } | null)?.code ?? '').trim(), CODE_INVITATION)) {
+      throw new Refus(403, 'Code d’invitation incorrect : demande-le à celui qui héberge le jeu.');
+    }
     if (!PSEUDO.test(pseudo)) throw new Refus(400, 'Le pseudo fait de 3 à 16 caractères : lettres, chiffres, _ ou -.');
     if (motDePasse.length < MOT_DE_PASSE_MIN) throw new Refus(400, `Le mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`);
     if (this.db.prepare('SELECT 1 FROM comptes WHERE pseudo = ?').get(pseudo)) throw new Refus(409, 'Ce pseudo est déjà pris.');
@@ -188,13 +198,19 @@ export class Comptes {
 
   /** Freine qui devine les mots de passe : `ESSAIS` tentatives par adresse toutes les dix minutes. */
   private limiter(req: IncomingMessage): void {
-    const adresse = req.socket.remoteAddress ?? '';
+    const adresse = adresseDe(req);
     const maintenant = Date.now();
     const recents = (this.essais.get(adresse) ?? []).filter((t) => maintenant - t < FENETRE);
     if (recents.length >= ESSAIS) throw new Refus(429, 'Trop d’essais : réessaie dans quelques minutes.');
     recents.push(maintenant);
     this.essais.set(adresse, recents);
   }
+}
+
+/** Compare deux textes sans que la durée trahisse le nombre de caractères justes. */
+function memeTexte(a: string, b: string): boolean {
+  const [x, y] = [Buffer.from(a), Buffer.from(b)];
+  return x.length === y.length && timingSafeEqual(x, y);
 }
 
 class Refus extends Error {

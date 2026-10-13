@@ -2,7 +2,7 @@
 // connecter, recopier sur le compte les personnages de ce navigateur, se déconnecter.
 import { MAX_CHARACTERS } from '../game/progress';
 import { LocalSaveStore } from '../game/saves';
-import { signIn, signOut, type AccountSaveStore } from '../net/account';
+import { serverSettings, signIn, signOut, type AccountSaveStore } from '../net/account';
 import { h } from './dom';
 import type { PanelHost } from './panels';
 
@@ -65,13 +65,17 @@ export function openAccount(host: PanelHost, deps: AccountDeps, onClose: () => v
 
   const pseudo = h('input', { type: 'text', maxlength: '16', autocomplete: 'username', 'aria-label': 'Pseudo', class: 'coop-input' });
   const password = h('input', { type: 'password', autocomplete: 'current-password', 'aria-label': 'Mot de passe', class: 'coop-input' });
+  const code = h('input', { type: 'text', maxlength: '64', autocomplete: 'off', 'aria-label': 'Code d’invitation', class: 'coop-input' });
+  // Le champ du code ne se montre que si le serveur en demande un.
+  const codeField = h('label', { class: 'coop-field', style: 'display: none' }, h('span', {}, 'Code d’invitation (pour créer un compte)'), code);
+  void serverSettings().then((settings) => (codeField.style.display = settings.invitation ? '' : 'none'));
   const error = h('p', { class: 'note danger' });
   let busy = false;
   const submit = (kind: 'inscription' | 'connexion') => {
     if (busy) return;
     busy = true;
     error.textContent = '';
-    signIn(kind, pseudo.value.trim(), password.value)
+    signIn(kind, pseudo.value.trim(), password.value, kind === 'inscription' ? code.value.trim() : '')
       .then((session) => {
         try {
           // Le pseudo du compte devient celui de la coop, si on n'en avait pas choisi.
@@ -97,6 +101,7 @@ export function openAccount(host: PanelHost, deps: AccountDeps, onClose: () => v
       { class: 'list coop' },
       h('label', { class: 'coop-field' }, h('span', {}, 'Pseudo'), pseudo),
       h('label', { class: 'coop-field' }, h('span', {}, 'Mot de passe'), password),
+      codeField,
       error,
       h(
         'div',

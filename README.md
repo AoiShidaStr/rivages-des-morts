@@ -141,10 +141,32 @@ Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machin
 
 **Comptes** : sur un jeu hébergé, l'écran titre propose « Se connecter ». Avec un compte, les personnages sont gardés sur le serveur et on les retrouve depuis n'importe quel ordinateur. Sans compte, ils restent dans le navigateur, comme avant ; une fois connecté, le panneau du compte propose de les recopier dessus. Les comptes sont dans `donnees/rivages.db`.
 
+### Jouer avec ses amis sur Internet
+
+Les réglages vont dans un fichier `.env` (copie de `.env.exemple`). Avant d'ouvrir le jeu à Internet, choisis un `CODE_INVITATION` : seuls ceux qui le connaissent pourront créer un compte. Mets aussi `PROXY=1` et `HOTE=127.0.0.1`.
+
+**Depuis ton PC, sans ouvrir de port (gratuit)** :
+
+```sh
+docker compose --profile tunnel up -d --build
+```
+
+Un tunnel gratuit de Cloudflare donne au jeu une adresse en `https://….trycloudflare.com`. Elle s'affiche en haut du menu social (O), avec un bouton « Copier » : donne-la à tes amis, avec le code d'invitation. L'adresse change à chaque redémarrage du tunnel, et le jeu n'est joignable que tant que ton PC est allumé.
+
+**Sur un VPS, avec un nom de domaine** : fais pointer le domaine vers le VPS, mets-le dans `DOMAINE`, puis :
+
+```sh
+docker compose --profile https up -d --build
+```
+
+Caddy obtient seul un certificat HTTPS pour ce domaine, et l'adresse `https://<domaine>` s'affiche dans le menu social. Les ports 80 et 443 du VPS doivent être ouverts. Pour rester à 0 € : une machine « Always Free » d'Oracle Cloud, et un sous-domaine gratuit chez DuckDNS, par exemple.
+
+### Entretien
+
 - **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.
 - **Mettre à jour** : `git pull`, puis la même commande.
 - **Sauvegarder** : copie le dossier `donnees/` (les comptes et leurs personnages).
-- **Déménager** sur un VPS ou une autre machine : copie le dépôt et le dossier `donnees/`, puis la même commande. Sur Internet, mets un proxy HTTPS devant (Caddy, par exemple) : le jeu passe alors en `wss://` tout seul.
+- **Déménager** sur un VPS ou une autre machine : copie le dépôt, le dossier `donnees/` et le fichier `.env`, puis la même commande.
 - **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`.
 
 Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur` (il réunit le serveur et le moteur du jeu dans `dist-server/serveur.js`, puis le lance). En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
