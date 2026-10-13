@@ -947,6 +947,11 @@ export class App {
       return;
     }
     if (event.type === 'playerHit' && event.hero !== me) return;
+    // Le Météore du Sorcier sonne pour tout le monde : rare, et visible de toute l'arène.
+    if ((event.type === 'blast' || event.type === 'blastEnd') && event.kind === 'meteor') {
+      this.sfx.play(event.type === 'blast' ? 'meteore' : 'meteore-impact');
+      return;
+    }
     const id = SFX_DES_EVENTS[event.type];
     if (id) this.sfx.play(id);
   }
