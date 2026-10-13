@@ -562,3 +562,30 @@ kbd {
   white-space: nowrap;
   color: rgba(29, 34, 38, 0.85);
 }
+
+/* Réserve : les actions d'un exemplaire (briser, poser, ranger, fondre), en colonne à droite de la fiche */
+.reserve-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.reserve-row .gravure-lines {
+  margin: 4px 0 0;
+}
+
+/* Inventaire : les liens vers la réserve et le codex, côte à côte */
+.inv-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Forge, onglet Éveil : le pouvoir que l'éveil donne à la relique */
+.eveil-power {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--vermilion);
+}

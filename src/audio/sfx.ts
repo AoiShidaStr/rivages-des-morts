@@ -4,10 +4,11 @@
 // Les Pistes longues (menu, île, combats) restent dans src/audio/music.ts : ici, on ne touche pas aux musiques des
 // amis musicologues. Un fichier absent ne casse rien : la variante est écartée, le jeu continue sans ce son.
 // Conventions : public/audio/sfx/<id>-1.mp3, -2.mp3, -3.mp3 (deux ou trois variantes, une suffit) — le cahier de
-// production de chaque id est dans docs/sons-a-produire.md.
+// production de chaque id est dans docs/sons-a-produire.md. Sans fichier, le son est synthétisé (src/audio/synth.ts).
 
 import data from '../data/sfx.json';
 import type { GameEvent } from '../game/types';
+import { Synth } from './synth';
 
 export type SfxId = keyof typeof data.sons;
 
@@ -43,6 +44,8 @@ export class Sfx {
   private readonly dernière = new Map<SfxId, number>();
   /** L'heure de la dernière joue de chaque son : le pas de 90 ms vaut son par son, pas pour tous ensemble. */
   private readonly dernierJeu = new Map<SfxId, number>();
+  /** Les sons dont le fichier manque encore se synthétisent : le jeu sonne dès maintenant, sans rien payer. */
+  private readonly synth = new Synth();
 
   constructor() {
     this.settings = loadSettings();
@@ -68,14 +71,18 @@ export class Sfx {
     this.changed();
   }
 
-  /** Joue ce son, si le navigateur le permet et que le fichier existe. Silencieux sans lui. */
+  /** Joue ce son, si le navigateur le permet : son fichier s'il existe, sinon sa version synthétisée. */
   play(id: SfxId): void {
     if (!this.unlocked || this.settings.muted) return;
     const maintenant = Date.now();
     // Le même son à 90 ms près s'efface devant lui-même : les rafales de coups restent lisibles.
     if (maintenant - (this.dernierJeu.get(id) ?? 0) < MÊME_PAS_MS) return;
     const variantes = this.pool(id);
-    if (variantes.length === 0) return;
+    this.dernierJeu.set(id, maintenant);
+    if (variantes.length === 0) {
+      this.synth.play(id, this.settings.volume);
+      return;
+    }
     const dernière = this.dernière.get(id) ?? -1;
     const dispo = variantes.length > 1 ? variantes.filter((_, i) => i !== dernière) : variantes;
     const audio = dispo[Math.floor(Math.random() * dispo.length)];
@@ -84,7 +91,6 @@ export class Sfx {
     audio.playbackRate = 0.92 + Math.random() * 0.14;
     audio.volume = this.settings.volume;
     this.dernière.set(id, variantes.indexOf(audio));
-    this.dernierJeu.set(id, maintenant);
     void audio.play().catch(() => {
       // Lecture refusée (fichier absent, onglet en arrière-plan) : le jeu continue en silence.
     });

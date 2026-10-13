@@ -30,6 +30,7 @@
   },
   "rewards": {
     "itemsFrom": 10,
+    "eclat": { "about": "L'Éclat des Tablettes (l'Éveil, chez Tetsu) : le boss de chaque bloc en laisse un dès le palier `from`.", "from": 50, "material": "eclat-tablettes", "count": 1 },
     "rarity": [
       { "from": 10, "weights": { "rare": 70, "épique": 25, "légendaire": 5 } },
       { "from": 20, "weights": { "rare": 40, "épique": 45, "légendaire": 15 } },

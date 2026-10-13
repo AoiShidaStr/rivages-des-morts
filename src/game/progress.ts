@@ -47,7 +47,30 @@ export interface ProgressState {
   quests: Record<string, Exclude<QuestStatus, 'none'>>;
   /** Coffres gagnés en donjon, à ouvrir sur la barque. */
   chests: number;
+  /**
+   * La réserve : les exemplaires en plus d'un objet déjà possédé (doublons, sceaux du Yomi, achats). L'objet
+   * possédé (`items`) reste celui qu'on porte et qu'on forge ; un exemplaire de la réserve garde son niveau et sa
+   * gravure, pour la vente, l'échange, ou pour poser sa gravure sur son arme.
+   */
+  stock: StockEntry[];
 }
+
+/** Un exemplaire rangé dans la réserve. */
+export interface StockEntry {
+  /** Identifiant propre à l'exemplaire (deux katanas de rōnin sont deux lignes). */
+  uid: string;
+  item: string;
+  /** Niveau de forge de l'exemplaire. */
+  level: number;
+  gravure?: Gravure;
+  /** Sceau du Yomi pas encore brisé : la gravure existe, mais on ne la connaît qu'en l'ouvrant. */
+  sceau?: boolean;
+}
+
+/** Au-delà, un nouvel exemplaire est fondu tout de suite : la réserve reste lisible et la sauvegarde légère. */
+export const STOCK_MAX = 200;
+
+const newUid = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 export interface DungeonRecord {
   unlocked: number;
@@ -183,6 +206,7 @@ function fresh(): ProgressState {
     flags: {},
     quests: {},
     chests: 0,
+    stock: [],
   };
 }
 
@@ -364,6 +388,19 @@ export class Progress {
     return actions;
   }
 
+  /** Range un exemplaire dans la réserve ; faux si elle est pleine (l'appelant le fond alors). */
+  addStock(entry: Omit<StockEntry, 'uid'>): boolean {
+    if (this.state.stock.length >= STOCK_MAX) return false;
+    this.state.stock.push({ uid: newUid(), ...entry, level: Math.max(1, Math.floor(entry.level)) });
+    return true;
+  }
+
+  /** Sort un exemplaire de la réserve et le renvoie (undefined s'il n'y est plus). */
+  takeStock(uid: string): StockEntry | undefined {
+    const i = this.state.stock.findIndex((e) => e.uid === uid);
+    return i >= 0 ? this.state.stock.splice(i, 1)[0] : undefined;
+  }
+
   /** Range un nouvel objet et l'équipe si son emplacement est libre. */
   acquire(item: string, slot?: Slot): void {
     if (!this.has(item)) this.state.items.push(item);
@@ -523,8 +560,8 @@ function levelUpToast(level: number, point: boolean): Action {
  * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
  * pas de héros (c'était toujours un Guerrier Einherjar).
  */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'dungeons' | 'hero' | 'gravures'> &
-  Partial<Pick<ProgressState, 'itemLevels' | 'dungeons' | 'hero' | 'gravures'>> & {
+type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures'>> & {
     weaponLevel?: number;
     weaponLevels?: Record<string, number>;
     /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
@@ -560,6 +597,9 @@ function migrate(saved: SavedState, catalog: Catalog): ProgressState {
     if (item && catalog.itemSlot(item) !== slot) delete state.equipped[slot];
   }
   state.itemLevels = { [STARTING_WEAPON]: weaponLevel ?? 1, ...weaponLevels, ...saved.itemLevels };
+  // 0.19.0 : la réserve. Un exemplaire d'un objet retiré du jeu la quitte.
+  state.stock = (Array.isArray(state.stock) ? state.stock : []).filter((e) => e && catalog.hasItem(e.item));
+  state.eveils = { ...state.eveils };
   // Une gravure survit à tout sauf à la disparition de son arme (`{ ...undefined }` vaut {} sur une vieille sauvegarde).
   state.gravures = { ...state.gravures };
   for (const id of Object.keys(state.gravures)) if (!catalog.hasItem(id)) delete state.gravures[id];

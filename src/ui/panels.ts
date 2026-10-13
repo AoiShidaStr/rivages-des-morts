@@ -20,13 +20,16 @@ import {
   type Loadout,
   type SubclassDef,
 } from '../game/loadout';
-import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravureRank, gravureSealText, rankOdds, rollGravure, type GravureData } from '../game/gravure';
+import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravureRank, gravureSealText, rankOdds, rollGravure, type Gravure, type GravureData } from '../game/gravure';
 import type { EndlessModifierSeed } from '../game/infini';
-import type { RolledOffer } from '../game/loot';
-import { readJournal, seenItems } from '../game/journal';
-import { SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
+import { salvage, type RolledOffer } from '../game/loot';
+import { breakSeal, meltStock, poseGravure, takeOut } from '../game/reserve';
+import { markSeen, readJournal, seenItems } from '../game/journal';
+import { STOCK_MAX, SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
 import { keyName, withKeys } from '../keys';
 import { h, icon, obole, type Child } from './dom';
+import { livePanel } from './social';
+import type { SocialClient } from '../net/social';
 
 /** Nombre à la française : « 1,35 ». */
 const fr = (value: number, digits = 2): string => value.toLocaleString('fr-FR', { maximumFractionDigits: digits });
@@ -775,7 +778,7 @@ function eveilBody(ctx: UiContext, rerender: () => void): HTMLElement {
     h(
       'p',
       { class: 'note' },
-      `${matCount} × ${content.materials[matId] ?? matId} et ${rules.oboles} oboles éveillent une relique : portée, elle te donne ${eveilCharge(rules.bonus)} en plus de ses effets.`,
+      `${matCount} × ${content.materials[matId] ?? matId} et ${rules.oboles} oboles éveillent une relique : portée, elle gagne le pouvoir écrit sous son nom. Les Éclats tombent sur le boss de chaque bloc du Yomi sans fond, dès le palier 50.`,
     ),
     ...(relics.length
       ? relics.map((id) => {
@@ -793,8 +796,9 @@ function eveilBody(ctx: UiContext, rerender: () => void): HTMLElement {
                 ...itemTags(def).map((t) => h('span', { class: 'tag' }, t)),
               ),
               h('div', { class: 'item-meta' }, `Relique · ${def.summary ?? def.description}`),
+              h('div', { class: 'eveil-power' }, `Éveil : ${def.eveil?.summary ?? eveilCharge(rules.bonus)}`),
             ),
-            atMax(id) ? h('span', { class: 'note' }, `Éveillée : ${eveilCharge(rules.bonus)} gagnés`) : price.node,
+            atMax(id) ? h('span', { class: 'note' }, 'Éveillée') : price.node,
             atMax(id)
               ? null
               : h(
@@ -1189,7 +1193,12 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           { class: 'col' },
           h('h3', {}, 'Porté'),
           h('div', { class: 'slots' }, ...slotButtons),
-          h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets'),
+          h(
+            'div',
+            { class: 'inv-links' },
+            h('button', { class: 'btn small', onclick: () => openReserve(host, ctx) }, `Réserve (${progress.state.stock.length})`),
+            h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets'),
+          ),
           fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${Math.round(cfg.attack.damage)} dégâts`, stats),
           fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
           fold(
@@ -1649,31 +1658,69 @@ export function openLoot(host: PanelHost, title: string, lines: (string | Node)[
 
 /**
  * La stèle des records du ponton : les paliers franchis dans le Yomi sans fond, lus dans le journal de descentes
- * (src/game/journal.ts, rien n'en sort de l'ordinateur). Le héros du journal porte déjà son libellé (`heroLabel`).
+ * (src/game/journal.ts, rien n'en sort de l'ordinateur), puis, sur le serveur du jeu, le classement de tous les
+ * joueurs (server/records.ts). Le héros du journal porte déjà son libellé (`heroLabel`).
  */
-export function openRecords(host: PanelHost): void {
-  const runs = readJournal();
-  const perHero = new Map<string, { best: number; wins: number; total: number }>();
-  let cooperative = 0;
-  for (const run of runs) {
-    const stat = perHero.get(run.hero) ?? { best: 0, wins: 0, total: 0 };
-    stat.total += 1;
-    if (run.victory) stat.wins += 1;
-    if (run.dungeon === 'infini' && run.victory) stat.best = Math.max(stat.best, run.dungeonLevel);
-    perHero.set(run.hero, stat);
-    if (run.players > 1) cooperative += 1;
+export function openRecords(host: PanelHost, social: SocialClient | null = null): void {
+  const build = () => {
+    const runs = readJournal();
+    const perHero = new Map<string, { best: number; wins: number; total: number }>();
+    let cooperative = 0;
+    for (const run of runs) {
+      const stat = perHero.get(run.hero) ?? { best: 0, wins: 0, total: 0 };
+      stat.total += 1;
+      if (run.victory) stat.wins += 1;
+      if (run.dungeon === 'infini' && run.victory) stat.best = Math.max(stat.best, run.dungeonLevel);
+      perHero.set(run.hero, stat);
+      if (run.players > 1) cooperative += 1;
+    }
+    const ranked = [...perHero.entries()].sort((a, b) => b[1].best - a[1].best || b[1].total - a[1].total);
+    const mine: (string | Node)[] = ranked.map(([name, stat]) =>
+      h(
+        'div',
+        { class: 'records-line' },
+        h('span', {}, name),
+        h(
+          'span',
+          { class: 'note' },
+          stat.best > 0 ? `palier ${stat.best}` : 'aucun palier franchi',
+          ` · ${stat.wins} victoire${stat.wins > 1 ? 's' : ''} sur ${stat.total} descente${stat.total > 1 ? 's' : ''}`,
+        ),
+      ),
+    );
+    if (cooperative > 0) mine.push(h('div', { class: 'note' }, `${cooperative} descente${cooperative > 1 ? 's' : ''} en coop dans le journal.`));
+    if (runs.length === 0) mine.push(h('p', { class: 'note' }, 'Aucune descente enregistrée. La stèle attend ton premier palier.'));
+    const server = social
+      ? social.records === null
+        ? [h('p', { class: 'note' }, social.connected ? 'La stèle interroge le serveur…' : 'Serveur injoignable pour l’instant.')]
+        : social.records.length === 0
+          ? [h('p', { class: 'note' }, 'Aucun palier gravé sur ce serveur. Le premier bloc gagné du Yomi sans fond ouvrira la liste.')]
+          : social.records.map((r, i) =>
+              h(
+                'div',
+                { class: 'records-line' },
+                h('span', {}, `${i + 1}. ${r.pseudo} · ${r.heros}`),
+                h('span', { class: 'note' }, `palier ${r.palier}`),
+              ),
+            )
+      : [];
+    const body = h(
+      'div',
+      { class: 'list' },
+      social ? h('h3', {}, 'Tous les joueurs du serveur') : null,
+      ...server,
+      h('h3', {}, 'Sur ce navigateur'),
+      h('ul', { class: 'loot' }, ...mine.map((l) => h('li', {}, l))),
+    );
+    return { title: 'Stèle des records — Yomi sans fond', subtitle: social ? 'Le classement du serveur, puis ton journal' : '', body };
+  };
+  if (!social) {
+    const { title, body } = build();
+    host.show(title, null, body);
+    return;
   }
-  const ranked = [...perHero.entries()].sort((a, b) => b[1].best - a[1].best || b[1].total - a[1].total);
-  const lines: (string | Node)[] = ranked.map(([name, stat]) =>
-    h('div', { class: 'records-line' },
-      h('span', {}, name),
-      h('span', { class: 'note' },
-        stat.best > 0 ? `palier ${stat.best}` : 'aucun palier franchi',
-        ` · ${stat.wins} victoire${stat.wins > 1 ? 's' : ''} sur ${stat.total} descente${stat.total > 1 ? 's' : ''}`)),
-  );
-  if (cooperative > 0) lines.push(h('div', { class: 'note' }, `${cooperative} descente${cooperative > 1 ? 's' : ''} en coop dans le journal.`));
-  if (runs.length === 0) lines.push(h('p', { class: 'note' }, 'Aucune descente enregistrée. La stèle attend ton premier palier.'));
-  openLoot(host, 'Stèle des records — Yomi sans fond', lines);
+  social.requestRecords();
+  livePanel(host, social, build);
 }
 
 /**
@@ -1744,6 +1791,9 @@ function dropSources(id: string): string[] {
 export function openCodex(host: PanelHost, ctx: UiContext): void {
   const render = () => {
     const { progress } = ctx;
+    // Tout objet possédé compte comme croisé, d'où qu'il vienne (achat, coffre, quête, échange, réserve) : un objet
+    // revendu ensuite reste « déjà vu ».
+    for (const id of [...progress.state.items, ...progress.state.stock.map((e) => e.item)]) markSeen(id);
     const seen = new Set<string>(seenItems());
     const all = Object.entries(content.items);
     const total = all.length;
@@ -1787,9 +1837,112 @@ export function openCodex(host: PanelHost, ctx: UiContext): void {
       h(
         'div',
         { class: 'list' },
-        h('p', { class: 'note' }, 'Un objet croisé une fois reste compté sur ce navigateur, pour tous les personnages.'),
+        h('p', { class: 'note' }, 'Un objet obtenu une fois (butin, achat, coffre, échange) reste compté sur ce navigateur, pour tous les personnages.'),
         ...((Object.entries(content.slots) as [Slot, string][]).map(([slot, label]) => rayon(slot, label)).filter(Boolean) as HTMLElement[]),
         rayon(null, 'Objets de quête') as HTMLElement | null,
+      ),
+      { wide: true },
+    );
+  };
+  render();
+}
+
+/** Les lignes d'une gravure, en liste : la contrepartie se lit en rouge, comme dans l'onglet Graver. */
+function gravureList(gravure: Gravure): HTMLElement {
+  const data = content.gravures;
+  return h(
+    'ul',
+    { class: 'gravure-lines' },
+    ...gravure.lines.flatMap((line) => {
+      const lineDef = gravureLineDef(data, line.id);
+      if (!lineDef) return [];
+      const contre = lineDef.kind === 'contrepartie';
+      return [h('li', { class: `gravure-line${contre ? ' contrepartie' : ''}` }, contre ? `Contrepartie · ${lineDef.summary}` : gravureLineText(line, lineDef))];
+    }),
+  );
+}
+
+/**
+ * La réserve : chaque exemplaire en plus d'un objet possédé (doublons, sceaux du Yomi, achats), avec son niveau et sa
+ * gravure. On y brise un sceau, on pose une gravure sur son arme (l'ancienne prend sa place), on fond, ou on sort
+ * l'exemplaire vers l'équipement quand on n'a plus l'objet. La vente passe par les échanges (menu social).
+ */
+export function openReserve(host: PanelHost, ctx: UiContext): void {
+  const render = () => {
+    const { progress } = ctx;
+    const stock = progress.state.stock;
+    const data = content.gravures;
+    const rows = [...stock]
+      .sort((a, b) => (content.items[a.item]?.name ?? a.item).localeCompare(content.items[b.item]?.name ?? b.item) || b.level - a.level)
+      .map((entry) => {
+        const def = content.items[entry.item];
+        if (!def) return null;
+        const owned = progress.has(entry.item);
+        const rank = entry.gravure && !entry.sceau ? gravureRank(data, entry.gravure) : undefined;
+        const current = owned && def.slot === 'arme' ? progress.gravure(entry.item) : undefined;
+        const s = salvage(content.duplicates, content.upgrade, def);
+        const gain = [`${s.oboles} oboles`, s.material ? `${s.count} ${content.materials[s.material] ?? s.material}` : null].filter(Boolean).join(', ');
+        const act = (label: string, run: () => void, title?: string) =>
+          h('button', { class: 'btn small', title, onclick: () => { run(); render(); } }, label);
+        return h(
+          'div',
+          { class: 'row recipe reserve-row' },
+          itemBlock(
+            entry.item,
+            h(
+              'div',
+              { class: 'item-head' },
+              h('strong', { title: def.description }, def.name),
+              h('span', { class: 'tag' }, `niv. ${entry.level}`),
+              entry.sceau ? h('span', { class: 'tag' }, 'Gravure scellée') : rank ? h('span', { class: 'tag' }, rank.name) : null,
+            ),
+            h('div', { class: 'item-meta' }, `${content.slots[def.slot as Slot] ?? 'Objet'} · ${owned ? 'tu possèdes déjà cet objet' : 'tu ne possèdes plus cet objet'}`),
+            entry.gravure && !entry.sceau ? gravureList(entry.gravure) : null,
+            current && entry.gravure && !entry.sceau ? h('div', { class: 'note' }, `Sur ton arme : ${gravureRank(data, current)?.name ?? 'gravure'}`) : null,
+          ),
+          h(
+            'div',
+            { class: 'reserve-actions' },
+            entry.sceau
+              ? act('Briser le sceau', () => {
+                  const opened = breakSeal(progress, entry.uid);
+                  if (opened?.gravure) ctx.toast(`${def.name} · ${gravureRank(data, opened.gravure)?.name ?? 'gravure'}`, 'loot', entry.item);
+                })
+              : null,
+            !entry.sceau && entry.gravure && owned && def.slot === 'arme'
+              ? act(
+                  current ? 'Échanger avec mon arme' : 'Poser sur mon arme',
+                  () => {
+                    if (poseGravure(progress, entry.uid)) ctx.toast(`Gravure posée sur ${def.name}`, 'loot', entry.item);
+                  },
+                  current ? 'La gravure de ton arme passe sur cet exemplaire : une seule gravure active à la fois.' : undefined,
+                )
+              : null,
+            !owned && !entry.sceau
+              ? act('Ranger dans l’équipement', () => {
+                  if (takeOut(progress, entry.uid)) ctx.toast(`${def.name} rejoint ton équipement`, 'loot', entry.item);
+                })
+              : null,
+            act(
+              'Fondre',
+              () => {
+                const text = meltStock(progress, entry.uid);
+                if (text) ctx.toast(text, 'loot', entry.item);
+              },
+              `Tetsu le fond : ${gain}`,
+            ),
+          ),
+        );
+      })
+      .filter(Boolean) as HTMLElement[];
+    host.show(
+      'Réserve',
+      `${stock.length} / ${STOCK_MAX} exemplaires`,
+      h(
+        'div',
+        { class: 'list' },
+        h('p', { class: 'note' }, 'Les doublons, les sceaux du Yomi et les objets reçus en double attendent ici. Brise un sceau pour découvrir sa gravure ; pose-la sur ton arme ou revends l’exemplaire (menu social : échange, hôtel des ventes, boutique).'),
+        ...(rows.length ? rows : [h('p', { class: 'note' }, 'Ta réserve est vide.')]),
       ),
       { wide: true },
     );
