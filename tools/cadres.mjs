@@ -14,32 +14,41 @@ import sharp from 'sharp';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packDir = process.argv[2] ?? path.join(os.homedir(), 'Downloads', 'kenney_fantasy-ui-borders');
-const outDir = path.join(projectDir, 'public', 'ui', 'cadres');
+// Pour essayer une autre palette sans toucher aux cadres du jeu : CADRES_SORTIE=<dossier> et
+// CADRES_COULEURS='{"trait":"#…",…}' (clés ci-dessous).
+const outDir = process.env.CADRES_SORTIE ?? path.join(projectDir, 'public', 'ui', 'cadres');
 
 // Couleurs de src/ui/ui.css (:root).
-const ink = '#1d2226';
-const paper = '#f1ece2';
-const vermilion = '#c8412f';
-const vermilionDark = '#9b2f22';
-const gold = '#d9b45a';
+const colors = {
+  fenetre: '#1d2226', // trait des fenêtres, encarts, séparateur
+  dialogue: '#d9b45a', // double trait de la boîte de dialogue
+  bouton: '#1d2226', // fond des boutons
+  boutonTrait: '#d9b45a',
+  survol: '#c8412f', // bouton survolé ou principal
+  survolTrait: '#f1ece2',
+  survolSombre: '#9b2f22', // bouton principal survolé, bouton dangereux
+  case: '#1d2226', // bouton fermer
+  accent: '#c8412f', // onglet actif, carte choisie
+  ...JSON.parse(process.env.CADRES_COULEURS ?? '{}'),
+};
 
 const border = (n) => `PNG/Default/Border/panel-border-${n}.png`;
 const panel = (n) => `PNG/Default/Panel/panel-${n}.png`;
 
 const frames = [
   // Fenêtres, cartes de pause et de fin : grecque aux coins, à l'encre sur le papier.
-  { name: 'fenetre', line: [border('007'), ink] },
+  { name: 'fenetre', line: [border('007'), colors.fenetre] },
   // Boîte de dialogue et bannière de lieu (fond sombre) : double trait doré.
-  { name: 'dialogue', line: [border('003'), gold] },
+  { name: 'dialogue', line: [border('003'), colors.dialogue] },
   // Boutons : coins en carrés, trait doré ou papier, fond plein.
-  { name: 'bouton', line: [border('009'), gold], fill: [panel('009'), ink] },
-  { name: 'bouton-vermillon', line: [border('009'), paper], fill: [panel('009'), vermilion] },
-  { name: 'bouton-vermillon-sombre', line: [border('009'), paper], fill: [panel('009'), vermilionDark] },
+  { name: 'bouton', line: [border('009'), colors.boutonTrait], fill: [panel('009'), colors.bouton] },
+  { name: 'bouton-vermillon', line: [border('009'), colors.survolTrait], fill: [panel('009'), colors.survol] },
+  { name: 'bouton-vermillon-sombre', line: [border('009'), colors.survolTrait], fill: [panel('009'), colors.survolSombre] },
   // Fermer, onglet actif, carte choisie : trait fin à l'encre.
-  { name: 'case', line: [border('001'), ink] },
-  { name: 'case-vermillon', line: [border('001'), vermilion] },
+  { name: 'case', line: [border('001'), colors.case] },
+  { name: 'case-vermillon', line: [border('001'), colors.accent] },
   // Suivi de quête et petits encarts sur papier.
-  { name: 'encart', line: [border('012'), ink] },
+  { name: 'encart', line: [border('012'), colors.fenetre] },
 ];
 
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
@@ -76,13 +85,13 @@ const fade = path.join(packDir, 'PNG/Default/Divider Fade/divider-fade-001.png')
 const half = await sharp(fade).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 const { width, height } = half.info;
 const sep = Buffer.alloc(width * 2 * height * 4);
-const inkRgb = rgb(ink);
+const lineRgb = rgb(colors.fenetre);
 for (let y = 0; y < height; y++) {
   for (let x = 0; x < width; x++) {
     const a = half.data[(y * width + x) * 4 + 3];
     if (!a) continue;
-    sep.set([...inkRgb, a], (y * width * 2 + x) * 4);
-    sep.set([...inkRgb, a], (y * width * 2 + (width * 2 - 1 - x)) * 4);
+    sep.set([...lineRgb, a], (y * width * 2 + x) * 4);
+    sep.set([...lineRgb, a], (y * width * 2 + (width * 2 - 1 - x)) * 4);
   }
 }
 await sharp(sep, { raw: { width: width * 2, height, channels: 4 } })
