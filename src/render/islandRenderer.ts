@@ -285,7 +285,7 @@ export class IslandRenderer {
         view = undefined;
       }
       if (!view) {
-        const entry = this.entryFor(it.sprite);
+        const entry = this.entryFor(it.sprite, it.def.height);
         if (!entry) continue;
         view = this.billboard(`npc-${it.def.id}`, entry, it.pos, it.def.solid ?? 0.3, it.sprite);
         this.npcs.set(it.def.id, view);
@@ -332,7 +332,7 @@ export class IslandRenderer {
         this.highlight.material.setFloat('alpha', 0.55 + 0.25 * Math.sin(this.time * 5));
       }
     }
-    this.syncMarkers(visible.map((it) => ({ id: it.def.id, pos: it.pos, sprite: it.sprite })), markers);
+    this.syncMarkers(visible.map((it) => ({ id: it.def.id, pos: it.pos, sprite: it.sprite, height: it.def.height })), markers);
   }
 
   render(): void {
@@ -498,7 +498,7 @@ export class IslandRenderer {
 
   // --- Marqueurs de quête ------------------------------------------------------
 
-  private syncMarkers(visible: { id: string; pos: Vec2; sprite?: string }[], wanted: ReadonlyMap<string, string>): void {
+  private syncMarkers(visible: { id: string; pos: Vec2; sprite?: string; height?: number }[], wanted: ReadonlyMap<string, string>): void {
     for (const [id, marker] of this.markers) {
       if (wanted.has(id) && visible.some((v) => v.id === id)) continue;
       marker.el.remove();
@@ -518,7 +518,7 @@ export class IslandRenderer {
         const el = document.createElement('div');
         el.className = 'quest-marker';
         this.overlay.append(el);
-        const spriteHeight = v.sprite ? (this.entryFor(v.sprite)?.height ?? 1.5) : 1.5;
+        const spriteHeight = v.sprite ? (this.entryFor(v.sprite, v.height)?.height ?? 1.5) : 1.5;
         marker = { el, anchor: new Vector3(v.pos.x, 0, v.pos.z).addInPlace(up.scale(spriteHeight + MARKER_HEIGHT_MARGIN)) };
         this.markers.set(v.id, marker);
       }

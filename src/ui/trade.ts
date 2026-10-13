@@ -2,7 +2,7 @@
 // boutique d'un joueur (son mode marchand).
 import { content } from '../content';
 import type { Progress } from '../game/progress';
-import { cannotGive, describeLot, emptyLot, lotItem, tradableItems, type Lot } from '../game/trade';
+import { cannotGive, describeLot, emptyLot, lotItem, lotKey, tradableLots, type Lot, type LotItem } from '../game/trade';
 import type { Sale, SocialClient } from '../net/social';
 import { h, icon } from './dom';
 import type { PanelHost } from './panels';
@@ -10,6 +10,10 @@ import { livePanel } from './social';
 
 const itemName = (id: string) => content.items[id]?.name ?? id;
 const materialName = (id: string) => content.materials[id] ?? id;
+
+/** « Katana de rōnin · niv. 3 · gravé · réserve » : ce qu'on voit d'une pièce dans un lot. */
+const lotLabel = (i: LotItem, mine = false): string =>
+  `${itemName(i.item)}${i.level > 1 ? ` · niv. ${i.level}` : ''}${i.sceau ? ' · gravure scellée' : i.gravure ? ' · gravé' : ''}${mine && i.uid ? ' · réserve' : ''}`;
 
 /** Les matériaux qu'on possède, avec leur nombre. */
 function ownedMaterials(progress: Progress): [string, number][] {
@@ -22,7 +26,7 @@ function lotView(lot: Lot): HTMLElement {
   return h(
     'div',
     { class: 'trade-lot' },
-    ...lot.items.map((i) => h('div', { class: 'trade-line' }, icon(i.item, 'small'), `${itemName(i.item)}${i.level > 1 ? ` · niv. ${i.level}` : ''}${i.gravure ? ' · gravé' : ''}`)),
+    ...lot.items.map((i) => h('div', { class: 'trade-line' }, icon(i.item, 'small'), lotLabel(i))),
     ...Object.entries(lot.materials).map(([id, n]) => h('div', { class: 'trade-line' }, `${n} × ${materialName(id)}`)),
     lot.oboles ? h('div', { class: 'trade-line' }, `${lot.oboles} oboles`) : null,
   );
@@ -33,8 +37,8 @@ function lotView(lot: Lot): HTMLElement {
  * `change` reçoit le lot à chaque modification.
  */
 function lotEditor(progress: Progress, lot: Lot, change: (lot: Lot) => void, withOboles: boolean): HTMLElement {
-  const items = tradableItems(progress);
-  const chosen = new Set(lot.items.map((i) => i.item));
+  const items = tradableLots(progress);
+  const chosen = new Set(lot.items.map(lotKey));
   const update = (next: Lot) => change(next);
   const number = (value: number, max: number, set: (n: number) => void) => {
     const input = h('input', { type: 'number', min: '0', max: String(max), value: String(value), class: 'coop-input trade-count' });
@@ -49,22 +53,23 @@ function lotEditor(progress: Progress, lot: Lot, change: (lot: Lot) => void, wit
       ? h(
           'div',
           { class: 'trade-items' },
-          ...items.map((id) =>
-            h(
+          ...items.map((choice) => {
+            const key = lotKey(choice);
+            return h(
               'label',
               { class: 'trade-line' },
               h('input', {
                 type: 'checkbox',
-                checked: chosen.has(id),
+                checked: chosen.has(key),
                 onchange: (e) => {
                   const on = (e.target as HTMLInputElement).checked;
-                  update({ ...lot, items: on ? [...lot.items, lotItem(progress, id)] : lot.items.filter((i) => i.item !== id) });
+                  update({ ...lot, items: on ? [...lot.items, lotItem(progress, key)] : lot.items.filter((i) => lotKey(i) !== key) });
                 },
               }),
-              icon(id, 'small'),
-              `${itemName(id)}${(progress.state.itemLevels[id] ?? 1) > 1 ? ` · niv. ${progress.state.itemLevels[id]}` : ''}`,
-            ),
-          ),
+              icon(choice.item, 'small'),
+              lotLabel(choice, true),
+            );
+          }),
         )
       : h('p', { class: 'note' }, 'Aucune pièce à céder (celles que tu portes restent sur toi).'),
     h('h3', {}, 'Matériaux'),

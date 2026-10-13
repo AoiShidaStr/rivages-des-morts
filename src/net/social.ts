@@ -57,6 +57,14 @@ export interface Market {
   taxe: number;
 }
 
+/** Une ligne de la stèle des records partagée (server/records.ts). */
+export interface ServerRecord {
+  pseudo: string;
+  heros: string;
+  palier: number;
+  quand: number;
+}
+
 /** Ce que le jeu doit ranger dans le personnage, ou en retirer, quand le serveur le dit. */
 export type Goods =
   | { kind: 'echange'; avec: string; donne: Lot; recoit: Lot }
@@ -78,6 +86,8 @@ export class SocialClient {
   market: Market | null = null;
   /** La dernière boutique ouverte. */
   shop: { pseudo: string; ventes: Sale[] } | null = null;
+  /** Le classement de la stèle partagée, une fois demandé (null avant la réponse du serveur). */
+  records: ServerRecord[] | null = null;
   /** Le serveur dit de ranger ou de retirer quelque chose du personnage. */
   onGoods: ((goods: Goods) => void) | null = null;
   /** Un échange vient de commencer : le jeu ouvre sa fenêtre. */
@@ -147,6 +157,16 @@ export class SocialClient {
     this.channel.post({ t: 'hdv', faire: 'retirer', id });
   }
 
+  /** Grave un palier du Yomi sans fond sur la stèle partagée (le serveur garde le meilleur de chaque héros). */
+  submitRecord(heros: string, palier: number): void {
+    this.channel.post({ t: 'record', heros, palier });
+  }
+
+  /** Demande le classement de la stèle partagée ; il arrive dans `records`. */
+  requestRecords(): void {
+    this.channel.post({ t: 'records' });
+  }
+
   /** Invite son groupe dans sa partie en coop. */
   inviteToGame(code: string): void {
     this.channel.post({ t: 'partie', code });
@@ -175,6 +195,9 @@ export class SocialClient {
       this.receiveTrade(m);
     } else if (m.t === 'hdv') {
       this.receiveMarket(m);
+    } else if (m.t === 'records' && Array.isArray(m.liste)) {
+      this.records = m.liste as unknown as ServerRecord[];
+      this.changed();
     } else if (m.t === 'partie' && typeof m.code === 'string' && typeof m.de === 'string') {
       this.push({ canal: 'avis', de: m.de, texte: `${m.de} invite le groupe dans sa partie.`, quand: Date.now(), code: m.code });
     }

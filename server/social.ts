@@ -15,6 +15,7 @@
 //   { t: 'ami', faire: 'demander' | 'accepter' | 'refuser' | 'retirer', pseudo }
 //   { t: 'groupe', faire: 'inviter' | 'accepter' | 'refuser' | 'quitter' | 'exclure', pseudo? }
 //   { t: 'partie', code }
+//   { t: 'record', heros, palier } et { t: 'records' } : la stèle des records partagée (records.ts)
 // Du serveur vers la page :
 //   { t: 'etat', moi, amis: [{ pseudo, enLigne, ile }], recues, envoyees, groupe: { chef, membres } | null, invitations }
 //   { t: 'chat', canal, de, a?, texte, quand }
@@ -23,6 +24,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Comptes } from './comptes.ts';
 import { Echanges } from './echanges.ts';
+import { Records } from './records.ts';
 
 /** Autant de joueurs qu'une partie en coop (MAX_PLAYERS, src/net/session.ts). */
 const TAILLE_GROUPE = 3;
@@ -73,6 +75,8 @@ export class Social {
 
   private readonly comptes: Comptes;
   private readonly echanges: Echanges;
+  /** La stèle des records partagée (records.ts). */
+  private readonly records: Records;
 
   constructor(comptes: Comptes) {
     this.comptes = comptes;
@@ -86,6 +90,7 @@ export class Social {
         PRIMARY KEY (de, a)
       );
     `);
+    this.records = new Records(this.db);
     this.echanges = new Echanges(this.db, {
       envoyerA: (id, message) => this.envoyerA(id, message),
       enLigne: (id) => this.enLigne(id),
@@ -102,6 +107,11 @@ export class Social {
       return;
     }
     const moi = page.compte;
+    // La stèle se lit sans compte ; on n'y grave qu'avec un compte.
+    if (message.t === 'records') {
+      page.envoyer({ t: 'records', liste: this.records.classement() });
+      return;
+    }
     if (!moi) {
       if (['chat', 'ami', 'groupe', 'partie', 'echange', 'hdv'].includes(String(message.t))) page.envoyer({ t: 'avis', texte: 'Connecte-toi à un compte pour discuter et ajouter des amis.' });
       return;
@@ -112,6 +122,7 @@ export class Social {
     else if (message.t === 'groupe') this.groupe(page, moi, String(message.faire), pseudo);
     else if (message.t === 'partie') this.partie(page, moi, message.code);
     else if (message.t === 'echange' || message.t === 'hdv') this.echanges.recevoir(moi, message);
+    else if (message.t === 'record') this.records.soumettre(moi.id, message.heros, message.palier);
   }
 
   /** La page part (onglet fermé, coupure). */

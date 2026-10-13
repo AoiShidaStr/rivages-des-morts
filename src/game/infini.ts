@@ -8,6 +8,8 @@ import type { EnemyKind } from './types';
 
 export interface EndlessModifier {
   from: number;
+  /** Les pactes en portent un : un pacte scellé ne se retire plus dans la même descente. */
+  id?: string;
   name: string;
   description: string;
   curses?: Partial<Record<CurseId, number>>;
@@ -16,7 +18,7 @@ export interface EndlessModifier {
   damage?: number;
 }
 
-/** Un pacte est un modificateur sans palier d'entrée : on l'enchâsse au fil de la descente et il s'ajoute aux précédents. */
+/** Un pacte est un modificateur sans palier d'entrée : on l'enchâsse au fil de la descente et il s'ajoute aux autres. */
 export type EndlessModifierSeed = Omit<EndlessModifier, 'from'>;
 
 export interface EndlessData {
@@ -34,7 +36,12 @@ export interface EndlessData {
   beyond: Omit<EndlessModifier, 'from'>;
   /** Les pactes du Yomi : à chaque bloc à partir de `from` (premier palier du bloc), l'hôte en scelle un parmi un tirage. */
   pactes?: { from: number; options: EndlessModifierSeed[] };
-  rewards: { itemsFrom: number; rarity: { from: number; weights: Record<string, number> }[] };
+  rewards: {
+    itemsFrom: number;
+    rarity: { from: number; weights: Record<string, number> }[];
+    /** L'Éclat des Tablettes que laisse le boss d'un bloc, dès le palier `from`. */
+    eclat?: { from: number; material: string; count: number };
+  };
   victory: { title: string; text: string };
   defeat: string;
   /** Point de retour sur l'île, devant la cascade. */
@@ -77,8 +84,12 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
   let hp = 1;
   let damage = 1;
   let extraSpawns = 0;
-  for (const m of [...modifiersAt(data, palier), ...pactes]) {
-    for (const [id, value] of Object.entries(m.curses ?? {}) as [CurseId, number][]) curses[id] = Math.max(curses[id] ?? 0, value);
+  const modifiers = modifiersAt(data, palier);
+  for (const m of [...modifiers, ...pactes]) {
+    // Les paliers montent les malédictions (on garde la plus forte) ; un pacte, lui, les fixe : le Pacte du créneau
+    // ramène les élites à une seule par vague, même quand les paliers en demandent trois.
+    const pacte = !modifiers.includes(m as EndlessModifier);
+    for (const [id, value] of Object.entries(m.curses ?? {}) as [CurseId, number][]) curses[id] = pacte ? value : Math.max(curses[id] ?? 0, value);
     hp *= m.hp ?? 1;
     damage *= m.damage ?? 1;
     extraSpawns += m.extraSpawns ?? 0;
@@ -136,10 +147,14 @@ function palierWave(data: EndlessData, difficulty: DifficultyData, wave: WaveCon
   };
 }
 
-/** Les pactes du bloc : deux ou trois tirés sans doublon parmi les options, ou null avant le premier bloc pacté. */
-export function pacteDraft(data: EndlessData, bloc: number, random: () => number = Math.random): EndlessModifierSeed[] | null {
+/**
+ * Les pactes du bloc : deux ou trois tirés sans doublon parmi les options, ou null avant le premier bloc pacté. Un
+ * pacte déjà scellé dans la descente (`sealed`, par identifiant) ne revient pas : ils ne s'empilent pas sur eux-mêmes,
+ * et quand tous sont scellés, la descente continue sans nouveau pacte.
+ */
+export function pacteDraft(data: EndlessData, bloc: number, random: () => number = Math.random, sealed: readonly string[] = []): EndlessModifierSeed[] | null {
   if (firstPalier(data, bloc) < (data.pactes?.from ?? Infinity)) return null;
-  const pool = data.pactes?.options ?? [];
+  const pool = (data.pactes?.options ?? []).filter((p) => !p.id || !sealed.includes(p.id));
   if (pool.length === 0) return null;
   const shuffled = [...pool].sort(() => random() - 0.5);
   return shuffled.slice(0, Math.min(3, pool.length));

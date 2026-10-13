@@ -78,25 +78,47 @@ kbd {
   gap: 12px;
 }
 
-/* Codex des objets : une ligne par objet, rareté et état (possédé / déjà croisé / jamais vu) */
+/* Codex des objets : une fiche par objet, son nom et son état en haut, rareté et tags dessous, puis ses sources */
 .codex-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  grid-template-areas:
+    'icon name state'
+    'icon tags tags'
+    'icon sources sources';
+  column-gap: 10px;
+  row-gap: 1px;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 2px 0;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(29, 34, 38, 0.18);
+  border-radius: 3px;
 }
 
-/* Les sources de l'objet, une ligne sous la fiche : qui le lâche, à quel taux, et où l'aller chercher */
-.codex-item .sources {
-  width: 100%;
-  padding-left: 26px;
-  opacity: 0.8;
-  font-size: 11px;
+.codex-item > :first-child {
+  grid-area: icon;
+}
+
+.codex-item .codex-name {
+  grid-area: name;
+  font-family: var(--serif);
+  font-size: 15px;
+}
+
+.codex-item .codex-state {
+  grid-area: state;
+  position: static;
 }
 
 .codex-item .tags {
-  flex: 1;
+  grid-area: tags;
+  color: var(--ink-2);
+}
+
+.codex-item .sources {
+  grid-area: sources;
+  opacity: 0.8;
+  font-size: 11px;
 }
 
 .codex-item.faint {
@@ -539,4 +561,31 @@ kbd {
   font-size: 12px;
   white-space: nowrap;
   color: rgba(29, 34, 38, 0.85);
+}
+
+/* Réserve : les actions d'un exemplaire (briser, poser, ranger, fondre), en colonne à droite de la fiche */
+.reserve-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.reserve-row .gravure-lines {
+  margin: 4px 0 0;
+}
+
+/* Inventaire : les liens vers la réserve et le codex, côte à côte */
+.inv-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Forge, onglet Éveil : le pouvoir que l'éveil donne à la relique */
+.eveil-power {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--vermilion);
 }

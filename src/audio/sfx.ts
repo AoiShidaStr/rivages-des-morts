@@ -4,10 +4,11 @@
 // Les Pistes longues (menu, île, combats) restent dans src/audio/music.ts : ici, on ne touche pas aux musiques des
 // amis musicologues. Un fichier absent ne casse rien : la variante est écartée, le jeu continue sans ce son.
 // Conventions : public/audio/sfx/<id>-1.mp3, -2.mp3, -3.mp3 (deux ou trois variantes, une suffit) — le cahier de
-// production de chaque id est dans docs/sons-a-produire.md.
+// production de chaque id est dans docs/sons-a-produire.md. Sans fichier, le son est synthétisé (src/audio/synth.ts).
 
 import data from '../data/sfx.json';
 import type { GameEvent } from '../game/types';
+import { Synth } from './synth';
 
 export type SfxId = keyof typeof data.sons;
 
@@ -41,12 +42,17 @@ export class Sfx {
   private readonly pools = new Map<SfxId, HTMLAudioElement[]>();
   /** La dernière variante jouée par son, pour ne jamais répéter la même derrière elle-même. */
   private readonly dernière = new Map<SfxId, number>();
-  private dernierJeu = 0;
+  /** L'heure de la dernière joue de chaque son : le pas de 90 ms vaut son par son, pas pour tous ensemble. */
+  private readonly dernierJeu = new Map<SfxId, number>();
+  /** Les sons dont le fichier manque encore se synthétisent : le jeu sonne dès maintenant, sans rien payer. */
+  private readonly synth = new Synth();
 
   constructor() {
     this.settings = loadSettings();
     const débloque = () => {
       this.unlocked = true;
+      // Les fichiers se chargent dès le premier geste : le premier coup du combat a déjà son son.
+      for (const id of Object.keys(data.sons) as SfxId[]) this.pool(id);
       window.removeEventListener('pointerdown', débloque, true);
       window.removeEventListener('keydown', débloque, true);
     };
@@ -65,14 +71,18 @@ export class Sfx {
     this.changed();
   }
 
-  /** Joue ce son, si le navigateur le permet et que le fichier existe. Silencieux sans lui. */
+  /** Joue ce son, si le navigateur le permet : son fichier s'il existe, sinon sa version synthétisée. */
   play(id: SfxId): void {
     if (!this.unlocked || this.settings.muted) return;
     const maintenant = Date.now();
     // Le même son à 90 ms près s'efface devant lui-même : les rafales de coups restent lisibles.
-    if (this.dernierJeu && maintenant - this.dernierJeu < MÊME_PAS_MS) return;
+    if (maintenant - (this.dernierJeu.get(id) ?? 0) < MÊME_PAS_MS) return;
     const variantes = this.pool(id);
-    if (variantes.length === 0) return;
+    this.dernierJeu.set(id, maintenant);
+    if (variantes.length === 0) {
+      this.synth.play(id, this.settings.volume);
+      return;
+    }
     const dernière = this.dernière.get(id) ?? -1;
     const dispo = variantes.length > 1 ? variantes.filter((_, i) => i !== dernière) : variantes;
     const audio = dispo[Math.floor(Math.random() * dispo.length)];
@@ -81,30 +91,33 @@ export class Sfx {
     audio.playbackRate = 0.92 + Math.random() * 0.14;
     audio.volume = this.settings.volume;
     this.dernière.set(id, variantes.indexOf(audio));
-    this.dernierJeu = maintenant;
     void audio.play().catch(() => {
       // Lecture refusée (fichier absent, onglet en arrière-plan) : le jeu continue en silence.
     });
   }
 
+  /**
+   * Les variantes prêtes de ce son. On ne demande la variante suivante que si la précédente existe : un son pas
+   * encore produit ne coûte qu'une requête manquée, pas trois.
+   */
   private pool(id: SfxId): HTMLAudioElement[] {
     let variantes = this.pools.get(id);
     if (!variantes) {
-      variantes = [];
-      this.pools.set(id, variantes);
-      for (const n of VARIANTES) {
-        const audio = new Audio(`${import.meta.env.BASE_URL}audio/sfx/${id}-${n}.mp3`);
+      const prêtes: HTMLAudioElement[] = [];
+      variantes = prêtes;
+      this.pools.set(id, prêtes);
+      const charge = (i: number) => {
+        if (i >= VARIANTES.length) return;
+        const audio = new Audio(`${import.meta.env.BASE_URL}audio/sfx/${id}-${VARIANTES[i]}.mp3`);
         audio.preload = 'auto';
-        audio.onerror = () => {
-          // Fichier absent : on retire la variante de la réserve.
-          const list = this.pools.get(id);
-          if (!list) return;
-          const idx = list.indexOf(audio);
-          if (idx >= 0) list.splice(idx, 1);
-        };
+        // Fichier absent : la variante n'entre pas dans la réserve, et les suivantes ne sont pas demandées.
+        audio.addEventListener('canplaythrough', () => {
+          prêtes.push(audio);
+          charge(i + 1);
+        }, { once: true });
         audio.load();
-        variantes.push(audio);
-      }
+      };
+      charge(0);
     }
     return variantes;
   }

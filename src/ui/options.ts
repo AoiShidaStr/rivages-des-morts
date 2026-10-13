@@ -1,4 +1,5 @@
 import type { Music } from '../audio/music';
+import type { Sfx } from '../audio/sfx';
 import { LOW_GRAPHICS, lowGraphics, setLowGraphics } from '../render/flags';
 import { MIN_SCALE, type AdaptiveResolution } from '../render/resolution';
 import { fullTextures, setFullTextures } from '../render/textureBudget';
@@ -9,7 +10,7 @@ import type { PanelHost } from './panels';
 const FULL_TEXTURES = fullTextures();
 
 /** Réglages du joueur, depuis l'écran titre ou la pause : la musique et l'affichage. */
-export function openOptions(host: PanelHost, music: Music, resolution: AdaptiveResolution, onClose?: () => void): void {
+export function openOptions(host: PanelHost, music: Music, sfx: Sfx, resolution: AdaptiveResolution, onClose?: () => void): void {
   const { settings } = music;
   const value = h('strong', { class: 'volume-value' });
   const slider = h('input', { type: 'range', min: '0', max: '100', step: '5', 'aria-label': 'Volume de la musique' });
@@ -28,6 +29,26 @@ export function openOptions(host: PanelHost, music: Music, resolution: AdaptiveR
     sync();
   });
   sync();
+
+  // Les sons du combat et du butin : leur propre volume, indépendant de la musique.
+  const sfxValue = h('strong', { class: 'volume-value' });
+  const sfxSlider = h('input', { type: 'range', min: '0', max: '100', step: '5', 'aria-label': 'Volume des sons' });
+  const sfxMute = h('input', { type: 'checkbox' });
+  const syncSfx = () => {
+    sfxSlider.value = String(Math.round(sfx.settings.volume * 100));
+    sfxMute.checked = sfx.settings.muted;
+    sfxValue.textContent = sfx.settings.muted ? 'coupés' : `${sfxSlider.value} %`;
+  };
+  sfxSlider.addEventListener('input', () => {
+    sfx.setVolume(Number(sfxSlider.value) / 100);
+    syncSfx();
+  });
+  sfxSlider.addEventListener('change', () => sfx.play('coup'));
+  sfxMute.addEventListener('change', () => {
+    sfx.setMuted(sfxMute.checked);
+    syncSfx();
+  });
+  syncSfx();
 
   // Netteté : automatique (elle baisse si la carte graphique peine), ou fixée par le joueur.
   const auto = h('input', { type: 'checkbox' });
@@ -81,6 +102,9 @@ export function openOptions(host: PanelHost, music: Music, resolution: AdaptiveR
       h('h3', {}, 'Musique'),
       h('div', { class: 'option-row' }, h('span', {}, 'Volume'), slider, value),
       h('label', { class: 'option-row' }, mute, h('span', {}, 'Couper la musique (touche M)')),
+      h('h3', {}, 'Sons'),
+      h('div', { class: 'option-row' }, h('span', {}, 'Volume'), sfxSlider, sfxValue),
+      h('label', { class: 'option-row' }, sfxMute, h('span', {}, 'Couper les sons du combat et du butin')),
       h('h3', {}, 'Graphismes'),
       h('div', { class: 'option-row' }, h('span', {}, 'Netteté'), sharpness, sharpnessValue),
       h('label', { class: 'option-row' }, auto, h('span', {}, 'Netteté automatique : baisse seulement si la carte graphique ralentit le jeu')),

@@ -35,7 +35,8 @@ const MAX_LOT = 20;
 const ID = /^[\w-]{1,48}$/;
 
 export interface Lot {
-  items: { item: string; level: number; gravure?: unknown }[];
+  /** `uid` : un exemplaire de la réserve du vendeur ; `sceau` : sa gravure est encore scellée. */
+  items: { item: string; level: number; gravure?: unknown; sceau?: true; uid?: string }[];
   materials: Record<string, number>;
   oboles: number;
 }
@@ -69,13 +70,23 @@ export function lireLot(brut: unknown): Lot | null {
   const vus = new Set<string>();
   for (const i of items) {
     if (!i || typeof i !== 'object') return null;
-    const { item, level, gravure } = i as Record<string, unknown>;
-    if (typeof item !== 'string' || !ID.test(item) || vus.has(item)) return null;
+    const { item, level, gravure, sceau, uid } = i as Record<string, unknown>;
+    if (typeof item !== 'string' || !ID.test(item)) return null;
+    if (uid !== undefined && (typeof uid !== 'string' || !ID.test(uid))) return null;
+    // Deux exemplaires du même objet passent s'ils viennent de la réserve (chacun son uid) ; l'équipement, une fois.
+    const cle = typeof uid === 'string' ? `r:${uid}` : `o:${item}`;
+    if (vus.has(cle)) return null;
     const niveau = entier(level, 999);
     if (!niveau) return null;
     if (gravure !== undefined && JSON.stringify(gravure).length > 2048) return null;
-    vus.add(item);
-    lot.items.push(gravure === undefined ? { item, level: niveau } : { item, level: niveau, gravure });
+    vus.add(cle);
+    lot.items.push({
+      item,
+      level: niveau,
+      ...(gravure === undefined ? {} : { gravure }),
+      ...(sceau === true ? { sceau: true as const } : {}),
+      ...(typeof uid === 'string' ? { uid } : {}),
+    });
   }
   if (!materials || typeof materials !== 'object' || Array.isArray(materials)) return null;
   const entrees = Object.entries(materials as Record<string, unknown>);

@@ -4,13 +4,13 @@ import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
-import { gravureRank, rollSeal, type Gravure } from './game/gravure';
+import { rollSeal, type Gravure } from './game/gravure';
 import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
 import { buildLoadout, classWeapon, equipBlock, heroClass, heroLabel, heroSubclass, levelProgress, type Loadout } from './game/loadout';
-import { drawWeighted, salvage, type RolledOffer } from './game/loot';
+import { drawWeighted, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
 import { MAX_CHARACTERS, STARTING_WEAPON, bindSelf, type Action, type Hero, type Progress, type ProgressState } from './game/progress';
 import type { GameEvent, InputFrame, Outcome } from './game/types';
@@ -58,6 +58,7 @@ import { openMarket, openPlayerShop, openTrade } from './ui/trade';
 import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
 import { logRun, markSeen } from './game/journal';
+import { stockItem } from './game/reserve';
 import { SFX_DES_EVENTS, Sfx } from './audio/sfx';
 import { openOptions } from './ui/options';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
@@ -424,7 +425,7 @@ export class App {
       });
     }
     options.push({ label: hasUnseenNotes() ? 'Nouveautés •' : 'Nouveautés', action: () => openPatchNotes(this.panels, () => this.showTitle()) });
-    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.sfx, this.resolution) });
     const record = globalRecord();
     this.screens.showTitle(options, latestVersion, record ? `Record du ${content.endless.name} : palier ${record.palier} (${record.hero})` : '');
   }
@@ -635,7 +636,7 @@ export class App {
           openForge(this.panels, this.ui);
           break;
         case 'records':
-          openRecords(this.panels);
+          openRecords(this.panels, this.social);
           break;
         case 'chests':
           this.openChests();
@@ -865,10 +866,10 @@ export class App {
     } else {
       input.flush();
     }
-      const events = world.drainEvents();
-      if (online) this.shareState(world, events);
-      for (const event of events) {
-        this.sfxEvent(event);
+    const events = world.drainEvents();
+    if (online) this.shareState(world, events);
+    for (const event of events) {
+      this.sfxEvent(event, world.player.id);
       this.track(event);
       // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
       if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
@@ -936,19 +937,24 @@ export class App {
   // --- Coop en ligne ---------------------------------------------------------------
 
   /**
-   * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
-   * depuis le précédent (canal sûr).
+   * Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts).
+   * En coop, seuls mes coups et les coups que je reçois sonnent : ceux des alliés passeraient en rafale continue.
    */
-  /** Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts). */
-  private sfxEvent(event: GameEvent): void {
+  private sfxEvent(event: GameEvent, me: number): void {
     if (event.type === 'enemyHit') {
+      if (event.owner >= 0 && event.owner !== me) return;
       this.sfx.play(event.crit ? 'crit' : 'coup');
       return;
     }
+    if (event.type === 'playerHit' && event.hero !== me) return;
     const id = SFX_DES_EVENTS[event.type];
     if (id) this.sfx.play(id);
   }
 
+  /**
+   * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
+   * depuis le précédent (canal sûr).
+   */
   private shareState(world: World, events: GameEvent[]): void {
     const session = this.coop;
     if (!session) return;
@@ -989,7 +995,7 @@ export class App {
     this.inbox = [];
     for (const event of events) {
       this.track(event);
-      this.sfxEvent(event);
+      this.sfxEvent(event, mirror.player.id);
     }
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
@@ -1252,7 +1258,7 @@ export class App {
     }
   }
 
-  /** Un objet rejoint le butin de la descente ; déjà possédé, il est fondu en ressources plutôt que perdu. */
+  /** Un objet rejoint le butin de la descente ; déjà possédé, son exemplaire ira dans la réserve à l'encaissement. */
   private gainRunItem(id: string, label = 'Butin rare'): void {
     const def = content.items[id];
     if (!def) return;
@@ -1262,11 +1268,9 @@ export class App {
       this.sfx.play('butin');
       this.screens.toast(`${label} : ${def.name}`, 'loot', id);
     } else if (def.slot) {
-      const s = salvage(content.duplicates, content.upgrade, def);
       this.run.duplicates.push(id);
-      this.run.oboles += s.oboles;
-      if (s.material) this.run.materials[s.material] = (this.run.materials[s.material] ?? 0) + s.count;
-      this.screens.toast(`Doublon : ${def.name}, fondu en ressources`, 'loot', id);
+      markSeen(id);
+      this.screens.toast(`Doublon : ${def.name}, pour ta réserve`, 'loot', id);
     }
   }
 
@@ -1298,7 +1302,7 @@ export class App {
       xp: Math.round(this.run.xp),
       materials: [
         ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
-        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`)),
+        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure scellée, dans ta réserve`)),
         ...this.duplicateLines(),
         ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
       ],
@@ -1312,8 +1316,10 @@ export class App {
     progress.gainOboles(oboles);
     for (const [id, amount] of Object.entries(this.run.materials)) progress.gainMaterial(id, amount);
     for (const item of this.run.items) progress.acquire(item, content.items[item]?.slot);
-    // Le sceau ne se pose qu'avec le reste : tomber avant de remonter le rend au Yomi, comme le butin en jeu.
-    if (victory) for (const seal of this.run.seals) progress.setGravure(seal.item, seal.gravure);
+    // Les doublons et les sceaux vont dans la réserve. Le sceau ne compte qu'avec le reste : tomber avant de remonter
+    // le rend au Yomi, comme le butin en jeu.
+    for (const item of this.run.duplicates) stockItem(progress, item);
+    if (victory) for (const seal of this.run.seals) stockItem(progress, seal.item, 1, seal.gravure, true);
     progress.state.chests += chests;
     return progress.gainXp(xp);
   }
@@ -1403,10 +1409,15 @@ export class App {
       const record = this.recordEndless(last);
       const item = rollEndlessItem(data, last, content.items, progress.state.hero, content.skills, (id) => progress.has(id) || this.run.items.includes(id));
       if (item) this.gainRunItem(item, `Palier ${last}`);
+      const eclat = data.rewards.eclat;
+      if (eclat && last >= eclat.from) {
+        this.run.materials[eclat.material] = (this.run.materials[eclat.material] ?? 0) + eclat.count;
+        this.screens.toast(`Palier ${last} : ${eclat.count} × ${content.materials[eclat.material] ?? eclat.material}`, 'loot');
+      }
       const seal = this.drawSeal(last);
       if (seal) {
         this.run.seals.push(seal);
-        this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · ${gravureRank(content.gravures, seal.gravure)?.name ?? 'gravure'}`, 'loot', seal.item);
+        this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure scellée`, 'loot', seal.item);
       }
       endless.awaiting = true;
       const next = endless.bloc + 1;
@@ -1512,7 +1523,8 @@ export class App {
 
   /**
    * Continuer plus bas : les pactes d'abord, si le bloc suivant les réclame (premier palier ≥ 51), puis la descente ;
-   * en coop, l'hôte scelle un pacte et relance tout le monde. Les invités ne passent jamais ici (ils encasissent). */
+   * en coop, l'hôte scelle un pacte et relance tout le monde. Les invités ne passent jamais ici (ils encaissent).
+   */
   private continueEndless(bloc: number): void {
     const relance = () => {
       const session = this.coop;
@@ -1524,9 +1536,9 @@ export class App {
       session.choose(ENDLESS, firstPalier(content.endless, bloc));
       void this.startCoop(session.start(this.member()));
     };
-    const drafts = pacteDraft(content.endless, bloc);
+    const drafts = pacteDraft(content.endless, bloc, Math.random, this.pactesEncours.map((p) => p.id ?? p.name));
     if (drafts) {
-      openPactDraft(this.panels, firstPalier(content.endless, bloc), drafts, (pacte) => {
+      openPactDraft(this.panels, firstPalier(content.endless, bloc), content.endless.palierStep, drafts, (pacte) => {
         this.pactesEncours = [...this.pactesEncours, pacte];
         this.screens.toast(`Pacte scellé : ${pacte.name}`, 'quest');
         relance();
@@ -1559,22 +1571,19 @@ export class App {
     const { progress } = this.d;
     const best = progress.state.flags[ENDLESS_RECORD] ?? 0;
     submitGlobalRecord(palier, `${heroLabel(content.skills, progress.state.hero)}, niv. ${progress.level}`);
+    // Sur le serveur du jeu, avec un compte : le palier se grave aussi sur la stèle partagée.
+    this.social?.submitRecord(heroLabel(content.skills, progress.state.hero), palier);
     if (palier <= best) return false;
     progress.state.flags[ENDLESS_RECORD] = palier;
     progress.save();
     return true;
   }
 
-  /** « Doublon fondu : Katana de rōnin ×2 (+80 oboles, +6 Écaille de kappa) », un par objet. */
+  /** « Doublon : Katana de rōnin ×2, dans ta réserve », un par objet. */
   private duplicateLines(): HTMLElement[] {
     const counts = new Map<string, number>();
     for (const id of this.run.duplicates) counts.set(id, (counts.get(id) ?? 0) + 1);
-    return [...counts].map(([id, n]) => {
-      const def = content.items[id];
-      const s = salvage(content.duplicates, content.upgrade, def);
-      const gain = [`+${s.oboles * n} oboles`, s.material ? `+${s.count * n} ${content.materials[s.material]}` : null].filter(Boolean).join(', ');
-      return lootLine(id, `Doublon fondu : ${def.name}${n > 1 ? ` ×${n}` : ''} (${gain})`);
-    });
+    return [...counts].map(([id, n]) => lootLine(id, `Doublon : ${content.items[id]?.name ?? id}${n > 1 ? ` ×${n}` : ''}, dans ta réserve`));
   }
 
   /**
@@ -1660,7 +1669,7 @@ export class App {
         },
       });
     }
-    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.resolution) });
+    options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.sfx, this.resolution) });
     options.push({
       label: 'Menu principal',
       action: () => {

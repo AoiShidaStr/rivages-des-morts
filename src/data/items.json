@@ -532,7 +532,8 @@
       "bonus": { "damage": 0.25 },
       "summary": "Tant que tu n'es pas touché, +25 % de dégâts. Un coup reçu vide la coupelle 5 s.",
       "effects": [{ "op": "set", "path": "perks.coupelle", "value": { "bonus": 0.25, "emptyTime": 5 } }],
-      "description": "La coupelle d'eau d'un vieux kappa. L'eau n'en déborde jamais, tant qu'on garde son calme."
+      "description": "La coupelle d'eau d'un vieux kappa. L'eau n'en déborde jamais, tant qu'on garde son calme.",
+      "eveil": {"summary": "La coupelle pleine donne +40 % de dégâts et se remplit en 3 s.", "effects": [{"op": "set", "path": "perks.coupelle", "value": {"bonus": 0.4, "emptyTime": 3}}]}
     },
     "ecaille-ryujin": {
       "name": "Écaille de Ryūjin",
@@ -555,7 +556,8 @@
       "tags": ["Tous"],
       "summary": "Chaque esquive laisse un fil : le premier ennemi qui le touche est ralenti de 60 % pendant 3 s.",
       "effects": [{ "op": "set", "path": "perks.joren", "value": { "stun": 3, "life": 8, "radius": 1 } }],
-      "description": "Une bobine de soie argentée qui ne s'use jamais. Un fil flotte toujours dans l'air, prêt à s'accrocher."
+      "description": "Une bobine de soie argentée qui ne s'use jamais. Un fil flotte toujours dans l'air, prêt à s'accrocher.",
+      "eveil": {"summary": "Le fil ralentit 4 s, tient 12 s et s'étend sur 1,5 m.", "effects": [{"op": "set", "path": "perks.joren", "value": {"stun": 4, "life": 12, "radius": 1.5}}]}
     },
     "magatama-yasakani": {
       "name": "Magatama de Yasakani",
@@ -566,7 +568,8 @@
       "bonus": { "maxHp": 25, "damage": 0.05 },
       "summary": "Tes sorts coûtent 25 % de mana en moins. Sa lueur apaise (compris dans ses PV).",
       "effects": [{ "op": "mul", "path": "perks.manaCost", "value": 0.75 }],
-      "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?"
+      "description": "L'un des trois trésors sacrés du Japon. Comment a-t-il pu finir dans une toile d'araignée ?",
+      "eveil": {"summary": "Tes sorts coûtent 40 % de mana en moins au total.", "effects": [{"op": "mul", "path": "perks.manaCost", "value": 0.8}]}
     },
     "peigne-izanagi": {
       "name": "Peigne d'Izanagi",
@@ -575,7 +578,8 @@
       "tags": ["Tous"],
       "bonus": { "dodge": 0.15, "speed": 0.06 },
       "summary": "Esquive plus longue, pas plus vif.",
-      "description": "Le peigne qu'Izanagi jeta derrière lui en fuyant : ses dents devinrent des pousses de bambou, et les shikome s'arrêtèrent pour les dévorer."
+      "description": "Le peigne qu'Izanagi jeta derrière lui en fuyant : ses dents devinrent des pousses de bambou, et les shikome s'arrêtèrent pour les dévorer.",
+      "eveil": {"summary": "+10 % d'esquive et +4 % de vitesse en plus.", "bonus": {"dodge": 0.1, "speed": 0.04}}
     },
     "masque-hannya": {
       "name": "Masque de hannya",
@@ -597,7 +601,8 @@
       "bonus": { "maxHp": 20 },
       "summary": "Chaque ennemi à moins de 3 m te donne +2 % de vol de vie, jusqu'à +10 %. Plus la mêlée est serrée, plus tu tiens.",
       "effects": [{ "op": "set", "path": "perks.arenaHeart", "value": { "perEnemy": 0.02, "max": 0.1, "radius": 3 } }],
-      "description": "Un cœur de pierre rouge trouvé sous le sable d'une arène oubliée. Il bat plus vite quand on l'entoure."
+      "description": "Un cœur de pierre rouge trouvé sous le sable d'une arène oubliée. Il bat plus vite quand on l'entoure.",
+      "eveil": {"summary": "+3 % de vol de vie par ennemi proche, jusqu'à +15 %, dans un rayon de 3,5 m.", "effects": [{"op": "set", "path": "perks.arenaHeart", "value": {"perEnemy": 0.03, "max": 0.15, "radius": 3.5}}]}
     },
     "nodachi-ikusa": {
       "name": "Nodachi de l'Ikusa",
@@ -672,7 +677,8 @@
         { "op": "mul", "path": "paladin.judgement.perHit", "value": 1.5 },
         { "op": "mul", "path": "paladin.judgement.damage", "value": 1.35 }
       ],
-      "description": "Un petit taiko de cérémonie. Chaque coup porté le fait gronder un peu plus, jusqu'à ce que le temple réponde."
+      "description": "Un petit taiko de cérémonie. Chaque coup porté le fait gronder un peu plus, jusqu'à ce que le temple réponde.",
+      "eveil": {"summary": "Le Jugement frappe encore 20 % plus fort.", "effects": [{"op": "mul", "path": "paladin.judgement.damage", "value": 1.2}]}
     },
     "shimenawa-tressee": {
       "name": "Shimenawa tressée",
@@ -725,7 +731,8 @@
       "bonus": { "damage": 0.15 },
       "summary": "Toutes tes flèches transpercent les yokai, sans perdre de dégâts.",
       "effects": [{ "op": "set", "path": "perks.arrowPierce", "value": true }],
-      "description": "Les flèches célestes que les dieux confièrent au premier archer descendu sur terre. Rien ne les arrête, pas même ce qu'elles touchent."
+      "description": "Les flèches célestes que les dieux confièrent au premier archer descendu sur terre. Rien ne les arrête, pas même ce qu'elles touchent.",
+      "eveil": {"summary": "Les flèches transpercent et font 10 % de dégâts en plus.", "bonus": {"damage": 0.1}}
     },
     "arc-ikazuchi": {
       "name": "Arc d'Ikazuchi",
@@ -802,7 +809,8 @@
         { "op": "set", "path": "perks.finisher", "value": 0.3 },
         { "op": "add", "path": "perks.valhallaShare", "value": 0.04 }
       ],
-      "description": "Un encrier noir où le dieu de la mort trempe son pinceau. Les noms qu'il écrit ne s'effacent pas."
+      "description": "Un encrier noir où le dieu de la mort trempe son pinceau. Les noms qu'il écrit ne s'effacent pas.",
+      "eveil": {"summary": "Critique assuré sous 40 % des PV du yokai (au lieu de 30 %).", "effects": [{"op": "set", "path": "perks.finisher", "value": 0.4}]}
     },
     "mino-paille": {
       "name": "Mino de paille",
@@ -820,7 +828,8 @@
       "tags": ["Tous"],
       "summary": "+35 % de dégâts et +10 % de vitesse, mais tous les soins et boucliers que tu reçois sont réduits de moitié.",
       "effects": [{ "op": "set", "path": "perks.yomotsu", "value": { "damage": 0.35, "speed": 0.1, "healing": 0.5 } }],
-      "description": "Un bol de riz cuit au foyer du Yomi. Izanami en mangea, et ne put jamais revenir chez les vivants. Il rend fort ; il rend mort."
+      "description": "Un bol de riz cuit au foyer du Yomi. Izanami en mangea, et ne put jamais revenir chez les vivants. Il rend fort ; il rend mort.",
+      "eveil": {"summary": "+45 % de dégâts et +12 % de vitesse ; les soins ne sont plus réduits que de 40 %.", "effects": [{"op": "set", "path": "perks.yomotsu", "value": {"damage": 0.45, "speed": 0.12, "healing": 0.6}}]}
     },
     "gohei-sanctuaire": {
       "name": "Gohei du sanctuaire",
@@ -1212,7 +1221,8 @@
       "bonus": { "maxHp": 12, "damage": 0.1 },
       "summary": "Ta Frappe fracassante appelle un éclair sur la cible la plus proche de l'impact (15 dégâts).",
       "effects": [{ "op": "set", "path": "perks.smashBolt", "value": 15 }],
-      "description": "Une perle d'orage prise dans la queue du serpent à huit têtes. Elle gronde quand on frappe le sol."
+      "description": "Une perle d'orage prise dans la queue du serpent à huit têtes. Elle gronde quand on frappe le sol.",
+      "eveil": {"summary": "L'éclair de la Frappe fracassante fait 30 dégâts.", "effects": [{"op": "set", "path": "perks.smashBolt", "value": 30}]}
     },
     "capuche-ascete": {
       "name": "Capuche de l'ascète",
@@ -1306,7 +1316,8 @@
       "bonus": { "damage": 0.3 },
       "summary": "Tes sorts coûtent aussi 5 % de tes PV actuels, en plus de leur mana.",
       "effects": [{ "op": "set", "path": "perks.bloodCost", "value": 0.05 }],
-      "description": "Une pierre rouge qui bat comme un cœur. Elle prête sa force à qui accepte de saigner pour elle."
+      "description": "Une pierre rouge qui bat comme un cœur. Elle prête sa force à qui accepte de saigner pour elle.",
+      "eveil": {"summary": "Les sorts ne coûtent plus que 3 % de tes PV actuels.", "effects": [{"op": "set", "path": "perks.bloodCost", "value": 0.03}]}
     },
     "coeur-cendres": {
       "name": "Cœur de Cendres",
@@ -1317,7 +1328,8 @@
       "bonus": { "maxHp": 30 },
       "summary": "Un coup mortel te laisse à 1 PV et allume aussitôt ton Bouclier de flammes (une fois toutes les 60 s).",
       "effects": [{ "op": "set", "path": "perks.cheatDeath", "value": { "cooldown": 60 } }],
-      "description": "Un cœur de charbon encore tiède, trouvé dans les cendres d'un bûcher. Il refuse de s'éteindre, et ne laisse pas s'éteindre celui qui le porte."
+      "description": "Un cœur de charbon encore tiède, trouvé dans les cendres d'un bûcher. Il refuse de s'éteindre, et ne laisse pas s'éteindre celui qui le porte.",
+      "eveil": {"summary": "Le sursaut revient toutes les 40 s (au lieu de 60).", "effects": [{"op": "set", "path": "perks.cheatDeath", "value": {"cooldown": 40}}]}
     },
     "bandeau-vent": {
       "name": "Bandeau du vent",
@@ -1422,7 +1434,8 @@
         { "op": "add", "path": "blade.critFactor", "value": 0.5 },
         { "op": "mul", "path": "perks.maxHpFactor", "value": 0.85 }
       ],
-      "description": "Un tantō sans garde, celui qui frappa un seigneur dans le dos. Il coupe aussi la main qui le tient."
+      "description": "Un tantō sans garde, celui qui frappa un seigneur dans le dos. Il coupe aussi la main qui le tient.",
+      "eveil": {"summary": "Tes PV max ne baissent plus que de 10 %.", "effects": [{"op": "mul", "path": "perks.maxHpFactor", "value": 1.0588}]}
     },
     "coeur-assassin": {
       "name": "Cœur de l'Assassin",
@@ -1433,7 +1446,8 @@
       "bonus": { "maxHp": 20 },
       "summary": "Chaque coup sur une cible empoisonnée te rend 1 PV (selon ta puissance).",
       "effects": [{ "op": "set", "path": "perks.poisonHitHeal", "value": 1 }],
-      "description": "Un cœur séché dans un sachet de soie noire. Il bat au rythme du poison qui ronge les autres."
+      "description": "Un cœur séché dans un sachet de soie noire. Il bat au rythme du poison qui ronge les autres.",
+      "eveil": {"summary": "Chaque coup sur une cible empoisonnée rend 2 PV.", "effects": [{"op": "set", "path": "perks.poisonHitHeal", "value": 2}]}
     },
     "tetsubo-guerre": {
       "name": "Tetsubō de guerre",
@@ -1547,7 +1561,8 @@
       "bonus": { "damage": 0.2 },
       "summary": "Le Marteau lancé traverse tous les ennemis sur son chemin, et porte 30 % plus loin.",
       "effects": [{ "op": "mul", "path": "paladin.hammer.range", "value": 1.3 }],
-      "description": "Un marteau de bronze pas plus grand qu'une main, offert aux temples par les forgerons. Lancé, il se souvient d'avoir été grand."
+      "description": "Un marteau de bronze pas plus grand qu'une main, offert aux temples par les forgerons. Lancé, il se souvient d'avoir été grand.",
+      "eveil": {"summary": "Le Marteau porte encore 15 % plus loin.", "effects": [{"op": "mul", "path": "paladin.hammer.range", "value": 1.15}]}
     },
     "ecaille-dragon-or": {
       "name": "Écaille du Dragon d'Or",
@@ -1558,7 +1573,8 @@
       "bonus": { "maxHp": 30, "armor": 0.1 },
       "summary": "Un coup qui briserait ta garde la laisse debout, à un souffle (une fois toutes les 30 s).",
       "effects": [{ "op": "set", "path": "perks.guardSave", "value": 30 }],
-      "description": "Une écaille d'or grande comme un bouclier d'enfant. Le dragon qui l'a perdue n'a jamais cédé un pouce."
+      "description": "Une écaille d'or grande comme un bouclier d'enfant. Le dragon qui l'a perdue n'a jamais cédé un pouce.",
+      "eveil": {"summary": "La garde sauvée revient toutes les 20 s (au lieu de 30).", "effects": [{"op": "set", "path": "perks.guardSave", "value": 20}]}
     },
     "capuche-camouflage": {
       "name": "Capuche de camouflage",
@@ -1672,7 +1688,8 @@
       "bonus": { "maxHp": 25, "armor": 0.1 },
       "summary": "Pendant que tu bandes l'arc, rien ne te repousse et tu subis 30 % de dégâts en moins.",
       "effects": [{ "op": "set", "path": "perks.drawGuard", "value": 0.3 }],
-      "description": "Un nœud de bois de camphrier, dur comme la pierre. Celui qui le porte s'enracine en tirant."
+      "description": "Un nœud de bois de camphrier, dur comme la pierre. Celui qui le porte s'enracine en tirant.",
+      "eveil": {"summary": "Arc bandé : 45 % de dégâts en moins (au lieu de 30 %).", "effects": [{"op": "set", "path": "perks.drawGuard", "value": 0.45}]}
     },
     "carquois-ouragan": {
       "name": "Carquois de l'Ouragan",
@@ -1683,7 +1700,8 @@
       "bonus": { "maxHp": 10, "damage": 0.1 },
       "summary": "Un tir simple sur cinq part en éventail de trois flèches.",
       "effects": [{ "op": "set", "path": "perks.quiverVolley", "value": { "every": 5, "arrows": 3 } }],
-      "description": "Un carquois de plumes grises qui siffle sans vent. Tous les cinq tirs, il se vide d'un coup."
+      "description": "Un carquois de plumes grises qui siffle sans vent. Tous les cinq tirs, il se vide d'un coup.",
+      "eveil": {"summary": "Un tir sur quatre part en éventail (au lieu d'un sur cinq).", "effects": [{"op": "set", "path": "perks.quiverVolley", "value": {"every": 4, "arrows": 3}}]}
     }
   },
   "materials": {

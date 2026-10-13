@@ -54,6 +54,8 @@ export interface ItemDef {
   summary?: string;
   /** Passifs débloqués à certains niveaux de forge (armes). */
   paliers?: Palier[];
+  /** L'Éveil des Tablettes (reliques) : le pouvoir que l'éveil ajoute, posé après les effets de la relique. */
+  eveil?: { summary: string; bonus?: Bonus; effects?: ConfigEffect[] };
   description: string;
 }
 
@@ -318,12 +320,14 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
     for (const b of [item.bonus, ...active.map((c) => c.bonus)]) {
       for (const [key, value] of Object.entries(scaled(b)) as [BonusKind, number][]) bonus[key] += value;
     }
-    // L'Éveil des Tablettes (src/data/items.json, forge.eveil) : une relique éveillée charge le héros du bonus réglé en data.
-    if (item.slot === 'relique' && (state.eveils[id] ?? 0) > 0 && data.eveil)
-      for (const [key, value] of Object.entries(data.eveil.bonus) as [BonusKind, number][]) bonus[key] += value;
+    // L'Éveil des Tablettes : une relique éveillée gagne son propre pouvoir (items.json, `eveil` de la relique), posé
+    // après ses effets pour les renforcer ; une relique sans pouvoir écrit charge le bonus commun (forge.eveil).
+    const awake = item.slot === 'relique' && (state.eveils?.[id] ?? 0) > 0;
+    const power = awake ? (item.eveil ?? (data.eveil ? { summary: '', bonus: data.eveil.bonus } : undefined)) : undefined;
+    for (const [key, value] of Object.entries(power?.bonus ?? {}) as [BonusKind, number][]) bonus[key] += value;
     // Un objet de race, ou un effet réservé à une race, modifie les passifs de la race : il passe après eux.
-    if (item.races?.length) raceEffects.push(...(item.effects ?? []));
-    else for (const effect of item.effects ?? []) applyEffect(config, effect);
+    if (item.races?.length) raceEffects.push(...(item.effects ?? []), ...(power?.effects ?? []));
+    else for (const effect of [...(item.effects ?? []), ...(power?.effects ?? [])]) applyEffect(config, effect);
     for (const c of active) {
       if (item.races?.length || c.if.races?.length) raceEffects.push(...(c.effects ?? []));
       else for (const effect of c.effects ?? []) applyEffect(config, effect);

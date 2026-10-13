@@ -287,7 +287,8 @@ async function main() {
   const sack = ['katana-ronin', 'yumi-bambou', 'chapeau-paille'];
   const sackRolls = (id) => (id === 'katana-ronin' ? 1 : 0);
   check('sceau · rien au palier voisin', rollSeal(data, data.sceau.palier + content.endless.palierStep, content.items, sack, sackRolls, random) === null);
-  check('sceau · rien quand tout est gravé', rollSeal(data, data.sceau.palier, content.items, sack, () => 1, random) === null);
+  check('sceau · tout est gravé : une arme du sac quand même', ['katana-ronin', 'yumi-bambou'].includes(rollSeal(data, data.sceau.palier, content.items, sack, () => 1, random)?.item));
+  check('sceau · rien sans arme', rollSeal(data, data.sceau.palier, content.items, ['chapeau-paille'], () => 0, random) === null);
   const seal = rollSeal(data, data.sceau.palier, content.items, sack, sackRolls, random);
   check('sceau · désigne l’arme jamais gravée du sac', seal?.item === 'yumi-bambou', seal?.item ?? 'rien');
   const sealPool = pools(content.items[seal?.item ?? '']?.tags ?? []);
