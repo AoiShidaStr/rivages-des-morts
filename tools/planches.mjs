@@ -76,7 +76,7 @@ for (const entry of [...config.planches, ...heroes]) {
 
 /** Découpe une image une seule fois, même quand plusieurs animations y puisent (planches complètes). */
 function split(input, options) {
-  const keys = ['layout', 'count', 'crop', 'erase', 'eraseLines', 'tolerance', 'localTolerance', 'maxSaturation', 'minPartRatio', 'fillHoles', 'minHole', 'keyColor', 'defringe'];
+  const keys = ['layout', 'count', 'crop', 'erase', 'eraseLines', 'tolerance', 'localTolerance', 'maxSaturation', 'minPartRatio', 'fillHoles', 'minHole', 'keyColor', 'defringe', 'despill'];
   const key = input + JSON.stringify(keys.map((k) => options[k]));
   if (!splitCache.has(key)) splitCache.set(key, splitFrames(input, options));
   return splitCache.get(key);
@@ -106,9 +106,10 @@ async function expandRows(planche) {
     let refHeight = standing;
     if (r.source) {
       const own = await split(path.join(sourceDir, r.source), { ...options, ...r, layout });
-      refHeight = own[first + (r.ref ?? 0)].bodyHeight;
+      // `refFrame` : l'image debout de cette source, comptée depuis le début de la planche (une ligne qui ne commence pas debout).
+      refHeight = own[r.refFrame ?? first + (r.ref ?? 0)].bodyHeight;
     }
-    const { row: _row, ref: _ref, ...rest } = r;
+    const { row: _row, ref: _ref, refFrame: _refFrame, ...rest } = r;
     animations.push({ ...rest, source: r.source ?? planche.source, layout, frames: indices, refHeight });
   }
   return { ...planche, bodyHeight: planche.bodyHeight ?? Math.round(standing), animations };

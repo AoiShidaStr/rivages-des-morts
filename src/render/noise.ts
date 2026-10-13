@@ -1,4 +1,4 @@
-/** Bruit et petites fonctions de forme, partagés par la carte peinte et les scènes en 3D. */
+/** Bruit et petites fonctions de forme, partagés par la carte de l'île et les arènes peintes. */
 
 function hash2(x: number, z: number): number {
   const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453;

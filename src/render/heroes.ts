@@ -1,6 +1,5 @@
 // Apparence du héros selon sa race et sa classe : une planche peinte par combinaison
-// (public/sprites/anim/heros-<race>-<classe>.json, `npm run anims-heros`), ou en pixel art avec `?pixel=1`
-// (public/sprites/pixel/heros-<race>-<classe>.json, `npm run pixel`).
+// (public/sprites/anim/heros-<race>-<classe>.json, `npm run planches`).
 import type { Hero } from '../game/progress';
 import type { SpriteDef, SpriteManifest } from './renderer';
 
@@ -46,23 +45,20 @@ export function heroImage(hero: Hero): string {
 }
 
 /**
- * Ajoute au manifeste une entrée par race et par classe :
- * - planche d'animation peinte par défaut (anim/heros-<race>-<classe>.json, anim/heros.json pour l'Einherjar guerrier) ;
- * - planche en pixel art avec ?pixel=1 (pixel/heros-<race>-<classe>.json).
+ * Ajoute au manifeste une entrée par race et par classe, avec sa planche d'animation peinte
+ * (anim/heros-<race>-<classe>.json, anim/heros.json pour l'Einherjar guerrier).
  */
 export function withHeroSprites(manifest: SpriteManifest, races: string[], classes: string[]): SpriteManifest {
   const base = manifest.heros ?? { file: 'heros.png', height: 1.75, facesRight: true };
-  const usePixel = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('pixel') === '1';
-
   const entries: [string, SpriteDef][] = races.flatMap((race) =>
     classes
       .map((cls) => heroSprite({ race, class: cls }))
       .filter((name) => name !== 'heros')
-      .map((name): [string, SpriteDef] => [name, { ...base, file: `${name}.png`, sheet: { file: `${usePixel ? 'pixel' : 'anim'}/${name}.json`, height: 2.35 } }]),
+      .map((name): [string, SpriteDef] => [name, { ...base, file: `${name}.png`, sheet: { file: `anim/${name}.json`, height: 2.35 } }]),
   );
   return {
     ...manifest,
-    heros: { ...base, file: 'heros.png', sheet: { file: usePixel ? 'pixel/heros.json' : 'anim/heros.json', height: 2.35 } },
+    heros: { ...base, file: 'heros.png', sheet: { file: 'anim/heros.json', height: 2.35 } },
     ...Object.fromEntries(entries),
   };
 }

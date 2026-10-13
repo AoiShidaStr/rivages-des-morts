@@ -3,13 +3,13 @@ import dialoguesJson from './data/dialogues.json';
 import gravuresJson from './data/gravures.json';
 import difficultyJson from './data/difficulty.json';
 import rizieresJson from './data/dungeon.json';
-import type { Arena3dKind } from './render/arena3d';
 import palaisJson from './data/dungeon-palais.json';
 import dungeonsJson from './data/dungeons.json';
 import entrainementJson from './data/entrainement.json';
 import endlessJson from './data/donjon-infini.json';
 import islandJson from './data/island.json';
 import islandSpritesJson from './data/islandSprites.json';
+import type { ArenaKind } from './render/arenaPainted';
 import itemsJson from './data/items.json';
 import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
@@ -89,8 +89,8 @@ export interface DungeonStyle {
   ground: [number, number, number];
   sky: string;
   decor: { sprite: string; x: number; z: number }[];
-  /** Prototype : arène construite en 3D (src/render/arena3d.ts), affichée avec `?3d` dans l'adresse. */
-  scene3d?: Arena3dKind;
+  /** Arène peinte autour du combat (src/render/arenaPainted.ts). */
+  arena?: ArenaKind;
 }
 
 /** Ce qui change d'un donjon à l'autre dans la configuration du combat. */

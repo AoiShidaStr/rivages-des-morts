@@ -1,4 +1,4 @@
-// Entrées de `npm run planches` pour les héros, lues dans ~/Pictures/game visual/heros (voir `npm run kit-heros`) :
+// Entrées de `npm run planches` pour les héros, lues dans ~/Pictures/game visual/heros :
 // une planche de jeu anim/heros-<race>-<classe> par héros qui a ses planches d'animation de profil
 // (<race>-<classe>/profil/<animation>/planche.jpg), au moins la course.
 //

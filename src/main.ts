@@ -15,7 +15,6 @@ import { openSaves, takeNotice } from './net/account';
 import { chooseNetwork } from './net/transport';
 import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
-import { SCENES_3D } from './render/flags';
 import { IslandRenderer } from './render/islandRenderer';
 import { Renderer, type SpriteManifest } from './render/renderer';
 
@@ -35,7 +34,7 @@ const devDungeon = params.get('donjon') ?? 'rizieres';
 /** `?coop=2` ou `?coop=3` : un ou deux alliés joués par l'ordinateur descendent avec le héros (test de la coop sans réseau). */
 const devCoop = Math.max(1, Math.min(3, Number(params.get('coop')) || 1));
 
-/** Renvoie le manifeste des sprites avec les planches d'animation appropriées (peintes par défaut, `?pixel=1` pour pixel art). */
+/** Renvoie le manifeste des sprites avec les planches d'animation appropriées (planches peintes). */
 function spriteManifest(base: SpriteManifest): SpriteManifest {
   return withHeroSprites(base, Object.keys(content.skills.races), Object.keys(content.skills.classes));
 }
@@ -52,9 +51,9 @@ async function start(): Promise<void> {
   const canvas = element<HTMLCanvasElement>('game');
   const overlay = element('overlay');
   // Sans anticrénelage (MSAA) : sur des images peintes, il ne lisse presque rien, et il coûtait plus de la moitié du
-  // temps de la carte graphique sur une puce Intel. Les arènes en 3D (?3d), elles, en ont besoin pour leurs arêtes.
+  // temps de la carte graphique sur une puce Intel.
   // La densité de l'écran est gérée par la résolution adaptative (render/resolution.ts), pas par Babylon.
-  const engine = new Engine(canvas, SCENES_3D, { stencil: false }, false);
+  const engine = new Engine(canvas, false, { stencil: false }, false);
   // Avec le serveur du jeu, les personnages peuvent vivre sur un compte : on les recopie avant de charger le dernier joué.
   const network = chooseNetwork(params);
   const notices: string[] = [];

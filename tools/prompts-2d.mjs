@@ -266,6 +266,7 @@ const ENEMIES = {
   },
   ikusa: {
     name: 'Guerrier du Yomi (Ikusa)',
+    heads: 5,
     palaceOrder: 3,
     look: 'an Ikusa, a soldier of the undead army of the Yomi: a gaunt armored warrior in rotting ashigaru armor of dark brown lacquer plates and tattered cloth, a dented conical jingasa helmet, a hollow grey face with glowing pale eyes (flat painted), holding a very long spear (yari) in both hands, stiff disciplined posture.',
     idle: 'standing stiff at attention, the long spear upright beside the body, the head turning slightly, the cloth swaying',
@@ -331,6 +332,7 @@ const ENEMIES = {
   },
   oublie: {
     name: 'Oublié',
+    heads: 5,
     bg: MAGENTA,
     look: 'an Oublié (Forgotten One): a tall thin figure in ragged grey-blue robes and a torn hood, a blank featureless white mask for a face with no eyes and no mouth, long thin arms and pale bony hands, a slightly bent posture, empty and sorrowful.',
     idle: 'standing slouched, the arms hanging, the head tilting slowly, the rags swaying',
@@ -378,6 +380,7 @@ const BOSSES = {
   },
   jorogumo: {
     name: 'Jorōgumo, forme humaine',
+    heads: 5,
     look: 'the Jorōgumo in her human form, the first boss: a beautiful and dangerous woman in a layered violet and black kimono decorated with spider-web patterns, an elaborate hairstyle with long spider-leg-shaped hairpins, pale skin with a faint web of dark lines on the neck and hands, a large folded folding fan (sensu) in her hand, a knowing cold smile. About 2.4 meters tall in the game.',
     idle: 'standing elegantly, the fan held folded at the chest, the sleeves and the hairpins swaying slightly, the head tilting',
     move: 'a graceful gliding walk in small steps, the kimono swaying, the fan held at the chest',
@@ -389,6 +392,7 @@ const BOSSES = {
   },
   jorogumoAraignee: {
     name: 'Jorōgumo, forme d\'araignée',
+    heads: 5,
     wide: true,
     look: 'the Jorōgumo in her true spider form, the boss: a giant spider about 4 meters wide and 2.2 meters tall, a huge violet-black abdomen with a cream kimono-like web pattern, eight thick jointed legs with pale bands, the upper body of the woman from the first form rising from the front of the body (pale face, long black hair, the spider-leg hairpins), a cluster of small red eyes above her brow. Seen slightly from above.',
     idle: 'standing tall on all eight legs, the body breathing, the front legs lifting one after the other, the woman\'s torso swaying, the hair drifting',
@@ -643,6 +647,7 @@ const frameRange = (from, to) => (from === to ? `frame ${from}` : `frames ${from
 function sheetPrompt({ intro, rows, ch, bg, label }) {
   const n = rows.length;
   const cells = n * COLUMNS;
+  const heads = ch.heads ?? 3;
   const format = n === COLUMNS
     ? 'Output a square 1:1 image at the highest resolution available (2048 x 2048 px if possible).'
     : 'Output a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible).';
@@ -662,13 +667,13 @@ function sheetPrompt({ intro, rows, ch, bg, label }) {
   });
   lines.push(
     'Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.',
-    `The character stays exactly the same in all ${cells} frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.`,
+    `The character stays exactly the same in all ${cells} frames: same ${heads === 3 ? 'chibi ' : ''}proportions (${heads} heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.`,
     'Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.',
     'DO NOT draw the same pose twice in a row: every frame must be clearly different from its neighbours, except where a held pose is asked for.',
     'DO NOT simply copy the reference figure into every cell.',
     'DO NOT change the camera angle, the facing direction or the design from one frame to the next.',
     'DO NOT move the character across the sheet: each frame stays centered in its own cell.',
-    LOOK,
+    lookFor(heads),
     bgText(bg),
     NOFX,
   );
@@ -678,26 +683,26 @@ function sheetPrompt({ intro, rows, ch, bg, label }) {
 const FICHE_OPEN = 'Character reference sheet for a 2D action RPG in which dead souls from every mythology fight across an archipelago of collapsed afterlives. ';
 
 /** Fiche de profil, générée de zéro : un seul personnage, une seule vue. */
-function fichePrompt({ subject, proportions, bg = GREY, wide = false }) {
+function fichePrompt({ subject, proportions, bg = GREY, wide = false, heads = 3 }) {
   return [
     `${FICHE_OPEN}One single character, shown once, full body, in ${VIEW.profil.fiche}. ${subject} Neutral calm idle stance.`,
     proportions,
     'The figure is large, about 85% of the image height, centered, with a wide empty margin around it.',
     wide ? 'Landscape 16:9 image at the highest resolution available.' : 'Portrait 3:4 image at the highest resolution available.',
-    LOOK,
+    lookFor(heads),
     bgText(bg),
     NOFX,
   ].join('\n');
 }
 
 /** Fiche de face ou de dos, générée à partir de la fiche de profil jointe. */
-function vueFichePrompt({ subject, view, bg = GREY, wide = false }) {
+function vueFichePrompt({ subject, view, bg = GREY, wide = false, heads = 3 }) {
   return [
     `The attached image is the reference sheet of our game character, a single figure seen in ${VIEW.profil.fiche}.`,
     `Draw the SAME character, alone, full body, in ${VIEW[view].fiche}: same design, proportions, outfit, colors, weapon and accessories, nothing added or removed, same scale and same neutral calm idle stance. Invent the details hidden in the attached view so that they stay consistent with the design. ${subject}`,
     'The figure is large, about 85% of the image height, centered, with a wide empty margin around it.',
     wide ? 'Landscape 16:9 image at the highest resolution available.' : 'Portrait 3:4 image at the highest resolution available.',
-    LOOK,
+    lookFor(heads),
     bgText(bg),
     NOFX,
   ].join('\n');
@@ -706,6 +711,20 @@ function vueFichePrompt({ subject, view, bg = GREY, wide = false }) {
 const PROPORTIONS_CREATURE =
   'Same chibi rendering as the heroes, adapted to the anatomy of this creature: an oversized head (or face) with big expressive eyes, a compact body, exaggerated readable features. ' +
   'A humanoid creature is exactly 3 heads tall, like the heroes. A strong readable silhouette from far away, with a clean outline.';
+
+/**
+ * Personnages imposants (les deux formes de la Jorōgumo, l'ikusa, l'Oublié, le gardien errant : `heads: 5`) :
+ * 5 têtes de haut au lieu des 3 des héros, pour qu'ils dominent l'écran.
+ */
+const TALL_HEADS = 5;
+const PROPORTIONS_TALL =
+  'Same painted rendering as the heroes, but NOT chibi: an imposing character, exactly 5 heads tall (the heroes are only 3 heads tall), ' +
+  'a smaller head relative to a longer body and longer limbs, a towering silhouette that dominates the heroes, still with clear readable features. ' +
+  'A creature that is not fully humanoid keeps these proportions for its human or humanoid parts. A strong readable silhouette from far away, with a clean outline.';
+const lookFor = (heads) =>
+  heads === TALL_HEADS
+    ? LOOK.replace('Painted 2D chibi action-RPG sprite style: chibi proportions,', 'Painted 2D action-RPG sprite style, the same rendering as our chibi heroes but with taller, more imposing proportions (5 heads tall),')
+    : LOOK;
 
 const fence = (s) => ['```text', s, '```', ''].join('\n');
 
@@ -746,12 +765,14 @@ function creature(key, data, kind) {
     id: key,
     name: data.name,
     subject: `The character is ${data.look}`,
-    proportions: kind === 'boss' ? BOSS_PROP : PROPORTIONS_CREATURE,
+    proportions: data.heads === TALL_HEADS
+      ? PROPORTIONS_TALL + (kind === 'boss' ? ' A boss: the head and the weak point must be clearly readable.' : '')
+      : kind === 'boss' ? BOSS_PROP : PROPORTIONS_CREATURE,
     bg: data.bg ?? GREY,
     wide: !!data.wide,
     rows: CREATURE_ROWS,
     data,
-    tail: `same design, chibi proportions, colors, nothing added or removed.${data.wide ? ' The creature is wider than tall: it uses the full width of each cell, at the same scale in every cell.' : ''}`,
+    tail: `same design, ${data.heads === TALL_HEADS ? 'proportions (5 heads tall)' : 'chibi proportions'}, colors, nothing added or removed.${data.wide ? ' The creature is wider than tall: it uses the full width of each cell, at the same scale in every cell.' : ''}`,
     who: `The character is ${data.look}`,
     views: ['face'],
   };
@@ -765,8 +786,8 @@ function characterSection(ch, views) {
   const out = [`## ${ch.name}`, ''];
   for (const vk of views) {
     const prompt = vk === 'profil'
-      ? fichePrompt({ subject: ch.subject, proportions: ch.proportions, bg: ch.bg, wide: ch.wide })
-      : vueFichePrompt({ subject: ch.subject, view: vk, bg: ch.bg, wide: ch.wide });
+      ? fichePrompt({ subject: ch.subject, proportions: ch.proportions, bg: ch.bg, wide: ch.wide, heads: ch.data.heads })
+      : vueFichePrompt({ subject: ch.subject, view: vk, bg: ch.bg, wide: ch.wide, heads: ch.data.heads });
     out.push(
       `### ${ch.name} — fiche ${vk}`,
       '',
@@ -849,6 +870,7 @@ const LOTS = [
 /** Le gardien errant de l'île (PNJ, dialogue « gardien ») : il n'avait jusqu'ici que l'image de l'Oublié. */
 const GARDIEN = {
   name: 'Gardien errant',
+  heads: 5,
   look:
     'the Wandering Guardian, a calm mysterious spirit who walks between the drowned rice fields of the dead and the island of the living: a tall gentle figure in a long shaggy straw rain cape (mino) over faded indigo robes, a very wide woven straw hat (sugegasa) that hides the upper face in shadow, two small pale calm eyes visible under the brim, a few rice stalks caught in the straw, a long weathered bamboo staff with a tiny bronze bell, and an ornate many-toothed wooden comb tucked at the belt (the comb of Izanagi). Serene, patient, ancient.',
   idle: 'standing perfectly still, both hands resting on the staff, the straw cape stirring, the hat tilting slowly, the tiny bell swaying',
@@ -897,6 +919,41 @@ const GARDIEN_ROWS = [
   },
 ];
 
+/** Lignes propres aux planches 4 × 8 de la Jorōgumo : lancer de toile et transformation (humaine), charge (araignée). */
+const WEB_ROW = {
+  fr: 'Lancer de toile',
+  en: 'WEB THROW',
+  loop: false,
+  beats: () => [
+    [1, 2, 'the fan snapped shut, the free hand drawn back to the shoulder, the body coiling'],
+    [3, 4, 'the arm thrusts forward, the fingers spreading, the body leaning into the throw'],
+    [5, 5, 'RELEASE, the key pose: the arm fully extended toward the target, the palm open (no web drawn)'],
+    [6, 6, 'the pose held, the sleeves flaring'],
+    [7, 8, 'back to the idle pose of the reference figure'],
+  ],
+};
+const TRANSFORM_ROW = {
+  fr: 'Transformation',
+  en: 'TRANSFORMATION into the spider form',
+  loop: false,
+  beats: () => [
+    [1, 2, 'the head bowed, the arms crossed over the chest, the body trembling'],
+    [3, 4, 'the back arching, the first long spider legs (violet-black with pale bands) bursting out from under the kimono'],
+    [5, 6, 'eight spider legs spread wide around her, the body lifted off the ground on them, the arms flung open'],
+    [7, 8, 'the spider legs planted, the body raised high, the fan opened above the head in a triumphant pose; frames 7 and 8 are nearly identical'],
+  ],
+};
+const CHARGE_ROW = {
+  fr: 'Charge',
+  en: 'CHARGE, a fast rush forward',
+  loop: false,
+  beats: () => [
+    [1, 2, 'crouching low, the legs gathered under the body, the woman\'s torso leaning forward'],
+    [3, 6, 'rushing forward on all eight legs, the body stretched low and long, the legs in a clearly different position in every frame, the hair streaming back'],
+    [7, 8, 'braking, the front legs digging in, back to the idle pose of the reference figure'],
+  ],
+};
+
 /**
  * Ce qui manque au 13 octobre 2026. Chaque planche : son nom de fichier (à ranger dans ~/Pictures/gamevisual),
  * ses lignes, et le découpage attendu à l'import (tags de tools/planches.json).
@@ -914,22 +971,40 @@ function lot4x8() {
     note: 'PNJ de l\'île : le jeu ne joue que l\'attente pour l\'instant ; la parole, le salut et la marche sont prêts pour la suite.',
     sheets: [sheet(gardien, 'gardien-errant-planche', GARDIEN_ROWS, 'idle · talk · bow · move')],
   });
-  const spider = creature('jorogumoAraignee', BOSSES.jorogumoAraignee, 'boss');
+  const human = creature('jorogumo-humaine', BOSSES.jorogumo, 'boss');
+  items.push({
+    ch: human,
+    folder: 'yokai-des-rizière',
+    fiche: true,
+    note: 'À refaire en 5 têtes (les planches du 13 octobre sont en 3 têtes) : la fiche d\'abord, puis les deux planches. Pas d\'attente dessinée : le jeu prend la première image de la course.',
+    sheets: [
+      sheet(human, 'jorogumo-humaine-planche1', [C[1], C[2], C[3], C[7]], 'move · strike 4-8 · windup (télégraphe) · channel (appel des araignées)'),
+      sheet(human, 'jorogumo-humaine-planche2', [C[4], C[5], WEB_ROW, TRANSFORM_ROW], 'stunned · hurt · web · transform (pas encore joués en jeu)', true),
+    ],
+  });
+  const spider = creature('jorogumo-araignee', BOSSES.jorogumoAraignee, 'boss');
   items.push({
     ch: spider,
     folder: 'yokai-des-rizière',
-    fiche: false,
-    note: 'La planche 1 est faite (course, attaque, télégraphe, charge). Joindre aussi la planche 1 pour garder le même dessin.',
-    sheets: [sheet(spider, 'jorogumo-araignee-planche2', [C[4], C[5], C[7], C[6]], 'stunned · hurt · airborne (au plafond) · death', true)],
+    fiche: true,
+    note: 'À refaire en 5 têtes pour le buste de la femme, comme sa forme humaine : la fiche, puis les deux planches (la planche 1 du 13 octobre est en 3 têtes).',
+    sheets: [
+      sheet(spider, 'jorogumo-araignee-planche1', [C[1], C[2], C[3], CHARGE_ROW], 'move · windup 1-3 / strike 4-8 · windup (télégraphe) · dash'),
+      sheet(spider, 'jorogumo-araignee-planche2', [C[4], C[5], C[7], C[6]], 'stunned · hurt · airborne (au plafond) · death', true),
+    ],
   });
-  for (const k of ['hitodama', 'oublie', 'araignee']) {
+  for (const k of ['hitodama', 'oublie', 'araignee', 'ikusa']) {
     const ch = creature(k, ENEMIES[k], 'enemy');
+    const tall = ENEMIES[k].heads === TALL_HEADS;
+    const garde = k === 'ikusa';
     items.push({
       ch,
-      folder: 'yokai-des-rizière',
+      folder: garde ? 'yokai-palais' : 'yokai-des-rizière',
       fiche: true,
-      note: 'Pas d\'attente dessinée : le jeu prend la première image de la course.',
-      sheets: [sheet(ch, `${k}-planche`, [C[1], C[2], C[6], C[4]], 'move · windup 1-3 / strike 4-8 · death · stunned')],
+      note: (garde ? 'Le garde du Palais, à refaire en 5 têtes (la planche du 13 octobre est en 3 têtes). ' : tall ? 'En 5 têtes. ' : '') +
+        'Pas d\'attente dessinée : le jeu prend la première image de la course.',
+      file: garde ? 'garde' : k,
+      sheets: [sheet(ch, `${garde ? 'garde' : k}-planche`, [C[1], C[2], C[6], C[4]], 'move · windup 1-3 / strike 4-8 · death · stunned')],
     });
   }
   for (const rk of ['einherjar', 'oushebti']) {
@@ -951,9 +1026,11 @@ function lot4x8() {
   const out = [
     '# Lot 6 : ce qui manque (planches 4 × 8, format du 13 octobre 2026)',
     '',
-    'Par ordre de priorité : le gardien errant (nouveau PNJ de l\'île), la seconde planche de la Jorōgumo araignée, les trois yokai des Rizières pas encore refaits (hitodama, Oublié, petite araignée), puis les héros Einherjar et Oushebti qui ne sont pas encore jouables (Sorcier, Lame, Paladin, Rôdeur). Déjà faits : kasa-obake, ikusa, Jorōgumo humaine.',
+    'Par ordre de priorité : le gardien errant (nouveau PNJ de l\'île), la Jorōgumo (ses deux formes), les yokai des Rizières pas encore refaits (hitodama, Oublié, petite araignée), le garde du Palais (ikusa), puis les héros Einherjar et Oushebti qui ne sont pas encore jouables (Sorcier, Lame, Paladin, Rôdeur). Déjà fait et gardé : kasa-obake.',
     '',
-    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, personnages chibi de 3 têtes, fond gris uni #8f8f8f (magenta #ff00ff pour l\'Oublié). Ranger chaque image dans `~/Pictures/gamevisual/<dossier>/` sous le nom indiqué. ' + REGLAGES,
+    '**Les personnages imposants font 5 têtes de haut** (gardien errant, Jorōgumo dans ses deux formes, Oublié, garde) ; les héros et les petits yokai restent en chibi de 3 têtes. Les planches du 13 octobre de la Jorōgumo et du garde, en 3 têtes, sont donc à refaire, en commençant par une nouvelle fiche de référence.',
+    '',
+    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, fond gris uni #8f8f8f (magenta #ff00ff pour l\'Oublié). Ranger chaque image dans `~/Pictures/gamevisual/<dossier>/` sous le nom indiqué. ' + REGLAGES,
     '',
     '**Si Nano Banana dessine une grille, du texte ou une ligne de plus ou de moins**, garder quand même l\'image : l\'import s\'adapte au nombre d\'images par ligne. Seuls le texte incrusté et les personnages qui débordent de leur case la rendent inutilisable.',
     '',
@@ -965,9 +1042,9 @@ function lot4x8() {
       out.push(
         `### ${ch.name} — fiche de référence`,
         '',
-        `**Générer 2 ou 3 variantes** et garder la meilleure (inutile si tu l'as déjà). **Enregistrer :** \`gamevisual/${item.folder}/${ch.id}-reference.jpg\``,
+        `**Générer 2 ou 3 variantes** et garder la meilleure${ch.data.heads === TALL_HEADS ? ' (à refaire même si tu en as une : elle doit être en 5 têtes)' : ' (inutile si tu l\'as déjà)'}. **Enregistrer :** \`gamevisual/${item.folder}/${item.file ?? ch.id}-reference.jpg\``,
         '',
-        fence(fichePrompt({ subject: ch.subject, proportions: ch.proportions, bg: ch.bg, wide: ch.wide })),
+        fence(fichePrompt({ subject: ch.subject, proportions: ch.proportions, bg: ch.bg, wide: ch.wide, heads: ch.data.heads })),
       );
     }
     item.sheets.forEach((s, i) => {

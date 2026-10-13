@@ -24,7 +24,7 @@ import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
-import { LOW_GRAPHICS, SCENES_3D } from './flags';
+import { LOW_GRAPHICS } from './flags';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { loadFittedTexture } from './textureBudget';
@@ -371,9 +371,6 @@ const VOIE_FX: Record<string, VoieFx> = {
   eclaireur: { sheet: 'fxVoieCouloirRodeur', life: 1.2, from: 'at' },
 };
 
-/** Arène en 3D : ce qui était posé au-delà de cette distance finit derrière les murs du fond. */
-const ARENA_3D_WALL = 12;
-
 export function registerShaders(): void {
   if (Effect.ShadersStore.spriteVertexShader) return;
   Effect.ShadersStore.spriteVertexShader = `
@@ -449,8 +446,7 @@ export function loadTexture(scene: Scene, url: string, pixelated = false): Promi
 
 /**
  * Affiche le monde en « fausse 3D » : caméra orthographique isométrique, sol de rizières,
- * et des images plates tournées vers la caméra. Un sprite pourra être remplacé par un modèle 3D
- * sans toucher à la logique du jeu.
+ * et des images peintes tournées vers la caméra.
  */
 export class Renderer {
   private readonly scene: Scene;
@@ -512,9 +508,9 @@ export class Renderer {
   };
   private groundMaterial: StandardMaterial | null = null;
   private groundMesh: Mesh | null = null;
-  /** Arène peinte ou en 3D, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
-  private arena3d: { update(dt: number): void; dispose(): void } | null = null;
-  private arena3dRequest = 0;
+  /** Arène peinte, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
+  private arena: { update(dt: number): void; dispose(): void } | null = null;
+  private arenaRequest = 0;
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
   /** Croissants des coups, un par largeur d'arc (le nodachi à 150°, le kanabō à 200°…). */
@@ -747,7 +743,7 @@ export class Renderer {
   sync(world: WorldView, events: readonly GameEvent[], dt: number): void {
     for (const hero of world.players) this.heroKits.set(hero.id, hero.cfg.kit);
     this.time += dt;
-    this.arena3d?.update(dt);
+    this.arena?.update(dt);
     const player = world.player;
     this.localId = player.id;
     this.localKit = player.cfg.kit;
@@ -2564,12 +2560,9 @@ export class Renderer {
     for (const mesh of this.decor.meshes) mesh.dispose();
     const meshes: { dispose(): void }[] = [];
     const animated: { material: ShaderMaterial; anim: SheetAnimation; time: number }[] = [];
-    const walled = SCENES_3D && !!style.scene3d;
     if (!LOW_GRAPHICS) style.decor.forEach((spot, i) => {
       const entry = this.sprites.get(spot.sprite);
       if (!entry) return;
-      // Arène 3D : ce qui était posé derrière les murs du fond ne se verrait plus qu'à moitié.
-      if (walled && Math.max(spot.x, spot.z) > ARENA_3D_WALL) return;
       const { sprite, material } = this.createSprite(`decor-${spot.sprite}-${i}`, entry);
       sprite.position.set(spot.x, 0, spot.z);
       sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(spot, this.forward) * 100);
@@ -2585,29 +2578,24 @@ export class Renderer {
   }
 
   private buildArena(style: DungeonStyle): void {
-    const request = ++this.arena3dRequest;
-    this.arena3d?.dispose();
-    this.arena3d = null;
+    const request = ++this.arenaRequest;
+    this.arena?.dispose();
+    this.arena = null;
     this.groundMesh?.setEnabled(true);
-    if (LOW_GRAPHICS || !style.scene3d) return;
-    const kind = style.scene3d;
-    const lanterns = style.decor.filter((spot) => spot.sprite.startsWith('lanterne'));
-    // Chargées à la demande : les scènes peintes ou 3D d'arène ne sont pas utiles si le style n'en fournit pas.
-    const build = !SCENES_3D
-      ? import('./arenaPainted').then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind, this.arenaHalfSize, style.decor, this.forward))
-      : kind === 'rizieres'
-        ? import('./rizieres3d').then(({ Rizieres3d }) => Rizieres3d.build(this.scene, style.decor))
-        : import('./arena3d').then(({ Arena3d }) => Arena3d.build(this.scene, lanterns));
-    build
+    if (LOW_GRAPHICS || !style.arena) return;
+    const kind = style.arena;
+    // Chargée à la demande : l'arène peinte n'est pas utile si le style n'en fournit pas.
+    import('./arenaPainted')
+      .then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind, this.arenaHalfSize, style.decor, this.forward))
       .then((arena) => {
-        if (request !== this.arena3dRequest) return arena.dispose();
-        this.arena3d = arena;
+        if (request !== this.arenaRequest) return arena.dispose();
+        this.arena = arena;
         this.groundMesh?.setEnabled(false);
       })
       .catch((error: unknown) => {
         console.warn('Arène indisponible, retour au sol en une image :', error);
         // La prochaine descente avec ce décor réessaiera.
-        if (request === this.arena3dRequest) this.shownStyle = null;
+        if (request === this.arenaRequest) this.shownStyle = null;
       });
   }
 

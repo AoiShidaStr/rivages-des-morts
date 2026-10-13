@@ -1,10 +1,10 @@
 # Rivages des Morts — Charte 2D
 
-Charte de la refonte graphique : **toutes les animations sont dessinées en 2D par Nano Banana 2** (application Gemini, sans API), **en personnages chibi de 3 têtes**, sur **une planche complète de 64 images (grille 8 × 8) par personnage**. La 3D, Blender et la pipeline GLB sont abandonnés : ce document remplace [Charte 3D](Charte%203D.md) et [pipeline](pipeline.md) pour le rendu des personnages. Les prompts correspondants sont dans [`prompts-2d/`](prompts-2d/) et se régénèrent avec `npm run prompts-2d` (`tools/prompts-2d.mjs`).
+Charte de la refonte graphique : **toutes les animations sont dessinées en 2D par Nano Banana 2** (application Gemini, sans API), **en personnages chibi de 3 têtes**, sur **une planche complète de 64 images (grille 8 × 8) par personnage**. La 3D et le pixel art sont abandonnés. Les prompts correspondants sont dans [`prompts-2d/`](prompts-2d/) et se régénèrent avec `npm run prompts-2d` (`tools/prompts-2d.mjs`).
 
 **Décision du 8 octobre 2026 : retour officiel au chibi en grille 8 × 8.** Les autres proportions et les autres grilles essayées avant ont été abandonnées. Sur une grille dense, Nano Banana 2 garde bien mieux l'anatomie et l'équipement d'un personnage chibi : un corps compact, une grosse tête et une arme exagérée restent cohérents d'une case à l'autre, alors que des corps élancés se disloquent (membres en trop, arme qui change de main ou de forme). Les références de style sont les planches complètes Hanyō d'octobre 2026, en particulier la Lame et le Paladin (`2d/hanyo-2D/`, portraits `public/sprites/heros-hanyo-<classe>.png`).
 
-Ce que la charte 3D garde comme valeur : la lumière froide, la règle « rouge = danger ennemi », l'anneau clair sous les héros, les hauteurs relatives des créatures (hitodama 0,6 m, kappa 1,3 m, héros 1,8 m…). Tout cela est reproduit ici ou dans le jeu, pas dans les planches.
+Ce que l'ancienne direction garde comme valeur : la lumière froide, la règle « rouge = danger ennemi », l'anneau clair sous les héros, les hauteurs relatives des créatures (hitodama 0,6 m, kappa 1,3 m, héros 1,8 m…). Tout cela est reproduit ici ou dans le jeu, pas dans les planches.
 
 **Le GDD d'origine prime.** Le jeu est un archipel d'au-delà (Yomi, Hadès, Duat, Helheim, puis la Mésopotamie) : les personnages ne sont pas « du Yomi ». Seuls les yokai et les boss du Yomi le sont. Les héros, eux, doivent rester cohérents sur toutes les îles : **la race fixe le corps et la culture du vêtement, la classe fixe seulement le rôle, la posture, la silhouette, la couleur d'accent et l'arme** (voir 2).
 
@@ -50,7 +50,7 @@ Les 20 tenues (une par race × classe) sont écrites dans `OUTFITS`, en tête de
   - **Corps compact, membres courts et solides.**
   - **Armes exagérées** : nodachi plus long que le personnage, kunai surdimensionnés, yumi bien plus haut que lui, naginata et bouclier de temple démesurés. L'arme doit se lire à l'échelle du jeu.
 - **Pourquoi le chibi** : sur une grille dense de 64 cases, l'IA garde bien mieux l'anatomie et l'équipement d'un personnage chibi. Un corps compact et une arme exagérée restent identiques d'une case à l'autre ; des proportions réalistes se disloquent (membres déformés, arme qui change de forme ou de main, tête qui grossit).
-- **Ennemis** : la forme propre à chaque créature, dans le même rendu chibi (tête ou visage surdimensionné, traits exagérés, corps compact). Une créature humanoïde (shikome, ikusa, Oublié) fait aussi 3 têtes. Chacune est dessinée **à pleine hauteur dans sa case** : c'est le jeu qui la met à l'échelle d'après sa hauteur (hitodama petit, kappa plus grand, héros 1,8 m). On ne dessine donc pas le hitodama plus petit dans l'image.
+- **Ennemis** : la forme propre à chaque créature, dans le même rendu chibi (tête ou visage surdimensionné, traits exagérés, corps compact). Une créature humanoïde (shikome) fait aussi 3 têtes ; les personnages imposants (les deux formes de la Jorōgumo, l'ikusa, l'Oublié, le gardien errant) font **5 têtes**, moins chibi, pour dominer les héros (`heads: 5` dans `tools/prompts-2d.mjs`). Chacune est dessinée **à pleine hauteur dans sa case** : c'est le jeu qui la met à l'échelle d'après sa hauteur (hitodama petit, kappa plus grand, héros 1,8 m). On ne dessine donc pas le hitodama plus petit dans l'image.
 - **Boss** : même planche et même case que les autres, rendu chibi, tête et point faible toujours lisibles. C'est le jeu qui les affiche plus grands (Izanami : 2,6 m).
 
 | | Case finale | Personnage debout | Pieds (ligne de base) |
@@ -100,7 +100,7 @@ Ce tableau suit le code tel qu'il est : l'Aura de lumière (A) du Paladin et la 
 | Guerrier et Rôdeur Hanyō | 12 images par ligne (deux animations sur certaines lignes) |
 | Lame et Sorcier Hanyō | 8 × 8, mais une ligne de 7 images |
 | Demi-dieux | grilles d'avant le standard, au nombre d'images variable selon la classe |
-| Invocateur Hanyō, héros des autres races | planches par animation (outil `kit-heros`) |
+| Invocateur Hanyō, héros des autres races | planches par animation (ancien outil `kit-heros`, retiré) |
 | Izanami, yokai du Palais | une planche de 16 images (4 × 4) par animation |
 
 ## 5. Fond et détourage

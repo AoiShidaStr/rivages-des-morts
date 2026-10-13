@@ -24,21 +24,34 @@
     {
       "name": "oublie",
       "bodyHeight": 240,
-      "animations": [
-        { "tag": "idle", "source": "sprites/oublie_idle.jpg", "count": 6, "duration": 150 },
-        { "tag": "move", "source": "sprites/oublie_move.jpg", "count": 8, "duration": 90 },
-        { "tag": "windup", "source": "sprites/oublie_windup.jpg", "layout": [3, 2], "ref": 0, "duration": 90, "once": true, "eraseLines": { "length": 0.04 } },
-        { "tag": "strike", "source": "sprites/oublie_strike.jpg", "count": 6, "ref": 5, "durations": [50, 50, 60, 90, 110, 140], "once": true },
-        { "tag": "stunned", "source": "sprites/oublie_stunned.jpg", "layout": [3, 2], "frames": [1, 2, 4], "ref": 4, "duration": 180, "tolerance": 14, "fillHoles": true, "minHole": 60 }
+      "source": "../gamevisual/yokai-des-rizière/oublie-planche.jpg",
+      "layout": [8, 8, 8, 8],
+      "defringe": 6,
+      "despill": true,
+      "fillHoles": true,
+      "holeTolerance": 40,
+      "minHole": 10,
+      "rows": [
+        { "tag": "idle", "row": 0, "frames": [0], "duration": 200 },
+        { "tag": "move", "row": 0, "duration": 90 },
+        { "tag": "windup", "row": 1, "frames": [0, 1, 2], "duration": 90, "once": true },
+        { "tag": "strike", "row": 1, "frames": [3, 4, 5, 6, 7], "duration": 30, "once": true },
+        { "tag": "death", "row": 2, "duration": 110, "once": true },
+        { "tag": "stunned", "row": 3, "duration": 160 }
       ]
     },
     {
       "name": "hitodama",
       "bodyHeight": 120,
-      "animations": [
-        { "tag": "move", "source": "sprites/hitodama_move.jpg", "count": 8, "frames": [0, 1, 2, 3, 5, 6, 7], "duration": 85, "eraseLines": true, "erase": [[0, 0, 1, 0.075], [0, 0.93, 1, 1], [0.03, 0.1, 0.06, 0.16], [0.265, 0.1, 0.295, 0.16], [0.5, 0.1, 0.53, 0.16], [0.735, 0.1, 0.765, 0.16], [0.03, 0.5, 0.06, 0.56], [0.265, 0.5, 0.295, 0.56], [0.5, 0.5, 0.53, 0.56], [0.735, 0.5, 0.765, 0.56]],
-          "seeds": [[0.05, 0.45], [0.28, 0.45], [0.52, 0.45], [0.75, 0.45], [0.05, 0.87], [0.28, 0.87], [0.52, 0.87], [0.75, 0.87]] },
-        { "tag": "stunned", "source": "sprites/hitodama_stunned.jpg", "count": 6, "duration": 120, "eraseLines": true }
+      "source": "../gamevisual/yokai-des-rizière/hitodama-planche.jpg",
+      "layout": [8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "frames": [0], "duration": 200 },
+        { "tag": "move", "row": 0, "duration": 85 },
+        { "tag": "windup", "row": 1, "frames": [0, 1, 2], "duration": 90, "once": true },
+        { "tag": "strike", "row": 1, "frames": [3, 4, 5, 6, 7], "duration": 30, "once": true },
+        { "tag": "death", "row": 2, "duration": 110, "once": true },
+        { "tag": "stunned", "row": 3, "duration": 120 }
       ]
     },
     {
@@ -95,50 +108,67 @@
     {
       "name": "araignee",
       "bodyHeight": 100,
-      "animations": [
-        { "tag": "idle", "source": "sprites/araignee_idle.jpg", "count": 4, "duration": 140 },
-        { "tag": "move", "source": "sprites/araignee_move.jpg", "count": 8, "duration": 60 },
-        { "tag": "windup", "source": "sprites/araignee_strike.jpg", "count": 4, "frames": [0], "ref": 3, "duration": 100, "once": true },
-        { "tag": "strike", "source": "sprites/araignee_strike.jpg", "count": 4, "frames": [1, 2, 3], "ref": 3, "durations": [60, 110, 140], "once": true },
-        { "tag": "stunned", "source": "sprites/araignee_stunned.jpg", "count": 6, "frames": [1, 2, 3, 4, 5], "duration": 140 }
+      "source": "../gamevisual/yokai-des-rizière/petite-araignee-planche.jpg",
+      "layout": [8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "frames": [0], "duration": 200 },
+        { "tag": "move", "row": 0, "duration": 60 },
+        { "tag": "windup", "row": 1, "frames": [0, 1, 2], "duration": 100, "once": true },
+        { "tag": "strike", "row": 1, "frames": [3, 4, 5, 6, 7], "duration": 30, "once": true },
+        { "tag": "death", "row": 2, "duration": 110, "once": true },
+        { "tag": "stunned", "row": 3, "duration": 140 }
       ]
     },
     {
       "name": "jorogumo",
       "bodyHeight": 260,
-      "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche1.jpg",
       "fillHoles": true,
+      "holeTolerance": 22,
       "minHole": 150,
-      "eraseLines": { "length": 0.08, "verticalLength": 0.15 },
-      "seeds": [[0.008, 0.235], [0.133, 0.235], [0.258, 0.235], [0.383, 0.235], [0.508, 0.235], [0.633, 0.235], [0.758, 0.235], [0.883, 0.235], [0.008, 0.485], [0.133, 0.485], [0.258, 0.485], [0.383, 0.485], [0.508, 0.485], [0.633, 0.485], [0.758, 0.485], [0.883, 0.485], [0.008, 0.735], [0.133, 0.735], [0.258, 0.735], [0.383, 0.735], [0.508, 0.735], [0.633, 0.735], [0.758, 0.735], [0.883, 0.735], [0.008, 0.985], [0.133, 0.985], [0.258, 0.985], [0.383, 0.985], [0.508, 0.985], [0.633, 0.985], [0.758, 0.985], [0.883, 0.985]],
-      "layout": [8, 8, 8, 8],
+      "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche1.jpg",
+      "layout": [8, 6, 6, 6],
       "rows": [
         { "tag": "idle", "row": 0, "frames": [0], "duration": 200 },
         { "tag": "move", "row": 0, "duration": 90 },
-        { "tag": "strike", "row": 1, "frames": [3, 4, 5, 6, 7], "duration": 30, "once": true },
-        { "tag": "windup", "row": 2, "duration": 110, "once": true },
+        { "tag": "strike", "row": 1, "frames": [1, 2, 3, 4, 5], "duration": 30, "once": true },
+        { "tag": "windup", "row": 2, "duration": 130, "once": true },
         { "tag": "channel", "row": 3, "duration": 130 },
-        { "tag": "stunned", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [10, 10, 8, 8], "seeds": [], "eraseLines": false, "row": 0, "duration": 150 },
-        { "tag": "hurt", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [10, 10, 8, 8], "seeds": [], "eraseLines": false, "row": 1, "ref": 9, "duration": 60, "once": true },
-        { "tag": "web", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [10, 10, 8, 8], "seeds": [], "eraseLines": false, "row": 2, "duration": 90, "once": true },
-        { "tag": "transform", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [10, 10, 8, 8], "seeds": [], "eraseLines": false, "row": 3, "duration": 110, "once": true }
+        { "tag": "stunned", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [8, 6, 6, 6], "row": 0, "duration": 150 },
+        { "tag": "hurt", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [8, 6, 6, 6], "refFrame": 0, "row": 1, "duration": 60, "once": true },
+        { "tag": "web", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [8, 6, 6, 6], "refFrame": 0, "row": 2, "duration": 90, "once": true },
+        { "tag": "transform", "source": "../gamevisual/yokai-des-rizière/jorogumo-humaine-planche2.jpg", "layout": [8, 6, 6, 6], "refFrame": 0, "row": 3, "duration": 110, "once": true }
       ]
     },
     {
       "name": "jorogumo-araignee",
       "bodyHeight": 280,
-      "tolerance": 42,
       "fillHoles": true,
+      "holeTolerance": 22,
       "minHole": 200,
-      "holeTolerance": 20,
-      "eraseLines": { "length": 0.04, "vertical": false },
-      "animations": [
-        { "tag": "idle", "source": "sprites/jorogumo-araignee_idle.jpg", "count": 6, "frames": [1, 2, 3, 4], "duration": 170 },
-        { "tag": "move", "source": "sprites/jorogumo-araignee_move.jpg", "count": 8, "duration": 80 },
-        { "tag": "windup", "source": "sprites/jorogumo-araignee_windup.jpg", "count": 4, "ref": 0, "duration": 120, "once": true },
-        { "tag": "strike", "source": "sprites/jorogumo-araignee_strike.jpg", "count": 6, "ref": 5, "durations": [60, 60, 70, 110, 120, 140], "once": true },
-        { "tag": "dash", "source": "sprites/jorogumo-araignee_dash.jpg", "count": 6, "duration": 60 },
-        { "tag": "airborne", "source": "sprites/jorogumo-araignee_airborne.jpg", "count": 4, "ref": 0, "duration": 110 }
+      "source": "../gamevisual/yokai-des-rizière/jorogumo-araignee-planche1.jpg",
+      "layout": [8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "frames": [0], "duration": 200 },
+        { "tag": "move", "row": 0, "duration": 80 },
+        { "tag": "strike", "row": 1, "frames": [3, 4, 5, 6, 7], "duration": 30, "once": true },
+        { "tag": "windup", "row": 2, "duration": 120, "once": true },
+        { "tag": "dash", "row": 3, "duration": 60 },
+        { "tag": "stunned", "source": "../gamevisual/yokai-des-rizière/jorogumo-araignee-planche2.jpg", "layout": [8, 8, 8, 8], "row": 0, "duration": 150 },
+        { "tag": "hurt", "source": "../gamevisual/yokai-des-rizière/jorogumo-araignee-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 1, "duration": 60, "once": true },
+        { "tag": "airborne", "source": "../gamevisual/yokai-des-rizière/jorogumo-araignee-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 2, "duration": 110 },
+        { "tag": "death", "source": "../gamevisual/yokai-des-rizière/jorogumo-araignee-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 3, "duration": 110, "once": true }
+      ]
+    },
+    {
+      "name": "gardien",
+      "bodyHeight": 240,
+      "source": "../gamevisual/gardien-erran-planche.jpg",
+      "layout": [8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "duration": 160 },
+        { "tag": "talk", "row": 1, "duration": 130 },
+        { "tag": "bow", "row": 2, "duration": 130, "once": true },
+        { "tag": "move", "row": 3, "duration": 110 }
       ]
     },
     {

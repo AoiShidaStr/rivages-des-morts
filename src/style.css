@@ -44,8 +44,8 @@ kbd {
   font-weight: 700;
   padding: 0 5px;
   border-radius: 3px;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--washi);
+  color: var(--sumi);
 }
 
 /* Coop : nom des autres héros au-dessus de leur tête, avec une barre de PV (--hp, de 0 à 1) */
@@ -90,8 +90,8 @@ kbd {
   row-gap: 1px;
   align-items: center;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(236, 230, 218, 0.14);
   border-radius: 3px;
 }
 
@@ -388,7 +388,7 @@ kbd {
   margin-bottom: 4px;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 20px;
-  color: var(--paper);
+  color: var(--washi);
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
@@ -404,7 +404,7 @@ kbd {
   gap: 8px;
   margin-top: 6px;
   font-size: 13px;
-  color: var(--paper);
+  color: var(--washi);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
@@ -475,7 +475,7 @@ kbd {
   padding: 6px 16px;
   border-radius: 4px;
   background: rgba(12, 10, 16, 0.5);
-  color: var(--paper);
+  color: var(--washi);
   font-size: 14px;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
@@ -514,7 +514,7 @@ kbd {
   text-align: center;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 36px;
-  color: var(--paper);
+  color: var(--washi);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
   opacity: 0;
   transition: opacity 0.4s;
@@ -541,7 +541,7 @@ kbd {
   padding: 8px 14px;
   text-align: center;
   font-size: 15px;
-  color: var(--paper);
+  color: var(--washi);
   background: var(--panel);
   border-left: 3px solid var(--vermilion);
   border-radius: 4px;
