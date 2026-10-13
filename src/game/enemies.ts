@@ -48,6 +48,8 @@ export interface Hit {
   ignoreShell?: boolean;
   /** Coup critique (Lame) : le rendu l'affiche autrement. */
   crit?: boolean;
+  /** Coop : index du joueur qui porte le coup, pour l'affichage (0 en solo ; absent : coup sans joueur, web de toile…). */
+  owner?: number;
 }
 
 export abstract class Enemy {
@@ -212,7 +214,7 @@ export abstract class Enemy {
     const away = normalize(sub(this.pos, hit.from), scale(this.facing, -1));
     const push = hit.knockback * this.base.knockbackFactor * (shielded ? 0.3 : 1);
     this.knockback = add(this.knockback, scale(away, push));
-    world.emit({ type: 'enemyHit', id: this.id, pos: { ...this.pos }, amount, shielded, crit: Boolean(hit.crit) });
+    world.emit({ type: 'enemyHit', id: this.id, pos: { ...this.pos }, amount, shielded, crit: Boolean(hit.crit), owner: hit.owner ?? -1 });
     if (this.dead) world.emit({ type: 'death', id: this.id, pos: { ...this.pos }, kind: this.kind });
     else if (!shielded) this.onHurt(world);
     return shielded;

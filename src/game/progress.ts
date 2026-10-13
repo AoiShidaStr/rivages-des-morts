@@ -32,6 +32,8 @@ export interface ProgressState {
   equipped: Partial<Record<Slot, string>>;
   /** Niveau de forge de chaque pièce d'équipement possédée (forge de Tetsu). */
   itemLevels: Record<string, number>;
+  /** Les reliques éveillées (l'Éveil des Tablettes) : un éveil par relique, la valeur compte ce qu'elle a reçu. */
+  eveils: Record<string, number>;
   /**
    * La gravure de chaque arme gravée (src/data/gravures.json), par identifiant d'arme : le tirage de Tetsu, qu'on
    * relance. Une arme jamais gravée n'y figure pas ; une gravure se pose sur un type d'arme, jamais sur une copie.
@@ -102,12 +104,15 @@ export interface Effect {
   subclass?: boolean;
   /** Ouvre le terrain d'entraînement (le billot de Tetsu) : on y frappe un mannequin, sans butin ni risque. */
   train?: boolean;
+  /** Ouvre la stèle des records (les paliers gravés sur le ponton). */
+  records?: boolean;
 }
 
 /** Ce que l'interface doit faire après une suite d'effets. */
 export type Action =
   | { kind: 'toast'; text: string; tone?: 'quest' | 'loot'; icon?: string }
   | { kind: 'shop'; id: string }
+  | { kind: 'records' }
   | { kind: 'forge' }
   | { kind: 'dungeon'; id: string }
   | { kind: 'chests' }
@@ -172,6 +177,7 @@ function fresh(): ProgressState {
     equipped: { arme: STARTING_WEAPON },
     itemLevels: { [STARTING_WEAPON]: 1 },
     gravures: {},
+    eveils: {},
     dungeons: {},
     materials: {},
     flags: {},
@@ -394,6 +400,11 @@ export class Progress {
     return actions;
   }
 
+  /** Le nombre d'éveils d'une relique (l'Éveil des Tablettes) : 0 tant qu'elle ne l'est pas. */
+  eveil(id: string): number {
+    return this.state.eveils[id] ?? 0;
+  }
+
   /** Meilleure victoire dans un donjon, ou dans n'importe lequel (`*`). */
   record(id: string): number {
     const records = id === '*' ? Object.values(this.state.dungeons) : [this.state.dungeons[id]];
@@ -486,6 +497,7 @@ export class Progress {
     if (e.toast) actions.push({ kind: 'toast', text: e.toast });
     if (e.open === 'shop' && e.shop) actions.push({ kind: 'shop', id: e.shop });
     if (e.open === 'forge') actions.push({ kind: 'forge' });
+    if (e.records) actions.push({ kind: 'records' });
     if (e.xp) {
       actions.push({ kind: 'toast', text: `+${e.xp} XP`, tone: 'loot' });
       actions.push(...this.gainXp(e.xp));
@@ -511,7 +523,7 @@ function levelUpToast(level: number, point: boolean): Action {
  * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
  * pas de héros (c'était toujours un Guerrier Einherjar).
  */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'dungeons' | 'hero' | 'gravures'> &
+type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'dungeons' | 'hero' | 'gravures'> &
   Partial<Pick<ProgressState, 'itemLevels' | 'dungeons' | 'hero' | 'gravures'>> & {
     weaponLevel?: number;
     weaponLevels?: Record<string, number>;

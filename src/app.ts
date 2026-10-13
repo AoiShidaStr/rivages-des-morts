@@ -5,7 +5,7 @@ import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type Dung
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { gravureRank, rollSeal, type Gravure } from './game/gravure';
-import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, rollEndlessItem, submitGlobalRecord } from './game/infini';
+import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
@@ -41,7 +41,9 @@ import {
   openForge,
   openInventory,
   openLoot,
+  openPactDraft,
   openQuests,
+  openRecords,
   openShop,
   openSkills,
   openSubclass,
@@ -55,7 +57,8 @@ import { ChatBox, openSocial } from './ui/social';
 import { openMarket, openPlayerShop, openTrade } from './ui/trade';
 import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
-import { logRun } from './game/journal';
+import { logRun, markSeen } from './game/journal';
+import { SFX_DES_EVENTS, Sfx } from './audio/sfx';
 import { openOptions } from './ui/options';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
 import { Screens, type MenuOption } from './ui/screens';
@@ -160,6 +163,8 @@ export class App {
   private preparing: Promise<void> | null = null;
   private titleAngle = 0;
   private run: Loot = emptyLoot();
+  /** Les sons courts (SFX) : les événements de combat et les gains d'objets ; les musiques restent celles des amis. */
+  private readonly sfx: Sfx = new Sfx();
   /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
   private endShop: RolledOffer[] = [];
   /** Donjon en cours, et son niveau (choisi à l'entrée). */
@@ -170,6 +175,8 @@ export class App {
    * choisi d'encaisser ou de continuer. Le butin de `run` court de bloc en bloc tant qu'il n'est pas encaissé.
    */
   private endless: { bloc: number; cleared: number; awaiting: boolean } | null = null;
+  /** Les pactes scellés dans la descente en cours du Yomi sans fond (un de plus à chaque bloc à partir du palier 51). */
+  private pactesEncours: EndlessModifierSeed[] = [];
   /** Où l'on reparaît sur l'île en remontant (devant la cascade, après le donjon infini). */
   private exitAt: ScreenPoint | null = null;
   private outcome: Outcome | null = null;
@@ -627,6 +634,9 @@ export class App {
         case 'forge':
           openForge(this.panels, this.ui);
           break;
+        case 'records':
+          openRecords(this.panels);
+          break;
         case 'chests':
           this.openChests();
           break;
@@ -766,11 +776,12 @@ export class App {
     this.busy = true;
     const data = content.endless;
     const keep = bloc > 0 && this.endless !== null;
+    if (!keep) this.pactesEncours = [];
     const cleared = keep && this.endless ? this.endless.cleared : 0;
     const player = this.loadout().config;
     const allies = this.botAllies();
     const dungeon = this.endlessDungeon(bloc);
-    const waves = blocWaves(data, content.difficulty, bloc, endlessArenas, 1 + allies.length);
+    const waves = blocWaves(data, content.difficulty, bloc, endlessArenas, 1 + allies.length, undefined, this.pactesEncours);
     const first = firstPalier(data, bloc);
     await this.screens.transition(data.name, this.endlessSubtitle(bloc, 1 + allies.length), () => {
       const world = new World({ ...this.d.config, ...dungeon.arena, waves, player, allies: allies.map((a) => a.config), difficulty: waves[0].difficulty });
@@ -854,9 +865,10 @@ export class App {
     } else {
       input.flush();
     }
-    const events = world.drainEvents();
-    if (online) this.shareState(world, events);
-    for (const event of events) {
+      const events = world.drainEvents();
+      if (online) this.shareState(world, events);
+      for (const event of events) {
+        this.sfxEvent(event);
       this.track(event);
       // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
       if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
@@ -927,6 +939,16 @@ export class App {
    * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
    * depuis le précédent (canal sûr).
    */
+  /** Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts). */
+  private sfxEvent(event: GameEvent): void {
+    if (event.type === 'enemyHit') {
+      this.sfx.play(event.crit ? 'crit' : 'coup');
+      return;
+    }
+    const id = SFX_DES_EVENTS[event.type];
+    if (id) this.sfx.play(id);
+  }
+
   private shareState(world: World, events: GameEvent[]): void {
     const session = this.coop;
     if (!session) return;
@@ -965,7 +987,10 @@ export class App {
     mirror.update(now);
     const events = this.inbox;
     this.inbox = [];
-    for (const event of events) this.track(event);
+    for (const event of events) {
+      this.track(event);
+      this.sfxEvent(event);
+    }
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
       // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
@@ -1071,6 +1096,7 @@ export class App {
     const endless = start.dungeon === ENDLESS;
     const bloc = endless ? blocOf(data, start.level) : 0;
     const keep = endless && bloc > 0 && this.endless !== null;
+    if (endless && !keep) this.pactesEncours = [];
     const cleared = keep && this.endless ? this.endless.cleared : 0;
     const dungeon = endless ? this.endlessDungeon(bloc) : (content.dungeons[start.dungeon] ?? content.dungeons.rizieres);
     const level = endless ? levelAt(data, start.level) : clampLevel(content.difficulty, start.level);
@@ -1081,7 +1107,7 @@ export class App {
     await this.screens.transition(title, subtitle, () => {
       this.coopRun = start.run;
       if (session.isHost) {
-        const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length) : null;
+        const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length, undefined, this.pactesEncours) : null;
         const difficulty = waves ? waves[0].difficulty : dungeonDifficultyFor(content.difficulty, level, configs.length, dungeon.strength);
         this.world = new World({ ...this.d.config, ...dungeon.arena, ...(waves ? { waves } : {}), player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
@@ -1232,6 +1258,8 @@ export class App {
     if (!def) return;
     if (!this.d.progress.has(id) && !this.run.items.includes(id)) {
       this.run.items.push(id);
+      markSeen(id);
+      this.sfx.play('butin');
       this.screens.toast(`${label} : ${def.name}`, 'loot', id);
     } else if (def.slot) {
       const s = salvage(content.duplicates, content.upgrade, def);
@@ -1482,16 +1510,30 @@ export class App {
     void this.runActions(actions);
   }
 
-  /** Continuer plus bas : en solo, le bloc suivant ; en coop, l'hôte relance tout le monde. */
+  /**
+   * Continuer plus bas : les pactes d'abord, si le bloc suivant les réclame (premier palier ≥ 51), puis la descente ;
+   * en coop, l'hôte scelle un pacte et relance tout le monde. Les invités ne passent jamais ici (ils encasissent). */
   private continueEndless(bloc: number): void {
-    const session = this.coop;
-    if (!session) {
-      void this.descendEndless(bloc);
+    const relance = () => {
+      const session = this.coop;
+      if (!session) {
+        void this.descendEndless(bloc);
+        return;
+      }
+      if (!session.isHost) return;
+      session.choose(ENDLESS, firstPalier(content.endless, bloc));
+      void this.startCoop(session.start(this.member()));
+    };
+    const drafts = pacteDraft(content.endless, bloc);
+    if (drafts) {
+      openPactDraft(this.panels, firstPalier(content.endless, bloc), drafts, (pacte) => {
+        this.pactesEncours = [...this.pactesEncours, pacte];
+        this.screens.toast(`Pacte scellé : ${pacte.name}`, 'quest');
+        relance();
+      });
       return;
     }
-    if (!session.isHost) return;
-    session.choose(ENDLESS, firstPalier(content.endless, bloc));
-    void this.startCoop(session.start(this.member()));
+    relance();
   }
 
   private afterEndlessOptions(): MenuOption[] {

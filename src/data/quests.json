@@ -129,6 +129,10 @@
   },
   "triggers": [
     {
+      "if": [{ "material": ["soie", 1] }, { "notFlag": "premiere_soie" }],
+      "then": [{ "set": "premiere_soie" }]
+    },
+    {
       "if": [{ "count": ["offrandes", 6] }, { "notFlag": "benediction_jizo" }],
       "then": [{ "set": "benediction_jizo" }, { "xp": 30 }, { "toast": "Les six Jizō te bénissent : +10 PV max." }]
     }

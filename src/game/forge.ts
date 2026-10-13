@@ -31,6 +31,18 @@ export interface UpgradeRules {
   paliers: Palier[];
 }
 
+/** L'Éveil des Tablettes (GDD) : le prix d'un éveil de relique et ce qu'il charge sur le héros. */
+export interface EveilRules {
+  about: string;
+  oboles: number;
+  /** La matière et la quantité qu'un éveil consomme (src/data/items.json : forge.eveil). */
+  material: [string, number];
+  /** Éveils maximum par relique. */
+  max: number;
+  /** Le bonus que l'éveil charge, tant que les pouvoirs propres à chaque relique ne sont pas écrits. */
+  bonus: Bonus;
+}
+
 export const isUpgradable = (rules: UpgradeRules, def: ItemDef | undefined): boolean => Boolean(def?.slot && rules.slots.includes(def.slot));
 
 /** Niveau le plus haut que la forge accepte : celui du joueur, dans la limite du maximum. */

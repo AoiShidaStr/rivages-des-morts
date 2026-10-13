@@ -739,13 +739,13 @@ export class Player {
     // Main de Týr : ce que la garde et l'Armure ont arrêté repart en partie vers l'attaquant.
     this.tyrHand(attacker, amount - chip * this.damageTakenFactor(), world);
     if (attacker && !attacker.dead && perks.guardReflect && amount > 0) {
-      attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2 }, world);
+      attacker.receiveHit({ amount: amount * perks.guardReflect, from: this.pos, knockback: 2, owner: this.id }, world);
       if (attacker.dead) this.onKill();
     }
     // Reflet (gravure), Mur de fer (voie Rempart) : un coup bloqué renvoie des dégâts fixes à l'attaquant. Le Guerrier
     // bloque comme le Paladin (`canGuard`), donc le renvoi vaut pour les deux — il vivait dans la suite du Paladin.
     if (attacker && !attacker.dead && perks.riposte) {
-      attacker.receiveHit({ amount: perks.riposte * this.damageMultiplier(), from: this.pos, knockback: 4 }, world);
+      attacker.receiveHit({ amount: perks.riposte * this.damageMultiplier(), from: this.pos, knockback: 4, owner: this.id }, world);
       if (attacker.dead) this.onKill();
     }
     // Écaille de Ryūjin : l'attaquant arrêté repart en feu.
@@ -904,7 +904,7 @@ export class Player {
   private tyrHand(attacker: Enemy | undefined, absorbed: number, world: World): void {
     const share = this.cfg.perks?.tyrHand;
     if (!share || !attacker || attacker.dead || absorbed <= 0) return;
-    attacker.receiveHit({ amount: absorbed * share, from: this.pos, knockback: 2 }, world);
+    attacker.receiveHit({ amount: absorbed * share, from: this.pos, knockback: 2, owner: this.id }, world);
     if (attacker.dead) this.onKill();
   }
 

@@ -70,6 +70,39 @@ kbd {
   color: #ffd9d0;
 }
 
+/* Stèle des records : une ligne du panneau, héros à gauche, paliers à droite */
+.records-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+/* Codex des objets : une ligne par objet, rareté et état (possédé / déjà croisé / jamais vu) */
+.codex-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+/* Les sources de l'objet, une ligne sous la fiche : qui le lâche, à quel taux, et où l'aller chercher */
+.codex-item .sources {
+  width: 100%;
+  padding-left: 26px;
+  opacity: 0.8;
+  font-size: 11px;
+}
+
+.codex-item .tags {
+  flex: 1;
+}
+
+.codex-item.faint {
+  opacity: 0.45;
+}
+
 /* Textes flottants au-dessus des combattants */
 .float {
   position: absolute;
@@ -140,6 +173,12 @@ kbd {
 .float.soul {
   color: #9fc4ff;
   font-size: 15px;
+}
+
+/* Coop : les chiffres des alliés reculent au second plan (chantier 1, lisibilité des dégâts) */
+.float.far {
+  opacity: 0.5;
+  font-size: 13px;
 }
 
 /* Barres et compétences */
