@@ -10,7 +10,7 @@
   "barque": { "file": "barque.png", "sheet": { "file": "anim/barque.json" }, "height": 1.9, "facesRight": false, "still": true, "motion": "flotte" },
   "rocher": { "file": "rocher.png", "sheet": { "file": "anim/rocher.json" }, "height": 4.4, "facesRight": true, "still": true, "motion": "respire" },
   "kappa": { "file": "kappa.png", "sheet": { "file": "anim/kappa.json" }, "height": 1.3, "facesRight": true },
-  "oublie": { "file": "oublie.png", "sheet": { "file": "anim/oublie.json" }, "height": 1.9, "facesRight": false },
+  "oublie": { "file": "oublie.png", "sheet": { "file": "anim/oublie.json" }, "height": 1.9, "facesRight": true },
   "gardien": { "file": "gardien.png", "sheet": { "file": "anim/gardien.json" }, "height": 2.4, "facesRight": true },
   "maisonThe": { "file": "decor/maison-the.png", "height": 3.4, "facesRight": true, "placeholder": "maison-the" },
   "forge": { "file": null, "sheet": { "file": "anim/forge.json" }, "height": 3.2, "facesRight": true, "placeholder": "forge" },
