@@ -7,6 +7,7 @@
 //   dure que le temps du serveur, et on y reste en se déconnectant (les autres peuvent exclure un absent).
 // - Chat : général (tous les joueurs connectés, avec les derniers messages pour qui arrive), groupe, privé (un joueur
 //   connecté). Un joueur du groupe peut y inviter les autres dans sa partie en coop (le code de la partie).
+// - Échanges, hôtel des ventes et boutiques : echanges.ts.
 //
 // Messages de la page vers le serveur :
 //   { t: 'auth', jeton }
@@ -21,6 +22,7 @@
 //   { t: 'partie', de, code }
 import type { DatabaseSync } from 'node:sqlite';
 import type { Comptes } from './comptes.ts';
+import { Echanges } from './echanges.ts';
 
 /** Autant de joueurs qu'une partie en coop (MAX_PLAYERS, src/net/session.ts). */
 const TAILLE_GROUPE = 3;
@@ -70,6 +72,7 @@ export class Social {
   private readonly bavards = new Map<number, number[]>();
 
   private readonly comptes: Comptes;
+  private readonly echanges: Echanges;
 
   constructor(comptes: Comptes) {
     this.comptes = comptes;
@@ -83,6 +86,13 @@ export class Social {
         PRIMARY KEY (de, a)
       );
     `);
+    this.echanges = new Echanges(this.db, {
+      envoyerA: (id, message) => this.envoyerA(id, message),
+      enLigne: (id) => this.enLigne(id),
+      pseudo: (id) => this.comptes.pseudo(id),
+      parPseudo: (pseudo) => this.comptes.parPseudo(pseudo),
+      avis: (id, texte) => this.envoyerA(id, { t: 'avis', texte }),
+    });
   }
 
   /** Un message de la page qui ne concerne pas un salon. */
@@ -93,7 +103,7 @@ export class Social {
     }
     const moi = page.compte;
     if (!moi) {
-      if (['chat', 'ami', 'groupe', 'partie'].includes(String(message.t))) page.envoyer({ t: 'avis', texte: 'Connecte-toi à un compte pour discuter et ajouter des amis.' });
+      if (['chat', 'ami', 'groupe', 'partie', 'echange', 'hdv'].includes(String(message.t))) page.envoyer({ t: 'avis', texte: 'Connecte-toi à un compte pour discuter et ajouter des amis.' });
       return;
     }
     const pseudo = typeof message.pseudo === 'string' ? message.pseudo.trim() : '';
@@ -101,6 +111,7 @@ export class Social {
     else if (message.t === 'ami') this.ami(page, moi, String(message.faire), pseudo);
     else if (message.t === 'groupe') this.groupe(page, moi, String(message.faire), pseudo);
     else if (message.t === 'partie') this.partie(page, moi, message.code);
+    else if (message.t === 'echange' || message.t === 'hdv') this.echanges.recevoir(moi, message);
   }
 
   /** La page part (onglet fermé, coupure). */
@@ -111,6 +122,7 @@ export class Social {
     miennes?.delete(page);
     if (miennes && !miennes.size) {
       this.pages.delete(moi.id);
+      this.echanges.quitter(moi.id);
       this.prevenir(moi.id);
     }
   }
@@ -140,6 +152,7 @@ export class Social {
     miennes.add(page);
     for (const message of this.historique) page.envoyer(message);
     this.prevenir(compte.id);
+    this.echanges.connecter(compte.id);
   }
 
   private enLigne(id: number): boolean {

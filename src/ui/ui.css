@@ -655,6 +655,46 @@ body:not([data-mode='dungeon']) #hud {
   color: rgba(29, 34, 38, 0.55);
 }
 
+/* Échanges, hôtel des ventes et boutiques (src/ui/trade.ts). */
+.trade-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .trade-sides {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trade-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+#ui .coop-input.trade-count {
+  flex: none;
+  width: 80px;
+}
+
+.trade-editor {
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.trade-items {
+  display: flex;
+  flex-direction: column;
+}
+
+#ui .chat-name.link {
+  color: #8a3b1e;
+  text-decoration: underline;
+}
+
 /* --- Dialogues --------------------------------------------------------------------- */
 
 .dialogue {

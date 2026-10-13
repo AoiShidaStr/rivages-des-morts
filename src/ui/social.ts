@@ -169,6 +169,10 @@ export interface SocialDeps {
   gameCode(): string | null;
   /** Prépare un message privé dans le chat. */
   whisper(pseudo: string): void;
+  /** Ouvre la boutique d'un joueur. */
+  shop(pseudo: string): void;
+  /** Ouvre l'hôtel des ventes. */
+  market(): void;
 }
 
 /** Le menu social : groupe, amis, joueurs de l'île. Il se redessine quand le serveur annonce un changement. */
@@ -192,11 +196,7 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
   pseudo.addEventListener('keydown', (e) => {
     if ((e as KeyboardEvent).key === 'Enter') add();
   });
-  let open = true;
-  const previous = social.onChange;
-  const render = () => {
-    previous?.();
-    if (!open) return;
+  livePanel(host, social, () => {
     const state = social.state;
     const moi = state?.moi ?? '';
     const friends = new Set(state?.amis.map((f) => f.pseudo.toLowerCase()));
@@ -208,6 +208,7 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
     const status = (f: { enLigne: boolean; ile: boolean }) => h('small', { class: f.enLigne ? 'online' : 'offline' }, f.enLigne ? (f.ile ? 'Sur l’île' : 'Connecté') : 'Hors ligne');
     const row = (label: Node, ...actions: (HTMLElement | null | false)[]) => h('div', { class: 'social-row' }, label, h('div', { class: 'social-actions' }, ...actions));
     const button = (text: string, onclick: () => void, primary = false) => h('button', { class: `btn small${primary ? ' primary' : ''}`, onclick }, text);
+    const trade = (p: string) => !social.trade && button('Échanger', () => social.tradeAction('proposer', p));
     const code = deps.gameCode();
     const visitors = deps.visitors().filter((v) => v.toLowerCase() !== moi.toLowerCase());
 
@@ -215,6 +216,15 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
       'div',
       { class: 'list coop social' },
       social.connected ? null : h('p', { class: 'note danger' }, 'Connexion au serveur…'),
+      h('div', { class: 'entry-actions' }, button('Hôtel des ventes', () => deps.market(), true)),
+      ...(social.tradeOffers.length
+        ? [
+            h('h3', {}, 'Propositions d’échange'),
+            ...social.tradeOffers.map((p) =>
+              row(h('div', {}, h('strong', {}, p), h('small', {}, ' te propose un échange')), button('Accepter', () => social.tradeAction('accepter', p), true), button('Refuser', () => social.tradeAction('refuser', p))),
+            ),
+          ]
+        : []),
       h('h3', {}, 'Groupe'),
       ...(state?.invitations ?? []).map((chef) =>
         row(h('div', {}, h('strong', {}, chef), h('small', {}, ' t’invite dans son groupe')), button('Accepter', () => social.group('accepter', chef), true), button('Refuser', () => social.group('refuser', chef))),
@@ -225,6 +235,7 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
               row(
                 h('div', {}, h('strong', {}, m.pseudo), m.pseudo === groupe.chef ? h('small', {}, ' · chef ') : ' ', status(m)),
                 m.pseudo !== moi && button('Message', () => deps.whisper(m.pseudo)),
+                m.pseudo !== moi && m.enLigne && trade(m.pseudo),
                 lead && m.pseudo !== moi && button('Exclure', () => social.group('exclure', m.pseudo)),
               ),
             ),
@@ -246,6 +257,8 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
         row(
           h('div', {}, h('strong', {}, f.pseudo), ' ', status(f)),
           f.enLigne && button('Message', () => deps.whisper(f.pseudo)),
+          f.enLigne && trade(f.pseudo),
+          button('Boutique', () => deps.shop(f.pseudo)),
           f.enLigne && canInvite(f.pseudo) && button('Inviter', () => social.group('inviter', f.pseudo)),
           button('Retirer', () => social.friend('retirer', f.pseudo)),
         ),
@@ -258,19 +271,50 @@ export function openSocial(host: PanelHost, deps: SocialDeps): void {
             row(
               h('strong', {}, v),
               button('Message', () => deps.whisper(v)),
+              trade(v),
+              button('Boutique', () => deps.shop(v)),
               !friends.has(v.toLowerCase()) && !pending.has(v.toLowerCase()) && button('Ajouter en ami', () => social.friend('demander', v)),
               canInvite(v) && button('Inviter', () => social.group('inviter', v)),
             ),
           )
         : [h('p', { class: 'note' }, 'Personne d’autre sur l’île pour l’instant.')]),
     );
-    host.show('Social', `Connecté : ${moi || '…'}`, body, {
+    return { title: 'Social', subtitle: `Connecté : ${moi || '…'}`, body };
+  });
+}
+
+/**
+ * Une fenêtre qui se redessine à chaque nouvelle du serveur, tant qu'elle est affichée (une autre fenêtre qui prend
+ * sa place l'arrête).
+ */
+export function livePanel(
+  host: PanelHost,
+  social: SocialClient,
+  build: () => { title: string; subtitle: string; body: HTMLElement; wide?: boolean },
+  onClose?: () => void,
+): void {
+  let shown: HTMLElement | null = null;
+  const render = () => {
+    if (shown && !host.root.contains(shown)) {
+      stop();
+      return;
+    }
+    // On n'efface pas un champ en cours de saisie : la fenêtre se redessine quand on le quitte.
+    const typing = document.activeElement;
+    if (shown && typing instanceof HTMLInputElement && typing.type !== 'checkbox' && shown.contains(typing)) {
+      typing.addEventListener('blur', () => setTimeout(render), { once: true });
+      return;
+    }
+    const { title, subtitle, body, wide } = build();
+    shown = body;
+    host.show(title, subtitle, body, {
+      wide,
       onClose: () => {
-        open = false;
-        social.onChange = previous;
+        stop();
+        onClose?.();
       },
     });
   };
-  social.onChange = render;
+  const stop = social.listen(render);
   render();
 }

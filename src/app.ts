@@ -21,7 +21,7 @@ import { MirrorWorld } from './net/mirror';
 import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
 import { IslandPresence, sharedIsland, type Profile } from './net/presence';
 import { CoopSession } from './net/session';
-import { SocialClient } from './net/social';
+import { SocialClient, type Goods } from './net/social';
 import { restartWith, type AccountSaveStore } from './net/account';
 import { traffic, type Network } from './net/transport';
 import type { Input } from './input';
@@ -52,6 +52,8 @@ import {
 } from './ui/panels';
 import { openCoopMenu, openLobby, pseudo } from './ui/coop';
 import { ChatBox, openSocial } from './ui/social';
+import { openMarket, openPlayerShop, openTrade } from './ui/trade';
+import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
 import { logRun } from './game/journal';
 import { openOptions } from './ui/options';
@@ -217,6 +219,34 @@ export class App {
       loadout: () => this.loadout(),
       toast: (text, tone, icon) => this.screens.toast(text, tone, icon),
     };
+    if (this.social) {
+      const social = this.social;
+      social.onTradeStart = () => openTrade(this.panels, social, this.d.progress);
+      social.onGoods = (goods) => this.receiveGoods(goods);
+    }
+  }
+
+  /** Le serveur conclut un échange, une mise en vente, un achat… : on range (ou retire) dans le personnage. */
+  private receiveGoods(goods: Goods): void {
+    const progress = this.d.progress;
+    let notes: string[] = [];
+    if (goods.kind === 'echange') {
+      give(progress, goods.donne);
+      notes = [`Échange conclu avec ${goods.avec} : tu reçois ${describeLot(goods.recoit)}.`, ...receive(progress, goods.recoit)];
+    } else if (goods.kind === 'mis') {
+      give(progress, goods.lot);
+      notes = [`En vente : ${describeLot(goods.lot)}.`];
+    } else if (goods.kind === 'achat') {
+      progress.gainOboles(-goods.prix);
+      notes = [`Acheté pour ${goods.prix} oboles : ${describeLot(goods.lot)}.`, ...receive(progress, goods.lot)];
+    } else if (goods.kind === 'rendu') {
+      notes = [`Retiré de la vente : ${describeLot(goods.lot)}.`, ...receive(progress, goods.lot)];
+    } else {
+      progress.gainOboles(goods.oboles);
+      notes = [`Tu encaisses ${goods.oboles} oboles de tes ventes.`];
+    }
+    progress.save();
+    for (const note of notes) this.screens.toast(note, 'loot');
   }
 
   start(): void {
@@ -505,6 +535,8 @@ export class App {
         this.panels.close();
         this.chat?.focus(`/m ${name} `);
       },
+      shop: (name) => this.social && openPlayerShop(this.panels, this.social, this.d.progress, name),
+      market: () => this.social && openMarket(this.panels, this.social, this.d.progress, (name) => this.social && openPlayerShop(this.panels, this.social, this.d.progress, name)),
     });
   }
 
