@@ -11,7 +11,9 @@ RUN VITE_RESEAU=serveur npm run build
 # 2. L'image finale : Node, le serveur, le jeu construit, et la seule dépendance du serveur (ws).
 FROM node:22-slim
 WORKDIR /jeu
-ENV NODE_ENV=production PORT=8080 UTILISATEUR=1000:1000
+# La version du jeu (le commit construit, donnée par lancer.bat / lancer.sh) : le serveur l'affiche au démarrage et sur /sante.
+ARG VERSION=inconnue
+ENV NODE_ENV=production PORT=8080 UTILISATEUR=1000:1000 VERSION=$VERSION
 COPY --from=build /jeu/node_modules/ws ./node_modules/ws
 COPY --from=build /jeu/dist ./dist
 COPY --from=build /jeu/dist-server ./dist-server
