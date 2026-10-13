@@ -1,18 +1,49 @@
-/* Interface provisoire, aux couleurs du Yomi : papier washi, encre, vermillon des torii,
-   or des oboles et bleu des âmes. Tout est en variables pour être refait facilement. */
+/* Interface « sumi et vermillon » : fenêtres à l'encre (gris anthracite), cadres et boutons vermillon,
+   or des oboles et bleu des âmes. Tout est en variables pour être refait facilement.
+   --paper et --ink sont le fond et le texte des fenêtres (sombre et clair) ; --washi et --sumi restent
+   clair et sombre partout (texte sur un bouton, une étiquette colorée, le HUD). */
 :root {
-  --paper: #f1ece2;
-  --paper-2: #e4d9c1;
-  --ink: #1d2226;
-  --ink-2: #2b3238;
+  --paper: #22252a;
+  --paper-2: #16181b;
+  --ink: #ece6da;
+  --ink-2: #aaa397;
+  --washi: #f1ece2;
+  --sumi: #1d2226;
   --ink-soft: rgba(20, 24, 28, 0.9);
   --vermilion: #c8412f;
+  --vermilion-clair: #e5664a; /* titres vermillon lisibles sur le fond sombre */
   --vermilion-dark: #9b2f22;
   --gold: #d9b45a;
   --spirit: #6ff3ff;
   --moss: #86b25a;
   --mist: #c3cbcf;
   --serif: Georgia, 'Times New Roman', serif;
+  /* Cadres en pixels du pack Kenney « Fantasy UI Borders » (CC0), teintés par npm run cadres. */
+  --cadre-fenetre: url('/ui/cadres/fenetre.png');
+  --cadre-dialogue: url('/ui/cadres/dialogue.png');
+  --cadre-bouton: url('/ui/cadres/bouton.png');
+  --cadre-bouton-vermillon: url('/ui/cadres/bouton-vermillon.png');
+  --cadre-bouton-vermillon-sombre: url('/ui/cadres/bouton-vermillon-sombre.png');
+  --cadre-case: url('/ui/cadres/case.png');
+  --cadre-case-vermillon: url('/ui/cadres/case-vermillon.png');
+  --cadre-encart: url('/ui/cadres/encart.png');
+  --separateur: url('/ui/cadres/separateur.png');
+}
+
+/* Les cadres sont en pixels : nets même sur un écran agrandi (125 %, 150 %). Les bords se répètent (round)
+   au lieu de s'étirer : étirés, Chrome perd les traits en mode pixelated. */
+.btn,
+.panel,
+.panel header,
+.panel .close,
+.pause-card,
+.result-card,
+.dialogue,
+.tracker,
+.area-name,
+.tab.active,
+.choice-card.selected {
+  image-rendering: pixelated;
 }
 
 /* Le HUD de combat n'apparaît que dans le donjon. */
@@ -33,6 +64,12 @@ body:not([data-mode='dungeon']) #hud {
   cursor: pointer;
 }
 
+/* Les boutons prennent la couleur du texte autour (clair sur les fenêtres sombres) ; sélecteur faible, pour que
+   toute classe (.btn, .tab…) garde la main. */
+button {
+  color: inherit;
+}
+
 .obole {
   display: inline-flex;
   align-items: center;
@@ -45,24 +82,25 @@ body:not([data-mode='dungeon']) #hud {
   height: 13px;
   border-radius: 50%;
   background: radial-gradient(circle, transparent 2.5px, var(--gold) 3px);
-  box-shadow: inset 0 0 0 1px #8a6d2c;
+  box-shadow: inset 0 0 0 1px var(--gold);
   outline: 2px solid transparent;
 }
 
+/* Bouton : fond plein et coins en petits carrés, tout dessiné par le cadre (le bord CSS reste fin). */
 .btn {
   pointer-events: auto;
   padding: 8px 16px;
-  border: 1px solid var(--ink);
-  border-radius: 3px;
-  background: var(--ink);
-  color: var(--paper);
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  border-image: var(--cadre-bouton) 12 fill / 12px / 0 round;
+  color: var(--washi);
   letter-spacing: 0.02em;
-  transition: background 0.15s, transform 0.1s;
+  transition: transform 0.1s;
 }
 
 .btn:hover:not([disabled]) {
-  background: var(--vermilion);
-  border-color: var(--vermilion-dark);
+  border-image-source: var(--cadre-bouton-vermillon);
 }
 
 .btn:active:not([disabled]) {
@@ -70,12 +108,11 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .btn.primary {
-  background: var(--vermilion);
-  border-color: var(--vermilion-dark);
+  border-image-source: var(--cadre-bouton-vermillon);
 }
 
-.btn.primary:hover {
-  background: var(--vermilion-dark);
+.btn.primary:hover:not([disabled]) {
+  border-image-source: var(--cadre-bouton-vermillon-sombre);
 }
 
 .btn[disabled] {
@@ -101,7 +138,7 @@ body:not([data-mode='dungeon']) #hud {
 .title-screen {
   justify-content: flex-start;
   background:
-    linear-gradient(90deg, rgba(241, 236, 226, 0.94) 0%, rgba(241, 236, 226, 0.78) 38%, rgba(195, 203, 207, 0) 70%),
+    linear-gradient(90deg, rgba(20, 22, 25, 0.94) 0%, rgba(20, 22, 25, 0.8) 38%, rgba(20, 22, 25, 0) 70%),
     radial-gradient(ellipse at 20% 100%, rgba(200, 65, 47, 0.18), transparent 60%);
 }
 
@@ -118,7 +155,7 @@ body:not([data-mode='dungeon']) #hud {
   margin-bottom: 14px;
   border-radius: 6px;
   background: var(--vermilion);
-  color: var(--paper);
+  color: var(--washi);
   font-family: var(--serif);
   font-size: 26px;
   writing-mode: vertical-rl;
@@ -169,7 +206,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(29, 34, 38, 0.6);
+  color: rgba(236, 230, 218, 0.6);
 }
 
 .pause-screen,
@@ -182,18 +219,25 @@ body:not([data-mode='dungeon']) #hud {
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100% - 32px);
   overflow-y: auto;
-  padding: 28px 32px;
-  background: linear-gradient(#f3eee4, var(--paper-2));
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  box-shadow: 0 0 0 5px rgba(241, 236, 226, 0.25), 0 24px 60px rgba(0, 0, 0, 0.5);
+  padding: 14px 18px;
+  background: linear-gradient(var(--paper), var(--paper-2));
+  border: 16px solid transparent;
+  border-image: var(--cadre-fenetre) 16 / 16px / 0 round;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  /* Avec la barre de défilement épaisse de Windows, Chrome n'affiche plus les bords du cadre. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-2) transparent;
 }
 
+/* Sous le titre, le trait double qui s'efface du pack Kenney. */
 .pause-card h2 {
   margin: 0 0 18px;
+  padding-bottom: 18px;
   font-family: var(--serif);
   font-weight: 400;
   font-size: 32px;
+  background: var(--separateur) left bottom / 192px 22px no-repeat;
+  image-rendering: pixelated;
 }
 
 .controls-help h3 {
@@ -201,7 +245,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .controls-help dl {
@@ -232,7 +276,7 @@ body:not([data-mode='dungeon']) #hud {
   margin: 0 0 22px;
   padding: 12px 16px;
   list-style: none;
-  background: rgba(29, 34, 38, 0.06);
+  background: rgba(236, 230, 218, 0.06);
   border-left: 3px solid var(--gold);
   display: grid;
   gap: 6px;
@@ -268,7 +312,7 @@ body:not([data-mode='dungeon']) #hud {
   align-items: center;
   justify-content: center;
   background: #0f1214;
-  color: var(--paper);
+  color: var(--washi);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.45s ease;
@@ -283,7 +327,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 12px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .fade-title {
@@ -308,7 +352,7 @@ body:not([data-mode='dungeon']) #hud {
 .toast {
   padding: 8px 16px;
   background: var(--paper);
-  border: 1px solid var(--ink);
+  border: 1px solid var(--vermilion);
   border-left: 4px solid var(--ink-2);
   border-radius: 3px;
   font-size: 14px;
@@ -375,18 +419,20 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .area-name {
-  padding: 6px 12px;
-  background: var(--ink-soft);
-  color: var(--paper);
-  border-left: 3px solid var(--vermilion);
+  padding: 2px 8px;
+  background: linear-gradient(var(--ink-soft), var(--ink-soft)) border-box center / calc(100% - 8px) calc(100% - 8px)
+    no-repeat;
+  color: var(--washi);
+  border: 10px solid transparent;
+  border-image: var(--cadre-dialogue) 12 / 12px / 0 round;
   font-family: var(--serif);
   font-size: 16px;
 }
 
 .purse {
   padding: 4px 12px;
-  background: rgba(241, 236, 226, 0.92);
-  border: 1px solid var(--ink);
+  background: rgba(26, 28, 31, 0.92);
+  border: 1px solid var(--vermilion);
   border-radius: 3px;
   font-size: 15px;
 }
@@ -396,11 +442,10 @@ body:not([data-mode='dungeon']) #hud {
   top: 16px;
   right: 16px;
   width: min(300px, 40vw);
-  padding: 10px 14px;
-  background: rgba(241, 236, 226, 0.92);
-  border: 1px solid var(--ink);
-  border-top: 3px solid var(--vermilion);
-  border-radius: 3px;
+  padding: 2px 6px 4px;
+  background: rgba(26, 28, 31, 0.92);
+  border: 10px solid transparent;
+  border-image: var(--cadre-encart) 10 / 10px / 0 round;
   font-size: 13px;
 }
 
@@ -408,7 +453,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .tracker strong {
@@ -431,7 +476,7 @@ body:not([data-mode='dungeon']) #hud {
   transform: translate(-50%, 6px);
   padding: 8px 16px;
   background: var(--ink-soft);
-  color: var(--paper);
+  color: var(--washi);
   border-radius: 999px;
   font-size: 15px;
   opacity: 0;
@@ -450,8 +495,8 @@ body:not([data-mode='dungeon']) #hud {
   min-width: 18px;
   padding: 0 5px;
   border-radius: 3px;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--washi);
+  color: var(--sumi);
   font: inherit;
   font-weight: 700;
   text-align: center;
@@ -477,7 +522,7 @@ body:not([data-mode='dungeon']) #hud {
   transform: translateX(-50%);
   font-family: var(--serif);
   font-size: clamp(28px, 4vw, 44px);
-  color: var(--paper);
+  color: var(--washi);
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
   white-space: nowrap;
   opacity: 0;
@@ -496,10 +541,10 @@ body:not([data-mode='dungeon']) #hud {
   place-items: center;
   width: 26px;
   height: 26px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--sumi);
   border-radius: 4px;
   background: var(--gold);
-  color: var(--ink);
+  color: var(--sumi);
   font-family: var(--serif);
   font-weight: 700;
   font-size: 18px;
@@ -637,7 +682,7 @@ body:not([data-mode='dungeon']) #hud {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(29, 34, 38, 0.12);
+  border-bottom: 1px solid rgba(236, 230, 218, 0.12);
 }
 
 .social-actions {
@@ -648,11 +693,11 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .social small.online {
-  color: #3f7a2c;
+  color: var(--moss);
 }
 
 .social small.offline {
-  color: rgba(29, 34, 38, 0.55);
+  color: rgba(236, 230, 218, 0.55);
 }
 
 /* Échanges, hôtel des ventes et boutiques (src/ui/trade.ts). */
@@ -691,7 +736,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 #ui .chat-name.link {
-  color: #8a3b1e;
+  color: var(--vermilion-clair);
   text-decoration: underline;
 }
 
@@ -706,11 +751,13 @@ body:not([data-mode='dungeon']) #hud {
   gap: 16px;
   width: min(920px, calc(100vw - 32px));
   min-height: 150px;
-  padding: 16px 20px 16px 16px;
-  background: var(--ink-soft);
-  color: var(--paper);
-  border-top: 3px solid var(--vermilion);
-  border-radius: 4px;
+  padding: 6px 10px 6px 6px;
+  /* Le fond s'arrête sous le trait extérieur du cadre : les coins carrés débordent. */
+  background: linear-gradient(var(--ink-soft), var(--ink-soft)) border-box center / calc(100% - 8px) calc(100% - 8px)
+    no-repeat;
+  color: var(--washi);
+  border: 12px solid transparent;
+  border-image: var(--cadre-dialogue) 12 / 12px / 0 round;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
   cursor: pointer;
@@ -724,7 +771,7 @@ body:not([data-mode='dungeon']) #hud {
   flex: 0 0 118px;
   height: 118px;
   overflow: hidden;
-  border: 2px solid var(--paper);
+  border: 2px solid var(--washi);
   border-radius: 4px;
   background: radial-gradient(circle at 50% 30%, #d7dde0, #8e9ca3);
 }
@@ -795,7 +842,7 @@ body:not([data-mode='dungeon']) #hud {
   border: 1px solid rgba(241, 236, 226, 0.25);
   border-radius: 3px;
   background: rgba(241, 236, 226, 0.06);
-  color: var(--paper);
+  color: var(--washi);
   text-align: left;
 }
 
@@ -825,21 +872,25 @@ body:not([data-mode='dungeon']) #hud {
   width: min(760px, calc(100vw - 32px));
   max-height: calc(100vh - 64px);
   overflow: auto;
-  background: linear-gradient(#f3eee4, var(--paper-2));
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  box-shadow: 0 0 0 5px rgba(241, 236, 226, 0.25), 0 24px 60px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(var(--paper), var(--paper-2));
+  border: 16px solid transparent;
+  border-image: var(--cadre-fenetre) 16 / 16px / 0 round;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-2) transparent;
 }
 
+/* Le double trait sous l'en-tête reprend celui des séparateurs du pack. */
 .panel header {
   position: sticky;
   top: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px;
+  padding: 4px 6px 12px;
   background: var(--paper);
-  border-bottom: 1px solid rgba(29, 34, 38, 0.25);
+  border-bottom: 6px double var(--vermilion);
 }
 
 .panel .seal {
@@ -849,7 +900,7 @@ body:not([data-mode='dungeon']) #hud {
   height: 38px;
   border-radius: 4px;
   background: var(--vermilion);
-  color: var(--paper);
+  color: var(--washi);
   font-family: var(--serif);
   font-size: 15px;
   writing-mode: vertical-rl;
@@ -872,14 +923,15 @@ body:not([data-mode='dungeon']) #hud {
   margin-left: auto;
   width: 34px;
   height: 34px;
-  border: 1px solid var(--ink);
-  border-radius: 3px;
+  border: 1px solid transparent;
+  border-image: var(--cadre-case) 8 / 8px / 0 round;
   background: transparent;
+  color: var(--ink);
 }
 
 .panel .close:hover {
-  background: var(--ink);
-  color: var(--paper);
+  border-image-source: var(--cadre-case-vermillon);
+  color: var(--vermilion-clair);
 }
 
 .panel h3 {
@@ -887,7 +939,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .list {
@@ -902,8 +954,8 @@ body:not([data-mode='dungeon']) #hud {
   gap: 14px;
   align-items: center;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
 }
 
@@ -925,19 +977,19 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: #cfc6b2;
+  background: #3a3e43;
 }
 
 .r-rare,
 .r-principale {
   background: var(--vermilion);
-  color: var(--paper);
+  color: var(--washi);
 }
 
 .r-peu-commune,
 .r-secondaire {
   background: #5d7a6a;
-  color: var(--paper);
+  color: var(--washi);
 }
 
 .r-quête,
@@ -947,12 +999,12 @@ body:not([data-mode='dungeon']) #hud {
 
 .r-épique {
   background: #6b4a8f;
-  color: var(--paper);
+  color: var(--washi);
 }
 
 .r-légendaire {
   background: linear-gradient(90deg, var(--gold), #f1d98a);
-  color: var(--ink);
+  color: var(--sumi);
 }
 
 .item-meta {
@@ -970,17 +1022,17 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .price s {
-  color: #7a7f80;
+  color: var(--ink-2);
 }
 
 .mat.missing {
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
 }
 
 .note {
   margin: 0;
   font-size: 13px;
-  color: #4a4f52;
+  color: var(--ink-2);
 }
 
 .inventory {
@@ -996,14 +1048,14 @@ body:not([data-mode='dungeon']) #hud {
   gap: 10px;
   padding: 7px 10px;
   margin-bottom: 4px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
   font-size: 14px;
 }
 
 .slot.empty {
-  color: #7a7f80;
+  color: var(--ink-2);
 }
 
 .slot-label {
@@ -1040,8 +1092,8 @@ body:not([data-mode='dungeon']) #hud {
   gap: 10px;
   padding: 8px 12px;
   text-align: left;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(29, 34, 38, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(236, 230, 218, 0.25);
   border-radius: 3px;
   pointer-events: auto;
 }
@@ -1084,8 +1136,8 @@ body:not([data-mode='dungeon']) #hud {
 
 .quest {
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
 }
 
@@ -1127,7 +1179,7 @@ body:not([data-mode='dungeon']) #hud {
   gap: 8px;
   padding: 4px 10px;
   background: var(--ink-soft);
-  color: var(--paper);
+  color: var(--washi);
   border-radius: 3px;
   font-size: 13px;
   font-weight: 600;
@@ -1154,7 +1206,7 @@ body:not([data-mode='dungeon']) #hud {
   padding: 0 6px;
   border-radius: 2px;
   background: var(--gold);
-  color: var(--ink);
+  color: var(--sumi);
   animation: bob 1.2s ease-in-out infinite;
 }
 
@@ -1171,13 +1223,13 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .owned .tags {
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
 }
 
 /* --- Forge sur 50 niveaux et entrée du donjon --------------------------------- */
 
 .btn.small {
-  padding: 5px 10px;
+  padding: 6px 12px;
   font-size: 13px;
 }
 
@@ -1193,7 +1245,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .palier-next {
-  color: #8a6d2c;
+  color: var(--gold);
 }
 
 .level-picker {
@@ -1233,7 +1285,7 @@ body:not([data-mode='dungeon']) #hud {
   gap: 2px;
   padding: 7px 10px;
   border-left: 3px solid var(--vermilion);
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.05);
   font-size: 14px;
 }
 
@@ -1242,7 +1294,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .note.danger {
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
   font-weight: 600;
 }
 
@@ -1312,15 +1364,15 @@ body:not([data-mode='dungeon']) #hud {
 .skills-header .xp .xp-bar {
   width: 220px;
   height: 8px;
-  background: rgba(29, 34, 38, 0.15);
+  background: rgba(236, 230, 218, 0.15);
 }
 
 .points {
-  color: #7a7f80;
+  color: var(--ink-2);
 }
 
 .points.has {
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
   font-weight: 700;
 }
 
@@ -1335,8 +1387,8 @@ body:not([data-mode='dungeon']) #hud {
   gap: 8px;
   align-content: start;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
 }
 
@@ -1354,14 +1406,14 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .branch-lore {
   margin: 0 0 4px;
   font-size: 12px;
   font-style: italic;
-  color: #4a4f52;
+  color: var(--ink-2);
 }
 
 /* Voies (sous-classes) : trois cartes, et celle qui est choisie se voit tout de suite. */
@@ -1377,7 +1429,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .branch.chosen {
   border-color: var(--vermilion);
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 0 0 1px var(--vermilion);
 }
 
@@ -1401,7 +1453,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .gravure-rank {
   font-weight: 700;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .gravure-lines {
@@ -1425,17 +1477,17 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .gravure-line.contrepartie {
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
 }
 
 .gravure-line.contrepartie::before {
   content: '!';
   font-weight: 700;
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
 }
 
 .gravure-odds {
-  color: #6b7075;
+  color: var(--ink-2);
   font-size: 0.85em;
 }
 
@@ -1445,9 +1497,9 @@ body:not([data-mode='dungeon']) #hud {
   gap: 2px;
   padding: 9px 11px;
   text-align: left;
-  border: 1px solid rgba(29, 34, 38, 0.3);
+  border: 1px solid rgba(236, 230, 218, 0.3);
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
   pointer-events: auto;
 }
 
@@ -1466,7 +1518,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #7a7f80;
+  color: var(--ink-2);
 }
 
 .node.learned {
@@ -1477,7 +1529,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .node.learned small,
 .node.learned .node-rank {
-  color: #cfd3d4;
+  color: #4a4f52;
 }
 
 .node.available {
@@ -1513,7 +1565,7 @@ body:not([data-mode='dungeon']) #hud {
   display: grid;
   gap: 2px;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
   border-left: 3px solid var(--vermilion);
   font-size: 13px;
 }
@@ -1539,9 +1591,9 @@ body:not([data-mode='dungeon']) #hud {
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border: 1px solid rgba(29, 34, 38, 0.25);
+  border: 1px solid rgba(236, 230, 218, 0.25);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .tab {
@@ -1557,12 +1609,18 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .tab:hover {
-  background: rgba(29, 34, 38, 0.08);
+  background: rgba(236, 230, 218, 0.08);
+}
+
+/* Onglet actif : papier clair dans un cadre fin vermillon, comme une carte choisie. */
+.tab {
+  border: 1px solid transparent;
 }
 
 .tab.active {
-  background: var(--ink);
-  color: var(--paper);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  border-image: var(--cadre-case-vermillon) 8 / 8px / 0 round;
 }
 
 .tabs.small .tab {
@@ -1575,7 +1633,7 @@ body:not([data-mode='dungeon']) #hud {
   padding: 0 5px;
   border-radius: 9px;
   background: var(--gold);
-  color: var(--ink);
+  color: var(--sumi);
   font-size: 11px;
   font-weight: 700;
   text-align: center;
@@ -1632,8 +1690,8 @@ body:not([data-mode='dungeon']) #hud {
   width: 100%;
   padding: 7px 10px;
   text-align: left;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
   color: var(--ink);
   pointer-events: auto;
@@ -1645,7 +1703,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .pick.selected {
   border-color: var(--ink);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.1);
   box-shadow: inset 3px 0 0 var(--vermilion);
 }
 
@@ -1677,7 +1735,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .pick-state.ready {
-  color: #8a6d2c;
+  color: var(--gold);
   font-size: 12px;
 }
 
@@ -1692,7 +1750,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .fold {
-  border-top: 1px solid rgba(29, 34, 38, 0.15);
+  border-top: 1px solid rgba(236, 230, 218, 0.15);
 }
 
 .fold summary {
@@ -1711,7 +1769,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .fold summary::before {
   content: '▸';
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
   font-size: 11px;
   transition: transform 0.15s;
 }
@@ -1725,7 +1783,7 @@ body:not([data-mode='dungeon']) #hud {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .fold-meta {
@@ -1739,7 +1797,7 @@ body:not([data-mode='dungeon']) #hud {
   padding: 0 6px;
   border-radius: 9px;
   background: var(--gold);
-  color: var(--ink);
+  color: var(--sumi);
   font-size: 11px;
   font-weight: 700;
 }
@@ -1750,8 +1808,8 @@ body:not([data-mode='dungeon']) #hud {
 
 .forge-detail {
   padding: 14px 16px 16px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
 }
 
@@ -1780,7 +1838,7 @@ body:not([data-mode='dungeon']) #hud {
   height: 8px;
   margin: 8px 0 12px;
   border-radius: 4px;
-  background: rgba(29, 34, 38, 0.12);
+  background: rgba(236, 230, 218, 0.12);
 }
 
 .track-fill {
@@ -1816,7 +1874,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .stats.compare dd b {
-  color: #3f6b22;
+  color: var(--moss);
 }
 
 .stats.compare dd.same {
@@ -1837,7 +1895,7 @@ body:not([data-mode='dungeon']) #hud {
   display: grid;
   grid-template-columns: 74px 1fr;
   gap: 8px;
-  color: #7a7f80;
+  color: var(--ink-2);
 }
 
 .paliers b {
@@ -1850,7 +1908,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .paliers li.reached b::after {
   content: ' ✓';
-  color: #8a6d2c;
+  color: var(--gold);
 }
 
 .paliers strong {
@@ -1869,7 +1927,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .row.owned-offer {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .row.owned-offer .item-head strong {
@@ -1903,12 +1961,12 @@ body:not([data-mode='dungeon']) #hud {
 
 .slots .slot.selected {
   border-color: var(--ink);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.1);
   box-shadow: inset 3px 0 0 var(--vermilion);
 }
 
 .slots .slot.empty .slot-item {
-  color: #7a7f80;
+  color: var(--ink-2);
 }
 
 .slot-item {
@@ -1921,7 +1979,7 @@ body:not([data-mode='dungeon']) #hud {
   min-width: 20px;
   padding: 0 6px;
   border-radius: 9px;
-  background: rgba(29, 34, 38, 0.1);
+  background: rgba(236, 230, 218, 0.1);
   font-size: 12px;
   text-align: center;
 }
@@ -1936,19 +1994,19 @@ body:not([data-mode='dungeon']) #hud {
 .delta {
   padding: 1px 6px;
   border-radius: 2px;
-  background: rgba(29, 34, 38, 0.07);
+  background: rgba(236, 230, 218, 0.07);
   font-size: 12px;
   color: var(--ink-2);
 }
 
 .delta.up {
   background: rgba(134, 178, 90, 0.22);
-  color: #3f6b22;
+  color: var(--moss);
 }
 
 .delta.down {
   background: rgba(200, 65, 47, 0.12);
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
 }
 
 .chips {
@@ -1961,9 +2019,9 @@ body:not([data-mode='dungeon']) #hud {
   display: inline-flex;
   gap: 5px;
   padding: 3px 8px;
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
   font-size: 13px;
 }
 
@@ -1983,7 +2041,7 @@ body:not([data-mode='dungeon']) #hud {
   overflow-y: auto;
   align-items: flex-start;
   background:
-    linear-gradient(rgba(241, 236, 226, 0.95), rgba(228, 217, 193, 0.95)),
+    linear-gradient(rgba(30, 33, 37, 0.97), rgba(18, 20, 23, 0.97)),
     radial-gradient(ellipse at 20% 100%, rgba(200, 65, 47, 0.18), transparent 60%);
 }
 
@@ -2004,7 +2062,7 @@ body:not([data-mode='dungeon']) #hud {
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
 }
 
 .creation-card .tagline {
@@ -2023,8 +2081,8 @@ body:not([data-mode='dungeon']) #hud {
   gap: 3px;
   padding: 12px 14px;
   text-align: left;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(29, 34, 38, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(236, 230, 218, 0.2);
   border-radius: 4px;
   color: var(--ink);
   pointer-events: auto;
@@ -2035,9 +2093,8 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .choice-card.selected {
-  border-color: var(--ink);
-  background: #fff;
-  box-shadow: inset 0 3px 0 var(--vermilion);
+  background: rgba(255, 255, 255, 0.1);
+  border-image: var(--cadre-case-vermillon) 8 / 8px / 0 round;
 }
 
 .choice-card.soon {
@@ -2060,7 +2117,7 @@ body:not([data-mode='dungeon']) #hud {
   margin: 4px 0 2px;
   padding: 1px 7px;
   border-radius: 2px;
-  background: rgba(29, 34, 38, 0.08);
+  background: rgba(236, 230, 218, 0.08);
   font-size: 12px;
 }
 
@@ -2069,7 +2126,7 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .stars {
-  color: var(--vermilion);
+  color: var(--vermilion-clair);
   letter-spacing: 1px;
 }
 
@@ -2096,8 +2153,8 @@ body:not([data-mode='dungeon']) #hud {
   gap: 20px;
   margin-top: 18px;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 4px;
   font-size: 14px;
 }
@@ -2109,8 +2166,8 @@ body:not([data-mode='dungeon']) #hud {
   justify-content: center;
   min-width: 170px;
   padding: 10px 14px;
-  background: radial-gradient(circle at 50% 65%, rgba(200, 65, 47, 0.15), rgba(29, 34, 38, 0.05) 75%);
-  border: 1px solid rgba(29, 34, 38, 0.16);
+  background: radial-gradient(circle at 50% 65%, rgba(200, 65, 47, 0.15), rgba(236, 230, 218, 0.05) 75%);
+  border: 1px solid rgba(236, 230, 218, 0.16);
   border-radius: 4px;
 }
 
@@ -2189,7 +2246,7 @@ body:not([data-mode='dungeon']) #hud {
   height: 56px;
   object-fit: cover;
   object-position: top;
-  border: 1px solid rgba(29, 34, 38, 0.3);
+  border: 1px solid rgba(236, 230, 218, 0.3);
   border-radius: 3px;
   background: #d8cfbb;
 }
@@ -2218,9 +2275,8 @@ body:not([data-mode='dungeon']) #hud {
 }
 
 .btn.danger {
-  background: var(--vermilion-dark);
-  border-color: var(--vermilion-dark);
-  color: var(--paper);
+  border-image-source: var(--cadre-bouton-vermillon-sombre);
+  color: var(--washi);
 }
 
 .character-footer {
@@ -2245,8 +2301,8 @@ body:not([data-mode='dungeon']) #hud {
 
 .patch-note {
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(29, 34, 38, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(236, 230, 218, 0.18);
   border-radius: 3px;
 }
 
@@ -2258,7 +2314,7 @@ body:not([data-mode='dungeon']) #hud {
 
 .patch-note summary strong {
   font-weight: 400;
-  color: var(--vermilion-dark);
+  color: var(--vermilion-clair);
 }
 
 .patch-note summary small {
@@ -2334,7 +2390,7 @@ body:not([data-mode='dungeon']) #hud {
 .icon.large {
   padding: 3px;
   background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.85), rgba(228, 217, 193, 0.9) 75%);
-  border: 1px solid rgba(29, 34, 38, 0.28);
+  border: 1px solid rgba(236, 230, 218, 0.28);
   border-radius: 4px;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
 }
@@ -2423,7 +2479,7 @@ body:not([data-mode='dungeon']) #hud {
   padding: 6px 10px;
   border: 1px solid rgba(20, 24, 28, 0.3);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--ink);
   font: inherit;
   pointer-events: auto;
@@ -2448,7 +2504,7 @@ body:not([data-mode='dungeon']) #hud {
   gap: 14px;
   padding: 10px 14px;
   border-left: 3px solid var(--vermilion);
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .coop-share small {
@@ -2476,7 +2532,7 @@ body:not([data-mode='dungeon']) #hud {
   padding: 8px 12px;
   border: 1px solid rgba(20, 24, 28, 0.15);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .coop-player > div,
