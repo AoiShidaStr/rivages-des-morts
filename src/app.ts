@@ -19,6 +19,7 @@ import { World } from './game/world';
 import { InputSender, RemoteInput, idleFrame } from './net/frames';
 import { MirrorWorld } from './net/mirror';
 import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
+import { IslandPresence, sharedIsland, type Profile } from './net/presence';
 import type { CoopSession } from './net/session';
 import { restartWith, type AccountSaveStore } from './net/account';
 import { traffic, type Network } from './net/transport';
@@ -48,7 +49,7 @@ import {
   type TrialChoice,
   type UiContext,
 } from './ui/panels';
-import { openCoopMenu, openLobby } from './ui/coop';
+import { openCoopMenu, openLobby, pseudo } from './ui/coop';
 import { openEndlessEntry } from './ui/infini';
 import { logRun } from './game/journal';
 import { openOptions } from './ui/options';
@@ -185,8 +186,11 @@ export class App {
   private readonly screens: Screens;
   private readonly creation: CreationScreen;
   private readonly ui: UiContext;
+  /** L'île partagée (jeu servi par son serveur) : les autres joueurs qui s'y promènent. */
+  private readonly presence: IslandPresence | null;
 
   constructor(private readonly d: AppDeps) {
+    this.presence = sharedIsland(d.network) ? new IslandPresence(d.network) : null;
     this.screens = new Screens(d.uiRoot);
     this.creation = new CreationScreen(d.uiRoot);
     this.dialogue = new DialogueBox(d.uiRoot);
@@ -457,6 +461,11 @@ export class App {
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
+    if (this.presence) {
+      this.presence.enter(this.islandProfile());
+      this.presence.update(dt, island.player);
+      islandRenderer.syncVisitors(this.presence.visitors(), dt);
+    }
     islandRenderer.render();
     this.screens.updateIslandHud({
       area: island.area?.name ?? island.data.name,
@@ -466,6 +475,15 @@ export class App {
       quest: trackedQuest(progress),
       prompt: target ? { verb: target.verb ?? 'Parler à', name: target.name } : null,
     });
+  }
+
+  /** Ce que les autres joueurs de l'île voient de nous : le pseudo du compte (sinon celui de la coop), le héros. */
+  private islandProfile(): Profile {
+    return {
+      name: this.d.account?.session.pseudo ?? pseudo(this.d.progress),
+      sprite: heroSprite(this.shownHero()),
+      level: this.d.progress.level,
+    };
   }
 
   /** « ! » ou « ? » au-dessus des PNJ, selon la variante de dialogue qui serait jouée. */
@@ -1557,6 +1575,11 @@ export class App {
 
   private setMode(mode: Mode): void {
     this.mode = mode;
+    // Hors de l'île (donjon, écran titre), on n'y est plus visible ; on y réapparaît au prochain passage.
+    if (mode !== 'island' && this.presence) {
+      this.presence.leave();
+      this.d.islandRenderer.hideVisitors();
+    }
     if (mode === 'title') this.music.play('menu');
     else if (mode === 'island') this.music.play('ile');
     document.body.dataset.mode = mode;

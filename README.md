@@ -133,6 +133,8 @@ docker compose up -d --build
 
 Puis ouvre http://localhost:8080. Tes amis ouvrent `http://<adresse de ta machine>:8080`. La coop se lance comme d'habitude (code ou parties publiques), mais tout passe par le serveur.
 
+**Île partagée** : sur un jeu hébergé, les joueurs qui se promènent sur l'île se voient en temps réel, avec leur pseudo au-dessus de la tête. En entrant dans un donjon, on disparaît de l'île des autres.
+
 **Comptes** : sur un jeu hébergé, l'écran titre propose « Se connecter ». Avec un compte, les personnages sont gardés sur le serveur et on les retrouve depuis n'importe quel ordinateur. Sans compte, ils restent dans le navigateur, comme avant ; une fois connecté, le panneau du compte propose de les recopier dessus. Les comptes sont dans `donnees/rivages.db`.
 
 - **Changer le port** : copie `.env.exemple` en `.env` et change `PORT`.

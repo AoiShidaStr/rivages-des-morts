@@ -15,6 +15,7 @@ import {
   type ShaderMaterial,
 } from '@babylonjs/core';
 import { toWorld, type Island } from '../game/island';
+import type { Visitor } from '../net/presence';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawProp } from './pixelArt';
 import { CAMERA_DISTANCE, PITCH, YAW, registerShaders, spriteMaterial, type SpriteDef, type SpriteManifest } from './renderer';
@@ -31,6 +32,8 @@ import { drawRadial, drawRing } from './textures';
 const VIEW_HALF_HEIGHT = 8.5;
 const SPRITE_ORDER = 10_000;
 const MARKER_HEIGHT_MARGIN = 0.45;
+/** Le nom d'un autre joueur flotte juste au-dessus de sa tête. */
+const NAME_HEIGHT_MARGIN = 0.25;
 
 interface SpriteEntry {
   texture: BaseTexture;
@@ -65,6 +68,12 @@ interface Marker {
   anchor: Vector3;
 }
 
+/** Un autre joueur de l'île partagée : son héros, et son nom au-dessus. */
+interface VisitorView {
+  view: Billboard;
+  label: HTMLDivElement;
+}
+
 /**
  * Rendu de l'île d'exploration : sol en pixel art, décors, PNJ et héros en images tournées vers la caméra.
  * Même caméra isométrique que les combats, pour que le passage de l'un à l'autre reste naturel.
@@ -87,6 +96,7 @@ export class IslandRenderer {
   private highlight: { mesh: Mesh; material: ShaderMaterial } | null = null;
   private shadowTexture!: BaseTexture;
   private readonly markers = new Map<string, Marker>();
+  private readonly visitors = new Map<string, VisitorView>();
   private time = 0;
   /** L'île en 3D (relief, eau, végétation), et les décors peints qu'elle remplace. */
   /** La carte peinte (sol assemblé, eau animée, décors posés par le code). */
@@ -183,10 +193,70 @@ export class IslandRenderer {
     const pos = { x: old.mesh.position.x, z: old.mesh.position.z };
     this.disposeBillboard(old);
     this.player = this.billboard('player', entry, pos, 0.4, sprite);
-    if (isHeroVariant(old.sprite)) {
-      this.sprites.get(old.sprite)?.texture.dispose();
-      this.sprites.delete(old.sprite);
+    this.release(old.sprite);
+  }
+
+  /** Libère la planche d'un héros d'une autre race ou classe, si plus personne sur l'île ne la porte. */
+  private release(sprite: string): void {
+    if (!isHeroVariant(sprite) || this.player?.sprite === sprite || this.wantedHero === sprite) return;
+    for (const { view } of this.visitors.values()) if (view.sprite === sprite) return;
+    this.sprites.get(sprite)?.texture.dispose();
+    this.sprites.delete(sprite);
+  }
+
+  /**
+   * Les autres joueurs de l'île partagée. Chacun garde son apparence : sa planche se charge à son arrivée (en
+   * graphismes allégés, tous portent celle du héros de base, pour la mémoire graphique), avec en attendant celle du
+   * héros de base.
+   */
+  syncVisitors(visitors: readonly Visitor[], dt: number): void {
+    const seen = new Set<string>();
+    const project = this.projector();
+    for (const visitor of visitors) {
+      seen.add(visitor.id);
+      const wanted = LOW_GRAPHICS || !this.manifest[visitor.sprite] ? 'heros' : visitor.sprite;
+      if (!this.sprites.has(wanted)) void this.loadHero(wanted);
+      const sprite = this.sprites.has(wanted) ? wanted : 'heros';
+      let shown = this.visitors.get(visitor.id);
+      if (shown && shown.view.sprite !== sprite) {
+        const old = shown.view.sprite;
+        this.disposeBillboard(shown.view);
+        shown.view = this.billboard(`visitor-${visitor.id}`, this.required(sprite), visitor.pos, 0.4, sprite);
+        this.release(old);
+      }
+      if (!shown) {
+        const label = document.createElement('div');
+        label.className = 'visitor-name';
+        this.overlay.append(label);
+        shown = { view: this.billboard(`visitor-${visitor.id}`, this.required(sprite), visitor.pos, 0.4, sprite), label };
+        this.visitors.set(visitor.id, shown);
+      }
+      const { view, label } = shown;
+      view.mesh.position.set(visitor.pos.x, 0, visitor.pos.z);
+      view.shadow.position.set(visitor.pos.x, 0.01, visitor.pos.z);
+      view.mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(visitor.pos, this.forward) * 100);
+      this.face(view, visitor.facing);
+      if (view.entry.anim) this.play(view, visitor.moving ? 'move' : 'idle', dt);
+      const text = `${visitor.name} · niv. ${visitor.level}`;
+      if (label.textContent !== text) label.textContent = text;
+      const screen = project(visitor.pos, view.entry.body + NAME_HEIGHT_MARGIN);
+      label.style.transform = `translate(${screen.x}px, ${screen.y}px) translate(-50%, -100%)`;
     }
+    for (const [id, shown] of this.visitors) {
+      if (!seen.has(id)) this.removeVisitor(id, shown);
+    }
+  }
+
+  /** Retire les autres joueurs (on quitte l'île). */
+  hideVisitors(): void {
+    for (const [id, shown] of this.visitors) this.removeVisitor(id, shown);
+  }
+
+  private removeVisitor(id: string, shown: VisitorView): void {
+    this.disposeBillboard(shown.view);
+    shown.label.remove();
+    this.visitors.delete(id);
+    this.release(shown.view.sprite);
   }
 
   /** Point de vue du menu principal : la caméra dérive lentement au-dessus du village. */
@@ -439,8 +509,7 @@ export class IslandRenderer {
     const viewport = this.camera.viewport.toGlobal(width, height);
     const transform = this.scene.getTransformMatrix();
     const toCss = this.canvas.clientWidth / Math.max(1, width);
-    // « Haut » de l'écran dans le monde : c'est l'axe le long duquel se dressent les sprites.
-    const up = new Vector3(Math.sin(PITCH) * this.forward.x, Math.cos(PITCH), Math.sin(PITCH) * this.forward.z);
+    const up = this.up();
     for (const v of visible) {
       const symbol = wanted.get(v.id);
       if (!symbol) continue;
@@ -458,6 +527,25 @@ export class IslandRenderer {
       const screen = Vector3.Project(marker.anchor, Matrix.Identity(), transform, viewport);
       marker.el.style.transform = `translate(${screen.x * toCss}px, ${screen.y * toCss + bob}px) translate(-50%, -100%)`;
     }
+  }
+
+  /** « Haut » de l'écran dans le monde : c'est l'axe le long duquel se dressent les sprites. */
+  private up(): Vector3 {
+    return new Vector3(Math.sin(PITCH) * this.forward.x, Math.cos(PITCH), Math.sin(PITCH) * this.forward.z);
+  }
+
+  /** Position à l'écran (en pixels CSS du canevas) d'un point à `rise` au-dessus du sol, le long des sprites. */
+  private projector(): (pos: Vec2, rise: number) => { x: number; y: number } {
+    const width = this.engine.getRenderWidth();
+    const viewport = this.camera.viewport.toGlobal(width, this.engine.getRenderHeight());
+    const transform = this.scene.getTransformMatrix();
+    const toCss = this.canvas.clientWidth / Math.max(1, width);
+    const up = this.up();
+    return (pos, rise) => {
+      const anchor = new Vector3(pos.x, 0, pos.z).addInPlace(up.scale(rise));
+      const screen = Vector3.Project(anchor, Matrix.Identity(), transform, viewport);
+      return { x: screen.x * toCss, y: screen.y * toCss };
+    };
   }
 
   /** Retire les marqueurs HTML (passage au donjon). */
