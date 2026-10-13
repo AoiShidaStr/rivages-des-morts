@@ -73,6 +73,8 @@ const MAX_STEPS_PER_FRAME = 5;
 const TITLE_ORBIT = { u: -4, v: 1, radius: 5, speed: 0.07 };
 /** Terrain d'entraînement : fenêtre du DPS affiché, en secondes de combat. */
 const DPS_WINDOW = 5;
+/** Une foulée dans l'eau de la rivière (s) : un clapotis par pas. */
+const STRIDE_S = 0.38;
 
 interface Loot {
   oboles: number;
@@ -166,6 +168,8 @@ export class App {
   private run: Loot = emptyLoot();
   /** Les sons courts (SFX) : les événements de combat et les gains d'objets ; les musiques restent celles des amis. */
   private readonly sfx: Sfx = new Sfx();
+  /** Temps avant le prochain pas dans l'eau (s). */
+  private stride = 0;
   /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
   private endShop: RolledOffer[] = [];
   /** Donjon en cours, et son niveau (choisi à l'entrée). */
@@ -514,6 +518,7 @@ export class App {
     const modal = this.busy || this.dialogue.open || this.panels.open || this.screens.paused;
     const entered = island.update(dt, modal ? vec() : this.readMove(islandRenderer.forward, islandRenderer.right));
     if (entered) this.screens.announceArea(entered.name);
+    this.splash(dt, island.player.moving && island.player.low);
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
@@ -940,6 +945,18 @@ export class App {
    * Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts).
    * En coop, seuls mes coups et les coups que je reçois sonnent : ceux des alliés passeraient en rafale continue.
    */
+  /** Les pas dans l'eau : en marchant dans le lit de la rivière, un clapotis à chaque foulée. */
+  private splash(dt: number, wading: boolean): void {
+    if (!wading) {
+      this.stride = 0;
+      return;
+    }
+    this.stride -= dt;
+    if (this.stride > 0) return;
+    this.sfx.play('pas-eau');
+    this.stride = STRIDE_S;
+  }
+
   private sfxEvent(event: GameEvent, me: number): void {
     if (event.type === 'enemyHit') {
       if (event.owner >= 0 && event.owner !== me) return;
