@@ -79,9 +79,34 @@
         "foudre", null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null
       ]
+    },
+    {
+      "source": "competences_planche_1.png",
+      "outDir": "public/sprites/competences",
+      "columns": 5,
+      "rows": 4,
+      "ids": [
+        "guerrier-a", "sorcier-a", "lame-a", "paladin-a", "rodeur-a",
+        "guerrier-e", "sorcier-e", "lame-e", "paladin-e", "rodeur-e",
+        "guerrier-r", "sorcier-r", "lame-r", "paladin-r", "rodeur-r",
+        "esquive", "voie", null, null, null
+      ]
+    },
+    {
+      "source": "competences_planche_2.png",
+      "outDir": "public/sprites/competences",
+      "columns": 5,
+      "rows": 4,
+      "ids": [
+        "voie-fureur", "voie-embrasement", "voie-ombre", "voie-serment", "voie-tireur",
+        "voie-demuni", "voie-orbe", "voie-chair", "voie-parjure", "voie-cuirasse",
+        "voie-cratere", "voie-dryade", "voie-saigne", "voie-eveque", "voie-eclaireur",
+        "voie-replique", "voie-lampion", "voie-voile", "voie-chantre", "voie-vigie"
+      ]
     }
   ],
   "icons": {
+    "voie-chair": { "fillHoles": true, "minHole": 150 },
     "masque-oublie": { "fillHoles": true, "minHole": 150, "holes": [[0.12, 0.375], [0.73, 0.375]] },
     "lanterne-braise": { "fillHoles": true, "minHole": 150 },
     "omamori-temple": { "fillHoles": true, "minHole": 150 },

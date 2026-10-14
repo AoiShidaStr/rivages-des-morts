@@ -304,6 +304,8 @@ export class World {
   private sanctuaries: Sanctuary[] = [];
   private clouds: Cloud[] = [];
   stumps: Stump[] = [];
+  /** Variante de salle de la vague en cours (indice dans `cfg.layouts`), -1 avant la première. */
+  private layout = -1;
   peaches: PeachTree[] = [];
   webs: Web[] = [];
   /** Gardes spectraux en jeu (voie de l'Évêque) : ils attirent, protègent et frappent avec le Paladin. */
@@ -2226,7 +2228,7 @@ export class World {
     // Donjon infini : chaque palier a son niveau et ses modificateurs (et son plafond de marée, 0.17.0).
     if (wave.difficulty) this.cfg.difficulty = wave.difficulty;
     this.tideMax = wave.difficulty?.tideMax ?? TIDE_MAX;
-    this.stumps = (wave.stumps ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
+    this.stumps = (wave.stumps ?? (wave.peaches ? [] : this.pickLayout())).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
     this.peaches = (wave.peaches ?? []).map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.peachRadius, ripe: true, regrow: 0 }));
     this.webs = [];
     for (const spawn of wave.spawns) {
@@ -2326,6 +2328,15 @@ export class World {
       case 'mannequin':
         return new Mannequin(id, pos, cfg.mannequin, patrol);
     }
+  }
+
+  /** Une variante de salle au hasard (voir `GameConfig.layouts`), différente de celle de la vague d'avant. */
+  private pickLayout(): readonly { x: number; z: number }[] {
+    const layouts = this.cfg.layouts ?? [];
+    if (layouts.length === 0) return [];
+    const others = layouts.map((_, i) => i).filter((i) => i !== this.layout || layouts.length === 1);
+    this.layout = others[Math.floor(Math.random() * others.length)];
+    return layouts[this.layout];
   }
 
   private spawnPoint(): Vec2 {

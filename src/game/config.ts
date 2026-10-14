@@ -1014,6 +1014,11 @@ export interface GameConfig {
   enemies: EnemyConfigs;
   webs: WebConfig;
   stumpRadius: number;
+  /**
+   * Variantes de salle : pour chaque vague qui ne place ni souches ni pêchers, l'une de ces dispositions de souches
+   * est tirée au hasard (jamais deux fois la même de suite), pour que les vagues ne se ressemblent pas toutes.
+   */
+  layouts?: { x: number; z: number }[][];
   /** Rayon d'un pêcher (obstacle, et portée à laquelle un coup en fait tomber la pêche). */
   peachRadius: number;
   /** Champion demandé par une vague (`elite`), hors malédiction « Âmes d'élite ». */

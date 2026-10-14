@@ -94,7 +94,7 @@ export interface DungeonStyle {
 }
 
 /** Ce qui change d'un donjon à l'autre dans la configuration du combat. */
-export type ArenaConfig = Pick<GameConfig, 'arenaHalfSize' | 'stumpRadius' | 'peachRadius' | 'webs' | 'champion' | 'waves'>;
+export type ArenaConfig = Pick<GameConfig, 'arenaHalfSize' | 'stumpRadius' | 'peachRadius' | 'webs' | 'champion' | 'waves' | 'layouts'>;
 
 /** Un donjon (src/data/dungeons.json), avec ses salles de combat. */
 export interface DungeonDef {
@@ -124,6 +124,8 @@ const ARENA_DEFAULTS = {
   stumpRadius: rizieresJson.stumpRadius,
   webs: rizieresJson.webs,
   peachRadius: 0.7,
+  // Sans variantes par défaut : les souches des Rizières n'ont pas leur place dans le Palais ni chez Tetsu.
+  layouts: [],
   champion: { hp: 1.8, damage: 1.3 },
 };
 

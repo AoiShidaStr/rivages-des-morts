@@ -2660,7 +2660,7 @@ export class Renderer {
 
   private text(pos: Vec2, height: number, label: string, kind: string, life = 0.9, far = false): void {
     const el = document.createElement('div');
-    el.className = `float ${kind}${far ? ' far' : ''}`;
+    el.className = `float ${kind}${far ? ' far' : ''}${/\p{L}/u.test(label) ? ' word' : ''}`;
     el.textContent = label;
     this.overlay.append(el);
     const vx = (Math.random() - 0.5) * (kind === 'crit' ? 0.7 : 0.4);
