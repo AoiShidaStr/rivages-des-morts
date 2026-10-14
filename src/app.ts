@@ -993,7 +993,8 @@ export class App {
     }
     if (event.type === 'enemyHit') {
       if (event.owner >= 0 && event.owner !== me) return;
-      this.sfx.play(event.crit ? 'crit' : 'coup');
+      // Le critique au repos sonne comme un coup ordinaire.
+      if (!event.crit || !this.sfx.play('crit')) this.sfx.play('coup');
       return;
     }
     if (event.type === 'playerHit' && event.hero !== me) return;

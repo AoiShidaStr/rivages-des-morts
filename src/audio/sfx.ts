@@ -16,7 +16,6 @@ export const SFX_DES_EVENTS: Partial<Record<GameEvent['type'], SfxId>> = {
   wave: 'vague',
   enemyHit: 'coup',
   playerHit: 'recu',
-  death: 'mort',
   guard: 'garde',
   parry: 'parade',
   heroDown: 'a-terre',
@@ -34,6 +33,39 @@ const SETTINGS_KEY = 'rivages-des-morts:sfx';
 const VARIANTES = [1, 2, 3];
 /** Pas entre deux joues du même son : les coups partent en rafale, on ne les empile pas l'un sur l'autre. */
 const MÊME_PAS_MS = 90;
+/**
+ * Repos plus long pour les sons du combat qui reviennent sans cesse : entendus à chaque coup, ils lassent vite.
+ * Un critique ne sonne qu'une fois toutes les 3 s ; entre-temps, le coup sonne comme un coup ordinaire.
+ */
+const REPOS_MS: Partial<Record<SfxId, number>> = {
+  crit: 3000,
+  coup: 400,
+  vide: 1500,
+  recu: 1000,
+  esquive: 800,
+  butin: 1000,
+};
+
+/** Ce qu'on clique décide du son : valider (bouton principal, choix), onglet, fermer, ou un bouton ordinaire. */
+function sonDuClic(cible: Element): { id: SfxId; vitesse: number } {
+  if (cible.matches('.primary, .dialogue .choice')) return { id: 'valider', vitesse: 1 };
+  if (cible.matches('[role="tab"], .tab, .chat-tab')) return { id: 'clic', vitesse: 1.2 };
+  if (cible.matches('.close, .danger') || /^(fermer|retour|annuler|quitter)/i.test(cible.getAttribute('title') ?? cible.textContent?.trim() ?? '')) {
+    return { id: 'clic', vitesse: 0.8 };
+  }
+  return { id: 'clic', vitesse: 1 };
+}
+
+/** L'élément cliquable sous le pointeur : un bouton, ou tout élément que le jeu montre comme cliquable (curseur main). */
+function cliquable(cible: EventTarget | null): Element | null {
+  let el = cible instanceof Element ? cible : null;
+  for (let i = 0; el && el !== document.body && i < 6; i++, el = el.parentElement) {
+    if (el.matches('button, .btn, [role="button"], [role="tab"]')) return (el as HTMLButtonElement).disabled ? null : el;
+    if (el instanceof HTMLCanvasElement) return null;
+    if (getComputedStyle(el).cursor === 'pointer') return el;
+  }
+  return null;
+}
 
 export class Sfx {
   readonly settings: SfxSettings;
@@ -56,10 +88,12 @@ export class Sfx {
     };
     window.addEventListener('pointerdown', débloque, true);
     window.addEventListener('keydown', débloque, true);
-    // Tous les boutons des menus et des fenêtres cliquent, d'un seul endroit : pas un appel par bouton.
+    // Tout ce qui se clique dans les menus et les fenêtres sonne, d'un seul endroit : pas un appel par bouton.
     document.addEventListener('click', (event) => {
-      const cible = event.target instanceof Element ? event.target.closest('button, .btn, [role="button"]') : null;
-      if (cible && !(cible as HTMLButtonElement).disabled) this.play('clic');
+      const cible = cliquable(event.target);
+      if (!cible) return;
+      const { id, vitesse } = sonDuClic(cible);
+      this.play(id, vitesse);
     }, true);
   }
 
@@ -74,26 +108,30 @@ export class Sfx {
     this.changed();
   }
 
-  /** Joue ce son, si le navigateur le permet : s'il a au moins un fichier. */
-  play(id: SfxId): void {
-    if (!this.unlocked || this.settings.muted) return;
+  /**
+   * Joue ce son, si le navigateur le permet : s'il a au moins un fichier et qu'il a fini son repos. Renvoie faux
+   * quand le son se tait. `vitesse` fixe la hauteur (sons d'interface) ; sans elle, elle varie un peu à chaque joue.
+   */
+  play(id: SfxId, vitesse?: number): boolean {
+    if (!this.unlocked || this.settings.muted) return false;
     const maintenant = Date.now();
-    // Le même son à 90 ms près s'efface devant lui-même : les rafales de coups restent lisibles.
-    if (maintenant - (this.dernierJeu.get(id) ?? 0) < MÊME_PAS_MS) return;
+    // Le même son s'efface devant lui-même pendant son repos : plusieurs coups à la fois ne sonnent qu'une fois.
+    if (maintenant - (this.dernierJeu.get(id) ?? 0) < (REPOS_MS[id] ?? MÊME_PAS_MS)) return false;
     const variantes = this.pool(id);
+    if (variantes.length === 0) return false;
     this.dernierJeu.set(id, maintenant);
-    if (variantes.length === 0) return;
     const dernière = this.dernière.get(id) ?? -1;
     const dispo = variantes.length > 1 ? variantes.filter((_, i) => i !== dernière) : variantes;
     const audio = dispo[Math.floor(Math.random() * dispo.length)];
     audio.currentTime = 0;
     // Un peu de vitesse au hasard : même une seule variante ne colle pas l'oreille.
-    audio.playbackRate = 0.92 + Math.random() * 0.14;
+    audio.playbackRate = vitesse ?? 0.92 + Math.random() * 0.14;
     audio.volume = this.settings.volume;
     this.dernière.set(id, variantes.indexOf(audio));
     void audio.play().catch(() => {
       // Lecture refusée (fichier absent, onglet en arrière-plan) : le jeu continue en silence.
     });
+    return true;
   }
 
   /**
