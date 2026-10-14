@@ -16,6 +16,7 @@ export const SFX_DES_EVENTS: Partial<Record<GameEvent['type'], SfxId>> = {
   wave: 'vague',
   enemyHit: 'coup',
   playerHit: 'recu',
+  death: 'mort',
   guard: 'garde',
   parry: 'parade',
   heroDown: 'a-terre',

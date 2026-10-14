@@ -8,8 +8,11 @@ Choisis par Meven le 14/10/2026 sur le banc d'écoute, tous en **CC0** (OpenGame
 - esquive-1 : artisticdude, « Swishes Sound Pack », swish-8.wav
 - clic-1 : rubberduck, « 100 CC0 SFX », switch_01.ogg ; clic-2 : rubberduck, « 80 CC0 RPG SFX », misc_01.ogg
 - butin-1 : artisticdude, « RPG Sound Pack », inventory/coin3.wav
+- coup-1 : AntumDeluge, « Thwack Sounds », thwack-03.wav
+- recu-1 : NenadSimic, « Muffled Distant Explosion » (tambour de bois), coupé à 0,45 s
+- mort-1 et mort-2 : PWL, « Bell dings/chimes » (bell_ding3, bell_ding2) mêlés à Fupi, « Erase / Escape », coupés à 1 s
 
-Encore à trouver parmi les 8 sons fréquents : coup qui touche, coup reçu, mort d'un yokai.
+Les 8 sons fréquents du combat ont désormais un fichier.
 
 Format conseillé : `.ogg` (ou `.mp3`), mono, 44,1 kHz, sans silence au début. Plusieurs variantes (×3) pour les sons fréquents, marqués *(var.)*.
 
