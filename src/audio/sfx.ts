@@ -4,7 +4,7 @@
 // Les Pistes longues (menu, île, combats) restent dans src/audio/music.ts : ici, on ne touche pas aux musiques des
 // amis musicologues. Un fichier absent ne casse rien : la variante est écartée, le jeu continue sans ce son.
 // Conventions : public/audio/sfx/<id>-1.mp3, -2.mp3, -3.mp3 (deux ou trois variantes, une suffit) — le cahier de
-// production de chaque id est dans docs/sons-a-produire.md. Sans fichier, le son reste muet. Les fichiers actuels sortent de packs CC0 (tools/sons.sh).
+// production de chaque id est dans docs/sons-a-produire.md. Sans fichier, le son reste muet.
 
 import data from '../data/sfx.json';
 import type { GameEvent } from '../game/types';
