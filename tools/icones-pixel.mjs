@@ -5,8 +5,10 @@
 // Usage : npm run icones-pixel             → toutes les icônes manquantes
 //         npm run icones-pixel -- kunai-jumeaux arc-soie   → refait ces icônes, même si elles existent
 //
-// Les icônes des compétences du HUD de combat (tools/pixel/competences.mjs) sont toujours refaites, dans
-// public/sprites/competences/<id>.png : elles n'ont pas de version peinte à protéger.
+// Les icônes des compétences du HUD de combat (tools/pixel/competences.mjs) vont dans
+// public/sprites/competences/<id>.png, avec la même règle (une icône peinte n'est jamais écrasée). La planche de
+// référence de leurs cases (public/sprites/sprites/competences/reference-planche-1.png) accompagne le prompt
+// docs/prompts-2d/07-icones-competences.md.
 import { access, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,13 +45,35 @@ for (const id of ids) {
 
 const skillDir = path.join(projectDir, 'public', 'sprites', 'competences');
 await mkdir(skillDir, { recursive: true });
+const skillIcons = {};
 for (const [id, draw] of Object.entries(SKILL_ICONS.ICONS)) {
   const c = new Canvas(SKILL_ICONS.SIZE, SKILL_ICONS.SIZE);
   draw(c);
   c.outline(SKILL_ICONS.OUTLINE);
-  await sharp(c.data, { raw: { width: SKILL_ICONS.SIZE, height: SKILL_ICONS.SIZE, channels: 4 } })
+  skillIcons[id] = await sharp(c.data, { raw: { width: SKILL_ICONS.SIZE, height: SKILL_ICONS.SIZE, channels: 4 } })
     .resize(SKILL_ICONS.SIZE * SCALE, SKILL_ICONS.SIZE * SCALE, { kernel: 'nearest' })
     .png({ compressionLevel: 9 })
-    .toFile(path.join(skillDir, `${id}.png`));
+    .toBuffer();
+  const output = path.join(skillDir, `${id}.png`);
+  if (!forced.includes(id) && (await exists(output))) continue;
+  await sharp(skillIcons[id]).toFile(output);
+  console.log(`${id.padEnd(20)} → public/sprites/competences/${id}.png`);
 }
-console.log(`${Object.keys(SKILL_ICONS.ICONS).length} icônes de compétences → public/sprites/competences/`);
+
+// Planche de référence pour Nano Banana : les cases de la première planche (tools/icones.json), sur le gris du fond.
+const sheet = JSON.parse(await readFile(path.join(projectDir, 'tools', 'icones.json'), 'utf8')).sheets.find((s) => s.source === 'competences_planche_1.png');
+if (sheet) {
+  const cell = SKILL_ICONS.SIZE * SCALE * 2;
+  const refDir = path.join(projectDir, 'public', 'sprites', 'sprites', 'competences');
+  await mkdir(refDir, { recursive: true });
+  const composites = sheet.ids.flatMap((id, i) =>
+    id && skillIcons[id]
+      ? [{ input: skillIcons[id], left: (i % sheet.columns) * cell + cell / 4, top: Math.floor(i / sheet.columns) * cell + cell / 4 }]
+      : [],
+  );
+  await sharp({ create: { width: sheet.columns * cell, height: sheet.rows * cell, channels: 3, background: '#d4d4d4' } })
+    .composite(composites)
+    .png()
+    .toFile(path.join(refDir, 'reference-planche-1.png'));
+  console.log('Planche de référence → public/sprites/sprites/competences/reference-planche-1.png');
+}

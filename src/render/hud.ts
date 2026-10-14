@@ -179,11 +179,12 @@ export class Hud {
 
   /**
    * Noms et icônes des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur.
-   * `voie` : la compétence de la voie (sous-classe), affichée sur F quand le héros en a choisi une. `novice` : tant
+   * `voie` : la compétence de la voie (sous-classe), affichée sur F quand le héros en a choisi une, avec l'icône de
+   * `voieId` (le torii générique tant que sa version peinte manque). `novice` : tant
    * que le joueur n'a gagné aucun donjon, la bande des touches et les noms sous les icônes restent affichés (ensuite,
    * les commandes se retrouvent dans le menu pause).
    */
-  configure(cls: ClassDef, voie?: string, novice = true): void {
+  configure(cls: ClassDef, voie?: string, voieId?: string, novice = true): void {
     const name = (key: string) => cls.actives.find((a) => a.key === key)?.name ?? '';
     for (const key of SKILL_KEYS) {
       const slot = this.skills[key];
@@ -196,6 +197,12 @@ export class Hud {
     this.voieSlot.root.classList.toggle('hidden', !voie);
     this.voieSlot.name.textContent = voie ?? '';
     this.voieSlot.root.title = voie ?? '';
+    const icon = this.voieSlot.icon;
+    icon.onerror = () => {
+      icon.onerror = null;
+      icon.src = `${ICONS}voie.png`;
+    };
+    icon.src = voieId ? `${ICONS}voie-${voieId}.png` : `${ICONS}voie.png`;
     this.voieSlot.root.querySelector('kbd')!.textContent = keyName('F');
     for (const [kit, { style }] of Object.entries(RESOURCE)) {
       if (style) this.rageBar.classList.toggle(style, kit === cls.kit);

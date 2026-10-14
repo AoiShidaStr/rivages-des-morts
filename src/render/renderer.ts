@@ -15,7 +15,6 @@ import {
   StandardMaterial,
   Texture,
   TransformNode,
-  Vector2,
   Vector3,
   Vector4,
   type BaseTexture,
@@ -202,9 +201,6 @@ export const PITCH = Math.atan(1 / Math.SQRT2); // 35,26° : isométrie vraie
 export const YAW = Math.PI / 4;
 export const CAMERA_DISTANCE = 40;
 const VIEW_HALF_HEIGHT = 6;
-/** Épaisseur (pixels d'écran) et opacité du liseré des yokai. */
-const OUTLINE_PX = 2;
-const OUTLINE_ALPHA = 0.85;
 const GROUND_SIZE = 44;
 const PADDY_SIZE = 3;
 const DEATH_TIME = 0.35;
@@ -398,24 +394,9 @@ export function registerShaders(): void {
     uniform float alpha;
     uniform float flipX;
     uniform vec4 frameRect;
-    uniform float outline;
-    uniform vec2 outlineStep;
-    vec4 frameColor(vec2 p) {
-      p = clamp(p, 0.0, 1.0);
-      return texture2D(textureSampler, frameRect.xy + vec2(mix(p.x, 1.0 - p.x, flipX), p.y) * frameRect.zw);
-    }
     void main(void) {
-      vec4 color = frameColor(vUV);
-      // Liseré : autour de la silhouette, l'encre prend la place du vide (seulement pour les yokai, voir outline()).
-      if (outline > 0.0 && color.a < 0.5) {
-        float around = 0.0;
-        for (int i = 0; i < 8; i++) {
-          float angle = float(i) * 0.785398;
-          around = max(around, frameColor(vUV + vec2(cos(angle), sin(angle)) * outlineStep).a);
-        }
-        float ink = smoothstep(0.2, 0.6, around) * outline;
-        color = vec4(mix(vec3(0.07, 0.05, 0.08), color.rgb, color.a), max(color.a, ink));
-      }
+      vec2 uv = frameRect.xy + vec2(mix(vUV.x, 1.0 - vUV.x, flipX), vUV.y) * frameRect.zw;
+      vec4 color = texture2D(textureSampler, uv);
       float a = color.a * alpha;
       if (a < 0.02) discard;
       gl_FragColor = vec4(mix(color.rgb * tint, flashColor, flash), a);
@@ -429,7 +410,7 @@ export function spriteMaterial(scene: Scene, name: string, texture: BaseTexture)
     { vertex: 'sprite', fragment: 'sprite' },
     {
       attributes: ['position', 'uv'],
-      uniforms: ['worldViewProjection', 'tint', 'flash', 'flashColor', 'alpha', 'flipX', 'frameRect', 'outline', 'outlineStep'],
+      uniforms: ['worldViewProjection', 'tint', 'flash', 'flashColor', 'alpha', 'flipX', 'frameRect'],
       samplers: ['textureSampler'],
       needAlphaBlending: true,
     },
@@ -441,8 +422,6 @@ export function spriteMaterial(scene: Scene, name: string, texture: BaseTexture)
   material.setFloat('alpha', 1);
   material.setFloat('flipX', 0);
   material.setVector4('frameRect', new Vector4(0, 0, 1, 1));
-  material.setFloat('outline', 0);
-  material.setVector2('outlineStep', new Vector2(0, 0));
   material.backFaceCulling = false;
   return material;
 }
@@ -799,7 +778,7 @@ export class Renderer {
         elite: enemy.elite,
         mark: enemy.mark,
         glare: enemy.gaze,
-      }, dt, true);
+      }, dt);
     }
     for (const [id, view] of this.views) {
       if (seen.has(id)) continue;
@@ -867,8 +846,7 @@ export class Renderer {
 
   // --- Entités -------------------------------------------------------------
 
-  /** `outline` : un liseré sombre autour de la silhouette (les yokai, pour qu'ils se détachent de l'eau claire). */
-  private syncEntity(id: number, spriteName: string, s: Snapshot, dt: number, outline = false): void {
+  private syncEntity(id: number, spriteName: string, s: Snapshot, dt: number): void {
     let view = this.views.get(id);
     if (!this.sprites.has(spriteName)) {
       // Planche pas encore là (un invité en coop ne connaît pas d'avance toutes les vagues) : elle se charge, et
@@ -884,7 +862,6 @@ export class Renderer {
     }
     if (!view) {
       view = this.createView(id, spriteName, s.radius);
-      if (outline) this.outline(view.material, this.sprites.get(spriteName)!);
       this.views.set(id, view);
     }
     view.node.position.set(s.pos.x, 0, s.pos.z);
@@ -1050,17 +1027,6 @@ export class Renderer {
       view.animTime += dt;
     }
     showFrame(view.material, anim, frameAt(anim, tagName, view.animTime));
-  }
-
-  /**
-   * Liseré d'encre de `OUTLINE_PX` pixels autour d'un sprite : le pas se compte en fraction du plan, d'après sa taille
-   * à l'écran (caméra orthographique), pour rester de même épaisseur sur un petit yokai et sur un boss.
-   */
-  private outline(material: ShaderMaterial, entry: SpriteEntry): void {
-    const pixelsPerMeter = this.canvas.clientHeight / (2 * VIEW_HALF_HEIGHT);
-    const step = OUTLINE_PX / Math.max(1, entry.height * pixelsPerMeter);
-    material.setVector2('outlineStep', new Vector2(step / entry.aspect, step));
-    material.setFloat('outline', OUTLINE_ALPHA);
   }
 
   /** Plan vertical tourné vers la caméra, dont l'origine est aux pieds du personnage. */

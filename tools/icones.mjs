@@ -2,7 +2,8 @@
 // transparents pour l'interface : public/sprites/icones/<id>.png.
 //
 // Usage : npm run icones
-// Réglages : tools/icones.json (planches sources, objet de chaque case, retouches par icône).
+// Réglages : tools/icones.json (planches sources, objet de chaque case, retouches par icône). Une planche peut
+// écrire ailleurs (`outDir`) : les icônes des compétences du HUD vont dans public/sprites/competences/.
 //
 // Chaque morceau détouré revient à la case de la grille qui contient son centre. Autour de l'objet,
 // on retire le gris du fond au lieu de couper net (le « couleur vers alpha » de GIMP) : les halos peints
@@ -21,6 +22,7 @@ const outDir = path.join(projectDir, config.outDir);
 const exists = (file) => access(file).then(() => true, () => false);
 
 await mkdir(outDir, { recursive: true });
+for (const sheet of config.sheets) if (sheet.outDir) await mkdir(path.join(projectDir, sheet.outDir), { recursive: true });
 const icons = [];
 for (const sheet of config.sheets) {
   const input = path.join(sourceDir, sheet.source);
@@ -56,7 +58,7 @@ for (const sheet of config.sheets) {
     }
     const cell = { left, top, width: cellW, height: cellH };
     const icon = await cutIcon(image, { labels, background, bg }, kept, cell, options);
-    const output = path.join(outDir, `${id}.png`);
+    const output = path.join(sheet.outDir ? path.join(projectDir, sheet.outDir) : outDir, `${id}.png`);
     await icon.png({ compressionLevel: 9 }).toFile(output);
     icons.push({ id, file: output });
     console.log(`${id.padEnd(18)} ${sheet.source} case ${index + 1} → ${path.relative(projectDir, output)}`);
