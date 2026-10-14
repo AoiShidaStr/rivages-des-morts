@@ -1065,9 +1065,246 @@ function lot4x8() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Demi-dieux (14 octobre 2026) : une ligne par action réelle du jeu (clic gauche, clic droit, A, E, R, esquive, gestes
+// des quatre Voies, Égide divine de la race, états propres comme la garde ou l'arc bandé), soit 16 lignes et 4 planches
+// de 4 × 8 par classe. La Sorcière et la Lame sont des femmes. `tag` : le nom de l'animation à l'import ; les tags qui
+// ne sont pas encore dans le jeu (types.ts, ArtPose) seront branchés à l'intégration.
+
+/** Ligne d'attaque (élan sur les images 1 à 3, coup de 4 à 8), comme la ligne 3 des héros. */
+const attackRow = (fr, en, tag, windup, strike) => ({
+  fr, en, tag, loop: false,
+  beats: () => [
+    [1, 1, 'the ready pose of the reference figure, the weight shifting back'],
+    [2, 3, `wind-up: ${windup}`],
+    [4, 4, `the strike launches, very fast: ${strike}, on its way`],
+    [5, 5, `IMPACT, the key frame of the attack: ${strike}, at full extension`],
+    [6, 6, 'follow-through: the momentum carries the body past the impact'],
+    [7, 8, 'recovery: back to the ready pose of the reference figure'],
+  ],
+});
+/** Geste d'une compétence (élan, tension, déclenchement, retour) ; `hold` : la pose se tient. */
+const gestureRow = (fr, en, tag, wind, release, hold = false) => ({ fr, en, tag, loop: false, beats: () => gesture(wind, release, hold) });
+/** Pose tenue (garde, arc bandé) : elle se prend puis se garde tant que la touche est tenue. */
+const holdRow = (fr, en, tag, text) => ({
+  fr, en, tag, loop: false,
+  beats: () => [
+    [1, 1, 'the ready pose of the reference figure'],
+    [2, 3, `moving into position: ${text}, on its way`],
+    [4, 5, `the position fully reached: ${text}`],
+    [6, 8, 'the position held: only tiny movements of the hair and cloth; frames 6 to 8 are nearly identical'],
+  ],
+});
+/** Marche lente en boucle (bouclier levé, arc bandé, marche furtive). */
+const walkRow = (fr, en, tag, every) => ({
+  fr, en, tag, loop: true,
+  beats: () =>
+    [
+      'the right foot steps forward', 'the weight on the right foot, the body at its lowest', 'the left foot passing', 'pushing off, the body at its highest',
+      'the left foot steps forward', 'the weight on the left foot, the body at its lowest', 'the right foot passing', 'pushing off, leading back to frame 1',
+    ].map((p, i) => [i + 1, i + 1, i === 0 ? `${p}; in every frame: ${every}` : p]),
+});
+/** Ligne libre : les étapes sont données telles quelles. */
+const customRow = (fr, en, tag, loop, steps) => ({ fr, en, tag, loop, beats: () => steps });
+/** Esquive (Espace) : une roulade rapide, propre à chaque classe. */
+const dodgeRow = (text) => customRow('Esquive (Espace)', 'DODGE (Space key), a very fast evasive roll', 'dash', false, [
+  [1, 1, 'the ready pose, the weight dropping'],
+  [2, 3, `diving into the roll: ${text}`],
+  [4, 5, 'rolling, tucked tight, the body at a clearly different angle in every frame'],
+  [6, 6, 'coming out of the roll onto one knee'],
+  [7, 8, 'rising back to the ready pose of the reference figure'],
+]);
+/** Lames ou arme tournées autour de soi : les ondes des Voies. */
+const spinRow = (fr, en, tag, start, held) => customRow(fr, en, tag, false, [
+  [1, 1, 'the ready pose of the reference figure'],
+  [2, 2, `winding up: ${start}`],
+  [3, 6, `a full spin on the spot, ${held}, the body turning through a whole circle (side, front, side, back), one quarter turn every frame`],
+  [7, 7, 'the spin ends facing right again, the weapon extended'],
+  [8, 8, 'back to the ready pose of the reference figure'],
+]);
+const DIVINE_ROW = (gear) => customRow('Égide divine (race, sous 35 % des PV)', 'DIVINE AEGIS (the demigod race power, when badly wounded)', 'aegis', false, [
+  [1, 2, `badly hurt: kneeling, one hand on the ground, the ${gear} still held`],
+  [3, 4, 'the head lifts and the floating golden ring behind the head grows larger, the body straightening'],
+  [5, 6, 'standing tall again, the chest out, the arms opened, the golden ring large behind the head (flat painted, no glow)'],
+  [7, 8, `back to the ready pose, the ${gear} raised, the ring back to its normal size`],
+]);
+const H = HERO_ROWS;
+const tagged = (row, tag) => ({ ...row, tag });
+
+const DEMIGOD_ROWS = {
+  guerrier: (c) => [
+    tagged(H[0], 'idle'), tagged(H[1], 'move'), tagged(H[2], 'windup 1-3 / strike 4-8'),
+    holdRow('Garde (clic droit tenu)', 'GUARD (right click held)', 'guard', c.signature.text),
+    customRow('Coup bloqué, blocage parfait', 'BLOCKED HIT', 'block', false, [
+      [1, 1, 'the guard pose: the nodachi upright in front of the body'],
+      [2, 2, 'IMPACT on the blade: the nodachi pushed back toward the chest, the feet sliding back'],
+      [3, 4, 'absorbing the shock, the knees bent, the teeth clenched'],
+      [5, 6, 'pushing back, the guard firm again'],
+      [7, 8, 'back to the guard pose; frames 7 and 8 are nearly identical'],
+    ]),
+    dodgeRow('a shoulder roll, the nodachi held close along the back'),
+    gestureRow('Frappe fracassante (A)', 'SMASH (A key)', 'smash', c.skill.wind, c.skill.release),
+    customRow('Bond (E)', 'LEAP (E key), a jump onto the targeted spot', 'leap', false, [
+      [1, 2, 'crouches deep, the nodachi held back in both hands'],
+      [3, 4, 'springs high into the air, the knees tucked, the nodachi raised overhead'],
+      [5, 5, 'at the top of the jump, the nodachi raised for the blow'],
+      [6, 6, 'lands, driving the nodachi down into the ground in front'],
+      [7, 8, 'rising from the landing crouch back to the ready pose'],
+    ]),
+    gestureRow('Frénésie (R)', 'FRENZY (R key)', 'ultimate', c.ultimate.wind, c.ultimate.release, true),
+    gestureRow('Voie de la Fureur : Cri de guerre', 'WAR CRY', 'cry', 'fills the lungs, the fists clenched on the hilt, the shoulders rising', 'a war cry: the head thrust forward, the mouth wide open, both arms spread wide, the nodachi held out to the side', true),
+    customRow('Voie du Démuni : Ruée', 'RUSH, a charge forward that sweeps everything', 'rush', false, [
+      [1, 2, 'lowers the head and the shoulder, the nodachi held across the body'],
+      [3, 6, 'charging forward shoulder first, the legs pumping, the body leaning far forward, a clearly different stride in every frame'],
+      [7, 7, 'a wide sweeping slash at the end of the charge'],
+      [8, 8, 'back to the ready pose of the reference figure'],
+    ]),
+    gestureRow('Voie du Cratère : Vague de bouclier', 'GROUND SLAM', 'slam', 'raises the nodachi flat and high in both hands, rising on the toes', 'slams the flat of the nodachi onto the ground in front, the knees bent deep, the whole body crushing down'),
+    spinRow('Voie de la Réplique : Spirale', 'SPIRAL', 'spin', 'the body twisted, the nodachi held out low', 'the nodachi held out at arm length'),
+    DIVINE_ROW(c.gear), tagged(H[5], 'hurt'), tagged(H[6], 'death'),
+  ],
+  sorcier: (c) => [
+    tagged(H[0], 'idle'), tagged(H[1], 'move'), tagged(H[2], 'windup 1-3 / strike 4-8'),
+    attackRow('Attaque, second coup (salves enchaînées)', 'MAIN ATTACK, SECOND HIT', 'strike2', 'the bell wand swung back over the shoulder, a new talisman drawn in the free hand', 'the bell wand flicked forward like a whip toward the target, the free hand following'),
+    dodgeRow('a light quick roll, the sleeves and ribbons wrapped around the body'),
+    gestureRow('Sceau (clic droit)', 'SEAL (right click)', 'seal', 'a paper talisman pinched between two fingers and raised to the lips, the bell wand drawn back', 'the talisman flung down onto the ground ahead, two fingers of the free hand pointing at the ground in a hand sign, the bell wand raised high (no seal drawn)'),
+    gestureRow('Bouclier de flammes (A)', 'FLAME SHIELD (A key)', 'ward', 'the arms crossed over the chest, the bell wand held tight, the head bowed', 'the arms flung wide open, the chest out, the robe and the ribbons blown outward all around her (no fire drawn)', true),
+    gestureRow('Fuite de feu (E)', 'FIRE FLIGHT (E key)', 'flight', c.skill.wind, c.skill.release),
+    gestureRow('Grand météore (R)', 'GREAT METEOR (R key)', 'ultimate', c.ultimate.wind, c.ultimate.release, true),
+    gestureRow('Voie de l\'Embrasement : Colonne ardente', 'BURNING COLUMN', 'column', 'the bell wand raised straight up toward the sky in both hands, the bells ringing', 'the bell wand brought down and pointed far ahead at the ground, the arm fully extended, the free hand pressed to the chest'),
+    gestureRow('Voie du Lampion : Lampion', 'PAPER LANTERN', 'lantern', 'takes a small round paper lantern from the sash and holds it up in the palm', 'tosses the lantern underhand far ahead, the arm swung forward and up (the lantern has left the hand and is not drawn)'),
+    gestureRow('Voie de l\'Orbe : Déflagration', 'BLAST', 'blast', 'hunches over, the arms crossed, the knees bent, gathering', 'bursts open: the arms and the bell wand flung out to the sides, the body thrown upright, the robe flared all around (no fire drawn)'),
+    gestureRow('Voie de la Dryade : Sceau de vigueur', 'SEAL OF VIGOR', 'vigor', 'kneels on one knee, a talisman between two fingers', 'the palm pressed flat on the ground, the head bowed, the bell wand held upright in the other hand, calm, blessing', true),
+    DIVINE_ROW(c.gear), tagged(H[5], 'hurt'), tagged(H[6], 'death'),
+  ],
+  lame: (c) => [
+    tagged(H[0], 'idle'), tagged(H[1], 'move'), tagged(H[2], 'windup 1-3 / strike 4-8'),
+    attackRow('Attaque, coup enchaîné (Enchaînement)', 'MAIN ATTACK, CHAINED HIT', 'strike2', 'the kunai pulled back at the hip, the body turning the other way', 'a quick reverse slash with the other kunai, then a stab forward, the body spinning half around'),
+    dodgeRow('a fast low forward roll, the kunai held flat along the forearms, the scarf flying'),
+    customRow('Frappe fantôme (clic droit)', 'PHANTOM STRIKE (right click)', 'ghost', false, [
+      [1, 2, 'drops into a deep crouch, the kunai reversed, the eyes locked on the target'],
+      [3, 4, 'gone in a burst: a long horizontal dive forward, the body almost flat, the scarf streaming (the body stays solid, no blur)'],
+      [5, 5, 'reappears behind the target: a crouched landing, both kunai held back over the shoulder'],
+      [6, 6, 'IMPACT: a backward double stab, both arms driven back'],
+      [7, 8, 'rising back to the low ready pose of the reference figure'],
+    ]),
+    gestureRow('Marque de mort (A)', 'DEATH MARK (A key)', 'mark', 'raises one kunai before the eyes, the other hand on the hip', 'points the kunai straight at the target with a fully extended arm, a cold stare, the body sideways (no mark drawn)', true),
+    gestureRow('Écran de fumée (E)', 'SMOKE SCREEN (E key)', 'smoke', c.skill.wind, c.skill.release),
+    walkRow('Invisible dans la fumée : marche furtive', 'STEALTH WALK, hidden in the smoke', 'hiddenMove', 'a crouched tiptoe sneak, the body very low, both kunai held back along the forearms, the scarf over the face'),
+    attackRow('Premier coup depuis l\'ombre', 'AMBUSH STRIKE from the shadows', 'ambush', 'rising from a crouch behind the target, both kunai raised high above the head', 'both kunai plunged down together in a savage double stab'),
+    customRow('Danse des lames (R)', 'BLADE DANCE (R key), leaping from enemy to enemy', 'ultimate', true, [
+      [1, 2, 'coils into a very low crouch, the kunai crossed behind the back'],
+      [3, 4, 'leaps forward through the air, the body horizontal, both kunai extended'],
+      [5, 5, 'lands with a double slash'],
+      [6, 6, 'a spinning slash, the scarf and the hair whirling'],
+      [7, 8, 'springs off again, crouched, toward the next target, leading back to frame 1'],
+    ]),
+    spinRow('Voies de l\'Ombre, de la Chair et de la Saignée : lames tournoyantes', 'WHIRLING BLADES', 'spin', 'crouched, both kunai held out to the sides', 'both kunai held out at arm length'),
+    attackRow('Voie du Voile : Frappe rouge', 'CROSS SLASH', 'cross', 'both kunai crossed high above the head', 'both arms slash down and out in a wide X, ending low with the arms spread'),
+    DIVINE_ROW(c.gear), tagged(H[5], 'hurt'), tagged(H[6], 'death'),
+  ],
+  paladin: (c) => [
+    tagged(H[0], 'idle'), tagged(H[1], 'move'), tagged(H[2], 'windup 1-3 / strike 4-8'),
+    holdRow('Bouclier levé (clic droit tenu)', 'SHIELD UP (right click held)', 'guard', c.signature.text),
+    walkRow('Avancer bouclier levé', 'SHIELD WALK, advancing slowly behind the raised shield', 'guardMove', 'slow heavy steps, the large shield raised in front of the body, the naginata held back'),
+    customRow('Garde brisée', 'GUARD BROKEN, stunned for a moment', 'guardBreak', false, [
+      [1, 1, 'IMPACT on the shield: the guard shatters'],
+      [2, 3, 'the shield knocked aside, the arm flung wide, the body thrown off balance'],
+      [4, 6, 'staggered and dazed, the shield arm hanging, the body swaying'],
+      [7, 8, 'recovering, raising the shield again'],
+    ]),
+    dodgeRow('a heavy shoulder roll, the shield on the back'),
+    gestureRow('Aura de lumière (A)', 'AURA OF LIGHT (A key)', 'aura', c.ultimate.wind, c.ultimate.release, true),
+    customRow('Marteau lancé (E)', 'THROWN HAMMER (E key), it flies out and comes back', 'hammer', false, [
+      [1, 2, c.skill.wind],
+      [3, 3, c.skill.release],
+      [4, 5, 'the arm still extended, watching the throw, the hand open'],
+      [6, 6, 'reaching out to catch the returning hammer'],
+      [7, 7, 'catches the hammer with a jolt'],
+      [8, 8, 'the hammer back at the belt, the ready pose of the reference figure'],
+    ]),
+    gestureRow('Égide (R)', 'AEGIS (R key), a protection laid on an ally', 'ultimate', 'raises the large shield high, the naginata drawn back', 'thrusts the free hand toward an ally ahead, palm open, laying a protective blessing, the shield held high (no light drawn)', true),
+    gestureRow('Voie du Serment : Onde du serment', 'OATH', 'oath', 'kneels, the naginata planted, the head bowed, a hand on the heart', 'rises and lifts the naginata high toward the sky in a solemn vow', true),
+    gestureRow('Voies du Parjure et de l\'Évêque : onde sacrée', 'HOLY WAVE', 'wave', 'raises the naginata high in both hands, the shield on the back', 'drives the butt of the naginata down into the ground, the body bent over it, the cloth flaring outward'),
+    gestureRow('Voie du Chantre : Chant', 'CHANT', 'chant', 'draws a deep breath, one hand on the chest', 'sings: the head lifted, the mouth open, one arm stretched out toward an ally ahead', true),
+    DIVINE_ROW(c.gear), tagged(H[5], 'hurt'), tagged(H[6], 'death'),
+  ],
+  rodeur: (c) => [
+    tagged(H[0], 'idle'), tagged(H[1], 'move'), tagged(H[2], 'windup 1-3 / strike 4-8'),
+    holdRow('Tir chargé : bander (clic droit tenu)', 'CHARGED SHOT, drawing (right click held)', 'channel', c.signature.text),
+    walkRow('Marche lente, arc bandé', 'DRAWN WALK, slow steps with the bow fully drawn', 'channelMove', 'slow careful steps, the bow fully drawn and aimed forward, the bow arm locked'),
+    customRow('Tir chargé : lâcher', 'CHARGED SHOT, release', 'loose', false, [
+      [1, 1, 'fully drawn, trembling with tension'],
+      [2, 2, 'RELEASE: the string snaps forward, the bow arm recoiling (no arrow drawn in flight)'],
+      [3, 4, 'follow-through, the drawing hand flung back past the ear'],
+      [5, 6, 'a heavy step back, the bow lowering'],
+      [7, 8, 'back to the ready pose of the reference figure'],
+    ]),
+    dodgeRow('a quick sideways roll, the bow held close against the body'),
+    gestureRow('Flèche-filet (A)', 'NET ARROW (A key)', 'net', c.skill.wind, c.skill.release),
+    gestureRow('Marque du chasseur (E)', 'HUNTER\'S MARK (E key)', 'hunt', 'shades the eyes with the free hand, scanning ahead', 'points two fingers at the prey with a fully extended arm, the bow held low, a predator stare (no mark drawn)', true),
+    customRow('Recul (R)', 'LEAP BACK (R key), firing three arrows', 'airborne', false, [
+      [1, 2, 'crouches, an arrow nocked'],
+      [3, 4, 'springs backward into the air, the body arching back'],
+      [5, 6, 'in mid-air, still leaping backward, the bow drawn and loosed toward the front, then drawn again'],
+      [7, 7, 'lands crouched, the bow raised'],
+      [8, 8, 'back to the ready pose of the reference figure'],
+    ]),
+    gestureRow('Voies du Tireur et de la Vigie : volée en éventail', 'FAN VOLLEY', 'volley', 'draws several arrows at once from the quiver and nocks them fanned out on the string', 'releases them all at once, the bow tilted flat, the string snapped forward (no arrow drawn in flight)'),
+    gestureRow('Voie de la Cuirasse : Souffle du chasseur', 'HUNTER\'S BREATH', 'breath', 'closes the eyes, a deep breath in, the chest rising, the bow held low', 'the eyes snap open, the body perfectly still and focused, the bow raised ready', true),
+    gestureRow('Voie de l\'Éclaireur : Le Couloir', 'CORRIDOR', 'corridor', 'takes a marker stake with a long cloth streamer from the quiver', 'throws it far ahead to plant it in the ground, the arm fully extended (the stake has left the hand)'),
+    DIVINE_ROW(c.gear), tagged(H[5], 'hurt'), tagged(H[6], 'death'),
+  ],
+};
+const WOMEN = new Set(['sorcier', 'lame']);
+
+function lotDemiDieux() {
+  const out = [
+    '# Lot 8 : Demi-dieux, toutes les actions du jeu (planches 4 × 8)',
+    '',
+    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière et la Lame sont des femmes.**',
+    '',
+    '**Ordre :** la fiche de référence d\'abord (à refaire : genre et tenue changent), puis les planches 1 à 4. Pour les planches 2 à 4, **joindre la fiche et la planche 1** : Nano Banana garde ainsi la même échelle et le même dessin.',
+    '',
+    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, fond gris uni #8f8f8f, héros chibi de 3 têtes. Ranger chaque image dans `~/Pictures/gamevisual/heros/` sous le nom indiqué. ' + REGLAGES,
+    '',
+    '**Import :** le tag de chaque ligne est indiqué. Ceux que le jeu ne joue pas encore (Bond, Cri, Sceau, Fuite de feu, Marque, fumée, marteau, Voies…) seront branchés à l\'intégration ; en attendant, ces actions retombent sur les animations d\'aujourd\'hui.',
+    '',
+  ];
+  for (const ck of ['guerrier', 'sorcier', 'lame', 'paladin', 'rodeur']) {
+    const cls = CLASSES[ck];
+    const ch = hero('demidieu', ck);
+    const woman = WOMEN.has(ck);
+    const subject = woman
+      ? ch.subject.replace('BODY (the race):', 'GENDER: a woman, clearly female (face, figure, hair). BODY (the race):')
+      : ch.subject;
+    const name = woman ? `${ch.name.replace('Sorcier', 'Sorcière')} (femme)` : ch.name;
+    const rows = DEMIGOD_ROWS[ck](cls);
+    if (rows.length !== 16) throw new Error(`${ck} : ${rows.length} lignes au lieu de 16`);
+    out.push(`## ${name}`, '', `### ${name} — fiche de référence`, '', `**Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-reference.jpg\``, '', fence(fichePrompt({ subject, proportions: ch.proportions })));
+    for (let p = 0; p < 4; p++) {
+      const sheetRows = rows.slice(p * 4, p * 4 + 4);
+      const who = woman ? 'The character is a woman.' : '';
+      const intro = sheetIntro('profil', who, ch.tail) +
+        (p > 0 ? ' The second attached image is the first sheet of this same character: match its scale, design and colors exactly.' : '');
+      out.push(
+        `### ${name} — planche ${p + 1}`,
+        '',
+        `**Lignes :** ${sheetRows.map((row, r) => `${r + 1} ${row.fr} (\`${row.tag}\`)`).join(' · ')}.`,
+        '',
+        `**Joindre :** la fiche de référence${p > 0 ? ' et la planche 1' : ''}. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-planche${p + 1}.jpg\``,
+        '',
+        fence(sheetPrompt({ intro, rows: sheetRows, ch: cls, bg: GREY, label: `demi-dieu-${ck}/planche${p + 1}` })),
+      );
+    }
+  }
+  return out.join('\n');
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Fichiers
 
-rmSync(OUT, { recursive: true, force: true });
+// Seul le dossier « plus-tard » est vidé : les fichiers écrits à la main à côté des lots (icônes…) restent.
+rmSync(new URL('plus-tard/', OUT), { recursive: true, force: true });
 mkdirSync(new URL('plus-tard/', OUT), { recursive: true });
 const write = (name, text) => writeFileSync(new URL(name, OUT), text);
 
@@ -1108,6 +1345,11 @@ for (const lot of LOTS) {
 {
   const text = lot4x8();
   write('06-ce-qui-manque-4x8.md', text);
+  total += count(text);
+}
+{
+  const text = lotDemiDieux();
+  write('08-demi-dieux-4x8.md', text);
   total += count(text);
 }
 
