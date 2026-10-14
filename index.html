@@ -7,28 +7,134 @@
     <meta name="description" content="Action-RPG de donjon en temps réel dans l'au-delà japonais du Yomi." />
     <meta property="og:title" content="Rivages des Morts" />
     <meta property="og:description" content="Action-RPG de donjon en temps réel dans l'au-delà japonais du Yomi." />
+    <link rel="preload" href="/fonts/shippori-mincho-regular.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Écran de chargement : écrit ici, en dur, pour s'afficher avant même que le code du jeu (plusieurs Mo) arrive. -->
+    <style>
+      #chargement {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 18px;
+        background:
+          radial-gradient(ellipse at 50% 110%, rgba(200, 65, 47, 0.22), transparent 60%),
+          #16181b;
+        color: #ece6da;
+        font-family: 'Shippori Mincho', Georgia, 'Times New Roman', serif;
+        transition: opacity 0.5s ease;
+      }
+      #chargement.fini {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #chargement .sceau {
+        display: grid;
+        place-items: center;
+        width: 76px;
+        height: 76px;
+        border-radius: 6px;
+        background: #c8412f;
+        color: #f1ece2;
+        font-size: 30px;
+        line-height: 1;
+        writing-mode: vertical-rl;
+        transform: rotate(-4deg);
+        box-shadow: 0 6px 18px rgba(155, 47, 34, 0.4);
+        animation: sceau 2.4s ease-in-out infinite;
+      }
+      #chargement h1 {
+        margin: 0;
+        font-size: clamp(32px, 6vw, 56px);
+        font-weight: 400;
+        letter-spacing: 0.02em;
+      }
+      #chargement .barre {
+        width: min(320px, 70vw);
+        height: 3px;
+        background: rgba(236, 230, 218, 0.14);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      #chargement .remplissage {
+        height: 100%;
+        background: #c8412f;
+        transform: scaleX(0.03);
+        transform-origin: left;
+        transition: transform 0.35s ease-out;
+      }
+      #chargement .etape {
+        min-height: 1.4em;
+        font-size: 15px;
+        font-style: italic;
+        color: #aaa397;
+      }
+      @keyframes sceau {
+        50% {
+          transform: rotate(-4deg) scale(1.04);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #chargement .sceau {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="chargement" role="status" aria-live="polite">
+      <div class="sceau" aria-hidden="true">黄泉</div>
+      <h1>Rivages des Morts</h1>
+      <div class="barre"><div class="remplissage"></div></div>
+      <div class="etape">Le passeur détache sa barque…</div>
+    </div>
+    <script>
+      // La barre avance avec chaque fichier reçu (code, images, planches) : on ne connaît pas le total d'avance,
+      // elle s'en approche donc sans jamais l'atteindre. Le jeu y ajoute ses étapes (src/loading.ts), puis la retire.
+      (function () {
+        var ecran = document.getElementById('chargement');
+        var remplissage = ecran.querySelector('.remplissage');
+        var recus = 0;
+        ecran.dataset.plancher = '0';
+        function avancer() {
+          if (ecran.classList.contains('fini')) return;
+          var auto = 0.92 * (1 - Math.exp(-recus / 45));
+          var part = Math.max(Number(ecran.dataset.plancher) || 0, auto);
+          remplissage.style.transform = 'scaleX(' + Math.max(0.03, part) + ')';
+        }
+        ecran.avancer = avancer;
+        if (window.PerformanceObserver) {
+          try {
+            new PerformanceObserver(function (liste) {
+              recus += liste.getEntries().length;
+              avancer();
+            }).observe({ type: 'resource', buffered: true });
+          } catch (e) {}
+        }
+      })();
+    </script>
     <canvas id="game" tabindex="0"></canvas>
     <div id="overlay"></div>
     <div id="hud">
-      <div class="status">
-        <div class="bar hp"><div class="fill"></div><div class="barrier"></div><span class="label">PV</span></div>
-        <div class="bar rage"><div class="fill"></div><span class="label">Rage</span></div>
-        <div class="skills">
-          <div class="skill" id="skill-dodge"><div class="cooldown"></div><kbd>Espace</kbd>Esquive</div>
-          <div class="skill" id="skill-a"><div class="cooldown"></div><kbd>A</kbd><span class="name">Frappe fracassante</span></div>
-          <div class="skill" id="skill-e"><div class="cooldown"></div><kbd>E</kbd><span class="name">Bond</span></div>
-          <div class="skill" id="skill-r"><div class="cooldown"></div><kbd>R</kbd><span class="name">Frénésie</span></div>
-          <div class="skill hidden" id="skill-f"><div class="cooldown"></div><kbd>F</kbd><span class="name">Voie</span></div>
-        </div>
-      </div>
+      <div class="status"></div>
       <div id="boss">
         <span class="name">Jorōgumo</span>
         <div class="bar"><div class="fill"></div></div>
       </div>
       <div id="banner"><small></small><span></span></div>
       <div id="hint"></div>
+      <div class="actionbar">
+        <div class="bar hp"><div class="fill"></div><div class="barrier"></div><span class="label">PV</span></div>
+        <div class="bar rage"><div class="fill"></div><span class="label">Rage</span></div>
+        <div class="skills">
+          <div class="skill" id="skill-dodge"><img class="icon" src="sprites/competences/esquive.png" alt="" /><div class="cooldown"></div><kbd>Espace</kbd><span class="name">Esquive</span></div>
+          <div class="skill" id="skill-a"><img class="icon" src="sprites/competences/guerrier-a.png" alt="" /><div class="cooldown"></div><kbd>A</kbd><span class="name">Frappe fracassante</span></div>
+          <div class="skill" id="skill-e"><img class="icon" src="sprites/competences/guerrier-e.png" alt="" /><div class="cooldown"></div><kbd>E</kbd><span class="name">Bond</span></div>
+          <div class="skill" id="skill-r"><img class="icon" src="sprites/competences/guerrier-r.png" alt="" /><div class="cooldown"></div><kbd>R</kbd><span class="name">Frénésie</span></div>
+          <div class="skill hidden" id="skill-f"><img class="icon" src="sprites/competences/voie.png" alt="" /><div class="cooldown"></div><kbd>F</kbd><span class="name">Voie</span></div>
+        </div>
+      </div>
       <div class="controls">
         <kbd>ZQSD</kbd> se déplacer · <kbd>Souris</kbd> viser · <kbd>Clic gauche</kbd> frapper ·
         <kbd>Clic droit</kbd> bloquer · <kbd>Espace</kbd> esquiver · <kbd>A</kbd> frappe · <kbd>E</kbd> bond · <kbd>R</kbd> frénésie

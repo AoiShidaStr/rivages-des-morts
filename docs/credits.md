@@ -16,6 +16,12 @@
 | `encart.png` | Border/panel-border-012 | suivi de quête |
 | `separateur.png` | Divider Fade/divider-fade-001 (et son miroir) | trait sous le titre de la pause |
 
+## Police des titres : Shippori Mincho (FONTWORKS, Google Fonts)
+
+- Licence : SIL Open Font License 1.1, voir `public/fonts/OFL-shippori-mincho.txt`.
+- Dans le dépôt : `public/fonts/shippori-mincho-*.woff2`, réduites aux caractères du jeu (latin, kana et les kanji des
+  sceaux) par `tools/polices.py`, pour marcher hors ligne et sur le serveur coop.
+
 ## Modèles 3D : KayKit
 
 Voir `public/models/kaykit-dungeon/LICENSE.txt` et `public/models/kaykit-forest/LICENSE.txt` (CC0).

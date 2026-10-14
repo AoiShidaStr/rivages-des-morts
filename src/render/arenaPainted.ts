@@ -199,7 +199,7 @@ function rizieres(
       const gx = Math.abs((((x + PADDY / 2) % PADDY) + PADDY) % PADDY - PADDY / 2);
       const gz = Math.abs((((z + PADDY / 2) % PADDY) + PADDY) % PADDY - PADDY / 2);
       // Diguette : le bord de chaque casier (distance au plus proche bord de case).
-      const dike = mud * smoothstep(PADDY / 2 - 0.2, PADDY / 2 - 0.1, Math.max(gx, gz));
+      const dike = mud * smoothstep(PADDY / 2 - 0.16, PADDY / 2 - 0.06, Math.max(gx, gz));
       w.mud[k] = mud;
       w.dike[k] = dike;
       w.paddyWater[k] = mud * (1 - dike);
@@ -229,7 +229,9 @@ function rizieres(
       { weight: w.mud, texture: tex.vase, tile: 3 },
       { weight: w.paddyWater, color: '#a9c1b8', alpha: 0.55 },
       { weight: w.sprouts, texture: tex.herbe, tile: 2.5, tint: '#c8d6b4', alpha: 0.45 },
-      { weight: w.dike, texture: tex.herbe, tile: 2.5, tint: '#c9ceb0' },
+      // Diguettes à demi fondues dans l'eau : elles découpent les casiers sans voler la vedette aux yokai.
+      { weight: w.dike, texture: tex.herbe, tile: 2.5, tint: '#c9ceb0', alpha: 0.4 },
+      { weight: w.dike, color: '#a9b8ae', alpha: 0.25 },
       { weight: w.bank, texture: tex.herbe, tile: 5, tint: '#b9c1a8' },
       { weight: w.bankVar, texture: tex.mousse, tile: 4, tint: '#c6ccbd', alpha: 0.7 },
       { weight: w.rock, texture: tex.roche, tile: 4 },

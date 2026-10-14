@@ -3,12 +3,12 @@
   "maxLevel": 100,
   "unlockStep": 5,
   "enemy": {
-    "about": "`base` et `bossBase` : force des yokai au niveau 1 ; `dungeons` : le supplément propre aux donjons ordinaires, appliqué par-dessus (0,16.0, ×1,5) — le Yomi sans fond ne le reçoit pas, il garde les chiffres de donjon-infini.json.",
+    "about": "`base` et `bossBase` : force des yokai au niveau 1 ; `dungeons` : le supplément propre aux donjons ordinaires, appliqué par-dessus (0,16.0, ×1,5) à partir du niveau `from` (5 : les niveaux 1 à 4 restent abordables pour un débutant) — le Yomi sans fond ne le reçoit pas, il garde les chiffres de donjon-infini.json.",
     "base": { "hp": 1.4, "damage": 1.6 },
     "bossBase": { "hp": 1.1, "damage": 1.2 },
     "hpPerLevel": 0.09,
     "damagePerLevel": 0.1,
-    "dungeons": { "hp": 1.5, "damage": 1.5 }
+    "dungeons": { "hp": 1.5, "damage": 1.5, "from": 5 }
   },
   "rewards": { "obolesPerLevel": 0.1, "xpPerLevel": 0.15, "rareChancePerLevel": 0.01, "extraMaterialEvery": 20 },
   "elite": { "hp": 1.8, "damage": 1.3 },

@@ -5,6 +5,9 @@ import { heroAvailable, heroImage, heroSprite } from '../render/heroes';
 import type { AsepriteSheet } from '../render/sheets';
 import { h } from './dom';
 
+/** Race proposée en premier à la création. */
+const FIRST_RACE = 'hanyo';
+
 /**
  * Création du héros (GDD, multiclassage « à la création ») : une race, et pour le Demi-dieu son parent divin,
  * puis une classe. Tout tient sur un écran : on clique, le résumé en bas suit.
@@ -19,8 +22,11 @@ export class CreationScreen {
   }
 
   show(skills: SkillsDef, items: Record<string, ItemDef>, onDone: (hero: Hero) => void, onBack: () => void, current?: Hero): void {
-    const raceIds = Object.keys(skills.races);
     const classIds = Object.keys(skills.classes);
+    // Les races où toutes les classes sont jouables d'abord, le Hanyō en tête (sélectionné par défaut, et le premier à
+    // recevoir ses planches chibi) : le premier écran du jeu montre ce qui existe, pas ce qui manque.
+    const rank = (race: string) => (race === FIRST_RACE ? 0 : classIds.every((cls) => heroAvailable(race, cls)) ? 1 : 2);
+    const raceIds = Object.keys(skills.races).sort((a, b) => rank(a) - rank(b));
     const hero: Hero = current ? { ...current } : { race: raceIds[0], class: classIds[0] };
     const isCurrent = (race: string, cls: string) => current !== undefined && current.race === race && current.class === cls;
 
@@ -60,17 +66,16 @@ export class CreationScreen {
         );
       });
 
-      const classCards = [
-        ...classIds.map((id) => {
+      // Seules les classes jouables avec cette race sont proposées (plus la vie actuelle du héros) : une classe sans
+      // ses planches, ou à venir, est cachée plutôt que grisée.
+      const classCards = classIds
+        .filter((id) => heroAvailable(hero.race, id) || isCurrent(hero.race, id))
+        .map((id) => {
           const c = skills.classes[id];
-          // Grisée tant que la race n'a pas de bonnes planches pour cette classe (sauf la vie actuelle du héros).
-          const locked = !heroAvailable(hero.race, id) && !isCurrent(hero.race, id);
           return h(
             'button',
             {
-              class: `choice-card${id === hero.class ? ' selected' : ''}${locked ? ' soon' : ''}`,
-              disabled: locked,
-              title: locked ? `${c.name} ${race.name} : bientôt, en attendant ses nouvelles planches` : undefined,
+              class: `choice-card${id === hero.class ? ' selected' : ''}`,
               onclick: () => {
                 hero.class = id;
                 render();
@@ -80,20 +85,9 @@ export class CreationScreen {
             h('small', { class: 'choice-origin' }, c.subtitle),
             h('span', { class: 'choice-style' }, c.role),
             h('small', { class: 'choice-line' }, 'Arme : ', h('b', {}, items[c.weapon]?.name ?? c.weapon)),
-            locked ? h('small', { class: 'choice-line' }, `Bientôt en ${race.name}`) : h('small', { class: 'choice-line' }, 'Difficulté : ', stars(c.difficulty)),
+            h('small', { class: 'choice-line' }, 'Difficulté : ', stars(c.difficulty)),
           );
-        }),
-        ...skills.upcomingClasses.map((c) =>
-          h(
-            'button',
-            { class: 'choice-card soon', disabled: true },
-            h('strong', {}, c.name),
-            h('small', { class: 'choice-origin' }, c.subtitle),
-            h('span', { class: 'choice-style' }, c.role),
-            h('small', { class: 'choice-line' }, 'Bientôt'),
-          ),
-        ),
-      ];
+        });
 
       // Aperçu : la peinture du héros, et son animation d'attente telle qu'elle apparaît en jeu.
       const previewCanvas = h('canvas', { class: 'hero-preview-canvas' });
