@@ -55,7 +55,7 @@
     { "id": "jizo-5", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -33.57, "v": 20.2, "solid": 0.3 },
     { "id": "jizo-6", "name": "Statue Jizō", "verb": "Examiner", "dialogue": "jizo", "sprite": "jizo", "u": -33.92, "v": 20.86, "solid": 0.3 },
     { "id": "ema", "name": "Plaque votive", "verb": "Examiner", "sprite": "ema", "u": 16.08, "v": -3.3, "solid": 0.3, "if": [{ "quest": "forgeron", "is": "active" }, { "notFlag": "ema_trouvee" }] },
-    { "id": "gardien-errant", "name": "Le gardien errant", "verb": "Contempler", "dialogue": "gardien", "sprite": "gardien", "u": 17.8, "v": -1.9, "reach": 2.4, "solid": 0.35, "if": [{ "notFlag": "gardien_rencontre" }] },
+    { "id": "gardien-errant", "name": "Le gardien errant", "verb": "Contempler", "dialogue": "gardien", "sprite": "gardien", "u": 17.8, "v": -1.9, "reach": 2.4, "solid": 0.35 },
     { "id": "coffre-pont", "name": "Coffre caché", "verb": "Ouvrir", "sprite": "coffre", "u": -1.42, "v": -25.31, "if": [{ "notFlag": "coffre_pont" }] },
     { "id": "faille-cascade", "name": "Faille derrière la cascade", "verb": "Entrer", "u": 19.4, "v": 37.9, "reach": 1.8, "if": [{ "level": 50 }] },
     { "id": "coffre-cascade", "name": "Coffre moussu", "verb": "Ouvrir", "sprite": "coffre", "u": 31.5, "v": 34.4, "if": [{ "notFlag": "coffre_cascade" }] },
@@ -71,7 +71,12 @@
     { "id": "voyageur", "name": "L'homme d'argile", "sprite": "argile", "u": -29.8, "v": -12.6, "solid": 0.45, "if": [{ "flag": "jorogumo_vaincue" }] },
     { "id": "sutra-1", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 33.97, "v": 42.88, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-1" }] },
     { "id": "sutra-2", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 19.84, "v": -50.86, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-2" }] },
-    { "id": "sutra-3", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 7.68, "v": 57.22, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-3" }] }
+    { "id": "sutra-3", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 7.68, "v": 57.22, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-3" }] },
+    { "id": "dame-puits", "name": "La dame du puits", "dialogue": "dame-puits", "sprite": "oublie", "u": 3.6, "v": 28.9, "reach": 2.2, "solid": 0.35 },
+    { "id": "biwa", "name": "Le récitant aveugle", "dialogue": "biwa", "sprite": "moine", "u": -25, "v": -28, "reach": 2.2, "solid": 0.35 },
+    { "id": "vieux-kappa", "name": "Le vieux kappa", "dialogue": "vieux-kappa", "sprite": "kappa", "u": 10.5, "v": 11, "reach": 2.2, "solid": 0.45 },
+    { "id": "lanterne-vieille", "name": "Lanterne moussue", "verb": "Écouter", "dialogue": "lanterne-vieille", "sprite": "lanterne", "u": 5.6, "v": 27.2, "reach": 2.2, "solid": 0.3 },
+    { "id": "dogu", "name": "Le dogū aux yeux clos", "dialogue": "dogu", "sprite": "argile", "u": 21, "v": -35, "reach": 2.2, "solid": 0.4 }
   ],
   "decor": [
     { "sprite": "ile/pierre-dressee", "u": -22.4, "v": -21.7, "height": 1.7 },

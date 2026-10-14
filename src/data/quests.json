@@ -125,6 +125,46 @@
         { "if": [{ "has": "tasse-ebrechee" }], "text": "Rapporter la tasse à Obaa Kiku." },
         { "text": "Retrouver la tasse du mari d'Obaa. Les kappa des Rizières noyées ramassent tout ce qui brille." }
       ]
+    },
+    "puits": {
+      "name": "Ce que le puits a gardé",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "material": ["os", 2] }], "text": "Rapporter deux os de guerrier du Yomi à la dame du puits." },
+        { "text": "Récupérer deux os de guerrier du Yomi sur les shikome, sous le Rocher." }
+      ]
+    },
+    "recit": {
+      "name": "Le récit sans oreilles",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "material": ["soie", 1] }], "text": "Rapporter une soie de jorōgumo au récitant aveugle, sur les galets du ponton." },
+        { "text": "Trouver de la soie de jorōgumo dans les Rizières noyées, pour recorder la biwa du récitant." }
+      ]
+    },
+    "coupelle": {
+      "name": "La coupelle fendue",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "material": ["seve", 2] }], "text": "Apporter deux sèves de kodama au vieux kappa, en amont de la rivière." },
+        { "text": "Récolter deux sèves de kodama, pour sceller la coupelle du vieux kappa." }
+      ]
+    },
+    "veille": {
+      "name": "Cent ans de veille",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "material": ["braise", 1] }], "text": "Rapporter une braise de hitodama à la lanterne centenaire, sur le chemin du village." },
+        { "text": "Trouver une braise de feu follet : la lanterne de pierre attend qu'on la rallume." }
+      ]
+    },
+    "argile": {
+      "name": "Les yeux clos",
+      "type": "Secondaire",
+      "objectives": [
+        { "if": [{ "dungeon": ["*", 5] }], "text": "Raconter au dogū ce qu'il y a au cinquième dessous des Rizières noyées." },
+        { "text": "Descendre jusqu'au cinquième dessous d'un donjon, et revenir le dire au dogū de la grande prairie." }
+      ]
     }
   },
   "triggers": [

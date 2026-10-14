@@ -16,7 +16,12 @@
     "isamu": { "name": "Isamu", "sprite": "oublie" },
     "voyageur": { "name": "L'homme d'argile" },
     "stele": { "name": "La stèle des records" },
-    "gardien": { "name": "Le gardien errant" }
+    "gardien": { "name": "Le gardien errant" },
+    "dame-puits": { "name": "La dame du puits", "sprite": "oublie" },
+    "biwa": { "name": "Le récitant aveugle", "sprite": "moine" },
+    "vieux-kappa": { "name": "Le vieux kappa", "sprite": "kappa" },
+    "lanterne-vieille": { "name": "La lanterne centenaire", "sprite": "lanterne" },
+    "dogu": { "name": "Le dogū aux yeux clos", "sprite": "argile" }
   },
   "dialogues": {
     "stele": [
@@ -41,6 +46,16 @@
           ["heros", "(Tu gardes l'éclat. Tetsu saura peut-être quoi en faire.)"]
         ],
         "then": [{ "give": "peigne-izanagi" }, { "oboles": 180 }, { "material": ["eclat-tablettes", 1] }, { "set": "gardien_rencontre" }]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["gardien", "On m'appelait le veilleur, du temps où la rizière nourrissait les vivants. On laissait une offrande au carré d'eau, et je la comptais."]] },
+          { "lines": [["gardien", "Le peigne que tu portes s'est allumé, un jour, dans un lieu où il n'y avait plus de jour. Sers-t'en pour voir ce que tu regardes."]] },
+          { "lines": [["gardien", "Je ne suis pas un kodama. Les kodama font du bruit quand on les compte. Les veilleurs, non."]] },
+          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["gardien", "Elle a cédé, dit-on. Alors je peux m'asseoir. Ça m'étonne encore."]] },
+          { "if": [{ "flag": "puits_repose" }], "lines": [["gardien", "Tu es remonté du puits avec une âme entière. Ce que tu as porté pour elle, tu le porteras longtemps."]] }
+        ]
       }
     ],
     "charon": [
@@ -124,7 +139,11 @@
           { "lines": [["charon", "Les coffres ? Sur ma barque. Toujours sur ma barque. Je ne suis pas une consigne, mais c'est tout comme."]] },
           { "lines": [["charon", "Ce que tu rapportes en double, Tetsu le fond. Rien ne se perd, au Yomi. Sauf les noms."]] },
           { "if": [{ "quest": "calme", "is": "done" }], "lines": [["charon", "La barque est prête. Quand une rive sera en vue, tu seras le premier à le savoir. Enfin, le deuxième : moi d'abord."]] },
-          { "if": [{ "quest": "calme", "is": "none" }], "lines": [["charon", "Les rizières sont calmes. Pas mal, pour une âme sans nom."]] }
+          { "if": [{ "quest": "calme", "is": "none" }], "lines": [["charon", "Les rizières sont calmes. Pas mal, pour une âme sans nom."]] },
+          { "lines": [["charon", "Il y a un aveugle, en bas, sur les galets. Il gratte une biwa et il récite pour ceux qui ne paient pas. Moi, je ne fais pas crédit."]] },
+          { "lines": [["charon", "La dame du puits, au-dessus du village ? Elle est là depuis plus longtemps que ma barque. Elle ne monte pas : elle dit que le fond lui tient les chevilles."]] },
+          { "lines": [["charon", "Le vieux kappa d'amont ne salue plus personne. Incline-toi le premier, sinon tu finiras à l'eau et je devrai te repêcher."]] },
+          { "if": [{ "flag": "puits_repose" }], "lines": [["charon", "Tu as remonté la dame du puits, à ce qu'on dit. Remonter, dans mon métier, ça n'arrive jamais deux fois."]] }
         ]
       }
     ],
@@ -186,7 +205,11 @@
           { "if": [{ "notFlag": "benediction_jizo" }], "lines": [["obaa", "Les six Jizō, près de Yuki… Une obole à chacun, et ils veillent sur toi. C'est ce qu'on disait, de mon temps."]] },
           { "lines": [["obaa", "Le tanuki m'a vendu une théière « authentique ». Elle fuit par le fond. Mais elle est jolie."]] },
           { "if": [{ "flag": "remise_obaa" }], "lines": [["obaa", "Genzō aimait les pêches. Il disait qu'elles chassaient les mauvais esprits. Je m'en souviens, maintenant."]] },
-          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["obaa", "On dit que la reine d'en bas s'est calmée. Le thé aurait meilleur goût… si on pouvait encore le boire."]] }
+          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["obaa", "On dit que la reine d'en bas s'est calmée. Le thé aurait meilleur goût… si on pouvait encore le boire."]] },
+          { "lines": [["obaa", "Ma théière ? Elle fuit par le fond. Le tanuki me l'a vendue « authentique ». Un jour, elle a remué toute seule sur le feu, et j'ai arrêté de poser des questions."]] },
+          { "lines": [["obaa", "Je note les noms, tu sais. Dans un cahier, à l'encre. Ici, on paie souvent avec ce qu'on a oublié : alors je garde, au cas où l'un d'eux reviendrait le chercher."]] },
+          { "if": [{ "quest": "recit", "is": "done" }], "lines": [["obaa", "Tu as donné de la soie au récitant ? Il chantera cette histoire-là aussi. Il chante tout, et il oublie tout le reste."]] },
+          { "if": [{ "flag": "puits_repose" }], "lines": [["obaa", "La dame du puits a cessé de tourner dans l'eau. On dit que c'est toi. Moi, je dis que c'est la première fois qu'une âme remonte sans rien payer."]] }
         ],
         "choices": [
           { "text": "Voir tes marchandises", "then": [{ "open": "shop", "shop": "obaa" }] },
@@ -213,6 +236,13 @@
             "reply": [
               ["obaa", "Ici, on existe tant que quelqu'un se souvient de nous. Les vivants ont cessé de prier les anciens dieux, de nommer leurs morts…"],
               ["obaa", "Alors on s'efface. D'abord le nom, puis le visage. Ceux qui ont tout perdu, on les appelle les Oubliés. Tu en verras, dans les rizières."]
+            ]
+          },
+          {
+            "text": "Pourquoi tiens-tu un cahier ?",
+            "reply": [
+              ["obaa", "Parce qu'ici, on existe tant que quelqu'un se souvient. Alors je me souviens pour tout le monde : c'est mon métier, depuis la mort."],
+              ["obaa", "Et si un jour tu retrouves ton nom, viens me le dire. Je l'écrirai à la page du milieu : c'est la plus solide."]
             ]
           },
           { "text": "Au revoir" }
@@ -284,7 +314,10 @@
           { "lines": [["tetsu", "Une pièce montée au niveau 25 compte double pour ton art. Au 50, elle compte pour tous. Le métal a de la mémoire."]] },
           { "if": [{ "flag": "sceau_ouvert" }, { "notHas": "do-yomi" }], "lines": [["tetsu", "Des os du Yomi et de la foudre figée… Rapporte-m'en, et je te fais un Dō que même Izanami n'entamerait pas."]] },
           { "lines": [["tetsu", "Un casque et une cuirasse, je te les forge. Le reste de la panoplie, les soldats du Palais le portent encore. Va le leur prendre : ensemble, les pièces se souviennent de ce qu'elles étaient."]] },
-          { "lines": [["tetsu", "Les doublons que tu rapportes, je les fonds. Rien de ce qui a été forgé ne se perd."]] }
+          { "lines": [["tetsu", "Les doublons que tu rapportes, je les fonds. Rien de ce qui a été forgé ne se perd."]] },
+          { "lines": [["tetsu", "Les shikome portent des lamelles d'os et des masques cousus. Ce métal-là ne se forge pas : on le déshabille sur un cadavre. Apporte-m'en, on verra ce qu'on en tire."]] },
+          { "lines": [["tetsu", "Tes reliques ? Je ne les reforge pas. L'éclat des Tablettes les éveille : c'est un autre métier. Le mien, c'est l'acier qui se souvient."]] },
+          { "if": [{ "flag": "nom_tetsu" }], "lines": [["tetsu", "Tu sauras un jour pourquoi j'ai gravé mon nom sur du bois et pas sur du fer. Le fer garde tout. Il garde trop."]] }
         ],
         "choices": [
           { "text": "Utiliser la forge", "then": [{ "open": "forge" }] },
@@ -346,7 +379,9 @@
         "pool": [
           { "lines": [["yuki", "Ma lanterne brille, mais le chemin s'arrête au Grand Rocher. Le moine dit que la dame derrière retient les morts."]] },
           { "lines": [["yuki", "Tu crois que Maman m'attend ? … Oui. Les mamans attendent toujours."]] },
-          { "lines": [["yuki", "Les Jizō veillent sur les enfants. Moi, je veille sur les Jizō. Comme ça, c'est juste."]] }
+          { "lines": [["yuki", "Les Jizō veillent sur les enfants. Moi, je veille sur les Jizō. Comme ça, c'est juste."]] },
+          { "lines": [["yuki", "Maman est partie un soir de brume. Papa dit qu'elle a ri, et que son rire faisait de la fumée blanche. Moi, je n'ai rien vu : je dormais."]] },
+          { "lines": [["yuki", "Il y a une lanterne, plus bas, qui parle toute seule. Je l'ai entendue. Grand-mère disait que les objets qui attendent cent ans finissent par avoir une voix."]] }
         ]
       },
       {
@@ -406,7 +441,7 @@
     "jizo": [
       {
         "if": [{ "notFlag": "offrande_{self}" }],
-        "lines": [["narrateur", "Un petit Jizō de pierre, coiffé d'un bonnet rouge. Il veille sur les enfants et les voyageurs perdus."]],
+        "lines": [["narrateur", "Un petit Jizō de pierre, coiffé d'un bonnet rouge. Six en tout, alignés le long du chemin : six chemins, six peines. Celui-ci veille sur les enfants et les voyageurs perdus."]],
         "choices": [
           {
             "text": "Offrir une obole",
@@ -477,6 +512,20 @@
             "if": [{ "flag": "coffre_pont" }, { "flag": "coffre_cascade" }, { "flag": "benediction_jizo" }, { "flag": "fragment_izanami" }],
             "reply": [["tanuki", "Tu as tout trouvé. Tout ! Tu es pire qu'un tanuki. Pour l'île, en tout cas. Dans les donjons, plus on descend, plus les trésors sont vrais."]]
           },
+          {
+            "text": "D'où viennent tes oboles ?",
+            "reply": [
+              ["tanuki", "De la vente. Et des feuilles. … Bon : surtout des feuilles. Mais elles tiennent bien, mes feuilles, tant qu'on ne les regarde pas de trop près."],
+              ["tanuki", "J'en ai vendu un sac à Obaa, une fois. Depuis, elle compte devant moi. C'est vexant."]
+            ]
+          },
+          {
+            "text": "Il paraît que tu t'es déjà changé en théière ?",
+            "reply": [
+              ["tanuki", "Une théière ? Moi ? … Une fois. Une seule. Et elle fuit par le fond, cette théière. Ce n'est pas ma faute si Obaa la garde quand même."],
+              ["tanuki", "Et la nuit, écoute : ce n'est pas l'orage, c'est mon ventre. Je bats dessus. Les villageois n'ont jamais rien compris, et ça me va très bien."]
+            ]
+          },
           { "text": "Partir" }
         ]
       }
@@ -515,7 +564,9 @@
           { "lines": [["kawataro", "Tu as salué quelqu'un aujourd'hui ? Ça ne coûte rien, et ça renverse des coupelles."]] },
           { "lines": [["kawataro", "Les kappa renforcés portent des choses lourdes : un kanabō, un tetsubō, une cloche… Ils aiment ce qui fait du bruit."]] },
           { "if": [{ "notFlag": "tanuki_trouve" }], "lines": [["kawataro", "Il paraît qu'un des Jizō sent le saké. Moi je ne dis rien : je suis un kappa poli."]] },
-          { "if": [{ "quest": "concombre", "is": "done" }], "lines": [["kawataro", "Kyuu… Ce concombre, je m'en souviendrai longtemps. Plus longtemps que de mon nom, peut-être."]] }
+          { "if": [{ "quest": "concombre", "is": "done" }], "lines": [["kawataro", "Kyuu… Ce concombre, je m'en souviendrai longtemps. Plus longtemps que de mon nom, peut-être."]] },
+          { "lines": [["kawataro", "Le vieux, en amont, ne salue plus personne depuis un siècle. Si tu l'abordes, incline-toi d'abord : sinon il te prendra pour un vivant pressé."]] },
+          { "lines": [["kawataro", "Et si un kappa te tend le bras, prends-le. C'est un cadeau : sa peau se rattache, et il t'apprendra à recoller un os en échange. C'est comme ça qu'on a appris, nous, de vous."]] }
         ]
       }
     ],
@@ -552,7 +603,9 @@
         "pool": [
           { "lines": [["isamu", "Isamu. Tu t'en souviens ? … Merci. La mer me manque, mais moins qu'avant."]] },
           { "lines": [["isamu", "Les Oubliés des rizières… Je leur ressemblais. Frappe-les vite : ce n'est pas de la cruauté, c'est de la pitié."]] },
-          { "lines": [["isamu", "Ma fille m'attendait sur le quai. Si elle est passée par ici, le passeur l'a vue. Je n'ose pas lui demander."]] }
+          { "lines": [["isamu", "Ma fille m'attendait sur le quai. Si elle est passée par ici, le passeur l'a vue. Je n'ose pas lui demander."]] },
+          { "lines": [["isamu", "Je suis sorti une nuit, au large. Une seule nuit. Le temps, lui, n'a pas attendu mon retour : c'est ce qu'on dit chez nous, quand un pêcheur disparaît sans laisser de barque."]] },
+          { "lines": [["isamu", "On raconte qu'au fond de la mer il y a un palais où l'on est reçu comme un prince. Ceux qui en reviennent ne retrouvent personne. J'ai toujours cru que c'était une histoire de mon village."]] }
         ]
       }
     ],
@@ -589,7 +642,8 @@
         "pool": [
           { "lines": [["voyageur", "Mon nom ? … Pas encore. Ici, un nom se mérite. Et le mien pèse lourd."]] },
           { "lines": [["voyageur", "Le fragment de tablette que tu portes est tiède, non ? Il sent quand une rive s'effondre."]] },
-          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["voyageur", "Tu as regardé une reine des morts en face, et tu es remonté. Mon ami, lui, n'a jamais su regarder la mort."]] }
+          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["voyageur", "Tu as regardé une reine des morts en face, et tu es remonté. Mon ami, lui, n'a jamais su regarder la mort."]] },
+          { "lines": [["voyageur", "La statuette d'argile, dans les herbes, plus loin. Les yeux fermés depuis deux mille ans. Elle dit qu'elle surveille la terre. Nous autres, d'argile, on nous laisse toujours un travail qui ne finit pas."]] }
         ]
       }
     ],
@@ -795,6 +849,12 @@
       },
       {
         "lines": [["moine", "Tu l'as entendue, n'est-ce pas ? Ne l'écoute pas trop longtemps. Les voix du Yomi retiennent ceux qui les écoutent."]],
+        "pool": [
+          { "lines": [["moine", "Izanami goûta le repas du foyer du Yomi. Ce qu'on mange là-bas, on le garde : voilà pourquoi elle ne pouvait plus remonter. Ce n'était pas une question de temps."]] },
+          { "lines": [["moine", "Quand Izanagi a fui, Izanami a lâché ses shikome : des femmes de la nuit, chargées de le rattraper. On en croise encore sous le Rocher, et elles portent des lamelles d'os."]] },
+          { "lines": [["moine", "Izanagi a arraché un peigne de ses cheveux et l'a allumé pour voir dans le noir. Ce qui brûle au Yomi ne s'éteint pas : demande au gardien des rizières ce qu'il en garde."]] },
+          { "lines": [["moine", "Il y a un récitateur aveugle, sur les galets du ponton. Demande-lui la bataille des morts : il la connaît mieux que moi. Moi, je n'ai que la fin."]] }
+        ],
         "choices": [
           {
             "text": "Retrouver une autre vie (changer de race ou de classe)",
@@ -882,6 +942,205 @@
         "choices": [
           { "text": "Entrer dans les Rizières noyées", "then": [{ "startQuest": "dame" }, { "enterDungeon": true }] },
           { "text": "Pas encore" }
+        ]
+      }
+    ],
+    "dame-puits": [
+      {
+        "if": [{ "notFlag": "sceau_ouvert" }],
+        "lines": [
+          ["narrateur", "L'eau du puits est noire et parfaitement immobile. Une silhouette y flotte, la tête en bas."],
+          ["dame-puits", "Ne te penche pas trop. On ne remonte pas d'un puits : on y tombe, et puis on y reste."],
+          ["dame-puits", "Toi, tu es encore tiède : ça se sent d'ici. Profites-en pour marcher."]
+        ]
+      },
+      {
+        "if": [{ "flag": "sceau_ouvert" }, { "quest": "puits", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["dame-puits", "Le rocher a glissé. Alors tu descends, toi aussi."],
+          ["heros", "Tu es tombée ?"],
+          ["dame-puits", "J'ai été poussée. Par une main, ou par la mienne : à la fin, je ne savais plus, et c'est cela qui me ronge."],
+          ["dame-puits", "Ils m'ont remontée par morceaux, un seau à la fois. Il me manque deux os. Les shikome en portent de trop, sous le Rocher."],
+          ["dame-puits", "Rapporte-m'en deux. Les miens, je les ai donnés à l'eau."]
+        ],
+        "then": [{ "startQuest": "puits" }]
+      },
+      {
+        "if": [{ "quest": "puits", "is": "active" }, { "material": ["os", 2] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu poses les deux os au bord du puits.)"],
+          ["narrateur", "L'eau frémit. La silhouette se recompose lentement, membre après membre, sans jamais sortir du cercle."],
+          ["dame-puits", "Voilà. Je tiens debout. Enfin : je tiens dans l'eau."],
+          ["dame-puits", "Prends ce masque. C'était le mien, le jour où la jalousie m'a changée en démon. Les moines le portent au théâtre ; moi, je n'en veux plus."],
+          ["dame-puits", "Et retiens au moins le puits, si mon nom est déjà parti."]
+        ],
+        "then": [{ "material": ["os", -2] }, { "completeQuest": "puits" }, { "set": "puits_repose" }, { "give": "masque-hannya" }, { "xp": 70 }, { "toast": "Fragment de mémoire : le repas du Yomi" }]
+      },
+      {
+        "if": [{ "quest": "puits", "is": "active" }],
+        "lines": [["dame-puits", "Deux os, pas plus. Sous le Rocher : les shikome en laissent traîner partout, elles n'en ont que faire."]]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["dame-puits", "Le puits n'a pas de fond. Enfin, il en a un : c'est le Yomi, et il est plein."]] },
+          { "lines": [["dame-puits", "Ne bois pas de cette eau. Le repas du Yomi ne se digère pas : il te garde."]] },
+          { "if": [{ "flag": "izanami_vaincue" }], "lines": [["dame-puits", "La reine s'est calmée là-dessous ? Alors pourquoi l'eau tremble encore quand je prononce son nom."]] }
+        ]
+      }
+    ],
+    "biwa": [
+      {
+        "if": [{ "quest": "recit", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Assis sur les galets, un homme au crâne rasé gratte une biwa sans cordes. Il tourne la tête vers toi sans y arriver tout à fait."],
+          ["biwa", "Approche. Je n'ai plus d'yeux, mais j'entends les vivants : vous marchez en biais, comme si vous pouviez repartir."],
+          ["biwa", "Je récite la bataille des morts, chaque nuit, à ceux qui la réclament. Ils ne paient pas, et je ne refuse pas."],
+          ["biwa", "Mais mes cordes sont mortes. Il me faut de la soie des rizières noyées : celle de la dame-araignée tient mille ans sans s'user."],
+          ["heros", "Et si les morts n'aiment pas mon visage ?"],
+          ["biwa", "Ils ne le verront pas. Couvre-toi de sutras jusqu'au cou, et surtout : garde tes oreilles."]
+        ],
+        "then": [{ "startQuest": "recit" }]
+      },
+      {
+        "if": [{ "quest": "recit", "is": "active" }, { "material": ["soie", 1] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui tends un écheveau de soie grise.)"],
+          ["narrateur", "Il en tend une corde en trois gestes, sans regarder ses mains, et pince. La note tient longtemps dans la brume."],
+          ["biwa", "Voilà. Écoute : c'est cela, l'autre camp. Des tambours, et personne pour rentrer."],
+          ["biwa", "Prends ce tambour. Il battait les funérailles ; il battra pour toi. Les moines l'appelaient le Jugement, je crois bien."],
+          ["biwa", "Et si une voix t'appelle par ton nom au bord de l'eau : ne réponds pas. Aucun mort ne connaît ton nom. C'est comme ça qu'on les reconnaît."]
+        ],
+        "then": [{ "material": ["soie", -1] }, { "completeQuest": "recit" }, { "set": "recit_cordes" }, { "give": "tambour-temple" }, { "xp": 80 }]
+      },
+      {
+        "if": [{ "quest": "recit", "is": "active" }],
+        "lines": [["biwa", "De la soie de jorōgumo. Elle file derrière le torii noir, au fond des rizières noyées."]]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["biwa", "Un jour, des moines m'ont couvert de sutras jusqu'au cou pour me cacher aux morts. Ils ont oublié mes oreilles. Je n'entends plus de ce côté-là, c'est tout."]] },
+          { "lines": [["biwa", "Les âmes ne montent pas toutes au ciel ni ne descendent toutes sous terre. La plupart errent, et je joue pour celles-là."]] },
+          { "if": [{ "race": "demi-dieu" }], "lines": [["biwa", "Vous autres, de la mer, vous avez un chanteur descendu chercher sa femme. On me l'a récitée cent fois. Elle finit mal dans toutes les versions."]] },
+          { "lines": [["biwa", "Reste encore un peu. C'est tout ce que je demande : qu'on écoute jusqu'au bout."]] }
+        ]
+      }
+    ],
+    "vieux-kappa": [
+      {
+        "if": [{ "quest": "coupelle", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Un kappa gris, immense pour son espèce, tourne le dos à l'eau. La coupelle de son crâne est fendue d'un bout à l'autre."],
+          ["vieux-kappa", "N'approche pas en souriant. Je ne rends plus les saluts : la dernière fois que je me suis incliné, j'ai perdu dix ans d'eau."],
+          ["heros", "Ta coupelle est cassée ?"],
+          ["vieux-kappa", "Fendue depuis un siècle. Je n'ai pas bu un vrai verre depuis. Il me faudrait de la sève de kodama : elle seule tient sur une coupelle sèche."],
+          ["vieux-kappa", "Apporte-m'en. Et pendant que tu cherches, retiens ceci : quand un homme tombe à l'eau derrière toi et te tend la main, ne la prends pas par le poignet. Prends-la par la peau. C'est nous qui perdons un bras, et nous en rions encore."]
+        ],
+        "then": [{ "startQuest": "coupelle" }]
+      },
+      {
+        "if": [{ "quest": "coupelle", "is": "active" }, { "material": ["seve", 2] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu verses la sève dans la fêlure.)"],
+          ["narrateur", "La sève coule et se fige en un liseré clair. Le vieux kappa incline la tête, très lentement, comme on fait un premier pas."],
+          ["vieux-kappa", "Elle tient. Kyuu. Tu entends ? C'est le bruit de mon siècle qui recommence."],
+          ["vieux-kappa", "Prends cette dent. Oui, une dent : le tanuki jure que nous n'en avons pas. Le tanuki n'a jamais rien vu de nous, sauf ce qu'il raconte."],
+          ["vieux-kappa", "Et si tu croises un enfant qui joue au bord de l'eau, compte ses doigts. Trois fois sur quatre, ce n'est pas un enfant."]
+        ],
+        "then": [{ "material": ["seve", -2] }, { "completeQuest": "coupelle" }, { "set": "coupelle_reparee" }, { "give": "dent-kappa" }, { "xp": 60 }]
+      },
+      {
+        "if": [{ "quest": "coupelle", "is": "active" }],
+        "lines": [["vieux-kappa", "De la sève de kodama. Les arbres qui la donnent portent une corde sacrée : ne touche pas à leur écorce."]]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["vieux-kappa", "Nous volons la bourse des noyés, et ce qu'ils ont dans les os. Mangez moins de concombres, vous autres : c'est à cause du concombre que je suis là."]] },
+          { "lines": [["vieux-kappa", "Kawatarō, en bas, se croit poli. Il salue les vivants. Il finira par sécher, les pieds en l'air, et personne ne lui rendra son eau."]] },
+          { "if": [{ "flag": "tanuki_trouve" }], "lines": [["vieux-kappa", "Ton tanuki sent le saké. Un vrai yokai sent la rivière et le poisson mort. Méfie-toi des gens qui sentent bon."]] }
+        ]
+      }
+    ],
+    "lanterne-vieille": [
+      {
+        "if": [{ "quest": "veille", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Une lanterne de pierre, couverte de mousse. Sous la pierre, quelque chose respire : une flamme qui n'éclaire pas."],
+          ["lanterne-vieille", "Cent ans que je compte les pas de ceux qui passent. Tu es le neuvième, cette année. Les autres ne s'arrêtent jamais."],
+          ["heros", "Tu parles ?"],
+          ["lanterne-vieille", "Tout finit par parler. Un bol oublié sur une étagère, un parapluie au fond d'un couloir, une lanterne au bord d'un chemin : nous attendons, et l'attente nous donne une voix."],
+          ["lanterne-vieille", "Ma flamme s'est éteinte le jour où la dernière main qui m'avait allumée est devenue cendre. Apporte-moi une braise de feu follet, et je veillerai encore un siècle."]
+        ],
+        "then": [{ "startQuest": "veille" }]
+      },
+      {
+        "if": [{ "quest": "veille", "is": "active" }, { "material": ["braise", 1] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu déposes la braise dans la lanterne de pierre.)"],
+          ["narrateur", "La flamme hésite, prend, et devient bleue. La mousse, autour, luit comme un tapis de gel."],
+          ["lanterne-vieille", "Ah. Voilà. Je me souviens du nom de la femme qui m'a allumée : Kiku. Elle tenait une maison de thé, ici, avant que le village ne devienne ce qu'il est."],
+          ["lanterne-vieille", "Prends ce talisman. Il était dans ma niche, plié en quatre. Il appartient à un dieu du feu qui ne répond plus, mais le papier, lui, brûle encore."]
+        ],
+        "then": [{ "material": ["braise", -1] }, { "completeQuest": "veille" }, { "set": "veille_allumee" }, { "give": "ofuda-kagutsuchi" }, { "xp": 55 }]
+      },
+      {
+        "if": [{ "quest": "veille", "is": "active" }],
+        "lines": [["lanterne-vieille", "Une braise de feu follet, encore chaude. Les rizières noyées en sont pleines, la nuit."]]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["lanterne-vieille", "Je ne brûle que ce qu'on m'apporte. C'est la règle des vieilles choses : nous ne prenons rien, on nous donne."]] },
+          { "if": [{ "flag": "allume_toro-1" }], "lines": [["lanterne-vieille", "Tes sœurs de pierre, là-haut, sont allumées. Il y a longtemps que je ne les avais pas vues brillantes : ça éclaire même les morts, tu sais."]] },
+          { "lines": [["lanterne-vieille", "Le moine frappe sa cloche à la même heure chaque soir. Je compte : parfois il se trompe. Nous ne le lui disons pas."]] }
+        ]
+      }
+    ],
+    "dogu": [
+      {
+        "if": [{ "quest": "argile", "is": "none" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Une statuette d'argile, debout dans les herbes, à hauteur d'homme. Ses yeux sont clos, mais son ombre bouge avant elle."],
+          ["dogu", "Approche. Je ne vois pas : j'ai les yeux fermés depuis qu'on m'a faite, et c'est ainsi qu'on me reconnaît."],
+          ["heros", "Qui t'a faite ?"],
+          ["dogu", "Ceux d'avant les rizières, d'avant les temples, d'avant les noms. Ils m'ont laissée ici pour veiller sur la terre, et la terre est devenue un au-delà : je veille toujours, mais sur quoi, je ne sais plus."],
+          ["dogu", "Va voir ce qu'il y a sous l'argile. Descends dans les rizières noyées jusqu'au cinquième dessous, et reviens me le dire."]
+        ],
+        "then": [{ "startQuest": "argile" }]
+      },
+      {
+        "if": [{ "quest": "argile", "is": "active" }, { "dungeon": ["*", 5] }],
+        "marker": "?",
+        "lines": [
+          ["heros", "(Tu lui racontes les cinq premiers dessous.)"],
+          ["narrateur", "La statuette ne bouge pas. L'ombre, derrière elle, s'allonge d'un cran."],
+          ["dogu", "Alors c'est vrai : la terre sous la terre est plus vieille que moi. Cette île, on l'a tirée de la mer avec une lance, goutte à goutte. Une autre lance l'a refermée sur un mort."],
+          ["dogu", "Prends cette petite sœur d'argile. Elle dormira mieux dans ton sac qu'ici, entre deux brumes."],
+          ["dogu", "Et ne cherche pas mes yeux. Ce qui les a fermés n'a jamais eu de nom."]
+        ],
+        "then": [{ "completeQuest": "argile" }, { "set": "argile_revelee" }, { "give": "dogu-yeux-clos" }, { "xp": 90 }, { "toast": "Fragment de mémoire : la lance, le sel, et l'île tirée de la mer" }]
+      },
+      {
+        "if": [{ "quest": "argile", "is": "active" }],
+        "lines": [["dogu", "Le cinquième dessous, dans les rizières noyées. Je saurai t'attendre : je ne fais que cela."]]
+      },
+      {
+        "lines": [],
+        "pool": [
+          { "lines": [["dogu", "L'homme d'argile, au bord de l'eau, vient d'un pays plus sec. Nous ne parlons pas la même langue, mais nous avons la même fissure."]] },
+          { "lines": [["dogu", "Les vivants creusent pour trouver de l'or. Les morts creusent pour trouver de la place."]] },
+          { "if": [{ "level": 40 }], "lines": [["dogu", "Tu descends loin, maintenant. En dessous de toi, il y a de l'argile. En dessous de l'argile, il y a moi."]] }
         ]
       }
     ]
