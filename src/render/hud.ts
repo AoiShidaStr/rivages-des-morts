@@ -9,8 +9,8 @@ import { h } from '../ui/dom';
  * Le HUD est mis à jour à chaque image : on n'écrit dans la page que ce qui a changé. Chaque écriture fait refaire au
  * navigateur le calcul des styles et de la mise en page, même pour une valeur identique.
  */
-const written = new WeakMap<HTMLElement, Partial<Record<'width' | 'left' | 'transform', string>>>();
-function setStyle(el: HTMLElement, prop: 'width' | 'left' | 'transform', value: string): void {
+const written = new WeakMap<HTMLElement, Partial<Record<'width' | 'left', string>>>();
+function setStyle(el: HTMLElement, prop: 'width' | 'left', value: string): void {
   let cache = written.get(el);
   if (!cache) written.set(el, (cache = {}));
   if (cache[prop] === value) return;
@@ -18,6 +18,15 @@ function setStyle(el: HTMLElement, prop: 'width' | 'left' | 'transform', value: 
   el.style[prop] = value;
 }
 const percent = (fraction: number) => `${(fraction * 100).toFixed(1)}%`;
+/** Recharge d'une case de compétence (de 1 à 0) : le secteur sombre qui tourne (style.css, `.skill .cooldown`). */
+const cooldowns = new WeakMap<HTMLElement, string>();
+function setCooldown(el: HTMLElement, fraction: number): void {
+  const value = Math.min(1, Math.max(0, fraction)).toFixed(3);
+  if (cooldowns.get(el) === value) return;
+  cooldowns.set(el, value);
+  el.style.setProperty('--cd', value);
+}
+const ICONS = `${import.meta.env.BASE_URL}sprites/competences/`;
 function setText(el: HTMLElement, text: string): void {
   if (el.textContent !== text) el.textContent = text;
 }
@@ -43,6 +52,7 @@ function clock(seconds: number): string {
 
 interface SkillSlot {
   root: HTMLElement;
+  icon: HTMLImageElement;
   name: HTMLElement;
   cooldown: HTMLElement;
 }
@@ -59,7 +69,9 @@ const BOSS_TITLES: Record<string, string> = { jorogumo: 'Jorōgumo', izanami: 'I
 
 /** Interface de combat en HTML par-dessus le canvas : barres, compétences, annonces de vague et du boss. */
 export class Hud {
+  private readonly root: HTMLElement;
   private readonly hpFill: HTMLElement;
+  private readonly hpLabel: HTMLElement;
   private readonly barrierFill: HTMLElement;
   /** Barre de ressource de la classe (voir `RESOURCE`). */
   private readonly rageBar: HTMLElement;
@@ -101,7 +113,9 @@ export class Hud {
       if (!el) throw new Error(`Élément d'interface introuvable : ${selector}`);
       return el;
     };
+    this.root = root;
     this.hpFill = find('.bar.hp .fill');
+    this.hpLabel = find('.bar.hp .label');
     this.barrierFill = find('.bar.hp .barrier');
     this.rageBar = find('.bar.rage');
     this.rageFill = find('.bar.rage .fill');
@@ -109,7 +123,7 @@ export class Hud {
     this.dodgeCooldown = find('#skill-dodge .cooldown');
     const slot = (key: string): SkillSlot => {
       const id = `#skill-${key.toLowerCase()}`;
-      return { root: find(id), name: find(`${id} .name`), cooldown: find(`${id} .cooldown`) };
+      return { root: find(id), icon: find(`${id} .icon`) as HTMLImageElement, name: find(`${id} .name`), cooldown: find(`${id} .cooldown`) };
     };
     this.skills = { A: slot('A'), E: slot('E'), R: slot('R') };
     this.voieSlot = slot('F');
@@ -126,7 +140,7 @@ export class Hud {
     this.gaze = h('div', { class: 'gaze', title: 'Plus tu la regardes, plus elle encaisse ; jauge pleine, sa colère éclate.' }, h('span', { class: 'gaze-eye' }, '目'), h('div', { class: 'gaze-bar' }, this.gazeFill), this.gazeLabel);
     this.boss.append(this.gaze);
     this.allyList = h('div', { class: 'allies' });
-    find('.bar.hp').after(this.allyList);
+    find('.status').append(this.allyList);
     this.trainingDps = h('strong', { class: 'dps' });
     this.trainingTotal = h('span', { class: 'total' });
     this.trainingTime = h('span', { class: 'time' });
@@ -164,17 +178,24 @@ export class Hud {
   }
 
   /**
-   * Noms des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur. `voie` : la
-   * compétence de la voie (sous-classe), affichée sur F quand le héros en a choisi une.
+   * Noms et icônes des compétences, barre et rappel des commandes selon la classe du héros et le clavier du joueur.
+   * `voie` : la compétence de la voie (sous-classe), affichée sur F quand le héros en a choisi une. `novice` : tant
+   * que le joueur n'a gagné aucun donjon, la bande des touches et les noms sous les icônes restent affichés (ensuite,
+   * les commandes se retrouvent dans le menu pause).
    */
-  configure(cls: ClassDef, voie?: string): void {
+  configure(cls: ClassDef, voie?: string, novice = true): void {
     const name = (key: string) => cls.actives.find((a) => a.key === key)?.name ?? '';
     for (const key of SKILL_KEYS) {
-      this.skills[key].name.textContent = name(key);
-      this.skills[key].root.querySelector('kbd')!.textContent = keyName(key);
+      const slot = this.skills[key];
+      slot.name.textContent = name(key);
+      slot.root.title = name(key);
+      slot.icon.src = `${ICONS}${cls.kit}-${key.toLowerCase()}.png`;
+      slot.root.querySelector('kbd')!.textContent = keyName(key);
     }
+    this.root.classList.toggle('novice', novice);
     this.voieSlot.root.classList.toggle('hidden', !voie);
     this.voieSlot.name.textContent = voie ?? '';
+    this.voieSlot.root.title = voie ?? '';
     this.voieSlot.root.querySelector('kbd')!.textContent = keyName('F');
     for (const [kit, { style }] of Object.entries(RESOURCE)) {
       if (style) this.rageBar.classList.toggle(style, kit === cls.kit);
@@ -196,6 +217,7 @@ export class Hud {
     const player = world.player;
     const cfg = player.cfg;
     setStyle(this.hpFill, 'width', percent(player.hp / cfg.maxHp));
+    setText(this.hpLabel, `PV ${Math.max(0, Math.ceil(player.hp))} / ${Math.round(cfg.maxHp)}`);
     // Le bouclier prolonge la barre après les PV (sans dépasser le bout).
     const shield = Math.min(player.barrier, cfg.maxHp - Math.min(player.hp, cfg.maxHp * 0.9));
     setStyle(this.barrierFill, 'left', percent(Math.min(player.hp, cfg.maxHp * 0.9) / cfg.maxHp));
@@ -209,7 +231,7 @@ export class Hud {
       setText(bar.name, `${bar.label}${hero.dead ? ' · à terre' : ''}${ping ? ` · ${Math.round(ping)} ms` : ''}`);
       bar.name.classList.toggle('lag', (ping ?? 0) > LAGGY);
     });
-    setStyle(this.dodgeCooldown, 'transform', `scaleX(${(player.dodgeCooldown / cfg.dodge.cooldown).toFixed(3)})`);
+    setCooldown(this.dodgeCooldown, player.dodgeCooldown / cfg.dodge.cooldown);
     let views: SkillView[];
     let fill = 0;
     let ready = false;
@@ -285,14 +307,14 @@ export class Hud {
       const view = views[i];
       slot.root.classList.toggle('locked', view.locked);
       slot.root.classList.toggle('active', Boolean(view.active));
-      setStyle(slot.cooldown, 'transform', `scaleX(${view.cooldown.toFixed(3)})`);
+      setCooldown(slot.cooldown, view.cooldown);
     });
     // La voie (sous-classe) : sa recharge se lit comme celle des autres compétences, sur sa propre touche.
     const voie = cfg.sousClasse;
     if (voie) {
       this.voieSlot.root.classList.toggle('hidden', false);
       this.voieSlot.root.classList.toggle('active', player.voieTime > 0);
-      this.voieSlot.cooldown.style.transform = `scaleX(${player.voieCooldown / voie.cooldown})`;
+      setCooldown(this.voieSlot.cooldown, player.voieCooldown / voie.cooldown);
     }
 
     // Deux boss à la fois (donjon infini) : la barre suit celui qui est le plus entamé.

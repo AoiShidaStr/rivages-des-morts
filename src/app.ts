@@ -1178,7 +1178,9 @@ export class App {
     hud.setAllies(allies.map((a) => a.name));
     dungeonRenderer.setStyle(dungeon.style);
     hud.reset(level, dungeon.boss);
-    hud.configure(heroClass(content.skills, this.shownHero()), heroSubclass(content.subclasses, this.shownHero())?.name);
+    // Après un premier donjon gagné, la bande des touches s'efface (elle reste dans le menu pause).
+    const novice = !Object.values(this.d.progress.state.dungeons).some((record) => record.best >= 1);
+    hud.configure(heroClass(content.skills, this.shownHero()), heroSubclass(content.subclasses, this.shownHero())?.name, novice);
     // Un vrai donjon reprend le héros du joueur : le prêt du billot ne survit pas à une descente.
     if (dungeon.id !== 'entrainement') this.trainingHero = null;
     // Le compteur d'entraînement ne survit pas à une descente : chaque séance repart de zéro.
