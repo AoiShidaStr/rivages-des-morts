@@ -1502,7 +1502,7 @@ export class World {
     const to = add(enemy.pos, scale(dir, enemy.radius + player.radius + 0.1));
     this.clampToArena(to, player.radius);
     this.emit({ type: 'streak', from: { ...from }, to: { ...to }, kind: 'dance' });
-    this.emit({ type: 'swing', pos: { ...to }, dir: scale(dir, -1), range: enemy.radius + 1.2, arcDeg: 120 });
+    this.emit({ type: 'swing', pos: { ...to }, dir: scale(dir, -1), range: enemy.radius + 1.2, arcDeg: 120, hero: player.id });
     this.weaponHit(enemy, player.cfg.blade.dance.damage, to, 3, 1);
     return to;
   }

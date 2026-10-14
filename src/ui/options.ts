@@ -1,6 +1,6 @@
 import type { Music } from '../audio/music';
 import type { Sfx } from '../audio/sfx';
-import { LOW_GRAPHICS, lowGraphics, setLowGraphics } from '../render/flags';
+import { LOW_GRAPHICS, lowGraphics, setLowGraphics, setShakeEnabled, shakeEnabled } from '../render/flags';
 import { MIN_SCALE, type AdaptiveResolution } from '../render/resolution';
 import { fullTextures, setFullTextures } from '../render/textureBudget';
 import { h } from './dom';
@@ -93,6 +93,11 @@ export function openOptions(host: PanelHost, music: Music, sfx: Sfx, resolution:
   });
   syncGraphics();
 
+  // Secousses de l'écran pendant le combat : s'appliquent tout de suite, sans recharger.
+  const shake = h('input', { type: 'checkbox' });
+  shake.checked = shakeEnabled();
+  shake.addEventListener('change', () => setShakeEnabled(shake.checked));
+
   host.show(
     'Options',
     'Réglages gardés dans ce navigateur',
@@ -109,6 +114,7 @@ export function openOptions(host: PanelHost, music: Music, sfx: Sfx, resolution:
       h('div', { class: 'option-row' }, h('span', {}, 'Netteté'), sharpness, sharpnessValue),
       h('label', { class: 'option-row' }, auto, h('span', {}, 'Netteté automatique : baisse seulement si la carte graphique ralentit le jeu')),
       h('label', { class: 'option-row' }, full, h('span', {}, 'Textures en pleine définition : plus nettes, plus lourdes en mémoire graphique')),
+      h('label', { class: 'option-row' }, shake, h('span', {}, "Secousses de l'écran pendant le combat")),
       h('label', { class: 'option-row' }, low, h('span', {}, 'Graphismes allégés : cartes sans décors ajoutés ni eau animée (pour les petites cartes graphiques)')),
       pending,
       reload,

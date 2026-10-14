@@ -24,7 +24,7 @@ import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
-import { LOW_GRAPHICS } from './flags';
+import { LOW_GRAPHICS, shakeEnabled } from './flags';
 import { isHeroVariant } from './heroes';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { loadFittedTexture } from './textureBudget';
@@ -156,6 +156,9 @@ interface EntityView {
   markRing?: { mesh: Mesh; material: ShaderMaterial; painted?: boolean };
   /** Style lumière : temps avant la prochaine image rémanente pendant une esquive. */
   ghostTimer?: number;
+  /** Recul du yokai touché : force (1 au coup, puis 0) et sens, à l'opposé de celui qui frappe. */
+  recoil?: number;
+  recoilDir?: Vec2;
 }
 
 interface Fx {
@@ -204,6 +207,11 @@ const VIEW_HALF_HEIGHT = 6;
 const GROUND_SIZE = 44;
 const PADDY_SIZE = 3;
 const DEATH_TIME = 0.35;
+/** Recul du yokai touché : distance du rejet (unités du sol) et vitesse à laquelle il revient en place. */
+const RECOIL_DISTANCE = 0.32;
+const RECOIL_DECAY = 7;
+/** Part des PV max au-delà de laquelle un coup reçu compte pour un gros coup (secousse plus forte). */
+const BIG_HIT = 0.15;
 // Les décalques au sol passent avant les sprites, triés entre eux de l'arrière vers l'avant.
 const DECAL_ORDER = -100_000;
 const SPRITE_ORDER = 10_000;
@@ -458,6 +466,9 @@ export class Renderer {
   private readonly right: Vec2;
   private shake = 0;
   private time = 0;
+  /** Où se tient chaque héros : le yokai touché recule à l'opposé de celui qui l'a frappé. */
+  private readonly heroPositions = new Map<number, Vec2>();
+  private localMaxHp = 1;
   private readonly sprites = new Map<string, SpriteEntry>();
   private readonly fxTextures: Record<
     'shadow' | 'crescent' | 'sweep' | 'ring' | 'telegraph' | 'web' | 'streak' | 'arrow' | 'hammer' | 'seal',
@@ -741,7 +752,11 @@ export class Renderer {
   }
 
   sync(world: WorldView, events: readonly GameEvent[], dt: number): void {
-    for (const hero of world.players) this.heroKits.set(hero.id, hero.cfg.kit);
+    for (const hero of world.players) {
+      this.heroKits.set(hero.id, hero.cfg.kit);
+      this.heroPositions.set(hero.id, hero.pos);
+    }
+    this.localMaxHp = world.player.cfg.maxHp;
     this.time += dt;
     this.arena?.update(dt);
     const player = world.player;
@@ -951,6 +966,13 @@ export class Renderer {
       sx *= 1.25;
       sy *= 0.45;
     }
+    // Touché : le yokai est rejeté d'un pas et s'écrase un instant, même quand une planche dessine sa posture.
+    const recoil = view.recoil ?? 0;
+    if (recoil > 0) {
+      view.recoil = Math.max(0, recoil - dt * RECOIL_DECAY);
+      sx *= 1 + 0.12 * recoil;
+      sy *= 1 - 0.1 * recoil;
+    }
     this.updateMarkRing(view, s.mark ?? null, s.radius, t);
     const k = Math.min(1, dt * 18);
     view.sx += (sx - view.sx) * k;
@@ -960,7 +982,10 @@ export class Renderer {
 
     const lift = view.def.lift ?? 0;
     const hover = lift > 0 ? Math.sin(t * 4) * 0.12 : 0;
-    view.sprite.position.set(this.right.x * jitter, lift + hover + s.altitude, this.right.z * jitter);
+    const push = recoil * recoil * RECOIL_DISTANCE;
+    const pushX = (view.recoilDir?.x ?? 0) * push;
+    const pushZ = (view.recoilDir?.z ?? 0) * push;
+    view.sprite.position.set(this.right.x * jitter + pushX, lift + hover + s.altitude, this.right.z * jitter + pushZ);
 
     if (s.blink) alpha *= Math.sin(this.time * 40) > 0 ? 1 : 0.45;
     // Style lumière : des copies translucides et teintées du héros restent derrière lui pendant l'esquive.
@@ -1612,6 +1637,14 @@ export class Renderer {
       case 'enemyHit': {
         const view = this.views.get(event.id);
         if (view) view.flash = event.shielded ? 0.35 : 1;
+        if (view && !event.shielded) {
+          // Recul à l'opposé du héros qui frappe ; un coup sans auteur (brûlure, toile) écrase seulement.
+          const hitter = this.heroPositions.get(event.owner);
+          const away = hitter ? { x: event.pos.x - hitter.x, z: event.pos.z - hitter.z } : { x: 0, z: 0 };
+          const len = Math.hypot(away.x, away.z);
+          view.recoilDir = len > 0.01 ? { x: away.x / len, z: away.z / len } : { x: 0, z: 0 };
+          view.recoil = event.crit ? 1 : 0.75;
+        }
         // Coop : « owner » dit quel joueur a frappé ; les chiffres des alliés reculent au second plan.
         const far = event.owner >= 0 && event.owner !== this.localId;
         // Style lumière : pas d'éclaboussure, le flash blanc de l'ennemi suffit.
@@ -1633,8 +1666,8 @@ export class Renderer {
         if (view) view.flash = event.blocked ? 0.4 : 1;
         // Ce qui passe la garde se lit plus discrètement qu'un coup reçu de plein fouet.
         this.text(event.pos, 2.1, `−${Math.round(event.amount)}`, event.blocked ? 'shield' : 'hurt', 0.9, !mine);
-        // Seuls les coups reçus par son propre héros secouent l'écran.
-        if (mine) this.addShake(event.blocked ? 0.2 : 0.5);
+        // Seuls les coups reçus par son propre héros secouent l'écran : légèrement, plus fort pour un gros coup.
+        if (mine) this.addShake(event.blocked ? 0.2 : event.amount >= this.localMaxHp * BIG_HIT ? 0.55 : 0.3);
         break;
       }
       case 'heroDown':
@@ -2655,6 +2688,7 @@ export class Renderer {
   }
 
   private addShake(amount: number): void {
+    if (!shakeEnabled()) return;
     this.shake = Math.min(1, Math.max(this.shake, amount));
   }
 

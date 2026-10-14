@@ -16,6 +16,7 @@ export const SFX_DES_EVENTS: Partial<Record<GameEvent['type'], SfxId>> = {
   wave: 'vague',
   enemyHit: 'coup',
   playerHit: 'recu',
+  death: 'mort',
   guard: 'garde',
   parry: 'parade',
   heroDown: 'a-terre',
@@ -55,6 +56,11 @@ export class Sfx {
     };
     window.addEventListener('pointerdown', débloque, true);
     window.addEventListener('keydown', débloque, true);
+    // Tous les boutons des menus et des fenêtres cliquent, d'un seul endroit : pas un appel par bouton.
+    document.addEventListener('click', (event) => {
+      const cible = event.target instanceof Element ? event.target.closest('button, .btn, [role="button"]') : null;
+      if (cible && !(cible as HTMLButtonElement).disabled) this.play('clic');
+    }, true);
   }
 
   setVolume(volume: number): void {

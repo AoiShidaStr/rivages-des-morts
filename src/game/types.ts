@@ -56,7 +56,8 @@ export interface InputFrame {
 /** Ce qui s'est passé pendant un pas : le rendu et l'interface en tirent les effets et les textes. */
 export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string; step?: string; palier?: number }
-  | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number }
+  /** `hero` : le héros qui frappe (le son du coup dans le vide ne joue que pour le sien). */
+  | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number; hero?: number }
   | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean; /** Coop : index du joueur qui a frappé (0 en solo, -1 si le coup vient de l'environnement). */ owner: number }
   /** `blocked` : ce qui a traversé la garde du Guerrier. */
   | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean; hero: number }
@@ -86,7 +87,7 @@ export type GameEvent =
   | { type: 'enemySwing'; pos: Vec2; dir: Vec2; range: number }
   | { type: 'jump'; id: number; target: Vec2; radius: number; duration: number }
   | { type: 'land'; id: number; pos: Vec2; radius: number }
-  | { type: 'dodge'; pos: Vec2; dir: Vec2 }
+  | { type: 'dodge'; pos: Vec2; dir: Vec2; hero?: number }
   | { type: 'smash'; pos: Vec2; radius: number }
   | { type: 'death'; id: number; pos: Vec2; kind: EnemyKind }
   | { type: 'bossPhase'; phase: number; label: string; hint?: string }

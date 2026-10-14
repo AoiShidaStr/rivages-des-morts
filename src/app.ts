@@ -5,7 +5,7 @@ import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type Dung
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { rollSeal, type Gravure } from './game/gravure';
-import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
+import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, isBoss, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
@@ -69,6 +69,32 @@ type Mode = 'title' | 'island' | 'dungeon' | 'result';
 /** La simulation du combat avance par pas fixes, quelle que soit la fréquence de l'écran. */
 const STEP = 1 / 60;
 const MAX_STEPS_PER_FRAME = 5;
+
+/**
+ * Micro-pause d'impact (secondes) qu'appelle un événement : le monde se fige un instant pour que le coup se sente.
+ * Critiques, parades et Frappe fracassante comme avant ; s'y ajoutent la mort d'un yokai (plus longue pour un boss)
+ * et les gros coups reçus (tout coup d'un boss, ou plus de 15 % des PV).
+ */
+function hitstopFor(event: GameEvent, world: WorldView): number {
+  switch (event.type) {
+    case 'enemyHit':
+      return event.crit ? 0.045 : 0;
+    case 'parry':
+    case 'perfectGuard':
+      return 0.05;
+    case 'smash':
+      return 0.04;
+    case 'death':
+      return isBoss(event.kind) ? 0.12 : 0.05;
+    case 'playerHit': {
+      if (event.hero !== world.player.id || event.blocked) return 0;
+      const big = event.amount >= world.player.cfg.maxHp * 0.15 || world.enemies.some((enemy) => enemy.boss);
+      return big ? 0.07 : 0;
+    }
+    default:
+      return 0;
+  }
+}
 /** Centre du village, survolé par la caméra derrière l'écran titre. */
 const TITLE_ORBIT = { u: -4, v: 1, radius: 5, speed: 0.07 };
 /** Terrain d'entraînement : fenêtre du DPS affiché, en secondes de combat. */
@@ -874,15 +900,13 @@ export class App {
     const events = world.drainEvents();
     if (online) this.shareState(world, events);
     for (const event of events) {
-      this.sfxEvent(event, world.player.id);
+      this.sfxEvent(event, world.player.id, events);
       this.track(event);
       // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
       if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
       // Micro-pause d'impact, seul : en ligne, figer un joueur le décalerait des autres.
       if (online) continue;
-      if (event.type === 'enemyHit' && event.crit) this.hitstop = 0.045;
-      else if (event.type === 'parry' || event.type === 'perfectGuard') this.hitstop = 0.05;
-      else if (event.type === 'smash') this.hitstop = 0.04;
+      this.hitstop = Math.max(this.hitstop, hitstopFor(event, world));
     }
     dungeonRenderer.sync(world, events, dt);
     if (online) hud.pings = world.players.slice(1).map((hero) => this.remote.get(hero.id)?.ping);
@@ -957,7 +981,16 @@ export class App {
     this.stride = STRIDE_S;
   }
 
-  private sfxEvent(event: GameEvent, me: number): void {
+  private sfxEvent(event: GameEvent, me: number, batch: readonly GameEvent[]): void {
+    // Mon coup qui ne touche rien : le coup et ses touches tombent dans le même pas, donc dans le même lot.
+    if (event.type === 'swing') {
+      if (event.hero === me && !batch.some((e) => e.type === 'enemyHit' && e.owner === me)) this.sfx.play('vide');
+      return;
+    }
+    if (event.type === 'dodge') {
+      if (event.hero === me) this.sfx.play('esquive');
+      return;
+    }
     if (event.type === 'enemyHit') {
       if (event.owner >= 0 && event.owner !== me) return;
       this.sfx.play(event.crit ? 'crit' : 'coup');
@@ -1017,7 +1050,7 @@ export class App {
     this.inbox = [];
     for (const event of events) {
       this.track(event);
-      this.sfxEvent(event, mirror.player.id);
+      this.sfxEvent(event, mirror.player.id, events);
     }
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
