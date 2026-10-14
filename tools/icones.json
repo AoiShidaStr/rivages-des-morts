@@ -106,6 +106,7 @@
     }
   ],
   "icons": {
+    "voie-chair": { "fillHoles": true, "minHole": 150 },
     "masque-oublie": { "fillHoles": true, "minHole": 150, "holes": [[0.12, 0.375], [0.73, 0.375]] },
     "lanterne-braise": { "fillHoles": true, "minHole": 150 },
     "omamori-temple": { "fillHoles": true, "minHole": 150 },
