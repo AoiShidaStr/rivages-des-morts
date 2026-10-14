@@ -2,6 +2,7 @@ import type { Engine } from '@babylonjs/core';
 import { Music } from './audio/music';
 import { whileHidden } from './background';
 import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type DungeonDef, type Line } from './content';
+import liens from './data/liens.json';
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { rollSeal, type Gravure } from './game/gravure';
@@ -1729,6 +1730,8 @@ export class App {
       });
     }
     options.push({ label: 'Options', action: () => openOptions(this.panels, this.music, this.sfx, this.resolution) });
+    // Le formulaire d'avis s'ouvre dans un nouvel onglet ; sans adresse dans src/data/liens.json, pas de bouton.
+    if (liens.avis) options.push({ label: 'Donner mon avis', action: () => window.open(liens.avis, '_blank', 'noopener') });
     options.push({
       label: 'Menu principal',
       action: () => {
