@@ -14,6 +14,9 @@ const CHARS_PER_SECOND = 55;
 export class DialogueBox {
   private readonly root: HTMLDivElement;
   private readonly portrait: HTMLImageElement;
+  /** Vignette de l'objet dont on parle (seau, biwa, coupelle, lanterne), ou rien. */
+  private readonly prop: HTMLImageElement;
+  private readonly propBox: HTMLDivElement;
   private readonly name: HTMLDivElement;
   private readonly text: HTMLParagraphElement;
   private readonly choicesEl: HTMLDivElement;
@@ -27,6 +30,10 @@ export class DialogueBox {
 
   constructor(parent: HTMLElement) {
     this.portrait = h('img', { alt: '' });
+    this.prop = h('img', { alt: '' });
+    this.propBox = h('div', { class: 'prop' }, this.prop);
+    // Rien à montrer tant qu'une réplique n'a pas d'objet : la vignette reste cachée.
+    this.propBox.hidden = true;
     this.name = h('div', { class: 'name' });
     this.text = h('p', { class: 'text' });
     this.choicesEl = h('div', { class: 'choices' });
@@ -36,6 +43,7 @@ export class DialogueBox {
       { class: 'dialogue', onclick: () => this.advance() },
       h('div', { class: 'portrait' }, this.portrait),
       h('div', { class: 'body' }, this.name, this.text, this.choicesEl, this.next),
+      this.propBox,
     );
     parent.append(this.root);
   }
@@ -44,13 +52,15 @@ export class DialogueBox {
     return this.root.classList.contains('visible');
   }
 
-  say(speaker: Speaker, text: string): Promise<void> {
+  say(speaker: Speaker, text: string, prop: string | null = null): Promise<void> {
     this.root.classList.add('visible');
     this.root.classList.toggle('narration', !speaker.name);
     this.name.textContent = speaker.name;
     this.name.hidden = !speaker.name;
     this.portrait.parentElement!.hidden = !speaker.portrait;
     if (speaker.portrait) this.portrait.src = speaker.portrait;
+    this.propBox.hidden = !prop;
+    if (prop) this.prop.src = prop;
     this.full = text;
     this.shown = 0;
     this.text.textContent = '';

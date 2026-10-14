@@ -41,6 +41,11 @@ export interface Variant {
   if?: Condition[];
   /** « ! » : quelque chose de nouveau ; « ? » : une quête à rendre. */
   marker?: string;
+  /**
+   * L'objet dont parle l'échange : sa vignette s'affiche dans la fenêtre de dialogue (clé du manifeste des
+   * sprites de l'île, `islandSprites.json`). La dame du puits montre son seau, le récitant sa biwa, etc.
+   */
+  prop?: string;
   lines: Line[];
   /**
    * Bavardage : après `lines`, une seule de ces répliques, à tour de rôle d'une visite à l'autre

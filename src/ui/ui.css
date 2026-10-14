@@ -810,6 +810,30 @@ button {
   transform-origin: top center;
 }
 
+/* L'objet dont parle l'échange : une petite vignette posée à droite de la fenêtre. */
+.dialogue .prop {
+  display: grid;
+  place-items: center;
+  flex: 0 0 96px;
+  height: 96px;
+  align-self: center;
+  padding: 6px;
+  border: 1px solid rgba(241, 236, 226, 0.35);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* `hidden` seul ne suffit pas : `display: grid` l'emporterait sur la règle du navigateur. */
+.dialogue .prop[hidden] {
+  display: none;
+}
+
+.dialogue .prop img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 .dialogue .body {
   position: relative;
   flex: 1;
@@ -1235,7 +1259,7 @@ button {
 }
 
 .panel.wide {
-  width: min(980px, calc(100vw - 32px));
+  width: min(1240px, calc(100vw - 32px));
 }
 
 .tag {
@@ -1449,6 +1473,11 @@ button {
 /* Sans ça, une carte et son contenu refusent de se rétrécir sous la largeur de leur texte et débordent. */
 .tree.voies .branch * {
   min-width: 0;
+}
+
+/* Les descriptions de passif se lisent dans la carte : une seule colonne, jamais plus large qu'elle. */
+.branch .passives {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .branch.chosen {

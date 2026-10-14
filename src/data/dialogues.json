@@ -17,11 +17,11 @@
     "voyageur": { "name": "L'homme d'argile" },
     "stele": { "name": "La stèle des records" },
     "gardien": { "name": "Le gardien errant" },
-    "dame-puits": { "name": "La dame du puits", "sprite": "oublie" },
-    "biwa": { "name": "Le récitant aveugle", "sprite": "moine" },
-    "vieux-kappa": { "name": "Le vieux kappa", "sprite": "kappa" },
-    "lanterne-vieille": { "name": "La lanterne centenaire", "sprite": "lanterne" },
-    "dogu": { "name": "Le dogū aux yeux clos", "sprite": "argile" }
+    "dame-puits": { "name": "La dame du puits", "sprite": "damePuits" },
+    "biwa": { "name": "Le récitant aveugle", "sprite": "biwa" },
+    "vieux-kappa": { "name": "Le vieux kappa", "sprite": "vieuxKappa" },
+    "lanterne-vieille": { "name": "La villageoise au giboyer", "sprite": "villageoise" },
+    "dogu": { "name": "Le dogū aux yeux clos", "sprite": "dogu" }
   },
   "dialogues": {
     "stele": [
@@ -948,6 +948,7 @@
     "dame-puits": [
       {
         "if": [{ "notFlag": "sceau_ouvert" }],
+        "prop": "seauEtLapin",
         "lines": [
           ["narrateur", "L'eau du puits est noire et parfaitement immobile. Une silhouette y flotte, la tête en bas."],
           ["dame-puits", "Ne te penche pas trop. On ne remonte pas d'un puits : on y tombe, et puis on y reste."],
@@ -956,6 +957,7 @@
       },
       {
         "if": [{ "flag": "sceau_ouvert" }, { "quest": "puits", "is": "none" }],
+        "prop": "seauEtLapin",
         "marker": "!",
         "lines": [
           ["dame-puits", "Le rocher a glissé. Alors tu descends, toi aussi."],
@@ -968,6 +970,7 @@
       },
       {
         "if": [{ "quest": "puits", "is": "active" }, { "material": ["os", 2] }],
+        "prop": "seauEtLapin",
         "marker": "?",
         "lines": [
           ["heros", "(Tu poses les deux os au bord du puits.)"],
@@ -980,9 +983,11 @@
       },
       {
         "if": [{ "quest": "puits", "is": "active" }],
+        "prop": "seauEtLapin",
         "lines": [["dame-puits", "Deux os, pas plus. Sous le Rocher : les shikome en laissent traîner partout, elles n'en ont que faire."]]
       },
       {
+        "prop": "seauEtLapin",
         "lines": [],
         "pool": [
           { "lines": [["dame-puits", "Le puits n'a pas de fond. Enfin, il en a un : c'est le Yomi, et il est plein."]] },
@@ -994,6 +999,7 @@
     "biwa": [
       {
         "if": [{ "quest": "recit", "is": "none" }],
+        "prop": "biwaSculpte",
         "marker": "!",
         "lines": [
           ["narrateur", "Assis sur les galets, un homme au crâne rasé gratte une biwa sans cordes. Il tourne la tête vers toi sans y arriver tout à fait."],
@@ -1007,6 +1013,7 @@
       },
       {
         "if": [{ "quest": "recit", "is": "active" }, { "material": ["soie", 1] }],
+        "prop": "biwaSculpte",
         "marker": "?",
         "lines": [
           ["heros", "(Tu lui tends un écheveau de soie grise.)"],
@@ -1019,9 +1026,11 @@
       },
       {
         "if": [{ "quest": "recit", "is": "active" }],
+        "prop": "biwaSculpte",
         "lines": [["biwa", "De la soie de jorōgumo. Elle file derrière le torii noir, au fond des rizières noyées."]]
       },
       {
+        "prop": "biwaSculpte",
         "lines": [],
         "pool": [
           { "lines": [["biwa", "Un jour, des moines m'ont couvert de sutras jusqu'au cou pour me cacher aux morts. Ils ont oublié mes oreilles. Je n'entends plus de ce côté-là, c'est tout."]] },
@@ -1034,6 +1043,7 @@
     "vieux-kappa": [
       {
         "if": [{ "quest": "coupelle", "is": "none" }],
+        "prop": "coupelleFissuree",
         "marker": "!",
         "lines": [
           ["narrateur", "Un kappa gris, immense pour son espèce, tourne le dos à l'eau. La coupelle de son crâne est fendue d'un bout à l'autre."],
@@ -1046,6 +1056,7 @@
       },
       {
         "if": [{ "quest": "coupelle", "is": "active" }, { "material": ["seve", 2] }],
+        "prop": "coupelleFissuree",
         "marker": "?",
         "lines": [
           ["heros", "(Tu verses la sève dans la fêlure.)"],
@@ -1058,9 +1069,11 @@
       },
       {
         "if": [{ "quest": "coupelle", "is": "active" }],
+        "prop": "coupelleFissuree",
         "lines": [["vieux-kappa", "De la sève de kodama. Les arbres qui la donnent portent une corde sacrée : ne touche pas à leur écorce."]]
       },
       {
+        "prop": "coupelleFissuree",
         "lines": [],
         "pool": [
           { "lines": [["vieux-kappa", "Nous volons la bourse des noyés, et ce qu'ils ont dans les os. Mangez moins de concombres, vous autres : c'est à cause du concombre que je suis là."]] },
@@ -1072,36 +1085,40 @@
     "lanterne-vieille": [
       {
         "if": [{ "quest": "veille", "is": "none" }],
+        "prop": "lanterneGiboyer",
         "marker": "!",
         "lines": [
-          ["narrateur", "Une lanterne de pierre, couverte de mousse. Sous la pierre, quelque chose respire : une flamme qui n'éclaire pas."],
-          ["lanterne-vieille", "Cent ans que je compte les pas de ceux qui passent. Tu es le neuvième, cette année. Les autres ne s'arrêtent jamais."],
-          ["heros", "Tu parles ?"],
-          ["lanterne-vieille", "Tout finit par parler. Un bol oublié sur une étagère, un parapluie au fond d'un couloir, une lanterne au bord d'un chemin : nous attendons, et l'attente nous donne une voix."],
-          ["lanterne-vieille", "Ma flamme s'est éteinte le jour où la dernière main qui m'avait allumée est devenue cendre. Apporte-moi une braise de feu follet, et je veillerai encore un siècle."]
+          ["narrateur", "Une femme âgée monte du village, une lanterne de pierre arrimée au dos comme un giboyer. La mousse a gagné le cadre de bois."],
+          ["lanterne-vieille", "Cent ans que je porte celle-ci par les chemins. Tu es le neuvième, cette année, à t'arrêter. Les autres ne s'arrêtent jamais."],
+          ["heros", "Elle parle ?"],
+          ["lanterne-vieille", "Tout finit par parler. Un bol oublié sur une étagère, un parapluie au fond d'un couloir, une lanterne au bord d'un chemin : ils attendent, et l'attente leur donne une voix."],
+          ["lanterne-vieille", "Sa flamme s'est éteinte le jour où la dernière main qui l'avait allumée est devenue cendre. Je n'ai jamais su l'allumer seule. Apporte-moi une braise de feu follet, et elle veillera encore un siècle."]
         ],
         "then": [{ "startQuest": "veille" }]
       },
       {
         "if": [{ "quest": "veille", "is": "active" }, { "material": ["braise", 1] }],
+        "prop": "lanterneGiboyer",
         "marker": "?",
         "lines": [
           ["heros", "(Tu déposes la braise dans la lanterne de pierre.)"],
-          ["narrateur", "La flamme hésite, prend, et devient bleue. La mousse, autour, luit comme un tapis de gel."],
-          ["lanterne-vieille", "Ah. Voilà. Je me souviens du nom de la femme qui m'a allumée : Kiku. Elle tenait une maison de thé, ici, avant que le village ne devienne ce qu'il est."],
-          ["lanterne-vieille", "Prends ce talisman. Il était dans ma niche, plié en quatre. Il appartient à un dieu du feu qui ne répond plus, mais le papier, lui, brûle encore."]
+          ["narrateur", "La flamme hésite, prend, et devient bleue. La mousse, autour, luit comme un tapis de gel. La femme ne dit rien : elle incline le cadre, lentement, pour que la lumière tombe sur toi."],
+          ["lanterne-vieille", "Ah. Voilà. Je me souviens du nom de celle qui l'avait allumée la première fois : Kiku. Elle tenait une maison de thé, ici, avant que le village ne devienne ce qu'il est."],
+          ["lanterne-vieille", "Prends ce talisman. Il était dans la niche, plié en quatre. Il appartient à un dieu du feu qui ne répond plus, mais le papier, lui, brûle encore."]
         ],
         "then": [{ "material": ["braise", -1] }, { "completeQuest": "veille" }, { "set": "veille_allumee" }, { "give": "ofuda-kagutsuchi" }, { "xp": 55 }]
       },
       {
         "if": [{ "quest": "veille", "is": "active" }],
+        "prop": "lanterneGiboyer",
         "lines": [["lanterne-vieille", "Une braise de feu follet, encore chaude. Les rizières noyées en sont pleines, la nuit."]]
       },
       {
+        "prop": "lanterneGiboyer",
         "lines": [],
         "pool": [
-          { "lines": [["lanterne-vieille", "Je ne brûle que ce qu'on m'apporte. C'est la règle des vieilles choses : nous ne prenons rien, on nous donne."]] },
-          { "if": [{ "flag": "allume_toro-1" }], "lines": [["lanterne-vieille", "Tes sœurs de pierre, là-haut, sont allumées. Il y a longtemps que je ne les avais pas vues brillantes : ça éclaire même les morts, tu sais."]] },
+          { "lines": [["lanterne-vieille", "Je n'allume que ce qu'on m'apporte. C'est la règle des vieilles choses : nous ne prenons rien, on nous donne."]] },
+          { "if": [{ "flag": "allume_toro-1" }], "lines": [["lanterne-vieille", "Ses sœurs de pierre, là-haut, sont allumées. Il y a longtemps que je ne les avais pas vues brillantes : ça éclaire même les morts, tu sais."]] },
           { "lines": [["lanterne-vieille", "Le moine frappe sa cloche à la même heure chaque soir. Je compte : parfois il se trompe. Nous ne le lui disons pas."]] }
         ]
       }

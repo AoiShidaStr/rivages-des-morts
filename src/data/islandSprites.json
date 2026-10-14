@@ -23,5 +23,14 @@
   "lanterne": { "file": "decor/lanterne.png", "height": 1.5, "facesRight": true, "placeholder": "lanterne" },
   "lanterneAllumee": { "file": null, "sheet": { "file": "anim/lanterne-allumee.json" }, "height": 1.5, "facesRight": true, "placeholder": "lanterne-allumee", "still": true },
   "sutra": { "file": "decor/sutra.png", "height": 0.6, "facesRight": true, "placeholder": "sutra" },
-  "argile": { "file": "decor/argile.png", "height": 1.9, "facesRight": true, "placeholder": "argile" }
+  "argile": { "file": "decor/argile.png", "height": 1.9, "facesRight": true, "placeholder": "argile" },
+  "damePuits": { "file": "pnj/dame-puits.png", "height": 1.6, "facesRight": true },
+  "biwa": { "file": "pnj/biwa.png", "height": 1.75, "facesRight": true },
+  "vieuxKappa": { "file": "pnj/vieux-kappa.png", "height": 1.5, "facesRight": true },
+  "villageoise": { "file": "pnj/villageoise.png", "height": 1.65, "facesRight": true },
+  "dogu": { "file": "pnj/dogu.png", "height": 1.4, "facesRight": true },
+  "seauEtLapin": { "file": "pnj/seau-et-lapin.png", "height": 0.55, "facesRight": true },
+  "biwaSculpte": { "file": "pnj/biwa-sculpte.png", "height": 0.5, "facesRight": true },
+  "coupelleFissuree": { "file": "pnj/coupelle-fissuree.png", "height": 0.3, "facesRight": true },
+  "lanterneGiboyer": { "file": "pnj/lanterne-de-pierre.png", "height": 0.9, "facesRight": true }
 }

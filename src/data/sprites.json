@@ -117,10 +117,5 @@
   "torii": { "file": "torii.png", "sheet": { "file": "anim/torii.json" }, "height": 5.5, "facesRight": true },
   "jizo": { "file": "jizo.png", "height": 1.1, "facesRight": true },
   "rocher": { "file": "rocher.png", "sheet": { "file": "anim/rocher.json" }, "height": 5, "facesRight": true },
-  "lanterneAllumee": { "file": "decor/lanterne.png", "sheet": { "file": "anim/lanterne-allumee.json" }, "height": 1.6, "facesRight": true },
-  "damePuits": { "file": "gamevisual/dame-puits-planche.jpg", "sheet": { "file": "anim/dame-puits.json" }, "height": 1.6, "facesRight": true },
-  "biwa": { "file": "gamevisual/biwa-planche.jpg", "sheet": { "file": "anim/biwa.json" }, "height": 1.6, "facesRight": true },
-  "vieuxKappa": { "file": "gamevisual/vieux-kappa-planche.jpg", "sheet": { "file": "anim/vieux-kappa.json" }, "height": 1.6, "facesRight": true },
-  "villageoise": { "file": "gamevisual/villageoise-planche.jpg", "sheet": { "file": "anim/villageoise.json" }, "height": 1.6, "facesRight": true },
-  "biwaObjet": { "file": "gamevisual/biwa-objet-planche.jpg", "height": 1.6, "facesRight": true }
+  "lanterneAllumee": { "file": "decor/lanterne.png", "sheet": { "file": "anim/lanterne-allumee.json" }, "height": 1.6, "facesRight": true }
 }

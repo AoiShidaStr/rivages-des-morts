@@ -51,6 +51,15 @@
     { "name": "heros-demi-dieu-lame", "source": "2d/demi-dieu-2D/demi-dieu-lame-reference.jpg" },
     { "name": "heros-demi-dieu-paladin", "source": "2d/demi-dieu-2D/demi-dieu-paladin-reference.jpg" },
     { "name": "heros-demi-dieu-rodeur", "source": "2d/demi-dieu-2D/demi-dieu-rodeur-reference.jpg" },
-    { "name": "heros-demi-dieu-sorcier", "source": "2d/demi-dieu-2D/demi-dieu-sorcier-reference.jpg" }
+    { "name": "heros-demi-dieu-sorcier", "source": "2d/demi-dieu-2D/demi-dieu-sorcier-reference.jpg" },
+    { "name": "pnj/dame-puits", "source": "../gamevisual/nouveau pnj/Dama du puits.jpg" },
+    { "name": "pnj/biwa", "source": "../gamevisual/nouveau pnj/Biwa du récitant.jpg" },
+    { "name": "pnj/vieux-kappa", "source": "../gamevisual/nouveau pnj/Vieux kappa.jpg" },
+    { "name": "pnj/villageoise", "source": "../gamevisual/nouveau pnj/Villageoise au giboyer.jpg" },
+    { "name": "pnj/dogu", "source": "../gamevisual/nouveau pnj/Dogū de la grande prairie.jpg" },
+    { "name": "pnj/seau-et-lapin", "source": "../gamevisual/nouveau pnj/seau et lapin.jpg" },
+    { "name": "pnj/biwa-sculpte", "source": "../gamevisual/nouveau pnj/biwa sculpté.jpg" },
+    { "name": "pnj/coupelle-fissuree", "source": "../gamevisual/nouveau pnj/coupelle fissurée.jpg" },
+    { "name": "pnj/lanterne-de-pierre", "source": "../gamevisual/nouveau pnj/lanterne de pierre.jpg" }
   ]
 }

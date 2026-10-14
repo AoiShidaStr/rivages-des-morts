@@ -620,16 +620,16 @@ export class App {
       const variants = bindSelf(content.dialogues[it.def.dialogue ?? it.def.id] ?? [], it.def.id);
       const variant = variants.find((v) => progress.check(v.if));
       if (!variant) return;
-      await this.playLines(variant.lines);
+      await this.playLines(variant.lines, variant.prop);
       const chatter = (variant.pool ?? []).filter((p) => progress.check(p.if));
       const turn = `bavardage_${it.def.dialogue ?? it.def.id}`;
-      if (chatter.length > 0) await this.playLines(chatter[progress.flag(turn) % chatter.length].lines);
+      if (chatter.length > 0) await this.playLines(chatter[progress.flag(turn) % chatter.length].lines, variant.prop);
       const actions = progress.apply([...(chatter.length > 0 ? [{ add: [turn, 1] as [string, number] }] : []), ...(variant.then ?? [])]);
       const available = (variant.choices ?? []).filter((c) => progress.check(c.if));
       if (available.length > 0) {
         const choice = available[await this.dialogue.choose(available.map((c) => c.text))];
         actions.push(...progress.apply(choice.then));
-        if (choice.reply) await this.playLines(choice.reply);
+        if (choice.reply) await this.playLines(choice.reply, variant.prop);
       }
       this.dialogue.close();
       await this.runActions(actions);
@@ -644,13 +644,15 @@ export class App {
     }
   }
 
-  private async playLines(lines: Line[]): Promise<void> {
+  private async playLines(lines: Line[], prop?: string): Promise<void> {
+    // L'objet dont parle l'échange (`prop`) s'affiche en vignette dans la fenêtre de dialogue.
+    const object = portraitUrl(prop);
     for (const [speakerId, text, conditions] of lines) {
       if (!this.d.progress.check(conditions)) continue;
       const speaker = content.speakers[speakerId] ?? { name: speakerId };
       // Le héros parle avec le visage de sa race et de sa classe.
       const portrait = speaker.sprite === 'heros' ? `${import.meta.env.BASE_URL}sprites/${heroImage(this.d.progress.state.hero)}` : portraitUrl(speaker.sprite);
-      await this.dialogue.say({ name: speaker.name, portrait }, this.d.progress.format(text));
+      await this.dialogue.say({ name: speaker.name, portrait }, this.d.progress.format(text), object);
     }
   }
 

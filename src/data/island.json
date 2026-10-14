@@ -72,11 +72,11 @@
     { "id": "sutra-1", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 33.97, "v": 42.88, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-1" }] },
     { "id": "sutra-2", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 19.84, "v": -50.86, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-2" }] },
     { "id": "sutra-3", "name": "Page de sutra", "verb": "Ramasser", "dialogue": "sutra", "sprite": "sutra", "u": 7.68, "v": 57.22, "if": [{ "quest": "sutra", "is": "active" }, { "notFlag": "page_sutra-3" }] },
-    { "id": "dame-puits", "name": "La dame du puits", "dialogue": "dame-puits", "sprite": "oublie", "u": 3.6, "v": 28.9, "reach": 2.2, "solid": 0.35 },
-    { "id": "biwa", "name": "Le récitant aveugle", "dialogue": "biwa", "sprite": "moine", "u": -25, "v": -28, "reach": 2.2, "solid": 0.35 },
-    { "id": "vieux-kappa", "name": "Le vieux kappa", "dialogue": "vieux-kappa", "sprite": "kappa", "u": 10.5, "v": 11, "reach": 2.2, "solid": 0.45 },
-    { "id": "lanterne-vieille", "name": "Lanterne moussue", "verb": "Écouter", "dialogue": "lanterne-vieille", "sprite": "lanterne", "u": 5.6, "v": 27.2, "reach": 2.2, "solid": 0.3 },
-    { "id": "dogu", "name": "Le dogū aux yeux clos", "dialogue": "dogu", "sprite": "argile", "u": 21, "v": -35, "reach": 2.2, "solid": 0.4 }
+    { "id": "dame-puits", "name": "La dame du puits", "dialogue": "dame-puits", "sprite": "damePuits", "u": 3.6, "v": 28.9, "reach": 2.2, "solid": 0.35 },
+    { "id": "biwa", "name": "Le récitant aveugle", "dialogue": "biwa", "sprite": "biwa", "u": -25, "v": -28, "reach": 2.2, "solid": 0.35 },
+    { "id": "vieux-kappa", "name": "Le vieux kappa", "dialogue": "vieux-kappa", "sprite": "vieuxKappa", "u": 10.5, "v": 11, "reach": 2.2, "solid": 0.45 },
+    { "id": "lanterne-vieille", "name": "La villageoise au giboyer", "verb": "Parler", "dialogue": "lanterne-vieille", "sprite": "villageoise", "u": 5.6, "v": 27.2, "reach": 2.2, "solid": 0.3 },
+    { "id": "dogu", "name": "Le dogū aux yeux clos", "dialogue": "dogu", "sprite": "dogu", "u": 21, "v": -35, "reach": 2.2, "solid": 0.4 }
   ],
   "decor": [
     { "sprite": "ile/pierre-dressee", "u": -22.4, "v": -21.7, "height": 1.7 },
