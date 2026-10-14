@@ -2,6 +2,15 @@
 
 **Déjà en jeu** (public/audio/sfx) : meteore et meteore-impact, le Météore du Sorcier (sons fournis par Meven).
 
+Choisis par Meven le 14/10/2026 sur le banc d'écoute, tous en **CC0** (OpenGameArt), recadrés et mis à −1 dB :
+- vide-1 : artisticdude, « RPG Sound Pack », battle/swing.wav
+- crit-1 : rubberduck, « 100 CC0 SFX », metal_06.ogg
+- esquive-1 : artisticdude, « Swishes Sound Pack », swish-8.wav
+- clic-1 : rubberduck, « 100 CC0 SFX », switch_01.ogg ; clic-2 : rubberduck, « 80 CC0 RPG SFX », misc_01.ogg
+- butin-1 : artisticdude, « RPG Sound Pack », inventory/coin3.wav
+
+Encore à trouver parmi les 8 sons fréquents : coup qui touche, coup reçu, mort d'un yokai.
+
 Format conseillé : `.ogg` (ou `.mp3`), mono, 44,1 kHz, sans silence au début. Plusieurs variantes (×3) pour les sons fréquents, marqués *(var.)*.
 
 ## Interface

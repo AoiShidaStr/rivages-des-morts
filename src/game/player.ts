@@ -1028,7 +1028,7 @@ export class Player {
         const quiver = this.cfg.perks?.quiverVolley;
         if (quiver && ++this.shots % quiver.every === 0) world.fan(a.dir, quiver.arrows);
       }
-      else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range + this.reachBonus, arcDeg: c.arcDeg, shape: c.shape, width: c.width });
+      else world.emit({ type: 'swing', pos: { ...this.pos }, dir: a.dir, range: c.range + this.reachBonus, arcDeg: c.arcDeg, shape: c.shape, width: c.width, hero: this.id });
       // Jugement : la ferveur pleine, le coup libère l'onde sacrée devant le Paladin.
       const judgement = this.cfg.paladin.judgement;
       if (this.cfg.kit === 'paladin' && this.fervor >= judgement.max) {
@@ -1084,7 +1084,7 @@ export class Player {
     if (evasion) this.evadeTime = evasion.duration;
     this.invulnerable = Math.max(this.invulnerable, this.cfg.dodge.invulnerable);
     this.openCritWindow();
-    world.emit({ type: 'dodge', pos: { ...this.pos }, dir });
+    world.emit({ type: 'dodge', pos: { ...this.pos }, dir, hero: this.id });
   }
 
   /** Tag Lame : les coups qui suivent une esquive sont critiques. */

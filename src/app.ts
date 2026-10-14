@@ -900,7 +900,7 @@ export class App {
     const events = world.drainEvents();
     if (online) this.shareState(world, events);
     for (const event of events) {
-      this.sfxEvent(event, world.player.id);
+      this.sfxEvent(event, world.player.id, events);
       this.track(event);
       // Terrain d'entraînement : chaque coup porté au mannequin entre dans le compteur affiché.
       if (this.trainingStats && event.type === 'enemyHit') this.countDamage(event.amount, world.time);
@@ -981,7 +981,16 @@ export class App {
     this.stride = STRIDE_S;
   }
 
-  private sfxEvent(event: GameEvent, me: number): void {
+  private sfxEvent(event: GameEvent, me: number, batch: readonly GameEvent[]): void {
+    // Mon coup qui ne touche rien : le coup et ses touches tombent dans le même pas, donc dans le même lot.
+    if (event.type === 'swing') {
+      if (event.hero === me && !batch.some((e) => e.type === 'enemyHit' && e.owner === me)) this.sfx.play('vide');
+      return;
+    }
+    if (event.type === 'dodge') {
+      if (event.hero === me) this.sfx.play('esquive');
+      return;
+    }
     if (event.type === 'enemyHit') {
       if (event.owner >= 0 && event.owner !== me) return;
       this.sfx.play(event.crit ? 'crit' : 'coup');
@@ -1041,7 +1050,7 @@ export class App {
     this.inbox = [];
     for (const event of events) {
       this.track(event);
-      this.sfxEvent(event, mirror.player.id);
+      this.sfxEvent(event, mirror.player.id, events);
     }
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
