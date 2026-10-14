@@ -43,7 +43,7 @@ export function openOptions(host: PanelHost, music: Music, sfx: Sfx, resolution:
     sfx.setVolume(Number(sfxSlider.value) / 100);
     syncSfx();
   });
-  sfxSlider.addEventListener('change', () => sfx.play('coup'));
+  sfxSlider.addEventListener('change', () => sfx.play('meteore-impact'));
   sfxMute.addEventListener('change', () => {
     sfx.setMuted(sfxMute.checked);
     syncSfx();
