@@ -1255,13 +1255,27 @@ const DEMIGOD_ROWS = {
     DIVINE_ROW(c.gear), tagged(H[5], 'hurt'), tagged(H[6], 'death'),
   ],
 };
-const WOMEN = new Set(['sorcier', 'lame']);
+const WOMEN = new Set(['sorcier', 'lame', 'rodeur']);
+
+/**
+ * La Rôdeuse Demi-dieu reprend la tenue et les accessoires d'une Artémis choisie par Meven (14 octobre 2026) :
+ * longs cheveux argentés, diadème d'or à feuilles de cristal, robe drapée blanche, bijoux d'or, papillons, arc doré.
+ */
+const ARTEMIS = {
+  outfit:
+    'inspired by the goddess Artemis: very long flowing wavy silver-white hair with soft lavender and pale pink tints; a thin gold circlet crown with curling gold branches set with a few translucent blue-green crystal leaves shaped like butterfly wings; ' +
+    'a long flowing white and pale-cream draped chiton gown with loose sheer sleeves falling from the shoulders and faint pale gold embroidery near the hem, a modest neckline; ' +
+    'gold shoulder clasps, a layered gold necklace, a small blue-green butterfly brooch at the chest, gold bands on the upper arms; small blue butterfly motifs painted on the cloth; a quiver of white-fletched arrows on the back',
+  role: 'Rôdeur (huntress): a graceful, light-footed archer, a shooting-ready posture, soft aqua and pale gold accents.',
+  weapon: 'an oversized elegant golden bow with curled ornate tips, much taller than the character, the starting weapon',
+  gear: 'golden bow and quiver',
+};
 
 function lotDemiDieux() {
   const out = [
     '# Lot 8 : Demi-dieux, toutes les actions du jeu (planches 4 × 8)',
     '',
-    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière et la Lame sont des femmes.**',
+    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière, la Lame et la Rôdeuse sont des femmes ; la Rôdeuse porte la tenue d’une Artémis (cheveux argentés, diadème d’or, robe drapée blanche, arc doré).**',
     '',
     '**Ordre :** la fiche de référence d\'abord (à refaire : genre et tenue changent), puis les planches 1 à 4. Pour les planches 2 à 4, **joindre la fiche et la planche 1** : Nano Banana garde ainsi la même échelle et le même dessin.',
     '',
@@ -1271,13 +1285,21 @@ function lotDemiDieux() {
     '',
   ];
   for (const ck of ['guerrier', 'sorcier', 'lame', 'paladin', 'rodeur']) {
-    const cls = CLASSES[ck];
-    const ch = hero('demidieu', ck);
+    const artemis = ck === 'rodeur';
+    const cls = artemis ? { ...CLASSES[ck], role: ARTEMIS.role, weapon: ARTEMIS.weapon, gear: ARTEMIS.gear } : CLASSES[ck];
+    const base = hero('demidieu', ck);
+    const ch = artemis
+      ? {
+          ...base,
+          subject: base.subject.replace(OUTFITS.demidieu.rodeur, ARTEMIS.outfit).replace(CLASSES.rodeur.role, ARTEMIS.role).replace(CLASSES.rodeur.weapon, ARTEMIS.weapon),
+          tail: base.tail.replace(CLASSES.rodeur.gear, ARTEMIS.gear),
+        }
+      : base;
     const woman = WOMEN.has(ck);
     const subject = woman
       ? ch.subject.replace('BODY (the race):', 'GENDER: a woman, clearly female (face, figure, hair). BODY (the race):')
       : ch.subject;
-    const name = woman ? `${ch.name.replace('Sorcier', 'Sorcière')} (femme)` : ch.name;
+    const name = woman ? `${ch.name.replace('Sorcier', 'Sorcière').replace('Rôdeur', 'Rôdeuse')} (femme${artemis ? ', façon Artémis' : ''})` : ch.name;
     const rows = DEMIGOD_ROWS[ck](cls);
     if (rows.length !== 16) throw new Error(`${ck} : ${rows.length} lignes au lieu de 16`);
     out.push(`## ${name}`, '', `### ${name} — fiche de référence`, '', `**Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-reference.jpg\``, '', fence(fichePrompt({ subject, proportions: ch.proportions })));

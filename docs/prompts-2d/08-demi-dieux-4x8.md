@@ -1,6 +1,6 @@
 # Lot 8 : Demi-dieux, toutes les actions du jeu (planches 4 × 8)
 
-Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière et la Lame sont des femmes.**
+Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière, la Lame et la Rôdeuse sont des femmes ; la Rôdeuse porte la tenue d’une Artémis (cheveux argentés, diadème d’or, robe drapée blanche, arc doré).**
 
 **Ordre :** la fiche de référence d'abord (à refaire : genre et tenue changent), puis les planches 1 à 4. Pour les planches 2 à 4, **joindre la fiche et la planche 1** : Nano Banana garde ainsi la même échelle et le même dessin.
 
@@ -488,14 +488,14 @@ Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-## Demi-dieu Rôdeur
+## Demi-dieu Rôdeuse (femme, façon Artémis)
 
-### Demi-dieu Rôdeur — fiche de référence
+### Demi-dieu Rôdeuse (femme, façon Artémis) — fiche de référence
 
 **Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** `gamevisual/heros/demi-dieu-rodeur-reference.jpg`
 
 ```text
-Character reference sheet for a 2D action RPG in which dead souls from every mythology fight across an archipelago of collapsed afterlives. One single character, shown once, full body, in three-quarter side view facing right. The character belongs to the Demi-dieu race and the Rôdeur class. BODY (the race): Demi-god (Greek): luminous warm golden skin, a thin solid golden ring floating behind the head as a discreet halo (drawn as a flat painted shape, not a glow), laurel details, the sign of the divine parent as a small lightning-bolt emblem on the clothing. OUTFIT (follows the culture of the race, nothing from any other culture): Greek hunter gear: a short tunic with leather straps, laced boots, a pelt over one shoulder, a short cape, a quiver. ROLE (the class): Rôdeur (hunter): a light hunter outfit, a quiver on the back, a shooting-ready posture, green accents. WEAPON: an oversized yumi (asymmetric longbow) much taller than the character, the starting weapon. The race decides the body, the face and the clothing culture; the class only decides the role, the posture, the silhouette, the accent color and the weapon. Neutral calm idle stance.
+Character reference sheet for a 2D action RPG in which dead souls from every mythology fight across an archipelago of collapsed afterlives. One single character, shown once, full body, in three-quarter side view facing right. The character belongs to the Demi-dieu race and the Rôdeur class. GENDER: a woman, clearly female (face, figure, hair). BODY (the race): Demi-god (Greek): luminous warm golden skin, a thin solid golden ring floating behind the head as a discreet halo (drawn as a flat painted shape, not a glow), laurel details, the sign of the divine parent as a small lightning-bolt emblem on the clothing. OUTFIT (follows the culture of the race, nothing from any other culture): inspired by the goddess Artemis: very long flowing wavy silver-white hair with soft lavender and pale pink tints; a thin gold circlet crown with curling gold branches set with a few translucent blue-green crystal leaves shaped like butterfly wings; a long flowing white and pale-cream draped chiton gown with loose sheer sleeves falling from the shoulders and faint pale gold embroidery near the hem, a modest neckline; gold shoulder clasps, a layered gold necklace, a small blue-green butterfly brooch at the chest, gold bands on the upper arms; small blue butterfly motifs painted on the cloth; a quiver of white-fletched arrows on the back. ROLE (the class): Rôdeur (huntress): a graceful, light-footed archer, a shooting-ready posture, soft aqua and pale gold accents. WEAPON: an oversized elegant golden bow with curled ornate tips, much taller than the character, the starting weapon. The race decides the body, the face and the clothing culture; the class only decides the role, the posture, the silhouette, the accent color and the weapon. Neutral calm idle stance.
 Chibi proportions: the character is exactly 3 heads tall. A large head with big expressive eyes, broad shoulders so that every pose reads clearly, a compact body with short sturdy limbs, and the class weapon drawn oversized (clearly larger than life) so that it stays readable in a small sprite. Same art style and level of detail as our Hanyo complete sheets (attach one of them, for example the Hanyo Lame or Paladin sheet, as a style reference when it is not the character being drawn). Strong readable silhouette from far away. All twenty heroes of the game share exactly the same total height.
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
@@ -504,14 +504,14 @@ Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Demi-dieu Rôdeur — planche 1
+### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 1
 
 **Lignes :** 1 Attente (`idle`) · 2 Course (`move`) · 3 Attaque principale (clic gauche) (`windup 1-3 / strike 4-8`) · 4 Tir chargé : bander (clic droit tenu) (`channel`).
 
 **Joindre :** la fiche de référence. **Enregistrer :** `gamevisual/heros/demi-dieu-rodeur-planche1.jpg`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, yumi and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. The character is a woman. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, golden bow and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure.
 Output a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible). The image is divided into an invisible grid of 8 columns x 4 rows (32 equal square cells).
 Each row is one animation of 8 frames, read left to right. The 4 rows, from top to bottom, are always in this exact order:
 ROW 1, IDLE, a slow breathing loop, a seamless loop where frame 8 leads back to frame 1: frames 1 to 2: the neutral ready pose of the reference figure, then the chest begins to swell; frames 3 to 4: breathing in, up to the top of the breath: the shoulders and the head rise; the bowstring and the quiver strap move with the breath, the head scans slightly left and right; frames 5 to 6: breathing out: the shoulders and the head sink, the knees give slightly, the hair and cloth sway the other way; frames 7 to 8: rising smoothly back toward frame 1; frame 8 is almost identical to frame 1.
@@ -530,14 +530,14 @@ Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Demi-dieu Rôdeur — planche 2
+### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 2
 
 **Lignes :** 1 Marche lente, arc bandé (`channelMove`) · 2 Tir chargé : lâcher (`loose`) · 3 Esquive (Espace) (`dash`) · 4 Flèche-filet (A) (`net`).
 
 **Joindre :** la fiche de référence et la planche 1. **Enregistrer :** `gamevisual/heros/demi-dieu-rodeur-planche2.jpg`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, yumi and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure. The second attached image is the first sheet of this same character: match its scale, design and colors exactly.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. The character is a woman. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, golden bow and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure. The second attached image is the first sheet of this same character: match its scale, design and colors exactly.
 Output a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible). The image is divided into an invisible grid of 8 columns x 4 rows (32 equal square cells).
 Each row is one animation of 8 frames, read left to right. The 4 rows, from top to bottom, are always in this exact order:
 ROW 1, DRAWN WALK, slow steps with the bow fully drawn, a seamless loop where frame 8 leads back to frame 1: frame 1: the right foot steps forward; in every frame: slow careful steps, the bow fully drawn and aimed forward, the bow arm locked; frame 2: the weight on the right foot, the body at its lowest; frame 3: the left foot passing; frame 4: pushing off, the body at its highest; frame 5: the left foot steps forward; frame 6: the weight on the left foot, the body at its lowest; frame 7: the right foot passing; frame 8: pushing off, leading back to frame 1.
@@ -556,14 +556,14 @@ Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Demi-dieu Rôdeur — planche 3
+### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 3
 
 **Lignes :** 1 Marque du chasseur (E) (`hunt`) · 2 Recul (R) (`airborne`) · 3 Voies du Tireur et de la Vigie : volée en éventail (`volley`) · 4 Voie de la Cuirasse : Souffle du chasseur (`breath`).
 
 **Joindre :** la fiche de référence et la planche 1. **Enregistrer :** `gamevisual/heros/demi-dieu-rodeur-planche3.jpg`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, yumi and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure. The second attached image is the first sheet of this same character: match its scale, design and colors exactly.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. The character is a woman. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, golden bow and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure. The second attached image is the first sheet of this same character: match its scale, design and colors exactly.
 Output a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible). The image is divided into an invisible grid of 8 columns x 4 rows (32 equal square cells).
 Each row is one animation of 8 frames, read left to right. The 4 rows, from top to bottom, are always in this exact order:
 ROW 1, HUNTER'S MARK (E key), played once: frames 1 to 2: gathering: shades the eyes with the free hand, scanning ahead; frames 3 to 4: the tension builds, the movement clearly progressing in every frame; frames 5 to 6: RELEASE, the key pose: points two fingers at the prey with a fully extended arm, the bow held low, a predator stare (no mark drawn); frame 7: the release pose held at full strength, the hair and cloth flaring; frame 8: back to the ready pose of the reference figure.
@@ -582,20 +582,20 @@ Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 ```
 
-### Demi-dieu Rôdeur — planche 4
+### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 4
 
 **Lignes :** 1 Voie de l'Éclaireur : Le Couloir (`corridor`) · 2 Égide divine (race, sous 35 % des PV) (`aegis`) · 3 Dégâts (`hurt`) · 4 Mort (`death`).
 
 **Joindre :** la fiche de référence et la planche 1. **Enregistrer :** `gamevisual/heros/demi-dieu-rodeur-planche4.jpg`
 
 ```text
-The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, yumi and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure. The second attached image is the first sheet of this same character: match its scale, design and colors exactly.
+The attached image is the reference sheet of our game character: a single figure seen in three-quarter side view facing right. The character is a woman. Draw the complete 2D sprite sheet of this exact character, all its animations on one image: same face, chibi proportions, outfit, colors, golden bow and quiver, nothing added or removed. Every frame is drawn in that same view and camera angle, exactly like the reference figure. The second attached image is the first sheet of this same character: match its scale, design and colors exactly.
 Output a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible). The image is divided into an invisible grid of 8 columns x 4 rows (32 equal square cells).
 Each row is one animation of 8 frames, read left to right. The 4 rows, from top to bottom, are always in this exact order:
 ROW 1, CORRIDOR, played once: frames 1 to 2: gathering: takes a marker stake with a long cloth streamer from the quiver; frames 3 to 4: the tension builds, the movement clearly progressing in every frame; frame 5: RELEASE, the key pose: throws it far ahead to plant it in the ground, the arm fully extended (the stake has left the hand); frame 6: the release pose held at full strength, the hair and cloth flaring; frame 7: starting to recover; frame 8: back to the ready pose of the reference figure.
-ROW 2, DIVINE AEGIS (the demigod race power, when badly wounded), played once: frames 1 to 2: badly hurt: kneeling, one hand on the ground, the yumi and quiver still held; frames 3 to 4: the head lifts and the floating golden ring behind the head grows larger, the body straightening; frames 5 to 6: standing tall again, the chest out, the arms opened, the golden ring large behind the head (flat painted, no glow); frames 7 to 8: back to the ready pose, the yumi and quiver raised, the ring back to its normal size.
-ROW 3, HURT, being hit and recovering, played once: frame 1: hit: the head snaps back, the torso recoils, the eyes squeezed shut; frames 2 to 3: maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held; frames 4 to 5: staggering, fighting to keep balance; frames 6 to 8: recovering, back to the ready pose of the reference figure, yumi and quiver in hand.
-ROW 4, DEATH, played once: frame 1: the fatal hit: the head snaps back, the body recoils; frames 2 to 3: staggers backward, the grip on the weapon loosening; frames 4 to 5: the knees buckle and the body falls, the yumi and quiver slipping from the hands; frame 6: lands on the ground with a small bounce, the yumi and quiver fallen beside the body; frames 7 to 8: lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid.
+ROW 2, DIVINE AEGIS (the demigod race power, when badly wounded), played once: frames 1 to 2: badly hurt: kneeling, one hand on the ground, the golden bow and quiver still held; frames 3 to 4: the head lifts and the floating golden ring behind the head grows larger, the body straightening; frames 5 to 6: standing tall again, the chest out, the arms opened, the golden ring large behind the head (flat painted, no glow); frames 7 to 8: back to the ready pose, the golden bow and quiver raised, the ring back to its normal size.
+ROW 3, HURT, being hit and recovering, played once: frame 1: hit: the head snaps back, the torso recoils, the eyes squeezed shut; frames 2 to 3: maximum recoil: the body bent back, one foot sliding, the arms thrown out, the weapon still held; frames 4 to 5: staggering, fighting to keep balance; frames 6 to 8: recovering, back to the ready pose of the reference figure, golden bow and quiver in hand.
+ROW 4, DEATH, played once: frame 1: the fatal hit: the head snaps back, the body recoils; frames 2 to 3: staggers backward, the grip on the weapon loosening; frames 4 to 5: the knees buckle and the body falls, the golden bow and quiver slipping from the hands; frame 6: lands on the ground with a small bounce, the golden bow and quiver fallen beside the body; frames 7 to 8: lies completely still; frames 7 and 8 are identical. Do not draw any dissolving or fading: the body stays solid.
 Each figure is centered in its own cell and drawn at the same scale in every cell of every row: the standing character is about 78% of the cell height, with its feet on the same baseline at about 89% of the cell height. The whole figure, weapon, hair and cloth included, stays inside its cell with an empty margin; nothing touches or crosses a neighbouring cell. If a pose is wide, keep the scale and let the pose use the width; never enlarge the character.
 The character stays exactly the same in all 32 frames: same chibi proportions (3 heads tall), same head size, same face, same outfit, same colors, same oversized weapon; only the pose changes.
 Every row has exactly 8 frames: no empty cell, no extra frame, no row with fewer frames.
