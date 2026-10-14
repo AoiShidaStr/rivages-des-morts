@@ -1258,24 +1258,87 @@ const DEMIGOD_ROWS = {
 const WOMEN = new Set(['sorcier', 'lame', 'rodeur']);
 
 /**
- * La Rôdeuse Demi-dieu reprend la tenue et les accessoires d'une Artémis choisie par Meven (14 octobre 2026) :
- * longs cheveux argentés, diadème d'or à feuilles de cristal, robe drapée blanche, bijoux d'or, papillons, arc doré.
+ * Les trois héroïnes Demi-dieux reprennent la tenue et les accessoires de déesses choisies par Meven (14 octobre 2026) :
+ * la Rôdeuse en Artémis, la Sorcière en Hestia, la Lame en Apaté. `fix` remplace dans les prompts les mots des
+ * descriptions de classe (pensées pour la série du Yomi : grelots, talismans, kunai, écharpe) par leur équivalent.
  */
-const ARTEMIS = {
-  outfit:
-    'inspired by the goddess Artemis: very long flowing wavy silver-white hair with soft lavender and pale pink tints; a thin gold circlet crown with curling gold branches set with a few translucent blue-green crystal leaves shaped like butterfly wings; ' +
-    'a long flowing white and pale-cream draped chiton gown with loose sheer sleeves falling from the shoulders and faint pale gold embroidery near the hem, a modest neckline; ' +
-    'gold shoulder clasps, a layered gold necklace, a small blue-green butterfly brooch at the chest, gold bands on the upper arms; small blue butterfly motifs painted on the cloth; a quiver of white-fletched arrows on the back',
-  role: 'Rôdeur (huntress): a graceful, light-footed archer, a shooting-ready posture, soft aqua and pale gold accents.',
-  weapon: 'an oversized elegant golden bow with curled ornate tips, much taller than the character, the starting weapon',
-  gear: 'golden bow and quiver',
+const PERSONAS = {
+  rodeur: {
+    goddess: 'Artémis',
+    outfit:
+      'inspired by the goddess Artemis: very long flowing wavy silver-white hair with soft lavender and pale pink tints; a thin gold circlet crown with curling gold branches set with a few translucent blue-green crystal leaves shaped like butterfly wings; ' +
+      'a long flowing white and pale-cream draped chiton gown with loose sheer sleeves falling from the shoulders and faint pale gold embroidery near the hem, a modest neckline; ' +
+      'gold shoulder clasps, a layered gold necklace, a small blue-green butterfly brooch at the chest, gold bands on the upper arms; small blue butterfly motifs painted on the cloth; a quiver of white-fletched arrows on the back',
+    role: 'Rôdeur (huntress): a graceful, light-footed archer, a shooting-ready posture, soft aqua and pale gold accents.',
+    weapon: 'an oversized elegant golden bow with curled ornate tips, much taller than the character, the starting weapon',
+    gear: 'golden bow and quiver',
+    fix: [],
+  },
+  sorcier: {
+    goddess: 'Hestia',
+    outfit:
+      'inspired by the goddess Hestia: a big voluminous mass of dark curly hair piled high on the head, serene half-closed eyes and a calm smile; large round gold fan-shaped earrings; ' +
+      'a gold collar necklace with a small ornate central clasp; a long white draped chiton gown held at both shoulders by gold clasps and gathered at the waist by a gold clasp, falling in soft folds to the feet, a modest neckline',
+    role: 'Sorcier (priestess of the sacred hearth fire): a serene, upright posture, the hands often open, white and gold with warm ember accents. The most fragile hero: no armor at all.',
+    weapon: 'none: she casts the fire with her bare hands, palms open, and wears only her gold jewelry',
+    gear: 'gold jewelry',
+    fix: [
+      ['the bells and ribbons sway with the breath, a paper talisman held between two fingers of the free hand', 'the hands held open at the hips, palms up, the drapery swaying'],
+      ['the bell wand raised to shoulder height, the free hand drawn back with a paper talisman between two fingers', 'one hand drawn back to the shoulder, palm open, the other hand forward'],
+      ['the free hand flicks forward to throw the talisman, the bell wand swept forward, the body leaning into the throw (no visible fire)', 'the open palm thrust forward toward the target, the body leaning into it (no visible fire)'],
+      ['the bell wand held low at the side, the wide sleeves and ribbons streaming back', 'the arms held slightly out, the drapery and the curls streaming back'],
+      ['the bell wand swung back over the shoulder, a new talisman drawn in the free hand', 'the other hand swung back over the shoulder, palm open'],
+      ['the bell wand flicked forward like a whip toward the target, the free hand following', 'the other palm swept forward toward the target in a wide arc'],
+      ['the sleeves and ribbons wrapped around the body', 'the drapery wrapped around the body'],
+      ['a paper talisman pinched between two fingers and raised to the lips, the bell wand drawn back', 'both hands cupped together before the lips, the eyes closed'],
+      ['the talisman flung down onto the ground ahead, two fingers of the free hand pointing at the ground in a hand sign, the bell wand raised high (no seal drawn)', 'one open palm thrust down toward the ground ahead, the other hand raised high (no seal drawn)'],
+      ['the bell wand held tight', 'the hands on the shoulders'],
+      ['the robe and the ribbons', 'the drapery and the curls'],
+      ['the robe, the sleeves and the ribbons', 'the drapery and the curls'],
+      ['the bell wand pointing at the sky', 'both palms open toward the sky'],
+      ['the bell wand raised straight up toward the sky in both hands, the bells ringing', 'both hands raised straight up toward the sky, palms together'],
+      ['the bell wand brought down and pointed far ahead at the ground', 'one arm brought down and pointed far ahead at the ground'],
+      ['a small round paper lantern from the sash', 'a small clay oil lamp from the waist clasp'],
+      ['the lantern', 'the lamp'],
+      ['the arms and the bell wand flung out', 'the arms flung out'],
+      ['a talisman between two fingers', 'one hand on the heart'],
+      ['the bell wand held upright in the other hand', 'the other hand raised, palm open'],
+      ['the gold jewelry still held', 'the gold jewelry glinting'],
+      ['the gold jewelry raised', 'both palms raised'],
+      ['the weapon still held', 'the hands open'],
+      ['the grip on the weapon loosening', 'the arms going limp'],
+      ['the gold jewelry slipping from the hands', 'the arms falling loose'],
+      ['the gold jewelry fallen beside the body', 'the drapery spread around the body'],
+      [', gold jewelry in hand', ', the hands open'],
+      ['same oversized weapon', 'same gold jewelry'],
+      ['and the class weapon drawn oversized (clearly larger than life) so that it stays readable in a small sprite', 'and the gold jewelry drawn clearly so that it stays readable in a small sprite'],
+    ],
+  },
+  lame: {
+    goddess: 'Apaté',
+    outfit:
+      'inspired by the goddess Apate (deceit): very long straight silver-white hair; pale ice-blue eyes (flat painted, no glow); fine dark crack-like markings on one cheek, the neck and the collarbone; a spiky silver hair ornament above one ear; small silver earrings; ' +
+      'an elegant long black gown slit for movement, with silver filigree like thorny branches across the shoulders and the bodice, a modest neckline, loose sheer black sleeves, black gloves to the elbow traced with silver filigree',
+    role: 'Lame (shadow assassin): fast and deadly, a low compact crouching posture, black and silver accents.',
+    weapon: 'two oversized slim silver daggers with ornate dark hilts and small crossguards, held in a reverse grip, the starting weapon',
+    gear: 'two silver daggers',
+    fix: [
+      ['two large kunai', 'two silver daggers'],
+      ['kunai', 'daggers'],
+      ['the scarf and the hair whirling', 'the long hair and the sleeves whirling'],
+      ['the scarf over the face', 'the head low'],
+      ['the scarf streaming', 'the long hair streaming'],
+      ['the scarf flying', 'the long hair flying'],
+    ],
+  },
 };
+const fixText = (text, fixes) => fixes.reduce((t, [from, to]) => t.split(from).join(to), text);
 
 function lotDemiDieux() {
   const out = [
     '# Lot 8 : Demi-dieux, toutes les actions du jeu (planches 4 × 8)',
     '',
-    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière, la Lame et la Rôdeuse sont des femmes ; la Rôdeuse porte la tenue d’une Artémis (cheveux argentés, diadème d’or, robe drapée blanche, arc doré).**',
+    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière, la Lame et la Rôdeuse sont des femmes, habillées comme trois déesses : Hestia, Apaté et Artémis.**',
     '',
     '**Ordre :** la fiche de référence d\'abord (à refaire : genre et tenue changent), puis les planches 1 à 4. Pour les planches 2 à 4, **joindre la fiche et la planche 1** : Nano Banana garde ainsi la même échelle et le même dessin.',
     '',
@@ -1285,24 +1348,26 @@ function lotDemiDieux() {
     '',
   ];
   for (const ck of ['guerrier', 'sorcier', 'lame', 'paladin', 'rodeur']) {
-    const artemis = ck === 'rodeur';
-    const cls = artemis ? { ...CLASSES[ck], role: ARTEMIS.role, weapon: ARTEMIS.weapon, gear: ARTEMIS.gear } : CLASSES[ck];
+    const persona = PERSONAS[ck];
+    const cls = persona ? { ...CLASSES[ck], role: persona.role, weapon: persona.weapon, gear: persona.gear } : CLASSES[ck];
     const base = hero('demidieu', ck);
-    const ch = artemis
+    const ch = persona
       ? {
           ...base,
-          subject: base.subject.replace(OUTFITS.demidieu.rodeur, ARTEMIS.outfit).replace(CLASSES.rodeur.role, ARTEMIS.role).replace(CLASSES.rodeur.weapon, ARTEMIS.weapon),
-          tail: base.tail.replace(CLASSES.rodeur.gear, ARTEMIS.gear),
+          subject: base.subject.replace(OUTFITS.demidieu[ck], persona.outfit).replace(CLASSES[ck].role, persona.role).replace(CLASSES[ck].weapon, persona.weapon),
+          tail: base.tail.replace(CLASSES[ck].gear, persona.gear),
         }
       : base;
+    const fix = (text) => (persona ? fixText(text, persona.fix) : text);
     const woman = WOMEN.has(ck);
     const subject = woman
       ? ch.subject.replace('BODY (the race):', 'GENDER: a woman, clearly female (face, figure, hair). BODY (the race):')
       : ch.subject;
-    const name = woman ? `${ch.name.replace('Sorcier', 'Sorcière').replace('Rôdeur', 'Rôdeuse')} (femme${artemis ? ', façon Artémis' : ''})` : ch.name;
+    const title = ch.name.replace('Sorcier', 'Sorcière').replace('Rôdeur', 'Rôdeuse');
+    const name = persona ? `${title} (femme, façon ${persona.goddess})` : ch.name;
     const rows = DEMIGOD_ROWS[ck](cls);
     if (rows.length !== 16) throw new Error(`${ck} : ${rows.length} lignes au lieu de 16`);
-    out.push(`## ${name}`, '', `### ${name} — fiche de référence`, '', `**Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-reference.jpg\``, '', fence(fichePrompt({ subject, proportions: ch.proportions })));
+    out.push(`## ${name}`, '', `### ${name} — fiche de référence`, '', `**Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-reference.jpg\``, '', fence(fix(fichePrompt({ subject, proportions: ch.proportions }))));
     for (let p = 0; p < 4; p++) {
       const sheetRows = rows.slice(p * 4, p * 4 + 4);
       const who = woman ? 'The character is a woman.' : '';
@@ -1315,7 +1380,7 @@ function lotDemiDieux() {
         '',
         `**Joindre :** la fiche de référence${p > 0 ? ' et la planche 1' : ''}. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-planche${p + 1}.jpg\``,
         '',
-        fence(sheetPrompt({ intro, rows: sheetRows, ch: cls, bg: GREY, label: `demi-dieu-${ck}/planche${p + 1}` })),
+        fence(fix(sheetPrompt({ intro, rows: sheetRows, ch: cls, bg: GREY, label: `demi-dieu-${ck}/planche${p + 1}` }))),
       );
     }
   }
