@@ -386,7 +386,7 @@ kbd {
 #boss .name {
   display: block;
   margin-bottom: 4px;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--serif);
   font-size: 20px;
   color: var(--washi);
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
@@ -419,7 +419,7 @@ kbd {
   height: 22px;
   border-radius: 50%;
   background: rgba(20, 16, 24, 0.75);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--serif);
   font-size: 13px;
 }
 
@@ -485,13 +485,13 @@ kbd {
 }
 
 .training .title {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--serif);
   font-size: 15px;
   opacity: 0.85;
 }
 
 .training .dps {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--serif);
   font-size: 22px;
   color: var(--gold);
 }
@@ -512,7 +512,7 @@ kbd {
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--serif);
   font-size: 36px;
   color: var(--washi);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);

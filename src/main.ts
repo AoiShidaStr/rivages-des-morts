@@ -11,6 +11,7 @@ import { Island } from './game/island';
 import { Progress } from './game/progress';
 import { Input } from './input';
 import { loadKeyboardLayout } from './keys';
+import { loadingDone, loadingFailed, loadingStep } from './loading';
 import { openSaves, takeNotice } from './net/account';
 import { chooseNetwork } from './net/transport';
 import { heroSprite, withHeroSprites } from './render/heroes';
@@ -46,6 +47,7 @@ function element<T extends HTMLElement>(id: string): T {
 }
 
 async function start(): Promise<void> {
+  loadingStep('Le passeur détache sa barque…', 0.3);
   // Avant toute interface : les touches s'affichent selon le clavier du joueur.
   await loadKeyboardLayout();
   const canvas = element<HTMLCanvasElement>('game');
@@ -58,6 +60,7 @@ async function start(): Promise<void> {
   const network = chooseNetwork(params);
   const notices: string[] = [];
   const accounts = network === 'serveur';
+  loadingStep('Les âmes retrouvent leur nom…', 0.35);
   const { store, account } = await openSaves(accounts, (text) => notices.push(text));
   const notice = takeNotice();
   if (notice) notices.push(notice);
@@ -69,6 +72,7 @@ async function start(): Promise<void> {
   const hero = heroSprite(progress.state.hero);
   dungeonRenderer.setHero(hero);
   islandRenderer.setHero(hero);
+  loadingStep('L’île du Yomi sort de la brume…', 0.45);
   await Promise.all([dungeonRenderer.load(), islandRenderer.load(island)]);
 
   const app = new App({
@@ -91,6 +95,7 @@ async function start(): Promise<void> {
     notices,
   });
   app.start();
+  loadingDone();
 
   // Accès à la partie depuis la console du navigateur, en développement seulement.
   if (import.meta.env.DEV) Object.assign(window, { rdm: app.debug() });
@@ -100,5 +105,6 @@ async function start(): Promise<void> {
 
 start().catch((error: unknown) => {
   console.error(error);
+  loadingFailed();
   element('overlay').textContent = `Le jeu n'a pas pu démarrer : ${error instanceof Error ? error.message : String(error)}`;
 });

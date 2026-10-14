@@ -2,6 +2,26 @@
    or des oboles et bleu des âmes. Tout est en variables pour être refait facilement.
    --paper et --ink sont le fond et le texte des fenêtres (sombre et clair) ; --washi et --sumi restent
    clair et sombre partout (texte sur un bouton, une étiquette colorée, le HUD). */
+
+/* Police des titres : Shippori Mincho (Google Fonts, licence OFL, public/fonts/OFL-shippori-mincho.txt), réduite aux
+   caractères du jeu par tools/polices.py et embarquée : elle marche hors ligne et sur le serveur coop. Elle contient
+   les kanji, donc les sceaux (黄泉, 魂…) ont partout le même dessin, quelles que soient les polices du joueur. */
+@font-face {
+  font-family: 'Shippori Mincho';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/shippori-mincho-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Shippori Mincho';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/shippori-mincho-bold.woff2') format('woff2');
+}
+
 :root {
   --paper: #22252a;
   --paper-2: #16181b;
@@ -17,7 +37,7 @@
   --spirit: #6ff3ff;
   --moss: #86b25a;
   --mist: #c3cbcf;
-  --serif: Georgia, 'Times New Roman', serif;
+  --serif: 'Shippori Mincho', Georgia, 'Times New Roman', serif;
   /* Cadres en pixels du pack Kenney « Fantasy UI Borders » (CC0), teintés par npm run cadres. */
   --cadre-fenetre: url('/ui/cadres/fenetre.png');
   --cadre-dialogue: url('/ui/cadres/dialogue.png');
@@ -28,6 +48,8 @@
   --cadre-case-vermillon: url('/ui/cadres/case-vermillon.png');
   --cadre-encart: url('/ui/cadres/encart.png');
   --separateur: url('/ui/cadres/separateur.png');
+  /* Curseurs, cases à cocher et boutons radio en vermillon, plutôt que le bleu du navigateur. */
+  accent-color: var(--vermilion);
 }
 
 /* Les cadres sont en pixels : nets même sur un écran agrandi (125 %, 150 %). Les bords se répètent (round)
@@ -158,6 +180,8 @@ button {
   color: var(--washi);
   font-family: var(--serif);
   font-size: 26px;
+  /* Deux kanji l'un sous l'autre tiennent dans le carré : sans line-height, la police de secours les faisait déborder. */
+  line-height: 1;
   writing-mode: vertical-rl;
   transform: rotate(-4deg);
   box-shadow: 0 6px 16px rgba(155, 47, 34, 0.35);
@@ -2148,8 +2172,9 @@ button {
 
 .creation-detail {
   display: grid;
-  grid-template-columns: auto 1fr 1fr;
-  align-items: center;
+  /* L'aperçu du héros prend la plus large colonne, sur toute la hauteur : c'est lui qu'on regarde en choisissant. */
+  grid-template-columns: minmax(300px, 1.25fr) 1fr 1.1fr;
+  align-items: start;
   gap: 20px;
   margin-top: 18px;
   padding: 14px 18px;
@@ -2164,6 +2189,8 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  align-self: stretch;
+  min-height: 300px;
   min-width: 170px;
   padding: 10px 14px;
   background: radial-gradient(circle at 50% 65%, rgba(200, 65, 47, 0.15), rgba(236, 230, 218, 0.05) 75%);
@@ -2173,28 +2200,29 @@ button {
 
 .hero-preview-visuals {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 12px;
 }
 
 .hero-painted-preview {
-  width: 90px;
-  height: 110px;
+  width: 160px;
+  height: 200px;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .hero-preview-canvas {
-  width: 200px;
+  width: min(280px, 100%);
   height: auto;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
 }
 
 .hero-preview-label {
-  margin-top: 6px;
+  margin-top: 8px;
   font-family: var(--serif);
-  font-size: 13px;
+  font-size: 16px;
   color: var(--ink);
   text-align: center;
 }

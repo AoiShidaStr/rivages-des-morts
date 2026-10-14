@@ -29,7 +29,7 @@ export interface DifficultyData {
      * difficulté du joueur expérimenté. Le Yomi sans fond, lui, ne le reçoit pas : c'est l'épreuve, elle garde ses
      * propres chiffres (donjon-infini.json) et l'on ne veut pas la durcir en même temps.
      */
-    dungeons?: { hp: number; damage: number };
+    dungeons?: { hp: number; damage: number; from?: number };
   };
   rewards: { obolesPerLevel: number; xpPerLevel: number; rareChancePerLevel: number; extraMaterialEvery: number };
   elite: { hp: number; damage: number };
@@ -121,13 +121,14 @@ export function difficultyFor(data: DifficultyData, level: number, heroes = 1, s
 }
 
 /**
- * Difficulté d'un donjon ordinaire : celle de `difficultyFor`, plus le supplément `enemy.dungeons` (0.16.0 : ×1,5),
- * appliqué aux yokai comme au boss. Le Yomi sans fond n'y touche pas : il appelle `difficultyFor` directement.
+ * Difficulté d'un donjon ordinaire : celle de `difficultyFor`, plus le supplément `enemy.dungeons` (0.16.0 : ×1,5) à partir
+ * de son niveau `from`, appliqué aux yokai comme au boss. Le Yomi sans fond n'y touche pas : il appelle `difficultyFor` directement.
  */
 export function dungeonDifficultyFor(data: DifficultyData, level: number, heroes = 1, strength: EnemyStrength = {}): Difficulty {
   const diff = difficultyFor(data, level, heroes, strength);
   const extra = data.enemy.dungeons;
-  if (!extra) return diff;
+  // Sous `from` (niveau 5) : le donjon d'apprentissage reste abordable pour les classes sans garde (diagnostic 0.16.0, § 6).
+  if (!extra || diff.level < (extra.from ?? 1)) return diff;
   return {
     ...diff,
     hp: diff.hp * extra.hp,
