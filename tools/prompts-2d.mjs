@@ -1437,6 +1437,7 @@ function simpleSheetPrompt({ who, gear, rows, second }) {
     LOOK,
     bgText(GREY),
     NOFX,
+    EYES,
   ].join('\n');
 }
 
