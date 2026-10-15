@@ -27,6 +27,10 @@ const NOFX =
   'No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, ' +
   'no text, no numbers, no labels, no drawn grid lines, no frame borders.';
 
+// Règle de Meven (13 octobre 2026) pour tous les personnages : le regard suit toujours le corps.
+const EYES =
+  'The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.';
+
 const GREY = { name: 'medium grey', hex: '#8f8f8f' };
 const MAGENTA = { name: 'pure magenta', hex: '#ff00ff' };
 const bgText = (bg) => `Flat uniform ${bg.name} background (${bg.hex}), exactly the same color everywhere, no gradient, no vignette.`;
@@ -676,6 +680,7 @@ function sheetPrompt({ intro, rows, ch, bg, label }) {
     lookFor(heads),
     bgText(bg),
     NOFX,
+    EYES,
   );
   return lines.join('\n');
 }
@@ -692,6 +697,7 @@ function fichePrompt({ subject, proportions, bg = GREY, wide = false, heads = 3 
     lookFor(heads),
     bgText(bg),
     NOFX,
+    EYES,
   ].join('\n');
 }
 
@@ -705,6 +711,7 @@ function vueFichePrompt({ subject, view, bg = GREY, wide = false, heads = 3 }) {
     lookFor(heads),
     bgText(bg),
     NOFX,
+    EYES,
   ].join('\n');
 }
 

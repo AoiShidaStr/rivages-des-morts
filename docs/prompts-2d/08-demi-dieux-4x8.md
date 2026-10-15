@@ -22,6 +22,7 @@ Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Guerrier — planche 1
@@ -48,6 +49,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Guerrier — planche 2
@@ -74,6 +76,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Guerrier — planche 3
@@ -100,6 +103,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Guerrier — planche 4
@@ -126,6 +130,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ## Demi-dieu Sorcière (femme, façon Hestia)
@@ -142,6 +147,7 @@ Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Sorcière (femme, façon Hestia) — planche 1
@@ -168,6 +174,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Sorcière (femme, façon Hestia) — planche 2
@@ -194,6 +201,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Sorcière (femme, façon Hestia) — planche 3
@@ -220,6 +228,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Sorcière (femme, façon Hestia) — planche 4
@@ -246,6 +255,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ## Demi-dieu Lame (femme, façon Apaté)
@@ -262,6 +272,7 @@ Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Lame (femme, façon Apaté) — planche 1
@@ -288,6 +299,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Lame (femme, façon Apaté) — planche 2
@@ -314,6 +326,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Lame (femme, façon Apaté) — planche 3
@@ -340,6 +353,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Lame (femme, façon Apaté) — planche 4
@@ -366,6 +380,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ## Demi-dieu Paladin
@@ -382,6 +397,7 @@ Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Paladin — planche 1
@@ -408,6 +424,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Paladin — planche 2
@@ -434,6 +451,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Paladin — planche 3
@@ -460,6 +478,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Paladin — planche 4
@@ -486,6 +505,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ## Demi-dieu Rôdeuse (femme, façon Artémis)
@@ -502,6 +522,7 @@ Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 1
@@ -528,6 +549,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 2
@@ -554,6 +576,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 3
@@ -580,6 +603,7 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
 
 ### Demi-dieu Rôdeuse (femme, façon Artémis) — planche 4
@@ -606,4 +630,5 @@ DO NOT move the character across the sheet: each frame stays centered in its own
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
 Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
+The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
