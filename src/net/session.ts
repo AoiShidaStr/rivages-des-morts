@@ -3,6 +3,8 @@
 import {
   MAX_PLAYERS,
   PROTOCOL,
+  SNAPSHOT_EVERY,
+  TICK_RATE,
   packSnapshot,
   unpackSnapshot,
   type Announce,
@@ -330,7 +332,7 @@ export class CoopSession {
     });
     room.on('snap', (data, from) => {
       if (from !== this.hostPeer) return;
-      noteArrival('snap', 50);
+      noteArrival('snap', (SNAPSHOT_EVERY * 1000) / TICK_RATE);
       const snap = unpackSnapshot(data);
       if (snap) this.handlers.state?.(snap);
     });

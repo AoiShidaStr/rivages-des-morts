@@ -186,6 +186,8 @@ export class App {
   private readonly remote = new Map<number, RemoteInput>();
   private hostTick = 0;
   private sentTick = 0;
+  /** Pas du dernier envoi des pings des invités. */
+  private pingsTick = 0;
   private outbox: GameEvent[] = [];
   /** Invité : événements reçus de l'hôte, pas encore montrés ; ses commandes numérotées, une par pas. */
   private inbox: GameEvent[] = [];
@@ -1183,7 +1185,7 @@ export class App {
   }
 
   /**
-   * Hôte : vingt fois par seconde, un instantané pour chaque invité (canal rapide), et les événements du combat
+   * Hôte : à chaque pas, un instantané pour chaque invité (canal rapide), et les événements du combat
    * depuis le précédent (canal sûr).
    */
   private shareState(world: World, events: GameEvent[]): void {
@@ -1195,7 +1197,10 @@ export class App {
     if (this.outbox.length) session.sendEvents({ run: this.coopRun, tick: this.hostTick, events: this.outbox });
     session.sendSnapshots(shareSnapshot(world, this.hostTick), this.coopRun, (seat) => this.remote.get(seat)?.applied ?? 0);
     // Une fois par seconde, le ping de chaque invité, pour que tous le voient (l'hôte n'en a pas : 0).
-    if (this.hostTick % 60 < SNAPSHOT_EVERY) session.sendPings(world.players.map((hero) => (hero.id === 0 ? 0 : (this.remote.get(hero.id)?.ping ?? 0))));
+    if (this.hostTick - this.pingsTick >= 60) {
+      this.pingsTick = this.hostTick;
+      session.sendPings(world.players.map((hero) => (hero.id === 0 ? 0 : (this.remote.get(hero.id)?.ping ?? 0))));
+    }
     this.outbox = [];
     this.sentTick = this.hostTick;
   }
@@ -1369,6 +1374,7 @@ export class App {
         for (let seat = 1; seat < configs.length; seat++) this.remote.set(seat, new RemoteInput(start.run));
         this.hostTick = 0;
         this.sentTick = 0;
+        this.pingsTick = 0;
         this.outbox = [];
       } else {
         this.world = null;
