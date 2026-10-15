@@ -202,6 +202,33 @@
           "cooldown": 12,
           "description": "Une lanterne posée sous la souris (8 m au plus) : elle explose au bout d'une seconde, et le sol reste brûlant 3 s. Revient en 12 s."
         }
+      },
+      "orbe": {
+        "name": "Orbe",
+        "subtitle": "Une seule boule, et elle efface",
+        "role": "Dégâts à distance, visée pure",
+        "lore": "Amaterasu ne lançait pas de flammes : elle en posait une, et attendait qu'on vienne s'y brûler.",
+        "passive": {
+          "name": "Lentille ardente",
+          "description": "Ton clic gauche ne lance plus trois boules guidées, mais un seul orbe qu'il faut viser : quatre fois les dégâts de ta salve, plus vite et plus loin, mais il met 1,2 s à revenir et ne suit plus personne. Un tir dans le vide ne coûte rien : un tir manqué coûte tout.",
+          "effects": [
+            {
+              "op": "set",
+              "path": "perks.baseAttack",
+              "value": { "count": 1, "damageFactor": 12, "radius": 0.6, "speed": 18, "turnRate": 0, "seek": 0, "range": 12, "windup": 0.3, "active": 0.08, "recovery": 1.2, "commit": 0.5 }
+            }
+          ]
+        },
+        "active": {
+          "name": "Déflagration",
+          "kind": "onde",
+          "radius": 3.2,
+          "damage": 1.1,
+          "knockback": 8,
+          "stun": 0.4,
+          "cooldown": 12,
+          "description": "L'orbe éclate autour de toi : ce qui te colle est brûlé, projeté et sonné 0,4 s. Revient en 12 s."
+        }
       }
     },
     "lame": {
@@ -235,6 +262,33 @@
         "subtitle": "Ce qu'on donne quand on n'a plus rien",
         "role": "Critiques, risque",
         "lore": "La lame la plus vive du Yomi n'a jamais eu besoin de ses organes : elle a besoin d'une ouverture.",
+        "passive": {
+          "name": "Peau vive",
+          "description": "Tu renonces à un tiers de tes PV ; en échange, tes coups critiques frappent 2,75 fois au lieu de 2 et tous tes dégâts montent de 60 %. Un échange raté ne pardonne plus.",
+          "effects": [
+            { "op": "set", "path": "perks.frailHp", "value": 0.65 },
+            { "op": "set", "path": "blade.critFactor", "value": 2.75 },
+            { "op": "set", "path": "perks.abandon", "value": { "damage": 0.6 } }
+          ]
+        },
+        "active": {
+          "name": "Cercle de lames",
+          "kind": "onde",
+          "radius": 3.6,
+          "damage": 1.35,
+          "knockback": 6,
+          "stun": 0.5,
+          "cooldown": 12,
+          "description": "Tes deux lames balaient autour de toi : tout ce qui t'entoure est coupé, projeté et sonné 0,5 s. Revient en 12 s."
+        }
+      }
+    },
+    "paladin": {
+      "aube": {
+        "name": "Aube",
+        "subtitle": "La lumière qui soigne",
+        "role": "Soins, zones",
+        "lore": "Amaterasu laissait son Aura derrière elle : elle réchauffait même ceux qui l'avaient oubliée.",
         "passive": {
           "name": "Peau vive",
           "description": "Tu renonces à un tiers de tes PV ; en échange, tes coups critiques frappent 2,75 fois au lieu de 2 et tous tes dégâts montent de 60 %. Un échange raté ne pardonne plus.",
@@ -335,6 +389,32 @@
         "subtitle": "Le serment ne tient qu'un coup",
         "role": "Dégâts, garde jetée",
         "lore": "Týr donna sa main pour une parole tenue. Le parjure garde ses deux mains, et s'en sert.",
+        "passive": {
+          "name": "Serment rompu",
+          "description": "Ta garde ne tient plus qu'un seul blocage : elle se brise aussitôt et met 1,5 s à revenir. En échange, tu frappes 50 % plus fort — et chaque blocage parfait ajoute 10 % de dégâts de plus, sans limite, tant que la descente dure.",
+          "effects": [
+            { "op": "set", "path": "paladin.guard.minCost", "value": 200 },
+            { "op": "set", "path": "perks.abandon", "value": { "damage": 0.5, "perPerfectGuard": 0.1 } }
+          ]
+        },
+        "active": {
+          "name": "Rupture",
+          "kind": "onde",
+          "radius": 3.6,
+          "damage": 1.4,
+          "knockback": 7,
+          "stun": 0.6,
+          "cooldown": 13,
+          "description": "Le serment cède : une onde sacrée fauche tout ce qui t'entoure, le projette et l'étourdit 0,6 s. Revient en 13 s."
+        }
+      }
+    },
+    "rodeur": {
+      "piegeur": {
+        "name": "Piégeur",
+        "subtitle": "Le terrain travaille pour toi",
+        "role": "Contrôle, filets",
+        "lore": "On ne chasse pas le yokai : on choisit l'endroit où il tombera.",
         "passive": {
           "name": "Serment rompu",
           "description": "Ta garde ne tient plus qu'un seul blocage : elle se brise aussitôt et met 1,5 s à revenir. En échange, tu frappes 50 % plus fort — et chaque blocage parfait ajoute 10 % de dégâts de plus, sans limite, tant que la descente dure.",
@@ -454,56 +534,6 @@
           "duration": 6,
           "cooldown": 15,
           "description": "Tu inspires une fois, et tout s'aligne : +40 % de dégâts et +10 % de vitesse de marche pendant 6 s. Revient en 15 s."
-        }
-      },
-      "eclaireur": {
-        "name": "L'Éclaireur",
-        "subtitle": "Le marqueur du groupe",
-        "role": "Contrôle, soutien",
-        "lore": "Un éclaireur ne tue pas seul : il montre où frapper, et l'équipe frappe.",
-        "passive": {
-          "name": "Flèche balise",
-          "description": "La Marque du chasseur dure 9 s au lieu de 6, et les yokai marqués subissent +15 % de dégâts de toute source (les tiens font 30 % de plus). En échange, tes PV tombent à ×0,85 : la voie se paie sur soi.",
-          "effects": [
-            { "op": "set", "path": "ranger.huntMark.duration", "value": 9 },
-            { "op": "set", "path": "ranger.huntMark.bonus", "value": 0.15 },
-            { "op": "set", "path": "perks.huntMarkAll", "value": 0.15 },
-            { "op": "set", "path": "perks.frailHp", "value": 0.85 }
-          ]
-        },
-        "active": {
-          "name": "Le Couloir",
-          "kind": "filet",
-          "range": 11,
-          "radius": 2.4,
-          "stun": 2,
-          "allyRush": 0.2,
-          "allyRushTime": 3,
-          "cooldown": 12,
-          "description": "Tu poses un couloir sous la souris (11 m au plus) : les yokai qui s'y trouvent sont cloués 2 s, et les alliés qui s'y tiennent vont 20 % plus vite — donc s'écartent vite. Revient en 12 s."
-        }
-      },
-      "vigie": {
-        "name": "Le Vigie",
-        "subtitle": "L'arc patient",
-        "role": "Dégâts à distance, contrôle",
-        "lore": "On ne bande pas un arc dans la précipitation : on choisit son instant, et on l'attend.",
-        "passive": {
-          "name": "Œil d'argile",
-          "description": "Tes tirs chargés pleins étourdissent 0,5 s. En échange, le Recul (Bond) recharge en 5 s au lieu de 3,6 s : la voie se joue à distance, pas en reculant.",
-          "effects": [
-            { "op": "set", "path": "perks.chargedStun", "value": 0.5 },
-            { "op": "set", "path": "ranger.leap.cooldown", "value": 5 }
-          ]
-        },
-        "active": {
-          "name": "Volée d'argile",
-          "kind": "salve",
-          "radius": 0,
-          "count": 6,
-          "damage": 0.9,
-          "cooldown": 13,
-          "description": "Six traits d'argile partent en éventail et traversent tout ce qu'ils touchent. Revient en 13 s."
         }
       }
     }

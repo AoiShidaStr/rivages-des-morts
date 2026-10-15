@@ -141,10 +141,6 @@ export class AdaptiveResolution {
     }
   }
 
-  /**
-   * Change la définition au début de l'image suivante, avant qu'elle soit dessinée : redimensionner le canevas
-   * l'efface, et juste après le rendu l'écran montrait une image vide (un éclair du fond gris de la page).
-   */
   private apply(): void {
     if (this.pending) return;
     this.pending = true;
