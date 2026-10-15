@@ -1258,11 +1258,45 @@ const DEMIGOD_ROWS = {
 const WOMEN = new Set(['sorcier', 'lame', 'rodeur']);
 
 /**
- * Les trois héroïnes Demi-dieux reprennent la tenue et les accessoires de déesses choisies par Meven (14 octobre 2026) :
- * la Rôdeuse en Artémis, la Sorcière en Hestia, la Lame en Apaté. `fix` remplace dans les prompts les mots des
- * descriptions de classe (pensées pour la série du Yomi : grelots, talismans, kunai, écharpe) par leur équivalent.
+ * Les cinq Demi-dieux suivent les fiches de référence choisies par Meven (15 octobre 2026) : Guerrier spartiate noir
+ * et or à la kopis, Paladin hoplite de bronze à la lance et au bouclier Méduse, et trois déesses (Hestia, Apaté,
+ * Artémis). `fix` remplace dans les prompts les mots des descriptions de classe, pensées pour la série du Yomi
+ * (nodachi, naginata, grelots, talismans, kunai, écharpe), par l'équivalent de la fiche.
  */
+/** Pour toute la race : les fiches n'ont ni peau dorée ni emblème d'éclair, seulement l'auréole. */
+const DEMIGOD_FIX = [
+  ['luminous warm golden skin, a thin solid golden ring floating behind the head as a discreet halo (drawn as a flat painted shape, not a glow), laurel details, the sign of the divine parent as a small lightning-bolt emblem on the clothing', 'a thin solid golden ring floating just above and behind the head as a discreet tilted halo (drawn as a flat painted shape, not a glow)'],
+];
 const PERSONAS = {
+  guerrier: {
+    outfit:
+      'Spartan warrior in black and gold: a black Corinthian helmet with gold trim and a tall black horsehair crest, a black muscle cuirass with gold rivets and trim, gold lion-head shoulder clasps, black segmented shoulder guards and bracers, ' +
+      'a skirt of black and bronze leather strips (pteruges), black greaves with gold studs, leather sandals, a long black cape',
+    role: 'Guerrier (berserker): a forward-leaning aggressive stance, black and gold accents.',
+    weapon: 'an oversized curved Greek sword (kopis) with a dark blade and a gold crossguard, the starting weapon',
+    gear: 'kopis',
+    fix: [['nodachi', 'kopis']],
+  },
+  paladin: {
+    outfit:
+      'Greek hoplite in bronze: a bronze Corinthian helmet engraved with a meander pattern and a tall red and black horsehair crest, a bronze muscle cuirass, a short white pleated chiton with short sleeves, ' +
+      'a skirt of dark red leather strips (pteruges) over the white chiton, bronze greaves, leather sandals, a dark brown cape fastened with a round bronze brooch',
+    role: 'Paladin (solar rampart): a steady rampart posture behind the shield, bronze and dark red accents.',
+    weapon: 'a long bronze-tipped spear (dory) and a large round bronze shield (aspis) embossed with the head of Medusa, the starting weapon',
+    gear: 'spear and Medusa shield',
+    fix: [
+      ['a wide sweeping slash then a lunging thrust, the naginata at full extension forward, the shield pulled back', 'a powerful lunging thrust, the spear at full extension forward, the shield held at the side'],
+      ['draws a short war hammer from the belt and pulls it back behind the shoulder, the shield turned aside', 'raises the spear above the shoulder in a javelin grip, the shield turned aside'],
+      ['hurls the hammer forward with the whole body, the throwing arm fully extended (the hammer has left the hand and is not drawn)', 'hurls the spear forward with the whole body, the throwing arm fully extended (the spear has left the hand and is not drawn)'],
+      ['the returning hammer', 'the returning spear'],
+      ['catches the hammer with a jolt', 'catches the spear with a jolt'],
+      ['the hammer back at the belt', 'the spear back in hand'],
+      ['THROWN HAMMER (E key)', 'THROWN SPEAR (E key)'],
+      ['Marteau lancé (E)', 'Lance lancée (E, la compétence « Marteau lancé »)'],
+      ['the large shield', 'the Medusa shield'],
+      ['naginata', 'spear'],
+    ],
+  },
   rodeur: {
     goddess: 'Artémis',
     outfit:
@@ -1277,54 +1311,52 @@ const PERSONAS = {
   sorcier: {
     goddess: 'Hestia',
     outfit:
-      'inspired by the goddess Hestia: a big voluminous mass of dark curly hair piled high on the head, serene half-closed eyes and a calm smile; large round gold fan-shaped earrings; ' +
-      'a gold collar necklace with a small ornate central clasp; a long white draped chiton gown held at both shoulders by gold clasps and gathered at the waist by a gold clasp, falling in soft folds to the feet, a modest neckline',
-    role: 'Sorcier (priestess of the sacred hearth fire): a serene, upright posture, the hands often open, white and gold with warm ember accents. The most fragile hero: no armor at all.',
-    weapon: 'none: she casts the fire with her bare hands, palms open, and wears only her gold jewelry',
-    gear: 'gold jewelry',
+      'inspired by the goddess Hestia: a big voluminous bun of black curly hair piled high on the head with a few loose curls; large gold fan-shaped earrings; a thin gold collar necklace; ' +
+      'a long white draped chiton gown held at both shoulders by gold clasps, a thin brown belt with a round gold clasp and a few small clay tablets and a small pouch hanging from it, falling in soft folds to the feet, a modest neckline; brown leather sandals',
+    role: 'Sorcier (priestess of the sacred hearth fire): a serene, upright posture, white and gold with warm bronze accents. The most fragile hero: no armor at all.',
+    weapon: 'a tall bronze staff topped with a shallow brazier bowl (the sacred hearth), the starting weapon',
+    gear: 'brazier staff',
     fix: [
-      ['the bells and ribbons sway with the breath, a paper talisman held between two fingers of the free hand', 'the hands held open at the hips, palms up, the drapery swaying'],
-      ['the bell wand raised to shoulder height, the free hand drawn back with a paper talisman between two fingers', 'one hand drawn back to the shoulder, palm open, the other hand forward'],
-      ['the free hand flicks forward to throw the talisman, the bell wand swept forward, the body leaning into the throw (no visible fire)', 'the open palm thrust forward toward the target, the body leaning into it (no visible fire)'],
-      ['the bell wand held low at the side, the wide sleeves and ribbons streaming back', 'the arms held slightly out, the drapery and the curls streaming back'],
-      ['the bell wand swung back over the shoulder, a new talisman drawn in the free hand', 'the other hand swung back over the shoulder, palm open'],
-      ['the bell wand flicked forward like a whip toward the target, the free hand following', 'the other palm swept forward toward the target in a wide arc'],
-      ['the sleeves and ribbons wrapped around the body', 'the drapery wrapped around the body'],
-      ['a paper talisman pinched between two fingers and raised to the lips, the bell wand drawn back', 'both hands cupped together before the lips, the eyes closed'],
-      ['the talisman flung down onto the ground ahead, two fingers of the free hand pointing at the ground in a hand sign, the bell wand raised high (no seal drawn)', 'one open palm thrust down toward the ground ahead, the other hand raised high (no seal drawn)'],
-      ['the bell wand held tight', 'the hands on the shoulders'],
-      ['the robe and the ribbons', 'the drapery and the curls'],
+      ['the bells and ribbons sway with the breath, a paper talisman held between two fingers of the free hand', 'the brazier staff held upright, the drapery swaying with the breath'],
+      ['the bell wand raised to shoulder height, the free hand drawn back with a paper talisman between two fingers', 'the brazier staff raised to shoulder height, the free hand drawn back, palm open'],
+      ['the free hand flicks forward to throw the talisman, the bell wand swept forward, the body leaning into the throw (no visible fire)', 'the brazier staff swept forward toward the target, the free hand following, the body leaning into it (no visible fire)'],
+      ['the bell wand held low at the side, the wide sleeves and ribbons streaming back', 'the brazier staff held upright in one hand, the drapery and the curls streaming back'],
+      ['the bell wand swung back over the shoulder, a new talisman drawn in the free hand', 'the free hand pulls a small clay tablet from the belt'],
+      ['the bell wand flicked forward like a whip toward the target, the free hand following', 'the clay tablet thrown forward toward the target, the brazier staff held back'],
+      ['the sleeves and ribbons wrapped around the body', 'the brazier staff held close to the body'],
+      ['a paper talisman pinched between two fingers and raised to the lips, the bell wand drawn back', 'a small clay tablet taken from the belt and raised to the lips, the brazier staff drawn back'],
+      ['the talisman flung down onto the ground ahead, two fingers of the free hand pointing at the ground in a hand sign, the bell wand raised high (no seal drawn)', 'the clay tablet thrown down onto the ground ahead, the brazier staff raised high (no seal drawn)'],
+      ['the bell wand held tight', 'the brazier staff held tight against the chest'],
       ['the robe, the sleeves and the ribbons', 'the drapery and the curls'],
-      ['the bell wand pointing at the sky', 'both palms open toward the sky'],
-      ['the bell wand raised straight up toward the sky in both hands, the bells ringing', 'both hands raised straight up toward the sky, palms together'],
-      ['the bell wand brought down and pointed far ahead at the ground', 'one arm brought down and pointed far ahead at the ground'],
-      ['a small round paper lantern from the sash', 'a small clay oil lamp from the waist clasp'],
+      ['the robe and the ribbons', 'the drapery and the curls'],
+      ['the bell wand pointing at the sky', 'the brazier staff raised toward the sky'],
+      ['the bell wand raised straight up toward the sky in both hands, the bells ringing', 'the brazier staff raised straight up toward the sky in both hands'],
+      ['the bell wand brought down and pointed far ahead at the ground', 'the brazier staff brought down and pointed far ahead at the ground'],
+      ['a small round paper lantern from the sash', 'a small clay oil lamp from the belt'],
       ['the lantern', 'the lamp'],
-      ['the arms and the bell wand flung out', 'the arms flung out'],
-      ['a talisman between two fingers', 'one hand on the heart'],
-      ['the bell wand held upright in the other hand', 'the other hand raised, palm open'],
-      ['the gold jewelry still held', 'the gold jewelry glinting'],
-      ['the gold jewelry raised', 'both palms raised'],
-      ['the weapon still held', 'the hands open'],
-      ['the grip on the weapon loosening', 'the arms going limp'],
-      ['the gold jewelry slipping from the hands', 'the arms falling loose'],
-      ['the gold jewelry fallen beside the body', 'the drapery spread around the body'],
-      [', gold jewelry in hand', ', the hands open'],
-      ['same oversized weapon', 'same gold jewelry'],
-      ['and the class weapon drawn oversized (clearly larger than life) so that it stays readable in a small sprite', 'and the gold jewelry drawn clearly so that it stays readable in a small sprite'],
+      ['the arms and the bell wand flung out', 'the arms and the brazier staff flung out'],
+      ['a talisman between two fingers', 'a clay tablet in the free hand'],
+      ['the bell wand held upright in the other hand', 'the brazier staff held upright in the other hand'],
     ],
   },
   lame: {
     goddess: 'Apaté',
     outfit:
-      'inspired by the goddess Apate (deceit): very long straight silver-white hair; pale ice-blue eyes (flat painted, no glow); fine dark crack-like markings on one cheek, the neck and the collarbone; a spiky silver hair ornament above one ear; small silver earrings; ' +
-      'an elegant long black gown slit for movement, with silver filigree like thorny branches across the shoulders and the bodice, a modest neckline, loose sheer black sleeves, black gloves to the elbow traced with silver filigree',
+      'inspired by the goddess Apate (deceit): very long straight silver-white hair; grey-blue eyes; a spiky silver hair ornament above one ear; ' +
+      'a long black dress slit up one side for movement, with sheer black long puffed sleeves gathered at the wrists, a modest neckline and a yoke of silver-grey lace like thorny branches across the shoulders; sheer black stockings and simple black ankle boots',
     role: 'Lame (shadow assassin): fast and deadly, a low compact crouching posture, black and silver accents.',
-    weapon: 'two oversized slim silver daggers with ornate dark hilts and small crossguards, held in a reverse grip, the starting weapon',
-    gear: 'two silver daggers',
+    weapon: 'two oversized curved silver sickle blades (harpe) with dark grips, one in each hand, the starting weapon',
+    gear: 'two silver sickles',
     fix: [
-      ['two large kunai', 'two silver daggers'],
-      ['kunai', 'daggers'],
+      ['two large kunai', 'two silver sickles'],
+      ['turn slightly in the reverse grip', 'turn slightly in the hands'],
+      ['the kunai reversed', 'the sickles raised'],
+      ['held flat along the forearms', 'held close to the body'],
+      ['held back along the forearms', 'held back at the sides'],
+      ['a quick reverse slash with the other kunai, then a stab forward', 'a quick reverse slash with the other sickle, then a hooking slash forward'],
+      ['both kunai plunged down together in a savage double stab', 'both sickles hooked down together in a savage double slash'],
+      ['a backward double stab', 'a backward double hooking slash'],
+      ['kunai', 'sickles'],
       ['the scarf and the hair whirling', 'the long hair and the sleeves whirling'],
       ['the scarf over the face', 'the head low'],
       ['the scarf streaming', 'the long hair streaming'],
@@ -1338,7 +1370,7 @@ function lotDemiDieux() {
   const out = [
     '# Lot 8 : Demi-dieux, toutes les actions du jeu (planches 4 × 8)',
     '',
-    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière, la Lame et la Rôdeuse sont des femmes, habillées comme trois déesses : Hestia, Apaté et Artémis.**',
+    'Une ligne par action réelle du jeu : attente, course, attaque (et son second coup quand la classe enchaîne), clic droit, esquive, A, E, R, le geste de chacune des quatre Voies (sous-classes), l\'Égide divine de la race, recul et mort, plus les états propres à la classe (garde tenue et coup bloqué, bouclier levé en marche et garde brisée, arc bandé en marche, marche furtive dans la fumée). Cela fait **16 lignes, soit 4 planches par classe**. **La Sorcière, la Lame et la Rôdeuse sont des femmes, habillées comme trois déesses : Hestia, Apaté et Artémis. Les prompts décrivent exactement les fiches de référence choisies le 15 octobre** (Guerrier spartiate noir et or à la kopis, Paladin hoplite de bronze à la lance et au bouclier Méduse, Hestia au bâton-brasero, Apaté aux faucilles, Artémis à l’arc doré).',
     '',
     '**Ordre :** la fiche de référence d\'abord (à refaire : genre et tenue changent), puis les planches 1 à 4. Pour les planches 2 à 4, **joindre la fiche et la planche 1** : Nano Banana garde ainsi la même échelle et le même dessin.',
     '',
@@ -1358,13 +1390,13 @@ function lotDemiDieux() {
           tail: base.tail.replace(CLASSES[ck].gear, persona.gear),
         }
       : base;
-    const fix = (text) => (persona ? fixText(text, persona.fix) : text);
+    const fix = (text) => fixText(text, [...DEMIGOD_FIX, ...(persona?.fix ?? [])]);
     const woman = WOMEN.has(ck);
     const subject = woman
       ? ch.subject.replace('BODY (the race):', 'GENDER: a woman, clearly female (face, figure, hair). BODY (the race):')
       : ch.subject;
     const title = ch.name.replace('Sorcier', 'Sorcière').replace('Rôdeur', 'Rôdeuse');
-    const name = persona ? `${title} (femme, façon ${persona.goddess})` : ch.name;
+    const name = persona?.goddess ? `${title} (femme, façon ${persona.goddess})` : ch.name;
     const rows = DEMIGOD_ROWS[ck](cls);
     if (rows.length !== 16) throw new Error(`${ck} : ${rows.length} lignes au lieu de 16`);
     out.push(`## ${name}`, '', `### ${name} — fiche de référence`, '', `**Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-reference.jpg\``, '', fence(fix(fichePrompt({ subject, proportions: ch.proportions }))));
@@ -1376,7 +1408,7 @@ function lotDemiDieux() {
       out.push(
         `### ${name} — planche ${p + 1}`,
         '',
-        `**Lignes :** ${sheetRows.map((row, r) => `${r + 1} ${row.fr} (\`${row.tag}\`)`).join(' · ')}.`,
+        fix(`**Lignes :** ${sheetRows.map((row, r) => `${r + 1} ${row.fr} (\`${row.tag}\`)`).join(' · ')}.`),
         '',
         `**Joindre :** la fiche de référence${p > 0 ? ' et la planche 1' : ''}. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-planche${p + 1}.jpg\``,
         '',
