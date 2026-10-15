@@ -28,6 +28,8 @@ import {
   vec,
   type Vec2,
 } from './math';
+import type { DuelConfig } from './config';
+import type { Player } from './player';
 import type { EnemyKind, MarkKind, Pose, StunReason } from './types';
 import type { Foe, World } from './world';
 
@@ -1979,4 +1981,133 @@ export class Mannequin extends Enemy {
     this.pos = add(this.pos, vec(this.dir * MANNEQUIN_WALK * dt, 0));
     this.facing = vec(this.dir, 0);
   }
+}
+
+/** Duel : après un étourdissement, le héros ne peut plus être étourdi pendant ce temps, en plus de sa durée. */
+const STUN_RESPITE = 1.5;
+
+/**
+ * Duel (PVP) : le double d'un héros, rangé parmi les ennemis pour que les coups, les sorts et les flèches de
+ * l'autre héros le visent sans que leur code change. Il n'agit pas : il suit son héros pas à pas, et lui fait
+ * subir ce qu'il reçoit, avec les réglages du duel (src/data/pvp.json) : dégâts, garde, étourdissements,
+ * ralentissements, recul. Son propre héros ne le voit pas : ni ses coups ni ses sorts ne le touchent.
+ */
+export class Rival extends Enemy {
+  readonly kind = 'rival' as const;
+  /** Secondes pendant lesquelles un nouvel étourdissement ne prend pas. */
+  private stunImmunity = 0;
+
+  constructor(
+    id: number,
+    private readonly hero: Player,
+    private readonly world: World,
+    private readonly duel: DuelConfig,
+  ) {
+    super(id, { ...hero.pos }, { maxHp: hero.cfg.maxHp, radius: hero.radius, mass: hero.mass, knockbackFactor: 1 });
+    this.spawnTimer = 0;
+    this.follow();
+  }
+
+  /** Le héros que ce double représente. */
+  get owner(): number {
+    return this.hero.id;
+  }
+
+  get pose(): Pose {
+    return this.hero.pose;
+  }
+
+  /** Vrai pendant le tour de son propre héros : il ne se vise jamais lui-même. */
+  private get mine(): boolean {
+    return this.world.player === this.hero;
+  }
+
+  get active(): boolean {
+    return !this.hero.dead && !this.mine;
+  }
+
+  /** En l'air (Bond, Recul), le héros est hors d'atteinte, comme un yokai qui saute. */
+  get targetable(): boolean {
+    return this.active && this.hero.altitude < 0.5;
+  }
+
+  /** Les héros se repoussent entre eux (World.separate), pas à travers leurs doubles. */
+  get solid(): boolean {
+    return false;
+  }
+
+  update(dt: number, _world: World): void {
+    this.marks.death = Math.max(0, this.marks.death - dt);
+    this.marks.hunt = Math.max(0, this.marks.hunt - dt);
+    this.bindImmunity = Math.max(0, this.bindImmunity - dt);
+    this.stunImmunity = Math.max(0, this.stunImmunity - dt);
+    this.slowTime = Math.max(0, this.slowTime - dt);
+    this.sinceHurt += dt;
+    // Le recul qu'on lui a donné (onde, Recul, coup de bouclier) pousse le vrai héros.
+    if (length(this.knockback) > 0) {
+      this.hero.knockback = add(this.hero.knockback, scale(this.knockback, this.duel.knockback));
+      this.knockback = vec();
+    }
+    this.follow();
+  }
+
+  /** Reprend la place, le regard et les PV de son héros. */
+  follow(): void {
+    this.pos = { ...this.hero.pos };
+    this.facing = { ...this.hero.facing };
+    this.hp = this.hero.hp;
+  }
+
+  receiveHit(hit: Hit, world: World): boolean {
+    if (this.mine || this.hero.dead) return false;
+    const attacker = world.player;
+    const exposed = (this.marks.hunt > 0 ? 1 + this.huntBonus : 1) * world.exposure(this);
+    const amount = hit.amount * exposed * this.duel.damage * (this.duel.classDamage[attacker.cfg.kit] ?? 1);
+    const before = this.hero.hp;
+    const from = world.rivalOf(attacker.id);
+    // Un coup sans recul (poison, saignement, brûlure, Aura) ronge sans laisser d'invulnérabilité derrière lui.
+    const guarded = hit.knockback > 0 && this.hero.isGuarding(hit.from);
+    if (guarded) this.hero.guard(world, from, amount);
+    else if (hit.knockback <= 0) this.hero.drain(amount, world);
+    else {
+      const away = normalize(sub(this.hero.pos, hit.from), scale(this.facing, -1));
+      this.hero.takeHit(amount, away, hit.knockback * this.duel.knockback, world, false, from);
+    }
+    this.follow();
+    const lost = before - this.hero.hp;
+    if (lost > 0) this.sinceHurt = 0;
+    if (lost > 0 || guarded) {
+      world.emit({ type: 'enemyHit', id: this.id, pos: { ...this.pos }, amount: lost, shielded: guarded, crit: Boolean(hit.crit), owner: hit.owner ?? -1, pvp: true });
+    }
+    if (this.dead) world.emit({ type: 'death', id: this.id, pos: { ...this.pos }, kind: this.kind });
+    return guarded;
+  }
+
+  /** Un soin de yokai (kodama) ne soigne pas un héros. */
+  heal(): void {}
+
+  regen(): void {}
+
+  slow(amount: number, duration: number, world: World): void {
+    if (this.mine || this.hero.dead) return;
+    const hero = this.hero;
+    const fresh = hero.pvpSlowTime <= 0;
+    hero.pvpSlow = Math.max(fresh ? 0 : hero.pvpSlow, Math.min(this.duel.slow.amount, amount));
+    hero.pvpSlowTime = Math.max(hero.pvpSlowTime, Math.min(this.duel.slow.max, duration * this.duel.slow.factor));
+    // Les talents qui frappent plus fort un ennemi ralenti (World.exposure) le voient aussi.
+    this.slowAmount = hero.pvpSlow;
+    this.slowTime = hero.pvpSlowTime;
+    if (fresh) world.emit({ type: 'slow', id: this.id, pos: { ...this.pos } });
+  }
+
+  stun(duration: number, reason: StunReason, world: World): void {
+    if (this.mine || this.hero.dead || this.stunImmunity > 0) return;
+    const time = Math.min(this.duel.stun.max, duration * this.duel.stun.factor);
+    if (time <= 0) return;
+    this.hero.pvpStun = Math.max(this.hero.pvpStun, time);
+    this.stunImmunity = time + STUN_RESPITE;
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  protected think(): void {}
 }

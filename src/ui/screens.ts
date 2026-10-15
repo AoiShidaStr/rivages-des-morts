@@ -164,6 +164,8 @@ export class Screens {
       subtitle?: string;
       defeat?: { title: string; text: string };
       lootTitle?: string;
+      /** Duel : ni butin ni coffre, la liste n'est pas montrée. */
+      noLoot?: boolean;
     },
     options: MenuOption[],
   ): void {
@@ -181,14 +183,16 @@ export class Screens {
           victory ? loot.victory.text : (loot.defeat?.text ?? 'Tu te réveilles sur la rive. Tu gardes ce que tu as ramassé, mais le donjon est à recommencer.'),
         ),
         loot.lootTitle ? h('h3', { class: 'loot-title' }, loot.lootTitle) : null,
-        h(
-          'ul',
-          { class: 'loot' },
-          h('li', {}, obole(`+${loot.oboles}`), ' oboles'),
-          h('li', {}, `+${loot.xp} XP`),
-          h('li', {}, `${loot.chests} coffre${loot.chests > 1 ? 's' : ''} à ouvrir sur la barque`),
-          ...loot.materials.map((m) => h('li', {}, m)),
-        ),
+        loot.noLoot
+          ? null
+          : h(
+              'ul',
+              { class: 'loot' },
+              h('li', {}, obole(`+${loot.oboles}`), ' oboles'),
+              h('li', {}, `+${loot.xp} XP`),
+              h('li', {}, `${loot.chests} coffre${loot.chests > 1 ? 's' : ''} à ouvrir sur la barque`),
+              ...loot.materials.map((m) => h('li', {}, m)),
+            ),
         this.menu(options),
       ),
     );

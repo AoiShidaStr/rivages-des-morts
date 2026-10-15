@@ -15,7 +15,9 @@ export type EnemyKind =
   | 'ikusa'
   | 'izanami'
   // Terrain d'entraînement de Tetsu : immobile, sans attaque.
-  | 'mannequin';
+  | 'mannequin'
+  // Duel (PVP) : le double d'un héros adverse, que les coups de l'autre héros visent (src/game/enemies.ts, Rival).
+  | 'rival';
 /** `peach` : une pêche d'Izanagi a repoussé Izanami. */
 export type StunReason = 'parry' | 'wall' | 'smash' | 'snag' | 'bond' | 'snare' | 'net' | 'daze' | 'peach';
 /** Marques posées sur un ennemi : mort (Lame), chasseur (Rôdeur). */
@@ -58,7 +60,7 @@ export type GameEvent =
   | { type: 'wave'; index: number; total: number; label: string; hint?: string; step?: string; palier?: number }
   /** `hero` : le héros qui frappe (le son du coup dans le vide ne joue que pour le sien). */
   | { type: 'swing'; pos: Vec2; dir: Vec2; range: number; arcDeg: number; shape?: 'arc' | 'line'; width?: number; hero?: number }
-  | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean; /** Coop : index du joueur qui a frappé (0 en solo, -1 si le coup vient de l'environnement). */ owner: number }
+  | { type: 'enemyHit'; id: number; pos: Vec2; amount: number; shielded: boolean; crit: boolean; /** Coop : index du joueur qui a frappé (0 en solo, -1 si le coup vient de l'environnement). */ owner: number; /** Duel : le coup a touché le héros adverse, qui l'affiche lui-même (playerHit). */ pvp?: boolean }
   /** `blocked` : ce qui a traversé la garde du Guerrier. */
   | { type: 'playerHit'; pos: Vec2; amount: number; blocked: boolean; hero: number }
   /** Coop : un héros tombe à terre ; un allié qui reste à côté le relève. */
@@ -135,4 +137,11 @@ export type GameEvent =
   | { type: 'sanctuary'; id: number; pos: Vec2; radius: number; life: number }
   | { type: 'cloud'; id: number; pos: Vec2; radius: number; life: number }
   | { type: 'lure'; pos: Vec2 }
+  /**
+   * Duel : une manche commence (`round`) ou se termine (`point`, `winner` : le héros qui la prend, -1 si elle est
+   * nulle et se rejoue). `wins` : manches gagnées par chaque héros.
+   */
+  | { type: 'duel'; kind: 'round' | 'point'; round: number; wins: readonly number[]; winner?: number }
+  /** Duel : la zone mord un héros resté dehors. */
+  | { type: 'zoneBite'; hero: number; pos: Vec2; amount: number }
   | { type: 'end'; outcome: Outcome };

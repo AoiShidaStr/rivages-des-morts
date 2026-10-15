@@ -29,6 +29,7 @@
     "perso-test": "node tools/perso-test.mjs",
     "equilibrage": "node tools/equilibrage.mjs",
     "dps": "node tools/equilibrage.mjs --mode dps",
+    "duel": "node tools/duel.mjs",
     "voies": "node tools/voies.mjs",
     "gravures": "node tools/gravures.mjs"
   },

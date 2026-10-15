@@ -1,6 +1,6 @@
 // Allié joué par l'ordinateur : il pilote un héros comme le ferait un joueur moyen. Il sert à tester la coop
 // sans réseau (`?coop=2`, `?coop=3`) et à régler la difficulté selon le nombre de héros.
-import type { Enemy } from './enemies';
+import { Rival, type Enemy } from './enemies';
 import { add, angleOf, degToRad, distance, fromAngle, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { Player } from './player';
 import type { InputFrame } from './types';
@@ -51,9 +51,12 @@ export class Bot {
   private aimTimer = 0;
   private missTimer = 0;
 
+  /** La place du héros piloté : en duel, le héros est refait à neuf à chaque manche, on le relit donc à chaque pas. */
+  private readonly seat: number;
+
   constructor(
     private readonly world: World,
-    private readonly hero: Player,
+    hero: Player,
     /**
      * Banc de DPS (`npm run dps`) : chaque compétence qui fait des dégâts part dès qu'elle est prête, même contre une
      * seule cible, pour mesurer les dégâts maximaux de la classe.
@@ -61,7 +64,13 @@ export class Bot {
     private readonly greedy = false,
     /** Imite un joueur moyen plutôt qu'un bot : voir `HUMAN`. */
     private readonly human = false,
-  ) {}
+  ) {
+    this.seat = hero.id;
+  }
+
+  private get hero(): Player {
+    return this.world.players[this.seat];
+  }
 
   /** Les commandes du héros pour ce pas. */
   input(): InputFrame {
@@ -133,7 +142,9 @@ export class Bot {
       return input;
     }
 
-    const foes = w.enemies.filter((e) => e.targetable);
+    // Duel : le double de l'adversaire est la cible, jamais le sien. On ne lit pas `targetable` d'un double hors du pas
+    // de simulation : il dépend du héros qui agit.
+    const foes = w.enemies.filter((e) => (e instanceof Rival ? e.owner !== p.id && !e.dead : e.targetable));
     if (!foes.length) {
       // Entre deux vagues, on reste près des autres héros.
       const leader = w.players[0];

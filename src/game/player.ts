@@ -51,6 +51,22 @@ export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): 
   return factor;
 }
 
+/** Commandes d'un héros étourdi en duel : rien n'est pressé ni tenu. */
+const stunned: InputFrame = {
+  move: vec(),
+  aim: vec(),
+  aimGround: vec(),
+  attackPressed: false,
+  attackHeld: false,
+  signatureHeld: false,
+  signaturePressed: false,
+  dodgePressed: false,
+  skillAPressed: false,
+  skillEPressed: false,
+  skillRPressed: false,
+  skillFPressed: false,
+};
+
 export class Player {
   pos: Vec2 = vec(0, 0);
   facing: Vec2 = vec(1, 0);
@@ -220,6 +236,13 @@ export class Player {
   /** Filet d'une voie (le Couloir de l'Éclaireur) : vitesse de marche en plus pendant ces secondes. */
   private netRush = 0;
   private netRushBonus = 0;
+  /**
+   * Duel : secondes d'étourdissement (le héros ne bouge ni n'agit), et ralentissement (part de la marche perdue,
+   * secondes restantes), posés par les coups de l'autre héros (World, Rival).
+   */
+  pvpStun = 0;
+  pvpSlow = 0;
+  pvpSlowTime = 0;
 
   /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
   constructor(
@@ -285,6 +308,7 @@ export class Player {
 
   get pose(): Pose {
     const a = this.action;
+    if (this.pvpStun > 0 && a.kind === 'free') return 'stunned';
     switch (a.kind) {
       case 'attack':
         return a.t < this.timing().windup ? 'windup' : 'strike';
@@ -465,6 +489,12 @@ export class Player {
 
   update(dt: number, input: InputFrame, world: World): void {
     const c = this.cfg;
+    // Duel : étourdi, le héros ne fait plus rien (les recharges courent quand même) ; ralenti, il marche moins vite.
+    this.pvpSlowTime = Math.max(0, this.pvpSlowTime - dt);
+    if (this.pvpStun > 0) {
+      this.pvpStun = Math.max(0, this.pvpStun - dt);
+      input = { ...stunned, move: vec(), aim: input.aim, aimGround: input.aimGround };
+    } else if (this.pvpSlowTime > 0) input = { ...input, move: scale(input.move, 1 - this.pvpSlow) };
     this.dodgeCooldown = Math.max(0, this.dodgeCooldown - dt * this.haste);
     // Bottes de Tengu : une esquive rechargée part en réserve, et la suivante se recharge.
     if (this.dodgeCooldown <= 0 && this.dodgeSpare < (c.perks?.dodgeCharges ?? 1) - 1) {
@@ -836,6 +866,16 @@ export class Player {
     this.knockback = scale(pushDir, knockback);
     if (this.action.kind === 'attack') this.action = { kind: 'free' };
     return true;
+  }
+
+  /**
+   * Duel : une morsure sans recul ni invulnérabilité (poison, saignement, brûlure, zone) : l'Armure compte,
+   * l'esquive non. Renvoie les PV perdus.
+   */
+  drain(amount: number, world: World): number {
+    const before = this.hp;
+    this.loseHp(amount * this.damageTakenFactor(), world, false);
+    return before - this.hp;
   }
 
   /** Part des dégâts réellement subis : équipement (Armure), posture, Égide, Frénésie, Peau du lion, sang yokai. */
