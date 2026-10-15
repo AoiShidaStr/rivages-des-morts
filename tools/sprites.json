@@ -39,7 +39,6 @@
     { "name": "moine", "source": "pnj_moine-du-rocher.jpg" },
     { "name": "barque", "source": "decor_barque-de-charon.jpg" },
     { "name": "rocher", "source": "decor_grand-rocher.jpg" },
-    { "name": "heros-invocateur", "source": "heros_invocateur.jpg" },
     { "name": "heros-lame", "source": "heros_lame.jpg" },
     { "name": "heros-paladin", "source": "heros_paladin.jpg" },
     { "name": "heros-rodeur", "source": "heros_rodeur.jpg" },
