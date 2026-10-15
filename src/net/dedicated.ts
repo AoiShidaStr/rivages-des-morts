@@ -62,6 +62,8 @@ export class DedicatedHost {
   private run = 0;
   private tick = 0;
   private sentTick = 0;
+  /** Pas du dernier envoi des pings de chacun. */
+  private pingsTick = 0;
   private outbox: GameEvent[] = [];
   private accumulator = 0;
   private last = 0;
@@ -188,6 +190,7 @@ export class DedicatedHost {
     this.remote.clear();
     for (let seat = 0; seat < configs.length; seat++) this.remote.set(seat, new RemoteInput(run));
     this.tick = 0;
+    this.pingsTick = 0;
     this.sentTick = 0;
     this.outbox = [];
     this.accumulator = 0;
@@ -232,6 +235,11 @@ export class DedicatedHost {
     const events = world.drainEvents();
     this.outbox.push(...events);
     const ended = events.some((e) => e.type === 'end');
+    // Chaque seconde, le ping de chacun : tous le voient à côté du nom des autres.
+    if (this.tick - this.pingsTick >= 60) {
+      this.pingsTick = this.tick;
+      this.room.sendFast('pings', world.players.map((hero) => Math.round(this.remote.get(hero.id)?.ping ?? 0)));
+    }
     if (this.tick - this.sentTick >= SNAPSHOT_EVERY || ended) {
       if (this.outbox.length) this.room.send('evts', { run: this.run, tick: this.tick, events: this.outbox } as unknown as Json);
       const shared = shareSnapshot(world, this.tick);

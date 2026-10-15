@@ -15,6 +15,7 @@ import {
   type Snapshot,
   type Start,
 } from './protocol';
+import { noteArrival } from './mesures';
 import { openRoom, serverPost, type Json, type Network, type Room } from './transport';
 
 /** Lettres des codes : ni 0 ni O, ni 1 ni I, pour qu'on ne les confonde pas en les dictant. */
@@ -75,6 +76,8 @@ export class CoopSession {
   private run = 0;
   /** Invité : aller-retour jusqu'à l'hôte (ms), lissé. */
   ping = 0;
+  /** Invité, en descente : ping de chaque joueur vers l'hôte, par place (envoyé par l'hôte chaque seconde). */
+  pings: number[] = [];
 
   private constructor(
     readonly role: 'host' | 'guest',
@@ -259,6 +262,11 @@ export class CoopSession {
     }
   }
 
+  /** Hôte : le ping de chaque joueur, par place (0 : l'hôte lui-même), pour que chacun voie celui des autres. */
+  sendPings(pings: number[]): void {
+    this.room.sendFast('pings', pings.map((ping) => Math.round(ping)));
+  }
+
   /** Hôte : les événements du combat, pour tous les invités (canal sûr). */
   sendEvents(packet: EventPacket): void {
     this.room.send('evts', packet as unknown as Json);
@@ -300,8 +308,12 @@ export class CoopSession {
     });
     room.on('snap', (data, from) => {
       if (from !== this.hostPeer) return;
+      noteArrival('snap', 50);
       const snap = unpackSnapshot(data);
       if (snap) this.handlers.state?.(snap);
+    });
+    room.on('pings', (data, from) => {
+      if (from === this.hostPeer && Array.isArray(data)) this.pings = data.map((ping) => (typeof ping === 'number' ? ping : 0));
     });
     room.on('evts', (data, from) => {
       if (from === this.hostPeer) this.handlers.events?.(data as unknown as EventPacket);

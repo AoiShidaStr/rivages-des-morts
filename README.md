@@ -168,7 +168,8 @@ Caddy obtient seul un certificat HTTPS pour ce domaine, et l'adresse `https://<d
 - **Voir la version servie** : http://localhost:8080/sante (champ `version`, le commit construit), ou la première ligne des journaux du conteneur.
 - **Sauvegarder** : copie le dossier `donnees/` (les comptes et leurs personnages).
 - **Déménager** sur un VPS ou une autre machine : copie le dépôt, le dossier `donnees/` et le fichier `.env`, puis la même commande.
-- **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`.
+- **Vérifier qu'il tourne** : http://localhost:8080/sante répond `{"ok":true,"joueurs":…,"comptes":…}`, avec dans `reseau` le résumé des connexions des dernières 24 heures.
+- **Comprendre le lag** : http://localhost:8080/journal, depuis la machine du serveur seulement, montre qui s'est connecté, qui a été coupé et pourquoi, combien de temps il est resté absent, son ping, ses images par seconde et ses à-coups (en orange quand ça va mal), plus le retard du serveur lui-même chaque minute. Tout est aussi gardé dans `donnees/journal-reseau.jsonl`. En jeu, chacun voit son ping en haut à droite et celui des autres à côté de leur nom.
 
 Sans Docker : `VITE_RESEAU=serveur npm run build` puis `npm run serveur` (il réunit le serveur et le moteur du jeu dans `dist-server/serveur.js`, puis le lance). En développement, `npm run serveur` à côté de `npm run dev`, puis http://localhost:5173/?reseau=serveur.
 

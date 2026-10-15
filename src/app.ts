@@ -23,7 +23,8 @@ import { IslandPresence, sharedIsland, type Profile } from './net/presence';
 import { CoopSession } from './net/session';
 import { SocialClient, type Goods } from './net/social';
 import { restartWith, type AccountSaveStore } from './net/account';
-import { traffic, type Network } from './net/transport';
+import { serverClock, traffic, type Network } from './net/transport';
+import { noteFrame, setPlace, startMeasures, type Place } from './net/mesures';
 import type { Input } from './input';
 import { heroImage, heroSprite } from './render/heroes';
 import type { Hud } from './render/hud';
@@ -61,6 +62,7 @@ import { logRun, markSeen } from './game/journal';
 import { stockItem } from './game/reserve';
 import { SFX_DES_EVENTS, Sfx } from './audio/sfx';
 import { openOptions } from './ui/options';
+import { PingBadge, type PingView } from './ui/ping';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
 import { Screens, type MenuOption } from './ui/screens';
 
@@ -69,6 +71,8 @@ type Mode = 'title' | 'island' | 'dungeon' | 'result';
 /** La simulation du combat avance par pas fixes, quelle que soit la fréquence de l'écran. */
 const STEP = 1 / 60;
 const MAX_STEPS_PER_FRAME = 5;
+/** Sans réponse du serveur depuis ce délai (ms, trois pings manqués), le badge de ping dit la connexion perdue. */
+const LOST_AFTER = 6_000;
 
 /**
  * Micro-pause d'impact (secondes) qu'appelle un événement : le monde se fige un instant pour que le coup se sente.
@@ -233,6 +237,8 @@ export class App {
   /** Le menu social et le chat (jeu hébergé, avec un compte). */
   private readonly social: SocialClient | null;
   private readonly chat: ChatBox | null;
+  /** Le ping du joueur en ligne, toujours à l'écran. */
+  private readonly pingBadge = new PingBadge();
 
   constructor(private readonly d: AppDeps) {
     this.presence = sharedIsland(d.network) ? new IslandPresence(d.network) : null;
@@ -292,6 +298,7 @@ export class App {
     else if (this.d.devWave !== null) void this.enterDungeon(this.d.devDungeon, this.d.devWave, false, this.d.devLevel ?? 1);
     else this.showTitle();
     for (const notice of this.d.notices) this.screens.toast(notice);
+    startMeasures(this.d.network);
     this.d.engine.runRenderLoop(() => this.frame());
     // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
     whileHidden(() => {
@@ -361,7 +368,29 @@ export class App {
     const dt = Math.min(0.1, elapsed / 1000);
     this.last = now;
     this.step(dt);
-    if (!document.hidden) this.resolution.sample(elapsed, performance.now() - now);
+    this.updateConnection();
+    if (!document.hidden) {
+      this.resolution.sample(elapsed, performance.now() - now);
+      noteFrame(elapsed);
+    }
+  }
+
+  /** Le ping à l'écran, et où l'on joue pour les mesures de la connexion (src/net/mesures.ts). */
+  private updateConnection(): void {
+    const session = this.coop;
+    let place: Place = 'menu';
+    let view: PingView = null;
+    if ((this.mode === 'dungeon' || this.mode === 'result') && session) {
+      place = session.isHost ? 'hote' : 'descente';
+      view = session.isHost ? 'host' : { ms: session.ping };
+    } else if (this.mode === 'island' && (this.presence || session) && this.d.network === 'serveur') {
+      place = 'ile';
+      view = { ms: serverClock.ping };
+    }
+    // Sur le serveur du jeu, plus de réponse depuis un moment : la page se reconnecte d'elle-même, on le dit.
+    if (view && this.d.network === 'serveur' && performance.now() - serverClock.lastPong > LOST_AFTER) view = 'lost';
+    setPlace(place);
+    this.pingBadge.show(view);
   }
 
   private step(dt: number): void {
@@ -1021,6 +1050,8 @@ export class App {
     if (this.hostTick - this.sentTick < SNAPSHOT_EVERY && !ended) return;
     if (this.outbox.length) session.sendEvents({ run: this.coopRun, tick: this.hostTick, events: this.outbox });
     session.sendSnapshots(shareSnapshot(world, this.hostTick), this.coopRun, (seat) => this.remote.get(seat)?.applied ?? 0);
+    // Une fois par seconde, le ping de chaque invité, pour que tous le voient (l'hôte n'en a pas : 0).
+    if (this.hostTick % 60 < SNAPSHOT_EVERY) session.sendPings(world.players.map((hero) => (hero.id === 0 ? 0 : (this.remote.get(hero.id)?.ping ?? 0))));
     this.outbox = [];
     this.sentTick = this.hostTick;
   }
@@ -1058,7 +1089,8 @@ export class App {
     if (mirror.ready) {
       dungeonRenderer.sync(mirror, events, dt);
       // Le ping qui compte pour un invité : celui vers l'hôte, affiché sur sa barre.
-      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 && !session?.dedicated ? session?.ping : undefined));
+      // Chez un hôte joueur, son ping est le nôtre (l'aller-retour jusqu'à lui) ; les autres, l'hôte nous les envoie.
+      hud.pings = mirror.players.filter((hero) => hero.id !== mirror.seat).map((hero) => (hero.id === 0 && !session?.dedicated ? session?.ping : session?.pings[hero.id] || undefined));
       hud.update(mirror, events, dt);
     }
     dungeonRenderer.render();
