@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { adressePublique, suivreTunnel } from './adresse.ts';
 import { Comptes } from './comptes.ts';
+import { Journal, causeCoupure } from './journal.ts';
 import { Social, type Page } from './social.ts';
 import { DedicatedHost } from '../src/net/dedicated.ts';
 import type { Json, Room } from '../src/net/transport.ts';
@@ -67,7 +68,17 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
     return;
   }
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique(), version: VERSION }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique(), version: VERSION, reseau: journal.resume() }));
+    return;
+  }
+  if (url.pathname === '/journal') {
+    // Les pseudos et les heures de jeu de chacun : seulement pour qui est sur la machine du serveur. Le tunnel et Caddy
+    // ajoutent ces en-têtes à tout ce qui vient d'Internet.
+    if (req.headers['x-forwarded-for'] || req.headers['cf-connecting-ip']) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Le journal ne se lit que sur la machine du serveur : http://localhost:8080/journal');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }).end(journal.page());
     return;
   }
   let relative: string;
@@ -115,6 +126,12 @@ interface Client {
   id: string;
   rooms: Set<string>;
   alive: boolean;
+  /** Coupée par le serveur faute de réponse au ping. */
+  silent?: boolean;
+  /** Quand la page s'est connectée (ms). */
+  since?: number;
+  /** Le ping que la page mesure jusqu'au serveur (ms). */
+  ping?: number;
   /** La page pour le menu social (son compte, une fois identifiée). */
   page: Page;
 }
@@ -125,7 +142,10 @@ type Incoming =
   | { t: 'join'; r: string }
   | { t: 'leave'; r: string }
   | { t: 'msg'; r: string; a: string; d: unknown; to?: string }
-  | { t: 'heberger'; code: string; open?: boolean };
+  | { t: 'heberger'; code: string; open?: boolean }
+  | { t: 'ping'; c: number; p?: number }
+  | { t: 'mesures' } & Record<string, unknown>
+  | { t: 'retour'; absent: number; code: number };
 
 const clients = new Set<Client>();
 /** Membres de chaque salon, par identifiant. */
@@ -182,6 +202,20 @@ function receive(client: Client, raw: string): void {
     host(message.code, message.open === true);
     return;
   }
+  if (message.t === 'ping') {
+    // L'heure du serveur, tout de suite : la page en tire son ping et l'écart entre les deux horloges.
+    post(client, { t: 'pong', c: message.c, s: Date.now() });
+    if (typeof message.p === 'number' && message.p > 0) client.ping = Math.round(message.p);
+    return;
+  }
+  if (message.t === 'mesures') {
+    noteMeasures(client, message);
+    return;
+  }
+  if (message.t === 'retour') {
+    if (typeof message.absent === 'number') journal.ecrire({ type: 'retour', joueur: who(client), absent: Math.round(message.absent), code: Number(message.code) || 0 });
+    return;
+  }
   if (message.t !== 'hi' && message.t !== 'join' && message.t !== 'leave' && message.t !== 'msg') {
     social.recevoir(client.page, message as Record<string, unknown>);
     return;
@@ -195,6 +229,30 @@ function receive(client: Client, raw: string): void {
   if (message.t === 'join') join(client, message.r);
   else if (message.t === 'leave') leave(client, message.r);
   else if (message.t === 'msg') relay(client, message);
+}
+
+// --- Journal des connexions (server/journal.ts) ---------------------------------------------
+
+/** Le nom d'une page dans le journal : son pseudo, sinon le début de son identifiant. */
+function who(client: Client): string {
+  return client.page.compte?.pseudo ?? `invité ${client.id.slice(0, 4) || '?'}`;
+}
+
+const PLACES = new Set(['menu', 'ile', 'descente', 'hote']);
+/** Un relevé de la page (src/net/mesures.ts) : seulement des nombres raisonnables. */
+function noteMeasures(client: Client, m: Record<string, unknown>): void {
+  const n = (key: string, max: number) => Math.max(0, Math.min(max, Math.round(Number(m[key]) || 0)));
+  journal.ecrire({
+    type: 'mesures',
+    joueur: who(client),
+    lieu: typeof m.lieu === 'string' && PLACES.has(m.lieu) ? m.lieu : 'menu',
+    ping: n('ping', 60_000),
+    pingMax: n('pingMax', 60_000),
+    ips: n('ips', 1_000),
+    imageMax: n('imageMax', 60_000),
+    acoups: n('acoups', 10_000),
+    trou: n('trou', 600_000),
+  });
 }
 
 // --- Parties tenues par le serveur ---------------------------------------------------------
@@ -266,6 +324,7 @@ if (utilisateur && process.getuid?.() === 0) {
 }
 const comptes = new Comptes(DONNEES);
 const social = new Social(comptes);
+const journal = new Journal(DONNEES, () => ({ joueurs: clients.size, parties: parties.size }));
 
 const server = createServer((req, res) => {
   serveFile(req, res).catch((error: unknown) => {
@@ -285,14 +344,22 @@ sockets.on('connection', (socket) => {
     id: '',
     rooms: new Set(),
     alive: true,
+    since: Date.now(),
     page: { compte: null, envoyer: (message) => post(client, message), surIle: () => client.rooms.has(ILE) },
   };
   clients.add(client);
+  // Le pseudo n'est connu qu'une fois la page identifiée : la connexion s'écrit un peu après.
+  setTimeout(() => {
+    if (clients.has(client)) journal.ecrire({ type: 'connexion', joueur: who(client) });
+  }, 2_000).unref();
   socket.on('pong', () => (client.alive = true));
   socket.on('message', (data, binary) => {
     if (!binary) receive(client, data.toString());
   });
-  socket.on('close', () => {
+  socket.on('close', (code) => {
+    // 1000 et 1001 : la page a fermé ou quitté proprement ; tout le reste est une coupure.
+    const anormale = client.silent === true || (code !== 1000 && code !== 1001);
+    journal.ecrire({ type: 'coupure', joueur: who(client), cause: causeCoupure(code, client.silent === true), code, anormale, duree: Date.now() - (client.since ?? Date.now()) });
     for (const name of [...client.rooms]) leave(client, name);
     clients.delete(client);
     social.quitter(client.page);
@@ -303,6 +370,7 @@ sockets.on('connection', (socket) => {
 setInterval(() => {
   for (const client of clients) {
     if (!client.alive) {
+      client.silent = true;
       client.socket?.terminate();
       continue;
     }
