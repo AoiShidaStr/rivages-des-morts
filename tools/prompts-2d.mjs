@@ -1366,6 +1366,73 @@ const PERSONAS = {
 };
 const fixText = (text, fixes) => fixes.reduce((t, [from, to]) => t.split(from).join(to), text);
 
+/**
+ * Prompts simples (15 octobre 2026) : les planches de la Sorcière et du Paladin, détaillées image par image avec des
+ * mots de jeu vidéo (« main attack », « right click »), ont embrouillé Nano Banana. Chaque ligne y porte le nom du
+ * mouvement et une phrase qui le décrit du début à la fin, comme on le raconterait. Les tags d'import ne changent pas.
+ */
+const SIMPLE_MOVES = {
+  sorcier: {
+    who: 'a chibi Greek fire priestess of Hestia: a big bun of black curly hair, large gold fan-shaped earrings, a white draped dress, a brown belt with small clay tablets and a pouch, sandals, and a tall bronze staff topped with a shallow brazier bowl',
+    gear: 'bronze brazier staff',
+    rows: [
+      ['idle', 'Calm breathing', 'she stands serenely, holding the brazier staff upright beside her, breathing slowly; her curls and her dress sway gently. A seamless loop: frame 8 matches frame 1', true],
+      ['move', 'Running', 'a light running cycle on the spot, the brazier staff held upright in one hand, the dress and the curls streaming back. A seamless loop', true],
+      ['windup 1-3 / strike 4-8', 'Hearth strike', 'she lifts the brazier staff back over her shoulder, then swings it forward and points the bowl straight at an enemy in front of her, then returns to her calm stance', false],
+      ['strike2', 'Clay tablet throw', 'she takes a small clay tablet from her belt and throws it forward at an enemy with her free hand, the staff held back, then returns to her calm stance', false],
+      ['dash', 'Quick roll', 'she dives forward into a short roll, holding the staff close to her body, rolls, and springs back up into her calm stance', false],
+      ['seal', 'Fire seal', 'she raises a clay tablet to her lips, then slams it down onto the ground in front of her while lifting the staff high, then stands back up', false],
+      ['ward', 'Flame shield', 'she hugs the staff to her chest and bows her head, then flings her arms wide open, chest out, her dress blown outward all around her, holds it, then relaxes', false],
+      ['flight', 'Fire dash', 'she crouches, then bursts forward in a long low leap, almost flying, her dress streaming behind her, lands lightly and stands up', false],
+      ['ultimate', 'Great meteor', 'she rises on tiptoe and raises the staff high toward the sky with both hands, holds it, then swings it down to point at the ground far ahead, bent forward, then straightens', false],
+      ['column', 'Burning column', 'she raises the staff straight up with both hands, then brings it down hard to point at the ground far ahead, her free hand on her chest, then returns to her stance', false],
+      ['lantern', 'Oil lamp toss', 'she takes a small clay oil lamp from her belt, tosses it underhand far ahead, watches it fly, then returns to her stance (the lamp is not drawn once it leaves her hand)', false],
+      ['blast', 'Fire burst', 'she crouches with her arms wrapped around the staff, then bursts upright with her arms and the staff flung out to the sides, her dress flaring all around her, then settles', false],
+      ['vigor', 'Blessing circle', 'she kneels on one knee and presses her palm flat on the ground, the staff upright in her other hand, head bowed, holds the blessing, then stands up', false],
+      ['aegis', 'Divine aegis', 'badly hurt, she kneels with one hand on the ground; the golden halo above her head grows larger as she rises and stands tall with her arms open; then she returns to her stance and the halo shrinks back to normal', false],
+      ['hurt', 'Hit', 'she is struck: her head snaps back and she staggers backward, then catches her balance and returns to her stance', false],
+      ['death', 'Defeat', 'she staggers, falls to her knees, collapses onto the ground with the staff beside her and lies completely still; frames 7 and 8 are identical, the body stays solid', false],
+    ],
+  },
+  paladin: {
+    who: 'a chibi Greek hoplite: a bronze Corinthian helmet with a tall red and black crest, a bronze muscle cuirass, a white chiton with a dark red leather strip skirt, bronze greaves, sandals, a dark cape, a long bronze-tipped spear and a large round bronze shield embossed with the face of Medusa',
+    gear: 'spear and Medusa shield',
+    rows: [
+      ['idle', 'Standing guard', 'he stands steady behind the Medusa shield, the spear upright, breathing slowly, the crest and the cape stirring. A seamless loop: frame 8 matches frame 1', true],
+      ['move', 'Running', 'a heavy running cycle on the spot, the shield held forward at chest height, the spear held back. A seamless loop', true],
+      ['windup 1-3 / strike 4-8', 'Spear thrust', 'he draws the spear back beside his head, then lunges forward with a powerful thrust, the spear at full extension, then pulls back to his guard stance', false],
+      ['guard', 'Shield wall', 'he raises the Medusa shield in front of his body and braces his feet wide, the spear held back over the shield rim; he holds this pose, frames 4 to 8 nearly identical', false],
+      ['guardMove', 'Shield advance', 'slow heavy steps forward on the spot behind the raised shield, the spear ready over its rim. A seamless loop', true],
+      ['guardBreak', 'Guard broken', 'a heavy blow knocks his shield aside; he staggers, dazed, the shield arm hanging, then gathers himself and raises the shield again', false],
+      ['dash', 'Quick roll', 'he dives into a heavy shoulder roll with the shield on his back, rolls, and rises back into his guard stance', false],
+      ['aura', 'Aura of light', 'he plants the spear upright beside him, then raises his free hand palm up toward the sky with his head lifted, holds it proudly, then returns to his stance', false],
+      ['hammer', 'Spear throw', 'he raises the spear over his shoulder like a javelin and hurls it forward with his whole body (his hand is empty after the throw), then reaches out and catches the spear as it flies back to him', false],
+      ['ultimate', 'Aegis', 'he lifts the shield high and stretches his free hand forward toward an ally, palm open, as if laying a protection on them, holds it, then returns to his stance', false],
+      ['oath', 'Oath', 'he kneels with the spear planted and a hand on his heart, then rises and lifts the spear high toward the sky in a solemn vow, then lowers it', false],
+      ['wave', 'Holy wave', 'he raises the spear high in both hands, then drives its butt down into the ground, bent over it, his cape flaring, then straightens up', false],
+      ['chant', 'Chant', 'he takes a deep breath with a hand on his chest, then sings with his head lifted and one arm stretched out toward an ally, holds the note, then returns to his stance', false],
+      ['aegis', 'Divine aegis', 'badly hurt, he kneels with one hand on the ground; the golden halo above his head grows larger as he rises and stands tall with his arms open; then he returns to his stance and the halo shrinks back to normal', false],
+      ['hurt', 'Hit', 'he is struck: his head snaps back and he staggers backward behind his shield, then catches his balance and returns to his stance', false],
+      ['death', 'Defeat', 'he staggers, falls to his knees, collapses onto the ground with the spear and the shield beside him and lies completely still; frames 7 and 8 are identical, the body stays solid', false],
+    ],
+  },
+};
+
+/** Une planche en prompt simple : le personnage joint, puis un mouvement nommé et raconté par ligne. */
+function simpleSheetPrompt({ who, gear, rows, second }) {
+  return [
+    `The first attached image is the reference sheet of our game character: ${who}, seen in three-quarter side view facing right.` +
+      (second ? ' The second attached image is the first sprite sheet of this same character: match its scale, design and colors exactly.' : ''),
+    'Draw a 2D sprite sheet of this exact character: a landscape 2:1 image at the highest resolution available (2048 x 1024 px if possible), divided into an invisible grid of 8 columns and 4 rows of square cells.',
+    'Each row shows ONE move of the character in 8 frames, read from left to right, from the start of the move to its end:',
+    ...rows.map(([, title, desc], r) => `Row ${r + 1}, "${title}": ${desc}.`),
+    `In every frame: the same character (same face, chibi proportions 3 heads tall, outfit, colors, ${gear}), the same size, always facing right in the same three-quarter view, feet on the same baseline, centered in its own cell with empty space around it; nothing crosses into a neighbouring cell. Every row has exactly 8 frames, each clearly different from the previous one. Do not write the move names or any text on the image.`,
+    LOOK,
+    bgText(GREY),
+    NOFX,
+  ].join('\n');
+}
+
 function lotDemiDieux() {
   const out = [
     '# Lot 8 : Demi-dieux, toutes les actions du jeu (planches 4 × 8)',
@@ -1400,6 +1467,23 @@ function lotDemiDieux() {
     const rows = DEMIGOD_ROWS[ck](cls);
     if (rows.length !== 16) throw new Error(`${ck} : ${rows.length} lignes au lieu de 16`);
     out.push(`## ${name}`, '', `### ${name} — fiche de référence`, '', `**Générer 2 ou 3 variantes** et garder la meilleure. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-reference.jpg\``, '', fence(fix(fichePrompt({ subject, proportions: ch.proportions }))));
+    const simple = SIMPLE_MOVES[ck];
+    if (simple) {
+      if (simple.rows.length !== 16) throw new Error(`${ck} : ${simple.rows.length} mouvements au lieu de 16`);
+      for (let p = 0; p < 4; p++) {
+        const sheetRows = simple.rows.slice(p * 4, p * 4 + 4);
+        out.push(
+          `### ${name} — planche ${p + 1}`,
+          '',
+          `**Lignes :** ${sheetRows.map(([tag, title], r) => `${r + 1} ${title} (\`${tag}\`)`).join(' · ')}.`,
+          '',
+          `**Joindre :** la fiche de référence${p > 0 ? ' et la planche 1' : ''}. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-planche${p + 1}.jpg\``,
+          '',
+          fence(simpleSheetPrompt({ who: simple.who, gear: simple.gear, rows: sheetRows, second: p > 0 })),
+        );
+      }
+      continue;
+    }
     for (let p = 0; p < 4; p++) {
       const sheetRows = rows.slice(p * 4, p * 4 + 4);
       const who = woman ? 'The character is a woman.' : '';
