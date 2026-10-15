@@ -1,5 +1,5 @@
-// Ce que l'hôte et les invités s'échangent. L'hôte fait tourner le combat ; vingt fois par seconde, il envoie à chaque
-// invité un instantané de ce que l'affichage doit montrer, par le canal rapide : un instantané perdu est remplacé par
+// Ce que l'hôte et les invités s'échangent. L'hôte fait tourner le combat ; à chaque pas (soixante fois par seconde), il envoie à
+// chaque invité un instantané de ce que l'affichage doit montrer, par le canal rapide : un instantané perdu est remplacé par
 // le suivant. Les événements du combat (coups, morts, butin) partent à part, par le canal sûr. Les invités envoient
 // leurs commandes à chaque pas, numérotées, par le canal rapide.
 import type { PlayerConfig } from '../game/config';
@@ -10,11 +10,16 @@ import type { DuelView, World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 11;
+export const PROTOCOL = 12;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
-/** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
-export const SNAPSHOT_EVERY = 3;
+/**
+ * L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation : à chaque pas, soixante par seconde. Un
+ * instantané part dès que le pas qui a joué les commandes des invités est fini, et le retard d'affichage chez eux tombe
+ * à deux pas (33 ms) quand le réseau est régulier. Trois fois plus de paquets qu'à vingt par seconde, ce qui reste
+ * modeste (un instantané tient dans un paquet réseau).
+ */
+export const SNAPSHOT_EVERY = 1;
 /** Pas de simulation par seconde. */
 export const TICK_RATE = 60;
 

@@ -1,4 +1,4 @@
-// Chez un invité : la partie telle que l'hôte la décrit. Les instantanés arrivent vingt fois par seconde, plus ou moins
+// Chez un invité : la partie telle que l'hôte la décrit. Les instantanés arrivent soixante fois par seconde, plus ou moins
 // en retard selon le réseau. On montre le passé proche, en interpolant entre deux instantanés : le retard s'ajuste à
 // l'irrégularité du réseau, juste assez pour avoir presque toujours un instantané d'avance, et l'horloge avance sans
 // à-coups. Le héros de l'invité, lui, est prédit (voir `predict.ts`) : il répond tout de suite à ses commandes.
@@ -12,9 +12,9 @@ import { SNAPSHOT_EVERY, TICK_RATE, type HeroSnap, type Snapshot } from './proto
 
 /** Pas de l'hôte par milliseconde. */
 const TICKS_PER_MS = TICK_RATE / 1000;
-/** Instantanés gardés pour interpoler, et arrivées retenues pour mesurer l'irrégularité du réseau (deux secondes). */
-const BUFFER = 20;
-const SAMPLES = 40;
+/** Instantanés gardés pour interpoler (une seconde), et arrivées retenues pour mesurer l'irrégularité du réseau (deux secondes). */
+const BUFFER = TICK_RATE / SNAPSHOT_EVERY;
+const SAMPLES = (2 * TICK_RATE) / SNAPSHOT_EVERY;
 /** Retard d'affichage (en pas) : au moins l'écart entre deux instantanés, au plus une demi-seconde. */
 const MIN_DELAY = SNAPSHOT_EVERY + 1;
 const MAX_DELAY = 30;
