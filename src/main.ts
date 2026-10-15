@@ -34,6 +34,8 @@ const devLevel = params.has('niveau') ? Number(params.get('niveau')) || 1 : null
 const devDungeon = params.get('donjon') ?? 'rizieres';
 /** `?coop=2` ou `?coop=3` : un ou deux alliés joués par l'ordinateur descendent avec le héros (test de la coop sans réseau). */
 const devCoop = Math.max(1, Math.min(3, Number(params.get('coop')) || 1));
+/** `?duel` : un duel d'entraînement contre l'ordinateur, dès le chargement ; `?duel=lame` choisit sa classe. */
+const devDuel = params.has('duel') ? params.get('duel') ?? '' : null;
 
 /** Renvoie le manifeste des sprites avec les planches d'animation appropriées (planches peintes). */
 function spriteManifest(base: SpriteManifest): SpriteManifest {
@@ -89,6 +91,7 @@ async function start(): Promise<void> {
     devLevel,
     devDungeon,
     devCoop,
+    devDuel,
     network,
     account,
     accounts,

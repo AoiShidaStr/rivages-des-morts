@@ -1,6 +1,6 @@
-import type { GameConfig, HazardConfig, SubclassActiveConfig, WaveConfig } from './config';
+import type { DuelConfig, GameConfig, HazardConfig, PlayerConfig, SubclassActiveConfig, WaveConfig } from './config';
 import type { CurseId } from './difficulty';
-import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Shikome, type Enemy } from './enemies';
+import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Rival, Shikome, type Enemy } from './enemies';
 import {
   add,
   angleOf,
@@ -59,6 +59,22 @@ const LURE_RANGE = 7;
 const TIDE_PER_SECOND = 0.007;
 const TIDE_MAX = 0.3;
 const TIDE_HEAL_LOSS = 0.35;
+
+/** Duel : secondes entre deux morsures de la zone. */
+const ZONE_TICK = 0.5;
+
+/** Duel : où en est la rencontre, telle que l'affichage la lit. */
+export interface DuelView {
+  /** Manche en cours (à partir de 1), et manches gagnées par chaque héros. */
+  readonly round: number;
+  readonly wins: readonly number[];
+  readonly roundsToWin: number;
+  /** Secondes restantes de la manche, et rayon de la zone (m). */
+  readonly timeLeft: number;
+  readonly zone: number;
+  /** Secondes de pause avant la manche suivante (0 : on se bat). */
+  readonly pause: number;
+}
 
 /** Commandes d'un héros sans joueur (entrée manquante) : il reste immobile. */
 function idleInput(hero: Player): InputFrame {
@@ -339,15 +355,146 @@ export class World {
   /** Héros déjà signalés à terre. */
   private readonly downed = new Set<Player>();
   private events: GameEvent[] = [];
+  /** Duel : les réglages des héros (repris à neuf à chaque manche), et l'état de la rencontre. */
+  private readonly heroConfigs: PlayerConfig[];
+  private match: { round: number; wins: number[]; time: number; pause: number; zoneTick: number } | null = null;
 
   /** `startWave` permet de commencer directement à une vague (tests, `?vague=7`). */
   constructor(
     readonly cfg: GameConfig,
     startWave = 0,
   ) {
-    this.players = [cfg.player, ...(cfg.allies ?? [])].map((c, i) => new Player(c, i));
+    const duel = cfg.duel;
+    // Duel : l'invulnérabilité après un coup reçu est plus courte qu'en donjon (src/data/pvp.json).
+    this.heroConfigs = [cfg.player, ...(cfg.allies ?? [])].map((c) => (duel ? { ...c, invulnerableAfterHit: duel.invulnerableAfterHit } : c));
+    this.players = this.heroConfigs.map((c, i) => new Player(c, i));
     this.actor = this.players[0];
     this.waveIndex = Math.max(0, Math.min(cfg.waves.length, startWave)) - 1;
+    if (duel) {
+      this.match = { round: 0, wins: this.players.map(() => 0), time: 0, pause: 0, zoneTick: ZONE_TICK };
+      this.startRound(duel);
+    }
+  }
+
+  /** Duel : la rencontre en cours, ou null hors duel. */
+  get duel(): DuelView | null {
+    const match = this.match;
+    const duel = this.cfg.duel;
+    if (!match || !duel) return null;
+    return {
+      round: match.round,
+      wins: match.wins,
+      roundsToWin: duel.roundsToWin,
+      timeLeft: Math.max(0, duel.roundTime - match.time),
+      zone: this.zoneRadius(),
+      pause: match.pause,
+    };
+  }
+
+  /** Duel : le double de ce héros, que visent les coups de l'autre. */
+  rivalOf(heroId: number): Rival | undefined {
+    return this.enemies.find((e): e is Rival => e instanceof Rival && e.owner === heroId);
+  }
+
+  /**
+   * Les héros que `hero` soigne et protège (Aura, Égide, bouclier, sanctuaire) : tous les héros debout, sauf en
+   * duel, où il n'a que lui-même.
+   */
+  allies(hero: Player): Player[] {
+    if (this.cfg.duel) return hero.dead ? [] : [hero];
+    return this.standing;
+  }
+
+  /** Duel : rayon de la zone, qui se referme de `zone.start` à `zone.end` après `zone.shrinkFrom` secondes. */
+  private zoneRadius(): number {
+    const duel = this.cfg.duel;
+    if (!duel || !this.match) return Infinity;
+    const { start, end, shrinkFrom } = duel.zone;
+    const k = Math.max(0, Math.min(1, (this.match.time - shrinkFrom) / Math.max(1, duel.roundTime - shrinkFrom)));
+    return mix(start, end, k);
+  }
+
+  /**
+   * Duel : une manche commence. Les héros repartent à neuf (PV, recharges, jauges) à leur place de départ, et
+   * l'arène est vidée de tout ce que la manche d'avant y avait laissé.
+   */
+  private startRound(duel: DuelConfig): void {
+    const match = this.match;
+    if (!match) return;
+    match.round++;
+    match.time = 0;
+    match.pause = 0;
+    match.zoneTick = ZONE_TICK;
+    for (let i = 0; i < this.players.length; i++) {
+      const hero = new Player(this.heroConfigs[i], i);
+      const spawn = duel.spawns[i % duel.spawns.length];
+      hero.pos = vec(spawn.x, spawn.z);
+      hero.facing = normalize(scale(hero.pos, -1), vec(1, 0));
+      this.players[i] = hero;
+    }
+    this.actor = this.players[0];
+    this.projectiles = [];
+    this.blasts = [];
+    this.embers = [];
+    this.lures = [];
+    this.sanctuaries = [];
+    this.clouds = [];
+    this.hazards = [];
+    this.snares = [];
+    this.guards = [];
+    this.guardTimers.clear();
+    this.webs = [];
+    this.peaches = [];
+    this.downed.clear();
+    this.prey.clear();
+    this.stumps = duel.stumps.map((p) => ({ pos: vec(p.x, p.z), radius: this.cfg.stumpRadius }));
+    this.enemies = this.players.map((hero) => new Rival(this.nextId++, hero, this, duel));
+    this.emit({ type: 'duel', kind: 'round', round: match.round, wins: [...match.wins] });
+  }
+
+  /**
+   * Duel : la zone mord ceux qui en sortent ; la manche se termine quand un héros tombe, ou au bout du temps (le
+   * plus entamé la perd ; à égalité, elle se rejoue). Celui qui gagne `roundsToWin` manches remporte le duel.
+   */
+  private updateDuel(dt: number, duel: DuelConfig): void {
+    const match = this.match;
+    if (!match) return;
+    match.time += dt;
+    match.zoneTick -= dt;
+    if (match.zoneTick <= 0) {
+      match.zoneTick += ZONE_TICK;
+      const radius = this.zoneRadius();
+      for (const hero of this.standing) {
+        if (length(hero.pos) <= radius) continue;
+        const amount = hero.drain(hero.cfg.maxHp * duel.zone.damage * ZONE_TICK, this);
+        this.emit({ type: 'zoneBite', hero: hero.id, pos: { ...hero.pos }, amount });
+      }
+    }
+    const standing = this.standing;
+    let winner: number | null = null;
+    if (standing.length < this.players.length) winner = standing.length === 1 ? standing[0].id : -1;
+    else if (match.time >= duel.roundTime) {
+      const [a, b] = this.players.map((hero) => hero.hp / hero.cfg.maxHp);
+      winner = Math.abs(a - b) < 1e-3 ? -1 : a > b ? 0 : 1;
+    }
+    if (winner === null) return;
+    if (winner >= 0) match.wins[winner]++;
+    this.emit({ type: 'duel', kind: 'point', round: match.round, wins: [...match.wins], winner });
+    if (winner >= 0 && match.wins[winner] >= duel.roundsToWin) {
+      this.finish(winner === 0 ? 'victory' : 'defeat');
+      return;
+    }
+    // Une manche nulle se rejoue sans compter.
+    if (winner < 0) match.round--;
+    match.pause = duel.pause;
+  }
+
+  /** Duel : vainqueur de la rencontre une fois finie (index du héros), null avant. */
+  get duelWinner(): number | null {
+    const duel = this.cfg.duel;
+    if (!duel || !this.match) return null;
+    const i = this.match.wins.findIndex((w) => w >= duel.roundsToWin);
+    return i >= 0 ? i : null;
   }
 
   /**
@@ -563,7 +710,7 @@ export class World {
       zone.tick -= dt;
       if (zone.tick <= 0 && zone.life > 0) {
         zone.tick += 1;
-        for (const hero of this.standing) if (distance(hero.pos, zone.pos) <= zone.radius + hero.radius) hero.heal(zone.heal, this);
+        for (const hero of this.allies(this.hero(zone.owner))) if (distance(hero.pos, zone.pos) <= zone.radius + hero.radius) hero.heal(zone.heal, this);
         if (zone.burn) this.act(this.hero(zone.owner), () => this.burnAround(zone.pos, zone.radius, zone.burn, true));
       }
       if (zone.life > 0) continue;
@@ -659,6 +806,7 @@ export class World {
    * à l'infini dans un combat qui s'étire ne paie plus, il faut le finir.
    */
   healFactor(): number {
+    if (this.cfg.duel) return this.cfg.duel.healing;
     return 1 - (TIDE_HEAL_LOSS * this.tide()) / TIDE_MAX;
   }
 
@@ -676,6 +824,13 @@ export class World {
     if (this.state !== 'playing') return;
     const inputs: readonly InputFrame[] = Array.isArray(input) ? input : [input];
     this.time += dt;
+    // Duel : entre deux manches, l'arène se fige le temps de lire le score.
+    const duel = this.cfg.duel;
+    if (duel && this.match && this.match.pause > 0) {
+      this.match.pause -= dt;
+      if (this.match.pause <= 0) this.startRound(duel);
+      return;
+    }
     for (const hero of this.players) {
       if (!hero.dead) this.act(hero, () => hero.update(dt, inputs[hero.id] ?? idleInput(hero), this));
     }
@@ -709,6 +864,10 @@ export class World {
     for (const enemy of fallen) this.prey.delete(enemy.id);
     this.releaseWisps(fallen);
     for (const hero of this.players) this.act(hero, () => this.afterKills(fallen));
+    if (duel) {
+      this.updateDuel(dt, duel);
+      return;
+    }
     this.updateFallen(dt);
     if (this.players.every((p) => p.dead)) {
       this.finish('defeat');
@@ -1040,7 +1199,7 @@ export class World {
     // L'Évêque : le Paladin a renoncé à l'Égide, tout le groupe tombe.
     if (perks.renounceAegis) return;
     // Le héros (lui compris) le plus proche de la souris, parmi ceux à portée.
-    const target = closest([paladin, ...this.standing.filter((h) => h !== paladin && distance(h.pos, paladin.pos) <= cfg.range)], aim) ?? paladin;
+    const target = closest([paladin, ...this.allies(paladin).filter((h) => h !== paladin && distance(h.pos, paladin.pos) <= cfg.range)], aim) ?? paladin;
     // R sur un héros déjà protégé : l'Égide le quitte, sans attendre la recharge.
     if (paladin.aegisOn === target.id || paladin.aegisSecond === target.id) {
       this.dropAegis(paladin, target.id);
@@ -1059,7 +1218,7 @@ export class World {
     this.emit({ type: 'aegis', hero: target.id, pos: { ...target.pos }, on: true });
     // Le Chantre : l'Égide protège aussi l'allié le plus proche, à la moitié de la sienne.
     if (perks.aegisAlly && (perks.aegisTargets ?? 1) < 2) {
-      const ally = closest(this.standing.filter((h) => h.id !== target.id), target.pos);
+      const ally = closest(this.allies(paladin).filter((h) => h.id !== target.id), target.pos);
       if (ally) {
         paladin.aegisSecond = ally.id;
         ally.aegisArmor = Math.max(ally.aegisArmor, perks.aegisAlly);
@@ -1589,7 +1748,7 @@ export class World {
     // Chacun, Paladin compris, regagne `healShare` de ses PV max sur toute l'Aura, une part à chaque seconde.
     let healed = 0;
     const share = cfg.healShare / Math.max(1, cfg.duration);
-    for (const hero of this.standing) {
+    for (const hero of this.allies(player)) {
       if (distance(hero.pos, player.pos) > cfg.radius + hero.radius) continue;
       healed += hero.heal(hero.cfg.maxHp * share, this);
       if (perks.auraArmor || perks.auraDamage) {
@@ -1616,7 +1775,7 @@ export class World {
    */
   healAllies(center: Vec2, radius: number, amount: number, healer?: Player): number {
     let healed = 0;
-    for (const hero of this.standing) {
+    for (const hero of this.allies(healer ?? this.player)) {
       const shares = hero.cfg.paladin.selfHeal;
       const share = hero === healer ? (shares[Math.min(this.players.length, shares.length) - 1] ?? 1) : 1;
       if (distance(hero.pos, center) <= radius + hero.radius) healed += hero.heal(amount * share, this);
@@ -1817,7 +1976,7 @@ export class World {
         }
         // Le Couloir (voie inverse du Rôdeur) : les alliés qui s'y tiennent s'écartent vite.
         if (cfg.allyRush) {
-          for (const hero of this.standing) {
+          for (const hero of this.allies(player)) {
             if (distance(hero.pos, at) <= cfg.radius + hero.radius) hero.rushFromNet(cfg.allyRush, cfg.allyRushTime ?? 3);
           }
         }
@@ -2121,10 +2280,17 @@ export class World {
     for (let i = 0; i < bodies.length; i++) {
       for (let j = i + 1; j < bodies.length; j++) pushApart(bodies[i], bodies[j]);
     }
-    for (const hero of this.standing) {
+    const standing = this.standing;
+    for (const hero of standing) {
       if (hero.dodging) continue;
       for (const enemy of bodies) {
         if (enemy.solid) pushApart(hero, enemy);
+      }
+    }
+    // Duel : les deux héros ne se traversent pas (sauf en esquive).
+    if (this.cfg.duel) {
+      for (let i = 0; i < standing.length; i++) {
+        for (let j = i + 1; j < standing.length; j++) if (!standing[i].dodging && !standing[j].dodging) pushApart(standing[i], standing[j]);
       }
     }
     for (const stump of [...this.stumps, ...this.peaches]) {
@@ -2203,7 +2369,7 @@ export class World {
   }
 
   private updateWaves(dt: number): void {
-    if (this.enemies.length > 0) return;
+    if (this.cfg.duel || this.enemies.length > 0) return;
     const waves = this.cfg.waves;
     // Terrain d'entraînement : sa vague ne s'épuise pas. Le mannequin tombé revient à sa place.
     if (!this.cfg.training && this.waveIndex >= waves.length - 1) {
@@ -2327,6 +2493,9 @@ export class World {
         return new Izanami(id, pos, cfg.izanami);
       case 'mannequin':
         return new Mannequin(id, pos, cfg.mannequin, patrol);
+      case 'rival':
+        // Un double ne s'invoque pas : il naît avec la manche, collé à son héros (startRound).
+        throw new Error('Un double de héros ne s’invoque pas.');
     }
   }
 

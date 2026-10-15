@@ -282,6 +282,8 @@ const PEACH = new Color3(1, 0.72, 0.62);
 const STORM = new Color3(0.8, 0.9, 1);
 const CLAY = new Color3(0.78, 0.55, 0.35);
 const DIVINE = new Color3(1, 0.86, 0.45);
+/** Duel : la zone qui se referme. */
+const ZONE = new Color3(0.85, 0.2, 0.25);
 const SMOKE = new Color3(0.16, 0.14, 0.22);
 /** Nuage de poison de la Lame. */
 const VENOM = new Color3(0.42, 0.85, 0.3);
@@ -490,6 +492,8 @@ export class Renderer {
   /** Aura du Paladin et nuage de la Lame : créés au premier usage, masqués ensuite. */
   /** Aura de lumière et nuage de fumée de chaque héros (coop : un par héros). */
   private readonly auraDecals = new Map<number, { mesh: Mesh; material: ShaderMaterial }>();
+  /** Duel : le cercle de la zone qui se referme. */
+  private zoneDecal: { mesh: Mesh; material: ShaderMaterial } | null = null;
   /** Aura d'état de chaque héros (coop : une par héros), créée au premier usage. */
   private readonly stateAuras = new Map<number, { mesh: Mesh; material: ShaderMaterial; kind: StateAura | null; level: number }>();
   /** Bouclier de flammes du Sorcier, un par héros. */
@@ -781,6 +785,8 @@ export class Renderer {
     for (const texture of this.retiredHeroTextures) texture.dispose();
     this.retiredHeroTextures = [];
     for (const enemy of world.enemies) {
+      // Duel : le double d'un héros n'a pas d'image, c'est le héros lui-même qu'on voit.
+      if (enemy.kind === 'rival') continue;
       seen.add(enemy.id);
       this.syncEntity(enemy.id, enemy.sprite, {
         pos: enemy.pos,
@@ -806,6 +812,7 @@ export class Renderer {
     this.syncAttackGuide(world);
     this.syncProjectiles(world.projectiles, world.enemies, dt);
     this.syncAura(world);
+    this.syncZone(world);
     this.syncWard(world);
     this.syncStateAuras(world, dt);
     this.syncSmoke(world);
@@ -845,6 +852,7 @@ export class Renderer {
     for (const view of this.projectiles.values()) this.disposeFx(view);
     this.projectiles.clear();
     for (const decal of [...this.auraDecals.values(), ...this.wardDecals.values(), ...this.smokeDecals.values(), ...this.stateAuras.values()]) decal.mesh.isVisible = false;
+    if (this.zoneDecal) this.zoneDecal.mesh.isVisible = false;
     for (const aura of this.stateAuras.values()) aura.level = 0;
     this.setAllies([]);
     if (this.aimDecal) this.aimDecal.mesh.isVisible = false;
@@ -1287,6 +1295,25 @@ export class Renderer {
     }
   }
 
+  /** Duel : le cercle de la zone, rouge sombre, qui se referme sur les deux héros. */
+  private syncZone(world: WorldView): void {
+    const duel = world.duel;
+    if (!duel && !this.zoneDecal) return;
+    if (!this.zoneDecal) {
+      this.zoneDecal = this.createDecal('duel-zone', this.fxTextures.ring, 2, 2, ZONE, 0.8, 0.02);
+      this.zoneDecal.mesh.alphaIndex = DECAL_ORDER;
+    }
+    const { mesh, material } = this.zoneDecal;
+    mesh.isVisible = Boolean(duel);
+    if (!duel) return;
+    mesh.position.x = 0;
+    mesh.position.z = 0;
+    mesh.scaling.setAll(duel.zone);
+    // Le cercle bat plus vite quand il se referme.
+    const closing = duel.timeLeft < 60 ? 1 : 0;
+    material.setFloat('alpha', 0.55 + 0.25 * closing * Math.sin(this.time * 5));
+  }
+
   /**
    * Auras d'état : une aura dressée juste derrière l'image du héros (on n'en voit que ce qui dépasse de sa
    * silhouette), de la couleur de l'état : feu pour le Bouclier de flammes, rouge pour la Frénésie et le Sang yokai,
@@ -1653,7 +1680,10 @@ export class Renderer {
           const turn = Math.random() * Math.PI * 2;
           this.sheetFx('fxImpact', 'impact', event.pos, { x: Math.cos(turn), z: Math.sin(turn) }, size, size, 0.24, 0.05);
         }
-        if (event.shielded) this.text(event.pos, 1.9, 'Bloqué', 'shield', 0.9, far);
+        // Duel : le chiffre s'affiche une fois, sur le héros touché (playerHit) ; le critique et la garde restent lisibles.
+        if (event.pvp && !event.shielded) {
+          if (event.crit) this.text(event.pos, 2.5, 'Critique !', 'crit', 0.7, far);
+        } else if (event.shielded) this.text(event.pos, 1.9, 'Bloqué', 'shield', 0.9, far);
         else if (event.crit) this.text(event.pos, 2, `${Math.round(event.amount)} !`, 'crit', 0.9, far);
         else this.text(event.pos, 1.7, String(Math.round(event.amount)), 'dmg', 0.9, far);
         // Seuls mes coups (et les coups sans joueur, brûlure de toile…) secouent l'écran.

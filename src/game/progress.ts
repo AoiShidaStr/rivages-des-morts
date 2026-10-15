@@ -127,6 +127,8 @@ export interface Effect {
   subclass?: boolean;
   /** Ouvre le terrain d'entraînement (le billot de Tetsu) : on y frappe un mannequin, sans butin ni risque. */
   train?: boolean;
+  /** Ouvre l'arène des duels : un duel d'entraînement contre une ombre jouée par l'ordinateur. */
+  duel?: boolean;
   /** Ouvre la stèle des records (les paliers gravés sur le ponton). */
   records?: boolean;
 }
@@ -141,7 +143,8 @@ export type Action =
   | { kind: 'chests' }
   | { kind: 'changeHero' }
   | { kind: 'subclass' }
-  | { kind: 'training' };
+  | { kind: 'training' }
+  | { kind: 'duel' };
 
 export interface Catalog {
   itemName(id: string): string;
@@ -548,6 +551,7 @@ export class Progress {
     if (e.changeHero) actions.push({ kind: 'changeHero' });
     if (e.subclass) actions.push({ kind: 'subclass' });
     if (e.train) actions.push({ kind: 'training' });
+    if (e.duel) actions.push({ kind: 'duel' });
   }
 }
 

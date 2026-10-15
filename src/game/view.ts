@@ -3,6 +3,7 @@
 import type { PlayerConfig } from './config';
 import type { Vec2 } from './math';
 import type { ArtPose, EnemyKind, MarkKind, Pose } from './types';
+import type { DuelView } from './world';
 
 /** Un héros, tel que l'affichage le voit : où il est, ce qu'il fait, ses PV et ses recharges. */
 export interface HeroView {
@@ -136,4 +137,6 @@ export interface WorldView {
   /** Le héros que poursuit ce yokai (le premier en solo). */
   preyOf(enemyId: number): number;
   readonly cfg: { readonly webs: { readonly burnTime: number }; readonly difficulty?: { readonly level: number } };
+  /** Duel (PVP) : la rencontre en cours ; absent ou null hors duel. */
+  readonly duel?: DuelView | null;
 }

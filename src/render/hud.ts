@@ -103,6 +103,12 @@ export class Hud {
   private readonly trainingDps: HTMLElement;
   private readonly trainingTotal: HTMLElement;
   private readonly trainingTime: HTMLElement;
+  /** Duel : manche, score et temps restant, sous la barre de l'adversaire (voir `updateDuel`). */
+  private readonly duelPanel: HTMLElement;
+  private readonly duelRound: HTMLElement;
+  private readonly duelScore: HTMLElement;
+  private readonly duelTime: HTMLElement;
+  private duelName = '';
   private bossTitle = 'Jorōgumo';
   private bossKind = '';
   private bannerTimer = 0;
@@ -153,6 +159,48 @@ export class Hud {
       this.trainingTime,
     );
     find('#boss').after(this.training);
+    this.duelRound = h('span', { class: 'round' });
+    this.duelScore = h('strong', { class: 'score' });
+    this.duelTime = h('span', { class: 'time' });
+    this.duelPanel = h('div', { class: 'duel', title: 'Deux manches gagnantes. La zone se referme : qui reste dehors perd des PV.' }, this.duelRound, this.duelScore, this.duelTime);
+    this.training.after(this.duelPanel);
+  }
+
+  /** Duel : le nom de l'adversaire, affiché sur sa barre de PV (celle du boss en donjon). Vide hors duel. */
+  setDuel(opponent: string): void {
+    this.duelName = opponent;
+    this.duelPanel.classList.toggle('visible', opponent !== '');
+  }
+
+  /** Duel : la barre de l'adversaire, le score, le temps, et les annonces de manche. */
+  private updateDuel(world: WorldView, events: readonly GameEvent[]): boolean {
+    const duel = world.duel;
+    if (!duel || !this.duelName) return false;
+    const me = world.player;
+    const rival = world.players.find((hero) => hero !== me);
+    this.boss.classList.toggle('visible', Boolean(rival));
+    this.gaze.classList.remove('visible');
+    if (rival) {
+      setText(this.bossName, `${this.duelName} · PV ${Math.max(0, Math.ceil(rival.hp))}`);
+      setStyle(this.bossFill, 'width', percent(Math.max(0, rival.hp) / rival.cfg.maxHp));
+    }
+    const mine = duel.wins[me.id] ?? 0;
+    const theirs = duel.wins[rival?.id ?? 1 - me.id] ?? 0;
+    setText(this.duelRound, `Manche ${duel.round}`);
+    setText(this.duelScore, `${mine} – ${theirs}`);
+    setText(this.duelTime, duel.pause > 0 ? 'Pause' : clock(Math.ceil(duel.timeLeft)));
+    this.duelTime.classList.toggle('late', duel.pause <= 0 && duel.timeLeft <= 15);
+    for (const event of events) {
+      if (event.type === 'duel' && event.kind === 'round') {
+        this.announce(`Manche ${event.round}`, 'Combattez !');
+      } else if (event.type === 'duel' && event.kind === 'point') {
+        const label = event.winner === undefined || event.winner < 0 ? 'Manche nulle' : event.winner === me.id ? 'Manche gagnée' : 'Manche perdue';
+        this.announce(`${event.wins[me.id] ?? 0} – ${event.wins[rival?.id ?? 1 - me.id] ?? 0}`, label);
+      } else if (event.type === 'end') {
+        this.hint.classList.remove('visible');
+      }
+    }
+    return true;
   }
 
   /**
@@ -324,6 +372,11 @@ export class Hud {
       setCooldown(this.voieSlot.cooldown, player.voieCooldown / voie.cooldown);
     }
 
+    if (this.updateDuel(world, events)) {
+      this.bannerTimer -= dt;
+      if (this.bannerTimer <= 0) this.banner.classList.remove('visible');
+      return;
+    }
     // Deux boss à la fois (donjon infini) : la barre suit celui qui est le plus entamé.
     const bosses = world.enemies.filter((e) => e.boss && e.hp > 0);
     const boss = bosses.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] ?? world.enemies.find((e) => e.boss);

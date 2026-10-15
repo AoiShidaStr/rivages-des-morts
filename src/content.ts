@@ -6,6 +6,7 @@ import rizieresJson from './data/dungeon.json';
 import palaisJson from './data/dungeon-palais.json';
 import dungeonsJson from './data/dungeons.json';
 import entrainementJson from './data/entrainement.json';
+import pvpJson from './data/pvp.json';
 import endlessJson from './data/donjon-infini.json';
 import islandJson from './data/island.json';
 import islandSpritesJson from './data/islandSprites.json';
@@ -14,7 +15,7 @@ import itemsJson from './data/items.json';
 import questsJson from './data/quests.json';
 import skillsJson from './data/skills.json';
 import sousClassesJson from './data/sous-classes.json';
-import type { GameConfig } from './game/config';
+import type { DuelConfig, GameConfig } from './game/config';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { ArenaSource, EndlessData } from './game/infini';
 import type { EveilRules, UpgradeRules } from './game/forge';
@@ -153,6 +154,17 @@ const entrainement = entrainementJson as unknown as {
   arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>;
 };
 
+/**
+ * Le duel (src/data/pvp.json) : son arène, comme un donjon hors de `content.dungeons`, ses règles et le niveau
+ * auquel tous les héros y entrent.
+ */
+const pvp = pvpJson as unknown as {
+  level: number;
+  meta: Omit<DungeonDef, 'id' | 'arena'>;
+  arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>;
+  duel: DuelConfig;
+};
+
 export interface QuestDef {
   name: string;
   type: string;
@@ -189,6 +201,8 @@ export const content = {
   } as Record<string, DungeonDef>,
   /** Le billot de Tetsu : on y frappe un mannequin immobile pour éprouver une classe ou un équipement. */
   entrainement: dungeonFrom('entrainement', entrainement.meta, entrainement.arena),
+  /** Le duel (PVP) : l'arène, les règles de la rencontre et le niveau commun des héros. */
+  pvp: { arena: dungeonFrom('duel', pvp.meta, pvp.arena), duel: pvp.duel, level: pvp.level },
   triggers: questsJson.triggers as unknown as Catalog['triggers'],
   /**
    * Le Yomi sans fond (donjon infini), qui tire ses blocs des donjons ci-dessus, mais les joue tous dans son arène à

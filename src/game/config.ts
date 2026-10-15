@@ -1031,4 +1031,37 @@ export interface GameConfig {
    * sans annonce et sans butin. Le héros n'y gagne ni quête ni objet.
    */
   training?: boolean;
+  /** Duel (PVP) : deux héros s'affrontent en manches, sans yokai ni vague. Absent : une descente ordinaire. */
+  duel?: DuelConfig;
+}
+
+/**
+ * Duel (PVP) : ses règles et ses réglages à part (src/data/pvp.json). Ils ne touchent que les coups d'un héros
+ * sur un autre : le PVE n'en dépend jamais.
+ */
+export interface DuelConfig {
+  /** Durée d'une manche (s), manches à gagner, et pause entre deux manches (s). */
+  roundTime: number;
+  roundsToWin: number;
+  pause: number;
+  /** Places de départ des deux héros, et souches de l'arène (symétriques). */
+  spawns: { x: number; z: number }[];
+  stumps: { x: number; z: number }[];
+  /**
+   * Zone qui rétrécit : rayon de départ et d'arrivée (m), seconde où elle commence à se refermer, et part des PV
+   * max perdue chaque seconde passée dehors.
+   */
+  zone: { start: number; end: number; shrinkFrom: number; damage: number };
+  /** Multiplicateur des dégâts d'un héros sur un autre, puis par classe de l'attaquant. */
+  damage: number;
+  classDamage: Partial<Record<Kit, number>>;
+  /** Part des soins gardée en duel. */
+  healing: number;
+  /** Invulnérabilité après un coup reçu (s), plus courte qu'en donjon : un duel ne se joue pas à un coup par seconde. */
+  invulnerableAfterHit: number;
+  /** Étourdissements et ralentissements sur un héros : part gardée de leur durée, et durée la plus longue (s). */
+  stun: { factor: number; max: number };
+  slow: { factor: number; max: number; amount: number };
+  /** Part du recul gardée. */
+  knockback: number;
 }
