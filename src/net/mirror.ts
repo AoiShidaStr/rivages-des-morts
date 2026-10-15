@@ -5,6 +5,7 @@
 import type { PlayerConfig } from '../game/config';
 import { lerp, type Vec2 } from '../game/math';
 import type { InputFrame } from '../game/types';
+import type { DuelView } from '../game/world';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WebView, WorldView } from '../game/view';
 import { Prediction } from './predict';
 import { SNAPSHOT_EVERY, TICK_RATE, type HeroSnap, type Snapshot } from './protocol';
@@ -43,6 +44,8 @@ export class MirrorWorld implements WorldView {
   peaches: PeachView[] = [];
   webs: WebView[] = [];
   hammerOut = false;
+  /** Duel : la rencontre telle que l'hôte la décrit (null hors duel). */
+  duel: DuelView | null = null;
   readonly cfg: WorldView['cfg'];
 
   preyOf(enemyId: number): number {
@@ -146,6 +149,7 @@ export class MirrorWorld implements WorldView {
       this.peachKey = peachKey;
       this.peaches = b.peaches;
     }
+    this.duel = latest.duel;
     const mine = latest.heroes[this.seat];
     this.hammerOut = mine?.hammerOut ?? false;
   }

@@ -6,11 +6,11 @@ import type { PlayerConfig } from '../game/config';
 import type { Vec2 } from '../game/math';
 import type { GameEvent } from '../game/types';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WebView } from '../game/view';
-import type { World } from '../game/world';
+import type { DuelView, World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 10;
+export const PROTOCOL = 11;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
@@ -88,6 +88,8 @@ export interface Snapshot {
   stumps: StumpView[];
   peaches: PeachView[];
   webs: WebView[];
+  /** Duel : où en est la rencontre (manche, score, temps, zone) ; null hors duel. */
+  duel: DuelView | null;
 }
 
 /** Événements du combat depuis le paquet précédent, jusqu'au pas `tick`. */
@@ -340,6 +342,7 @@ export function shareSnapshot(world: World, tick: number): SharedSnap {
         world.webs.map((w) => ({ id: w.id, pos: w.pos, radius: w.radius, age: w.age, burning: w.burning })),
         WEB_DEFAULTS,
       ),
+      ...(world.duel ? { d: packObject({ ...world.duel } as Plain, NO_DEFAULTS) } : {}),
     },
   };
 }
@@ -373,5 +376,6 @@ export function unpackSnapshot(data: Json): Snapshot | null {
     stumps: unpackList<StumpView>(d.t, NO_DEFAULTS),
     peaches: unpackList<PeachView>(d.c, NO_DEFAULTS),
     webs: unpackList<WebView>(d.w, WEB_DEFAULTS),
+    duel: d.d && typeof d.d === 'object' ? unpackObject<DuelView>(d.d as Plain, NO_DEFAULTS) : null,
   };
 }

@@ -40,6 +40,10 @@ export const cleanCode = (text: string): string =>
 
 const roomOf = (code: string) => `partie-${code}`;
 
+/** Le salon d'un duel (PVP) porte ce donjon : deux joueurs au plus, l'hôte contre son invité. */
+export const DUEL = 'duel';
+const DUEL_PLAYERS = 2;
+
 type Hello = { version: number; member: Member };
 
 /** Ce qu'une session raconte à l'interface et au jeu. */
@@ -110,6 +114,14 @@ export class CoopSession {
     return CoopSession.join(network, code, me);
   }
 
+  /**
+   * Ouvre un duel : on en est l'hôte (le combat tourne dans ce navigateur), et l'adversaire le rejoint avec son code.
+   * Un duel n'est jamais public : on n'y entre qu'avec le code.
+   */
+  static hostDuel(network: Network, me: Member, level: number): CoopSession {
+    return CoopSession.host(network, me, { open: false, dungeon: DUEL, level });
+  }
+
   /** Rejoint la partie de ce code. */
   static join(network: Network, code: string, me: Member): CoopSession {
     const session = new CoopSession('guest', code, network, me, openRoom(network, roomOf(code)));
@@ -128,6 +140,16 @@ export class CoopSession {
   /** Nombre de joueurs dans le salon, hôte compris. */
   get size(): number {
     return this.lobby.players.length;
+  }
+
+  /** Salon d'un duel (PVP) plutôt que d'une descente. */
+  get duel(): boolean {
+    return this.lobby.dungeon === DUEL;
+  }
+
+  /** Joueurs au plus dans ce salon. */
+  get capacity(): number {
+    return this.duel ? DUEL_PLAYERS : MAX_PLAYERS;
   }
 
   /** Partie tenue par le serveur : pas d'hôte joueur. */
@@ -163,7 +185,7 @@ export class CoopSession {
       if (hello.version !== PROTOCOL) return room.send('refuse', 'Vous n’avez pas la même version du jeu : rechargez la page (Ctrl+F5).', from);
       if (this.lobby.inGame) return room.send('refuse', 'La descente a déjà commencé.', from);
       if (this.members.has(from)) return this.broadcastLobby();
-      if (this.size >= MAX_PLAYERS) return room.send('refuse', `La partie est pleine (${MAX_PLAYERS} joueurs).`, from);
+      if (this.size >= this.capacity) return room.send('refuse', this.duel ? 'Ce duel a déjà ses deux adversaires.' : `La partie est pleine (${MAX_PLAYERS} joueurs).`, from);
       this.members.set(from, hello.member);
       this.lobby.players.push(this.entry(from, hello.member, false));
       this.broadcastLobby();
