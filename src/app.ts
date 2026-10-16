@@ -6,7 +6,7 @@ import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { rollSeal, type Gravure } from './game/gravure';
 import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, isBoss, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
-import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
+import { toScreen, toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
 import { duelLoadout } from './game/pvp';
@@ -65,6 +65,7 @@ import { openEndlessEntry } from './ui/infini';
 import { logRun, markSeen } from './game/journal';
 import { stockItem } from './game/reserve';
 import { SFX_DES_EVENTS, Sfx } from './audio/sfx';
+import { Ambiance } from './audio/ambiance';
 import { openOptions } from './ui/options';
 import { PingBadge, type PingView } from './ui/ping';
 import { hasUnseenNotes, latestVersion, openPatchNotes } from './ui/patchNotes';
@@ -107,7 +108,7 @@ function hitstopFor(event: GameEvent, world: WorldView): number {
 const TITLE_ORBIT = { u: -4, v: 1, radius: 5, speed: 0.07 };
 /** Terrain d'entraînement : fenêtre du DPS affiché, en secondes de combat. */
 const DPS_WINDOW = 5;
-/** Une foulée dans l'eau de la rivière (s) : un clapotis par pas. */
+/** Une foulée sur l'île (s) : un pas qui sonne selon le sol. */
 const STRIDE_S = 0.38;
 
 interface Loot {
@@ -208,8 +209,11 @@ export class App {
   private run: Loot = emptyLoot();
   /** Les sons courts (SFX) : les événements de combat et les gains d'objets ; les musiques restent celles des amis. */
   private readonly sfx: Sfx = new Sfx();
+  private readonly ambiance = new Ambiance(this.sfx.settings);
   /** Temps avant le prochain pas dans l'eau (s). */
   private stride = 0;
+  /** Le Rôdeur bandait son arc au pas précédent (le son part au début de la charge). */
+  private drawing = false;
   /** Boutique de fin tirée à la dernière victoire : elle reste la même tant qu'on ne redescend pas. */
   private endShop: RolledOffer[] = [];
   /** Donjon en cours, et son niveau (choisi à l'entrée). */
@@ -426,6 +430,7 @@ export class App {
   private step(dt: number): void {
     this.dialogue.tick(dt);
     this.handleKeys();
+    this.ambiance.update(this.mode === 'island' ? toScreen(this.d.island.player.pos) : null, dt);
 
     switch (this.mode) {
       case 'title':
@@ -604,7 +609,7 @@ export class App {
     const modal = this.busy || this.dialogue.open || this.panels.open || this.screens.paused;
     const entered = island.update(dt, modal ? vec() : this.readMove(islandRenderer.forward, islandRenderer.right));
     if (entered) this.screens.announceArea(entered.name);
-    this.splash(dt, island.player.moving && island.player.low);
+    this.steps(dt, island.player.moving ? island.ground() : null);
     const target = modal ? null : island.nearest();
     islandRenderer.focus(island.player.pos, dt);
     islandRenderer.sync(island, target?.def.id ?? null, this.markers(), dt);
@@ -725,6 +730,7 @@ export class App {
       switch (action.kind) {
         case 'toast':
           this.screens.toast(action.text, action.tone, action.icon);
+          if (action.levelUp) this.sfx.play('niveau');
           break;
         case 'shop':
           openShop(this.panels, this.ui, action.id);
@@ -1101,6 +1107,7 @@ export class App {
     }
     const events = world.drainEvents();
     if (online) this.shareState(world, events);
+    this.bowDraw(world.player.drawProgress);
     for (const event of events) {
       this.sfxEvent(event, world.player.id, events);
       this.track(event);
@@ -1171,16 +1178,22 @@ export class App {
    * Les sons courts du combat : un coup critique sonne « crit », les autres événements suivent la carte (sfx.ts).
    * En coop, seuls mes coups et les coups que je reçois sonnent : ceux des alliés passeraient en rafale continue.
    */
-  /** Les pas dans l'eau : en marchant dans le lit de la rivière, un clapotis à chaque foulée. */
-  private splash(dt: number, wading: boolean): void {
-    if (!wading) {
+  /** Les pas sur l'île : à chaque foulée, la terre, le bois (ponts, ponton) ou le clapotis du lit de la rivière. */
+  private steps(dt: number, ground: 'eau' | 'bois' | 'terre' | null): void {
+    if (!ground) {
       this.stride = 0;
       return;
     }
     this.stride -= dt;
     if (this.stride > 0) return;
-    this.sfx.play('pas-eau');
+    this.sfx.play(`pas-${ground}`);
     this.stride = STRIDE_S;
+  }
+
+  /** Le Rôdeur qui commence à bander son arc. */
+  private bowDraw(progress: number): void {
+    if (progress > 0 && !this.drawing) this.sfx.play('bander');
+    this.drawing = progress > 0;
   }
 
   private sfxEvent(event: GameEvent, me: number, batch: readonly GameEvent[]): void {
@@ -1195,8 +1208,13 @@ export class App {
     }
     if (event.type === 'enemyHit') {
       if (event.owner >= 0 && event.owner !== me) return;
-      // Le critique au repos sonne comme un coup ordinaire.
-      if (!event.crit || !this.sfx.play('crit')) this.sfx.play('coup');
+      // Une carapace (le kappa renforcé) arrête le coup ; le critique au repos sonne comme un coup ordinaire.
+      if (event.shielded) this.sfx.play('carapace');
+      else if (!event.crit || !this.sfx.play('crit')) this.sfx.play('coup');
+      return;
+    }
+    if (event.type === 'end') {
+      this.sfx.play(event.outcome === 'victory' ? 'victoire' : 'defaite');
       return;
     }
     if (event.type === 'playerHit' && event.hero !== me) return;

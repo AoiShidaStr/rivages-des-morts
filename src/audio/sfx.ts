@@ -18,6 +18,7 @@ export const SFX_DES_EVENTS: Partial<Record<GameEvent['type'], SfxId>> = {
   playerHit: 'recu',
   guard: 'garde',
   parry: 'parade',
+  perfectGuard: 'parade',
   heroDown: 'a-terre',
   heroRevived: 'releve',
 };
@@ -44,7 +45,25 @@ const REPOS_MS: Partial<Record<SfxId, number>> = {
   recu: 1000,
   esquive: 800,
   butin: 1000,
+  refus: 400,
 };
+
+/** Volume relatif de certains sons : les pas reviennent à chaque foulée, ils restent en retrait. */
+const VOLUME: Partial<Record<SfxId, number>> = {
+  'pas-terre': 0.35,
+  'pas-bois': 0.4,
+  'pas-eau': 0.45,
+};
+
+/** Un son d'action de l'interface (équiper, forger, vendre…) remplace le clic du bouton qui l'a lancé. */
+const CLIC_REMPLACÉ_MS = 150;
+
+let jeuUi: ((id: SfxId) => void) | null = null;
+
+/** Les fenêtres jouent leurs sons d'action par ici, sans tenir le gestionnaire (branché par `Sfx`). */
+export function sonUi(id: SfxId): void {
+  jeuUi?.(id);
+}
 
 /** Ce qu'on clique décide du son : valider (bouton principal, choix), onglet, fermer, ou un bouton ordinaire. */
 function sonDuClic(cible: Element): { id: SfxId; vitesse: number } {
@@ -77,8 +96,14 @@ export class Sfx {
   /** L'heure de la dernière joue de chaque son : le pas de 90 ms vaut son par son, pas pour tous ensemble. */
   private readonly dernierJeu = new Map<SfxId, number>();
 
+  /** Le dernier clic d'interface joué, que le son d'action du même bouton coupe. */
+  private clic: { audio: HTMLAudioElement; à: number } | null = null;
+  /** Le dernier fichier lancé, quel que soit le son. */
+  private joué: HTMLAudioElement | null = null;
+
   constructor() {
     this.settings = loadSettings();
+    jeuUi = (id) => this.action(id);
     const débloque = () => {
       this.unlocked = true;
       // Les fichiers se chargent dès le premier geste : le premier coup du combat a déjà son son.
@@ -93,8 +118,20 @@ export class Sfx {
       const cible = cliquable(event.target);
       if (!cible) return;
       const { id, vitesse } = sonDuClic(cible);
-      this.play(id, vitesse);
+      if (this.play(id, vitesse) && this.joué) this.clic = { audio: this.joué, à: Date.now() };
     }, true);
+    // Un bouton grisé ne reçoit pas le clic : l'appui dessus sonne le refus (pas assez d'oboles, rien à vendre…).
+    document.addEventListener('pointerdown', (event) => {
+      const el = event.target instanceof Element ? event.target.closest('button, .btn') : null;
+      if (el && (el as HTMLButtonElement).disabled) this.play('refus', 1);
+    }, true);
+  }
+
+  /** Le son d'une action de l'interface : il coupe le clic que le même bouton vient de jouer. */
+  action(id: SfxId): void {
+    if (this.clic && Date.now() - this.clic.à < CLIC_REMPLACÉ_MS) this.clic.audio.pause();
+    this.clic = null;
+    this.play(id, 1);
   }
 
   setVolume(volume: number): void {
@@ -126,8 +163,9 @@ export class Sfx {
     audio.currentTime = 0;
     // Un peu de vitesse au hasard : même une seule variante ne colle pas l'oreille.
     audio.playbackRate = vitesse ?? 0.92 + Math.random() * 0.14;
-    audio.volume = this.settings.volume;
+    audio.volume = this.settings.volume * (VOLUME[id] ?? 1);
     this.dernière.set(id, variantes.indexOf(audio));
+    this.joué = audio;
     void audio.play().catch(() => {
       // Lecture refusée (fichier absent, onglet en arrière-plan) : le jeu continue en silence.
     });

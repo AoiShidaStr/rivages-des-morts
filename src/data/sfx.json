@@ -4,8 +4,8 @@
     "coup": "Un coup de héros sur un yokai : whoosh sec puis l'impact, chair ou carapace. Les critiques passent par « crit », pas ici.",
     "crit": "L'accent du coup critique : l'impact plus long, métallique, une note qui remonte.",
     "recu": "Un coup reçu par le héros : blunt et sourd, un souffle court.",
-    "garde": "La garde du Guerrier ou du Paladin qui encaisse : acier tamisé.",
-    "parade": "La parade parfaite ou la riposte : un tintement aigu qui rebondit, presque une cloche.",
+    "garde": "Le coup bloqué : la garde du Guerrier ou du Paladin qui encaisse.",
+    "parade": "La parade parfaite (garde au bon moment) ou la riposte.",
     "vague": "Le début d'une vague : un souffle sombre, un tambour grave, sans mélodie (les musiques des amis ouvrent le combat).",
     "a-terre": "Un héros tombé ; les « Allié à terre » et « À terre ! » partagent le son.",
     "releve": "Le relevé d'un héros : une respiration qui repart, légère, une clochette de temple (suzu).",
@@ -16,6 +16,19 @@
     "butin": "Un objet rare en poche : la lumière qui se pose, trois notes de koto.",
     "meteore": "Le Météore du Sorcier lancé (R) : la pierre de feu qui siffle en tombant.",
     "meteore-impact": "Le Météore qui s'écrase : l'explosion et le sol qui tremble.",
-    "pas-eau": "Un pas dans le lit de la rivière, sur l'île : le clapotis de la foulée."
+    "pas-eau": "Un pas dans le lit de la rivière, sur l'île : le clapotis de la foulée.",
+    "carapace": "Un coup arrêté par une carapace (le kappa renforcé) : il sonne à la place du coup ordinaire.",
+    "victoire": "La fin d'une descente gagnée.",
+    "defaite": "La fin d'une descente perdue.",
+    "bander": "Le Rôdeur qui bande l'arc pour un tir chargé.",
+    "equiper-arme": "Une arme, une amulette ou une relique équipée.",
+    "equiper-armure": "Une pièce d'armure équipée : casque, plastron, jambières, bottes.",
+    "refus": "Un bouton grisé qu'on appuie quand même : pas assez d'oboles, rien à vendre.",
+    "vendre": "Un lot mis en vente (hôtel des ventes ou boutique).",
+    "forge": "Tetsu améliore une pièce : l'enclume.",
+    "fabriquer": "Tetsu forge une nouvelle pièce.",
+    "niveau": "Un niveau gagné.",
+    "pas-terre": "Un pas sur la terre, l'herbe ou le gravier de l'île.",
+    "pas-bois": "Un pas sur le bois d'un pont ou du ponton de Charon."
   }
 }

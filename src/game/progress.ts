@@ -140,7 +140,7 @@ export interface Effect {
 
 /** Ce que l'interface doit faire après une suite d'effets. */
 export type Action =
-  | { kind: 'toast'; text: string; tone?: 'quest' | 'loot'; icon?: string }
+  | { kind: 'toast'; text: string; tone?: 'quest' | 'loot'; icon?: string; /** Un niveau gagné : le toast sonne. */ levelUp?: true }
   | { kind: 'shop'; id: string }
   | { kind: 'records' }
   | { kind: 'forge' }
@@ -564,7 +564,7 @@ export class Progress {
 
 function levelUpToast(level: number, point: boolean): Action {
   const text = point ? `Niveau ${level} ! +1 point de compétence (touche ${keyName('K')})` : `Niveau ${level} ! Tetsu peut forger ton équipement jusqu’au niveau ${level}.`;
-  return { kind: 'toast', text, tone: 'quest' };
+  return { kind: 'toast', text, tone: 'quest', levelUp: true };
 }
 
 /**

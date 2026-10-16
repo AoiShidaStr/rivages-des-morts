@@ -93,6 +93,8 @@ export interface IslandData {
   river?: Polygon[];
   /** Tabliers des ponts, tracés sur la carte : dessinés par-dessus le héros quand il passe dessous. */
   bridges?: Polygon[];
+  /** Planches où l'on marche hors des ponts (le ponton de Charon) : les pas y sonnent le bois. */
+  wood?: Polygon[];
   /** Chutes d'eau, tracées sur la carte : dessinées par-dessus le héros (un peu transparentes) quand il passe derrière. */
   falls?: Polygon[];
   scenery: IslandScenery;
@@ -233,6 +235,13 @@ export class Island {
       }
     }
     return best;
+  }
+
+  /** Ce que le héros a sous les pieds, pour le son de ses pas : l'eau du lit, le bois d'un pont ou du ponton, la terre. */
+  ground(): 'eau' | 'bois' | 'terre' {
+    if (this.player.low) return 'eau';
+    const s = toScreen(this.player.pos);
+    return onBridge(this.data, s) || this.data.wood?.some((p) => insidePolygon(s, p)) ? 'bois' : 'terre';
   }
 
   /**
