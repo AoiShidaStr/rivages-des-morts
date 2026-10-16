@@ -1229,7 +1229,8 @@ export class App {
     // La dernière commande suffit : elle porte la direction du moment et le compte de tous les appuis.
     if (packet) session?.sendInput(packet);
     mirror.update(now);
-    const events = this.inbox;
+    // L'esquive prévue sonne et se voit dès l'appui ; celle que l'hôte annonce ensuite ne se rejoue pas.
+    const events = [...mirror.takeEvents(), ...this.inbox.filter((event) => !mirror.echo(event))];
     this.inbox = [];
     for (const event of events) {
       this.track(event);

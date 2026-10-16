@@ -4,7 +4,7 @@
 // à-coups. Le héros de l'invité, lui, est prédit (voir `predict.ts`) : il répond tout de suite à ses commandes.
 import type { PlayerConfig } from '../game/config';
 import { lerp, type Vec2 } from '../game/math';
-import type { InputFrame } from '../game/types';
+import type { GameEvent, InputFrame } from '../game/types';
 import type { DuelView } from '../game/world';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WebView, WorldView } from '../game/view';
 import { Prediction } from './predict';
@@ -77,12 +77,22 @@ export class MirrorWorld implements WorldView {
     this.cfg = { webs: { burnTime: arena.webBurnTime }, difficulty: { level } };
     this.players = configs.map((cfg, id) => this.hero(cfg, id));
     this.player = this.players[seat];
-    this.prediction = new Prediction(configs[seat], arena.halfSize, arena.webSlow);
+    this.prediction = new Prediction(configs[seat], arena.halfSize, arena.webSlow, seat);
   }
 
   /** Une commande vient de partir vers l'hôte. */
   record(seq: number, frame: InputFrame): void {
     this.prediction.record(seq, frame);
+  }
+
+  /** Les événements de son propre héros joués d'avance (esquive), à montrer tout de suite. */
+  takeEvents(): GameEvent[] {
+    return this.prediction.takeEvents();
+  }
+
+  /** Vrai si l'hôte annonce un événement déjà joué d'avance : on ne le rejoue pas. */
+  echo(event: GameEvent): boolean {
+    return this.prediction.echo(event);
   }
 
   /** Un instantané vient d'arriver ; `at` : l'heure d'arrivée (performance.now()). */

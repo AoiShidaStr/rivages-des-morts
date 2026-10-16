@@ -6,6 +6,9 @@ import type { Decoy, World } from './world';
 
 /** Durée pendant laquelle un clic, une esquive ou une compétence reste en mémoire, le temps que le coup en cours le permette. */
 const ATTACK_BUFFER = 0.2;
+/** Esquive d'un invité : au plus ce retard rattrapé (s), et le retard d'affichage de ses ennemis qui s'y ajoute. */
+const DODGE_GRACE_MAX = 0.15;
+const DISPLAY_DELAY = 0.05;
 /** Affichage : durée du recul dessiné après un coup reçu, et du geste d'une compétence instantanée. */
 const HURT_TIME = 0.32;
 const CAST_TIME = { skill: 0.5, ultimate: 0.7 };
@@ -215,6 +218,12 @@ export class Player {
   /** Secondes depuis que la garde est levée (blocage parfait), et retard réseau du joueur (un invité, en coop). */
   private guardHeld = 0;
   latency = 0;
+  /**
+   * Invité : coups reçus il y a moins de `DODGE_GRACE_MAX` s. Il a vu le coup partir en retard (le temps que l'image
+   * arrive) et son esquive met encore un aller simple à venir : quand elle arrive, les coups de cette fenêtre sont
+   * annulés, comme la garde parfaite élargit déjà la sienne.
+   */
+  private recentHits: { age: number; hp: number; barrier: number; knockback: Vec2 }[] = [];
   /** Bouclier temporaire (Haidate de shikome, Bouclier de flammes) : PV absorbés avant les vrais, et secondes restantes. */
   barrier = 0;
   private barrierTime = 0;
@@ -526,6 +535,10 @@ export class Player {
     if (this.barrierTime <= 0) this.barrier = 0;
     this.tickKitCooldowns(dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
+    if (this.recentHits.length) {
+      for (const hit of this.recentHits) hit.age += dt;
+      this.recentHits = this.recentHits.filter((hit) => hit.age <= DODGE_GRACE_MAX);
+    }
     this.hurt = Math.max(0, this.hurt - dt);
     if (this.cast && (this.cast.t -= dt) <= 0) this.cast = null;
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
@@ -854,7 +867,10 @@ export class Player {
       return true;
     }
     const taken = amount * this.damageTakenFactor() * (falling ? 1 - (perks.hazardWard ?? 0) : 1);
+    const hpBefore = this.hp;
+    const barrierBefore = this.barrier;
     this.loseHp(taken, world, false);
+    if (this.latency > 0 && this.hp > 0) this.recentHits.push({ age: 0, hp: hpBefore - this.hp, barrier: barrierBefore - this.barrier, knockback: scale(pushDir, knockback) });
     this.tyrHand(attacker, amount - taken, world);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
     // Lame : un coup reçu brise le combo.
@@ -1123,8 +1139,24 @@ export class Player {
     const evasion = this.cfg.perks?.evasion;
     if (evasion) this.evadeTime = evasion.duration;
     this.invulnerable = Math.max(this.invulnerable, this.cfg.dodge.invulnerable);
+    this.forgiveLateHits(world);
     this.openCritWindow();
     world.emit({ type: 'dodge', pos: { ...this.pos }, dir, hero: this.id });
+  }
+
+  /** Invité : l'esquive arrive avec son retard réseau ; les coups reçus pendant ce retard sont rendus. */
+  private forgiveLateHits(world: World): void {
+    const grace = Math.min(DODGE_GRACE_MAX, 2 * this.latency + DISPLAY_DELAY);
+    const late = this.recentHits.filter((hit) => hit.age <= grace);
+    this.recentHits = [];
+    if (!late.length || this.hp <= 0) return;
+    for (const hit of late) {
+      this.hp = Math.min(this.cfg.maxHp, this.hp + hit.hp);
+      this.barrier += hit.barrier;
+      this.knockback = sub(this.knockback, scale(hit.knockback, Math.exp(-10 * hit.age)));
+    }
+    this.hurt = 0;
+    world.emit({ type: 'evade', pos: { ...this.pos } });
   }
 
   /** Tag Lame : les coups qui suivent une esquive sont critiques. */
