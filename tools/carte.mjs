@@ -34,6 +34,7 @@ for (const p of island.walk) svg += poly(p, '#00ff66', '#00ff66');
 for (const p of island.blocks) svg += poly(p, '#ff0033', '#ff0033');
 for (const p of island.river ?? []) svg += poly(p, '#22e0d0', '#22e0d0');
 for (const p of island.bridges ?? []) svg += poly(p, '#c98a4b', '#c98a4b');
+for (const p of island.falls ?? []) svg += poly(p, '#9fe8ff', '#9fe8ff');
 for (const p of [island.scenery.paddies, island.scenery.pool]) svg += poly(p, '#33aaff', '#33aaff');
 for (const p of [...island.scenery.groves, ...island.scenery.beaches]) svg += poly(p, '#ffdd00', '#ffdd00');
 for (const a of island.areas) {

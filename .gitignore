@@ -5,5 +5,3 @@ dist-server/
 public/sprites/sprites/
 donnees/
 .env
-/docs/island.json
-/docs/editeur/

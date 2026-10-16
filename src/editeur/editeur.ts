@@ -16,13 +16,14 @@ interface SpriteDef {
 const MANIFEST = islandSpritesJson as Record<string, SpriteDef>;
 const SPRITES = `${import.meta.env.BASE_URL}sprites/`;
 
-type PolyLayer = 'walk' | 'blocks' | 'river' | 'bridges' | 'water' | 'groves';
+type PolyLayer = 'walk' | 'blocks' | 'river' | 'bridges' | 'falls' | 'water' | 'groves';
 type Layer = PolyLayer | 'areas' | 'props' | 'npcs' | 'decor' | 'solids';
 const LAYERS: Record<Layer, { label: string; color: string }> = {
   walk: { label: 'Zones de marche', color: '#2bff7a' },
   blocks: { label: 'Obstacles (murs)', color: '#ff3b5c' },
   river: { label: 'Lit de la rivière (en contrebas)', color: '#22e0d0' },
   bridges: { label: 'Ponts (passent devant le héros)', color: '#c98a4b' },
+  falls: { label: "Chutes d'eau (passent devant le héros)", color: '#9fe8ff' },
   solids: { label: 'Collisions des objets', color: '#ff7b3b' },
   water: { label: 'Rizières et bassin', color: '#3db2ff' },
   groves: { label: 'Bosquets et plages', color: '#ffd93b' },
@@ -36,6 +37,7 @@ const POLY_NAMES: Record<string, string> = {
   blocks: 'Obstacle',
   river: 'Lit de la rivière',
   bridges: 'Pont',
+  falls: "Chute d'eau",
   groves: 'Bosquet',
   beaches: 'Plage',
   paddies: 'Eau des rizières',
@@ -66,7 +68,7 @@ let opacity = 1;
 
 /** Image à poser (palette) ou zone en cours de tracé. */
 let placing: { kind: 'decor' | 'prop'; sprite: string } | null = null;
-let tracing: { kind: 'walk' | 'blocks' | 'river' | 'bridges' | 'groves' | 'beaches'; points: Polygon } | null = null;
+let tracing: { kind: 'walk' | 'blocks' | 'river' | 'bridges' | 'falls' | 'groves' | 'beaches'; points: Polygon } | null = null;
 
 // Vue : point de l'image = (écran - pan) / zoom.
 let zoom = 0.2;
@@ -245,6 +247,7 @@ function polygons(): Poly[] {
   for (const p of data.walk) add(data.walk, p, 'walk', 'walk');
   for (const p of data.river ?? []) add(data.river ?? null, p, 'river', 'river');
   for (const p of data.bridges ?? []) add(data.bridges ?? null, p, 'bridges', 'bridges');
+  for (const p of data.falls ?? []) add(data.falls ?? null, p, 'falls', 'falls');
   for (const p of data.blocks) add(data.blocks, p, 'blocks', 'blocks');
   return out;
 }
@@ -711,6 +714,7 @@ function finishTrace(): void {
       blocks: data.blocks,
       river: (data.river ??= []),
       bridges: (data.bridges ??= []),
+      falls: (data.falls ??= []),
       groves: data.scenery.groves,
       beaches: data.scenery.beaches,
     };
@@ -1000,6 +1004,7 @@ function showSelection(): void {
     note(`${s.poly.length} sommets. Glisse un sommet carré pour le déplacer, double-clique sur un bord pour en ajouter un, Suppr pour enlever le sommet choisi. Glisse l'intérieur pour déplacer toute la zone.`);
     if (s.layer === 'walk') note('Le héros marche dedans. Prévois au moins 0,7 de large dans les passages (son corps fait 0,35 de rayon).');
     if (s.layer === 'river') note("En contrebas : on y descend et on en remonte seulement là où il chevauche une zone de marche (le bas de l'escalier du quai), jamais depuis un pont. Garde-le à l'écart des zones de marche partout ailleurs, sinon on remonte par la berge.");
+    if (s.layer === 'falls') note("L'eau qui tombe, telle qu'elle est peinte : elle passe devant le héros (un peu transparente) quand il marche derrière son pied. Garde le lit de la rivière dessous pour qu'on y aille.");
     if (s.layer === 'bridges') note("Le tablier, tel qu'il est peint : il passe devant le héros qui marche dessous. Garde aussi une zone de marche dessus pour le traverser.");
     if (s.layer === 'blocks') note('Le héros ne passe pas dedans, même au milieu d\'une zone de marche ou du lit de la rivière.');
     if (s.list) {

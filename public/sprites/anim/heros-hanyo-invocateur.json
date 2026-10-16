@@ -1,0 +1,370 @@
+{
+ "frames": [
+  {
+   "filename": "idle 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 140
+  },
+  {
+   "filename": "idle 1",
+   "frame": {
+    "x": 478,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 140
+  },
+  {
+   "filename": "idle 2",
+   "frame": {
+    "x": 956,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 140
+  },
+  {
+   "filename": "idle 3",
+   "frame": {
+    "x": 1434,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 140
+  },
+  {
+   "filename": "idle 4",
+   "frame": {
+    "x": 1912,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 140
+  },
+  {
+   "filename": "idle 5",
+   "frame": {
+    "x": 2390,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 140
+  },
+  {
+   "filename": "move 6",
+   "frame": {
+    "x": 2868,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 7",
+   "frame": {
+    "x": 3346,
+    "y": 0,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 8",
+   "frame": {
+    "x": 0,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 9",
+   "frame": {
+    "x": 478,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 10",
+   "frame": {
+    "x": 956,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 11",
+   "frame": {
+    "x": 1434,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 12",
+   "frame": {
+    "x": 1912,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "move 13",
+   "frame": {
+    "x": 2390,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "windup 14",
+   "frame": {
+    "x": 2868,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "windup 15",
+   "frame": {
+    "x": 3346,
+    "y": 284,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "windup 16",
+   "frame": {
+    "x": 0,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 80
+  },
+  {
+   "filename": "strike 17",
+   "frame": {
+    "x": 478,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 60
+  },
+  {
+   "filename": "strike 18",
+   "frame": {
+    "x": 956,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 60
+  },
+  {
+   "filename": "strike 19",
+   "frame": {
+    "x": 1434,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 60
+  },
+  {
+   "filename": "strike 20",
+   "frame": {
+    "x": 1912,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 60
+  },
+  {
+   "filename": "guard 21",
+   "frame": {
+    "x": 2390,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 70
+  },
+  {
+   "filename": "guard 22",
+   "frame": {
+    "x": 2868,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 70
+  },
+  {
+   "filename": "guard 23",
+   "frame": {
+    "x": 3346,
+    "y": 568,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 70
+  },
+  {
+   "filename": "guard 24",
+   "frame": {
+    "x": 0,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 70
+  },
+  {
+   "filename": "dash 25",
+   "frame": {
+    "x": 478,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 26",
+   "frame": {
+    "x": 956,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 27",
+   "frame": {
+    "x": 1434,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 28",
+   "frame": {
+    "x": 1912,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 29",
+   "frame": {
+    "x": 2390,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 40
+  },
+  {
+   "filename": "dash 30",
+   "frame": {
+    "x": 2868,
+    "y": 852,
+    "w": 478,
+    "h": 284
+   },
+   "duration": 40
+  }
+ ],
+ "meta": {
+  "app": "tools/planches.mjs",
+  "image": "heros-hanyo-invocateur.webp",
+  "size": {
+   "w": 3824,
+   "h": 1136
+  },
+  "smooth": true,
+  "bodyHeight": 256,
+  "anchor": {
+   "x": 239,
+   "y": 272
+  },
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   },
+   {
+    "name": "move",
+    "from": 6,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "windup",
+    "from": 14,
+    "to": 16,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "strike",
+    "from": 17,
+    "to": 20,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "guard",
+    "from": 21,
+    "to": 24,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "dash",
+    "from": 25,
+    "to": 30,
+    "direction": "forward",
+    "repeat": "1"
+   }
+  ]
+ }
+}
