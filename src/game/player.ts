@@ -437,6 +437,9 @@ export class Player {
 
   /** Soigne le héros ; renvoie les PV rendus. */
   heal(amount: number, world: World): number {
+    // Un héros tombé ne se relève pas par un soin reçu dans le même pas (vol de vie, poison qui soigne) : en duel, le
+    // second héros, qui agit après le premier, en aurait profité seul.
+    if (this.dead) return 0;
     // « Saignée du Yomi » : la marée boit une part des soins tant que la vague dure (world.healFactor).
     const gained = Math.min(amount * this.healFactor * world.healFactor(), this.cfg.maxHp - this.hp);
     if (gained <= 0) return 0;
