@@ -1236,6 +1236,8 @@ export class App {
       else if (!event.crit || !this.sfx.play('crit')) this.sfx.play('coup');
       return;
     }
+    // Le koto ouvre chaque donjon et chaque palier du Yomi sans fond.
+    if (event.type === 'wave' && (event.index === 0 || event.palier !== undefined)) this.sfx.play('manche', 1);
     if (event.type === 'end') {
       this.sfx.play(event.outcome === 'victory' ? 'victoire' : 'defaite');
       return;
