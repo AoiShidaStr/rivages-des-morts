@@ -49,8 +49,8 @@ export class CreationScreen {
             onclick: () => {
               hero.race = id;
               delete hero.parent;
-              // Classe pas encore jouable avec cette race : on retombe sur la première classe jouable.
-              if (!heroAvailable(id, hero.class) && !isCurrent(id, hero.class)) hero.class = classIds.find((c) => heroAvailable(id, c)) ?? hero.class;
+              // Classe pas encore jouable avec cette race : on retombe sur le Guerrier.
+              if (!heroAvailable(id, hero.class) && !isCurrent(id, hero.class)) hero.class = 'guerrier';
               render();
             },
           },
