@@ -1,3 +1,4 @@
+import { random } from './rng';
 import type { PlayerConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, lerp, normalize, scale, sub, vec, type Vec2 } from './math';
@@ -842,7 +843,7 @@ export class Player {
     const guardShield = world.guardShield(this.pos);
     if (guardShield > 0) amount *= 1 - guardShield;
     // Bandeau du vent : juste après une esquive, un coup peut passer à côté.
-    if (this.evadeTime > 0 && perks.evasion && Math.random() < perks.evasion.chance) {
+    if (this.evadeTime > 0 && perks.evasion && random() < perks.evasion.chance) {
       this.invulnerable = Math.max(this.invulnerable, 0.2);
       world.emit({ type: 'evade', pos: { ...this.pos } });
       return false;
