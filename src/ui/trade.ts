@@ -5,6 +5,7 @@ import type { Progress } from '../game/progress';
 import { cannotGive, describeLot, emptyLot, lotItem, lotKey, tradableLots, type Lot, type LotItem } from '../game/trade';
 import type { Sale, SocialClient } from '../net/social';
 import { h, icon } from './dom';
+import { sonUi } from '../audio/sfx';
 import type { PanelHost } from './panels';
 import { livePanel } from './social';
 
@@ -248,6 +249,7 @@ export function openMarket(host: PanelHost, social: SocialClient, progress: Prog
               disabled: empty || Boolean(problem),
               onclick: () => {
                 social.sell(draft, price, inShop);
+                sonUi('vendre');
                 draft = emptyLot();
               },
             },

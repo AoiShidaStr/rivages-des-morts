@@ -29,6 +29,7 @@ import { markSeen, readJournal, seenItems } from '../game/journal';
 import { STOCK_MAX, SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
 import { keyName, withKeys } from '../keys';
 import { h, icon, obole, type Child } from './dom';
+import { sonUi } from '../audio/sfx';
 import { livePanel } from './social';
 import type { SocialClient } from '../net/social';
 
@@ -350,6 +351,7 @@ export function openShop(host: PanelHost, ctx: UiContext, shopId: string, rolled
                 class: 'btn',
                 onclick: () => {
                   progress.equip(item, slot);
+                  sonEquiper(slot);
                   render();
                 },
               },
@@ -457,6 +459,7 @@ function applyUpgrade(ctx: UiContext, id: string, plan: UpgradePlan): void {
   for (const [m, n] of Object.entries(plan.materials)) progress.gainMaterial(m, -n);
   progress.state.itemLevels[id] = plan.to;
   progress.save();
+  sonUi(plan.to >= rules.maxLevel ? 'forge-max' : 'forge');
   ctx.toast(`${def.name} : niveau ${plan.to}`, 'loot', id);
   for (const p of reachedPaliers(rules, def, plan.to).slice(before)) ctx.toast(`Palier ${p.level} · ${p.name} : ${p.summary}`, 'quest');
 }
@@ -524,6 +527,8 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
       {
         class: 'btn primary',
         disabled: one.to === level,
+        // Grisé faute d'oboles ou de matériaux (pas au plafond) : Tetsu le fait savoir.
+        'data-refus': one.to === level && !maxed && level < cap ? 'forge-pauvre' : undefined,
         onclick: () => {
           applyUpgrade(ctx, id, one);
           rerender();
@@ -955,6 +960,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
                 progress.gainOboles(-recipe.oboles);
                 for (const [id, amount] of Object.entries(recipe.materials)) progress.gainMaterial(id, -amount);
                 acquire(ctx, recipe.item);
+                sonUi('fabriquer');
                 ctx.toast(`Forgé : ${def.name}`, 'loot', recipe.item);
                 render();
               },
@@ -1034,6 +1040,11 @@ function statDelta(ctx: UiContext, before: Loadout, after: Loadout): { text: str
 }
 
 /** Ce que changerait le fait de porter `id` à la place de l'objet actuel de son emplacement. */
+/** Une arme ou un bijou sonne autrement qu'une pièce d'armure qu'on enfile. */
+function sonEquiper(slot: Slot): void {
+  sonUi(slot === 'casque' || slot === 'plastron' || slot === 'jambieres' || slot === 'bottes' ? 'equiper-armure' : 'equiper-arme');
+}
+
 function equipDelta(ctx: UiContext, loadout: Loadout, id: string, slot: Slot): { text: string; good: boolean }[] {
   const { state } = ctx.progress;
   return statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [slot]: id } }, content, ctx.progress.level));
@@ -1104,6 +1115,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           onclick: () => {
             memory.inventorySlot = slot;
             progress.equip(id, slot);
+            sonEquiper(slot);
             render();
           },
         },
@@ -1362,6 +1374,7 @@ export function openBuilds(host: PanelHost, ctx: UiContext): void {
                   onclick: () => {
                     const missing = applyBuild(progress, content, build);
                     if (missing === null) return;
+                    sonUi('equiper-arme');
                     ctx.toast(missing.length ? `${build.name} équipé (${missing.length} objet${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''})` : `${build.name} équipé`, 'quest');
                     render();
                   },
