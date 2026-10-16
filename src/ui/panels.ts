@@ -459,7 +459,7 @@ function applyUpgrade(ctx: UiContext, id: string, plan: UpgradePlan): void {
   for (const [m, n] of Object.entries(plan.materials)) progress.gainMaterial(m, -n);
   progress.state.itemLevels[id] = plan.to;
   progress.save();
-  sonUi('forge');
+  sonUi(plan.to >= rules.maxLevel ? 'forge-max' : 'forge');
   ctx.toast(`${def.name} : niveau ${plan.to}`, 'loot', id);
   for (const p of reachedPaliers(rules, def, plan.to).slice(before)) ctx.toast(`Palier ${p.level} · ${p.name} : ${p.summary}`, 'quest');
 }
@@ -527,6 +527,8 @@ function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => vo
       {
         class: 'btn primary',
         disabled: one.to === level,
+        // Grisé faute d'oboles ou de matériaux (pas au plafond) : Tetsu le fait savoir.
+        'data-refus': one.to === level && !maxed && level < cap ? 'forge-pauvre' : undefined,
         onclick: () => {
           applyUpgrade(ctx, id, one);
           rerender();

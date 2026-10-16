@@ -29,6 +29,15 @@
     "fabriquer": "Tetsu forge une nouvelle pièce.",
     "niveau": "Un niveau gagné.",
     "pas-terre": "Un pas sur la terre, l'herbe ou le gravier de l'île.",
-    "pas-bois": "Un pas sur le bois d'un pont ou du ponton de Charon."
+    "pas-bois": "Un pas sur le bois d'un pont ou du ponton de Charon.",
+    "forge-pauvre": "Tetsu quand l'amélioration suivante coûte trop (bouton grisé).",
+    "forge-max": "Une pièce qui atteint le niveau maximum (50) à la forge.",
+    "pnj-charon": "La voix de Charon quand on lui parle.",
+    "pnj-tetsu": "La voix de Tetsu, le forgeron quand on lui parle.",
+    "pnj-gardien-errant": "La voix de le gardien errant quand on lui parle.",
+    "pnj-moine": "La voix de le moine du Rocher quand on lui parle.",
+    "pnj-kawataro": "La voix de Kawatarō quand on lui parle.",
+    "pnj-nanashi": "La voix de l'âme sans visage quand on lui parle.",
+    "pnj-vieux-kappa": "La voix de le vieux kappa quand on lui parle."
   }
 }

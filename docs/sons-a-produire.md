@@ -8,6 +8,7 @@
 - pas-eau-1 à 3 : trois foulées prises dans la piste longue de son.m4a (n° 55, à 48,95 s, 57,40 s et 78,61 s)
 - carapace-1 « coup bloqué (kappa renforcé) » · garde-1 « coup bloqué (joueur) » · parade-1 « parade parfaite »
 - victoire-1 · defaite-1 · niveau-1 « Level up » · refus-1 « UI refus » (bouton grisé appuyé) · vendre-1 « vendre la réserve »
+- Voix des PNJ (pnj-*-1) : Charon n° 61, Tetsu n° 56, gardien errant n° 63, moine n° 62, Kawatarō n° 59, âme sans visage n° 64, vieux kappa n° 60 ; forge-pauvre-1 (amélioration trop chère) n° 57 ; forge-max-1 (niveau 50) n° 58
 - equiper-arme-1 « équipé item » (arme, amulette, relique, build) · equiper-armure-1 « équipé armure »
 
 **Téléchargés par Meven** (noms de fichiers au format Pixabay, libres d'usage ; à revérifier avant la sortie) :
@@ -43,7 +44,7 @@ Format conseillé : `.ogg` (ou `.mp3`), mono, 44,1 kHz, sans silence au début. 
 
 ## Île
 - Ambiances : ruisseau, vent, village
-- Les PNJ quand on leur parle (voir la page « Sons des PNJ »)
+- Les PNJ sans voix : Obaa Kiku, Yuki, le tanuki, la dame du puits, le récitant aveugle, l'homme d'argile, la villageoise, le dogū
 - Interagir (objet) · ramasser
 - Barque de Charon
 

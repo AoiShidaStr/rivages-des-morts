@@ -64,7 +64,8 @@ import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
 import { logRun, markSeen } from './game/journal';
 import { stockItem } from './game/reserve';
-import { SFX_DES_EVENTS, Sfx } from './audio/sfx';
+import { SFX_DES_EVENTS, Sfx, type SfxId } from './audio/sfx';
+import sfxData from './data/sfx.json';
 import { Ambiance } from './audio/ambiance';
 import { openOptions } from './ui/options';
 import { PingBadge, type PingView } from './ui/ping';
@@ -685,6 +686,9 @@ export class App {
       const variants = bindSelf(content.dialogues[it.def.dialogue ?? it.def.id] ?? [], it.def.id);
       const variant = variants.find((v) => progress.check(v.if));
       if (!variant) return;
+      // Les PNJ qui ont une voix la font entendre quand on leur parle.
+      const voix = `pnj-${it.def.id}`;
+      if (voix in sfxData.sons) this.sfx.play(voix as SfxId, 1);
       await this.playLines(variant.lines, variant.prop);
       const chatter = (variant.pool ?? []).filter((p) => progress.check(p.if));
       const turn = `bavardage_${it.def.dialogue ?? it.def.id}`;

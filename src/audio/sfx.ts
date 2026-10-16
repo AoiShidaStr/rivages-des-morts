@@ -123,7 +123,7 @@ export class Sfx {
     // Un bouton grisé ne reçoit pas le clic : l'appui dessus sonne le refus (pas assez d'oboles, rien à vendre…).
     document.addEventListener('pointerdown', (event) => {
       const el = event.target instanceof Element ? event.target.closest('button, .btn') : null;
-      if (el && (el as HTMLButtonElement).disabled) this.play('refus', 1);
+      if (el && (el as HTMLButtonElement).disabled) this.play((el.getAttribute('data-refus') as SfxId | null) ?? 'refus', 1);
     }, true);
   }
 
