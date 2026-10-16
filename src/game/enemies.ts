@@ -1,3 +1,4 @@
+import { random } from './rng';
 import type {
   EnemyBaseConfig,
   HitodamaConfig,
@@ -339,7 +340,7 @@ export abstract class Enemy {
 export class Hitodama extends Enemy {
   readonly kind = 'hitodama' as const;
   private retreat = 0;
-  private readonly phase = Math.random() * Math.PI * 2;
+  private readonly phase = random() * Math.PI * 2;
 
   constructor(
     id: number,
@@ -667,7 +668,7 @@ export class KasaObake extends Enemy {
     super(id, pos, cfg);
     this.state = { kind: 'pause', t: this.randomPause() };
     // Décalage aléatoire : plusieurs kasa-obake ne sautent pas tous en même temps.
-    this.jumpTimer = cfg.jumpCooldown * (0.5 + Math.random());
+    this.jumpTimer = cfg.jumpCooldown * (0.5 + random());
   }
 
   get altitude(): number {
@@ -707,7 +708,7 @@ export class KasaObake extends Enemy {
       case 'pause':
         state.t -= dt;
         if (state.t > 0) break;
-        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange * world.notice(foe) && Math.random() < cfg.jumpChance) {
+        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange * world.notice(foe) && random() < cfg.jumpChance) {
           this.jumpTimer = cfg.jumpCooldown;
           this.state = { kind: 'rise', t: 0 };
         } else {
@@ -766,13 +767,13 @@ export class KasaObake extends Enemy {
 
   /** Petit bond imprévisible : vers sa cible, mais dévié au hasard, parfois même vers l'arrière. */
   private hopTarget(foePos: Vec2): Vec2 {
-    const angle = angleOf(sub(foePos, this.pos)) + (Math.random() * 2 - 1) * degToRad(110);
-    const reach = this.cfg.hopDistance * (0.6 + Math.random() * 0.6);
+    const angle = angleOf(sub(foePos, this.pos)) + (random() * 2 - 1) * degToRad(110);
+    const reach = this.cfg.hopDistance * (0.6 + random() * 0.6);
     return add(this.pos, scale(fromAngle(angle), reach));
   }
 
   private randomPause(): number {
-    return this.cfg.pauseMin + Math.random() * (this.cfg.pauseMax - this.cfg.pauseMin);
+    return this.cfg.pauseMin + random() * (this.cfg.pauseMax - this.cfg.pauseMin);
   }
 }
 
@@ -1200,7 +1201,7 @@ export class Jorogumo extends Enemy {
     const alive = world.enemies.filter((e) => e.kind === 'araignee' && !e.dead).length;
     const count = Math.min(cfg.summonCount, cfg.maxSpiders - alive);
     for (let i = 0; i < count; i++) {
-      const angle = (i / Math.max(1, count)) * Math.PI * 2 + Math.random();
+      const angle = (i / Math.max(1, count)) * Math.PI * 2 + random();
       world.spawn('araignee', add(this.pos, scale(fromAngle(angle), this.radius + 0.8)));
     }
   }
@@ -1268,7 +1269,7 @@ export class Jorogumo extends Enemy {
       this.rainTimer = cfg.rainInterval;
       for (let i = 0; i < cfg.rainCount; i++) {
         const target = i === 0 ? world.player.pos : world.randomPoint();
-        world.dropHazard(target, cfg.rain, Math.random() < cfg.rainWebChance);
+        world.dropHazard(target, cfg.rain, random() < cfg.rainWebChance);
       }
     }
     this.pullTimer -= dt;
@@ -1348,9 +1349,9 @@ type ShikomeState =
 export class Shikome extends Enemy {
   readonly kind = 'shikome' as const;
   private state: ShikomeState = { kind: 'chase' };
-  private cooldown = 0.6 + Math.random() * 0.9;
+  private cooldown = 0.6 + random() * 0.9;
   /** Côté par lequel elle contourne sa proie : les furies arrivent de plusieurs côtés à la fois. */
-  private readonly flank = Math.random() < 0.5 ? -1 : 1;
+  private readonly flank = random() < 0.5 ? -1 : 1;
 
   constructor(
     id: number,
@@ -1420,7 +1421,7 @@ export class Shikome extends Enemy {
       case 'stunned':
         state.t -= dt;
         if (state.t <= 0) {
-          this.cooldown = cfg.cooldown * (0.8 + Math.random() * 0.4);
+          this.cooldown = cfg.cooldown * (0.8 + random() * 0.4);
           this.state = { kind: 'chase' };
         }
         break;
@@ -1468,7 +1469,7 @@ export class Ikazuchi extends Enemy {
   private blinkTimer = 0;
   /** Éclairs déjà utilisés pour fuir : passé `blinkCharges`, il reste à portée de lame. */
   private blinks = 0;
-  private readonly orbit = Math.random() < 0.5 ? -1 : 1;
+  private readonly orbit = random() < 0.5 ? -1 : 1;
 
   constructor(
     id: number,
@@ -1476,7 +1477,7 @@ export class Ikazuchi extends Enemy {
     private readonly cfg: IkazuchiConfig,
   ) {
     super(id, pos, cfg);
-    this.boltTimer = cfg.boltInterval * (0.4 + Math.random() * 0.5);
+    this.boltTimer = cfg.boltInterval * (0.4 + random() * 0.5);
   }
 
   get pose(): Pose {
@@ -1524,7 +1525,7 @@ export class Ikazuchi extends Enemy {
         if (state.t < cfg.boltChannel) return;
         world.dropHazard(foe.pos, cfg.bolt, false);
         this.state = { kind: 'drift' };
-        this.boltTimer = cfg.boltInterval * (0.85 + Math.random() * 0.3);
+        this.boltTimer = cfg.boltInterval * (0.85 + random() * 0.3);
         return;
       case 'drift': {
         // Trop près : il disparaît dans un éclair et reparaît quelques pas plus loin, un nombre limité de fois.
@@ -1863,7 +1864,7 @@ export class Izanami extends Enemy {
     const player = world.player.pos;
     for (let i = 0; i < count; i++) {
       // Le premier éclair vise le héros ; les autres tombent autour, pour lui couper la route.
-      const target = i === 0 ? player : add(player, scale(fromAngle(Math.random() * Math.PI * 2), 1.8 + Math.random() * 2.5));
+      const target = i === 0 ? player : add(player, scale(fromAngle(random() * Math.PI * 2), 1.8 + random() * 2.5));
       world.dropHazard(target, this.cfg.revealed.bolt, false);
     }
   }
@@ -1890,7 +1891,7 @@ export class Izanami extends Enemy {
     const alive = world.enemies.filter((e) => e.kind === kind && !e.dead).length;
     const n = Math.min(count, max - alive);
     for (let i = 0; i < n; i++) {
-      const angle = (i / Math.max(1, n)) * Math.PI * 2 + Math.random();
+      const angle = (i / Math.max(1, n)) * Math.PI * 2 + random();
       world.spawn(kind, kind === 'ikazuchi' ? world.edgePoint() : add(this.pos, scale(fromAngle(angle), this.radius + 1)));
     }
   }

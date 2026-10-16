@@ -1,3 +1,4 @@
+import { random } from './rng';
 import type { DuelConfig, GameConfig, HazardConfig, PlayerConfig, SubclassActiveConfig, WaveConfig } from './config';
 import type { CurseId } from './difficulty';
 import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Rival, Shikome, type Enemy } from './enemies';
@@ -2117,7 +2118,7 @@ export class World {
         // Dō de l'archer d'élite, Croc de loup : les tirs de loin portent plus fort, et parfois critiques.
         const far = distance(player.pos, enemy.pos);
         const long = perks.longShot && far >= perks.longShot.distance ? 1 + perks.longShot.bonus : 1;
-        const crit = perks.farCrit && far >= perks.farCrit.distance && Math.random() < perks.farCrit.chance ? player.cfg.blade.critFactor : 1;
+        const crit = perks.farCrit && far >= perks.farCrit.distance && random() < perks.farCrit.chance ? player.cfg.blade.critFactor : 1;
         this.weaponHit(enemy, p.damage * long, from, p.knockback, crit);
         // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
         if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos, perks.chargedNet);
@@ -2177,9 +2178,9 @@ export class World {
   edgePoint(): Vec2 {
     const half = this.cfg.arenaHalfSize - 1;
     for (let attempt = 0; attempt < 30; attempt++) {
-      const along = (Math.random() * 2 - 1) * half;
-      const side = Math.random() < 0.5 ? -half : half;
-      const p = Math.random() < 0.5 ? vec(along, side) : vec(side, along);
+      const along = (random() * 2 - 1) * half;
+      const side = random() < 0.5 ? -half : half;
+      const p = random() < 0.5 ? vec(along, side) : vec(side, along);
       if (this.players.every((h) => distance(p, h.pos) > SPAWN_CLEARANCE) && !this.insideStump(p, 0.5)) return p;
     }
     return this.spawnPoint();
@@ -2189,7 +2190,7 @@ export class World {
   randomPoint(margin = 1.5): Vec2 {
     const half = this.cfg.arenaHalfSize - margin;
     for (let attempt = 0; attempt < 30; attempt++) {
-      const p = vec((Math.random() * 2 - 1) * half, (Math.random() * 2 - 1) * half);
+      const p = vec((random() * 2 - 1) * half, (random() * 2 - 1) * half);
       if (!this.insideStump(p, 0.5)) return p;
     }
     return vec();
@@ -2504,14 +2505,14 @@ export class World {
     const layouts = this.cfg.layouts ?? [];
     if (layouts.length === 0) return [];
     const others = layouts.map((_, i) => i).filter((i) => i !== this.layout || layouts.length === 1);
-    this.layout = others[Math.floor(Math.random() * others.length)];
+    this.layout = others[Math.floor(random() * others.length)];
     return layouts[this.layout];
   }
 
   private spawnPoint(): Vec2 {
     const half = this.cfg.arenaHalfSize - 1.5;
     for (let attempt = 0; attempt < 30; attempt++) {
-      const p = vec((Math.random() * 2 - 1) * half, (Math.random() * 2 - 1) * half);
+      const p = vec((random() * 2 - 1) * half, (random() * 2 - 1) * half);
       if (this.players.every((h) => distance(p, h.pos) > SPAWN_CLEARANCE) && !this.insideStump(p, 1)) return p;
     }
     // Arène trop petite : on vise le coin opposé au joueur.

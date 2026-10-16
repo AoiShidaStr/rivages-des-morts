@@ -19,6 +19,8 @@ import type { WorldView } from './game/view';
 import { World } from './game/world';
 import { InputSender, RemoteInput, idleFrame } from './net/frames';
 import { MirrorWorld } from './net/mirror';
+import { DuelNet } from './net/rollback';
+import { setRandomState } from './game/rng';
 import { SNAPSHOT_EVERY, shareSnapshot, type InputPacket, type Member, type Start } from './net/protocol';
 import { IslandPresence, sharedIsland, type Profile } from './net/presence';
 import { CoopSession, DUEL } from './net/session';
@@ -178,6 +180,8 @@ export class App {
    */
   private coop: CoopSession | null = null;
   private mirror: MirrorWorld | null = null;
+  /** Duel en ligne : chacun des deux joueurs fait tourner le combat, en netcode à rollback (src/net/rollback.ts). */
+  private duelNet: DuelNet | null = null;
   private lobbyOpen = false;
   private refreshLobby: (() => void) | null = null;
   /** Numéro de la descente en coop : les paquets d'une descente précédente sont ignorés. */
@@ -319,7 +323,8 @@ export class App {
     this.d.engine.runRenderLoop(() => this.frame());
     // Onglet caché, le navigateur n'anime plus la page : l'hôte d'une partie en coop continue pourtant le combat.
     whileHidden(() => {
-      if (this.coop?.isHost && this.world && this.mode === 'dungeon') this.frame();
+      // En duel, les deux joueurs font tourner le combat : l'autre attendrait le nôtre.
+      if (((this.coop?.isHost && this.world) || this.duelNet) && this.mode === 'dungeon') this.frame();
     });
   }
 
@@ -336,6 +341,10 @@ export class App {
       },
       get mirror() {
         return app.mirror;
+      },
+      /** Duel en ligne : le combat à rollback (pas, pas sûrs, renvois du monde). */
+      get duelNet() {
+        return app.duelNet;
       },
       /** Octets échangés en coop depuis l'ouverture de la page. */
       traffic,
@@ -401,7 +410,8 @@ export class App {
     let view: PingView = null;
     if ((this.mode === 'dungeon' || this.mode === 'result') && session) {
       place = session.isHost ? 'hote' : 'descente';
-      view = session.isHost ? 'host' : { ms: session.ping };
+      // En duel, personne n'est l'hôte du combat : chacun voit son ping vers l'autre.
+      view = this.duelNet ? { ms: session.isHost ? this.duelNet.ping : session.ping } : session.isHost ? 'host' : { ms: session.ping };
     } else if (this.mode === 'island' && (this.presence || session) && this.d.network === 'serveur') {
       place = 'ile';
       view = { ms: serverClock.ping };
@@ -429,12 +439,12 @@ export class App {
           break;
         }
         this.updateDungeon(dt);
-        const view = this.world ?? this.mirror;
+        const view = this.combatView;
         this.music.play(view?.enemies.some((e) => e.boss) ? 'boss' : 'combat');
         break;
       }
       case 'result':
-        if (this.world ?? this.mirror) this.d.dungeonRenderer.sync((this.world ?? this.mirror) as WorldView, [], dt);
+        if (this.combatView) this.d.dungeonRenderer.sync(this.combatView, [], dt);
         this.d.dungeonRenderer.render();
         break;
     }
@@ -775,6 +785,7 @@ export class App {
       const world = new World({ ...this.d.config, ...terrain.arena, player, training: true });
       this.world = world;
       this.mirror = null;
+      this.duelNet = null;
       this.bots = [];
       this.endless = null;
       this.exitAt = null;
@@ -809,6 +820,7 @@ export class App {
       const world = new World({ ...config, ...arena.arena, player, allies: [rival.config], duel });
       this.world = world;
       this.mirror = null;
+      this.duelNet = null;
       this.endless = null;
       this.exitAt = null;
       this.bots = [new Bot(world, world.players[1], false, true)];
@@ -837,7 +849,7 @@ export class App {
     const arena = content.pvp.arena;
     this.outcome = null;
     this.setMode('result');
-    const me = (this.world ?? this.mirror)?.player.id ?? 0;
+    const me = this.combatView?.player.id ?? 0;
     const wins = [this.duelWins[me] ?? 0, this.duelWins[1 - me] ?? 0];
     const forfeit = this.duelForfeit;
     // En ligne, abandonner en cours de route est une défaite, même en menant au score.
@@ -996,6 +1008,7 @@ export class App {
       const world = new World({ ...this.d.config, ...dungeon.arena, waves, player, allies: allies.map((a) => a.config), difficulty: waves[0].difficulty });
       this.world = world;
       this.mirror = null;
+      this.duelNet = null;
       this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
       const ready = this.prepareDungeon(dungeon, levelAt(data, first), allies, keep, true);
       this.endless = { bloc, cleared, awaiting: false };
@@ -1032,6 +1045,7 @@ export class App {
       const world = new World({ ...config, ...dungeon.arena, player, allies: allies.map((a) => a.config), difficulty }, startWave);
       this.world = world;
       this.mirror = null;
+      this.duelNet = null;
       this.bots = world.players.slice(1).map((hero) => new Bot(world, hero));
       return this.prepareDungeon(dungeon, this.dungeonLevel, allies);
     };
@@ -1039,7 +1053,16 @@ export class App {
     else await begin();
   }
 
+  /** Le combat tel qu'on l'affiche : le monde qu'on fait tourner, celui de l'hôte décrit par lui, ou celui du duel. */
+  private get combatView(): WorldView | null {
+    return this.world ?? this.mirror ?? this.duelNet?.view ?? null;
+  }
+
   private updateDungeon(dt: number): void {
+    if (this.duelNet) {
+      this.updateDuelNet(dt);
+      return;
+    }
     if (this.mirror) {
       this.updateGuest(dt);
       return;
@@ -1247,6 +1270,30 @@ export class App {
     if (this.outcome) this.finishDungeon(this.outcome);
   }
 
+  /**
+   * Duel en ligne : les deux joueurs font tourner le combat ; on avance du temps écoulé avec nos commandes, en
+   * rejouant ce qu'il faut quand celles de l'adversaire arrivent (src/net/rollback.ts).
+   */
+  private updateDuelNet(dt: number): void {
+    const net = this.duelNet;
+    if (!net) return;
+    const { input, dungeonRenderer, hud } = this.d;
+    const session = this.coop;
+    const view = net.view;
+    const ping = (session?.isHost ? net.ping : session?.ping) ?? 0;
+    const events = net.update(dt, () => (this.screens.paused ? idleFrame(view.player.pos) : this.readCombatInput(view)), ping, performance.now());
+    if (net.steps > 0) input.flush();
+    for (const event of events) {
+      this.sfxEvent(event, net.seat, events);
+      this.track(event);
+    }
+    dungeonRenderer.sync(view, events, dt);
+    hud.pings = [ping || undefined];
+    hud.update(view, events, dt);
+    if (!document.hidden) dungeonRenderer.render();
+    if (this.outcome) this.finishDungeon(this.outcome);
+  }
+
   /** Ouvre la coop : le salon si on est déjà dans une partie, sinon créer ou rejoindre. */
   private openCoop(): void {
     if (this.coop) {
@@ -1293,6 +1340,8 @@ export class App {
         if (this.mirror && packet.run === this.mirror.run) this.inbox.push(...packet.events);
       },
       input: (seat, packet) => this.remote.get(seat)?.receive(packet, performance.now()),
+      rollback: (data) => this.duelNet?.receive(data, performance.now()),
+      rollbackState: (data) => this.duelNet?.receiveState(data),
       left: (seat) => {
         if (this.duelMatch?.online) this.winByForfeit();
         else this.world?.retire(seat);
@@ -1329,8 +1378,8 @@ export class App {
     if (this.lobbyOpen) this.panels.close();
     if (reason) this.screens.toast(reason);
     // Duel : l'hôte parti, c'est son adversaire qui gagne ; si c'est nous qui partons (`reason` vide), on abandonne.
-    if (reason && this.mirror && this.duelMatch?.online) this.winByForfeit();
-    if (this.mode === 'dungeon' && this.mirror && !this.outcome) this.finishDungeon('defeat');
+    if (reason && (this.mirror || this.duelNet) && this.duelMatch?.online) this.winByForfeit();
+    if (this.mode === 'dungeon' && (this.mirror || this.duelNet) && !this.outcome) this.finishDungeon('defeat');
   }
 
   /** Une descente à plusieurs commence : l'hôte fait tourner le combat, les invités l'affichent. */
@@ -1364,13 +1413,21 @@ export class App {
     this.duelForfeit = false;
     await this.screens.transition(title, subtitle, () => {
       this.coopRun = start.run;
-      if (session.isHost) {
+      if (duel) {
+        // Les deux joueurs font tourner le même combat : mêmes réglages (passés par le réseau, pour être identiques
+        // à l'octet près) et même graine du hasard.
+        const same = JSON.parse(JSON.stringify(configs)) as typeof configs;
+        setRandomState(start.seed ?? start.run);
+        const world = new World({ ...this.d.config, ...dungeon.arena, player: same[0], allies: same.slice(1), duel: content.pvp.duel });
+        this.world = null;
+        this.mirror = null;
+        this.duelNet = new DuelNet(world, start.seat, start.run, (packet) => session.sendRollback(packet), (state) => session.sendRollbackState(state));
+      } else if (session.isHost) {
         const waves = endless ? blocWaves(data, content.difficulty, bloc, endlessArenas, configs.length, undefined, this.pactesEncours) : null;
         const difficulty = waves ? waves[0].difficulty : dungeonDifficultyFor(content.difficulty, level, configs.length, dungeon.strength);
-        this.world = duel
-          ? new World({ ...this.d.config, ...dungeon.arena, player: configs[0], allies: configs.slice(1), duel: content.pvp.duel })
-          : new World({ ...this.d.config, ...dungeon.arena, ...(waves ? { waves } : {}), player: configs[0], allies: configs.slice(1), difficulty });
+        this.world = new World({ ...this.d.config, ...dungeon.arena, ...(waves ? { waves } : {}), player: configs[0], allies: configs.slice(1), difficulty });
         this.mirror = null;
+        this.duelNet = null;
         this.remote.clear();
         for (let seat = 1; seat < configs.length; seat++) this.remote.set(seat, new RemoteInput(start.run));
         this.hostTick = 0;
@@ -1379,6 +1436,7 @@ export class App {
         this.outbox = [];
       } else {
         this.world = null;
+        this.duelNet = null;
         const arena = { halfSize: dungeon.arena.arenaHalfSize, webSlow: dungeon.arena.webs.slowFactor, webBurnTime: dungeon.arena.webs.burnTime };
         this.mirror = new MirrorWorld(configs, start.seat, start.run, arena, level);
         this.sender = new InputSender(start.run);
@@ -1432,7 +1490,7 @@ export class App {
     this.setMode('dungeon');
     // Un invité ne connaît pas les vagues de l'hôte : celles du donjon, et le reste à la demande (Renderer.syncEntity).
     const waves = allKinds ? Object.values(content.dungeons).flatMap((d) => d.arena.waves) : (this.world?.cfg.waves ?? dungeon.arena.waves);
-    const view = this.world ?? this.mirror;
+    const view = this.combatView;
     const kits = view ? [view.player, ...view.players.filter((hero) => hero !== view.player)].map((hero) => hero.cfg.kit) : [];
     const preparing = dungeonRenderer
       .prepareDescent(
@@ -1884,6 +1942,7 @@ export class App {
       this.panels.close();
       this.world = null;
       this.mirror = null;
+      this.duelNet = null;
       this.duelMatch = null;
       this.d.hud.setDuel('');
       // Les étiquettes des alliés vivent par-dessus l'écran : sans ça, elles restent sur l'île après la coop.

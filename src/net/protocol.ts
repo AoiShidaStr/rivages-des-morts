@@ -1,7 +1,8 @@
 // Ce que l'hôte et les invités s'échangent. L'hôte fait tourner le combat ; à chaque pas (soixante fois par seconde), il envoie à
 // chaque invité un instantané de ce que l'affichage doit montrer, par le canal rapide : un instantané perdu est remplacé par
 // le suivant. Les événements du combat (coups, morts, butin) partent à part, par le canal sûr. Les invités envoient
-// leurs commandes à chaque pas, numérotées, par le canal rapide.
+// leurs commandes à chaque pas, numérotées, par le canal rapide. Le duel fait exception : chacun des deux joueurs fait
+// tourner le combat et ils ne s'échangent que leurs commandes (src/net/rollback.ts).
 import type { PlayerConfig } from '../game/config';
 import type { Vec2 } from '../game/math';
 import type { GameEvent } from '../game/types';
@@ -10,7 +11,7 @@ import type { DuelView, World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 12;
+export const PROTOCOL = 13;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /**
@@ -63,6 +64,8 @@ export interface Start {
   level: number;
   seat: number;
   heroes: { name: string; sprite: string; config: PlayerConfig }[];
+  /** Duel : la graine du hasard du combat, la même chez les deux joueurs (src/game/rng.ts). */
+  seed?: number;
 }
 
 /** Annonce d'une partie publique, pour la liste des parties ouvertes. */

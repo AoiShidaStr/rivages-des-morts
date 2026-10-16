@@ -177,7 +177,7 @@ export function openDuelMenu(host: PanelHost, deps: CoopDeps): void {
       { class: 'list coop' },
       h('label', { class: 'coop-field' }, h('span', {}, 'Ton pseudo'), name),
       h('h3', {}, 'Créer un duel'),
-      h('p', { class: 'note' }, 'Tu reçois un code : donne-le à ton adversaire. Le combat tourne sur ton ordinateur.'),
+      h('p', { class: 'note' }, 'Tu reçois un code : donne-le à ton adversaire. Le combat tourne chez vous deux à la fois, sans avantage pour celui qui crée le duel.'),
       h(
         'div',
         { class: 'entry-actions' },

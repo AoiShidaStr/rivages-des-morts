@@ -60,6 +60,9 @@ export interface SessionEvents {
   events?(packet: EventPacket): void;
   /** Hôte : les commandes d'un invité, à sa place. */
   input?(seat: number, packet: InputPacket): void;
+  /** Duel : les commandes de l'adversaire (src/net/rollback.ts), et le monde de l'hôte après une divergence. */
+  rollback?(data: Json): void;
+  rollbackState?(data: Json): void;
   /** Hôte, en pleine descente : un invité est parti. */
   left?(seat: number): void;
   /** La session est finie : on l'a quittée, l'hôte est parti, ou il a refusé. */
@@ -182,6 +185,9 @@ export class CoopSession {
 
   private setupHost(): void {
     const room = this.room;
+    room.on('rb', (data, from) => {
+      if ((this.seats.get(from) ?? 0) > 0) this.handlers.rollback?.(data);
+    });
     room.on('hello', (data, from) => {
       const hello = data as unknown as Hello;
       if (hello.version !== PROTOCOL) return room.send('refuse', 'Vous n’avez pas la même version du jeu : rechargez la page (Ctrl+F5).', from);
@@ -274,7 +280,8 @@ export class CoopSession {
     this.lobby.inGame = true;
     this.broadcastLobby();
     const run = ++this.run;
-    const start = (seat: number): Start => ({ run, dungeon: this.lobby.dungeon, level: this.lobby.level, seat, heroes });
+    const seed = this.duel ? Math.floor(Math.random() * 2 ** 32) : undefined;
+    const start = (seat: number): Start => ({ run, dungeon: this.lobby.dungeon, level: this.lobby.level, seat, heroes, ...(seed === undefined ? {} : { seed }) });
     for (const [peer, seat] of this.seats) if (seat > 0) this.room.send('start', start(seat) as unknown as Json, peer);
     return start(0);
   }
@@ -289,6 +296,22 @@ export class CoopSession {
   /** Hôte : le ping de chaque joueur, par place (0 : l'hôte lui-même), pour que chacun voie celui des autres. */
   sendPings(pings: number[]): void {
     this.room.sendFast('pings', pings.map((ping) => Math.round(ping)));
+  }
+
+  /** Duel : nos commandes pour l'adversaire (canal rapide : un paquet perdu est couvert par le suivant). */
+  sendRollback(data: Json): void {
+    for (const peer of this.opponents()) this.room.sendFast('rb', data, peer);
+  }
+
+  /** Duel, hôte : son monde entier pour l'invité, après une divergence (canal sûr). */
+  sendRollbackState(data: Json): void {
+    for (const peer of this.opponents()) this.room.send('rbs', data, peer);
+  }
+
+  /** Les autres joueurs de la descente : les invités pour l'hôte, l'hôte pour un invité. */
+  private opponents(): string[] {
+    if (this.role === 'guest') return this.hostPeer ? [this.hostPeer] : [];
+    return [...this.seats].filter(([, seat]) => seat > 0).map(([peer]) => peer);
   }
 
   /** Hôte : les événements du combat, pour tous les invités (canal sûr). */
@@ -307,6 +330,12 @@ export class CoopSession {
 
   private setupGuest(): void {
     const room = this.room;
+    room.on('rb', (data, from) => {
+      if (from === this.hostPeer) this.handlers.rollback?.(data);
+    });
+    room.on('rbs', (data, from) => {
+      if (from === this.hostPeer) this.handlers.rollbackState?.(data);
+    });
     const hello = () => room.send('hello', { version: PROTOCOL, member: this.me } as unknown as Json);
     // On se présente à chaque pair qui arrive : seul l'hôte répond (les autres invités ignorent le message).
     room.onPeerJoin((peer) => {
