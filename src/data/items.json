@@ -290,6 +290,7 @@
       "description": "Un petit arc de cavalier, taillé pour tirer vite plutôt que loin. Le kasa-obake qui le gardait s'en servait comme manche."
     },
     "kaiken-izanami": {
+      "pvp": {"effects": [{"op": "set", "path": "attack.damage", "value": 8}, {"op": "set", "path": "attack.range", "value": 2.2}, {"op": "set", "path": "attack.shape", "value": "line"}, {"op": "set", "path": "attack.width", "value": 0.7}, {"op": "set", "path": "attack.commit", "value": 0}, {"op": "set", "path": "attack.windup", "value": 0.04}, {"op": "set", "path": "attack.recovery", "value": 0.12}, {"op": "set", "path": "attack.knockback", "value": 1.5}, {"op": "add", "path": "blade.critFactor", "value": 0.2}], "summary": "En duel : critiques +0,2 au lieu de +0,5."},
       "name": "Kaiken d'Izanami",
       "slot": "arme",
       "rarity": "épique",
@@ -358,6 +359,7 @@
       "description": "Un masque de fer au rictus figé. Derrière, on ne voit pas venir la riposte."
     },
     "masque-oublie": {
+      "pvp": {"effects": [{"op": "add", "path": "sorcier.flight.cooldown", "value": -1}], "summary": "En duel : la Fuite de feu revient 1 s plus tôt (la flamme leurre ne trompe pas un joueur)."},
       "name": "Masque d'Oublié",
       "slot": "casque",
       "rarity": "épique",
@@ -372,6 +374,7 @@
       "description": "Un masque blanc sans visage. Qui le porte, on l'oublie un peu."
     },
     "voile-izanami": {
+      "pvp": {"effects": [{"op": "add", "path": "sorcier.meteor.delay", "value": -0.5}, {"op": "mul", "path": "sorcier.meteor.damage", "value": 1.25}], "summary": "En duel : le météore s'écrase 0,5 s plus tôt (1,5 s de préavis) et frappe 25 % plus fort."},
       "name": "Voile d'Izanami",
       "slot": "casque",
       "rarity": "rare",
@@ -826,6 +829,7 @@
       "description": "Une cape de paille de riz contre la pluie, comme en portaient les paysans des rizières. Obaa jure que rien ne la traverse."
     },
     "yomotsu-hegui": {
+      "pvp": {"effects": [{"op": "set", "path": "perks.yomotsu", "value": {"damage": 0.15, "speed": 0.05, "healing": 0.5}}], "summary": "En duel : +15 % de dégâts et +5 % de vitesse, mais tous les soins et boucliers que tu reçois sont réduits de moitié."},
       "name": "Yomotsu-hegui",
       "slot": "relique",
       "rarity": "épique",
@@ -914,6 +918,7 @@
       "description": "Une veste d'onmyōji doublée de papier huilé et cousue de fils d'amiante. Elle sent le roussi, jamais le brûlé."
     },
     "haidate-shikome": {
+      "pvp": {"effects": [{"op": "set", "path": "perks.ghostShield", "value": {"amount": 0.05, "duration": 2}}], "summary": "En duel : après une Frappe fantôme, un bouclier de 5 % de tes PV max pendant 2 s."},
       "name": "Haidate de shikome",
       "slot": "jambieres",
       "rarity": "peu commune",
@@ -1325,6 +1330,7 @@
       "eveil": {"summary": "Les sorts ne coûtent plus que 3 % de tes PV actuels.", "effects": [{"op": "set", "path": "perks.bloodCost", "value": 0.03}]}
     },
     "coeur-cendres": {
+      "pvp": {"effects": [{"op": "set", "path": "perks.cheatDeath", "value": {"cooldown": 60, "ward": false}}], "summary": "En duel : un coup mortel te laisse à 1 PV, une fois par manche, sans allumer le Bouclier de flammes."},
       "name": "Cœur de Cendres",
       "slot": "relique",
       "rarity": "épique",
@@ -1337,6 +1343,7 @@
       "eveil": {"summary": "Le sursaut revient toutes les 40 s (au lieu de 60).", "effects": [{"op": "set", "path": "perks.cheatDeath", "value": {"cooldown": 40}}]}
     },
     "bandeau-vent": {
+      "pvp": {"effects": [{"op": "set", "path": "perks.evasion", "value": {"every": 7, "duration": 2}}], "summary": "En duel : pendant 2 s après une esquive, un coup sur sept passe à côté."},
       "name": "Bandeau du vent",
       "slot": "casque",
       "rarity": "rare",
@@ -1666,6 +1673,7 @@
       "description": "Des sandales de paille souple, tressées pour bondir de côté. Rien de plus, rien de moins."
     },
     "croc-loup": {
+      "pvp": {"effects": [{"op": "set", "path": "perks.farCrit", "value": {"distance": 5, "every": 7}}], "summary": "En duel : une flèche sur sept est critique sur une cible à plus de 5 m."},
       "name": "Croc de loup",
       "slot": "amulette",
       "rarity": "peu commune",

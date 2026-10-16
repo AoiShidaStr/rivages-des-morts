@@ -121,6 +121,9 @@ export class Player {
   marchPrimed = false;
   /** Bandeau du vent : secondes pendant lesquelles un coup peut passer à côté. */
   private evadeTime = 0;
+  /** Versions de duel du Bandeau du vent et du Croc de loup : des compteurs plutôt que du hasard. */
+  private evadeCount = 0;
+  private farShots = 0;
   /** Bottes de Tengu : esquives gardées en réserve, en plus de celle qui se recharge. */
   dodgeSpare: number;
   /** Cœur de Cendres, Écaille du Dragon d'Or : secondes avant de pouvoir resservir. */
@@ -433,6 +436,20 @@ export class Player {
   /** Part des soins et des boucliers reçus (Yomotsu-hegui : la nourriture du Yomi retient chez les morts). */
   get healFactor(): number {
     return this.cfg.perks?.yomotsu?.healing ?? 1;
+  }
+
+  /** Bandeau du vent : ce coup passe-t-il à côté ? Au hasard, ou un sur `every` (version de duel). */
+  private evades(evasion: { chance?: number; every?: number }): boolean {
+    if (!evasion.every) return random() < (evasion.chance ?? 0);
+    this.evadeCount = (this.evadeCount + 1) % evasion.every;
+    return this.evadeCount === 0;
+  }
+
+  /** Croc de loup : ce tir lointain est-il critique ? Au hasard, ou un sur `every` (version de duel). */
+  farCrit(farCrit: { chance?: number; every?: number }): boolean {
+    if (!farCrit.every) return random() < (farCrit.chance ?? 0);
+    this.farShots = (this.farShots + 1) % farCrit.every;
+    return this.farShots === 0;
   }
 
   /** En duel, la part gardée des soins qui ne passent pas par `heal` (régénération, Égide divine) ; 1 ailleurs. */
@@ -851,7 +868,7 @@ export class Player {
     const guardShield = world.guardShield(this.pos);
     if (guardShield > 0) amount *= 1 - guardShield;
     // Bandeau du vent : juste après une esquive, un coup peut passer à côté.
-    if (this.evadeTime > 0 && perks.evasion && random() < perks.evasion.chance) {
+    if (this.evadeTime > 0 && perks.evasion && this.evades(perks.evasion)) {
       this.invulnerable = Math.max(this.invulnerable, 0.2);
       world.emit({ type: 'evade', pos: { ...this.pos } });
       return false;
@@ -951,7 +968,7 @@ export class Player {
       this.cheatCooldown = ashes.cooldown;
       this.hp = 1;
       this.invulnerable = Math.max(this.invulnerable, 0.5);
-      world.raiseWard(this);
+      if (ashes.ward !== false) world.raiseWard(this);
       world.emit({ type: 'saved', pos: { ...this.pos }, label: 'Cœur de Cendres !' });
     }
     const aegis = perks.divineAegis;

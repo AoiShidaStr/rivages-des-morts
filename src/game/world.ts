@@ -2118,7 +2118,7 @@ export class World {
         // Dō de l'archer d'élite, Croc de loup : les tirs de loin portent plus fort, et parfois critiques.
         const far = distance(player.pos, enemy.pos);
         const long = perks.longShot && far >= perks.longShot.distance ? 1 + perks.longShot.bonus : 1;
-        const crit = perks.farCrit && far >= perks.farCrit.distance && random() < perks.farCrit.chance ? player.cfg.blade.critFactor : 1;
+        const crit = perks.farCrit && far >= perks.farCrit.distance && player.farCrit(perks.farCrit) ? player.cfg.blade.critFactor : 1;
         this.weaponHit(enemy, p.damage * long, from, p.knockback, crit);
         // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
         if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos, perks.chargedNet);

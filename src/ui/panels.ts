@@ -105,6 +105,15 @@ export class PanelHost {
 
 // --- Petits éléments ----------------------------------------------------------
 
+/** Les objets du build Duel qui changent en duel (exclus, ou réécrits), une ligne chacun. */
+function duelNotes(build: Build): HTMLElement | null {
+  const lines = Object.values(build.equipped)
+    .map((id) => (id ? content.items[id] : undefined))
+    .filter((def): def is ItemDef => Boolean(def && duelText(def)))
+    .map((def) => h('li', {}, h('strong', {}, def.name), ` · ${duelText(def)}`));
+  return lines.length ? h('ul', { class: 'note' }, ...lines) : null;
+}
+
 export function bonusText(bonus: Bonus | undefined): string {
   const parts = (Object.entries(bonus ?? {}) as [BonusKind, number][]).map(([key, value]) => {
     const label = key === 'maxHp' ? content.bonuses[key] : content.bonuses[key].toLowerCase();
@@ -120,7 +129,13 @@ function effectText(def: ItemDef, level = 1): string {
   const bonus = upgradable ? scaledBonus(rules, def.bonus, level) : def.bonus;
   const paliers = upgradable ? reachedPaliers(rules, def, level).map((p) => p.name) : [];
   const conditional = (def.conditional ?? []).map((c) => c.summary);
-  return [def.summary, bonusText(bonus), ...conditional, ...paliers].filter(Boolean).join(' · ') || 'Aucun effet';
+  return [def.summary, bonusText(bonus), ...conditional, ...paliers, duelText(def)].filter(Boolean).join(' · ') || 'Aucun effet';
+}
+
+/** Ce que l'objet devient en duel, s'il y change (src/game/pvp.ts) : exclu, ou sa version de duel. */
+function duelText(def: ItemDef): string {
+  if (def.pvp === false) return 'En duel : n’entre pas (ne sert que contre les yokai)';
+  return def.pvp?.summary ?? '';
 }
 
 /** « Réservé à la race Hanyō. » : ce qui empêche le héros de porter l'objet, ou null. */
@@ -1461,7 +1476,8 @@ export function openBuilds(host: PanelHost, ctx: UiContext): void {
         h('div', { class: 'item-head' }, h('strong', {}, 'Build Duel'), h('span', { class: 'tag' }, `arme + ${DUEL_SLOTS} sur 6`)),
         picker ?? (duel ? buildSummary(progress, duel) : h('div', { class: 'note' }, 'Aucun build Duel : en duel, ton héros garde ses talents et sa voie actuels.')),
         duel && !fitsHero(duel, hero) ? h('div', { class: 'note danger' }, 'Build d’une autre classe : le duel prend tes talents et ta voie actuels.') : null,
-        h('div', { class: 'note' }, 'Sert tout seul en duel, sans toucher à ce que tu portes. Ses talents et sa voie comptent déjà ; ses objets compteront quand la règle des objets en duel sera en place (pour l’instant, le duel donne l’arme de départ de ta classe).'),
+        h('div', { class: 'note' }, 'Sert tout seul en duel, sans toucher à ce que tu portes. En duel, les objets perdent leurs stats et gardent leurs effets ; une arme frappe avec les dégâts par seconde de l’arme de départ de ta classe, et tout est forgé au niveau du duel.'),
+        duel && fitsHero(duel, hero) ? duelNotes(duel) : null,
       ),
       h(
         'div',

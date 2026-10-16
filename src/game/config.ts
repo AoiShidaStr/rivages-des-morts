@@ -623,9 +623,13 @@ export interface Perks {
   /** Pierre de sang yōkai : chaque sort coûte aussi cette part des PV actuels. */
   bloodCost?: number;
   /** Cœur de Cendres : survit à un coup mortel et allume le Bouclier de flammes, une fois toutes les `cooldown` s. */
-  cheatDeath?: { cooldown: number };
-  /** Bandeau du vent : pendant `duration` s après une esquive, `chance` d'éviter un coup. */
-  evasion?: { chance: number; duration: number };
+  /** `ward: false` (version de duel) : le héros reste à 1 PV sans allumer son Bouclier de flammes. */
+  cheatDeath?: { cooldown: number; ward?: boolean };
+  /**
+   * Bandeau du vent : pendant `duration` s après une esquive, `chance` d'éviter un coup. Version de duel : `every`
+   * à la place, un coup sur `every` évité, sans hasard.
+   */
+  evasion?: { chance?: number; every?: number; duration: number };
   /** Masque du Kitsune : l'Écran de fumée laisse un clone qui attire les yokai ces secondes. */
   smokeClone?: number;
   /** Gi de l'assassin : vitesse de frappe en plus. */
@@ -673,7 +677,8 @@ export interface Perks {
   /** Waraji de l'éclaireur : charges de poison posées par le filet. */
   netPoison?: number;
   /** Croc de loup : `chance` de critique sur les cibles à plus de `distance` m. */
-  farCrit?: { distance: number; chance: number };
+  /** Croc de loup : `chance` de critique sur une cible à plus de `distance` m ; en duel, `every` : un tir sur `every`. */
+  farCrit?: { distance: number; chance?: number; every?: number };
   /** Charme des bois : immobile `delay` s, le héros regagne `heal` PV par seconde. */
   stillHeal?: { delay: number; heal: number };
   /** Cœur de la Forêt : arc bandé, aucun recul et cette part de dégâts subis en moins. */

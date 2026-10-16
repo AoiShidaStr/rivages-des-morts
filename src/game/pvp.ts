@@ -5,8 +5,8 @@
 //
 // Règle des objets en duel (plan PvP, étape 2, 16/10/2026) : un objet vaut par ce qu'il change à la façon de jouer,
 // jamais par ses chiffres. Ses stats (`bonus` : PV, dégâts, vitesse, esquive, armure, oboles) sont ignorées ; ses effets
-// restent. Une arme garde sa forme (portée, arc, cadence) mais a les dégâts et les stats de l'arme de départ de sa
-// classe, et tout est forgé au niveau du duel. Dans items.json, `"pvp": false` sort un objet du duel (il ne
+// restent. Une arme garde sa forme (portée, arc, cadence) mais a les stats et les dégâts par seconde de l'arme de départ
+// de sa classe, et tout est forgé au niveau du duel. Dans items.json, `"pvp": false` sort un objet du duel (il ne
 // sert que contre des yokai) et `"pvp": { "effects": [...] }` le remplace par sa version de duel. Les effets cumulés
 // sont plafonnés (pvp.json, `items`) : recharges, invulnérabilité.
 import type { PlayerConfig } from './config';
@@ -29,16 +29,32 @@ export interface DuelRules {
   classes?: Partial<Record<string, ConfigEffect[]>>;
 }
 
+/** Les temps d'un coup d'arme qui comptent pour sa cadence. */
+type Timing = { windup: number; active: number; recovery: number };
+
+/** Ce que pose l'effet `set attack.<key>` d'une arme, s'il y en a un. */
+const setOf = (def: ItemDef | undefined, key: string): number | undefined => {
+  const value = def?.effects?.find((e) => e.op === 'set' && e.path === `attack.${key}`)?.value;
+  return typeof value === 'number' ? value : undefined;
+};
+
+/** Durée d'un coup de l'arme (amorce, coup, reprise), ce qu'elle ne pose pas venant de `fallback`. */
+const cycleOf = (def: ItemDef | undefined, fallback: Timing): number =>
+  (setOf(def, 'windup') ?? fallback.windup) + (setOf(def, 'active') ?? fallback.active) + (setOf(def, 'recovery') ?? fallback.recovery);
+
 /**
- * Un objet de duel : ses effets (sa version PvP s'il en a une), sans stats ni éveil. Une arme frappe comme l'arme de
- * départ de sa classe et en prend les stats : seule sa forme la distingue. Les paliers de forge restent, puisque tout
- * est forgé au niveau du duel.
+ * Un objet de duel : ses effets (sa version PvP s'il en a une), sans stats ni éveil. Une arme prend les stats de
+ * l'arme de départ de sa classe, et ses dégâts par coup suivent sa cadence : une arme deux fois plus rapide frappe
+ * deux fois moins fort, pour les mêmes dégâts par seconde. Seule sa forme la distingue (portée, arc, effets). Les
+ * paliers de forge restent, puisque tout est forgé au niveau du duel.
  */
-function duelItem(def: ItemDef, reference: ItemDef | undefined): ItemDef {
+function duelItem(def: ItemDef, reference: ItemDef | undefined, base: Timing): ItemDef {
   const pvp = def.pvp;
   const own = pvp ? pvp.effects : (def.effects ?? []);
-  const damage = reference?.effects?.find((e) => e.op === 'set' && e.path === 'attack.damage')?.value;
   const weapon = def.slot === 'arme' && reference !== undefined;
+  const refDamage = setOf(reference, 'damage');
+  const refTiming = { windup: setOf(reference, 'windup') ?? base.windup, active: setOf(reference, 'active') ?? base.active, recovery: setOf(reference, 'recovery') ?? base.recovery };
+  const damage = refDamage === undefined ? undefined : (refDamage * cycleOf(def, refTiming)) / Math.max(0.01, cycleOf(reference, base));
   const effects = weapon && damage !== undefined ? own.map((e) => (e.path === 'attack.damage' && e.op === 'set' ? { ...e, value: damage } : e)) : own;
   const { bonus: _bonus, eveil: _eveil, pvp: _pvp, conditional, ...rest } = def;
   return {
@@ -57,14 +73,14 @@ export function allowedInDuel(def: ItemDef | undefined): boolean {
 const duelItems = new WeakMap<LoadoutData, Map<string, LoadoutData>>();
 
 /** Les données de jeu vues du duel, pour une classe : chaque objet ramené à sa version de duel. */
-function duelData(data: LoadoutData, cls: string): LoadoutData {
+function duelData(data: LoadoutData, cls: string, base: Timing): LoadoutData {
   let byClass = duelItems.get(data);
   if (!byClass) duelItems.set(data, (byClass = new Map()));
   let out = byClass.get(cls);
   if (!out) {
     const weapon = data.skills.classes[cls]?.weapon;
     const reference = weapon ? data.items[weapon] : undefined;
-    const items = Object.fromEntries(Object.entries(data.items).filter(([, def]) => allowedInDuel(def)).map(([id, def]) => [id, duelItem(def, reference)]));
+    const items = Object.fromEntries(Object.entries(data.items).filter(([, def]) => allowedInDuel(def)).map(([id, def]) => [id, duelItem(def, reference, base)]));
     out = { ...data, items };
     byClass.set(cls, out);
   }
@@ -127,7 +143,7 @@ function write(node: unknown, path: string[], value: number): void {
 /** Les réglages d'un héros en duel, au niveau commun `level`, objets ramenés à leur version de duel et plafonnés. */
 export function duelLoadout(base: PlayerConfig, state: ProgressState, data: LoadoutData, level: number, pvp?: DuelRules): Loadout {
   const duel = duelState(state, data, level);
-  const view = duelData(data, duel.hero.class);
+  const view = duelData(data, duel.hero.class, base.attack);
   const loadout = buildLoadout(base, duel, view, level);
   if (!pvp) return loadout;
   const rules = pvp.items;
