@@ -61,6 +61,17 @@ export class Music {
     this.changed();
   }
 
+  /** La musique se tait le temps d'un son qui doit s'entendre seul (le koto qui ouvre le Yomi sans fond). */
+  hush(ms: number): void {
+    this.hushUntil = Date.now() + ms;
+    for (const p of this.playing) this.apply(p);
+    setTimeout(() => {
+      for (const p of this.playing) this.apply(p);
+    }, ms + 20);
+  }
+
+  private hushUntil = 0;
+
   private changed(): void {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
@@ -114,7 +125,7 @@ export class Music {
 
   private apply(p: Playing): void {
     const { volume, muted } = this.settings;
-    p.audio.volume = muted ? 0 : volume * p.level;
+    p.audio.volume = muted || Date.now() < this.hushUntil ? 0 : volume * p.level;
   }
 }
 

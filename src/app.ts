@@ -111,6 +111,8 @@ const TITLE_ORBIT = { u: -4, v: 1, radius: 5, speed: 0.07 };
 const DPS_WINDOW = 5;
 /** Une foulée sur l'île (s) : un pas qui sonne selon le sol. */
 const STRIDE_S = 0.38;
+/** Durée du koto qui ouvre le Yomi sans fond : la musique du combat se tait pendant ce temps. */
+const KOTO_MS = 3500;
 
 interface Loot {
   oboles: number;
@@ -1236,8 +1238,8 @@ export class App {
       else if (!event.crit || !this.sfx.play('crit')) this.sfx.play('coup');
       return;
     }
-    // Le koto ouvre chaque donjon et chaque palier du Yomi sans fond.
-    if (event.type === 'wave' && (event.index === 0 || event.palier !== undefined)) this.sfx.play('manche', 1);
+    // Le koto ouvre le Yomi sans fond, puis chaque bloc qu'on choisit de continuer, seul : la musique se tait.
+    if (event.type === 'wave' && event.index === 0 && this.endless && this.sfx.play('manche', 1)) this.music.hush(KOTO_MS);
     if (event.type === 'end') {
       this.sfx.play(event.outcome === 'victory' ? 'victoire' : 'defaite');
       return;

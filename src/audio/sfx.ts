@@ -41,7 +41,7 @@ const MÊME_PAS_MS = 90;
 const REPOS_MS: Partial<Record<SfxId, number>> = {
   crit: 3000,
   coup: 400,
-  vide: 1500,
+  vide: 1000,
   recu: 1000,
   esquive: 800,
   butin: 1000,
