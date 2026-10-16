@@ -12,6 +12,12 @@ const REACT = 0.28;
 const SKILL = 0.75;
 /** Profil « humain » (`--humain` de l'équilibrage) : réaction plus lente, attaques moins souvent vues, visée qui tremble. */
 const HUMAN = { react: 0.18, skill: 0.6, aimError: 0.9, aimEvery: 0.4, missRate: 0.12 };
+/**
+ * Duel : temps qu'il faut pour voir venir un coup de l'autre héros (secondes). Un coup d'arme part trop vite pour
+ * être esquivé à vue ; le Fracas, une flèche, un marteau, un sceau ou un météore, si.
+ */
+const LATENCY = 0.12;
+const HUMAN_LATENCY = 0.22;
 
 /**
  * Ce que le bot lit des yokai au-delà de leur interface publique : leur état et leurs réglages.
@@ -40,7 +46,15 @@ const GAZE_LOW = 0.15;
 /** `dir` tourné de `angle` radians. */
 const turn = (dir: Vec2, angle: number): Vec2 => fromAngle(angleOf(dir) + angle);
 
-type Threat = { type: 'melee'; src: Vec2 } | { type: 'charge'; src: Vec2; dir: Vec2 } | { type: 'land'; at: Vec2 };
+type Threat = { type: 'melee'; src: Vec2 } | { type: 'charge'; src: Vec2; dir: Vec2 } | { type: 'shot'; src: Vec2; dir: Vec2 } | { type: 'land'; at: Vec2 };
+
+/** Ce que le bot lit des sceaux et météores en attente : privés au monde, comme l'état des yokai. */
+interface BlastPeek {
+  pos: Vec2;
+  radius: number;
+  t: number;
+  owner: number;
+}
 
 export class Bot {
   private readonly seen = new WeakMap<object, boolean>();
@@ -50,6 +64,9 @@ export class Bot {
   private aimOffset = vec();
   private aimTimer = 0;
   private missTimer = 0;
+  /** Duel : l'instant où chaque coup de l'adversaire a été aperçu, et l'élan qu'il prend en ce moment. */
+  private readonly spotted = new WeakMap<object, number>();
+  private swing: object | null = null;
 
   /** La place du héros piloté : en duel, le héros est refait à neuf à chaque manche, on le relit donc à chaque pas. */
   private readonly seat: number;
@@ -64,6 +81,11 @@ export class Bot {
     private readonly greedy = false,
     /** Imite un joueur moyen plutôt qu'un bot : voir `HUMAN`. */
     private readonly human = false,
+    /**
+     * Duel : esquive aussi les coups lents de l'autre héros (Fracas, projectiles, sceaux, météores). Seul l'équilibrage
+     * (`npm run duel`) s'en sert pour l'instant ; l'ombre du duel hors ligne joue sans.
+     */
+    private readonly rivalAware = false,
   ) {
     this.seat = hero.id;
   }
@@ -182,7 +204,12 @@ export class Bot {
         input.aim = { ...hit.src };
         return input;
       }
-      input.move = hit.type === 'charge' ? vec(-hit.dir.z, hit.dir.x) : normalize(sub(p.pos, hit.src));
+      if (hit.type === 'shot') {
+        // Un projectile : on sort de sa ligne par le côté où l'on est déjà.
+        const side = vec(-hit.dir.z, hit.dir.x);
+        const rel = sub(p.pos, hit.src);
+        input.move = rel.x * side.x + rel.z * side.z >= 0 ? side : scale(side, -1);
+      } else input.move = hit.type === 'charge' ? vec(-hit.dir.z, hit.dir.x) : normalize(sub(p.pos, hit.src));
       if (p.dodgeCooldown <= 0) input.dodgePressed = true;
       // Le Sorcier, esquive en recharge, s'en sort par la Fuite de feu.
       else if (kit === 'sorcier' && p.flightCooldown <= 0 && p.mana >= p.spellCost(c.sorcier.flight.cost)) input.skillEPressed = true;
@@ -417,6 +444,45 @@ export class Bot {
     }
     for (const h of this.world.dangers) {
       if (h.cfg.warning - h.t < this.react + 0.15 && distance(h.pos, p.pos) < h.cfg.radius + p.radius + 0.3 && this.notices(h)) out.push({ type: 'land', at: h.pos });
+    }
+    if (this.rivalAware && this.world.duel) out.push(...this.duelThreats());
+    return out;
+  }
+
+  /** Vrai une fois que le coup est vu depuis assez longtemps pour qu'on réagisse (voir `LATENCY`). */
+  private spots(attack: object): boolean {
+    const now = this.world.time;
+    if (!this.spotted.has(attack)) this.spotted.set(attack, now);
+    return now - (this.spotted.get(attack) ?? now) >= (this.human ? HUMAN_LATENCY : LATENCY) && this.notices(attack);
+  }
+
+  /** Duel : les coups de l'autre héros qui vont toucher celui-ci. */
+  private duelThreats(): Threat[] {
+    const w = this.world;
+    const p = this.hero;
+    const out: Threat[] = [];
+    const foe = w.players.find((h) => h.id !== p.id && !h.dead);
+    // Élan d'un coup de mêlée : un nouveau à chaque fois que l'adversaire repasse en « windup ».
+    if (!foe || foe.pose !== 'windup') this.swing = null;
+    else {
+      this.swing ??= {};
+      const c = foe.cfg;
+      const reach = Math.max(c.attack.range, c.kit === 'guerrier' ? c.smash.offset + c.smash.radius : 0) + foe.radius + p.radius + 0.5;
+      const to = normalize(sub(p.pos, foe.pos));
+      const facing = foe.facing.x * to.x + foe.facing.z * to.z > 0.3;
+      if (distance(foe.pos, p.pos) < reach && facing && this.spots(this.swing)) out.push({ type: 'melee', src: foe.pos });
+    }
+    for (const shot of w.projectiles) {
+      if (shot.owner === p.id) continue;
+      const rel = sub(p.pos, shot.pos);
+      const along = rel.x * shot.dir.x + rel.z * shot.dir.z;
+      const across = Math.abs(rel.x * shot.dir.z - rel.z * shot.dir.x);
+      const coming = along > -0.3 && along < shot.range + 0.5 && across < shot.radius + p.radius + 0.4;
+      if (coming && along / Math.max(1, shot.speed) < this.react + 0.25 && this.spots(shot)) out.push({ type: 'shot', src: shot.pos, dir: shot.dir });
+    }
+    for (const blast of (w as unknown as { blasts: BlastPeek[] }).blasts) {
+      if (blast.owner === p.id) continue;
+      if (blast.t < this.react + 0.35 && distance(blast.pos, p.pos) < blast.radius + p.radius + 0.3 && this.spots(blast)) out.push({ type: 'land', at: blast.pos });
     }
     return out;
   }
