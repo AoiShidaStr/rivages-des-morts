@@ -56,6 +56,8 @@ export interface ItemDef {
   paliers?: Palier[];
   /** L'Éveil des Tablettes (reliques) : le pouvoir que l'éveil ajoute, posé après les effets de la relique. */
   eveil?: { summary: string; bonus?: Bonus; effects?: ConfigEffect[] };
+  /** En duel (src/game/pvp.ts) : false, l'objet n'y entre pas ; sinon sa version de duel, qui remplace ses effets. */
+  pvp?: false | { effects: ConfigEffect[]; summary?: string };
   description: string;
 }
 

@@ -812,7 +812,7 @@ export class App {
     this.busy = true;
     const { config, progress } = this.d;
     const { arena, duel, level } = content.pvp;
-    const player = duelLoadout(config.player, progress.state, content, level).config;
+    const player = duelLoadout(config.player, progress.state, content, level, content.pvp.items).config;
     const rival = this.duelOpponent(cls);
     this.trainingHero = null;
     this.duelMatch = { opponent: rival.name, cls: rival.cls, online: false };
@@ -838,7 +838,7 @@ export class App {
     const chosen = cls && classes.includes(cls) ? cls : classes[Math.floor(Math.random() * classes.length)];
     const hero = { race: ALLY_RACES[Math.floor(Math.random() * ALLY_RACES.length)], class: chosen };
     const state = { ...progress.state, hero, talents: [] };
-    const loadout = duelLoadout(config.player, state, content, content.pvp.level);
+    const loadout = duelLoadout(config.player, state, content, content.pvp.level, content.pvp.items);
     return { config: loadout.config, sprite: heroSprite(hero), name: `Ombre ${content.skills.classes[chosen].name.toLowerCase()}`, cls: chosen };
   }
 
@@ -1322,7 +1322,7 @@ export class App {
       level: this.d.progress.level,
       sprite: heroSprite(hero),
       // Duel : le héros entre égalisé, au niveau commun, avec l'arme de départ de sa classe (src/game/pvp.ts).
-      config: this.coop?.duel ? duelLoadout(this.d.config.player, this.d.progress.state, content, content.pvp.level).config : this.loadout().config,
+      config: this.coop?.duel ? duelLoadout(this.d.config.player, this.d.progress.state, content, content.pvp.level, content.pvp.items).config : this.loadout().config,
     };
   }
 

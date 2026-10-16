@@ -14,9 +14,10 @@
 // (intervalle de Wilson à 95 %), durée moyenne d'une manche et part des manches jouées jusqu'au bout du temps. Puis le
 // taux de victoire de chaque classe, toutes paires confondues. Une paire hors de 40–60 % est marquée « ! ».
 //
-// Audit : la classe affronte chacune des autres, d'abord avec son équipement de duel seul, puis avec en plus chacun des
-// objets qu'elle peut porter (forgé au niveau du duel, par-dessus l'équipement de duel). L'écart de taux de victoire dit
-// ce que l'objet changerait s'il gardait ses stats en duel ; c'est la base de l'étape 2 du plan (stats ignorées).
+// Audit : la classe affronte chacune des autres, d'abord avec l'arme de départ seule, puis avec en plus chacun des
+// objets qu'elle peut porter en duel, dans son build Duel. Le duel applique sa règle (src/game/pvp.ts : stats ignorées,
+// effets gardés, plafonds) : l'écart de taux de victoire est ce que l'effet de l'objet change. Au-delà de 8 points, il
+// est à revoir (plan PvP).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -59,7 +60,7 @@ function seedOf(...parts) {
 const { createServer } = await import('vite');
 const server = await createServer({ root: ROOT, server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom', logLevel: 'error' });
 const load = (path) => server.ssrLoadModule(path);
-const [{ World }, { Bot }, { duelState }, { buildLoadout, equipBlock }, { content }, rng, player, enemies] = await Promise.all([
+const [{ World }, { Bot }, { duelLoadout, allowedInDuel }, { equipBlock }, { content }, rng, player, enemies] = await Promise.all([
   load('/src/game/world.ts'),
   load('/src/game/bot.ts'),
   load('/src/game/pvp.ts'),
@@ -71,38 +72,38 @@ const [{ World }, { Bot }, { duelState }, { buildLoadout, equipBlock }, { conten
 ]);
 const { arena, duel, level } = content.pvp;
 
-/** La progression d'un héros de test de la classe `cls`, ramenée au duel ; `item` : un objet porté en plus. */
+/**
+ * La progression d'un héros de test de la classe `cls`, avec son build Duel : l'arme de départ, et `item` en plus
+ * (audit des objets). Le duel la ramène à ses règles (src/game/pvp.ts) : stats des objets ignorées, effets gardés.
+ */
 const heroState = (cls, item) => {
   const [a, b, c] = TREE[cls];
-  const state = duelState(
-    {
-      version: 1,
-      hero: { race: RACE, class: cls, ...(RACE === 'demi-dieu' ? { parent: 'zeus' } : {}) },
-      oboles: 0,
-      xp: 0,
-      talents: [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`),
-      items: [],
-      equipped: {},
-      itemLevels: {},
-      eveils: {},
-      gravures: {},
-      dungeons: {},
-      materials: {},
-      flags: {},
-      quests: {},
-      chests: 0,
-      stock: [],
-      builds: [],
-      duelBuild: null,
-    },
-    content,
-    level,
-  );
-  if (!item) return state;
-  const def = content.items[item];
-  return { ...state, items: [...state.items, item], equipped: { ...state.equipped, [def.slot]: item }, itemLevels: { ...state.itemLevels, [item]: level } };
+  const talents = [1, 2, 3, 4].flatMap((n) => [`${a}-${n}`, `${b}-${n}`]).concat(`${c}-1`);
+  const weapon = content.skills.classes[cls].weapon;
+  const slot = item ? content.items[item].slot : null;
+  const equipped = { arme: weapon, ...(slot ? { [slot]: item } : {}) };
+  return {
+    version: 1,
+    hero: { race: RACE, class: cls, ...(RACE === 'demi-dieu' ? { parent: 'zeus' } : {}) },
+    oboles: 0,
+    xp: 0,
+    talents,
+    items: Object.values(equipped),
+    equipped,
+    itemLevels: {},
+    eveils: {},
+    gravures: {},
+    dungeons: {},
+    materials: {},
+    flags: {},
+    quests: {},
+    chests: 0,
+    stock: [],
+    builds: [],
+    duelBuild: { name: 'Duel', class: cls, equipped, talents },
+  };
 };
-const heroConfig = (cls, item) => buildLoadout(player.default, heroState(cls, item), content, level).config;
+const heroConfig = (cls, item) => duelLoadout(player.default, heroState(cls, item), content, level, content.pvp.items).config;
 
 /** Un duel entre `a` (héros 0) et `b` (héros 1), avec sa graine : les manches de chacun, et la durée de chacune. */
 function fight(a, b, seed) {
@@ -167,7 +168,7 @@ if (AUDIT) {
   const others = CLASSES.filter((c) => c !== cls);
   const hero = heroState(cls).hero;
   const items = Object.entries(content.items)
-    .filter(([, def]) => def.slot && !equipBlock(def, hero, content.skills))
+    .filter(([, def]) => def.slot && allowedInDuel(def) && !equipBlock(def, hero, content.skills))
     .map(([id]) => id);
   const pooled = (item) => {
     let won = 0;

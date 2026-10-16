@@ -435,6 +435,11 @@ export class Player {
     return this.cfg.perks?.yomotsu?.healing ?? 1;
   }
 
+  /** En duel, la part gardée des soins qui ne passent pas par `heal` (régénération, Égide divine) ; 1 ailleurs. */
+  private duelHealing(world: World): number {
+    return world.duel ? world.healFactor() : 1;
+  }
+
   /** Soigne le héros ; renvoie les PV rendus. */
   heal(amount: number, world: World): number {
     // Un héros tombé ne se relève pas par un soin reçu dans le même pas (vol de vie, poison qui soigne) : en duel, le
@@ -558,7 +563,7 @@ export class Player {
 
     // Instinct yokai : blessé, le Hanyō se régénère.
     const instinct = c.perks?.yokaiInstinct;
-    if (instinct && this.hp > 0 && this.hp < c.maxHp * instinct.threshold) this.hp = Math.min(c.maxHp, this.hp + instinct.regen * this.healFactor * dt);
+    if (instinct && this.hp > 0 && this.hp < c.maxHp * instinct.threshold) this.hp = Math.min(c.maxHp, this.hp + instinct.regen * this.healFactor * this.duelHealing(world) * dt);
 
     const aimDir = normalize(sub(input.aim, this.pos), this.facing);
     const warrior = c.kit === 'guerrier';
@@ -954,7 +959,7 @@ export class Player {
       // Égide divine : une fois par vague, le Demi-dieu au bord de la mort devient intouchable un instant.
       this.aegisUsed = true;
       this.invulnerable = Math.max(this.invulnerable, aegis.invulnerable);
-      this.hp = Math.min(this.cfg.maxHp, this.hp + this.cfg.maxHp * aegis.heal * this.healFactor);
+      this.hp = Math.min(this.cfg.maxHp, this.hp + this.cfg.maxHp * aegis.heal * this.healFactor * this.duelHealing(world));
       world.emit({ type: 'divineAegis', pos: { ...this.pos } });
     }
     world.emit({ type: 'playerHit', pos: { ...this.pos }, amount: taken, blocked, hero: this.id });

@@ -1,5 +1,5 @@
 {
-  "about": "spec : rôle de l'objet pour sa classe (dps, survie, boss ; les objets « boss » ne tombent que sur Jorōgumo et Izanami). bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : sorcier.*, blade.*, paladin.* et ranger.* pour le Sorcier, la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks.",
+  "about": "spec : rôle de l'objet pour sa classe (dps, survie, boss ; les objets « boss » ne tombent que sur Jorōgumo et Izanami). bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : sorcier.*, blade.*, paladin.* et ranger.* pour le Sorcier, la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks. pvp : la version de duel (src/game/pvp.ts) ; en duel, bonus et paliers sont ignorés et les effets gardés ; false sort l'objet du duel (il ne sert que contre des yokai) ; { \"effects\": […], \"summary\": \"…\" } remplace ses effets en duel.",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -514,6 +514,7 @@
       "description": "Les kappa n'ont pas de dents. Le tanuki assure que si."
     },
     "peche-okamuzumi": {
+      "pvp": false,
       "name": "Pêche Ōkamuzumi",
       "slot": "amulette",
       "rarity": "légendaire",
@@ -593,6 +594,7 @@
       "description": "Le masque cornu d'une femme que la jalousie a changée en démon. Celui qui le porte n'a plus peur de rien, surtout pas de mourir."
     },
     "gourde-sake-oni": {
+      "pvp": false,
       "name": "Cœur de l'Arène",
       "slot": "relique",
       "rarity": "rare",
@@ -798,6 +800,7 @@
       "description": "Une bombe de fumée d'argile, scellée à la cire. Les shinobi du Yomi en gardent toujours une contre la peau."
     },
     "encre-shinigami": {
+      "pvp": false,
       "name": "Encre de Shinigami",
       "slot": "relique",
       "rarity": "légendaire",
@@ -813,6 +816,7 @@
       "eveil": {"summary": "Critique assuré sous 40 % des PV du yokai (au lieu de 30 %).", "effects": [{"op": "set", "path": "perks.finisher", "value": 0.4}]}
     },
     "mino-paille": {
+      "pvp": false,
       "name": "Mino de paille",
       "slot": "plastron",
       "rarity": "commune",
@@ -842,6 +846,7 @@
       "description": "Un bâton rituel orné de bandes de papier en éclair. Les dieux d'ici ne connaissent pas ton père ; lui, les entend."
     },
     "corne-oni": {
+      "pvp": false,
       "name": "Corne d'oni brisée",
       "slot": "amulette",
       "rarity": "rare",
@@ -1343,6 +1348,7 @@
       "description": "Un long bandeau de soie blanche noué au front. Il flotte toujours dans le sens du prochain coup."
     },
     "masque-kitsune": {
+      "pvp": false,
       "name": "Masque du Kitsune",
       "slot": "casque",
       "rarity": "épique",
@@ -1577,6 +1583,7 @@
       "eveil": {"summary": "La garde sauvée revient toutes les 20 s (au lieu de 30).", "effects": [{"op": "set", "path": "perks.guardSave", "value": 20}]}
     },
     "capuche-camouflage": {
+      "pvp": false,
       "name": "Capuche de camouflage",
       "slot": "casque",
       "rarity": "rare",
@@ -1613,6 +1620,7 @@
       "description": "Une cuirasse légère, sans manche à droite pour libérer la corde. Les archers d'élite ne se battent jamais de près."
     },
     "manteau-plumes": {
+      "pvp": false,
       "name": "Manteau de Plumes",
       "slot": "plastron",
       "rarity": "épique",
