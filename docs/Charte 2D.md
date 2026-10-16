@@ -105,8 +105,9 @@ Ce tableau suit le code tel qu'il est : l'Aura de lumière (A) du Paladin et la 
 
 ## 5. Fond et détourage
 
-- Fond **gris moyen uni `#8f8f8f`**, identique partout, sans dégradé ni vignette, sans grille ni cadre (les traits de grille compliquent le détourage).
-- Exception : l'**Oublié** (robe gris-bleu) est dessiné sur fond **magenta `#ff00ff`**, parce que `tools/detourer.mjs` confond un sujet gris avec le fond gris. L'import devra accepter une couleur de fond par personnage.
+- Depuis le 16 octobre 2026, fond **vert pur uni `#00ff00`** (vert d'incrustation), identique partout, sans dégradé ni vignette, sans grille ni cadre (les traits de grille compliquent le détourage). Le personnage lui-même n'utilise pas ce vert.
+- Fond **magenta `#ff00ff`** pour les personnages qui ont du vert sur eux (Oushebti en faïence bleu-vert, Rôdeur des autres races, kappa, kodama, shikome et Izanami révélée au teint gris-vert, pêcher) et pour l'**Oublié**. Le choix est fait par personnage dans `tools/prompts-2d.mjs` (`bg`).
+- Le détourage (`tools/decoupe.mjs`) reconnaît seul un fond coloré : il retire cette couleur partout, y compris dans les petites poches fermées, puis efface le liseré que la compression JPEG laisse au bord du sujet. Les anciennes planches sur fond gris `#8f8f8f` se découpent comme avant.
 - Le fond enfermé dans une forme (entre l'arc et sa corde, sous un bras) se vide avec `"fillHoles": true` (et `"minHole": 30` sur une petite planche).
 
 ## 6. Vues

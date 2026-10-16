@@ -27,9 +27,11 @@ const NOFX =
   'No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, ' +
   'no text, no numbers, no labels, no drawn grid lines, no frame borders.';
 
-const GREY = { name: 'medium grey', hex: '#8f8f8f' };
+// Fond des planches (16 octobre 2026) : un vert pur, que le détourage reconnaît sans hésiter. Les personnages qui ont du
+// vert sur eux (faïence des Oushebti, peau gris-vert, feuilles, kappa) passent sur le magenta.
+const GREEN = { name: 'pure chroma-key green', hex: '#00ff00' };
 const MAGENTA = { name: 'pure magenta', hex: '#ff00ff' };
-const bgText = (bg) => `Flat uniform ${bg.name} background (${bg.hex}), exactly the same color everywhere, no gradient, no vignette.`;
+const bgText = (bg) => `Flat uniform ${bg.name} background (${bg.hex}), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.`;
 
 const PROPORTIONS_HERO =
   'Chibi proportions: the character is exactly 3 heads tall. A large head with big expressive eyes, broad shoulders so that every pose reads clearly, a compact body with short sturdy limbs, ' +
@@ -238,9 +240,10 @@ const CLASSES = {
 // Ennemis et boss
 
 // `wide` : la créature est plus large que haute, toutes ses planches passent en paysage.
-// `bg` : fond de la planche (le magenta quand la créature est grise et se confondrait avec le fond gris).
+// `bg` : fond de la planche, le vert par défaut ; le magenta quand la créature a du vert sur elle (kappa, kodama, peau gris-vert).
 const ENEMIES = {
   shikome: {
+    bg: MAGENTA,
     name: 'Yomotsu-shikome',
     palaceOrder: 1,
     look: 'a Yomotsu-shikome, a fury of the Japanese underworld: a hunched hag-like creature with pale rotting grey-green skin, a huge mane of tangled black hair, hooked clawed hands, a wide grinning mouth with crooked teeth, ragged dark-purple funeral rags, long thin limbs, always ready to pounce.',
@@ -287,6 +290,7 @@ const ENEMIES = {
     death: 'shrinks, flickers smaller and smaller, the face fading into a tiny dot',
   },
   kodama: {
+    bg: MAGENTA,
     name: 'Kodama',
     look: 'a Kodama (tree spirit): a small rounded pale-cream body with a big round head, hollow dark oval eyes and mouth, a tiny trunk-like body with small twig arms, soft moss-green patches and a small leaf on top of the head, child-sized and gentle.',
     idle: 'standing still and gently rocking side to side, the head tilting, the leaf on top trembling',
@@ -298,6 +302,7 @@ const ENEMIES = {
     special: { name: 'soin (heal channel)', loop: true, text: 'arms raised and swaying, the head tilted back and rocking, the body gently pulsing in size, a calm chanting pose' },
   },
   kappa: {
+    bg: MAGENTA,
     name: 'Kappa',
     look: 'a Kappa (river yokai): a stocky green amphibian humanoid, a turtle-like shell on the back, a beak-like mouth, webbed hands and feet, a hollow water dish on top of the head with a small puddle of water (painted flat), wide shoulders and a squat body, cheerful but dangerous.',
     idle: 'standing braced, the shell hunched, the arms hanging, the head tilting, the water dish steady',
@@ -309,6 +314,7 @@ const ENEMIES = {
     special: { name: 'étourdi (stunned)', loop: true, text: 'dazed: the dish tipped and empty, swaying on the spot with the knees wobbling, the arms dangling, the eyes crossed' },
   },
   kappaRenforce: {
+    bg: MAGENTA,
     name: 'Kappa renforcé',
     look: 'an armored elite Kappa: the same stocky green amphibian humanoid as a regular kappa but bigger and darker, wearing lacquered armor plates over the shell and shoulders, a battle scar, a spiked bracer, a hollow water dish with a puddle painted flat, heavier and angrier.',
     idle: 'braced with arms spread a little, the shell hunched, the chest heaving, the head swinging side to side',
@@ -368,6 +374,7 @@ const BOSSES = {
     special: { name: 'invocation (summon)', loop: false, text: 'both arms raised to the sides with the palms up, the head lifted and the hair parting, the body rising onto the toes' },
   },
   izanamiRevelee: {
+    bg: MAGENTA,
     name: 'Izanami, le vrai visage',
     look: 'Izanami revealed, second phase: the same tall figure in the same white burial kimono, but now torn open, the body rotting: grey-green decayed skin, exposed ribs and collarbones, a gaunt skeletal face with hollow eyes and a wide dark mouth, long black hair flowing back, eight small pale eel-like thunder-god shapes (the eight thunder gods) coiled around her shoulders, arms and waist as solid painted shapes. Terrifying but elegant. About 3 meters tall in the game.',
     idle: 'standing hunched, the body shuddering in small spasms, the head twitching, the thunder-god shapes writhing slowly on the body',
@@ -683,7 +690,7 @@ function sheetPrompt({ intro, rows, ch, bg, label }) {
 const FICHE_OPEN = 'Character reference sheet for a 2D action RPG in which dead souls from every mythology fight across an archipelago of collapsed afterlives. ';
 
 /** Fiche de profil, générée de zéro : un seul personnage, une seule vue. */
-function fichePrompt({ subject, proportions, bg = GREY, wide = false, heads = 3 }) {
+function fichePrompt({ subject, proportions, bg = GREEN, wide = false, heads = 3 }) {
   return [
     `${FICHE_OPEN}One single character, shown once, full body, in ${VIEW.profil.fiche}. ${subject} Neutral calm idle stance.`,
     proportions,
@@ -696,7 +703,7 @@ function fichePrompt({ subject, proportions, bg = GREY, wide = false, heads = 3 
 }
 
 /** Fiche de face ou de dos, générée à partir de la fiche de profil jointe. */
-function vueFichePrompt({ subject, view, bg = GREY, wide = false, heads = 3 }) {
+function vueFichePrompt({ subject, view, bg = GREEN, wide = false, heads = 3 }) {
   return [
     `The attached image is the reference sheet of our game character, a single figure seen in ${VIEW.profil.fiche}.`,
     `Draw the SAME character, alone, full body, in ${VIEW[view].fiche}: same design, proportions, outfit, colors, weapon and accessories, nothing added or removed, same scale and same neutral calm idle stance. Invent the details hidden in the attached view so that they stay consistent with the design. ${subject}`,
@@ -751,7 +758,7 @@ function hero(rk, ck) {
     name: `${race.name} ${cls.name}`,
     subject: heroSubject(rk, race, ck, cls),
     proportions: HERO_PROP,
-    bg: GREY,
+    bg: rk === 'oushebti' || ck === 'rodeur' ? MAGENTA : GREEN,
     wide: false,
     rows: HERO_ROWS,
     data: cls,
@@ -768,7 +775,7 @@ function creature(key, data, kind) {
     proportions: data.heads === TALL_HEADS
       ? PROPORTIONS_TALL + (kind === 'boss' ? ' A boss: the head and the weak point must be clearly readable.' : '')
       : kind === 'boss' ? BOSS_PROP : PROPORTIONS_CREATURE,
-    bg: data.bg ?? GREY,
+    bg: data.bg ?? GREEN,
     wide: !!data.wide,
     rows: CREATURE_ROWS,
     data,
@@ -824,7 +831,7 @@ function pecherPrompts() {
   return spec.map(([id, title, state]) => ({
     id,
     title,
-    prompt: [base + state, 'Square 1:1 image at the highest resolution available.', LOOK, bgText(GREY), NOFX].join('\n'),
+    prompt: [base + state, 'Square 1:1 image at the highest resolution available.', LOOK, bgText(MAGENTA), NOFX].join('\n'),
   }));
 }
 
@@ -1030,7 +1037,7 @@ function lot4x8() {
     '',
     '**Les personnages imposants font 5 têtes de haut** (gardien errant, Jorōgumo dans ses deux formes, Oublié, garde) ; les héros et les petits yokai restent en chibi de 3 têtes. Les planches du 13 octobre de la Jorōgumo et du garde, en 3 têtes, sont donc à refaire, en commençant par une nouvelle fiche de référence.',
     '',
-    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, fond gris uni #8f8f8f (magenta #ff00ff pour l\'Oublié). Ranger chaque image dans `~/Pictures/gamevisual/<dossier>/` sous le nom indiqué. ' + REGLAGES,
+    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, fond vert uni #00ff00 (magenta #ff00ff pour l\'Oublié et les personnages qui ont du vert sur eux). Ranger chaque image dans `~/Pictures/gamevisual/<dossier>/` sous le nom indiqué. ' + REGLAGES,
     '',
     '**Si Nano Banana dessine une grille, du texte ou une ligne de plus ou de moins**, garder quand même l\'image : l\'import s\'adapte au nombre d\'images par ligne. Seuls le texte incrusté et les personnages qui débordent de leur case la rendent inutilisable.',
     '',
@@ -1428,7 +1435,7 @@ function simpleSheetPrompt({ who, gear, rows, second }) {
     ...rows.map(([, title, desc], r) => `Row ${r + 1}, "${title}": ${desc}.`),
     `In every frame: the same character (same face, chibi proportions 3 heads tall, outfit, colors, ${gear}), the same size, always facing right in the same three-quarter view, feet on the same baseline, centered in its own cell with empty space around it; nothing crosses into a neighbouring cell. Every row has exactly 8 frames, each clearly different from the previous one. Do not write the move names or any text on the image.`,
     LOOK,
-    bgText(GREY),
+    bgText(GREEN),
     NOFX,
   ].join('\n');
 }
@@ -1441,7 +1448,7 @@ function lotDemiDieux() {
     '',
     '**Ordre :** la fiche de référence d\'abord (à refaire : genre et tenue changent), puis les planches 1 à 4. Pour les planches 2 à 4, **joindre la fiche et la planche 1** : Nano Banana garde ainsi la même échelle et le même dessin.',
     '',
-    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, fond gris uni #8f8f8f, héros chibi de 3 têtes. Ranger chaque image dans `~/Pictures/gamevisual/heros/` sous le nom indiqué. ' + REGLAGES,
+    '**Format : image 2:1 (2 048 × 1 024 px si possible), 4 lignes de 8 cases carrées, une animation par ligne**, fond vert uni #00ff00 (magenta #ff00ff pour les Oushebti et le Rôdeur des autres races), héros chibi de 3 têtes. Ranger chaque image dans `~/Pictures/gamevisual/heros/` sous le nom indiqué. ' + REGLAGES,
     '',
     '**Import :** le tag de chaque ligne est indiqué. Ceux que le jeu ne joue pas encore (Bond, Cri, Sceau, Fuite de feu, Marque, fumée, marteau, Voies…) seront branchés à l\'intégration ; en attendant, ces actions retombent sur les animations d\'aujourd\'hui.',
     '',
@@ -1496,7 +1503,7 @@ function lotDemiDieux() {
         '',
         `**Joindre :** la fiche de référence${p > 0 ? ' et la planche 1' : ''}. **Enregistrer :** \`gamevisual/heros/demi-dieu-${ck}-planche${p + 1}.jpg\``,
         '',
-        fence(fix(sheetPrompt({ intro, rows: sheetRows, ch: cls, bg: GREY, label: `demi-dieu-${ck}/planche${p + 1}` }))),
+        fence(fix(sheetPrompt({ intro, rows: sheetRows, ch: cls, bg: GREEN, label: `demi-dieu-${ck}/planche${p + 1}` }))),
       );
     }
   }
@@ -1519,7 +1526,7 @@ const count = (text) => (text.match(/^```text/gm) ?? []).length;
 
 for (const lot of LOTS) {
   // Maintenant : fiche de profil + planche complète de profil.
-  const body = [`# ${lot.title}`, '', lot.intro, '', '**Format : une planche complète par personnage, image carrée de 2 048 × 2 048 px si possible, 64 images en grille 8 × 8 (cases de 256 px), une ligne de 8 images par animation**, personnages chibi de 3 têtes, fond gris uni (magenta pour l\'Oublié). Ordre des lignes : [Charte 2D](../Charte%202D.md), section 4. ' + REGLAGES, ''];
+  const body = [`# ${lot.title}`, '', lot.intro, '', '**Format : une planche complète par personnage, image carrée de 2 048 × 2 048 px si possible, 64 images en grille 8 × 8 (cases de 256 px), une ligne de 8 images par animation**, personnages chibi de 3 têtes, fond vert uni #00ff00 (magenta pour l\'Oublié et les personnages qui ont du vert sur eux). Ordre des lignes : [Charte 2D](../Charte%202D.md), section 4. ' + REGLAGES, ''];
   for (const ch of lot.chars) body.push(characterSection(ch, NOW));
   if (lot.extra) body.push(lot.extra());
   const text = body.join('\n');
