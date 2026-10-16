@@ -9,7 +9,7 @@ import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, isBoss, levelAt,
 import { toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
-import { duelLoadout } from './game/pvp';
+import { duelLoadout, duelState } from './game/pvp';
 import { buildLoadout, classWeapon, equipBlock, heroClass, heroLabel, heroSubclass, levelProgress, type Loadout } from './game/loadout';
 import { drawWeighted, type RolledOffer } from './game/loot';
 import { add, length, normalize, scale, vec, type Vec2 } from './game/math';
@@ -243,6 +243,9 @@ export class App {
   private duelMatch: { opponent: string; cls: string; online: boolean } | null = null;
   /** Duel : manches gagnées par chaque héros, d'après le dernier point marqué. */
   private duelWins: number[] = [0, 0];
+  /** Duel en ligne : la durée et le vainqueur de chaque manche, pour le journal des duels du serveur. */
+  private duelRounds: { duree: number; gagnant: number }[] = [];
+  private duelRoundStart = 0;
   /** Duel en ligne : l'adversaire est parti avant la fin. */
   private duelForfeit = false;
   /** Micro-pause d'impact (hitstop) sur les coups critiques et parades majeures pour le game feel. */
@@ -812,7 +815,7 @@ export class App {
     this.busy = true;
     const { config, progress } = this.d;
     const { arena, duel, level } = content.pvp;
-    const player = duelLoadout(config.player, progress.state, content, level, content.pvp.items).config;
+    const player = duelLoadout(config.player, progress.state, content, level, content.pvp).config;
     const rival = this.duelOpponent(cls);
     this.trainingHero = null;
     this.duelMatch = { opponent: rival.name, cls: rival.cls, online: false };
@@ -838,8 +841,23 @@ export class App {
     const chosen = cls && classes.includes(cls) ? cls : classes[Math.floor(Math.random() * classes.length)];
     const hero = { race: ALLY_RACES[Math.floor(Math.random() * ALLY_RACES.length)], class: chosen };
     const state = { ...progress.state, hero, talents: [] };
-    const loadout = duelLoadout(config.player, state, content, content.pvp.level, content.pvp.items);
+    const loadout = duelLoadout(config.player, state, content, content.pvp.level, content.pvp);
     return { config: loadout.config, sprite: heroSprite(hero), name: `Ombre ${content.skills.classes[chosen].name.toLowerCase()}`, cls: chosen };
+  }
+
+  /** Journal des duels du serveur : l'équipement de duel de ce joueur (classe, voie, race, objets), au début du duel. */
+  private reportDuelEquipment(): void {
+    const state = duelState(this.d.progress.state, content, content.pvp.level);
+    const { arme, ...others } = state.equipped;
+    this.social?.reportDuelEquipment(state.hero.class, state.hero.subclass ?? '', state.hero.race, arme ?? '', Object.values(others).filter((id): id is string => Boolean(id)));
+  }
+
+  /** Journal des duels : l'hôte envoie le résultat. `forfeitWinner` : la place gagnante si l'adversaire a abandonné. */
+  private reportDuelResult(forfeitWinner: number | null): void {
+    const heroes = this.combatView?.players ?? [];
+    const classes = heroes.map((h) => h.cfg.kit);
+    if (classes.length !== 2) return;
+    this.social?.reportDuelResult(classes, heroes.map((h) => h.cfg.sousClasse?.id ?? ''), this.duelRounds, forfeitWinner);
   }
 
   /**
@@ -857,6 +875,7 @@ export class App {
     // En ligne, abandonner en cours de route est une défaite, même en menant au score.
     const victory = forfeit || (match?.online ? wins[0] >= content.pvp.duel.roundsToWin : outcome === 'victory');
     const session = this.coop;
+    if (match?.online && session?.isHost) this.reportDuelResult(forfeit ? me : null);
     if (session?.isHost) session.backToLobby();
     const options: MenuOption[] = match?.online
       ? [
@@ -1322,7 +1341,7 @@ export class App {
       level: this.d.progress.level,
       sprite: heroSprite(hero),
       // Duel : le héros entre égalisé, au niveau commun, avec l'arme de départ de sa classe (src/game/pvp.ts).
-      config: this.coop?.duel ? duelLoadout(this.d.config.player, this.d.progress.state, content, content.pvp.level, content.pvp.items).config : this.loadout().config,
+      config: this.coop?.duel ? duelLoadout(this.d.config.player, this.d.progress.state, content, content.pvp.level, content.pvp).config : this.loadout().config,
     };
   }
 
@@ -1412,7 +1431,9 @@ export class App {
     // Duel : l'adversaire est connu avant de préparer l'arène (sa barre en haut de l'écran).
     this.duelMatch = duel ? { opponent, cls: '', online: true } : null;
     this.duelWins = [0, 0];
+    this.duelRounds = [];
     this.duelForfeit = false;
+    if (duel) this.reportDuelEquipment();
     await this.screens.transition(title, subtitle, () => {
       this.coopRun = start.run;
       if (duel) {
@@ -1562,7 +1583,11 @@ export class App {
         this.recordEndless(event.palier - 1);
       }
     } else if (event.type === 'end') this.outcome = event.outcome;
-    else if (event.type === 'duel') this.duelWins = [...event.wins];
+    else if (event.type === 'duel') {
+      this.duelWins = [...event.wins];
+      if (event.kind === 'round') this.duelRoundStart = Date.now();
+      else this.duelRounds.push({ duree: (Date.now() - this.duelRoundStart) / 1000, gagnant: event.winner ?? -1 });
+    }
     else if (event.type === 'death') {
       const drop = content.drops[event.kind];
       if (!drop) return;

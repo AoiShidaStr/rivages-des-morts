@@ -18,6 +18,8 @@ const HUMAN = { react: 0.18, skill: 0.6, aimError: 0.9, aimEvery: 0.4, missRate:
  */
 const LATENCY = 0.12;
 const HUMAN_LATENCY = 0.22;
+/** Duel : distance au centre (m) à partir de laquelle un tireur qui recule se sent au bord (l'arène fait 9 m de côté). */
+const KITE_ROOM = 8;
 
 /**
  * Ce que le bot lit des yokai au-delà de leur interface publique : leur état et leurs réglages.
@@ -337,7 +339,7 @@ export class Bot {
     if (kit === 'sorcier') {
       const range = c.attack.range;
       const close = near(3);
-      if (close.length) input.move = normalize(sub(p.pos, close[0].pos));
+      if (close.length) input.move = this.kite(close[0].pos);
       else if (gap > range - 1.5) input.move = toTarget;
       if (gap <= range) input.attackHeld = true;
       return input;
@@ -345,7 +347,7 @@ export class Bot {
     if (kit === 'rodeur') {
       const range = c.attack.range;
       const close = near(3.5);
-      if (close.length) input.move = normalize(sub(p.pos, close[0].pos));
+      if (close.length) input.move = this.kite(close[0].pos);
       else if (gap > range - 1) input.move = toTarget;
       // Tir chargé quand personne n'est proche.
       if (p.pose === 'channel') {
@@ -383,6 +385,23 @@ export class Bot {
     if (gap > c.attack.range * 0.6) input.move = toTarget;
     if (gap <= c.attack.range * 0.85) input.attackHeld = true;
     return input;
+  }
+
+  /**
+   * S'écarter de `from`. En duel (`rivalAware`), un tireur ne recule pas droit dans le mur : il tourne autour de
+   * l'adversaire, et revient vers le centre à mesure qu'il approche du bord de l'arène ou de la zone.
+   */
+  private kite(from: Vec2): Vec2 {
+    const p = this.hero;
+    const away = normalize(sub(p.pos, from), vec(1, 0));
+    const view = this.world.duel;
+    if (!this.rivalAware || !view) return away;
+    const room = Math.min(view.zone, KITE_ROOM);
+    const toCenter = normalize(scale(p.pos, -1), away);
+    let side = vec(-away.z, away.x);
+    if (side.x * toCenter.x + side.z * toCenter.z < 0) side = scale(side, -1);
+    const edge = Math.min(1, length(p.pos) / room);
+    return normalize(add(add(scale(away, 1 - 0.8 * edge), scale(side, 0.5 + edge)), scale(toCenter, 0.6 * edge)), away);
   }
 
   /** Chaque attaque est vue ou non, une fois pour toutes. */

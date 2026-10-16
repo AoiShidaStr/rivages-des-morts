@@ -447,7 +447,7 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   return { config, level, bonus, tagCount, tier };
 }
 
-function applyEffect(target: object, effect: ConfigEffect): void {
+export function applyEffect(target: object, effect: ConfigEffect): void {
   const keys = effect.path.split('.');
   let node = target as Record<string, unknown>;
   for (const key of keys.slice(0, -1)) {

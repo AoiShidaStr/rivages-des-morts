@@ -11,7 +11,7 @@
 // sont plafonnés (pvp.json, `items`) : recharges, invulnérabilité.
 import type { PlayerConfig } from './config';
 import { buildTalents, DUEL_SLOTS, fitsHero } from './builds';
-import { buildLoadout, equipBlock, talentPointsAt, type ItemDef, type Loadout, type LoadoutData } from './loadout';
+import { applyEffect, buildLoadout, equipBlock, talentPointsAt, type ConfigEffect, type ItemDef, type Loadout, type LoadoutData } from './loadout';
 import type { ProgressState, Slot } from './progress';
 
 /** Plafonds des effets d'objets cumulés en duel (src/data/pvp.json, `items`). */
@@ -20,6 +20,13 @@ export interface DuelItemRules {
   cooldownCut: number;
   /** Invulnérabilité la plus longue que les objets peuvent donner à une esquive ou à la Frappe fantôme (s). */
   invulnerable: number;
+}
+
+/** Le duel tel que pvp.json le règle côté héros : plafonds des objets, et réglages propres à chaque classe. */
+export interface DuelRules {
+  items: DuelItemRules;
+  /** Effets posés sur le héros d'une classe en duel seulement (même syntaxe que items.json), après tout le reste. */
+  classes?: Partial<Record<string, ConfigEffect[]>>;
 }
 
 /**
@@ -118,11 +125,12 @@ function write(node: unknown, path: string[], value: number): void {
 }
 
 /** Les réglages d'un héros en duel, au niveau commun `level`, objets ramenés à leur version de duel et plafonnés. */
-export function duelLoadout(base: PlayerConfig, state: ProgressState, data: LoadoutData, level: number, rules?: DuelItemRules): Loadout {
+export function duelLoadout(base: PlayerConfig, state: ProgressState, data: LoadoutData, level: number, pvp?: DuelRules): Loadout {
   const duel = duelState(state, data, level);
   const view = duelData(data, duel.hero.class);
   const loadout = buildLoadout(base, duel, view, level);
-  if (!rules) return loadout;
+  if (!pvp) return loadout;
+  const rules = pvp.items;
   // Plafonds : on compare au même héros avec sa seule arme, pour ne borner que ce que les autres objets ajoutent.
   const bare = buildLoadout(base, { ...duel, equipped: { arme: duel.equipped.arme }, items: duel.equipped.arme ? [duel.equipped.arme] : [] }, view, level).config;
   const config = loadout.config;
@@ -136,5 +144,7 @@ export function duelLoadout(base: PlayerConfig, state: ProgressState, data: Load
     const now = read(config, path);
     if (typeof was === 'number' && typeof now === 'number') write(config, path, Math.min(now, Math.max(was, rules.invulnerable)));
   }
+  // Réglages de classe du duel (étape 3 du plan PvP) : ils passent en dernier, sur le héros déjà monté.
+  for (const effect of pvp.classes?.[duel.hero.class] ?? []) applyEffect(config, effect);
   return loadout;
 }

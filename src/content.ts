@@ -17,6 +17,7 @@ import skillsJson from './data/skills.json';
 import sousClassesJson from './data/sous-classes.json';
 import type { DuelConfig, GameConfig } from './game/config';
 import type { DuelItemRules } from './game/pvp';
+import type { ConfigEffect } from './game/loadout';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { ArenaSource, EndlessData } from './game/infini';
 import type { EveilRules, UpgradeRules } from './game/forge';
@@ -165,6 +166,7 @@ const pvp = pvpJson as unknown as {
   arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>;
   duel: DuelConfig;
   items: DuelItemRules;
+  classes?: Partial<Record<string, ConfigEffect[]>>;
 };
 
 export interface QuestDef {
@@ -204,7 +206,7 @@ export const content = {
   /** Le billot de Tetsu : on y frappe un mannequin immobile pour éprouver une classe ou un équipement. */
   entrainement: dungeonFrom('entrainement', entrainement.meta, entrainement.arena),
   /** Le duel (PVP) : l'arène, les règles de la rencontre et le niveau commun des héros. */
-  pvp: { arena: dungeonFrom('duel', pvp.meta, pvp.arena), duel: pvp.duel, level: pvp.level, items: pvp.items },
+  pvp: { arena: dungeonFrom('duel', pvp.meta, pvp.arena), duel: pvp.duel, level: pvp.level, items: pvp.items, classes: pvp.classes ?? {} },
   triggers: questsJson.triggers as unknown as Catalog['triggers'],
   /**
    * Le Yomi sans fond (donjon infini), qui tire ses blocs des donjons ci-dessus, mais les joue tous dans son arène à

@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { adressePublique, suivreTunnel } from './adresse.ts';
 import { Comptes } from './comptes.ts';
+import { Duels } from './duels.ts';
 import { Journal, causeCoupure } from './journal.ts';
 import { Social, type Page } from './social.ts';
 import { DedicatedHost } from '../src/net/dedicated.ts';
@@ -68,7 +69,7 @@ async function serveFile(req: IncomingMessage, res: ServerResponse): Promise<voi
     return;
   }
   if (url.pathname === '/sante') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique(), version: VERSION, reseau: journal.resume() }));
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, joueurs: clients.size, comptes: comptes.total, connectes: social.connectes, parties: parties.size, adresse: adressePublique(), version: VERSION, reseau: journal.resume(), duels: duels.resume() }));
     return;
   }
   if (url.pathname === '/journal') {
@@ -216,6 +217,10 @@ function receive(client: Client, raw: string): void {
     if (typeof message.absent === 'number') journal.ecrire({ type: 'retour', joueur: who(client), absent: Math.round(message.absent), code: Number(message.code) || 0 });
     return;
   }
+  if ((message as { t: string }).t === 'duel') {
+    duels.recevoir(message as Record<string, unknown>);
+    return;
+  }
   if (message.t !== 'hi' && message.t !== 'join' && message.t !== 'leave' && message.t !== 'msg') {
     social.recevoir(client.page, message as Record<string, unknown>);
     return;
@@ -324,6 +329,7 @@ if (utilisateur && process.getuid?.() === 0) {
 }
 const comptes = new Comptes(DONNEES);
 const social = new Social(comptes);
+const duels = new Duels(DONNEES);
 const journal = new Journal(DONNEES, () => ({ joueurs: clients.size, parties: parties.size }));
 
 const server = createServer((req, res) => {

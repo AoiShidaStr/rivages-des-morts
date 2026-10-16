@@ -9,6 +9,7 @@
 //   npm run duel -- --json grille.json              garde la grille dans un fichier (référence de l'équilibrage)
 //   npm run duel -- --comparer tools/duel-reference.json   écart de chaque paire avec la grille de référence
 //   npm run duel -- --objets rodeur --parties 6     audit des objets : la classe avec puis sans chaque objet
+//   npm run duel -- --reglages '{"damage":0.2}'     essaie des réglages de duel par-dessus src/data/pvp.json
 //
 // Grille : pour chaque paire, manches gagnées par chaque camp, part gagnée par le premier avec sa marge d'erreur
 // (intervalle de Wilson à 95 %), durée moyenne d'une manche et part des manches jouées jusqu'au bout du temps. Puis le
@@ -35,6 +36,8 @@ const RACE = option('race', 'einherjar');
 const SEED = Number(option('graine', '1'));
 const JSON_OUT = option('json', null);
 const COMPARE = option('comparer', null);
+/** Réglages de duel essayés par-dessus pvp.json, en JSON : `--reglages '{"classDamage":{"rodeur":0.9}}'`. */
+const { classes: CLASS_OVER, ...TRY } = JSON.parse(option('reglages', '{}'));
 /** Les branches de talents prises par le bot : les deux premières pleines, un nœud de la troisième. */
 const TREE = { guerrier: ['susanoo', 'heracles', 'berserkir'], sorcier: ['kagutsuchi', 'seimei', 'promethee'], lame: ['tsukuyomi', 'thanatos', 'loki'], paladin: ['tyr', 'amaterasu', 'osiris'], rodeur: ['artemis', 'hachiman', 'skadi'] };
 const STEP = 1 / 60;
@@ -70,7 +73,12 @@ const [{ World }, { Bot }, { duelLoadout, allowedInDuel }, { equipBlock }, { con
   load('/src/data/player.json'),
   load('/src/data/enemies.json'),
 ]);
-const { arena, duel, level } = content.pvp;
+const merge = (base, over) =>
+  Object.fromEntries([...new Set([...Object.keys(base), ...Object.keys(over)])].map((k) => [k, over[k] && typeof over[k] === 'object' && !Array.isArray(over[k]) && base[k] ? merge(base[k], over[k]) : (over[k] ?? base[k])]));
+const { arena, level } = content.pvp;
+const duel = merge(content.pvp.duel, TRY);
+/** Réglages de classe essayés (`classes` dans --reglages) : ils remplacent ceux de pvp.json pour ces classes. */
+const CLASS_TRY = { ...content.pvp.classes, ...(CLASS_OVER ?? {}) };
 
 /**
  * La progression d'un héros de test de la classe `cls`, avec son build Duel : l'arme de départ, et `item` en plus
@@ -103,7 +111,7 @@ const heroState = (cls, item) => {
     duelBuild: { name: 'Duel', class: cls, equipped, talents },
   };
 };
-const heroConfig = (cls, item) => duelLoadout(player.default, heroState(cls, item), content, level, content.pvp.items).config;
+const heroConfig = (cls, item) => duelLoadout(player.default, heroState(cls, item), content, level, { items: content.pvp.items, classes: CLASS_TRY }).config;
 
 /** Un duel entre `a` (héros 0) et `b` (héros 1), avec sa graine : les manches de chacun, et la durée de chacune. */
 function fight(a, b, seed) {

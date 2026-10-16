@@ -162,6 +162,16 @@ export class SocialClient {
     this.channel.post({ t: 'record', heros, palier });
   }
 
+  /** Journal des duels du serveur (server/duels.ts) : l'équipement de duel de ce joueur, au début d'un duel en ligne. */
+  reportDuelEquipment(classe: string, voie: string, race: string, arme: string, objets: string[]): void {
+    this.channel.post({ t: 'duel', faire: 'equipement', classe, voie, race, arme, objets });
+  }
+
+  /** Journal des duels : le résultat d'un duel en ligne, envoyé par son hôte. `gagnant` : la place du vainqueur. */
+  reportDuelResult(classes: string[], voies: string[], manches: { duree: number; gagnant: number }[], forfait: number | null): void {
+    this.channel.post({ t: 'duel', faire: 'resultat', classes, voies, manches, forfait });
+  }
+
   /** Demande le classement de la stèle partagée ; il arrive dans `records`. */
   requestRecords(): void {
     this.channel.post({ t: 'records' });
