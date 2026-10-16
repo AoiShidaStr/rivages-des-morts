@@ -44,6 +44,7 @@ import {
   openDungeonEntry,
   openForge,
   openInventory,
+  openBuilds,
   openLoot,
   openPactDraft,
   openQuests,
@@ -468,7 +469,7 @@ export class App {
       this.screens.toast(this.music.settings.muted ? 'Musique coupée (M)' : 'Musique remise (M)');
     }
     if (this.panels.open) {
-      if (key('Escape') || key('KeyI') || key('KeyJ') || key('KeyK') || key('KeyO')) this.panels.close();
+      if (key('Escape') || key('KeyI') || key('KeyB') || key('KeyJ') || key('KeyK') || key('KeyO')) this.panels.close();
       return;
     }
     if (this.screens.paused) {
@@ -481,6 +482,7 @@ export class App {
         const target = this.d.island.nearest();
         if (target) void this.interact(target);
       } else if (key('KeyI')) openInventory(this.panels, this.ui);
+      else if (key('KeyB')) openBuilds(this.panels, this.ui);
       else if (key('KeyJ')) openQuests(this.panels, this.ui);
       else if (key('KeyK')) openSkills(this.panels, this.ui);
       else if (key('KeyO') && this.d.accounts) this.openSocialPanel();

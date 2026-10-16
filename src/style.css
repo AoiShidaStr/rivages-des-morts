@@ -725,6 +725,66 @@ kbd {
   flex-wrap: wrap;
 }
 
+/* Équipement : les onglets Équipement et Builds au-dessus de la fenêtre */
+.inventory-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.inventory-page > .tabs {
+  margin: 12px 18px 0;
+}
+
+/* Builds : une place par ligne, son contenu à gauche et ses boutons à droite */
+.build-row {
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
+.build-row.worn {
+  border-color: var(--vermilion-clair);
+}
+
+.build-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#ui .build-name {
+  max-width: 220px;
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--washi);
+  border-color: rgba(236, 230, 218, 0.25);
+}
+
+/* Un objet du build que le héros ne possède plus */
+.chip.build-missing {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* Build Duel : les pièces gardées (4 sur 6), à cocher */
+#ui .chip.build-pick {
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.chip.build-pick.on {
+  opacity: 1;
+  border-color: var(--vermilion-clair);
+}
+
+.chip.build-pick[disabled] {
+  cursor: default;
+  opacity: 0.35;
+}
+
 /* Forge, onglet Éveil : le pouvoir que l'éveil donne à la relique */
 .eveil-power {
   margin-top: 2px;
