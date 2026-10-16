@@ -24,6 +24,7 @@ import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravure
 import type { EndlessModifierSeed } from '../game/infini';
 import { salvage, type RolledOffer } from '../game/loot';
 import { breakSeal, meltStock, poseGravure, takeOut } from '../game/reserve';
+import { applyBuild, BUILD_COUNT, DUEL_SLOTS, extraSlots, fitsHero, missingItems, saveBuild, saveDuelBuild, snapshot, type Build } from '../game/builds';
 import { markSeen, readJournal, seenItems } from '../game/journal';
 import { STOCK_MAX, SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
 import { keyName, withKeys } from '../keys';
@@ -1187,50 +1188,334 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       h('span', {}, purse(progress), ` · ${state.chests} coffre${state.chests > 1 ? 's' : ''} à ouvrir sur la barque`),
       h(
         'div',
-        { class: 'inventory' },
-        h(
+        { class: 'inventory-page' },
+        gearTabs(host, ctx, 'equipement'),
+          h(
           'div',
-          { class: 'col' },
-          h('h3', {}, 'Porté'),
-          h('div', { class: 'slots' }, ...slotButtons),
+          { class: 'inventory' },
           h(
             'div',
-            { class: 'inv-links' },
-            h('button', { class: 'btn small', onclick: () => openReserve(host, ctx) }, `Réserve (${progress.state.stock.length})`),
-            h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets'),
+            { class: 'col' },
+            h('h3', {}, 'Porté'),
+            h('div', { class: 'slots' }, ...slotButtons),
+            h(
+              'div',
+              { class: 'inv-links' },
+              h('button', { class: 'btn small', onclick: () => openReserve(host, ctx) }, `Réserve (${progress.state.stock.length})`),
+              h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets'),
+            ),
+            fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${Math.round(cfg.attack.damage)} dégâts`, stats),
+            fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
+            fold(
+              'inv-materials',
+              false,
+              'Matériaux',
+              materials.length ? String(materials.reduce((sum, [id]) => sum + progress.material(id), 0)) : 'aucun',
+              materials.length
+                ? h('div', { class: 'chips' }, ...materials.map(([id, name]) => h('span', { class: 'chip' }, icon(id, 'small'), name, h('b', {}, `× ${progress.material(id)}`))))
+                : h('p', { class: 'note' }, 'Les ennemis des Rizières noyées en laissent tomber.'),
+            ),
+            questItems.length
+              ? fold(
+                  'inv-quest',
+                  false,
+                  'Objets de quête',
+                  String(questItems.length),
+                  h('div', { class: 'chips' }, ...questItems.map((id) => h('span', { class: 'chip', title: content.items[id]?.description ?? '' }, icon(id, 'small'), content.items[id]?.name ?? id))),
+                )
+              : null,
           ),
-          fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${Math.round(cfg.attack.damage)} dégâts`, stats),
-          fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
-          fold(
-            'inv-materials',
-            false,
-            'Matériaux',
-            materials.length ? String(materials.reduce((sum, [id]) => sum + progress.material(id), 0)) : 'aucun',
-            materials.length
-              ? h('div', { class: 'chips' }, ...materials.map(([id, name]) => h('span', { class: 'chip' }, icon(id, 'small'), name, h('b', {}, `× ${progress.material(id)}`))))
-              : h('p', { class: 'note' }, 'Les ennemis des Rizières noyées en laissent tomber.'),
+          h(
+            'div',
+            { class: 'col inventory-shelf' },
+            shelfTabs(progress, owned, shelf, (s) => {
+              memory.inventoryShelf = s;
+              render();
+            }),
+            sections.length
+              ? h('div', { class: 'shelf-sections', 'data-scroll': `inventory-${shelf}` }, ...sections)
+              : h('p', { class: 'note' }, 'Aucun objet dans ce rayon. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.'),
+            sections.length ? h('p', { class: 'note' }, 'Clique sur un objet pour l’équiper ; clique sur l’objet porté pour le retirer. Une arme se change, elle ne se retire pas.') : null,
           ),
-          questItems.length
-            ? fold(
-                'inv-quest',
-                false,
-                'Objets de quête',
-                String(questItems.length),
-                h('div', { class: 'chips' }, ...questItems.map((id) => h('span', { class: 'chip', title: content.items[id]?.description ?? '' }, icon(id, 'small'), content.items[id]?.name ?? id))),
-              )
-            : null,
+        ),
+      ),
+      { wide: true },
+    );
+  };
+  render();
+}
+
+/** Les onglets de la fenêtre d'équipement : ce qui est porté, et les builds enregistrés. */
+function gearTabs(host: PanelHost, ctx: UiContext, current: 'equipement' | 'builds'): HTMLElement {
+  return tabs(
+    [
+      { id: 'equipement' as const, label: 'Équipement' },
+      { id: 'builds' as const, label: `Builds (${keyName('B')})` },
+    ],
+    current,
+    (id) => (id === 'builds' ? openBuilds(host, ctx) : openInventory(host, ctx)),
+  );
+}
+
+// --- Builds -----------------------------------------------------------------------
+
+/** Vrai si le héros porte et a choisi exactement ce que tient le build. */
+function isWorn(progress: Progress, build: Build): boolean {
+  const now = snapshot(progress.state, build.name);
+  const same = (a: Partial<Record<Slot, string>>, b: Partial<Record<Slot, string>>) =>
+    (Object.keys(content.slots) as Slot[]).every((slot) => (a[slot] ?? '') === (b[slot] ?? ''));
+  return (
+    now.class === build.class &&
+    now.subclass === build.subclass &&
+    same(now.equipped, build.equipped) &&
+    now.talents.length === build.talents.length &&
+    now.talents.every((t) => build.talents.includes(t))
+  );
+}
+
+/** Le contenu d'un build : un objet par emplacement (barré s'il n'est plus possédé), ses talents et sa voie. */
+function buildSummary(progress: Progress, build: Build): HTMLElement {
+  const missing = new Set(missingItems(progress.state, build));
+  const voie = build.subclass ? content.subclasses[build.class]?.[build.subclass] : undefined;
+  const items = (Object.keys(content.slots) as Slot[])
+    .map((slot) => build.equipped[slot])
+    .filter((id): id is string => !!id)
+    .map((id) =>
+      h(
+        'span',
+        {
+          class: `chip${missing.has(id) ? ' build-missing' : ''}`,
+          title: missing.has(id) ? 'Tu ne possèdes plus cet objet : son emplacement restera vide.' : (content.items[id]?.description ?? ''),
+        },
+        icon(id, 'small'),
+        content.items[id]?.name ?? id,
+      ),
+    );
+  return h(
+    'div',
+    { class: 'build-summary' },
+    h('div', { class: 'chips' }, ...items),
+    h(
+      'div',
+      { class: 'note' },
+      `${content.skills.classes[build.class]?.name ?? build.class} · ${build.talents.length} talent${build.talents.length > 1 ? 's' : ''} · ${voie ? `voie ${voie.name}` : 'sans voie'}`,
+    ),
+    missing.size ? h('div', { class: 'note danger' }, `${missing.size} objet${missing.size > 1 ? 's' : ''} que tu ne possèdes plus : ${missing.size > 1 ? 'leurs emplacements resteront vides' : 'son emplacement restera vide'}.`) : null,
+  );
+}
+
+/**
+ * Les builds : cinq places pour enregistrer l'équipement, les talents et la voie du héros, et y revenir en un clic,
+ * plus le build Duel (l'arme et 4 des 6 autres emplacements), qui sert tout seul en duel. Sur l'île seulement,
+ * comme la fenêtre d'équipement.
+ */
+export function openBuilds(host: PanelHost, ctx: UiContext): void {
+  /** Les emplacements gardés pour le build Duel, pendant que le joueur choisit ; null hors de ce choix. */
+  let duelPick: Slot[] | null = null;
+
+  const render = () => {
+    const { progress } = ctx;
+    const { state } = progress;
+    const hero = state.hero;
+
+    const card = (index: number) => {
+      const build = state.builds[index] ?? null;
+      const worn = build ? isWorn(progress, build) : false;
+      const other = build && !fitsHero(build, hero);
+      return h(
+        'div',
+        { class: `row build-row${worn ? ' worn' : ''}` },
+        h(
+          'div',
+          {},
+          h(
+            'div',
+            { class: 'item-head' },
+            build
+              ? h('input', {
+                  class: 'coop-input build-name',
+                  value: build.name,
+                  maxlength: '24',
+                  'aria-label': 'Nom du build',
+                  onchange: (e) => {
+                    build.name = (e.currentTarget as HTMLInputElement).value.trim() || `Build ${index + 1}`;
+                    progress.save();
+                    render();
+                  },
+                  onkeydown: (e) => e.stopPropagation(),
+                })
+              : h('strong', {}, `Build ${index + 1}`),
+            worn ? h('span', { class: 'tag' }, 'Porté') : null,
+          ),
+          build ? buildSummary(progress, build) : h('div', { class: 'note' }, 'Place libre : enregistre ce que tu portes maintenant.'),
+          other ? h('div', { class: 'note danger' }, 'Build d’une autre classe : il ne s’applique pas à ton héros.') : null,
         ),
         h(
           'div',
-          { class: 'col inventory-shelf' },
-          shelfTabs(progress, owned, shelf, (s) => {
-            memory.inventoryShelf = s;
-            render();
-          }),
-          sections.length
-            ? h('div', { class: 'shelf-sections', 'data-scroll': `inventory-${shelf}` }, ...sections)
-            : h('p', { class: 'note' }, 'Aucun objet dans ce rayon. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.'),
-          sections.length ? h('p', { class: 'note' }, 'Clique sur un objet pour l’équiper ; clique sur l’objet porté pour le retirer. Une arme se change, elle ne se retire pas.') : null,
+          { class: 'reserve-actions' },
+          build
+            ? h(
+                'button',
+                {
+                  class: 'btn small primary',
+                  disabled: worn || !!other,
+                  onclick: () => {
+                    const missing = applyBuild(progress, content, build);
+                    if (missing === null) return;
+                    ctx.toast(missing.length ? `${build.name} équipé (${missing.length} objet${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''})` : `${build.name} équipé`, 'quest');
+                    render();
+                  },
+                },
+                worn ? 'Équipé' : 'Équiper',
+              )
+            : null,
+          h(
+            'button',
+            {
+              class: 'btn small',
+              disabled: worn,
+              title: 'Enregistre ton équipement, tes talents et ta voie actuels dans cette place.',
+              onclick: () => {
+                const saved = saveBuild(progress, index);
+                ctx.toast(`${saved.name} enregistré`, 'quest');
+                render();
+              },
+            },
+            build ? 'Remplacer par l’actuel' : 'Enregistrer l’actuel',
+          ),
+          build
+            ? h(
+                'button',
+                {
+                  class: 'btn small',
+                  onclick: () => {
+                    state.builds[index] = null;
+                    progress.save();
+                    render();
+                  },
+                },
+                'Vider',
+              )
+            : null,
+        ),
+      );
+    };
+
+    // Le build Duel : l'arme, puis au plus DUEL_SLOTS des six autres emplacements.
+    const duel = state.duelBuild;
+    const current = extraSlots(state);
+    const saveDuel = (keep: Slot[]) => {
+      saveDuelBuild(progress, keep);
+      duelPick = null;
+      ctx.toast('Build Duel enregistré', 'quest');
+      render();
+    };
+    const picker = duelPick
+      ? h(
+          'div',
+          { class: 'build-summary' },
+          h('div', { class: 'note' }, `Garde ${DUEL_SLOTS} emplacements sur ${current.length} en plus de l’arme (${duelPick.length} / ${DUEL_SLOTS}) :`),
+          h(
+            'div',
+            { class: 'chips' },
+            ...current.map((slot) => {
+              const id = state.equipped[slot] as string;
+              const on = duelPick!.includes(slot);
+              return h(
+                'button',
+                {
+                  class: `chip build-pick${on ? ' on' : ''}`,
+                  'aria-pressed': String(on),
+                  disabled: !on && duelPick!.length >= DUEL_SLOTS,
+                  onclick: () => {
+                    duelPick = on ? duelPick!.filter((s) => s !== slot) : [...duelPick!, slot];
+                    render();
+                  },
+                },
+                icon(id, 'small'),
+                `${content.slots[slot]} · ${content.items[id]?.name ?? id}`,
+              );
+            }),
+          ),
+        )
+      : null;
+    const duelCard = h(
+      'div',
+      { class: 'row build-row build-duel' },
+      h(
+        'div',
+        {},
+        h('div', { class: 'item-head' }, h('strong', {}, 'Build Duel'), h('span', { class: 'tag' }, `arme + ${DUEL_SLOTS} sur 6`)),
+        picker ?? (duel ? buildSummary(progress, duel) : h('div', { class: 'note' }, 'Aucun build Duel : en duel, ton héros garde ses talents et sa voie actuels.')),
+        duel && !fitsHero(duel, hero) ? h('div', { class: 'note danger' }, 'Build d’une autre classe : le duel prend tes talents et ta voie actuels.') : null,
+        h('div', { class: 'note' }, 'Sert tout seul en duel, sans toucher à ce que tu portes. Ses talents et sa voie comptent déjà ; ses objets compteront quand la règle des objets en duel sera en place (pour l’instant, le duel donne l’arme de départ de ta classe).'),
+      ),
+      h(
+        'div',
+        { class: 'reserve-actions' },
+        ...(duelPick
+          ? [
+              h('button', { class: 'btn small primary', onclick: () => saveDuel(duelPick ?? []) }, 'Valider'),
+              h(
+                'button',
+                {
+                  class: 'btn small',
+                  onclick: () => {
+                    duelPick = null;
+                    render();
+                  },
+                },
+                'Annuler',
+              ),
+            ]
+          : [
+              h(
+                'button',
+                {
+                  class: 'btn small',
+                  title: 'Enregistre ton arme, tes talents, ta voie et 4 de tes autres pièces.',
+                  onclick: () => {
+                    if (current.length <= DUEL_SLOTS) saveDuel(current);
+                    else {
+                      duelPick = current.slice(0, DUEL_SLOTS);
+                      render();
+                    }
+                  },
+                },
+                duel ? 'Remplacer par l’actuel' : 'Enregistrer l’actuel',
+              ),
+            ]),
+        duel && !duelPick
+          ? h(
+              'button',
+              {
+                class: 'btn small',
+                onclick: () => {
+                  state.duelBuild = null;
+                  progress.save();
+                  render();
+                },
+              },
+              'Vider',
+            )
+          : null,
+      ),
+    );
+
+    host.show(
+      'Équipement',
+      `${BUILD_COUNT} builds pour ${heroClass(content.skills, hero).name.toLowerCase()} · un clic pour changer d’équipement, de talents et de voie`,
+      h(
+        'div',
+        { class: 'inventory-page' },
+        gearTabs(host, ctx, 'builds'),
+        h(
+          'div',
+          { class: 'list', 'data-scroll': 'builds' },
+          h('p', { class: 'note' }, 'Un build garde ton équipement, tes talents et ta voie. « Équiper » les reprend tous d’un coup ; un objet vendu ou échangé depuis laisse son emplacement vide.'),
+          ...Array.from({ length: BUILD_COUNT }, (_, i) => card(i)),
+          h('h3', {}, 'Duel'),
+          duelCard,
         ),
       ),
       { wide: true },
