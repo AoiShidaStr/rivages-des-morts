@@ -589,6 +589,48 @@ kbd {
   opacity: 0.7;
 }
 
+/* Duel : manche, score et temps, sous la barre de l'adversaire. */
+.duel {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  align-items: baseline;
+  gap: 14px;
+  padding: 4px 16px;
+  border-radius: 4px;
+  background: rgba(12, 10, 16, 0.5);
+  color: var(--washi);
+  font-size: 14px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.duel.visible {
+  display: flex;
+}
+
+.duel .round {
+  font-family: var(--serif);
+  opacity: 0.85;
+}
+
+.duel .score {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--gold);
+}
+
+.duel .time {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.duel .time.late {
+  color: #e8735a;
+  opacity: 1;
+}
+
 /* Annonces */
 #banner {
   position: absolute;
@@ -683,9 +725,97 @@ kbd {
   flex-wrap: wrap;
 }
 
+/* Équipement : les onglets Équipement et Builds au-dessus de la fenêtre */
+.inventory-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.inventory-page > .tabs {
+  margin: 12px 18px 0;
+}
+
+/* Builds : une place par ligne, son contenu à gauche et ses boutons à droite */
+.build-row {
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
+.build-row.worn {
+  border-color: var(--vermilion-clair);
+}
+
+.build-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#ui .build-name {
+  max-width: 220px;
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--washi);
+  border-color: rgba(236, 230, 218, 0.25);
+}
+
+/* Un objet du build que le héros ne possède plus */
+.chip.build-missing {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* Build Duel : les pièces gardées (4 sur 6), à cocher */
+#ui .chip.build-pick {
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.chip.build-pick.on {
+  opacity: 1;
+  border-color: var(--vermilion-clair);
+}
+
+.chip.build-pick[disabled] {
+  cursor: default;
+  opacity: 0.35;
+}
+
 /* Forge, onglet Éveil : le pouvoir que l'éveil donne à la relique */
 .eveil-power {
   margin-top: 2px;
   font-size: 12px;
   color: var(--vermilion);
+}
+
+/* Ping du joueur en ligne (src/ui/ping.ts). */
+.ping-badge {
+  position: fixed;
+  top: 8px;
+  right: 10px;
+  z-index: 30;
+  display: none;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(10, 12, 16, 0.55);
+  color: #b9e6a8;
+  font: 600 11px/1.5 system-ui, sans-serif;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.ping-badge.visible {
+  display: block;
+}
+
+.ping-badge.lag {
+  color: #ffb36b;
+}
+
+.ping-badge.lost {
+  color: #ff7b6b;
 }

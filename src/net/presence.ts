@@ -5,6 +5,7 @@
 // La version GitHub Pages n'a pas d'île partagée : en WebRTC, un salon unique pour tous les joueurs n'aurait pas de
 // sens. Pour les tests, `?reseau=local` la fait marcher entre onglets du même navigateur.
 import { add, distance, length, scale, sub, vec, type Vec2 } from '../game/math';
+import { noteArrival } from './mesures';
 import { openRoom, type Json, type Network, type Room } from './transport';
 
 const ROOM = 'ile';
@@ -86,6 +87,8 @@ export class IslandPresence {
       remote.target = vec(x, z);
       remote.facing = length(vec(fx, fz)) > 0.01 ? vec(fx, fz) : remote.facing;
       remote.moving = moving === 1;
+      // Un héros qui marche annonce sa position tous les `SEND_EVERY` : une annonce très en retard est un à-coup.
+      noteArrival(`pos:${from}`, remote.moving ? SEND_EVERY * 1000 : 0);
       if (!remote.placed) {
         remote.pos = remote.target;
         remote.placed = true;

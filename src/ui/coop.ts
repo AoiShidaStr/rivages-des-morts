@@ -145,6 +145,62 @@ export function openCoopMenu(host: PanelHost, deps: CoopDeps): void {
 }
 
 /**
+ * L'arène des duels : créer un duel et donner son code à son adversaire, ou rejoindre le sien. L'hôte fait tourner le
+ * combat dans son navigateur ; tout y est égalisé (src/game/pvp.ts), rien ne s'y gagne ni ne s'y perd.
+ */
+export function openDuelMenu(host: PanelHost, deps: CoopDeps): void {
+  const name = h('input', { type: 'text', maxlength: String(PSEUDO_MAX), value: pseudo(deps.progress), 'aria-label': 'Pseudo', class: 'coop-input' });
+  const code = h('input', { type: 'text', maxlength: String(CODE_LENGTH), placeholder: 'CODE', 'aria-label': 'Code du duel', class: 'coop-input coop-code-input' });
+  const who = () => {
+    const value = name.value.trim().slice(0, PSEUDO_MAX) || pseudo(deps.progress);
+    savePseudo(value);
+    return value;
+  };
+  const join = (value: string) => {
+    const clean = cleanCode(value);
+    if (clean.length !== CODE_LENGTH) {
+      deps.toast(`Le code d’un duel a ${CODE_LENGTH} caractères.`);
+      return;
+    }
+    host.close();
+    deps.opened(CoopSession.join(deps.network, clean, deps.member(who())));
+  };
+  code.addEventListener('input', () => (code.value = cleanCode(code.value)));
+  code.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key === 'Enter') join(code.value);
+  });
+  host.show(
+    content.pvp.arena.name,
+    `Un duel contre un autre joueur, en deux manches gagnantes. Tout est égalisé : niveau ${content.pvp.level}, arme de départ, seuls comptent ta race, ta classe, ta voie et tes talents.`,
+    h(
+      'div',
+      { class: 'list coop' },
+      h('label', { class: 'coop-field' }, h('span', {}, 'Ton pseudo'), name),
+      h('h3', {}, 'Créer un duel'),
+      h('p', { class: 'note' }, 'Tu reçois un code : donne-le à ton adversaire. Le combat tourne chez vous deux à la fois, sans avantage pour celui qui crée le duel.'),
+      h(
+        'div',
+        { class: 'entry-actions' },
+        h(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              host.close();
+              deps.opened(CoopSession.hostDuel(deps.network, deps.member(who()), content.pvp.level));
+            },
+          },
+          'Créer le duel',
+        ),
+      ),
+      h('h3', {}, 'Rejoindre avec un code'),
+      h('div', { class: 'coop-join' }, code, h('button', { class: 'btn', onclick: () => join(code.value) }, 'Rejoindre')),
+    ),
+  );
+  name.focus();
+}
+
+/**
  * Le salon : le code à partager, les joueurs et s'ils sont prêts. L'hôte choisit le donjon et son niveau
  * (parmi ceux qu'il a ouverts) et lance la descente ; les invités se disent prêts.
  */
@@ -168,10 +224,12 @@ export function openLobby(
         h('span', { class: `coop-status${p.ready || p.peer === lobby.leader ? ' ready' : ''}` }, p.host ? 'Hôte' : p.peer === lobby.leader ? 'Meneur' : p.ready ? 'Prêt' : 'Pas prêt'),
       ),
     );
-    for (let i = lobby.players.length; i < MAX_PLAYERS; i++) rows.push(h('div', { class: 'coop-player empty' }, h('small', {}, 'Place libre')));
+    for (let i = lobby.players.length; i < session.capacity; i++) rows.push(h('div', { class: 'coop-player empty' }, h('small', {}, session.duel ? 'En attente de ton adversaire' : 'Place libre')));
 
     const settings: HTMLElement[] = [];
-    if (session.leads) {
+    if (session.duel) {
+      settings.push(h('p', { class: 'note' }, `Deux manches gagnantes de ${content.pvp.duel.roundTime} s, la zone se referme. Tout est égalisé au niveau ${content.pvp.level}. ${session.isHost ? 'Lance le duel quand ton adversaire est prêt.' : 'Dis-toi prêt : l’hôte lance le duel.'}`));
+    } else if (session.leads) {
       // Le serveur ne tient pas le Yomi sans fond : ses blocs se décident chez un hôte joueur.
       const dungeons = openDungeons(progress).filter((id) => !session.dedicated || id !== ENDLESS);
       const endless = lobby.dungeon === ENDLESS;
@@ -226,17 +284,17 @@ export function openLobby(
       h(
         'div',
         { class: 'coop-share' },
-        h('small', {}, 'Code de la partie'),
+        h('small', {}, session.duel ? 'Code du duel' : 'Code de la partie'),
         h('strong', { class: 'coop-code' }, session.code),
         h('button', { class: 'btn small', onclick: copy, title: 'Copier le code' }, 'Copier'),
       ),
       h('div', { class: 'coop-players' }, ...rows),
       ...settings,
-      lobby.inGame ? h('p', { class: 'note' }, 'La descente est en cours.') : null,
+      lobby.inGame ? h('p', { class: 'note' }, session.duel ? 'Le duel est en cours.' : 'La descente est en cours.') : null,
       h(
         'div',
         { class: 'entry-actions' },
-        h('button', { class: 'btn', onclick: () => actions.quit() }, session.isHost ? 'Fermer la partie' : 'Quitter la partie'),
+        h('button', { class: 'btn', onclick: () => actions.quit() }, session.duel ? 'Quitter le duel' : session.isHost ? 'Fermer la partie' : 'Quitter la partie'),
         session.leads
           ? h(
               'button',
@@ -246,7 +304,19 @@ export function openLobby(
                 title: waiting ? (alone ? 'Attends qu’un ami rejoigne la partie' : 'Attends que tout le monde soit prêt') : '',
                 onclick: () => actions.launch(),
               },
-              alone ? 'En attente de joueurs…' : waiting ? 'En attente des joueurs prêts…' : lobby.players.length < 2 ? 'Descendre' : 'Descendre ensemble',
+              session.duel
+                ? alone
+                  ? 'En attente de l’adversaire…'
+                  : waiting
+                    ? 'En attente qu’il soit prêt…'
+                    : 'Lancer le duel'
+                : alone
+                  ? 'En attente de joueurs…'
+                  : waiting
+                    ? 'En attente des joueurs prêts…'
+                    : lobby.players.length < 2
+                      ? 'Descendre'
+                      : 'Descendre ensemble',
             )
           : h(
               'button',
@@ -258,12 +328,16 @@ export function openLobby(
     body.replaceChildren(...parts.filter((part): part is HTMLElement => part !== null));
   };
 
-  const subtitle = session.isHost
+  const subtitle = session.duel
+    ? session.isHost
+      ? 'Ton adversaire rejoint avec le code.'
+      : 'En attente de l’hôte…'
+    : session.isHost
     ? 'Tu es l’hôte. Tes amis rejoignent avec le code.'
     : session.network === 'serveur'
       ? 'Partie tenue par le serveur : le combat continue même si un joueur part.'
       : 'En attente de l’hôte…';
-  host.show('Salon coop', subtitle, body, { onClose: () => actions.closed() });
+  host.show(session.duel ? 'Salon du duel' : 'Salon coop', subtitle, body, { onClose: () => actions.closed() });
   if (session.lobby.players.length) render(session.lobby);
   else body.replaceChildren(h('p', { class: 'note' }, `Connexion à la partie ${session.code}…`));
   return () => {

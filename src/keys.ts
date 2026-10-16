@@ -12,6 +12,7 @@ const CODES: Record<string, string> = {
   E: 'KeyE',
   R: 'KeyR',
   F: 'KeyF',
+  B: 'KeyB',
   I: 'KeyI',
   J: 'KeyJ',
   K: 'KeyK',

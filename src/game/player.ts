@@ -1,3 +1,4 @@
+import { random } from './rng';
 import type { PlayerConfig } from './config';
 import type { Enemy } from './enemies';
 import { add, degToRad, distance, inCone, length, lerp, normalize, scale, sub, vec, type Vec2 } from './math';
@@ -6,6 +7,9 @@ import type { Decoy, World } from './world';
 
 /** Durée pendant laquelle un clic, une esquive ou une compétence reste en mémoire, le temps que le coup en cours le permette. */
 const ATTACK_BUFFER = 0.2;
+/** Esquive d'un invité : au plus ce retard rattrapé (s), et le retard d'affichage de ses ennemis qui s'y ajoute. */
+const DODGE_GRACE_MAX = 0.15;
+const DISPLAY_DELAY = 0.05;
 /** Affichage : durée du recul dessiné après un coup reçu, et du geste d'une compétence instantanée. */
 const HURT_TIME = 0.32;
 const CAST_TIME = { skill: 0.5, ultimate: 0.7 };
@@ -50,6 +54,22 @@ export function walkFactor(cfg: PlayerConfig, hp: number, transformed: number): 
   if (perks.yomotsu) factor += perks.yomotsu.speed;
   return factor;
 }
+
+/** Commandes d'un héros étourdi en duel : rien n'est pressé ni tenu. */
+const stunned: InputFrame = {
+  move: vec(),
+  aim: vec(),
+  aimGround: vec(),
+  attackPressed: false,
+  attackHeld: false,
+  signatureHeld: false,
+  signaturePressed: false,
+  dodgePressed: false,
+  skillAPressed: false,
+  skillEPressed: false,
+  skillRPressed: false,
+  skillFPressed: false,
+};
 
 export class Player {
   pos: Vec2 = vec(0, 0);
@@ -199,6 +219,12 @@ export class Player {
   /** Secondes depuis que la garde est levée (blocage parfait), et retard réseau du joueur (un invité, en coop). */
   private guardHeld = 0;
   latency = 0;
+  /**
+   * Invité : coups reçus il y a moins de `DODGE_GRACE_MAX` s. Il a vu le coup partir en retard (le temps que l'image
+   * arrive) et son esquive met encore un aller simple à venir : quand elle arrive, les coups de cette fenêtre sont
+   * annulés, comme la garde parfaite élargit déjà la sienne.
+   */
+  private recentHits: { age: number; hp: number; barrier: number; knockback: Vec2 }[] = [];
   /** Bouclier temporaire (Haidate de shikome, Bouclier de flammes) : PV absorbés avant les vrais, et secondes restantes. */
   barrier = 0;
   private barrierTime = 0;
@@ -220,6 +246,13 @@ export class Player {
   /** Filet d'une voie (le Couloir de l'Éclaireur) : vitesse de marche en plus pendant ces secondes. */
   private netRush = 0;
   private netRushBonus = 0;
+  /**
+   * Duel : secondes d'étourdissement (le héros ne bouge ni n'agit), et ralentissement (part de la marche perdue,
+   * secondes restantes), posés par les coups de l'autre héros (World, Rival).
+   */
+  pvpStun = 0;
+  pvpSlow = 0;
+  pvpSlowTime = 0;
 
   /** `id` : place du héros dans la partie (0 : l'hôte, ou le seul héros en solo). */
   constructor(
@@ -285,6 +318,7 @@ export class Player {
 
   get pose(): Pose {
     const a = this.action;
+    if (this.pvpStun > 0 && a.kind === 'free') return 'stunned';
     switch (a.kind) {
       case 'attack':
         return a.t < this.timing().windup ? 'windup' : 'strike';
@@ -403,6 +437,9 @@ export class Player {
 
   /** Soigne le héros ; renvoie les PV rendus. */
   heal(amount: number, world: World): number {
+    // Un héros tombé ne se relève pas par un soin reçu dans le même pas (vol de vie, poison qui soigne) : en duel, le
+    // second héros, qui agit après le premier, en aurait profité seul.
+    if (this.dead) return 0;
     // « Saignée du Yomi » : la marée boit une part des soins tant que la vague dure (world.healFactor).
     const gained = Math.min(amount * this.healFactor * world.healFactor(), this.cfg.maxHp - this.hp);
     if (gained <= 0) return 0;
@@ -465,6 +502,12 @@ export class Player {
 
   update(dt: number, input: InputFrame, world: World): void {
     const c = this.cfg;
+    // Duel : étourdi, le héros ne fait plus rien (les recharges courent quand même) ; ralenti, il marche moins vite.
+    this.pvpSlowTime = Math.max(0, this.pvpSlowTime - dt);
+    if (this.pvpStun > 0) {
+      this.pvpStun = Math.max(0, this.pvpStun - dt);
+      input = { ...stunned, move: vec(), aim: input.aim, aimGround: input.aimGround };
+    } else if (this.pvpSlowTime > 0) input = { ...input, move: scale(input.move, 1 - this.pvpSlow) };
     this.dodgeCooldown = Math.max(0, this.dodgeCooldown - dt * this.haste);
     // Bottes de Tengu : une esquive rechargée part en réserve, et la suivante se recharge.
     if (this.dodgeCooldown <= 0 && this.dodgeSpare < (c.perks?.dodgeCharges ?? 1) - 1) {
@@ -496,6 +539,10 @@ export class Player {
     if (this.barrierTime <= 0) this.barrier = 0;
     this.tickKitCooldowns(dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
+    if (this.recentHits.length) {
+      for (const hit of this.recentHits) hit.age += dt;
+      this.recentHits = this.recentHits.filter((hit) => hit.age <= DODGE_GRACE_MAX);
+    }
     this.hurt = Math.max(0, this.hurt - dt);
     if (this.cast && (this.cast.t -= dt) <= 0) this.cast = null;
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
@@ -799,7 +846,7 @@ export class Player {
     const guardShield = world.guardShield(this.pos);
     if (guardShield > 0) amount *= 1 - guardShield;
     // Bandeau du vent : juste après une esquive, un coup peut passer à côté.
-    if (this.evadeTime > 0 && perks.evasion && Math.random() < perks.evasion.chance) {
+    if (this.evadeTime > 0 && perks.evasion && random() < perks.evasion.chance) {
       this.invulnerable = Math.max(this.invulnerable, 0.2);
       world.emit({ type: 'evade', pos: { ...this.pos } });
       return false;
@@ -824,7 +871,10 @@ export class Player {
       return true;
     }
     const taken = amount * this.damageTakenFactor() * (falling ? 1 - (perks.hazardWard ?? 0) : 1);
+    const hpBefore = this.hp;
+    const barrierBefore = this.barrier;
     this.loseHp(taken, world, false);
+    if (this.latency > 0 && this.hp > 0) this.recentHits.push({ age: 0, hp: hpBefore - this.hp, barrier: barrierBefore - this.barrier, knockback: scale(pushDir, knockback) });
     this.tyrHand(attacker, amount - taken, world);
     if (perks.coupelle) this.coupelleEmpty = perks.coupelle.emptyTime;
     // Lame : un coup reçu brise le combo.
@@ -836,6 +886,16 @@ export class Player {
     this.knockback = scale(pushDir, knockback);
     if (this.action.kind === 'attack') this.action = { kind: 'free' };
     return true;
+  }
+
+  /**
+   * Duel : une morsure sans recul ni invulnérabilité (poison, saignement, brûlure, zone) : l'Armure compte,
+   * l'esquive non. Renvoie les PV perdus.
+   */
+  drain(amount: number, world: World): number {
+    const before = this.hp;
+    this.loseHp(amount * this.damageTakenFactor(), world, false);
+    return before - this.hp;
   }
 
   /** Part des dégâts réellement subis : équipement (Armure), posture, Égide, Frénésie, Peau du lion, sang yokai. */
@@ -1083,8 +1143,24 @@ export class Player {
     const evasion = this.cfg.perks?.evasion;
     if (evasion) this.evadeTime = evasion.duration;
     this.invulnerable = Math.max(this.invulnerable, this.cfg.dodge.invulnerable);
+    this.forgiveLateHits(world);
     this.openCritWindow();
     world.emit({ type: 'dodge', pos: { ...this.pos }, dir, hero: this.id });
+  }
+
+  /** Invité : l'esquive arrive avec son retard réseau ; les coups reçus pendant ce retard sont rendus. */
+  private forgiveLateHits(world: World): void {
+    const grace = Math.min(DODGE_GRACE_MAX, 2 * this.latency + DISPLAY_DELAY);
+    const late = this.recentHits.filter((hit) => hit.age <= grace);
+    this.recentHits = [];
+    if (!late.length || this.hp <= 0) return;
+    for (const hit of late) {
+      this.hp = Math.min(this.cfg.maxHp, this.hp + hit.hp);
+      this.barrier += hit.barrier;
+      this.knockback = sub(this.knockback, scale(hit.knockback, Math.exp(-10 * hit.age)));
+    }
+    this.hurt = 0;
+    world.emit({ type: 'evade', pos: { ...this.pos } });
   }
 
   /** Tag Lame : les coups qui suivent une esquive sont critiques. */

@@ -297,34 +297,33 @@
     },
     {
       "name": "heros-demi-dieu-guerrier",
-      "source": "2d/demi-dieu-2D/demi-dieu-guerrier-planchecomplete.jpg",
-      "layout": [8, 8, 8, 8, 8, 8],
+      "source": "../gamevisual/demi dieu/guerrier-planche1.jpg",
+      "layout": [8, 8, 8, 8],
       "rows": [
         { "tag": "idle", "row": 0, "duration": 120 },
         { "tag": "move", "row": 1, "duration": 80 },
         { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 60, "once": true },
         { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7], "duration": 45, "once": true },
-        { "tag": "skill", "row": 3, "duration": 70, "once": true },
-        { "tag": "airborne", "row": 3, "frames": [1, 2, 3, 4, 5], "duration": 60, "once": true },
-        { "tag": "hurt", "row": 4, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
-        { "tag": "death", "row": 4, "frames": [4, 5, 6, 7], "duration": 110, "once": true },
-        { "tag": "ultimate", "row": 5, "duration": 80, "once": true }
+        { "tag": "guard", "row": 3, "duration": 70, "once": true },
+        { "tag": "hurt", "source": "../gamevisual/demi dieu/guerrier-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 0, "frames": [1, 2, 3, 4, 5, 6], "duration": 60, "once": true },
+        { "tag": "dash", "source": "../gamevisual/demi dieu/guerrier-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 1, "duration": 45, "once": true },
+        { "tag": "skill", "source": "../gamevisual/demi dieu/guerrier-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 2, "duration": 70, "once": true },
+        { "tag": "ultimate", "source": "../gamevisual/demi dieu/guerrier-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 2, "frames": [0, 1, 2, 3], "duration": 90, "once": true },
+        { "tag": "airborne", "source": "../gamevisual/demi dieu/guerrier-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 3, "frames": [1, 2, 3, 4], "duration": 60, "once": true }
       ]
     },
     {
       "name": "heros-demi-dieu-lame",
-      "source": "2d/demi-dieu-2D/demi-dieu-lame-planchecomplete.jpg",
-      "layout": [10, 10, 10, 9, 10, 10],
+      "source": "../gamevisual/demi dieu/lame-planche1.jpg",
+      "layout": [10, 8, 8, 8],
       "rows": [
         { "tag": "idle", "row": 0, "duration": 120 },
         { "tag": "move", "row": 1, "duration": 80 },
         { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 60, "once": true },
-        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7, 8, 9], "duration": 45, "once": true },
-        { "tag": "dash", "row": 3, "frames": [0, 1, 2, 4, 5], "duration": 45, "once": true },
-        { "tag": "skill", "row": 3, "frames": [0, 1, 2, 4, 5, 6, 7, 8], "duration": 70, "once": true },
-        { "tag": "hurt", "row": 4, "frames": [0, 1, 2, 3, 4, 5], "duration": 60, "once": true },
-        { "tag": "death", "row": 4, "frames": [6, 7, 8, 9], "duration": 110, "once": true },
-        { "tag": "ultimate", "row": 5, "duration": 80, "once": true }
+        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "dash", "source": "../gamevisual/demi dieu/lame-planche2.jpg", "layout": [10, 8, 9, 8], "refFrame": 0, "row": 0, "duration": 40, "once": true },
+        { "tag": "ultimate", "source": "../gamevisual/demi dieu/lame-planche2.jpg", "layout": [10, 8, 9, 8], "refFrame": 0, "row": 1, "frames": [0, 1, 2, 3, 4], "duration": 70, "once": true },
+        { "tag": "skill", "source": "../gamevisual/demi dieu/lame-planche2.jpg", "layout": [10, 8, 9, 8], "refFrame": 0, "row": 3, "duration": 70, "once": true }
       ]
     },
     {
@@ -345,20 +344,21 @@
     },
     {
       "name": "heros-demi-dieu-rodeur",
-      "source": "2d/demi-dieu-2D/demi-dieu-rodeur_planchecomplete.jpg",
-      "layout": [8, 8, 8, 8, 8, 8, 8, 8],
+      "fillHoles": true,
+      "holeTolerance": 16,
+      "minHole": 30,
+      "source": "../gamevisual/demi dieu/rodeuse-planche1.jpg",
+      "layout": [8, 8, 8, 8],
       "rows": [
         { "tag": "idle", "row": 0, "duration": 120 },
         { "tag": "move", "row": 1, "duration": 80 },
-        { "tag": "windup", "row": 2, "frames": [0, 1, 2, 3], "duration": 60, "once": true },
-        { "tag": "strike", "row": 2, "frames": [4, 5, 6, 7], "duration": 45, "once": true },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 60, "once": true },
+        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7], "duration": 45, "once": true },
         { "tag": "channel", "row": 3, "frames": [0, 1, 2, 3, 4], "duration": 70, "once": true },
-        { "tag": "skill", "row": 3, "duration": 70, "once": true },
-        { "tag": "dash", "row": 4, "duration": 45, "once": true },
-        { "tag": "airborne", "row": 4, "frames": [2, 3, 4, 5], "duration": 60, "once": true },
-        { "tag": "hurt", "row": 5, "duration": 60, "once": true },
-        { "tag": "death", "row": 6, "duration": 110, "once": true },
-        { "tag": "ultimate", "row": 7, "duration": 80, "once": true }
+        { "tag": "skill", "source": "../gamevisual/demi dieu/rodeuse-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 0, "frames": [0, 1, 2, 3, 4, 5], "duration": 70, "once": true },
+        { "tag": "dash", "source": "../gamevisual/demi dieu/rodeuse-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 2, "duration": 45, "once": true },
+        { "tag": "airborne", "source": "../gamevisual/demi dieu/rodeuse-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 2, "frames": [2, 3, 4], "duration": 60, "once": true },
+        { "tag": "ultimate", "source": "../gamevisual/demi dieu/rodeuse-planche2.jpg", "layout": [8, 8, 8, 8], "refFrame": 0, "row": 3, "duration": 80, "once": true }
       ]
     },
     {

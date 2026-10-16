@@ -1,0 +1,69 @@
+{
+  "about": "Le duel (PVP) : deux héros s'affrontent en deux manches gagnantes. Tout est égalisé : chaque héros y entre au niveau `level`, avec l'arme de départ de sa classe et rien d'autre ; seuls comptent sa race, sa classe, sa voie et ses talents. `meta` a la forme d'un donjon (nom, région, décor) et `arena` celle de dungeon.json, sans vague. `duel` règle la rencontre et les coups d'un héros sur un autre : ces réglages ne touchent jamais le PVE (GameConfig.duel, src/game/enemies.ts Rival). Dégâts : `damage` multiplie tous les coups portés à un héros, puis `classDamage` selon la classe de l'attaquant. Soins : `healing` est la part gardée. `stun` et `slow` : part gardée de la durée, et durée la plus longue ; `slow.amount` : la part de la marche perdue au plus. `zone.damage` : part des PV max perdue par seconde hors de la zone.",
+  "level": 30,
+  "meta": {
+    "name": "L'arène des duels",
+    "region": "Duel · deux manches gagnantes",
+    "boss": "Adversaire",
+    "bossLabel": "ton adversaire",
+    "victory": {
+      "title": "Victoire",
+      "text": "Ton adversaire salue et se relève. Rien ne se perd ni ne se gagne ici : seul l'honneur compte."
+    },
+    "onVictory": [],
+    "firstVictory": { "if": [], "then": [] },
+    "shop": "",
+    "exit": { "u": -2.4, "v": 9.6 },
+    "style": {
+      "arena": "palais",
+      "ground": [0.5, 0.4, 0.5],
+      "sky": "#2b2430",
+      "decor": [
+        { "sprite": "torii", "x": -12, "z": 0 },
+        { "sprite": "torii", "x": 12, "z": 0 },
+        { "sprite": "lanterneAllumee", "x": -10.5, "z": 10.5 },
+        { "sprite": "lanterneAllumee", "x": 10.5, "z": -10.5 },
+        { "sprite": "lanterneAllumee", "x": 10.5, "z": 10.5 },
+        { "sprite": "lanterneAllumee", "x": -10.5, "z": -10.5 },
+        { "sprite": "jizo", "x": 0, "z": 11 },
+        { "sprite": "jizo", "x": 0, "z": -11 }
+      ]
+    }
+  },
+  "arena": {
+    "arenaHalfSize": 9,
+    "stumpRadius": 0.6,
+    "webs": {
+      "radius": 1.3,
+      "maxWebs": 0,
+      "slowFactor": 1,
+      "igniteReach": 1,
+      "burnTime": 0.6,
+      "burnDamage": 0
+    },
+    "waves": []
+  },
+  "duel": {
+    "roundTime": 90,
+    "roundsToWin": 2,
+    "pause": 3,
+    "spawns": [
+      { "x": -5, "z": 0 },
+      { "x": 5, "z": 0 }
+    ],
+    "stumps": [
+      { "x": 0, "z": 3.6 },
+      { "x": 0, "z": -3.6 },
+      { "x": -4.5, "z": 5.5 },
+      { "x": 4.5, "z": -5.5 }
+    ],
+    "zone": { "start": 13, "end": 3, "shrinkFrom": 30, "damage": 0.06 },
+    "damage": 0.15,
+    "classDamage": { "guerrier": 1, "sorcier": 1.45, "lame": 0.85, "paladin": 1.25, "rodeur": 0.8 },
+    "healing": 0.5,
+    "invulnerableAfterHit": 0.25,
+    "stun": { "factor": 0.5, "max": 1 },
+    "slow": { "factor": 0.6, "max": 2, "amount": 0.4 },
+    "knockback": 0.6
+  }
+}

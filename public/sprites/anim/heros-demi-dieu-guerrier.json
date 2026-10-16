@@ -5,544 +5,634 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 1",
    "frame": {
-    "x": 176,
+    "x": 260,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 2",
    "frame": {
-    "x": 352,
+    "x": 520,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 3",
    "frame": {
-    "x": 528,
+    "x": 780,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 4",
    "frame": {
-    "x": 704,
+    "x": 1040,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 5",
    "frame": {
-    "x": 880,
+    "x": 1300,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 6",
    "frame": {
-    "x": 1056,
+    "x": 1560,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "idle 7",
    "frame": {
-    "x": 1232,
+    "x": 1820,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 120
   },
   {
    "filename": "move 8",
    "frame": {
-    "x": 1408,
+    "x": 2080,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 9",
    "frame": {
-    "x": 1584,
+    "x": 2340,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 10",
    "frame": {
-    "x": 1760,
+    "x": 2600,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 11",
    "frame": {
-    "x": 1936,
+    "x": 2860,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 12",
    "frame": {
-    "x": 2112,
+    "x": 3120,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 13",
    "frame": {
-    "x": 2288,
+    "x": 3380,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 14",
    "frame": {
-    "x": 2464,
+    "x": 3640,
     "y": 0,
-    "w": 176,
-    "h": 163
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "move 15",
    "frame": {
-    "x": 2640,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 0,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 80
   },
   {
    "filename": "windup 16",
    "frame": {
-    "x": 2816,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 260,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
    "filename": "windup 17",
    "frame": {
-    "x": 2992,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 520,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
    "filename": "windup 18",
    "frame": {
-    "x": 3168,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 780,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
    "filename": "strike 19",
    "frame": {
-    "x": 3344,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 1040,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 45
   },
   {
    "filename": "strike 20",
    "frame": {
-    "x": 3520,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 1300,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 45
   },
   {
    "filename": "strike 21",
    "frame": {
-    "x": 3696,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 1560,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 45
   },
   {
    "filename": "strike 22",
    "frame": {
-    "x": 3872,
-    "y": 0,
-    "w": 176,
-    "h": 163
+    "x": 1820,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 45
   },
   {
    "filename": "strike 23",
    "frame": {
-    "x": 0,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2080,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 45
   },
   {
-   "filename": "skill 24",
+   "filename": "guard 24",
    "frame": {
-    "x": 176,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2340,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 25",
+   "filename": "guard 25",
    "frame": {
-    "x": 352,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2600,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 26",
+   "filename": "guard 26",
    "frame": {
-    "x": 528,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2860,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 27",
+   "filename": "guard 27",
    "frame": {
-    "x": 704,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 3120,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 28",
+   "filename": "guard 28",
    "frame": {
-    "x": 880,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 3380,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 29",
+   "filename": "guard 29",
    "frame": {
-    "x": 1056,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 3640,
+    "y": 186,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 30",
+   "filename": "guard 30",
    "frame": {
-    "x": 1232,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 0,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "skill 31",
+   "filename": "guard 31",
    "frame": {
-    "x": 1408,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 260,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 70
   },
   {
-   "filename": "airborne 32",
+   "filename": "hurt 32",
    "frame": {
-    "x": 1584,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 520,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
-   "filename": "airborne 33",
+   "filename": "hurt 33",
    "frame": {
-    "x": 1760,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 780,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
-   "filename": "airborne 34",
+   "filename": "hurt 34",
    "frame": {
-    "x": 1936,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 1040,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
-   "filename": "airborne 35",
+   "filename": "hurt 35",
    "frame": {
-    "x": 2112,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 1300,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
-   "filename": "airborne 36",
+   "filename": "hurt 36",
    "frame": {
-    "x": 2288,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 1560,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
    "filename": "hurt 37",
    "frame": {
-    "x": 2464,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 1820,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
    "duration": 60
   },
   {
-   "filename": "hurt 38",
+   "filename": "dash 38",
    "frame": {
-    "x": 2640,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2080,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 60
+   "duration": 45
   },
   {
-   "filename": "hurt 39",
+   "filename": "dash 39",
    "frame": {
-    "x": 2816,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2340,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 60
+   "duration": 45
   },
   {
-   "filename": "hurt 40",
+   "filename": "dash 40",
    "frame": {
-    "x": 2992,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2600,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 60
+   "duration": 45
   },
   {
-   "filename": "death 41",
+   "filename": "dash 41",
    "frame": {
-    "x": 3168,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 2860,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 110
+   "duration": 45
   },
   {
-   "filename": "death 42",
+   "filename": "dash 42",
    "frame": {
-    "x": 3344,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 3120,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 110
+   "duration": 45
   },
   {
-   "filename": "death 43",
+   "filename": "dash 43",
    "frame": {
-    "x": 3520,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 3380,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 110
+   "duration": 45
   },
   {
-   "filename": "death 44",
+   "filename": "dash 44",
    "frame": {
-    "x": 3696,
-    "y": 163,
-    "w": 176,
-    "h": 163
+    "x": 3640,
+    "y": 372,
+    "w": 260,
+    "h": 186
    },
-   "duration": 110
+   "duration": 45
   },
   {
-   "filename": "ultimate 45",
-   "frame": {
-    "x": 3872,
-    "y": 163,
-    "w": 176,
-    "h": 163
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 46",
+   "filename": "dash 45",
    "frame": {
     "x": 0,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 45
   },
   {
-   "filename": "ultimate 47",
+   "filename": "skill 46",
    "frame": {
-    "x": 176,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "x": 260,
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 70
   },
   {
-   "filename": "ultimate 48",
+   "filename": "skill 47",
    "frame": {
-    "x": 352,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "x": 520,
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 70
   },
   {
-   "filename": "ultimate 49",
+   "filename": "skill 48",
    "frame": {
-    "x": 528,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "x": 780,
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 70
   },
   {
-   "filename": "ultimate 50",
+   "filename": "skill 49",
    "frame": {
-    "x": 704,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "x": 1040,
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 70
   },
   {
-   "filename": "ultimate 51",
+   "filename": "skill 50",
    "frame": {
-    "x": 880,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "x": 1300,
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 70
   },
   {
-   "filename": "ultimate 52",
+   "filename": "skill 51",
    "frame": {
-    "x": 1056,
-    "y": 326,
-    "w": 176,
-    "h": 163
+    "x": 1560,
+    "y": 558,
+    "w": 260,
+    "h": 186
    },
-   "duration": 80
+   "duration": 70
+  },
+  {
+   "filename": "skill 52",
+   "frame": {
+    "x": 1820,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 70
+  },
+  {
+   "filename": "skill 53",
+   "frame": {
+    "x": 2080,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 70
+  },
+  {
+   "filename": "ultimate 54",
+   "frame": {
+    "x": 2340,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 55",
+   "frame": {
+    "x": 2600,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 56",
+   "frame": {
+    "x": 2860,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 57",
+   "frame": {
+    "x": 3120,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 90
+  },
+  {
+   "filename": "airborne 58",
+   "frame": {
+    "x": 3380,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 60
+  },
+  {
+   "filename": "airborne 59",
+   "frame": {
+    "x": 3640,
+    "y": 558,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 60
+  },
+  {
+   "filename": "airborne 60",
+   "frame": {
+    "x": 0,
+    "y": 744,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 60
+  },
+  {
+   "filename": "airborne 61",
+   "frame": {
+    "x": 260,
+    "y": 744,
+    "w": 260,
+    "h": 186
+   },
+   "duration": 60
   }
  ],
  "meta": {
   "app": "tools/planches.mjs",
   "image": "heros-demi-dieu-guerrier.webp",
   "size": {
-   "w": 4048,
-   "h": 489
+   "w": 3900,
+   "h": 930
   },
   "smooth": true,
-  "bodyHeight": 130,
+  "bodyHeight": 167,
   "anchor": {
-   "x": 88,
-   "y": 154
+   "x": 130,
+   "y": 176
   },
   "frameTags": [
    {
@@ -572,37 +662,44 @@
     "repeat": "1"
    },
    {
-    "name": "skill",
+    "name": "guard",
     "from": 24,
     "to": 31,
     "direction": "forward",
     "repeat": "1"
    },
    {
-    "name": "airborne",
-    "from": 32,
-    "to": 36,
-    "direction": "forward",
-    "repeat": "1"
-   },
-   {
     "name": "hurt",
-    "from": 37,
-    "to": 40,
+    "from": 32,
+    "to": 37,
     "direction": "forward",
     "repeat": "1"
    },
    {
-    "name": "death",
-    "from": 41,
-    "to": 44,
+    "name": "dash",
+    "from": 38,
+    "to": 45,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "skill",
+    "from": 46,
+    "to": 53,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "ultimate",
-    "from": 45,
-    "to": 52,
+    "from": 54,
+    "to": 57,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "airborne",
+    "from": 58,
+    "to": 61,
     "direction": "forward",
     "repeat": "1"
    }

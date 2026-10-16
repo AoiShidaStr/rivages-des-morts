@@ -1,20 +1,26 @@
-// Ce que l'hôte et les invités s'échangent. L'hôte fait tourner le combat ; vingt fois par seconde, il envoie à chaque
-// invité un instantané de ce que l'affichage doit montrer, par le canal rapide : un instantané perdu est remplacé par
+// Ce que l'hôte et les invités s'échangent. L'hôte fait tourner le combat ; à chaque pas (soixante fois par seconde), il envoie à
+// chaque invité un instantané de ce que l'affichage doit montrer, par le canal rapide : un instantané perdu est remplacé par
 // le suivant. Les événements du combat (coups, morts, butin) partent à part, par le canal sûr. Les invités envoient
-// leurs commandes à chaque pas, numérotées, par le canal rapide.
+// leurs commandes à chaque pas, numérotées, par le canal rapide. Le duel fait exception : chacun des deux joueurs fait
+// tourner le combat et ils ne s'échangent que leurs commandes (src/net/rollback.ts).
 import type { PlayerConfig } from '../game/config';
 import type { Vec2 } from '../game/math';
 import type { GameEvent } from '../game/types';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WebView } from '../game/view';
-import type { World } from '../game/world';
+import type { DuelView, World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 10;
+export const PROTOCOL = 14;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
-/** L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation (20 par seconde). */
-export const SNAPSHOT_EVERY = 3;
+/**
+ * L'hôte envoie un instantané tous les `SNAPSHOT_EVERY` pas de simulation : à chaque pas, soixante par seconde. Un
+ * instantané part dès que le pas qui a joué les commandes des invités est fini, et le retard d'affichage chez eux tombe
+ * à deux pas (33 ms) quand le réseau est régulier. Trois fois plus de paquets qu'à vingt par seconde, ce qui reste
+ * modeste (un instantané tient dans un paquet réseau).
+ */
+export const SNAPSHOT_EVERY = 1;
 /** Pas de simulation par seconde. */
 export const TICK_RATE = 60;
 
@@ -58,6 +64,8 @@ export interface Start {
   level: number;
   seat: number;
   heroes: { name: string; sprite: string; config: PlayerConfig }[];
+  /** Duel : la graine du hasard du combat, la même chez les deux joueurs (src/game/rng.ts). */
+  seed?: number;
 }
 
 /** Annonce d'une partie publique, pour la liste des parties ouvertes. */
@@ -88,6 +96,8 @@ export interface Snapshot {
   stumps: StumpView[];
   peaches: PeachView[];
   webs: WebView[];
+  /** Duel : où en est la rencontre (manche, score, temps, zone) ; null hors duel. */
+  duel: DuelView | null;
 }
 
 /** Événements du combat depuis le paquet précédent, jusqu'au pas `tick`. */
@@ -340,6 +350,7 @@ export function shareSnapshot(world: World, tick: number): SharedSnap {
         world.webs.map((w) => ({ id: w.id, pos: w.pos, radius: w.radius, age: w.age, burning: w.burning })),
         WEB_DEFAULTS,
       ),
+      ...(world.duel ? { d: packObject({ ...world.duel } as Plain, NO_DEFAULTS) } : {}),
     },
   };
 }
@@ -373,5 +384,6 @@ export function unpackSnapshot(data: Json): Snapshot | null {
     stumps: unpackList<StumpView>(d.t, NO_DEFAULTS),
     peaches: unpackList<PeachView>(d.c, NO_DEFAULTS),
     webs: unpackList<WebView>(d.w, WEB_DEFAULTS),
+    duel: d.d && typeof d.d === 'object' ? unpackObject<DuelView>(d.d as Plain, NO_DEFAULTS) : null,
   };
 }

@@ -1,6 +1,7 @@
 // Progression conservée entre les sessions : oboles, objets, matériaux, quêtes et drapeaux.
 // Les dialogues et les quêtes (src/data) la lisent avec des conditions et la modifient avec des effets.
 // Chaque personnage a son emplacement de sauvegarde (saves.ts) ; `Progress` tient celui qu'on joue.
+import { BUILD_COUNT, readBuild, type Build } from './builds';
 import type { Gravure } from './gravure';
 import { LocalSaveStore, newSlotId, type SaveStore } from './saves';
 
@@ -53,6 +54,10 @@ export interface ProgressState {
    * gravure, pour la vente, l'échange, ou pour poser sa gravure sur son arme.
    */
   stock: StockEntry[];
+  /** Les builds libres (src/game/builds.ts) : BUILD_COUNT places, null pour une place vide. */
+  builds: (Build | null)[];
+  /** Le build Duel : ses talents et sa voie servent en duel, sans toucher à ce que porte le héros. */
+  duelBuild: Build | null;
 }
 
 /** Un exemplaire rangé dans la réserve. */
@@ -127,6 +132,8 @@ export interface Effect {
   subclass?: boolean;
   /** Ouvre le terrain d'entraînement (le billot de Tetsu) : on y frappe un mannequin, sans butin ni risque. */
   train?: boolean;
+  /** Ouvre l'arène des duels : un duel d'entraînement contre une ombre jouée par l'ordinateur. */
+  duel?: boolean;
   /** Ouvre la stèle des records (les paliers gravés sur le ponton). */
   records?: boolean;
 }
@@ -141,7 +148,8 @@ export type Action =
   | { kind: 'chests' }
   | { kind: 'changeHero' }
   | { kind: 'subclass' }
-  | { kind: 'training' };
+  | { kind: 'training' }
+  | { kind: 'duel' };
 
 export interface Catalog {
   itemName(id: string): string;
@@ -207,6 +215,8 @@ function fresh(): ProgressState {
     quests: {},
     chests: 0,
     stock: [],
+    builds: [],
+    duelBuild: null,
   };
 }
 
@@ -548,6 +558,7 @@ export class Progress {
     if (e.changeHero) actions.push({ kind: 'changeHero' });
     if (e.subclass) actions.push({ kind: 'subclass' });
     if (e.train) actions.push({ kind: 'training' });
+    if (e.duel) actions.push({ kind: 'duel' });
   }
 }
 
@@ -560,8 +571,8 @@ function levelUpToast(level: number, point: boolean): Action {
  * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
  * pas de héros (c'était toujours un Guerrier Einherjar).
  */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures'> &
-  Partial<Pick<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures'>> & {
+type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures' | 'builds' | 'duelBuild'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures' | 'builds' | 'duelBuild'>> & {
     weaponLevel?: number;
     weaponLevels?: Record<string, number>;
     /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
@@ -600,6 +611,9 @@ function migrate(saved: SavedState, catalog: Catalog): ProgressState {
   // 0.19.0 : la réserve. Un exemplaire d'un objet retiré du jeu la quitte.
   state.stock = (Array.isArray(state.stock) ? state.stock : []).filter((e) => e && catalog.hasItem(e.item));
   state.eveils = { ...state.eveils };
+  // Les builds. Un build abîmé (sauvegarde trafiquée) laisse sa place vide.
+  state.builds = (Array.isArray(state.builds) ? state.builds : []).slice(0, BUILD_COUNT).map(readBuild);
+  state.duelBuild = readBuild(state.duelBuild);
   // Une gravure survit à tout sauf à la disparition de son arme (`{ ...undefined }` vaut {} sur une vieille sauvegarde).
   state.gravures = { ...state.gravures };
   for (const id of Object.keys(state.gravures)) if (!catalog.hasItem(id)) delete state.gravures[id];

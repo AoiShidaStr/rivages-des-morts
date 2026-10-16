@@ -1,3 +1,4 @@
+import { random } from './rng';
 import type {
   EnemyBaseConfig,
   HitodamaConfig,
@@ -28,6 +29,8 @@ import {
   vec,
   type Vec2,
 } from './math';
+import type { DuelConfig } from './config';
+import type { Player } from './player';
 import type { EnemyKind, MarkKind, Pose, StunReason } from './types';
 import type { Foe, World } from './world';
 
@@ -337,7 +340,7 @@ export abstract class Enemy {
 export class Hitodama extends Enemy {
   readonly kind = 'hitodama' as const;
   private retreat = 0;
-  private readonly phase = Math.random() * Math.PI * 2;
+  private readonly phase = random() * Math.PI * 2;
 
   constructor(
     id: number,
@@ -665,7 +668,7 @@ export class KasaObake extends Enemy {
     super(id, pos, cfg);
     this.state = { kind: 'pause', t: this.randomPause() };
     // Décalage aléatoire : plusieurs kasa-obake ne sautent pas tous en même temps.
-    this.jumpTimer = cfg.jumpCooldown * (0.5 + Math.random());
+    this.jumpTimer = cfg.jumpCooldown * (0.5 + random());
   }
 
   get altitude(): number {
@@ -705,7 +708,7 @@ export class KasaObake extends Enemy {
       case 'pause':
         state.t -= dt;
         if (state.t > 0) break;
-        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange * world.notice(foe) && Math.random() < cfg.jumpChance) {
+        if (this.jumpTimer <= 0 && distance(foe.pos, this.pos) <= cfg.jumpRange * world.notice(foe) && random() < cfg.jumpChance) {
           this.jumpTimer = cfg.jumpCooldown;
           this.state = { kind: 'rise', t: 0 };
         } else {
@@ -764,13 +767,13 @@ export class KasaObake extends Enemy {
 
   /** Petit bond imprévisible : vers sa cible, mais dévié au hasard, parfois même vers l'arrière. */
   private hopTarget(foePos: Vec2): Vec2 {
-    const angle = angleOf(sub(foePos, this.pos)) + (Math.random() * 2 - 1) * degToRad(110);
-    const reach = this.cfg.hopDistance * (0.6 + Math.random() * 0.6);
+    const angle = angleOf(sub(foePos, this.pos)) + (random() * 2 - 1) * degToRad(110);
+    const reach = this.cfg.hopDistance * (0.6 + random() * 0.6);
     return add(this.pos, scale(fromAngle(angle), reach));
   }
 
   private randomPause(): number {
-    return this.cfg.pauseMin + Math.random() * (this.cfg.pauseMax - this.cfg.pauseMin);
+    return this.cfg.pauseMin + random() * (this.cfg.pauseMax - this.cfg.pauseMin);
   }
 }
 
@@ -1198,7 +1201,7 @@ export class Jorogumo extends Enemy {
     const alive = world.enemies.filter((e) => e.kind === 'araignee' && !e.dead).length;
     const count = Math.min(cfg.summonCount, cfg.maxSpiders - alive);
     for (let i = 0; i < count; i++) {
-      const angle = (i / Math.max(1, count)) * Math.PI * 2 + Math.random();
+      const angle = (i / Math.max(1, count)) * Math.PI * 2 + random();
       world.spawn('araignee', add(this.pos, scale(fromAngle(angle), this.radius + 0.8)));
     }
   }
@@ -1266,7 +1269,7 @@ export class Jorogumo extends Enemy {
       this.rainTimer = cfg.rainInterval;
       for (let i = 0; i < cfg.rainCount; i++) {
         const target = i === 0 ? world.player.pos : world.randomPoint();
-        world.dropHazard(target, cfg.rain, Math.random() < cfg.rainWebChance);
+        world.dropHazard(target, cfg.rain, random() < cfg.rainWebChance);
       }
     }
     this.pullTimer -= dt;
@@ -1346,9 +1349,9 @@ type ShikomeState =
 export class Shikome extends Enemy {
   readonly kind = 'shikome' as const;
   private state: ShikomeState = { kind: 'chase' };
-  private cooldown = 0.6 + Math.random() * 0.9;
+  private cooldown = 0.6 + random() * 0.9;
   /** Côté par lequel elle contourne sa proie : les furies arrivent de plusieurs côtés à la fois. */
-  private readonly flank = Math.random() < 0.5 ? -1 : 1;
+  private readonly flank = random() < 0.5 ? -1 : 1;
 
   constructor(
     id: number,
@@ -1418,7 +1421,7 @@ export class Shikome extends Enemy {
       case 'stunned':
         state.t -= dt;
         if (state.t <= 0) {
-          this.cooldown = cfg.cooldown * (0.8 + Math.random() * 0.4);
+          this.cooldown = cfg.cooldown * (0.8 + random() * 0.4);
           this.state = { kind: 'chase' };
         }
         break;
@@ -1466,7 +1469,7 @@ export class Ikazuchi extends Enemy {
   private blinkTimer = 0;
   /** Éclairs déjà utilisés pour fuir : passé `blinkCharges`, il reste à portée de lame. */
   private blinks = 0;
-  private readonly orbit = Math.random() < 0.5 ? -1 : 1;
+  private readonly orbit = random() < 0.5 ? -1 : 1;
 
   constructor(
     id: number,
@@ -1474,7 +1477,7 @@ export class Ikazuchi extends Enemy {
     private readonly cfg: IkazuchiConfig,
   ) {
     super(id, pos, cfg);
-    this.boltTimer = cfg.boltInterval * (0.4 + Math.random() * 0.5);
+    this.boltTimer = cfg.boltInterval * (0.4 + random() * 0.5);
   }
 
   get pose(): Pose {
@@ -1522,7 +1525,7 @@ export class Ikazuchi extends Enemy {
         if (state.t < cfg.boltChannel) return;
         world.dropHazard(foe.pos, cfg.bolt, false);
         this.state = { kind: 'drift' };
-        this.boltTimer = cfg.boltInterval * (0.85 + Math.random() * 0.3);
+        this.boltTimer = cfg.boltInterval * (0.85 + random() * 0.3);
         return;
       case 'drift': {
         // Trop près : il disparaît dans un éclair et reparaît quelques pas plus loin, un nombre limité de fois.
@@ -1861,7 +1864,7 @@ export class Izanami extends Enemy {
     const player = world.player.pos;
     for (let i = 0; i < count; i++) {
       // Le premier éclair vise le héros ; les autres tombent autour, pour lui couper la route.
-      const target = i === 0 ? player : add(player, scale(fromAngle(Math.random() * Math.PI * 2), 1.8 + Math.random() * 2.5));
+      const target = i === 0 ? player : add(player, scale(fromAngle(random() * Math.PI * 2), 1.8 + random() * 2.5));
       world.dropHazard(target, this.cfg.revealed.bolt, false);
     }
   }
@@ -1888,7 +1891,7 @@ export class Izanami extends Enemy {
     const alive = world.enemies.filter((e) => e.kind === kind && !e.dead).length;
     const n = Math.min(count, max - alive);
     for (let i = 0; i < n; i++) {
-      const angle = (i / Math.max(1, n)) * Math.PI * 2 + Math.random();
+      const angle = (i / Math.max(1, n)) * Math.PI * 2 + random();
       world.spawn(kind, kind === 'ikazuchi' ? world.edgePoint() : add(this.pos, scale(fromAngle(angle), this.radius + 1)));
     }
   }
@@ -1979,4 +1982,133 @@ export class Mannequin extends Enemy {
     this.pos = add(this.pos, vec(this.dir * MANNEQUIN_WALK * dt, 0));
     this.facing = vec(this.dir, 0);
   }
+}
+
+/** Duel : après un étourdissement, le héros ne peut plus être étourdi pendant ce temps, en plus de sa durée. */
+const STUN_RESPITE = 1.5;
+
+/**
+ * Duel (PVP) : le double d'un héros, rangé parmi les ennemis pour que les coups, les sorts et les flèches de
+ * l'autre héros le visent sans que leur code change. Il n'agit pas : il suit son héros pas à pas, et lui fait
+ * subir ce qu'il reçoit, avec les réglages du duel (src/data/pvp.json) : dégâts, garde, étourdissements,
+ * ralentissements, recul. Son propre héros ne le voit pas : ni ses coups ni ses sorts ne le touchent.
+ */
+export class Rival extends Enemy {
+  readonly kind = 'rival' as const;
+  /** Secondes pendant lesquelles un nouvel étourdissement ne prend pas. */
+  private stunImmunity = 0;
+
+  constructor(
+    id: number,
+    private readonly hero: Player,
+    private readonly world: World,
+    private readonly duel: DuelConfig,
+  ) {
+    super(id, { ...hero.pos }, { maxHp: hero.cfg.maxHp, radius: hero.radius, mass: hero.mass, knockbackFactor: 1 });
+    this.spawnTimer = 0;
+    this.follow();
+  }
+
+  /** Le héros que ce double représente. */
+  get owner(): number {
+    return this.hero.id;
+  }
+
+  get pose(): Pose {
+    return this.hero.pose;
+  }
+
+  /** Vrai pendant le tour de son propre héros : il ne se vise jamais lui-même. */
+  private get mine(): boolean {
+    return this.world.player === this.hero;
+  }
+
+  get active(): boolean {
+    return !this.hero.dead && !this.mine;
+  }
+
+  /** En l'air (Bond, Recul), le héros est hors d'atteinte, comme un yokai qui saute. */
+  get targetable(): boolean {
+    return this.active && this.hero.altitude < 0.5;
+  }
+
+  /** Les héros se repoussent entre eux (World.separate), pas à travers leurs doubles. */
+  get solid(): boolean {
+    return false;
+  }
+
+  update(dt: number, _world: World): void {
+    this.marks.death = Math.max(0, this.marks.death - dt);
+    this.marks.hunt = Math.max(0, this.marks.hunt - dt);
+    this.bindImmunity = Math.max(0, this.bindImmunity - dt);
+    this.stunImmunity = Math.max(0, this.stunImmunity - dt);
+    this.slowTime = Math.max(0, this.slowTime - dt);
+    this.sinceHurt += dt;
+    // Le recul qu'on lui a donné (onde, Recul, coup de bouclier) pousse le vrai héros.
+    if (length(this.knockback) > 0) {
+      this.hero.knockback = add(this.hero.knockback, scale(this.knockback, this.duel.knockback));
+      this.knockback = vec();
+    }
+    this.follow();
+  }
+
+  /** Reprend la place, le regard et les PV de son héros. */
+  follow(): void {
+    this.pos = { ...this.hero.pos };
+    this.facing = { ...this.hero.facing };
+    this.hp = this.hero.hp;
+  }
+
+  receiveHit(hit: Hit, world: World): boolean {
+    if (this.mine || this.hero.dead) return false;
+    const attacker = world.player;
+    const exposed = (this.marks.hunt > 0 ? 1 + this.huntBonus : 1) * world.exposure(this);
+    const amount = hit.amount * exposed * this.duel.damage * (this.duel.classDamage[attacker.cfg.kit] ?? 1);
+    const before = this.hero.hp;
+    const from = world.rivalOf(attacker.id);
+    // Un coup sans recul (poison, saignement, brûlure, Aura) ronge sans laisser d'invulnérabilité derrière lui.
+    const guarded = hit.knockback > 0 && this.hero.isGuarding(hit.from);
+    if (guarded) this.hero.guard(world, from, amount);
+    else if (hit.knockback <= 0) this.hero.drain(amount, world);
+    else {
+      const away = normalize(sub(this.hero.pos, hit.from), scale(this.facing, -1));
+      this.hero.takeHit(amount, away, hit.knockback * this.duel.knockback, world, false, from);
+    }
+    this.follow();
+    const lost = before - this.hero.hp;
+    if (lost > 0) this.sinceHurt = 0;
+    if (lost > 0 || guarded) {
+      world.emit({ type: 'enemyHit', id: this.id, pos: { ...this.pos }, amount: lost, shielded: guarded, crit: Boolean(hit.crit), owner: hit.owner ?? -1, pvp: true });
+    }
+    if (this.dead) world.emit({ type: 'death', id: this.id, pos: { ...this.pos }, kind: this.kind });
+    return guarded;
+  }
+
+  /** Un soin de yokai (kodama) ne soigne pas un héros. */
+  heal(): void {}
+
+  regen(): void {}
+
+  slow(amount: number, duration: number, world: World): void {
+    if (this.mine || this.hero.dead) return;
+    const hero = this.hero;
+    const fresh = hero.pvpSlowTime <= 0;
+    hero.pvpSlow = Math.max(fresh ? 0 : hero.pvpSlow, Math.min(this.duel.slow.amount, amount));
+    hero.pvpSlowTime = Math.max(hero.pvpSlowTime, Math.min(this.duel.slow.max, duration * this.duel.slow.factor));
+    // Les talents qui frappent plus fort un ennemi ralenti (World.exposure) le voient aussi.
+    this.slowAmount = hero.pvpSlow;
+    this.slowTime = hero.pvpSlowTime;
+    if (fresh) world.emit({ type: 'slow', id: this.id, pos: { ...this.pos } });
+  }
+
+  stun(duration: number, reason: StunReason, world: World): void {
+    if (this.mine || this.hero.dead || this.stunImmunity > 0) return;
+    const time = Math.min(this.duel.stun.max, duration * this.duel.stun.factor);
+    if (time <= 0) return;
+    this.hero.pvpStun = Math.max(this.hero.pvpStun, time);
+    this.stunImmunity = time + STUN_RESPITE;
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  protected think(): void {}
 }

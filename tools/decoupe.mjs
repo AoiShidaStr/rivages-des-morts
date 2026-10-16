@@ -1,5 +1,6 @@
 // Détourage partagé par `npm run sprites` (images fixes) et `npm run planches` (animations) :
-// reconnaît le fond gris presque uni des images de Nano Banana et en fait de la transparence.
+// reconnaît le fond presque uni des images de Nano Banana (vert pur depuis le 16 octobre 2026, magenta pour les
+// personnages qui ont du vert, gris pour les plus anciennes) et en fait de la transparence.
 
 /** Masque alpha du sujet (0 = fond, 255 = sujet, 150 = bord adouci). */
 export function alphaMask(data, w, h, options) {
@@ -11,23 +12,54 @@ export function alphaMask(data, w, h, options) {
   removeSmallParts(alpha, w, h, options.minPartRatio);
   softenEdges(alpha, w, h);
   if (options.defringe) defringe(data, alpha, w, h, options.defringe);
-  if (options.despill) despill(data, alpha, w * h, options.despill === true ? 8 : options.despill);
+  // Fond coloré : sa teinte déteint sur les bords du sujet (compression JPEG). `despill: true` la retire partout
+  // (l'Oublié, tout gris) ; sinon elle est retirée d'office sur une bande de quelques pixels le long du fond.
+  const ref = borderMedian(data, w, h);
+  if (options.despill || isColored(ref)) despill(data, alpha, w, h, ref, options.despill ? Infinity : 4, typeof options.despill === 'number' ? options.despill : 8);
   return alpha;
 }
 
+/** Le fond est-il d'une couleur franche (vert, magenta) plutôt qu'un gris ? */
+const isColored = (ref) => Math.max(...ref) - Math.min(...ref) > 64;
+
 /**
- * Retire la teinte du fond magenta déteinte sur le sujet (bords, contours, traînées) : ce que le rouge et le bleu
- * ont tous deux en plus du vert (au-delà de `excess`) leur est retiré. Le gris bleuté de l'Oublié, où le rouge
- * reste sous le vert, n'est pas touché ; le liseré rose redevient gris. Modifie `data` (RVB) sur place.
+ * Retire la teinte du fond coloré déteinte sur le sujet : les canaux forts du fond (le vert pour un fond vert, le rouge
+ * et le bleu pour le magenta) sont ramenés au niveau des autres canaux, au-delà de `excess`. Un sujet qui n'a pas cette
+ * teinte (le gris bleuté de l'Oublié) n'est pas touché ; le liseré vert ou rose redevient neutre. Seuls les pixels à
+ * moins de `band` pixels du fond sont traités. Modifie `data` (RVB) sur place.
  */
-function despill(data, alpha, count, excess) {
-  for (let i = 0; i < count; i++) {
-    if (!alpha[i]) continue;
-    const spill = Math.min(data[i * 3], data[i * 3 + 2]) - data[i * 3 + 1] - excess;
+function despill(data, alpha, w, h, ref, band, excess) {
+  const strong = [0, 1, 2].filter((c) => ref[c] > 128);
+  const weak = [0, 1, 2].filter((c) => ref[c] <= 128);
+  if (strong.length === 0 || weak.length === 0) return;
+  const near = band === Infinity ? null : distanceToBackground(alpha, w, h, band);
+  for (let i = 0; i < w * h; i++) {
+    if (!alpha[i] || (near && near[i] > band)) continue;
+    const spill = Math.min(...strong.map((c) => data[i * 3 + c])) - Math.max(...weak.map((c) => data[i * 3 + c])) - excess;
     if (spill <= 0) continue;
-    data[i * 3] -= spill;
-    data[i * 3 + 2] -= spill;
+    for (const c of strong) data[i * 3 + c] -= spill;
   }
+}
+
+/** Distance (en pas de grille, plafonnée à `cap + 1`) de chaque pixel au fond transparent le plus proche. */
+function distanceToBackground(alpha, w, h, cap) {
+  const d = new Uint8Array(w * h).fill(cap + 1);
+  for (let i = 0; i < w * h; i++) if (!alpha[i]) d[i] = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (x > 0) d[i] = Math.min(d[i], d[i - 1] + 1);
+      if (y > 0) d[i] = Math.min(d[i], d[i - w] + 1);
+    }
+  }
+  for (let y = h - 1; y >= 0; y--) {
+    for (let x = w - 1; x >= 0; x--) {
+      const i = y * w + x;
+      if (x < w - 1) d[i] = Math.min(d[i], d[i + 1] + 1);
+      if (y < h - 1) d[i] = Math.min(d[i], d[i + w] + 1);
+    }
+  }
+  return d;
 }
 
 /**
@@ -144,7 +176,7 @@ export function floodBackground(data, w, h, options) {
 
   // Fond coloré (le magenta de l'Oublié, une créature grise qui se confondrait avec le fond gris) : seule compte
   // la distance à la couleur du fond, pas la saturation.
-  const colored = Math.max(...ref) - Math.min(...ref) > 64;
+  const colored = isColored(ref);
   const greyNear = (i, color, maxGap, maxSat) => {
     const r = data[i * 3];
     const g = data[i * 3 + 1];
@@ -221,6 +253,16 @@ export function floodBackground(data, w, h, options) {
       if (tail - first < minHole) for (let k = first; k < tail; k++) background[queue[k]] = 2;
     }
     for (let i = 0; i < w * h; i++) if (background[i] === 2) background[i] = 0;
+  }
+  // Fond coloré (vert, magenta) : aucun personnage n'a cette couleur franche, elle est donc retirée partout, y
+  // compris dans les petites poches fermées (spirales d'un arc, entre deux plumes), comme un fond d'incrustation.
+  // La compression JPEG décale ces poches hors de la tolérance : un pixel où les canaux du fond dominent franchement
+  // les autres (le vert loin devant le rouge et le bleu) est aussi du fond.
+  if (colored) {
+    const strong = [0, 1, 2].filter((c) => ref[c] > 128);
+    const weak = [0, 1, 2].filter((c) => ref[c] <= 128);
+    const dominance = (i) => Math.min(...strong.map((c) => data[i * 3 + c])) - Math.max(...weak.map((c) => data[i * 3 + c]));
+    for (let i = 0; i < w * h; i++) if (!background[i] && (greyWithin(i, tolerance, maxSaturation) || dominance(i) > 150)) background[i] = 1;
   }
   return background;
 }

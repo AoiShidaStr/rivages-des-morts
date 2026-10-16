@@ -2,7 +2,7 @@
 
 Ces ennemis ont déjà des planches peintes dans le jeu. À refaire en dernier, pour que tout le bestiaire ait le même rendu que les nouveaux.
 
-**Format : une planche complète par personnage, image carrée de 2 048 × 2 048 px si possible, 64 images en grille 8 × 8 (cases de 256 px), une ligne de 8 images par animation**, personnages chibi de 3 têtes, fond gris uni (magenta pour l'Oublié). Ordre des lignes : [Charte 2D](../Charte%202D.md), section 4. **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
+**Format : une planche complète par personnage, image carrée de 2 048 × 2 048 px si possible, 64 images en grille 8 × 8 (cases de 256 px), une ligne de 8 images par animation**, personnages chibi de 3 têtes, fond vert uni #00ff00 (magenta pour l'Oublié et les personnages qui ont du vert sur eux). Ordre des lignes : [Charte 2D](../Charte%202D.md), section 4. **Aide de style (facultatif) :** joindre aussi une image de référence déjà réussie et ajouter au début du prompt : « Match the painting style of the second attached image. »
 
 ## Hitodama
 
@@ -16,7 +16,7 @@ Same chibi rendering as the heroes, adapted to the anatomy of this creature: an 
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure chroma-key green background (#00ff00), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -47,7 +47,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure chroma-key green background (#00ff00), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -64,7 +64,7 @@ Same chibi rendering as the heroes, adapted to the anatomy of this creature: an 
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -95,7 +95,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -112,7 +112,7 @@ Same chibi rendering as the heroes, adapted to the anatomy of this creature: an 
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -143,7 +143,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -160,7 +160,7 @@ Same chibi rendering as the heroes, adapted to the anatomy of this creature: an 
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -191,7 +191,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -208,7 +208,7 @@ Same chibi rendering as the heroes, adapted to the anatomy of this creature: an 
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure chroma-key green background (#00ff00), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -239,7 +239,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure chroma-key green background (#00ff00), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -256,7 +256,7 @@ Same painted rendering as the heroes, but NOT chibi: an imposing character, exac
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Portrait 3:4 image at the highest resolution available.
 Painted 2D action-RPG sprite style, the same rendering as our chibi heroes but with taller, more imposing proportions (5 heads tall), soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -287,7 +287,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D action-RPG sprite style, the same rendering as our chibi heroes but with taller, more imposing proportions (5 heads tall), soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure magenta background (#ff00ff), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -304,7 +304,7 @@ Same chibi rendering as the heroes, adapted to the anatomy of this creature: an 
 The figure is large, about 85% of the image height, centered, with a wide empty margin around it.
 Landscape 16:9 image at the highest resolution available.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure chroma-key green background (#00ff00), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```
@@ -335,7 +335,7 @@ DO NOT simply copy the reference figure into every cell.
 DO NOT change the camera angle, the facing direction or the design from one frame to the next.
 DO NOT move the character across the sheet: each frame stays centered in its own cell.
 Painted 2D chibi action-RPG sprite style: chibi proportions, soft painted gradients, clothing folds, motifs and accessories drawn clearly but simplified for a small sprite, a crisp dark ink-blue outline (about 2 px when the character is about 200 px tall, thinner on inner details), two-tone cel shading where the shadow is the base color darkened and tinted toward blue-violet (never black), a soft cool light coming from the upper left, character colors more saturated and lighter than a muted, desaturated world around them, metal painted with a single sharp white highlight. No photorealism, no noise, no fine texture, no 3D-render look, no realistic skin pores. Seen from a slightly raised camera, about 35 degrees above the horizon, like an isometric action RPG.
-Flat uniform medium grey background (#8f8f8f), exactly the same color everywhere, no gradient, no vignette.
+Flat uniform pure chroma-key green background (#00ff00), exactly the same color everywhere, no gradient, no vignette; the character itself uses none of this background color.
 No effects of any kind: no magic, no glow, no light rays, no motion trails or blur, no smoke, no sparks, no speed lines, no cast shadow, no ground, no text, no numbers, no labels, no drawn grid lines, no frame borders.
 The eyes always look in the direction the body and the head are facing; the pupils never look at the viewer or in another direction than the head.
 ```

@@ -345,6 +345,15 @@
             ],
             "then": [{ "train": true }]
           },
+          {
+            "text": "L'arène des duels (affronter un autre joueur)",
+            "reply": [
+              ["tetsu", "Une arène, de l'autre côté du billot. On s'y bat d'égal à égal : même niveau, l'arme de ta classe, rien d'autre. Ce qui compte, c'est ta main et tes choix."],
+              ["tetsu", "Deux manches gagnantes. Et ne traîne pas au bord : quand le temps file, le cercle se referme, et ce qui reste dehors s'use."],
+              ["tetsu", "Ouvre un duel et donne le code à ton adversaire, ou entre le sien."]
+            ],
+            "then": [{ "duel": true }]
+          },
           { "text": "Au revoir" }
         ]
       }

@@ -3,6 +3,8 @@
 import {
   MAX_PLAYERS,
   PROTOCOL,
+  SNAPSHOT_EVERY,
+  TICK_RATE,
   packSnapshot,
   unpackSnapshot,
   type Announce,
@@ -15,6 +17,7 @@ import {
   type Snapshot,
   type Start,
 } from './protocol';
+import { noteArrival } from './mesures';
 import { openRoom, serverPost, type Json, type Network, type Room } from './transport';
 
 /** Lettres des codes : ni 0 ni O, ni 1 ni I, pour qu'on ne les confonde pas en les dictant. */
@@ -39,6 +42,10 @@ export const cleanCode = (text: string): string =>
 
 const roomOf = (code: string) => `partie-${code}`;
 
+/** Le salon d'un duel (PVP) porte ce donjon : deux joueurs au plus, l'hôte contre son invité. */
+export const DUEL = 'duel';
+const DUEL_PLAYERS = 2;
+
 type Hello = { version: number; member: Member };
 
 /** Ce qu'une session raconte à l'interface et au jeu. */
@@ -53,6 +60,9 @@ export interface SessionEvents {
   events?(packet: EventPacket): void;
   /** Hôte : les commandes d'un invité, à sa place. */
   input?(seat: number, packet: InputPacket): void;
+  /** Duel : les commandes de l'adversaire (src/net/rollback.ts), et le monde de l'hôte après une divergence. */
+  rollback?(data: Json): void;
+  rollbackState?(data: Json): void;
   /** Hôte, en pleine descente : un invité est parti. */
   left?(seat: number): void;
   /** La session est finie : on l'a quittée, l'hôte est parti, ou il a refusé. */
@@ -75,6 +85,8 @@ export class CoopSession {
   private run = 0;
   /** Invité : aller-retour jusqu'à l'hôte (ms), lissé. */
   ping = 0;
+  /** Invité, en descente : ping de chaque joueur vers l'hôte, par place (envoyé par l'hôte chaque seconde). */
+  pings: number[] = [];
 
   private constructor(
     readonly role: 'host' | 'guest',
@@ -107,6 +119,14 @@ export class CoopSession {
     return CoopSession.join(network, code, me);
   }
 
+  /**
+   * Ouvre un duel : on en est l'hôte (le combat tourne dans ce navigateur), et l'adversaire le rejoint avec son code.
+   * Un duel n'est jamais public : on n'y entre qu'avec le code.
+   */
+  static hostDuel(network: Network, me: Member, level: number): CoopSession {
+    return CoopSession.host(network, me, { open: false, dungeon: DUEL, level });
+  }
+
   /** Rejoint la partie de ce code. */
   static join(network: Network, code: string, me: Member): CoopSession {
     const session = new CoopSession('guest', code, network, me, openRoom(network, roomOf(code)));
@@ -125,6 +145,16 @@ export class CoopSession {
   /** Nombre de joueurs dans le salon, hôte compris. */
   get size(): number {
     return this.lobby.players.length;
+  }
+
+  /** Salon d'un duel (PVP) plutôt que d'une descente. */
+  get duel(): boolean {
+    return this.lobby.dungeon === DUEL;
+  }
+
+  /** Joueurs au plus dans ce salon. */
+  get capacity(): number {
+    return this.duel ? DUEL_PLAYERS : MAX_PLAYERS;
   }
 
   /** Partie tenue par le serveur : pas d'hôte joueur. */
@@ -155,12 +185,15 @@ export class CoopSession {
 
   private setupHost(): void {
     const room = this.room;
+    room.on('rb', (data, from) => {
+      if ((this.seats.get(from) ?? 0) > 0) this.handlers.rollback?.(data);
+    });
     room.on('hello', (data, from) => {
       const hello = data as unknown as Hello;
       if (hello.version !== PROTOCOL) return room.send('refuse', 'Vous n’avez pas la même version du jeu : rechargez la page (Ctrl+F5).', from);
       if (this.lobby.inGame) return room.send('refuse', 'La descente a déjà commencé.', from);
       if (this.members.has(from)) return this.broadcastLobby();
-      if (this.size >= MAX_PLAYERS) return room.send('refuse', `La partie est pleine (${MAX_PLAYERS} joueurs).`, from);
+      if (this.size >= this.capacity) return room.send('refuse', this.duel ? 'Ce duel a déjà ses deux adversaires.' : `La partie est pleine (${MAX_PLAYERS} joueurs).`, from);
       this.members.set(from, hello.member);
       this.lobby.players.push(this.entry(from, hello.member, false));
       this.broadcastLobby();
@@ -247,7 +280,8 @@ export class CoopSession {
     this.lobby.inGame = true;
     this.broadcastLobby();
     const run = ++this.run;
-    const start = (seat: number): Start => ({ run, dungeon: this.lobby.dungeon, level: this.lobby.level, seat, heroes });
+    const seed = this.duel ? Math.floor(Math.random() * 2 ** 32) : undefined;
+    const start = (seat: number): Start => ({ run, dungeon: this.lobby.dungeon, level: this.lobby.level, seat, heroes, ...(seed === undefined ? {} : { seed }) });
     for (const [peer, seat] of this.seats) if (seat > 0) this.room.send('start', start(seat) as unknown as Json, peer);
     return start(0);
   }
@@ -257,6 +291,27 @@ export class CoopSession {
     for (const [peer, seat] of this.seats) {
       if (seat > 0 && this.members.has(peer)) this.room.sendFast('snap', packSnapshot(shared, run, seat, ack(seat)), peer);
     }
+  }
+
+  /** Hôte : le ping de chaque joueur, par place (0 : l'hôte lui-même), pour que chacun voie celui des autres. */
+  sendPings(pings: number[]): void {
+    this.room.sendFast('pings', pings.map((ping) => Math.round(ping)));
+  }
+
+  /** Duel : nos commandes pour l'adversaire (canal rapide : un paquet perdu est couvert par le suivant). */
+  sendRollback(data: Json): void {
+    for (const peer of this.opponents()) this.room.sendFast('rb', data, peer);
+  }
+
+  /** Duel, hôte : son monde entier pour l'invité, après une divergence (canal sûr). */
+  sendRollbackState(data: Json): void {
+    for (const peer of this.opponents()) this.room.send('rbs', data, peer);
+  }
+
+  /** Les autres joueurs de la descente : les invités pour l'hôte, l'hôte pour un invité. */
+  private opponents(): string[] {
+    if (this.role === 'guest') return this.hostPeer ? [this.hostPeer] : [];
+    return [...this.seats].filter(([, seat]) => seat > 0).map(([peer]) => peer);
   }
 
   /** Hôte : les événements du combat, pour tous les invités (canal sûr). */
@@ -275,6 +330,12 @@ export class CoopSession {
 
   private setupGuest(): void {
     const room = this.room;
+    room.on('rb', (data, from) => {
+      if (from === this.hostPeer) this.handlers.rollback?.(data);
+    });
+    room.on('rbs', (data, from) => {
+      if (from === this.hostPeer) this.handlers.rollbackState?.(data);
+    });
     const hello = () => room.send('hello', { version: PROTOCOL, member: this.me } as unknown as Json);
     // On se présente à chaque pair qui arrive : seul l'hôte répond (les autres invités ignorent le message).
     room.onPeerJoin((peer) => {
@@ -300,8 +361,12 @@ export class CoopSession {
     });
     room.on('snap', (data, from) => {
       if (from !== this.hostPeer) return;
+      noteArrival('snap', (SNAPSHOT_EVERY * 1000) / TICK_RATE);
       const snap = unpackSnapshot(data);
       if (snap) this.handlers.state?.(snap);
+    });
+    room.on('pings', (data, from) => {
+      if (from === this.hostPeer && Array.isArray(data)) this.pings = data.map((ping) => (typeof ping === 'number' ? ping : 0));
     });
     room.on('evts', (data, from) => {
       if (from === this.hostPeer) this.handlers.events?.(data as unknown as EventPacket);

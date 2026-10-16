@@ -204,6 +204,45 @@ export interface ServerListener {
   closed(): void;
 }
 
+/**
+ * Horloge et ping du serveur. La page envoie un `ping` toutes les `PING_EVERY` ms sur sa connexion ; le serveur répond
+ * aussitôt avec son heure. On en tire l'aller-retour (lissé, affiché à l'écran) et l'écart entre l'horloge de la page
+ * et celle du serveur, estimé sur l'aller-retour le plus court des derniers échanges (le moins déformé par l'attente).
+ */
+export const serverClock = {
+  /** Aller-retour jusqu'au serveur (ms), lissé ; 0 tant qu'aucune réponse n'est arrivée. */
+  ping: 0,
+  /** Heure du serveur moins heure de la page (ms). */
+  offset: 0,
+  /** Quand la dernière réponse est arrivée (`performance.now()`) ; 0 depuis une coupure. */
+  lastPong: 0,
+  /** Heure du serveur, estimée (ms depuis 1970). */
+  now(): number {
+    return Date.now() + this.offset;
+  },
+};
+/** Les allers-retours depuis le dernier relevé de src/net/mesures.ts. */
+export const pingStats = { sum: 0, count: 0, max: 0 };
+const PING_EVERY = 2_000;
+/** Derniers échanges (aller-retour, écart d'horloge) : l'écart retenu est celui de l'aller-retour le plus court. */
+const clockSamples: { rtt: number; offset: number }[] = [];
+/** Coupure en cours : quand elle a commencé et son code, pour le dire au serveur à la reconnexion. */
+let cut: { at: number; code: number } | null = null;
+
+function pong(m: { c?: unknown; s?: unknown }): void {
+  if (typeof m.c !== 'number' || typeof m.s !== 'number') return;
+  const now = performance.now();
+  const rtt = Math.max(0, now - m.c);
+  serverClock.ping = serverClock.ping ? serverClock.ping + (rtt - serverClock.ping) * 0.3 : rtt;
+  serverClock.lastPong = now;
+  pingStats.sum += rtt;
+  pingStats.count++;
+  pingStats.max = Math.max(pingStats.max, rtt);
+  clockSamples.push({ rtt, offset: m.s + rtt / 2 - Date.now() });
+  if (clockSamples.length > 10) clockSamples.shift();
+  serverClock.offset = clockSamples.reduce((best, s) => (s.rtt < best.rtt ? s : best)).offset;
+}
+
 /** Identifiant de la page auprès du serveur : le même d'une connexion à l'autre. */
 const serverSelf = Math.random().toString(36).slice(2, 12);
 /** Les salons ouverts par cette page, avec leurs membres (hors soi) et ceux qui les écoutent. */
@@ -239,9 +278,18 @@ function serverLink(): ServerLink {
     },
     backlog: () => socket.bufferedAmount,
   };
+  // Première connexion : on laisse au serveur le temps de répondre avant de dire la connexion perdue.
+  if (!cut && !serverClock.lastPong) serverClock.lastPong = performance.now();
+  let pinger = 0;
+  const sendPing = () => current.post({ t: 'ping', c: performance.now(), p: Math.round(serverClock.ping) });
   socket.onopen = () => {
     reconnectDelay = RECONNECT_MIN;
     for (const text of waiting.splice(0)) socket.send(text);
+    // De retour après une coupure : le serveur note combien de temps on a été absent (journal des connexions).
+    if (cut) current.post({ t: 'retour', absent: Math.round(performance.now() - cut.at), code: cut.code });
+    cut = null;
+    sendPing();
+    pinger = window.setInterval(sendPing, PING_EVERY);
     serverListeners.forEach((l) => l.open());
   };
   socket.onmessage = (e: MessageEvent) => {
@@ -254,6 +302,10 @@ function serverLink(): ServerLink {
       return;
     }
     if (!m || typeof m.t !== 'string') return;
+    if (m.t === 'pong') {
+      pong(m as { c?: unknown; s?: unknown });
+      return;
+    }
     if (typeof m.r !== 'string') {
       serverListeners.forEach((l) => l.message(m as { t: string } & Record<string, Json>));
       return;
@@ -272,9 +324,12 @@ function serverLink(): ServerLink {
       room.listeners.forEach((l) => l.message(m.a!, m.d ?? null, m.from!));
     }
   };
-  socket.onclose = () => {
+  socket.onclose = (e: CloseEvent) => {
+    window.clearInterval(pinger);
     if (link !== current) return;
     link = null;
+    serverClock.lastPong = 0;
+    cut ??= { at: performance.now(), code: e.code };
     for (const room of serverRooms.values()) {
       for (const peer of [...room.peers]) {
         room.peers.delete(peer);
