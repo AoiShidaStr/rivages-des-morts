@@ -2,7 +2,7 @@
 
 Action-RPG de donjon en temps réel, jouable dans le navigateur. Tu incarnes une âme échouée sur l'île du Yomi, l'au-delà japonais, et tu affrontes ses yokai au corps à corps. Inspiré de Waven et de Hades.
 
-> Prototype : une île, un donjon de sept vagues dont un boss. Graphismes provisoires.
+> En développement (version 0.19) : l'île du Yomi, deux donjons (les Rizières noyées et leur Jorōgumo, le Palais d'Izanami), le Yomi sans fond, un donjon sans fin à paliers, cinq classes, quatre races, et la coop en ligne jusqu'à trois. Graphismes et sons encore provisoires par endroits.
 
 ## ▶ Jouer
 
@@ -184,4 +184,4 @@ Le code est en TypeScript avec [Babylon.js](https://www.babylonjs.com/) et [Vite
 
 ## Donner son avis
 
-Une idée, un bug, un boss trop dur ? Ouvre une [issue](https://github.com/AoiShidaStr/rivages-des-morts/issues).
+Une idée, un bug, un boss trop dur ? Ouvre une [issue](https://github.com/AoiShidaStr/rivages-des-morts/issues). En jeu, le menu pause (<kbd>Échap</kbd>) a aussi un bouton **Donner mon avis** quand le formulaire est en ligne (son adresse se règle dans `src/data/liens.json`).

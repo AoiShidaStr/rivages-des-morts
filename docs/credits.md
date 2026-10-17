@@ -22,6 +22,9 @@
 - Dans le dépôt : `public/fonts/shippori-mincho-*.woff2`, réduites aux caractères du jeu (latin, kana et les kanji des
   sceaux) par `tools/polices.py`, pour marcher hors ligne et sur le serveur coop.
 
-## Modèles 3D : KayKit
+## Sons
 
-Voir `public/models/kaykit-dungeon/LICENSE.txt` et `public/models/kaykit-forest/LICENSE.txt` (CC0).
+- Météore du Sorcier (`public/audio/sfx/meteore-*`, `meteore-impact-*`) : sons fournis par Meven.
+- Sons du combat, du butin et de l'interface (`public/audio/sfx/`) : packs CC0 d'OpenGameArt (artisticdude, rubberduck…), le détail fichier par fichier est dans `docs/sons-a-produire.md`.
+
+Les modèles 3D KayKit des premières versions ont été retirés : le jeu n'utilise plus aucun modèle 3D tiers.
