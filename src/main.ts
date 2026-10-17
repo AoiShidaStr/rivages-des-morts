@@ -18,6 +18,7 @@ import { heroSprite, withHeroSprites } from './render/heroes';
 import { Hud } from './render/hud';
 import { IslandRenderer } from './render/islandRenderer';
 import { Renderer, type SpriteManifest } from './render/renderer';
+import { watchNewVersion } from './ui/newVersion';
 
 // L'arène (salles, souches, pêchers) change avec le donjon : celle des Rizières noyées sert de base.
 const config: GameConfig = {
@@ -75,7 +76,9 @@ async function start(): Promise<void> {
   dungeonRenderer.setHero(hero);
   islandRenderer.setHero(hero);
   loadingStep('L’île du Yomi sort de la brume…', 0.45);
-  await Promise.all([dungeonRenderer.load(), islandRenderer.load(island)]);
+  // Seule l'île est attendue : l'écran titre se montre devant elle. L'arène se charge ensuite, pendant que le joueur
+  // lit le titre ou se promène ; une descente lancée avant attend qu'elle soit prête (Renderer.prepareDescent).
+  await islandRenderer.load(island);
 
   const app = new App({
     engine,
@@ -99,6 +102,8 @@ async function start(): Promise<void> {
   });
   app.start();
   loadingDone();
+  dungeonRenderer.load().catch((error: unknown) => console.warn('Arène :', error));
+  watchNewVersion();
 
   // Accès à la partie depuis la console du navigateur, en développement seulement.
   if (import.meta.env.DEV) Object.assign(window, { rdm: app.debug() });

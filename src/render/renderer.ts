@@ -26,6 +26,7 @@ import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WorldVi
 import { REVIVE_TIME } from '../game/world';
 import { LOW_GRAPHICS, shakeEnabled } from './flags';
 import { isHeroVariant } from './heroes';
+import { imageUrl } from './imageUrl';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
 import { loadFittedTexture } from './textureBudget';
 import {
@@ -440,7 +441,7 @@ export function loadTexture(scene: Scene, url: string, pixelated = false): Promi
   return new Promise((resolve, reject) => {
     // Le pixel art garde des pixels nets : pas de mipmaps ni de lissage.
     const texture: Texture = new Texture(
-      url,
+      imageUrl(url),
       scene,
       pixelated,
       true,
@@ -551,6 +552,10 @@ export class Renderer {
   private prefetching = false;
   /** Le décor affiché : le même d'une descente à l'autre (blocs du donjon infini), il n'est pas refait. */
   private shownStyle: DungeonStyle | null = null;
+  /** Le chargement de l'arène (`load`), et le décor demandé avant qu'il finisse. */
+  private loading: Promise<void> | null = null;
+  private loaded = false;
+  private pendingStyle: DungeonStyle | null = null;
 
   constructor(
     readonly engine: Engine,
@@ -599,7 +604,21 @@ export class Renderer {
     this.onDemand = new Set([...ENEMY_SHEETS, ...Object.keys(manifest).filter((name) => effectKit(name))]);
   }
 
-  async load(): Promise<void> {
+  /**
+   * Charge le sol, la toile et les sprites de l'arène, une seule fois (les appels suivants rendent la même promesse).
+   * Lancé après l'écran titre (main.ts) : `prepareDescent` l'attend, et `setStyle` garde le décor demandé d'ici là.
+   */
+  load(): Promise<void> {
+    this.loading ??= this.loadArena().then(() => {
+      this.loaded = true;
+      const style = this.pendingStyle;
+      this.pendingStyle = null;
+      if (style) this.setStyle(style);
+    });
+    return this.loading;
+  }
+
+  private async loadArena(): Promise<void> {
     await this.buildGround();
     // Toile peinte si elle existe, sinon le dessin provisoire du constructeur.
     const web = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/toile.png`).catch(() => null);
@@ -665,6 +684,7 @@ export class Renderer {
    * noir : le combat commence avec ses planches prêtes.
    */
   async prepareDescent(kinds: Iterable<string>, kits: readonly string[]): Promise<void> {
+    await this.load();
     // Les feux follets peuvent naître de n'importe quel yokai (malédictions du donjon infini).
     const wanted = new Set<string>(ENEMY_SPRITES.hitodama);
     for (const kind of kinds) for (const name of ENEMY_SPRITES[kind] ?? []) wanted.add(name);
@@ -2616,6 +2636,10 @@ export class Renderer {
 
   /** Arène du donjon : teinte du sol, couleur de la brume, décor posé autour (src/data/dungeons.json). */
   setStyle(style: DungeonStyle): void {
+    if (!this.loaded) {
+      this.pendingStyle = style;
+      return;
+    }
     if (style === this.shownStyle) return;
     this.shownStyle = style;
     if (this.groundMaterial) this.groundMaterial.emissiveColor = new Color3(...style.ground);

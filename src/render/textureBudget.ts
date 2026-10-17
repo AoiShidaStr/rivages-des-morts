@@ -1,4 +1,5 @@
 import { Texture, type Scene } from '@babylonjs/core';
+import { imageUrl } from './imageUrl';
 import { MAX_PIXEL_RATIO } from './resolution';
 
 /**
@@ -56,7 +57,7 @@ export function textureScale(texelsPerUnit: number): number {
  * Sans réduction, c'est un chargement ordinaire, partagé entre les scènes par le cache de Babylon.
  */
 export async function loadFittedTexture(scene: Scene, url: string, texelsPerUnit: (width: number, height: number) => number): Promise<Texture> {
-  const response = await fetch(url);
+  const response = await fetch(imageUrl(url));
   if (!response.ok) throw new Error(url);
   const full = await createImageBitmap(await response.blob(), { premultiplyAlpha: 'none' });
   const scale = textureScale(texelsPerUnit(full.width, full.height));

@@ -4,6 +4,7 @@ import type { GameEvent } from '../game/types';
 import type { WorldView } from '../game/view';
 import { keyName, moveKeys, withKeys } from '../keys';
 import { h } from '../ui/dom';
+import { imageUrl } from './imageUrl';
 
 /**
  * Le HUD est mis à jour à chaque image : on n'écrit dans la page que ce qui a changé. Chaque écriture fait refaire au
@@ -238,7 +239,7 @@ export class Hud {
       const slot = this.skills[key];
       slot.name.textContent = name(key);
       slot.root.title = name(key);
-      slot.icon.src = `${ICONS}${cls.kit}-${key.toLowerCase()}.png`;
+      slot.icon.src = imageUrl(`${ICONS}${cls.kit}-${key.toLowerCase()}.png`);
       slot.root.querySelector('kbd')!.textContent = keyName(key);
     }
     this.root.classList.toggle('novice', novice);
@@ -248,9 +249,9 @@ export class Hud {
     const icon = this.voieSlot.icon;
     icon.onerror = () => {
       icon.onerror = null;
-      icon.src = `${ICONS}voie.png`;
+      icon.src = imageUrl(`${ICONS}voie.png`);
     };
-    icon.src = voieId ? `${ICONS}voie-${voieId}.png` : `${ICONS}voie.png`;
+    icon.src = imageUrl(voieId ? `${ICONS}voie-${voieId}.png` : `${ICONS}voie.png`);
     this.voieSlot.root.querySelector('kbd')!.textContent = keyName('F');
     for (const [kit, { style }] of Object.entries(RESOURCE)) {
       if (style) this.rageBar.classList.toggle(style, kit === cls.kit);
