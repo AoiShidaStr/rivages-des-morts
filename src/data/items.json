@@ -1,5 +1,5 @@
 {
-  "about": "spec : rôle de l'objet pour sa classe (dps, survie, boss ; les objets « boss » ne tombent que sur Jorōgumo et Izanami). bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : sorcier.*, blade.*, paladin.* et ranger.* pour le Sorcier, la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks. pvp : la version de duel (src/game/pvp.ts) ; en duel, bonus et paliers sont ignorés et les effets gardés ; false sort l'objet du duel (il ne sert que contre des yokai) ; { \"effects\": […], \"summary\": \"…\" } remplace ses effets en duel.",
+  "about": "spec : rôle de l'objet pour sa classe (dps, survie, boss ; les objets « boss » ne tombent que sur Jorōgumo et Izanami). bonus : effets simples (maxHp en PV ; damage, speed, dodge, armor, oboles en part : 0,08 = 8 %). effects : réglages du héros (mêmes règles que skills.json : sorcier.*, blade.*, paladin.* et ranger.* pour le Sorcier, la Lame, le Paladin et le Rôdeur). tags : classes (« Tous » compte pour toutes), pour les paliers de classe ; une arme se manie par la classe de ses tags. classes / races : identifiants des classes ou des races qui peuvent porter l'objet (absent : tout le monde, sauf les armes). conditional : effets qui ne valent que pour certaines classes, races ou à partir d'un niveau : [{ \"if\": { \"classes\": [\"guerrier\"], \"races\": [\"hanyo\"], \"minLevel\": 10 }, \"summary\": \"…\", \"bonus\": {…}, \"effects\": […] }]. Les effets de combat (sous 30 % de PV…) passent par les perks. pvp : la version de duel (src/game/pvp.ts) ; en duel, bonus et paliers sont ignorés et les effets gardés ; false sort l'objet du duel (il ne sert que contre des yokai) ; { \"effects\": […], \"summary\": \"…\" } remplace ses effets en duel ; \"damage\": 0.8 y fait frapper une arme 20 % moins fort, quand sa forme (portée, arc, cadence) pèse trop en duel.",
   "slots": {
     "arme": "Arme",
     "casque": "Casque",
@@ -186,6 +186,7 @@
       "description": "Un grand arc asymétrique de bambou laqué, la poignée placée bas comme le veut la tradition. Il chante quand on le bande."
     },
     "kusarigama": {
+      "pvp": {"effects": [{"op": "set", "path": "attack.damage", "value": 9}, {"op": "set", "path": "attack.range", "value": 2.7}, {"op": "set", "path": "attack.shape", "value": "arc"}, {"op": "set", "path": "attack.arcDeg", "value": 140}, {"op": "set", "path": "attack.commit", "value": 0}, {"op": "set", "path": "attack.windup", "value": 0.06}, {"op": "set", "path": "attack.recovery", "value": 0.2}, {"op": "set", "path": "attack.knockback", "value": 2.5}, {"op": "add", "path": "blade.ghost.range", "value": 2}, {"op": "add", "path": "blade.poison.duration", "value": 5}], "damage": 0.62, "summary": "En duel : frappe 38 % moins fort (sa chaîne longue et rapide y pèse trop)."},
       "name": "Kusarigama des Oubliés",
       "slot": "arme",
       "rarity": "légendaire",
@@ -213,6 +214,7 @@
       "description": "Une faucille de riziculteur au bout d'une chaîne rouillée. Les Oubliés s'en servaient pour moissonner ; maintenant, ils moissonnent autre chose."
     },
     "crocs-jorogumo": {
+      "pvp": {"damage": 0.85, "summary": "En duel : frappe 15 % moins fort (sa forme y pèse trop)."},
       "name": "Crocs de la Jorōgumo",
       "slot": "arme",
       "rarity": "épique",
@@ -239,6 +241,7 @@
       "description": "Arrachés à la Jorōgumo et montés sur des poignées de soie. Le venin n'a jamais séché ; il répare celui qui les tient."
     },
     "miroir-yata": {
+      "pvp": {"effects": [{"op": "set", "path": "attack.damage", "value": 14}, {"op": "set", "path": "attack.range", "value": 2.4}, {"op": "set", "path": "attack.shape", "value": "line"}, {"op": "set", "path": "attack.width", "value": 0.55}, {"op": "set", "path": "attack.commit", "value": 0.25}, {"op": "set", "path": "attack.windup", "value": 0.1}, {"op": "set", "path": "attack.recovery", "value": 0.3}, {"op": "set", "path": "attack.knockback", "value": 4}, {"op": "set", "path": "perks.auraWeaken", "value": 0.15}], "summary": "En duel : l'estoc est deux fois plus étroit (0,55 m) et l'Aura affaiblit de 15 % au lieu de 30 %."},
       "name": "Miroir de Yata",
       "slot": "arme",
       "rarity": "légendaire",
@@ -265,6 +268,7 @@
       "description": "Le miroir octogonal qui tira Amaterasu hors de sa grotte, ou son reflet tombé au Yomi. La Jorōgumo n'osait pas s'y regarder."
     },
     "hankyu": {
+      "pvp": {"damage": 1.2, "summary": "En duel : frappe 20 % plus fort (sa cadence rapide y compte moins)."},
       "name": "Hankyū de chasse",
       "slot": "arme",
       "rarity": "rare",
@@ -290,7 +294,7 @@
       "description": "Un petit arc de cavalier, taillé pour tirer vite plutôt que loin. Le kasa-obake qui le gardait s'en servait comme manche."
     },
     "kaiken-izanami": {
-      "pvp": {"effects": [{"op": "set", "path": "attack.damage", "value": 8}, {"op": "set", "path": "attack.range", "value": 2.2}, {"op": "set", "path": "attack.shape", "value": "line"}, {"op": "set", "path": "attack.width", "value": 0.7}, {"op": "set", "path": "attack.commit", "value": 0}, {"op": "set", "path": "attack.windup", "value": 0.04}, {"op": "set", "path": "attack.recovery", "value": 0.12}, {"op": "set", "path": "attack.knockback", "value": 1.5}, {"op": "add", "path": "blade.critFactor", "value": 0.2}], "summary": "En duel : critiques +0,2 au lieu de +0,5."},
+      "pvp": {"effects": [{"op": "set", "path": "attack.damage", "value": 8}, {"op": "set", "path": "attack.range", "value": 2.2}, {"op": "set", "path": "attack.shape", "value": "line"}, {"op": "set", "path": "attack.width", "value": 0.7}, {"op": "set", "path": "attack.commit", "value": 0}, {"op": "set", "path": "attack.windup", "value": 0.04}, {"op": "set", "path": "attack.recovery", "value": 0.12}, {"op": "set", "path": "attack.knockback", "value": 1.5}, {"op": "add", "path": "blade.critFactor", "value": 0.2}], "damage": 0.78, "summary": "En duel : critiques +0,2 au lieu de +0,5, et frappe 22 % moins fort."},
       "name": "Kaiken d'Izanami",
       "slot": "arme",
       "rarity": "épique",
@@ -317,6 +321,7 @@
       "description": "Le petit poignard qu'Izanami portait à la ceinture de son kimono des morts. On ne l'a jamais vu sortir de son fourreau ; on a seulement vu ce qu'il laissait."
     },
     "arc-pecher": {
+      "pvp": {"damage": 0.9, "summary": "En duel : frappe 10 % moins fort (sa forme y pèse trop)."},
       "name": "Arc du pêcher",
       "slot": "arme",
       "rarity": "épique",
@@ -610,6 +615,7 @@
       "eveil": {"summary": "+3 % de vol de vie par ennemi proche, jusqu'à +15 %, dans un rayon de 3,5 m.", "effects": [{"op": "set", "path": "perks.arenaHeart", "value": {"perEnemy": 0.03, "max": 0.15, "radius": 3.5}}]}
     },
     "nodachi-ikusa": {
+      "pvp": {"damage": 0.75, "summary": "En duel : frappe 25 % moins fort (sa forme y pèse trop)."},
       "name": "Nodachi de l'Ikusa",
       "slot": "arme",
       "rarity": "épique",
@@ -1107,6 +1113,7 @@
       "description": "Le bâton que Susanoo planta dans le ciel pour retenir l'orage. Le feu qui en sort ne tombe pas : il tourne autour de celui qui le tient."
     },
     "kanabo-demon-sang": {
+      "pvp": {"damage": 0.9, "summary": "En duel : frappe 10 % moins fort (sa forme y pèse trop)."},
       "name": "Kanabō du Démon-Sang",
       "slot": "arme",
       "rarity": "légendaire",
@@ -1463,6 +1470,7 @@
       "eveil": {"summary": "Chaque coup sur une cible empoisonnée rend 2 PV.", "effects": [{"op": "set", "path": "perks.poisonHitHeal", "value": 2}]}
     },
     "tetsubo-guerre": {
+      "pvp": {"effects": [{"op": "set", "path": "attack.damage", "value": 18}, {"op": "set", "path": "attack.range", "value": 2.2}, {"op": "set", "path": "attack.shape", "value": "arc"}, {"op": "set", "path": "attack.arcDeg", "value": 170}, {"op": "set", "path": "attack.commit", "value": 0.26}, {"op": "set", "path": "attack.windup", "value": 0.14}, {"op": "set", "path": "attack.recovery", "value": 0.3}, {"op": "set", "path": "attack.knockback", "value": 3}, {"op": "mul", "path": "paladin.hammer.damage", "value": 1.3}], "summary": "En duel : portée 2,2 m au lieu de 2,3, recul des coups 3 au lieu de 6, et le Marteau lancé frappe 30 % plus fort au lieu de 60 %."},
       "name": "Tetsubō de guerre",
       "slot": "arme",
       "rarity": "épique",

@@ -7,7 +7,8 @@
 // jamais par ses chiffres. Ses stats (`bonus` : PV, dégâts, vitesse, esquive, armure, oboles) sont ignorées ; ses effets
 // restent. Une arme garde sa forme (portée, arc, cadence) mais a les stats et les dégâts par seconde de l'arme de départ
 // de sa classe, et tout est forgé au niveau du duel. Dans items.json, `"pvp": false` sort un objet du duel (il ne
-// sert que contre des yokai) et `"pvp": { "effects": [...] }` le remplace par sa version de duel. Les effets cumulés
+// sert que contre des yokai) et `"pvp": { "effects": [...] }` le remplace par sa version de duel ; `"pvp": { "damage": 0.8 }`
+// fait frapper une arme 20 % moins fort en duel, quand sa forme (portée, arc) y pèse trop. Les effets cumulés
 // sont plafonnés (pvp.json, `items`) : recharges, invulnérabilité.
 import type { PlayerConfig } from './config';
 import { buildTalents, DUEL_SLOTS, fitsHero } from './builds';
@@ -50,11 +51,13 @@ const cycleOf = (def: ItemDef | undefined, fallback: Timing): number =>
  */
 function duelItem(def: ItemDef, reference: ItemDef | undefined, base: Timing): ItemDef {
   const pvp = def.pvp;
-  const own = pvp ? pvp.effects : (def.effects ?? []);
+  const own = (pvp ? pvp.effects : undefined) ?? def.effects ?? [];
   const weapon = def.slot === 'arme' && reference !== undefined;
   const refDamage = setOf(reference, 'damage');
   const refTiming = { windup: setOf(reference, 'windup') ?? base.windup, active: setOf(reference, 'active') ?? base.active, recovery: setOf(reference, 'recovery') ?? base.recovery };
-  const damage = refDamage === undefined ? undefined : (refDamage * cycleOf(def, refTiming)) / Math.max(0.01, cycleOf(reference, base));
+  // `pvp.damage` : une arme dont la forme (portée, arc) pèse trop en duel y frappe d'autant moins fort (ou plus).
+  const scale = (pvp ? pvp.damage : undefined) ?? 1;
+  const damage = refDamage === undefined ? undefined : (scale * refDamage * cycleOf(def, refTiming)) / Math.max(0.01, cycleOf(reference, base));
   const effects = weapon && damage !== undefined ? own.map((e) => (e.path === 'attack.damage' && e.op === 'set' ? { ...e, value: damage } : e)) : own;
   const { bonus: _bonus, eveil: _eveil, pvp: _pvp, conditional, ...rest } = def;
   return {

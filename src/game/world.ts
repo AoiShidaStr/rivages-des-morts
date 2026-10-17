@@ -985,6 +985,9 @@ export class World {
       factor = Math.max(factor, perks.stanceCrit);
     }
     if (warrior && factor > 1 && perks.offenseCrit && player.stance === 'offensive') factor += perks.offenseCrit;
+    // Duel : l'armure du Guerrier émousse les critiques qu'il reçoit (`critArmor` : part du surplus retirée).
+    const armored = enemy instanceof Rival ? this.players.find((h) => h.id === enemy.owner)?.cfg.perks?.critArmor : undefined;
+    if (armored && factor > 1) factor = 1 + (factor - 1) * (1 - armored);
     // « Écorce des kodama » : seuls les coups d'arme sont amoindris.
     let amount = base * factor * player.damageMultiplier() * (1 - this.curse('ecorce'));
     const execute = perks.execute;
@@ -2120,6 +2123,7 @@ export class World {
         const long = perks.longShot && far >= perks.longShot.distance ? 1 + perks.longShot.bonus : 1;
         const crit = perks.farCrit && far >= perks.farCrit.distance && player.farCrit(perks.farCrit) ? player.cfg.blade.critFactor : 1;
         this.weaponHit(enemy, p.damage * long, from, p.knockback, crit);
+        if (perks.arrowSlow && !enemy.dead) enemy.slow(perks.arrowSlow.amount, perks.arrowSlow.duration, this);
         // Arc de soie : le tir chargé plein s'ouvre en filet sur sa première proie.
         if (p.full && perks.chargedNet && p.hit.size === 1) this.netBurst(p.pos, perks.chargedNet);
         // Arc d'Ikazuchi : la foudre tombe sur la première proie d'un tir plein, au plus une fois par recharge.

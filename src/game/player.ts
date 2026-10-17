@@ -615,7 +615,7 @@ export class Player {
         this.updateFree(dt, input, aimDir, slow);
         break;
       case 'attack':
-        this.updateAttack(dt, a, aimDir, input, world);
+        this.updateAttack(dt, a, aimDir, input, world, slow);
         break;
       case 'dodge': {
         // Geta du danseur de feu : une braise au départ, une à mi-course, une à l'arrivée.
@@ -1095,9 +1095,16 @@ export class Player {
     aimDir: Vec2,
     input: InputFrame,
     world: World,
+    slow: number,
   ): void {
     const c = this.cfg.attack;
     const time = this.timing();
+    // Tir en marchant (Rôdeur en duel) : il garde une part de sa vitesse pendant qu'il tire.
+    const shootMove = this.cfg.perks?.shootMove;
+    if (shootMove && this.cfg.kit === 'rodeur' && length(input.move) > 0.05) {
+      this.pos = add(this.pos, scale(input.move, this.cfg.moveSpeed * shootMove * slow * this.speedFactor() * dt));
+      this.moving = true;
+    }
     a.t += dt;
     // Le Rôdeur tire une flèche au lieu de frapper ; le Sorcier, une salve de boules de feu.
     const ranged = this.cfg.kit === 'rodeur' || this.cfg.kit === 'sorcier';

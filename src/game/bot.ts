@@ -20,6 +20,8 @@ const LATENCY = 0.12;
 const HUMAN_LATENCY = 0.22;
 /** Duel : distance au centre (m) à partir de laquelle un tireur qui recule se sent au bord (l'arène fait 9 m de côté). */
 const KITE_ROOM = 8;
+/** Duel : l'écart au-delà de sa portée à partir duquel un héros de mêlée esquive vers l'adversaire pour le rattraper. */
+const CHASE_GAP = 1.5;
 
 /**
  * Ce que le bot lit des yokai au-delà de leur interface publique : leur état et leurs réglages.
@@ -384,6 +386,8 @@ export class Bot {
     }
     if (gap > c.attack.range * 0.6) input.move = toTarget;
     if (gap <= c.attack.range * 0.85) input.attackHeld = true;
+    // Duel : un héros de mêlée rattrape un Rôdeur qui recule (il tire en marchant) par une esquive vers lui, comme le ferait un joueur.
+    else if (this.rivalAware && w.duel && gap > c.attack.range + CHASE_GAP && p.dodgeCooldown <= 0 && this.shooter(target)) input.dodgePressed = true;
     return input;
   }
 
@@ -402,6 +406,13 @@ export class Bot {
     if (side.x * toCenter.x + side.z * toCenter.z < 0) side = scale(side, -1);
     const edge = Math.min(1, length(p.pos) / room);
     return normalize(add(add(scale(away, 1 - 0.8 * edge), scale(side, 0.5 + edge)), scale(toCenter, 0.6 * edge)), away);
+  }
+
+  /** Duel : vrai si `target` est le double d'un Rôdeur (le Sorcier, lui, a sa Fuite de feu pour garder ses distances). */
+  private shooter(target: Enemy): boolean {
+    if (!(target instanceof Rival)) return false;
+    const kit = this.world.players.find((h) => h.id === target.owner)?.cfg.kit;
+    return kit === 'rodeur';
   }
 
   /** Chaque attaque est vue ou non, une fois pour toutes. */

@@ -525,6 +525,12 @@ export interface Perks {
   chargedNet?: { amount: number; duration: number };
   /** Après la Frappe, ralentissement des yokai touchés (objets du Guerrier). */
   smashSlow?: { amount: number; duration: number };
+  /** Rôdeur en duel : chaque flèche ralentit l'autre héros, pour garder ses distances face à la mêlée. */
+  arrowSlow?: { amount: number; duration: number };
+  /** Rôdeur en duel : part de sa vitesse gardée pendant un tir (sinon il tire à l'arrêt). */
+  shootMove?: number;
+  /** Guerrier en duel : part du surplus des critiques reçus que son armure retire (0,5 : un ×2 ne fait plus que ×1,5). */
+  critArmor?: number;
   /** Carquois divin : un tir chargé plein part en plusieurs flèches. */
   splitShot?: number;
   /** Vent du nord : le Recul laisse un filet là où tu étais. */

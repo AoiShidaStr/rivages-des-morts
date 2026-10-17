@@ -11,7 +11,7 @@ import type { DuelView, World } from '../game/world';
 import type { Json } from './transport';
 
 /** À changer quand les messages changent : deux versions différentes du jeu ne jouent pas ensemble. */
-export const PROTOCOL = 16;
+export const PROTOCOL = 17;
 /** Trois héros au plus dans une partie. */
 export const MAX_PLAYERS = 3;
 /**

@@ -9,6 +9,7 @@
 //   npm run duel -- --json grille.json              garde la grille dans un fichier (référence de l'équilibrage)
 //   npm run duel -- --comparer tools/duel-reference.json   écart de chaque paire avec la grille de référence
 //   npm run duel -- --objets rodeur --parties 6     audit des objets : la classe avec puis sans chaque objet
+//   npm run duel -- --objets lame --seulement kusarigama,kaiken-izanami   audit de quelques objets seulement
 //   npm run duel -- --reglages '{"damage":0.2}'     essaie des réglages de duel par-dessus src/data/pvp.json
 //
 // Grille : pour chaque paire, manches gagnées par chaque camp, part gagnée par le premier avec sa marge d'erreur
@@ -31,6 +32,8 @@ function option(name, fallback) {
 
 const CLASSES = option('classes', 'guerrier,sorcier,lame,paladin,rodeur').split(',');
 const AUDIT = option('objets', null);
+/** Audit : seulement ces objets (`--seulement kusarigama,kaiken-izanami`). */
+const ONLY = option('seulement', null)?.split(',');
 const RUNS = Number(option('parties', AUDIT ? '6' : '100'));
 const RACE = option('race', 'einherjar');
 const SEED = Number(option('graine', '1'));
@@ -176,7 +179,7 @@ if (AUDIT) {
   const others = CLASSES.filter((c) => c !== cls);
   const hero = heroState(cls).hero;
   const items = Object.entries(content.items)
-    .filter(([, def]) => def.slot && allowedInDuel(def) && !equipBlock(def, hero, content.skills))
+    .filter(([id, def]) => def.slot && allowedInDuel(def) && !equipBlock(def, hero, content.skills) && (!ONLY || ONLY.includes(id)))
     .map(([id]) => id);
   const pooled = (item) => {
     let won = 0;

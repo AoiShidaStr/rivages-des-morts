@@ -1,12 +1,13 @@
 {
-  "about": "Le duel (PVP) : deux héros s'affrontent en deux manches gagnantes. Tout est égalisé : chaque héros y entre au niveau `level`, avec l'équipement de son build Duel (l'arme et 4 emplacements au plus), sans les stats des objets (src/game/pvp.ts) ; seuls comptent sa race, sa classe, sa voie, ses talents et les effets de ses objets. `classes` : réglages d'une classe en duel seulement, posés en dernier sur le héros (même syntaxe que les effets d'items.json ; réglés le 16/10/2026 avec npm run duel pour rapprocher chaque paire de 50 %). `items` plafonne les effets cumulés des objets : `cooldownCut`, la part des recharges qu'ils peuvent retirer ; `invulnerable`, l'invulnérabilité la plus longue d'une esquive ou d'une Frappe fantôme (s). `meta` a la forme d'un donjon (nom, région, décor) et `arena` celle de dungeon.json, sans vague. `duel` règle la rencontre et les coups d'un héros sur un autre : ces réglages ne touchent jamais le PVE (GameConfig.duel, src/game/enemies.ts Rival). Dégâts : `damage` multiplie tous les coups portés à un héros, puis `classDamage` selon la classe de l'attaquant. Soins : `healing` est la part gardée. `stun` et `slow` : part gardée de la durée, et durée la plus longue ; `slow.amount` : la part de la marche perdue au plus. `zone.damage` : part des PV max perdue par seconde hors de la zone.",
+  "about": "Le duel (PVP) : deux héros s'affrontent en deux manches gagnantes. Tout est égalisé : chaque héros y entre au niveau `level`, avec l'équipement de son build Duel (l'arme et 4 emplacements au plus), sans les stats des objets (src/game/pvp.ts) ; seuls comptent sa race, sa classe, sa voie, ses talents et les effets de ses objets. `classes` : réglages d'une classe en duel seulement, posés en dernier sur le héros (même syntaxe que les effets d'items.json ; réglés le 16/10/2026 avec npm run duel pour rapprocher chaque paire de 50 %, puis le 17/10 pour casser les contres : le Rôdeur tire en marchant (`perks.shootMove`) et ses flèches ralentissent (`perks.arrowSlow`), la Frappe fracassante du Guerrier est moins large et son armure émousse les critiques reçus (`perks.critArmor`), l'Égide du Paladin ne retire que 30 % des dégâts). `items` plafonne les effets cumulés des objets : `cooldownCut`, la part des recharges qu'ils peuvent retirer ; `invulnerable`, l'invulnérabilité la plus longue d'une esquive ou d'une Frappe fantôme (s). `meta` a la forme d'un donjon (nom, région, décor) et `arena` celle de dungeon.json, sans vague. `duel` règle la rencontre et les coups d'un héros sur un autre : ces réglages ne touchent jamais le PVE (GameConfig.duel, src/game/enemies.ts Rival). Dégâts : `damage` multiplie tous les coups portés à un héros, puis `classDamage` selon la classe de l'attaquant. Soins : `healing` est la part gardée. `stun` et `slow` : part gardée de la durée, et durée la plus longue ; `slow.amount` : la part de la marche perdue au plus. `zone.damage` : part des PV max perdue par seconde hors de la zone.",
   "level": 30,
   "items": { "cooldownCut": 0.4, "invulnerable": 0.5 },
   "classes": {
-    "guerrier": [{ "op": "mul", "path": "maxHp", "value": 1.06 }],
-    "lame": [{ "op": "mul", "path": "maxHp", "value": 1.19 }],
-    "paladin": [{ "op": "mul", "path": "maxHp", "value": 0.88 }],
-    "rodeur": [{ "op": "mul", "path": "maxHp", "value": 0.88 }]
+    "guerrier": [{ "op": "mul", "path": "maxHp", "value": 1.06 }, { "op": "mul", "path": "smash.radius", "value": 0.78 }, { "op": "set", "path": "perks.critArmor", "value": 0.5 }],
+    "sorcier": [{ "op": "mul", "path": "maxHp", "value": 1.026 }],
+    "lame": [{ "op": "mul", "path": "maxHp", "value": 1.286 }],
+    "paladin": [{ "op": "mul", "path": "maxHp", "value": 0.854 }, { "op": "set", "path": "paladin.aegis.armor", "value": 0.3 }],
+    "rodeur": [{ "op": "mul", "path": "maxHp", "value": 0.818 }, { "op": "set", "path": "perks.shootMove", "value": 1 }, { "op": "set", "path": "perks.arrowSlow", "value": { "amount": 0.4, "duration": 1 } }]
   },
   "meta": {
     "name": "L'arène des duels",
@@ -66,7 +67,7 @@
     ],
     "zone": { "start": 13, "end": 3, "shrinkFrom": 30, "damage": 0.06 },
     "damage": 0.15,
-    "classDamage": { "guerrier": 1.05, "sorcier": 1.45, "lame": 0.85, "paladin": 1.25, "rodeur": 0.7 },
+    "classDamage": { "guerrier": 0.924, "sorcier": 1.281, "lame": 0.875, "paladin": 1.25, "rodeur": 0.638 },
     "healing": 0.5,
     "invulnerableAfterHit": 0.25,
     "stun": { "factor": 0.5, "max": 1 },
