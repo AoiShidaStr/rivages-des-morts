@@ -93,7 +93,7 @@ export class Screens {
         h('p', { class: 'tagline' }, 'Les au-delà se sont effondrés. Les âmes ne trouvent plus leur chemin.'),
         this.menu(options),
         record ? h('p', { class: 'title-record' }, record) : null,
-        h('p', { class: 'footnote' }, `Prototype${version ? ` · version ${version}` : ''} · île du Yomi · graphismes provisoires`),
+        h('p', { class: 'footnote' }, `${version ? `Version ${version} · ` : ''}île du Yomi`),
       ),
     );
     this.title.classList.add('visible');
