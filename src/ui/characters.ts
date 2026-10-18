@@ -2,6 +2,7 @@ import { content } from '../content';
 import { heroLabel, heroRace } from '../game/loadout';
 import { MAX_CHARACTERS, type CharacterSummary } from '../game/progress';
 import { heroImage } from '../render/heroes';
+import { isPixelArt } from '../render/textureBudget';
 import { h, obole } from './dom';
 import type { PanelHost, UiContext } from './panels';
 
@@ -69,7 +70,7 @@ export function openCharacters(host: PanelHost, ctx: UiContext, actions: Charact
     return h(
       'div',
       { class: `row character${c.id === progress.slot ? ' current' : ''}` },
-      h('img', { class: 'character-portrait', src: `${import.meta.env.BASE_URL}sprites/${heroImage(c.hero)}`, alt: '' }),
+      h('img', { class: `character-portrait${isPixelArt(`sprites/${heroImage(c.hero)}`) ? ' pixel-art' : ''}`, src: `${import.meta.env.BASE_URL}sprites/${heroImage(c.hero)}`, alt: '' }),
       h(
         'div',
         { class: 'character-body' },

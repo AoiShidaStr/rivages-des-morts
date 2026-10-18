@@ -20,6 +20,7 @@
     "nettoyer": "node tools/nettoyer.mjs",
     "objets": "node tools/collection-objets.mjs",
     "icones": "node tools/icones.mjs",
+    "images-fixes": "node tools/pixel/images-fixes.mjs",
     "cadres": "node tools/cadres.mjs",
     "icones-pixel": "node tools/icones-pixel.mjs",
     "vfx": "node tools/vfx.mjs",

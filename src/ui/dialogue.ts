@@ -1,3 +1,4 @@
+import { isPixelArt } from '../render/textureBudget';
 import { h } from './dom';
 
 export interface Speaker {
@@ -59,8 +60,10 @@ export class DialogueBox {
     this.name.hidden = !speaker.name;
     this.portrait.parentElement!.hidden = !speaker.portrait;
     if (speaker.portrait) this.portrait.src = speaker.portrait;
+    this.portrait.classList.toggle('pixel-art', !!speaker.portrait && isPixelArt(speaker.portrait));
     this.propBox.hidden = !prop;
     if (prop) this.prop.src = prop;
+    this.prop.classList.toggle('pixel-art', !!prop && isPixelArt(prop));
     this.full = text;
     this.shown = 0;
     this.text.textContent = '';

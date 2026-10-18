@@ -3,6 +3,7 @@ import type { Hero } from '../game/progress';
 import { keyName } from '../keys';
 import { heroAvailable, heroImage, heroSprite } from '../render/heroes';
 import type { AsepriteSheet } from '../render/sheets';
+import { isPixelArt } from '../render/textureBudget';
 import { h } from './dom';
 
 /** Race proposée en premier à la création. */
@@ -97,6 +98,7 @@ export class CreationScreen {
         alt: `${race.name} ${cls.name}`,
         class: 'hero-painted-preview',
       });
+      paintedImg.classList.toggle('pixel-art', isPixelArt(paintedImg.src));
 
       const previewBox = h(
         'div',
@@ -239,10 +241,14 @@ function playIdle(canvas: HTMLCanvasElement, name: string): void {
     const tag = sheet.meta.frameTags?.find((t) => t.name === 'idle');
     const frames = sheet.frames.slice(tag?.from ?? 0, (tag?.to ?? 0) + 1);
     const { w, h: height } = frames[0].frame;
-    // Une case entière, réduite de moitié : les proportions de la planche sont gardées.
-    canvas.width = Math.round(w / 2);
-    canvas.height = Math.round(height / 2);
+    // Une case entière, réduite de moitié : les proportions de la planche sont gardées. Le pixel art garde
+    // toute sa grille et s'affiche sans lissage.
+    const pixel = sheet.meta.smooth === false;
+    canvas.width = pixel ? w : Math.round(w / 2);
+    canvas.height = pixel ? height : Math.round(height / 2);
+    canvas.classList.toggle('pixel-art', pixel);
     const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingEnabled = !pixel;
     const total = frames.reduce((sum, f) => sum + f.duration, 0);
     const start = performance.now();
     const tick = (now: number) => {
