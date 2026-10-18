@@ -28,7 +28,7 @@ import { LOW_GRAPHICS, shakeEnabled } from './flags';
 import { isHeroVariant } from './heroes';
 import { imageUrl } from './imageUrl';
 import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
-import { loadFittedTexture } from './textureBudget';
+import { isPixelArt, loadFittedTexture } from './textureBudget';
 import {
   drawArrow,
   drawCrescent,
@@ -621,7 +621,8 @@ export class Renderer {
   private async loadArena(): Promise<void> {
     await this.buildGround();
     // Toile peinte si elle existe, sinon le dessin provisoire du constructeur.
-    const web = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/toile.png`).catch(() => null);
+    const webUrl = `${import.meta.env.BASE_URL}sprites/toile.png`;
+    const web = await loadTexture(this.scene, webUrl, isPixelArt(webUrl)).catch(() => null);
     if (web) this.fxTextures.web = web;
     // Les planches des héros des autres races et classes ne se chargent qu'à la demande (setHero) :
     // chacune pèse plusieurs dizaines de Mo en mémoire graphique.
@@ -1096,6 +1097,20 @@ export class Renderer {
   private updateDying(dt: number): void {
     this.dying = this.dying.filter((view) => {
       view.dying += dt;
+      // Planche en pixel art qui dessine la chute (ligne « mort ») : elle se joue en entier, puis l'image s'efface.
+      const anim = this.sprites.get(view.spriteName)?.anim;
+      const fall = anim?.tags.get('death');
+      if (anim && fall) {
+        const length = anim.frames.slice(fall.from, fall.to + 1).reduce((sum, f) => sum + f.duration, 0);
+        showFrame(view.material, anim, frameAt(anim, 'death', view.dying));
+        const fade = Math.min(1, Math.max(0, (view.dying - length) / DEATH_TIME));
+        view.material.setFloat('alpha', 1 - fade);
+        view.material.setFloat('flash', Math.max(0, 1 - view.dying / 0.12));
+        view.shadowMaterial.setFloat('alpha', 0.4 * (1 - fade));
+        if (fade < 1) return true;
+        this.disposeView(view);
+        return false;
+      }
       const k = Math.min(1, view.dying / DEATH_TIME);
       view.material.setFloat('alpha', 1 - k);
       view.material.setFloat('flash', 1 - k);
@@ -2619,7 +2634,8 @@ export class Renderer {
   /** Sol peint (sols/rizieres.jpg, cadré comme le dessin provisoire) s'il existe, sinon le dessin. */
   private async buildGround(): Promise<void> {
     const ground = MeshBuilder.CreateGround('ground', { width: GROUND_SIZE, height: GROUND_SIZE }, this.scene);
-    const painted = await loadTexture(this.scene, `${import.meta.env.BASE_URL}sprites/sols/rizieres.jpg`).catch(() => null);
+    const groundUrl = `${import.meta.env.BASE_URL}sprites/sols/rizieres.jpg`;
+    const painted = await loadTexture(this.scene, groundUrl, isPixelArt(groundUrl)).catch(() => null);
     const texture = painted ?? this.canvasTexture('groundTexture', drawGround(2048, GROUND_SIZE, this.arenaHalfSize, PADDY_SIZE));
     texture.hasAlpha = false;
     const material = new StandardMaterial('groundMaterial', this.scene);

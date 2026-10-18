@@ -5,344 +5,384 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 200
+   "duration": 1000
   },
   {
    "filename": "move 1",
    "frame": {
-    "x": 180,
+    "x": 130,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 2",
    "frame": {
-    "x": 360,
+    "x": 260,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 3",
    "frame": {
-    "x": 540,
+    "x": 390,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 4",
    "frame": {
-    "x": 720,
+    "x": 520,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 5",
    "frame": {
-    "x": 900,
+    "x": 650,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 6",
    "frame": {
-    "x": 1080,
+    "x": 780,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 7",
    "frame": {
-    "x": 1260,
+    "x": 910,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
    "filename": "move 8",
    "frame": {
-    "x": 1440,
+    "x": 1040,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 85
   },
   {
-   "filename": "windup 9",
+   "filename": "move 9",
    "frame": {
-    "x": 1620,
+    "x": 1170,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 90
+   "duration": 85
   },
   {
-   "filename": "windup 10",
+   "filename": "move 10",
    "frame": {
-    "x": 1800,
+    "x": 1300,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 90
+   "duration": 85
   },
   {
    "filename": "windup 11",
    "frame": {
-    "x": 1980,
+    "x": 1430,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
    "duration": 90
   },
   {
-   "filename": "strike 12",
+   "filename": "windup 12",
    "frame": {
-    "x": 2160,
+    "x": 1560,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 30
+   "duration": 90
   },
   {
    "filename": "strike 13",
    "frame": {
-    "x": 2340,
+    "x": 1690,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 30
+   "duration": 40
   },
   {
    "filename": "strike 14",
    "frame": {
-    "x": 2520,
+    "x": 1820,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 30
+   "duration": 40
   },
   {
    "filename": "strike 15",
    "frame": {
-    "x": 2700,
+    "x": 1950,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 30
+   "duration": 40
   },
   {
    "filename": "strike 16",
    "frame": {
-    "x": 2880,
+    "x": 2080,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 30
+   "duration": 40
   },
   {
-   "filename": "death 17",
+   "filename": "strike 17",
    "frame": {
-    "x": 3060,
+    "x": 2210,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 40
   },
   {
-   "filename": "death 18",
+   "filename": "strike 18",
    "frame": {
-    "x": 3240,
+    "x": 2340,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 40
   },
   {
-   "filename": "death 19",
+   "filename": "stunned 19",
    "frame": {
-    "x": 3420,
+    "x": 2470,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 120
   },
   {
-   "filename": "death 20",
+   "filename": "stunned 20",
    "frame": {
-    "x": 3600,
+    "x": 2600,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 120
   },
   {
-   "filename": "death 21",
+   "filename": "stunned 21",
    "frame": {
-    "x": 3780,
+    "x": 2730,
     "y": 0,
-    "w": 180,
-    "h": 143
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 120
   },
   {
-   "filename": "death 22",
+   "filename": "stunned 22",
    "frame": {
-    "x": 0,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 2860,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 120
   },
   {
-   "filename": "death 23",
+   "filename": "stunned 23",
    "frame": {
-    "x": 180,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 2990,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 120
   },
   {
-   "filename": "death 24",
+   "filename": "stunned 24",
    "frame": {
-    "x": 360,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3120,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
-   "duration": 110
+   "duration": 120
   },
   {
    "filename": "stunned 25",
    "frame": {
-    "x": 540,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3250,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
    "duration": 120
   },
   {
    "filename": "stunned 26",
    "frame": {
-    "x": 720,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3380,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
    "duration": 120
   },
   {
    "filename": "stunned 27",
    "frame": {
-    "x": 900,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3510,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
    "duration": 120
   },
   {
    "filename": "stunned 28",
    "frame": {
-    "x": 1080,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3640,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
    "duration": 120
   },
   {
-   "filename": "stunned 29",
+   "filename": "death 29",
    "frame": {
-    "x": 1260,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3770,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
-   "duration": 120
+   "duration": 110
   },
   {
-   "filename": "stunned 30",
+   "filename": "death 30",
    "frame": {
-    "x": 1440,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 3900,
+    "y": 0,
+    "w": 130,
+    "h": 84
    },
-   "duration": 120
+   "duration": 110
   },
   {
-   "filename": "stunned 31",
+   "filename": "death 31",
    "frame": {
-    "x": 1620,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 0,
+    "y": 84,
+    "w": 130,
+    "h": 84
    },
-   "duration": 120
+   "duration": 110
   },
   {
-   "filename": "stunned 32",
+   "filename": "death 32",
    "frame": {
-    "x": 1800,
-    "y": 143,
-    "w": 180,
-    "h": 143
+    "x": 130,
+    "y": 84,
+    "w": 130,
+    "h": 84
    },
-   "duration": 120
+   "duration": 110
+  },
+  {
+   "filename": "death 33",
+   "frame": {
+    "x": 260,
+    "y": 84,
+    "w": 130,
+    "h": 84
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 34",
+   "frame": {
+    "x": 390,
+    "y": 84,
+    "w": 130,
+    "h": 84
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 35",
+   "frame": {
+    "x": 520,
+    "y": 84,
+    "w": 130,
+    "h": 84
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 36",
+   "frame": {
+    "x": 650,
+    "y": 84,
+    "w": 130,
+    "h": 84
+   },
+   "duration": 110
   }
  ],
  "meta": {
   "app": "tools/planches.mjs",
   "image": "hitodama.webp",
   "size": {
-   "w": 3960,
-   "h": 286
+   "w": 4030,
+   "h": 168
   },
-  "smooth": true,
-  "bodyHeight": 120,
+  "smooth": false,
+  "bodyHeight": 64,
   "anchor": {
-   "x": 90,
-   "y": 133
+   "x": 65,
+   "y": 75
   },
   "frameTags": [
    {
@@ -354,35 +394,35 @@
    {
     "name": "move",
     "from": 1,
-    "to": 8,
+    "to": 10,
     "direction": "forward"
    },
    {
     "name": "windup",
-    "from": 9,
-    "to": 11,
+    "from": 11,
+    "to": 12,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "strike",
-    "from": 12,
-    "to": 16,
-    "direction": "forward",
-    "repeat": "1"
-   },
-   {
-    "name": "death",
-    "from": 17,
-    "to": 24,
+    "from": 13,
+    "to": 18,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "stunned",
-    "from": 25,
-    "to": 32,
+    "from": 19,
+    "to": 28,
     "direction": "forward"
+   },
+   {
+    "name": "death",
+    "from": 29,
+    "to": 36,
+    "direction": "forward",
+    "repeat": "1"
    }
   ]
  }

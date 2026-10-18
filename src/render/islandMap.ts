@@ -4,6 +4,7 @@ import type { Vec2 } from '../game/math';
 import type { DecorSpot } from './decorSprites';
 import { decorSolids, islandDecor, MapImage, WalkField } from './islandDecor';
 import { Grid, PaintedWater } from './paintedGround';
+import { isPixelArt } from './textureBudget';
 
 /**
  * L'île en carte peinte : une seule grande image (island.json, `map`), peinte vue par la caméra du jeu, posée au sol
@@ -69,8 +70,10 @@ export class IslandMap {
       return material;
     };
 
-    const texture = new Texture(url, scene, false, true, Texture.TRILINEAR_SAMPLINGMODE);
-    texture.anisotropicFilteringLevel = 8;
+    // Carte en pixel art (depuis la 0.21) : pixels nets ; carte peinte : lissée.
+    const pixel = isPixelArt(url);
+    const texture = new Texture(url, scene, pixel, true, pixel ? Texture.NEAREST_SAMPLINGMODE : Texture.TRILINEAR_SAMPLINGMODE);
+    if (!pixel) texture.anisotropicFilteringLevel = 8;
     texture.wrapU = Texture.CLAMP_ADDRESSMODE;
     texture.wrapV = Texture.CLAMP_ADDRESSMODE;
     // La mer unie, sous la carte et bien au-delà : le coin de la même image, étiré, pour un raccord sans couture.

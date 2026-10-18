@@ -14,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { borderMedian, components, floodBackground } from './decoupe.mjs';
+import { pixelize } from './pixel/images.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(projectDir, 'tools', 'icones.json'), 'utf8'));
@@ -33,7 +34,7 @@ for (const sheet of config.sheets) {
   }
   const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const image = { data, w: info.width, h: info.height };
-  const background = floodBackground(data, image.w, image.h, config.defaults);
+  const background = floodBackground(data, image.w, image.h, { ...config.defaults, ...sheet.defaults });
   const subject = background.map((b) => (b ? 0 : 1));
   const { labels, parts } = components(subject, image.w, image.h);
   const bg = borderMedian(data, image.w, image.h);
@@ -42,7 +43,7 @@ for (const sheet of config.sheets) {
 
   for (const [index, id] of sheet.ids.entries()) {
     if (!id) continue;
-    const options = { ...config.defaults, ...config.icons[id] };
+    const options = { ...config.defaults, ...sheet.defaults, ...config.icons[id] };
     const left = (index % sheet.columns) * cellW;
     const top = Math.floor(index / sheet.columns) * cellH;
     const inCell = parts.filter((p) => {
@@ -125,7 +126,8 @@ async function cutIcon(image, { labels, background, bg }, kept, cell, options) {
     const x = i % rw;
     return [x > 0 ? i - 1 : -1, x < rw - 1 ? i + 1 : -1, i >= rw ? i - rw : -1, i < n - rw ? i + rw : -1];
   };
-  for (let i = 0; i < n; i++) {
+  // Pixel art : bord net, pas de halo en demi-transparence (il garderait la teinte du fond magenta).
+  for (let i = 0; i < n && !options.pixel; i++) {
     if (isBackground[i] && neighbours(i).some((j) => j >= 0 && own[j])) {
       soft[i] = 1;
       queue[tail++] = i;
@@ -180,6 +182,12 @@ async function cutIcon(image, { labels, background, bg }, kept, cell, options) {
     .extend({ left: padX >> 1, right: padX - (padX >> 1), top: padY >> 1, bottom: padY - (padY >> 1), background: clear })
     .raw()
     .toBuffer();
+  if (options.pixel) {
+    // Ramenée à sa grille de pixels (`pixel.size` de côté), puis agrandie sans lissage à la taille des icônes.
+    const { size = 64, colours = 32 } = options.pixel;
+    const small = await (await pixelize(square, side, side, { scale: size / side, colours })).raw().ensureAlpha().toBuffer({ resolveWithObject: true });
+    return sharp(small.data, { raw: { width: small.info.width, height: small.info.height, channels: 4 } }).resize(config.size, config.size, { kernel: 'nearest' });
+  }
   return sharp(square, { raw: { width: side, height: side, channels: 4 } }).resize(config.size, config.size, { kernel: 'lanczos3' });
 }
 

@@ -257,12 +257,12 @@ export function floodBackground(data, w, h, options) {
   // Fond coloré (vert, magenta) : aucun personnage n'a cette couleur franche, elle est donc retirée partout, y
   // compris dans les petites poches fermées (spirales d'un arc, entre deux plumes), comme un fond d'incrustation.
   // La compression JPEG décale ces poches hors de la tolérance : un pixel où les canaux du fond dominent franchement
-  // les autres (le vert loin devant le rouge et le bleu) est aussi du fond.
+  // les autres (le vert loin devant le rouge et le bleu, de `keyDominance`) est aussi du fond.
   if (colored) {
     const strong = [0, 1, 2].filter((c) => ref[c] > 128);
     const weak = [0, 1, 2].filter((c) => ref[c] <= 128);
     const dominance = (i) => Math.min(...strong.map((c) => data[i * 3 + c])) - Math.max(...weak.map((c) => data[i * 3 + c]));
-    for (let i = 0; i < w * h; i++) if (!background[i] && (greyWithin(i, tolerance, maxSaturation) || dominance(i) > 150)) background[i] = 1;
+    for (let i = 0; i < w * h; i++) if (!background[i] && (greyWithin(i, tolerance, maxSaturation) || dominance(i) > (options.keyDominance ?? 150))) background[i] = 1;
   }
   return background;
 }

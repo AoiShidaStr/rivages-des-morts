@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { alphaMask, components } from './decoupe.mjs';
+import { markPixelArt, pixelize } from './pixel/images.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(projectDir, 'tools', 'decors.json'), 'utf8'));
@@ -26,6 +27,8 @@ const only = args.filter((a) => !a.startsWith('--'));
 const exists = (file) => access(file).then(() => true, () => false);
 /** Gris du fond demandé dans les prompts. */
 const GREY = { r: 0x8f, g: 0x8f, b: 0x8f };
+/** Décors en pixel art écrits pendant ce passage (chemins depuis public/sprites). */
+const pixelFiles = [];
 
 for (const sheet of config.sheets) {
   if (only.length > 0 && !only.includes(sheet.source)) continue;
@@ -40,8 +43,10 @@ for (const sheet of config.sheets) {
     continue;
   }
   if (sheet.kind === 'texture') await cutTextures(input, sheet);
+  else if (sheet.kind === 'carte') await copyMap(input, sheet);
   else await cutSprites(input, sheet);
 }
+if (pixelFiles.length) await markPixelArt(pixelFiles);
 
 async function findSource(name) {
   for (const ext of ['.png', '.jpg', '.jpeg', '.webp']) {
@@ -54,14 +59,24 @@ async function findSource(name) {
 // --- Décors détourés ----------------------------------------------------------
 
 async function cutSprites(input, sheet) {
-  const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  // `trim` : pixels retirés sur chaque bord, quand le générateur a encadré la page d'un trait sombre (il fausserait la
+  // couleur du fond, lue sur les bords).
+  const image = sharp(input).removeAlpha();
+  if (sheet.trim) {
+    const meta = await sharp(input).metadata();
+    image.extract({ left: sheet.trim, top: sheet.trim, width: meta.width - 2 * sheet.trim, height: meta.height - 2 * sheet.trim });
+  }
+  const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
   const w = info.width;
   const h = info.height;
   const sheetOptions = { ...config.defaults, ...sheet.defaults };
+  // Les couleurs d'origine : le détourage retire la teinte du fond au bord du sujet, et le trait de la grille avec.
+  const original = Buffer.from(data);
   const alpha = alphaMask(data, w, h, sheetOptions);
-  const { labels, parts } = components(alpha, w, h);
   const cellW = w / sheet.columns;
   const cellH = h / sheet.rows;
+  if (sheet.gridLines) clearGridLines(original, alpha, w, h, sheet, sheet.gridLines);
+  const { labels, parts } = components(alpha, w, h);
 
   for (const [index, name] of sheet.names.entries()) {
     if (!name) continue;
@@ -104,13 +119,61 @@ async function cutSprites(input, sheet) {
       for (let i = 0; i < cw * ch; i++) rgba[i * 4 + 3] = Math.min(rgba[i * 4 + 3], holes[i]);
     }
     // `"format": "webp"` : bien plus léger que le PNG pour les décors posés par dizaines (le jeu se charge en ligne).
-    const webp = sheet.format === 'webp';
+    const webp = (options.format ?? sheet.format) === 'webp';
     const output = path.join(outDir, `${name}.${webp ? 'webp' : 'png'}`);
     await mkdir(path.dirname(output), { recursive: true });
-    const resized = sharp(rgba, { raw: { width: cw, height: ch, channels: 4 } }).resize({ width: options.maxSize, height: options.maxSize, fit: 'inside', withoutEnlargement: true });
-    const result = await (webp ? resized.webp({ quality: 88, alphaQuality: 95 }) : resized.png()).toFile(output);
+    // `pixel` : planche en pixel art, ramenée à sa grille de pixels et enregistrée sans perte (pixels nets dans le jeu).
+    const result = sheet.pixel
+      ? await (await pixelize(rgba, cw, ch, { ...sheet.pixel, ...options.pixel }))[webp ? 'webp' : 'png'](webp ? { lossless: true, effort: 6 } : {}).toFile(output)
+      : await (() => {
+          const resized = sharp(rgba, { raw: { width: cw, height: ch, channels: 4 } }).resize({ width: options.maxSize, height: options.maxSize, fit: 'inside', withoutEnlargement: true });
+          return (webp ? resized.webp({ quality: 88, alphaQuality: 95 }) : resized.png()).toFile(output);
+        })();
+    if (sheet.pixel) pixelFiles.push(path.relative(outDir, output));
     console.log(`${name.padEnd(32)} case ${index + 1} → ${path.relative(projectDir, output)} (${result.width}×${result.height})`);
   }
+}
+
+/**
+ * Traits de la grille dessinés entre les cases (pages en pixel art de Meven) : ils relient les décors qui les touchent.
+ * Près de chaque limite de case (à `band` pixels près), un pixel de la teinte du fond, même sombre (le trait est un
+ * magenta presque noir), redevient du fond. Le contour sombre d'un décor, moins rose, reste.
+ */
+function clearGridLines(data, alpha, w, h, sheet, { band = 10 } = {}) {
+  const near = (v, size, count) => {
+    const k = Math.round(v / size);
+    return k > 0 && k < count && Math.abs(v - k * size) <= band;
+  };
+  const cellW = w / sheet.columns;
+  const cellH = h / sheet.rows;
+  for (let y = 0; y < h; y++) {
+    const rowLine = near(y, cellH, sheet.rows);
+    for (let x = 0; x < w; x++) {
+      if (!rowLine && !near(x, cellW, sheet.columns)) continue;
+      const i = y * w + x;
+      const [r, g, b] = [data[i * 3], data[i * 3 + 1], data[i * 3 + 2]];
+      if (Math.min(r, b) - g > 15 && Math.abs(r - b) < 60) alpha[i] = 0;
+    }
+  }
+}
+
+// --- Cartes ---------------------------------------------------------------------
+
+/**
+ * Carte entière (`"kind": "carte"`) : l'île ou le sol de l'arène, redessinés en pixel art sur la même mise en page que
+ * la carte peinte (les zones de marche de src/data/island.json restent donc valables). Copiée à sa taille (`size`),
+ * avec une petite version (`sample`) pour la couleur de la mer.
+ */
+async function copyMap(input, sheet) {
+  const size = sheet.size ?? 2048;
+  for (const [name, side] of [[sheet.name, size], [sheet.sample, 512]]) {
+    if (!name) continue;
+    const output = path.join(outDir, name);
+    const resized = sharp(input).removeAlpha().resize(side, side, { kernel: side < size ? 'lanczos3' : 'nearest' });
+    await (name.endsWith('.jpg') ? resized.jpeg({ quality: 92 }) : resized.webp({ quality: 92 })).toFile(output);
+    console.log(`${name.padEnd(32)} → ${path.relative(projectDir, output)} (${side}×${side})`);
+  }
+  if (sheet.pixel) pixelFiles.push(sheet.name);
 }
 
 // --- Textures de sol ----------------------------------------------------------
@@ -120,28 +183,39 @@ async function cutTextures(input, sheet) {
   const cellW = meta.width / sheet.columns;
   const cellH = meta.height / sheet.rows;
   // On laisse de côté le bord de chaque case : Nano Banana y peint souvent un liseré ou un joint.
-  const inset = 0.06;
+  const inset = sheet.inset ?? 0.06;
   const size = sheet.size ?? 1024;
   for (const [index, name] of sheet.names.entries()) {
     if (!name) continue;
-    const col = index % sheet.columns;
-    const row = Math.floor(index / sheet.columns);
-    const region = {
-      left: Math.round((col + inset) * cellW),
-      top: Math.round((row + inset) * cellH),
-      width: Math.round(cellW * (1 - 2 * inset)),
-      height: Math.round(cellH * (1 - 2 * inset)),
-    };
+    // `regions` : cases de tailles inégales, [gauche, haut, droite, bas] en pixels de la planche (texture.jpg de Meven,
+    // séparées par des traits sombres). La plus grande zone carrée au centre de la case, pour ne rien étirer.
+    let region;
+    if (sheet.regions) {
+      const [x0, y0, x1, y1] = sheet.regions[index];
+      const w = x1 - x0;
+      const h = y1 - y0;
+      const side = Math.round(Math.min(w, h) * (1 - 2 * inset));
+      region = { left: Math.round(x0 + (w - side) / 2), top: Math.round(y0 + (h - side) / 2), width: side, height: side };
+    } else {
+      const col = index % sheet.columns;
+      const row = Math.floor(index / sheet.columns);
+      region = {
+        left: Math.round((col + inset) * cellW),
+        top: Math.round((row + inset) * cellH),
+        width: Math.round(cellW * (1 - 2 * inset)),
+        height: Math.round(cellH * (1 - 2 * inset)),
+      };
+    }
     const { data } = await sharp(input)
       .extract(region)
-      .resize(size, size, { fit: 'fill', kernel: 'lanczos3' })
+      .resize(size, size, { fit: 'fill', kernel: sheet.pixel ? 'linear' : 'lanczos3' })
       .removeAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });
     const tiled = seamless(data, size);
     const output = path.join(outDir, `${name}.jpg`);
     await mkdir(path.dirname(output), { recursive: true });
-    await sharp(tiled, { raw: { width: size, height: size, channels: 3 } }).jpeg({ quality: 88 }).toFile(output);
+    await sharp(tiled, { raw: { width: size, height: size, channels: 3 } }).jpeg({ quality: sheet.pixel ? 95 : 88 }).toFile(output);
     console.log(`${name.padEnd(32)} case ${index + 1} → ${path.relative(projectDir, output)} (${size}×${size}, sans couture)`);
   }
 }

@@ -7,6 +7,11 @@
 //   - <nom>.json : le découpage au format « Array » d'Aseprite, un tag par posture,
 //     plus `meta.anchor` (position des pieds dans une case) et `meta.bodyHeight`.
 //
+// Pixel art (`pixel: true`, direction artistique depuis le 18 octobre 2026) : la planche garde des pixels nets.
+// `pixelHeight` ramène le personnage debout à cette hauteur en pixels du jeu (la planche générée est souvent
+// agrandie), l'opacité devient tout ou rien, la palette est réduite à `colours` couleurs pour toute la planche,
+// et le jeu l'affiche sans lissage (`meta.smooth: false`).
+//
 // Les héros par race et par classe s'y ajoutent, lus dans ~/Pictures/game visual/heros (voir planches-heros.mjs).
 //
 // Usage : npm run planches               → toutes les entrées de tools/planches.json et tous les héros
@@ -19,7 +24,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { referenceHeight, registerOnFirst, scaleFrame, splitFrames } from './grille.mjs';
-import { heroPlanches } from './planches-heros.mjs';
+import { heroPlanches, pixelHeroPlanches } from './planches-heros.mjs';
 
 const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = JSON.parse(await readFile(path.join(projectDir, 'tools', 'planches.json'), 'utf8'));
@@ -40,8 +45,11 @@ const splitCache = new Map();
 await mkdir(outDir, { recursive: true });
 // Un héros décrit dans tools/planches.json (planche complète) l'emporte sur ses anciennes planches du kit.
 const configured = new Set(config.planches.map((p) => p.name));
-const heroes = (await heroPlanches(sourceDir)).filter((p) => !configured.has(p.name));
-for (const entry of [...config.planches, ...heroes]) {
+// Un héros en pixel art (gamevisual/pixel-art/accueil/heros/<race>-<classe>.png) remplace toutes ses planches peintes.
+const pixelHeroes = await pixelHeroPlanches(sourceDir, config.pixelHeroes);
+const pixelNames = new Set(pixelHeroes.map((p) => p.name));
+const heroes = [...pixelHeroes, ...(await heroPlanches(sourceDir)).filter((p) => !configured.has(p.name) && !pixelNames.has(p.name))];
+for (const entry of [...config.planches.filter((p) => !pixelNames.has(p.name)), ...heroes]) {
   if (only.length > 0 && !only.includes(entry.name)) continue;
   const planche = entry.rows ? await expandRows(entry) : entry;
   const frames = [];
@@ -100,9 +108,12 @@ async function expandRows(planche) {
   const animations = [];
   for (const r of planche.rows) {
     const layout = r.layout ?? planche.layout;
-    const row = r.row ?? 0;
+    // `row` : une ligne, ou plusieurs lignes lues à la suite (pixel art en deux temps : 4 images par ligne).
+    const rowList = [r.row ?? 0].flat();
+    const row = rowList[0];
     const first = offset(layout, row);
-    const indices = (r.frames ?? [...Array(layout[row]).keys()]).map((i) => first + i);
+    const inRows = rowList.flatMap((k) => [...Array(layout[k]).keys()].map((i) => offset(layout, k) + i));
+    const indices = (r.frames ?? [...inRows.keys()]).map((i) => inRows[i]);
     let refHeight = standing;
     if (r.source) {
       const own = await split(path.join(sourceDir, r.source), { ...options, ...r, layout });
@@ -112,10 +123,12 @@ async function expandRows(planche) {
     const { row: _row, ref: _ref, refFrame: _refFrame, ...rest } = r;
     animations.push({ ...rest, source: r.source ?? planche.source, layout, frames: indices, refHeight });
   }
-  return { ...planche, bodyHeight: planche.bodyHeight ?? Math.round(standing), animations };
+  const pixelHeight = planche.pixel && planche.pixelHeight ? Math.min(standing, planche.pixelHeight) : standing;
+  return { ...planche, bodyHeight: planche.bodyHeight ?? Math.round(pixelHeight), animations };
 }
 
 async function writeSheet(planche, frames, tags) {
+  const pixel = Boolean(planche.pixel);
   // Case commune : assez large des deux côtés de l'axe, assez haute au-dessus et en dessous des pieds.
   const half = Math.ceil(Math.max(...frames.map((f) => Math.max(f.anchorX, f.width - f.anchorX))));
   const above = Math.ceil(Math.max(...frames.map((f) => f.baseline)));
@@ -133,24 +146,23 @@ async function writeSheet(planche, frames, tags) {
     const cx = (i % columns) * cellW;
     const cy = Math.floor(i / columns) * cellH;
     const input = await sharp(f.source.rgba, { raw: { width: f.source.width, height: f.source.height, channels: 4 } })
-      .resize(f.width, f.height, { kernel: 'lanczos3' })
+      .resize(f.width, f.height, { kernel: pixel ? 'linear' : 'lanczos3' })
       .png()
       .toBuffer();
     composites.push({ input, left: Math.round(cx + anchor.x - f.anchorX), top: Math.round(cy + anchor.y - f.baseline) });
     jsonFrames.push({ filename: `${f.tag} ${i}`, frame: { x: cx, y: cy, w: cellW, h: cellH }, duration: f.duration });
   }
   const image = `${planche.name}.webp`;
-  await sharp({ create: { width: sheetW, height: sheetH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-    .composite(composites)
-    .webp({ quality: 90, alphaQuality: 100, effort: 6 })
-    .toFile(path.join(outDir, image));
+  const sheet = sharp({ create: { width: sheetW, height: sheetH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite(composites);
+  if (pixel) await writePixelSheet(sheet, sheetW, sheetH, planche.colours ?? 64, path.join(outDir, image));
+  else await sheet.webp({ quality: 90, alphaQuality: 100, effort: 6 }).toFile(path.join(outDir, image));
   const json = {
     frames: jsonFrames,
     meta: {
       app: 'tools/planches.mjs',
       image,
       size: { w: sheetW, h: sheetH },
-      smooth: true,
+      smooth: !pixel,
       bodyHeight: planche.bodyHeight,
       anchor,
       frameTags: tags,
@@ -160,6 +172,17 @@ async function writeSheet(planche, frames, tags) {
   console.log(`→ ${path.relative(projectDir, path.join(outDir, image))} (${sheetW}×${sheetH}, cases ${cellW}×${cellH}, ${frames.length} images)`);
 
   if (previewDir) await writePreview(planche, frames, tags, cellW, cellH, anchor);
+}
+
+/** Pixel art : opacité tout ou rien, une seule palette pour toute la planche, enregistrée sans perte. */
+async function writePixelSheet(sheet, width, height, colours, file) {
+  const data = await sheet.raw().toBuffer();
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] >= 128) data[i] = 255;
+    else data[i] = data[i - 1] = data[i - 2] = data[i - 3] = 0;
+  }
+  const png = await sharp(data, { raw: { width, height, channels: 4 } }).png({ palette: true, colours, dither: 0 }).toBuffer();
+  await sharp(png).webp({ lossless: true, effort: 6 }).toFile(file);
 }
 
 /** Une bande par animation, avec la ligne des pieds et l'axe du corps, pour vérifier l'alignement. */

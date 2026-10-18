@@ -5,550 +5,470 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 1000
   },
   {
-   "filename": "idle 1",
+   "filename": "move 1",
    "frame": {
-    "x": 388,
+    "x": 200,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 2",
+   "filename": "move 2",
    "frame": {
-    "x": 776,
+    "x": 400,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 3",
+   "filename": "move 3",
    "frame": {
-    "x": 1164,
+    "x": 600,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 4",
+   "filename": "move 4",
    "frame": {
-    "x": 1552,
+    "x": 800,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 5",
+   "filename": "move 5",
    "frame": {
-    "x": 1940,
+    "x": 1000,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 6",
+   "filename": "move 6",
    "frame": {
-    "x": 2328,
+    "x": 1200,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 7",
+   "filename": "move 7",
    "frame": {
-    "x": 2716,
+    "x": 1400,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 8",
+   "filename": "move 8",
    "frame": {
-    "x": 3104,
+    "x": 1600,
     "y": 0,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
-   "duration": 120
+   "duration": 80
   },
   {
-   "filename": "idle 9",
+   "filename": "windup 9",
    "frame": {
-    "x": 3492,
+    "x": 1800,
     "y": 0,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 120
-  },
-  {
-   "filename": "move 10",
-   "frame": {
-    "x": 0,
-    "y": 485,
-    "w": 388,
-    "h": 485
+    "w": 200,
+    "h": 156
    },
    "duration": 80
   },
   {
-   "filename": "move 11",
+   "filename": "windup 10",
    "frame": {
-    "x": 388,
-    "y": 485,
-    "w": 388,
-    "h": 485
+    "x": 2000,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
    "duration": 80
   },
   {
-   "filename": "move 12",
+   "filename": "windup 11",
    "frame": {
-    "x": 776,
-    "y": 485,
-    "w": 388,
-    "h": 485
+    "x": 2200,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
    "duration": 80
   },
   {
-   "filename": "move 13",
+   "filename": "strike 12",
    "frame": {
-    "x": 1164,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "move 14",
-   "frame": {
-    "x": 1552,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "move 15",
-   "frame": {
-    "x": 1940,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "move 16",
-   "frame": {
-    "x": 2328,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "move 17",
-   "frame": {
-    "x": 2716,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "move 18",
-   "frame": {
-    "x": 3104,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "move 19",
-   "frame": {
-    "x": 3492,
-    "y": 485,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "windup 20",
-   "frame": {
-    "x": 0,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 2400,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
    "duration": 60
   },
   {
-   "filename": "windup 21",
+   "filename": "strike 13",
    "frame": {
-    "x": 388,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 2600,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
    "duration": 60
   },
   {
-   "filename": "windup 22",
+   "filename": "strike 14",
    "frame": {
-    "x": 776,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 2800,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
    "duration": 60
   },
   {
-   "filename": "windup 23",
+   "filename": "strike 15",
    "frame": {
-    "x": 1164,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 3000,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
    "duration": 60
   },
   {
-   "filename": "strike 24",
+   "filename": "strike 16",
    "frame": {
-    "x": 1552,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 3200,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
-   "duration": 45
+   "duration": 60
   },
   {
-   "filename": "strike 25",
+   "filename": "skill 17",
    "frame": {
-    "x": 1940,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 3400,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
-   "duration": 45
+   "duration": 70
   },
   {
-   "filename": "strike 26",
+   "filename": "skill 18",
    "frame": {
-    "x": 2328,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 3600,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
-   "duration": 45
+   "duration": 70
   },
   {
-   "filename": "strike 27",
+   "filename": "skill 19",
    "frame": {
-    "x": 2716,
-    "y": 970,
-    "w": 388,
-    "h": 485
+    "x": 3800,
+    "y": 0,
+    "w": 200,
+    "h": 156
    },
-   "duration": 45
+   "duration": 70
   },
   {
-   "filename": "dash 28",
-   "frame": {
-    "x": 3104,
-    "y": 970,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "dash 29",
-   "frame": {
-    "x": 3492,
-    "y": 970,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "dash 30",
+   "filename": "skill 20",
    "frame": {
     "x": 0,
-    "y": 1455,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "dash 31",
-   "frame": {
-    "x": 388,
-    "y": 1455,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "dash 32",
-   "frame": {
-    "x": 776,
-    "y": 1455,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "dash 33",
-   "frame": {
-    "x": 1164,
-    "y": 1455,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "dash 34",
-   "frame": {
-    "x": 1552,
-    "y": 1455,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 45
-  },
-  {
-   "filename": "skill 35",
-   "frame": {
-    "x": 1940,
-    "y": 1455,
-    "w": 388,
-    "h": 485
+    "y": 156,
+    "w": 200,
+    "h": 156
    },
    "duration": 70
   },
   {
-   "filename": "skill 36",
+   "filename": "skill 21",
    "frame": {
-    "x": 2328,
-    "y": 1455,
-    "w": 388,
-    "h": 485
+    "x": 200,
+    "y": 156,
+    "w": 200,
+    "h": 156
    },
    "duration": 70
   },
   {
-   "filename": "skill 37",
+   "filename": "skill 22",
    "frame": {
-    "x": 2716,
-    "y": 1455,
-    "w": 388,
-    "h": 485
+    "x": 400,
+    "y": 156,
+    "w": 200,
+    "h": 156
    },
    "duration": 70
   },
   {
-   "filename": "skill 38",
+   "filename": "skill 23",
    "frame": {
-    "x": 3104,
-    "y": 1455,
-    "w": 388,
-    "h": 485
+    "x": 600,
+    "y": 156,
+    "w": 200,
+    "h": 156
    },
    "duration": 70
   },
   {
-   "filename": "skill 39",
+   "filename": "skill 24",
    "frame": {
-    "x": 3492,
-    "y": 1455,
-    "w": 388,
-    "h": 485
+    "x": 800,
+    "y": 156,
+    "w": 200,
+    "h": 156
    },
    "duration": 70
   },
   {
-   "filename": "skill 40",
+   "filename": "ultimate 25",
+   "frame": {
+    "x": 1000,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 26",
+   "frame": {
+    "x": 1200,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 27",
+   "frame": {
+    "x": 1400,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 28",
+   "frame": {
+    "x": 1600,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 29",
+   "frame": {
+    "x": 1800,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 30",
+   "frame": {
+    "x": 2000,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 31",
+   "frame": {
+    "x": 2200,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "ultimate 32",
+   "frame": {
+    "x": 2400,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 90
+  },
+  {
+   "filename": "death 33",
+   "frame": {
+    "x": 2600,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 34",
+   "frame": {
+    "x": 2800,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 35",
+   "frame": {
+    "x": 3000,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 36",
+   "frame": {
+    "x": 3200,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 37",
+   "frame": {
+    "x": 3400,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 38",
+   "frame": {
+    "x": 3600,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 39",
+   "frame": {
+    "x": 3800,
+    "y": 156,
+    "w": 200,
+    "h": 156
+   },
+   "duration": 110
+  },
+  {
+   "filename": "death 40",
    "frame": {
     "x": 0,
-    "y": 1940,
-    "w": 388,
-    "h": 485
+    "y": 312,
+    "w": 200,
+    "h": 156
    },
-   "duration": 70
-  },
-  {
-   "filename": "skill 41",
-   "frame": {
-    "x": 388,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 70
-  },
-  {
-   "filename": "ultimate 42",
-   "frame": {
-    "x": 776,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 43",
-   "frame": {
-    "x": 1164,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 44",
-   "frame": {
-    "x": 1552,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 45",
-   "frame": {
-    "x": 1940,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 46",
-   "frame": {
-    "x": 2328,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 47",
-   "frame": {
-    "x": 2716,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
-  },
-  {
-   "filename": "ultimate 48",
-   "frame": {
-    "x": 3104,
-    "y": 1940,
-    "w": 388,
-    "h": 485
-   },
-   "duration": 80
+   "duration": 110
   }
  ],
  "meta": {
   "app": "tools/planches.mjs",
   "image": "heros-demi-dieu-sorcier.webp",
   "size": {
-   "w": 3880,
-   "h": 2425
+   "w": 4000,
+   "h": 468
   },
-  "smooth": true,
-  "bodyHeight": 361,
+  "smooth": false,
+  "bodyHeight": 128,
   "anchor": {
-   "x": 194,
-   "y": 413
+   "x": 100,
+   "y": 146
   },
   "frameTags": [
    {
     "name": "idle",
     "from": 0,
-    "to": 9,
+    "to": 0,
     "direction": "forward"
    },
    {
     "name": "move",
-    "from": 10,
-    "to": 19,
+    "from": 1,
+    "to": 8,
     "direction": "forward"
    },
    {
     "name": "windup",
-    "from": 20,
-    "to": 23,
+    "from": 9,
+    "to": 11,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "strike",
-    "from": 24,
-    "to": 27,
-    "direction": "forward",
-    "repeat": "1"
-   },
-   {
-    "name": "dash",
-    "from": 28,
-    "to": 34,
+    "from": 12,
+    "to": 16,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "skill",
-    "from": 35,
-    "to": 41,
+    "from": 17,
+    "to": 24,
     "direction": "forward",
     "repeat": "1"
    },
    {
     "name": "ultimate",
-    "from": 42,
-    "to": 48,
+    "from": 25,
+    "to": 32,
+    "direction": "forward",
+    "repeat": "1"
+   },
+   {
+    "name": "death",
+    "from": 33,
+    "to": 40,
     "direction": "forward",
     "repeat": "1"
    }
