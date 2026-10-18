@@ -30,6 +30,13 @@ jobs:
       # Seulement le jeu (pas son serveur, qui ne sert pas sur GitHub Pages) : sans serveur, il garde la coop en WebRTC.
       - run: npm run typecheck
       - run: npx vite build --base=./
+      # Le même build, à télécharger depuis la page du run (« jeu-web », un zip avec index.html à la racine) :
+      # c'est le fichier à envoyer sur itch.io.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jeu-web
+          path: dist
+          retention-days: 30
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
