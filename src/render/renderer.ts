@@ -208,6 +208,9 @@ const VIEW_HALF_HEIGHT = 6;
 const GROUND_SIZE = 44;
 const PADDY_SIZE = 3;
 const DEATH_TIME = 0.35;
+/** Chute dessinée d'un yokai : jouée deux fois plus vite que la planche, et presque transparente pour ne pas cacher le combat. */
+const DEATH_SPEED = 2;
+const DEATH_ALPHA = 0.3;
 /** Recul du yokai touché : distance du rejet (unités du sol) et vitesse à laquelle il revient en place. */
 const RECOIL_DISTANCE = 0.32;
 const RECOIL_DECAY = 7;
@@ -1102,9 +1105,10 @@ export class Renderer {
       const fall = anim?.tags.get('death');
       if (anim && fall) {
         const length = anim.frames.slice(fall.from, fall.to + 1).reduce((sum, f) => sum + f.duration, 0);
-        showFrame(view.material, anim, frameAt(anim, 'death', view.dying));
-        const fade = Math.min(1, Math.max(0, (view.dying - length) / DEATH_TIME));
-        view.material.setFloat('alpha', 1 - fade);
+        const played = view.dying * DEATH_SPEED;
+        showFrame(view.material, anim, frameAt(anim, 'death', played));
+        const fade = Math.min(1, Math.max(0, (played - length) / DEATH_TIME));
+        view.material.setFloat('alpha', DEATH_ALPHA * (1 - fade));
         view.material.setFloat('flash', Math.max(0, 1 - view.dying / 0.12));
         view.shadowMaterial.setFloat('alpha', 0.4 * (1 - fade));
         if (fade < 1) return true;
