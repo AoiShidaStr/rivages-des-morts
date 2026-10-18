@@ -4,42 +4,12 @@
   "defaults": { "tolerance": 30, "localTolerance": 18, "maxSaturation": 16, "minPartRatio": 0.001, "cellPartRatio": 0.03, "padding": 6, "maxSize": 768 },
   "sheets": [
     {
-      "source": "../gamevisual/pixel-art/accueil/decor/cartes/ile",
-      "kind": "carte",
-      "pixel": true,
-      "name": "sols/ile-fond.webp",
-      "sample": "sols/ile-fond-512.webp",
-      "size": 2048
-    },
-    { "source": "../gamevisual/pixel-art/accueil/decor/cartes/riziere", "kind": "carte", "pixel": true, "name": "sols/rizieres.jpg", "size": 2048 },
-    {
-      "source": "../gamevisual/pixel-art/accueil/decor/sols/texture grid",
+      "source": "decors_textures",
       "kind": "texture",
-      "pixel": true,
-      "size": 256,
-      "inset": 0.04,
-      "regions": [
-        [0, 0, 400, 504],
-        [418, 0, 1015, 504],
-        [1031, 0, 1529, 504],
-        [1545, 0, 2048, 504],
-        [1546, 521, 2048, 1016],
-        [0, 521, 400, 1016],
-        [408, 1032, 807, 2048],
-        [824, 1032, 1224, 2048],
-        [1242, 1032, 1640, 2048]
-      ],
-      "names": [
-        "sols/textures/chemin",
-        "sols/textures/dalles",
-        "sols/textures/gravier",
-        "sols/textures/herbe",
-        "sols/textures/mousse",
-        "sols/textures/roche",
-        "sols/textures/sable",
-        "sols/textures/terre-maudite",
-        "sols/textures/vase"
-      ]
+      "columns": 3,
+      "rows": 3,
+      "size": 512,
+      "names": ["sols/textures/herbe", "sols/textures/mousse", "sols/textures/chemin", "sols/textures/sable", "sols/textures/gravier", "sols/textures/dalles", "sols/textures/terre-maudite", "sols/textures/vase", "sols/textures/roche"]
     },
     {
       "source": "../gamevisual/pixel-art/accueil/decor/ile-1-arbres",
