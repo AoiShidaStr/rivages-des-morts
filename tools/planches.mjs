@@ -45,7 +45,7 @@ const splitCache = new Map();
 await mkdir(outDir, { recursive: true });
 // Un héros décrit dans tools/planches.json (planche complète) l'emporte sur ses anciennes planches du kit.
 const configured = new Set(config.planches.map((p) => p.name));
-// Un héros en pixel art (gamevisual/pixel/<race>-<classe>.png) remplace toutes ses planches peintes.
+// Un héros en pixel art (gamevisual/pixel-art/accueil/heros/<race>-<classe>.png) remplace toutes ses planches peintes.
 const pixelHeroes = await pixelHeroPlanches(sourceDir);
 const pixelNames = new Set(pixelHeroes.map((p) => p.name));
 const heroes = [...pixelHeroes, ...(await heroPlanches(sourceDir)).filter((p) => !configured.has(p.name) && !pixelNames.has(p.name))];

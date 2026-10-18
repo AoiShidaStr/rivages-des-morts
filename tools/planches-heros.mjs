@@ -6,7 +6,7 @@
 // n'en dessine pas toujours autant que demandé. Un options.json à côté d'une planche ajoute des réglages de
 // tools/planches.json pour elle seule, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
 // Les héros en pixel art (direction artistique depuis le 18 octobre 2026) sont lus à part, dans
-// ~/Pictures/gamevisual/pixel : une planche <race>-<classe>.png de 4 lignes × 8 images (voir `pixelHeroPlanches`).
+// ~/Pictures/gamevisual/pixel-art/accueil/heros : une planche <race>-<classe>.png de 4 lignes × 8 images (voir `pixelHeroPlanches`).
 import { access, readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -75,7 +75,7 @@ const PIXEL_HEIGHT = 128;
  * de tools/planches.json pour cette planche seule, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
  */
 export async function pixelHeroPlanches(sourceDir) {
-  const dir = path.join('..', 'gamevisual', 'pixel');
+  const dir = path.join('..', 'gamevisual', 'pixel-art', 'accueil', 'heros');
   const files = await readdir(path.join(sourceDir, dir)).catch(() => []);
   const planches = [];
   for (const file of files) {
