@@ -5,6 +5,8 @@
 // Chaque planche Nano Banana devient une posture du jeu. Le nombre d'images est lu sur la planche : Nano Banana
 // n'en dessine pas toujours autant que demandé. Un options.json à côté d'une planche ajoute des réglages de
 // tools/planches.json pour elle seule, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
+// Les héros en pixel art (direction artistique depuis le 18 octobre 2026) sont lus à part, dans
+// ~/Pictures/gamevisual/pixel : une planche <race>-<classe>.png de 4 lignes × 8 images (voir `pixelHeroPlanches`).
 import { access, readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -55,6 +57,53 @@ export async function heroPlanches(sourceDir) {
     }
     // fillHoles : vide le fond enfermé entre l'arc et sa corde, sous un bras, dans une boucle de cordon.
     planches.push({ name: `heros-${hero}`, bodyHeight: BODY_HEIGHT, fillHoles: true, minHole: 150, animations });
+  }
+  return planches;
+}
+
+/** Classe du jeu d'après le nom du fichier : les héroïnes demi-déesses gardent leur nom au féminin. */
+const CLASS_OF = { rodeuse: 'rodeur', sorciere: 'sorcier' };
+const RACES = ['demi-dieu', 'einherjar', 'hanyo', 'oushebti'];
+/** Hauteur du héros debout, en pixels du jeu, quand la planche générée est plus grande. */
+const PIXEL_HEIGHT = 128;
+
+/**
+ * Planches pixel art des héros : une image par héros, 4 lignes de 8 images (déplacement, attaque, attaque
+ * spéciale, mort). L'attente est la première image du déplacement ; l'attaque spéciale sert aux compétences
+ * et à l'ultime. Les autres postures retombent sur les plus proches dans le jeu (FALLBACK_POSE).
+ * Les planches de référence (`-reference`) sont ignorées. Un <race>-<classe>.options.json à côté ajoute des réglages
+ * de tools/planches.json pour cette planche seule, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
+ */
+export async function pixelHeroPlanches(sourceDir) {
+  const dir = path.join('..', 'gamevisual', 'pixel');
+  const files = await readdir(path.join(sourceDir, dir)).catch(() => []);
+  const planches = [];
+  for (const file of files) {
+    const match = /^(.+)-([a-z]+)\.(png|jpe?g|webp)$/.exec(file);
+    if (!match || !RACES.includes(match[1])) continue;
+    const classe = CLASS_OF[match[2]] ?? match[2];
+    const options = JSON.parse((await readFile(path.join(sourceDir, dir, `${match[1]}-${match[2]}.options.json`), 'utf8').catch(() => null)) ?? '{}');
+    planches.push({
+      name: `heros-${match[1]}-${classe}`,
+      source: path.join(dir, file),
+      layout: [8, 8, 8, 8],
+      pixel: true,
+      pixelHeight: PIXEL_HEIGHT,
+      // Fond enfermé entre une arme et le corps, et liseré de la couleur du fond.
+      fillHoles: true,
+      minHole: 10,
+      despill: true,
+      rows: [
+        { tag: 'idle', row: 0, frames: [0], duration: 1000 },
+        { tag: 'move', row: 0, duration: 80 },
+        { tag: 'windup', row: 1, frames: [0, 1, 2], duration: 80, once: true },
+        { tag: 'strike', row: 1, frames: [3, 4, 5, 6, 7], duration: 60, once: true },
+        { tag: 'skill', row: 2, duration: 70, once: true },
+        { tag: 'ultimate', row: 2, duration: 90, once: true },
+        { tag: 'death', row: 3, duration: 110, once: true },
+      ],
+      ...options,
+    });
   }
   return planches;
 }
