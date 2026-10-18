@@ -605,6 +605,29 @@
     }
   ],
   "pixelHeroes": {
+    "heros-demi-dieu-lame": {
+      "layout": [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
+      "rows": [
+        { "tag": "idle", "row": 0, "frames": [0], "duration": 1000 },
+        { "tag": "move", "row": 1, "duration": 80 },
+        { "tag": "windup", "row": 2, "frames": [0, 1, 2], "duration": 80, "once": true },
+        { "tag": "strike", "row": 2, "frames": [3, 4, 5, 6, 7], "duration": 60, "once": true },
+        { "tag": "windup-b", "row": 3, "frames": [0, 1, 2], "duration": 80, "once": true },
+        { "tag": "strike-b", "row": 3, "frames": [3, 4, 5, 6, 7], "duration": 60, "once": true },
+        { "tag": "dash", "row": 4, "duration": 35, "once": true },
+        { "tag": "airborne", "row": 5, "duration": 70, "once": true },
+        { "tag": "windup-c", "row": 6, "frames": [0, 1, 2], "duration": 80, "once": true },
+        { "tag": "strike-c", "row": 6, "frames": [3, 4, 5, 6, 7], "duration": 60, "once": true },
+        { "tag": "skill-mark", "row": 7, "duration": 60, "once": true },
+        { "tag": "skill", "row": 8, "duration": 60, "once": true },
+        { "tag": "skill-smoke", "row": 9, "duration": 60, "once": true },
+        { "tag": "hurt", "row": 10, "duration": 60, "once": true },
+        { "tag": "death", "row": 11, "duration": 110, "once": true },
+        { "tag": "guard", "row": 12, "duration": 70, "once": true },
+        { "tag": "skill-ghost", "row": 13, "duration": 60, "once": true },
+        { "tag": "ultimate", "row": 14, "duration": 60, "once": true }
+      ]
+    },
     "heros-demi-dieu-paladin": { "layout": [10, 10, 10, 9] },
     "heros-demi-dieu-rodeur": { "layout": [8, 8, 8, 9] },
     "heros-demi-dieu-guerrier": { "eraseLines": { "length": 0.03, "verticalLength": 0.08, "thickness": 5 } }

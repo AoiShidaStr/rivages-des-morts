@@ -144,9 +144,11 @@ export class Player {
   hurt = 0;
   /**
    * Affichage seulement : geste d'une compétence instantanée (sans action propre), joué par les planches complètes :
-   * `skill` pour A, E ou la signature, `ultimate` pour R.
+   * `skill` pour A, E ou la signature, `ultimate` pour R ; `art` nomme le geste propre à la compétence, s'il est dessiné.
    */
-  cast: { tag: 'skill' | 'ultimate'; t: number } | null = null;
+  cast: { tag: 'skill' | 'ultimate'; t: number; art?: string } | null = null;
+  /** Coup du combo en cours (0, 1, 2) : la Lame enchaîne trois attaques dessinées. */
+  private swing = 0;
   /** Secondes pendant lesquelles la Coupelle du kappa reste vide après un coup reçu. */
   coupelleEmpty = 0;
   private bearSkinUsed = false;
@@ -350,6 +352,12 @@ export class Player {
     if (this.cast) return this.cast.tag;
     if (this.hurt > 0 && this.action.kind === 'free') return 'hurt';
     return null;
+  }
+
+  /** Geste plus précis encore, joué avant `artPose` si la planche le dessine : 2e et 3e coups du combo, geste d'une compétence. */
+  get artDetail(): string | null {
+    if (this.action.kind === 'attack' && this.swing > 0) return `${this.pose}-${'abc'[this.swing]}`;
+    return this.cast?.art ?? null;
   }
 
   /** Multiplicateur des dégâts infligés : race, talents, Coupelle du kappa, objets. */
@@ -1064,6 +1072,7 @@ export class Player {
     this.attackBuffer = 0;
     this.marchTime = 0;
     this.blocking = false;
+    this.swing = this.combo > 0 ? (this.swing + 1) % 3 : 0;
     this.action = { kind: 'attack', t: 0, dir: { ...this.facing }, hit: new Set(), swung: false, crit: this.nextCrit(), aim: { ...aim } };
   }
 
@@ -1216,8 +1225,8 @@ export class Player {
   }
 
   /** Affichage : le héros fait le geste d'une compétence instantanée (planches complètes). */
-  private showCast(tag: 'skill' | 'ultimate'): void {
-    this.cast = { tag, t: CAST_TIME[tag] };
+  private showCast(tag: 'skill' | 'ultimate', art?: string): void {
+    this.cast = { tag, t: CAST_TIME[tag], art };
   }
 
   // --- Voie (sous-classe) -------------------------------------------------
@@ -1408,6 +1417,7 @@ export class Player {
         this.ghostCooldown = strike.killed ? 0 : b.ghost.cooldown;
         this.blocking = false;
         this.action = { kind: 'free' };
+        this.showCast('skill', 'skill-ghost');
         this.facing = normalize(sub(strike.target, this.pos), aimDir);
         this.invulnerable = Math.max(this.invulnerable, b.ghost.invulnerable);
         // Haidate de shikome : la Lame reparaît sous un bouclier.
@@ -1417,7 +1427,7 @@ export class Player {
     }
     if (input.skillAPressed && this.deathMarkCooldown <= 0 && world.deathMark(input.aim)) {
       this.deathMarkCooldown = b.deathMark.cooldown;
-      this.showCast('skill');
+      this.showCast('skill', 'skill-mark');
     }
     if (input.skillEPressed && this.smokeCooldown <= 0) {
       world.smokeScreen();
@@ -1425,7 +1435,7 @@ export class Player {
       this.hidden = b.smoke.duration;
       this.smokeExtended = 0;
       this.ambushReady = true;
-      this.showCast('skill');
+      this.showCast('skill', 'skill-smoke');
     }
     if (input.skillRPressed && this.danceCooldown <= 0 && this.canCancel()) {
       const targets = world.danceTargets();

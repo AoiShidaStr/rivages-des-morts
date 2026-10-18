@@ -18,6 +18,8 @@ export interface HeroView {
    * ou « hurt ». Absente chez un invité en coop : la posture suffit.
    */
   readonly artPose?: ArtPose | null;
+  /** Variante plus précise, essayée avant `artPose` : « strike-b », « skill-smoke »… */
+  readonly artDetail?: string | null;
   readonly altitude: number;
   readonly hp: number;
   readonly dead: boolean;
