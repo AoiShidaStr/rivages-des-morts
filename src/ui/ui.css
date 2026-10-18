@@ -2655,3 +2655,30 @@ ul.rules {
 .inventory-shelf .fold.current > summary .fold-title {
   color: var(--gold);
 }
+
+/* --- Nouvelle version (src/ui/newVersion.ts) ------------------------------------------ */
+
+.new-version {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 10px 12px 10px 16px;
+  background: var(--paper);
+  border: 1px solid var(--vermilion);
+  border-left: 4px solid var(--vermilion);
+  border-radius: 3px;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  animation: toast-in 0.3s ease;
+}
+
+.new-version span {
+  flex: 1;
+}

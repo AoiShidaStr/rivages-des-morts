@@ -1,3 +1,4 @@
+import { imageUrl } from '../render/imageUrl';
 export type Child = Node | string | number | null | undefined | false;
 type Attr = string | boolean | undefined | ((event: Event) => void);
 
@@ -31,7 +32,7 @@ export function icon(id: string, size: 'small' | 'medium' | 'large' = 'medium'):
     'span',
     { class: `icon ${size}` },
     h('img', {
-      src: `${import.meta.env.BASE_URL}sprites/icones/${id}.png`,
+      src: imageUrl(`${import.meta.env.BASE_URL}sprites/icones/${id}.png`),
       alt: '',
       draggable: 'false',
       onerror: (e) => (e.currentTarget as HTMLElement).parentElement?.classList.add('missing'),
