@@ -46,7 +46,7 @@ await mkdir(outDir, { recursive: true });
 // Un héros décrit dans tools/planches.json (planche complète) l'emporte sur ses anciennes planches du kit.
 const configured = new Set(config.planches.map((p) => p.name));
 // Un héros en pixel art (gamevisual/pixel-art/accueil/heros/<race>-<classe>.png) remplace toutes ses planches peintes.
-const pixelHeroes = await pixelHeroPlanches(sourceDir);
+const pixelHeroes = await pixelHeroPlanches(sourceDir, config.pixelHeroes);
 const pixelNames = new Set(pixelHeroes.map((p) => p.name));
 const heroes = [...pixelHeroes, ...(await heroPlanches(sourceDir)).filter((p) => !configured.has(p.name) && !pixelNames.has(p.name))];
 for (const entry of [...config.planches.filter((p) => !pixelNames.has(p.name)), ...heroes]) {
@@ -108,9 +108,12 @@ async function expandRows(planche) {
   const animations = [];
   for (const r of planche.rows) {
     const layout = r.layout ?? planche.layout;
-    const row = r.row ?? 0;
+    // `row` : une ligne, ou plusieurs lignes lues à la suite (pixel art en deux temps : 4 images par ligne).
+    const rowList = [r.row ?? 0].flat();
+    const row = rowList[0];
     const first = offset(layout, row);
-    const indices = (r.frames ?? [...Array(layout[row]).keys()]).map((i) => first + i);
+    const inRows = rowList.flatMap((k) => [...Array(layout[k]).keys()].map((i) => offset(layout, k) + i));
+    const indices = (r.frames ?? [...inRows.keys()]).map((i) => inRows[i]);
     let refHeight = standing;
     if (r.source) {
       const own = await split(path.join(sourceDir, r.source), { ...options, ...r, layout });

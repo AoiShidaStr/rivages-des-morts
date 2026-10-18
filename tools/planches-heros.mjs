@@ -71,22 +71,33 @@ const PIXEL_HEIGHT = 128;
  * Planches pixel art des héros : une image par héros, 4 lignes de 8 images (déplacement, attaque, attaque
  * spéciale, mort). L'attente est la première image du déplacement ; l'attaque spéciale sert aux compétences
  * et à l'ultime. Les autres postures retombent sur les plus proches dans le jeu (FALLBACK_POSE).
- * Les planches de référence (`-reference`) sont ignorées. Un <race>-<classe>.options.json à côté ajoute des réglages
- * de tools/planches.json pour cette planche seule, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
+ * Le fichier s'appelle <race>-<classe>.png, ou <classe>-planche.jpg pour les demi-dieux (premier lot de Meven).
+ * Les planches de référence (`-reference`) sont ignorées. Des réglages propres à un héros (par exemple `layout` quand
+ * le générateur a dessiné 10 images sur une ligne) viennent de `pixelHeroes` dans tools/planches.json, ou d'un
+ * <race>-<classe>.options.json à côté de la planche, par exemple { "eraseLines": { "length": 0.6 } } pour une grille dessinée.
  */
-export async function pixelHeroPlanches(sourceDir) {
+export async function pixelHeroPlanches(sourceDir, overrides = {}) {
   const dir = path.join('..', 'gamevisual', 'pixel-art', 'accueil', 'heros');
   const files = await readdir(path.join(sourceDir, dir)).catch(() => []);
   const planches = [];
   for (const file of files) {
-    const match = /^(.+)-([a-z]+)\.(png|jpe?g|webp)$/.exec(file);
-    if (!match || !RACES.includes(match[1])) continue;
-    const classe = CLASS_OF[match[2]] ?? match[2];
-    const options = JSON.parse((await readFile(path.join(sourceDir, dir, `${match[1]}-${match[2]}.options.json`), 'utf8').catch(() => null)) ?? '{}');
+    const named = /^(.+)-([a-z]+)\.(png|jpe?g|webp)$/.exec(file);
+    const firstBatch = /^([a-z]+)-planche\.(png|jpe?g|webp)$/.exec(file);
+    const [race, label] = firstBatch ? ['demi-dieu', firstBatch[1]] : named && RACES.includes(named[1]) ? [named[1], named[2]] : [];
+    if (!race) continue;
+    const classe = CLASS_OF[label] ?? label;
+    const name = `heros-${race}-${classe}`;
+    const stem = file.replace(/\.[a-z]+$/, '');
+    const options = {
+      ...overrides[name],
+      ...JSON.parse((await readFile(path.join(sourceDir, dir, `${stem}.options.json`), 'utf8').catch(() => null)) ?? '{}'),
+    };
+    const layout = options.layout ?? [8, 8, 8, 8];
+    const attack = [...Array(layout[1]).keys()];
     planches.push({
-      name: `heros-${match[1]}-${classe}`,
+      name,
       source: path.join(dir, file),
-      layout: [8, 8, 8, 8],
+      layout,
       pixel: true,
       pixelHeight: PIXEL_HEIGHT,
       // Fond enfermé entre une arme et le corps, et liseré de la couleur du fond.
@@ -96,8 +107,8 @@ export async function pixelHeroPlanches(sourceDir) {
       rows: [
         { tag: 'idle', row: 0, frames: [0], duration: 1000 },
         { tag: 'move', row: 0, duration: 80 },
-        { tag: 'windup', row: 1, frames: [0, 1, 2], duration: 80, once: true },
-        { tag: 'strike', row: 1, frames: [3, 4, 5, 6, 7], duration: 60, once: true },
+        { tag: 'windup', row: 1, frames: attack.slice(0, 3), duration: 80, once: true },
+        { tag: 'strike', row: 1, frames: attack.slice(3), duration: 60, once: true },
         { tag: 'skill', row: 2, duration: 70, once: true },
         { tag: 'ultimate', row: 2, duration: 90, once: true },
         { tag: 'death', row: 3, duration: 110, once: true },

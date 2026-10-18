@@ -1,102 +1,279 @@
 {
   "sourceDir": "~/Pictures/game visual",
   "outDir": "public/sprites",
-  "defaults": {
-    "tolerance": 30,
-    "localTolerance": 18,
-    "maxSaturation": 16,
-    "minPartRatio": 0.001,
-    "cellPartRatio": 0.03,
-    "padding": 6,
-    "maxSize": 768
-  },
+  "defaults": { "tolerance": 30, "localTolerance": 18, "maxSaturation": 16, "minPartRatio": 0.001, "cellPartRatio": 0.03, "padding": 6, "maxSize": 768 },
   "sheets": [
     {
-      "source": "decors_textures",
+      "source": "../gamevisual/pixel-art/accueil/decor/cartes/ile",
+      "kind": "carte",
+      "pixel": true,
+      "name": "sols/ile-fond.webp",
+      "sample": "sols/ile-fond-512.webp",
+      "size": 2048
+    },
+    { "source": "../gamevisual/pixel-art/accueil/decor/cartes/riziere", "kind": "carte", "pixel": true, "name": "sols/rizieres.jpg", "size": 2048 },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/sols/texture grid",
       "kind": "texture",
-      "columns": 3,
-      "rows": 3,
-      "size": 512,
-      "names": ["sols/textures/herbe", "sols/textures/mousse", "sols/textures/chemin", "sols/textures/sable", "sols/textures/gravier", "sols/textures/dalles", "sols/textures/terre-maudite", "sols/textures/vase", "sols/textures/roche"]
+      "pixel": true,
+      "size": 256,
+      "inset": 0.04,
+      "regions": [
+        [0, 0, 400, 504],
+        [418, 0, 1015, 504],
+        [1031, 0, 1529, 504],
+        [1545, 0, 2048, 504],
+        [1546, 521, 2048, 1016],
+        [0, 521, 400, 1016],
+        [408, 1032, 807, 2048],
+        [824, 1032, 1224, 2048],
+        [1242, 1032, 1640, 2048]
+      ],
+      "names": [
+        "sols/textures/chemin",
+        "sols/textures/dalles",
+        "sols/textures/gravier",
+        "sols/textures/herbe",
+        "sols/textures/mousse",
+        "sols/textures/roche",
+        "sols/textures/sable",
+        "sols/textures/terre-maudite",
+        "sols/textures/vase"
+      ]
     },
     {
-      "source": "decors_arbres",
-      "columns": 3,
-      "rows": 3,
-      "defaults": { "defringe": 8 },
-      "names": ["decor/ile/pin-tordu", "decor/ile/erable-rouge", "decor/ile/saule", "decor/ile/cerisier-pale", "decor/ile/bambous-hauts", "decor/ile/cedre", "decor/ile/ginkgo", "decor/ile/arbre-mort", "decor/ile/pin-sur-rocher"],
-      "format": "webp"
-    },
-    {
-      "source": "decors_vegetation",
-      "columns": 4,
-      "rows": 4,
-      "defaults": { "defringe": 8 },
-      "names": ["decor/ile/buisson-rond", "decor/ile/buisson-bas", "decor/ile/herbe-haute", "decor/ile/herbe-courte", "decor/ile/fougere", "decor/ile/roseaux", "decor/ile/bambous", "decor/ile/higanbana", "decor/ile/hortensias", "decor/ile/jeune-erable", "decor/ile/petit-pin", "decor/ile/azalee", "decor/ile/souche-moussue", "decor/ile/tronc-couche", "decor/ile/nenuphars", "decor/ile/herbes-de-rive"],
-      "format": "webp",
-      "options": { "decor/ile/higanbana": { "fillHoles": true, "minHole": 60 }, "decor/ile/herbe-haute": { "fillHoles": true, "minHole": 60 }, "decor/ile/herbes-de-rive": { "fillHoles": true, "minHole": 60 } }
-    },
-    {
-      "source": "decors_rochers",
-      "columns": 4,
-      "rows": 4,
-      "names": ["decor/ile/rocher-grand", "decor/ile/rocher-moyen", "decor/ile/rocher-petit", "decor/ile/galets", "decor/ile/rocher-moussu", "decor/ile/rocher-plat", "decor/ile/rocher-pointu", "decor/ile/cairn", "decor/ile/rochers-de-rive", "decor/ile/pierre-dressee", "decor/ile/rocher-fendu", "decor/ile/eboulis", "decor/ile/rocher-algues", "decor/ile/pas-japonais", "decor/ile/bloc-de-falaise", "decor/ile/pierre-du-jardin"],
-      "format": "webp"
-    },
-    {
-      "source": "decors_objets",
-      "columns": 4,
-      "rows": 4,
-      "names": ["decor/ile/petite-lanterne", "decor/ile/cloture-bambou", "decor/ile/shimenawa", "decor/ile/panneau", "decor/ile/sacs-de-riz", "decor/ile/tas-de-bois", "decor/ile/jarres", "decor/ile/kitsune", "decor/ile/steles", "decor/ile/sotoba", "decor/ile/lanterne-papier", "decor/ile/banc", "decor/ile/offrandes", "decor/ile/puits", "decor/ile/etendoir", "decor/ile/barque-echouee"],
-      "options": {
-        "decor/ile/cloture-bambou": {
-          "fillHoles": true,
-          "minHole": 300
-        },
-        "decor/ile/etendoir": {
-          "fillHoles": true,
-          "minHole": 300
-        },
-        "decor/ile/puits": {
-          "fillHoles": true,
-          "minHole": 300
-        },
-        "decor/ile/shimenawa": {
-          "fillHoles": true,
-          "minHole": 300
-        }
-      },
-      "format": "webp"
-    },
-    {
-      "source": "decors_rizieres",
-      "columns": 4,
-      "rows": 4,
-      "names": ["decor/rizieres/arbre-mort", "decor/rizieres/arbre-mort-soie", "decor/rizieres/souche", "decor/rizieres/roseaux", "decor/rizieres/riz", "decor/rizieres/riz-couche", "decor/rizieres/toile-piquets", "decor/rizieres/cocon", "decor/rizieres/epouvantail", "decor/rizieres/piquets", "decor/rizieres/lanterne-eteinte", "decor/rizieres/rocher-vase", "decor/rizieres/ossements", "decor/rizieres/nenuphars-fanes", "decor/rizieres/petit-jizo", "decor/rizieres/sandales"],
-      "options": {
-        "decor/rizieres/toile-piquets": {
-          "fillHoles": true,
-          "minHole": 30
-        },
-        "decor/rizieres/arbre-mort-soie": {
-          "fillHoles": true,
-          "minHole": 30
-        }
-      },
-      "format": "webp"
-    },
-    {
-      "source": "decors_sans-socle",
-      "columns": 2,
+      "source": "../gamevisual/pixel-art/accueil/decor/ile-1-arbres",
+      "columns": 5,
       "rows": 2,
-      "reference": ["decor/maison-the.png", "decor/coffre.png", "decor/ema.png", "jizo.png"],
-      "names": ["decor/maison-the", "decor/coffre", "decor/ema", "jizo"],
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/ile/arbre-mort",
+        "decor/ile/cedre",
+        "decor/ile/cerisier-pale",
+        "decor/ile/erable-rouge",
+        "decor/ile/ginkgo",
+        "decor/ile/petit-pin",
+        "decor/ile/pin-sur-rocher",
+        "decor/ile/pin-tordu",
+        "decor/ile/saule",
+        "decor/ile/jeune-erable"
+      ],
+      "format": "webp",
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/ile-2-arbres",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/ile/azalee",
+        "decor/ile/buisson-bas",
+        "decor/ile/buisson-rond",
+        "decor/ile/fougere",
+        "decor/ile/higanbana",
+        "decor/ile/hortensias",
+        "decor/ile/nenuphars",
+        "decor/ile/bambous",
+        "decor/ile/bambous-hauts",
+        "decor/ile/roseaux"
+      ],
+      "format": "webp",
+      "options": { "decor/ile/higanbana": { "fillHoles": true, "minHole": 60 }, "decor/ile/fougere": { "fillHoles": true, "minHole": 60 } },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/ile-3-arbres",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/ile/bloc-de-falaise",
+        "decor/ile/eboulis",
+        "decor/ile/galets",
+        "decor/ile/rocher-algues",
+        "decor/ile/rocher-fendu",
+        "decor/ile/rocher-grand",
+        "decor/ile/rocher-moussu",
+        "decor/ile/rocher-moyen",
+        "decor/ile/rocher-petit",
+        "decor/ile/rocher-plat"
+      ],
+      "format": "webp",
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/ile-4-arbres",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/ile/rocher-pointu",
+        "decor/ile/rochers-de-rive",
+        "decor/ile/pierre-dressee",
+        "decor/ile/pierre-du-jardin",
+        "decor/ile/souche-moussue",
+        "decor/ile/tronc-couche",
+        "decor/ile/herbe-courte",
+        "decor/ile/herbe-haute",
+        "decor/ile/herbes-de-rive",
+        "decor/ile/cairn"
+      ],
+      "format": "webp",
+      "options": { "decor/ile/herbe-haute": { "fillHoles": true, "minHole": 60 }, "decor/ile/herbes-de-rive": { "fillHoles": true, "minHole": 60 } },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 16 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/ile-5-arbres",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/ile/banc",
+        "decor/ile/barque-echouee",
+        "decor/ile/cloture-bambou",
+        "decor/ile/etendoir",
+        "decor/ile/jarres",
+        "decor/ile/kitsune",
+        "decor/ile/lanterne-papier",
+        "decor/ile/offrandes",
+        "decor/ile/panneau",
+        "decor/ile/pas-japonais"
+      ],
+      "format": "webp",
       "options": {
-        "decor/ema": {
-          "fillHoles": true,
-          "minHole": 2000
-        }
-      }
+        "decor/ile/cloture-bambou": { "fillHoles": true, "minHole": 60 },
+        "decor/ile/etendoir": { "fillHoles": true, "minHole": 60 },
+        "decor/ile/lanterne-papier": { "fillHoles": true, "minHole": 60 }
+      },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/ile-6-arbres",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/ile/petite-lanterne",
+        "decor/ile/puits",
+        "decor/ile/sacs-de-riz",
+        "decor/ile/shimenawa",
+        "decor/ile/sotoba",
+        "decor/ile/steles",
+        "decor/ile/tas-de-bois",
+        "pecher",
+        null,
+        "souche"
+      ],
+      "format": "webp",
+      "options": {
+        "decor/ile/puits": { "fillHoles": true, "minHole": 60 },
+        "decor/ile/shimenawa": { "fillHoles": true, "minHole": 60 },
+        "pecher": { "format": "png" },
+        "souche": { "format": "png" }
+      },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/riziere-1",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/rizieres/arbre-mort",
+        "decor/rizieres/arbre-mort-soie",
+        "decor/rizieres/cocon",
+        "decor/rizieres/epouvantail",
+        "decor/rizieres/lanterne-eteinte",
+        "decor/rizieres/nenuphars-fanes",
+        "decor/rizieres/ossements",
+        "decor/rizieres/petit-jizo",
+        "decor/rizieres/piquets",
+        "decor/rizieres/riz"
+      ],
+      "format": "webp",
+      "options": { "decor/rizieres/arbre-mort-soie": { "fillHoles": true, "minHole": 30 }, "decor/rizieres/piquets": { "fillHoles": true, "minHole": 60 } },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/riziere-2",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "decor/rizieres/riz-couche",
+        "decor/rizieres/rocher-vase",
+        "decor/rizieres/roseaux",
+        "decor/rizieres/sandales",
+        "decor/rizieres/souche",
+        "decor/rizieres/toile-piquets",
+        null,
+        null,
+        null,
+        null
+      ],
+      "format": "webp",
+      "options": { "decor/rizieres/toile-piquets": { "fillHoles": true, "minHole": 30 } },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/decor/divers",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": ["decor/arbre", "decor/argile", "decor/coffre", "decor/ema", "decor/jizo", null, "decor/lanterne", "decor/maison-the", "decor/sutra", "toile"],
+      "options": { "decor/ema": { "fillHoles": true, "minHole": 60 }, "toile": { "fillHoles": true, "minHole": 30 } },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/pnj/lot1",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": [
+        "gardien",
+        "pnj/villageoise",
+        "pnj/dame-puits",
+        "pnj/vieux-kappa",
+        "pnj/biwa",
+        "pnj/biwa-sculpte",
+        "pnj/coupelle-fissuree",
+        "pnj/dogu",
+        "pnj/lanterne-de-pierre",
+        "pnj/seau-et-lapin"
+      ],
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
+    },
+    {
+      "source": "../gamevisual/pixel-art/accueil/pnj/lot2",
+      "columns": 5,
+      "rows": 2,
+      "pixel": { "scale": 0.5, "colours": 48 },
+      "names": ["charon", "moine", "obaa-kiku", "tanuki", "tetsu", "jizo", "torii", "rocher", "barque", "yuki"],
+      "options": { "torii": { "fillHoles": true, "minHole": 60 } },
+      "defaults": { "eraseLines": { "length": 0.12, "verticalLength": 0.25, "thickness": 5 }, "keyDominance": 100 },
+      "trim": 12,
+      "gridLines": { "band": 10 }
     }
   ]
 }

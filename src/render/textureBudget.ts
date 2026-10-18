@@ -1,4 +1,5 @@
 import { Texture, type Scene } from '@babylonjs/core';
+import pixelArt from '../data/pixelArt.json';
 import { imageUrl } from './imageUrl';
 import { MAX_PIXEL_RATIO } from './resolution';
 
@@ -52,11 +53,22 @@ export function textureScale(texelsPerUnit: number): number {
   return scale < MIN_GAIN ? scale : 1;
 }
 
+/** Images en pixel art (src/data/pixelArt.json, tenu à jour par les outils de découpe), depuis public/sprites. */
+const PIXEL_ART = new Set<string>(pixelArt);
+
+/** L'image est-elle en pixel art ? Elle s'affiche alors sans lissage, pixels nets. */
+export function isPixelArt(url: string): boolean {
+  const at = url.lastIndexOf('sprites/');
+  return at >= 0 && PIXEL_ART.has(url.slice(at + 'sprites/'.length).replace(/[?#].*$/, ''));
+}
+
 /**
  * Charge une image lissée (avec mipmaps), réduite selon `texelsPerUnit(largeur, hauteur)` de l'image d'origine.
  * Sans réduction, c'est un chargement ordinaire, partagé entre les scènes par le cache de Babylon.
+ * Une image en pixel art est déjà petite : elle se charge telle quelle, sans lissage ni mipmaps.
  */
 export async function loadFittedTexture(scene: Scene, url: string, texelsPerUnit: (width: number, height: number) => number): Promise<Texture> {
+  if (isPixelArt(url)) return loadPixelTexture(scene, url);
   const response = await fetch(imageUrl(url));
   if (!response.ok) throw new Error(url);
   const full = await createImageBitmap(await response.blob(), { premultiplyAlpha: 'none' });
@@ -85,6 +97,24 @@ export async function loadFittedTexture(scene: Scene, url: string, texelsPerUnit
       () => queueMicrotask(() => resolve(texture)),
       (message, exception) => reject(exception instanceof Error ? exception : new Error(message ?? url)),
       bitmap,
+    );
+    texture.hasAlpha = true;
+    texture.wrapU = Texture.CLAMP_ADDRESSMODE;
+    texture.wrapV = Texture.CLAMP_ADDRESSMODE;
+  });
+}
+
+/** Image en pixel art : échantillonnage au plus proche, sans mipmaps. */
+export function loadPixelTexture(scene: Scene, url: string): Promise<Texture> {
+  return new Promise((resolve, reject) => {
+    const texture: Texture = new Texture(
+      imageUrl(url),
+      scene,
+      true,
+      true,
+      Texture.NEAREST_SAMPLINGMODE,
+      () => resolve(texture),
+      (message) => reject(new Error(message ?? url)),
     );
     texture.hasAlpha = true;
     texture.wrapU = Texture.CLAMP_ADDRESSMODE;

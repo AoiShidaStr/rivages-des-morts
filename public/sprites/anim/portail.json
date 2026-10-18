@@ -5,78 +5,78 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 1",
    "frame": {
-    "x": 354,
+    "x": 292,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 2",
    "frame": {
-    "x": 708,
+    "x": 584,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 3",
    "frame": {
-    "x": 1062,
+    "x": 876,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 4",
    "frame": {
-    "x": 1416,
+    "x": 1168,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 5",
    "frame": {
-    "x": 1770,
+    "x": 1460,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 6",
    "frame": {
-    "x": 2124,
+    "x": 1752,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   },
   {
    "filename": "idle 7",
    "frame": {
-    "x": 2478,
+    "x": 2044,
     "y": 0,
-    "w": 354,
-    "h": 401
+    "w": 292,
+    "h": 317
    },
    "duration": 90
   }
@@ -85,14 +85,14 @@
   "app": "tools/planches.mjs",
   "image": "portail.webp",
   "size": {
-   "w": 2832,
-   "h": 401
+   "w": 2336,
+   "h": 317
   },
-  "smooth": true,
-  "bodyHeight": 384,
+  "smooth": false,
+  "bodyHeight": 300,
   "anchor": {
-   "x": 177,
-   "y": 392
+   "x": 146,
+   "y": 308
   },
   "frameTags": [
    {
