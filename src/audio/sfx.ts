@@ -5,6 +5,9 @@
 // amis musicologues. Un fichier absent ne casse rien : la variante est écartée, le jeu continue sans ce son.
 // Conventions : public/audio/sfx/<id>-1.mp3, -2.mp3, -3.mp3 (deux ou trois variantes, une suffit) — le cahier de
 // production de chaque id est dans docs/sons-a-produire.md. Sans fichier, le son reste muet.
+// Les sons passent par Web Audio : décodés une fois, ils se rejouent sans rien recharger. Un élément <audio> par
+// variante (plus de 80) gelait Safari sur Mac : chacun y est un lecteur multimédia complet, et chaque pas, chaque coup
+// le faisait revenir au début et changer de vitesse.
 
 import data from '../data/sfx.json';
 import type { GameEvent } from '../game/types';
@@ -89,22 +92,29 @@ function cliquable(cible: EventTarget | null): Element | null {
 export class Sfx {
   readonly settings: SfxSettings;
   private unlocked = false;
-  /** Cache des variantes valides par identifiant : les fichiers absents sont retirés dès leur erreur de chargement. */
-  private readonly pools = new Map<SfxId, HTMLAudioElement[]>();
+  /** Créé au premier geste du joueur : le navigateur refuse le son avant. */
+  private context: AudioContext | null = null;
+  /** Les variantes décodées par identifiant : un fichier absent n'y entre pas. */
+  private readonly pools = new Map<SfxId, AudioBuffer[]>();
   /** La dernière variante jouée par son, pour ne jamais répéter la même derrière elle-même. */
   private readonly dernière = new Map<SfxId, number>();
   /** L'heure de la dernière joue de chaque son : le pas de 90 ms vaut son par son, pas pour tous ensemble. */
   private readonly dernierJeu = new Map<SfxId, number>();
 
   /** Le dernier clic d'interface joué, que le son d'action du même bouton coupe. */
-  private clic: { audio: HTMLAudioElement; à: number } | null = null;
+  private clic: { audio: AudioBufferSourceNode; à: number } | null = null;
   /** Le dernier fichier lancé, quel que soit le son. */
-  private joué: HTMLAudioElement | null = null;
+  private joué: AudioBufferSourceNode | null = null;
 
   constructor() {
     this.settings = loadSettings();
     jeuUi = (id) => this.action(id);
     const débloque = () => {
+      const Context = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Context) return;
+      this.context = new Context();
+      // Safari peut créer le contexte en pause même pendant un geste.
+      void this.context.resume().catch(() => {});
       this.unlocked = true;
       // Les fichiers se chargent dès le premier geste : le premier coup du combat a déjà son son.
       for (const id of Object.keys(data.sons) as SfxId[]) this.pool(id);
@@ -129,7 +139,13 @@ export class Sfx {
 
   /** Le son d'une action de l'interface : il coupe le clic que le même bouton vient de jouer. */
   action(id: SfxId): void {
-    if (this.clic && Date.now() - this.clic.à < CLIC_REMPLACÉ_MS) this.clic.audio.pause();
+    if (this.clic && Date.now() - this.clic.à < CLIC_REMPLACÉ_MS) {
+      try {
+        this.clic.audio.stop();
+      } catch {
+        // Déjà fini.
+      }
+    }
     this.clic = null;
     this.play(id, 1);
   }
@@ -150,7 +166,9 @@ export class Sfx {
    * quand le son se tait. `vitesse` fixe la hauteur (sons d'interface) ; sans elle, elle varie un peu à chaque joue.
    */
   play(id: SfxId, vitesse?: number): boolean {
-    if (!this.unlocked || this.settings.muted) return false;
+    const context = this.context;
+    if (!this.unlocked || !context || this.settings.muted) return false;
+    if (context.state === 'suspended') void context.resume().catch(() => {});
     const maintenant = Date.now();
     // Le même son s'efface devant lui-même pendant son repos : plusieurs coups à la fois ne sonnent qu'une fois.
     if (maintenant - (this.dernierJeu.get(id) ?? 0) < (REPOS_MS[id] ?? MÊME_PAS_MS)) return false;
@@ -159,16 +177,17 @@ export class Sfx {
     this.dernierJeu.set(id, maintenant);
     const dernière = this.dernière.get(id) ?? -1;
     const dispo = variantes.length > 1 ? variantes.filter((_, i) => i !== dernière) : variantes;
-    const audio = dispo[Math.floor(Math.random() * dispo.length)];
-    audio.currentTime = 0;
+    const buffer = dispo[Math.floor(Math.random() * dispo.length)];
+    const audio = context.createBufferSource();
+    audio.buffer = buffer;
     // Un peu de vitesse au hasard : même une seule variante ne colle pas l'oreille.
-    audio.playbackRate = vitesse ?? 0.92 + Math.random() * 0.14;
-    audio.volume = this.settings.volume * (VOLUME[id] ?? 1);
-    this.dernière.set(id, variantes.indexOf(audio));
+    audio.playbackRate.value = vitesse ?? 0.92 + Math.random() * 0.14;
+    const gain = context.createGain();
+    gain.gain.value = this.settings.volume * (VOLUME[id] ?? 1);
+    audio.connect(gain).connect(context.destination);
+    audio.start();
+    this.dernière.set(id, variantes.indexOf(buffer));
     this.joué = audio;
-    void audio.play().catch(() => {
-      // Lecture refusée (fichier absent, onglet en arrière-plan) : le jeu continue en silence.
-    });
     return true;
   }
 
@@ -176,24 +195,24 @@ export class Sfx {
    * Les variantes prêtes de ce son. On ne demande la variante suivante que si la précédente existe : un son pas
    * encore produit ne coûte qu'une requête manquée, pas trois.
    */
-  private pool(id: SfxId): HTMLAudioElement[] {
+  private pool(id: SfxId): AudioBuffer[] {
     let variantes = this.pools.get(id);
+    const context = this.context;
     if (!variantes) {
-      const prêtes: HTMLAudioElement[] = [];
+      const prêtes: AudioBuffer[] = [];
       variantes = prêtes;
       this.pools.set(id, prêtes);
-      const charge = (i: number) => {
+      if (!context) return variantes;
+      const charge = async (i: number): Promise<void> => {
         if (i >= VARIANTES.length) return;
-        const audio = new Audio(`${import.meta.env.BASE_URL}audio/sfx/${id}-${VARIANTES[i]}.mp3`);
-        audio.preload = 'auto';
-        // Fichier absent : la variante n'entre pas dans la réserve, et les suivantes ne sont pas demandées.
-        audio.addEventListener('canplaythrough', () => {
-          prêtes.push(audio);
-          charge(i + 1);
-        }, { once: true });
-        audio.load();
+        const response = await fetch(`${import.meta.env.BASE_URL}audio/sfx/${id}-${VARIANTES[i]}.mp3`);
+        if (!response.ok) return;
+        // Fichier absent (ou page servie à sa place) : le décodage échoue, la variante n'entre pas dans la réserve,
+        // et les suivantes ne sont pas demandées.
+        prêtes.push(await context.decodeAudioData(await response.arrayBuffer()));
+        await charge(i + 1);
       };
-      charge(0);
+      charge(0).catch(() => {});
     }
     return variantes;
   }
