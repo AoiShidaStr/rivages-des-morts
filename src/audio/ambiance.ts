@@ -55,7 +55,9 @@ export class Ambiance {
     for (const s of this.sources.values()) {
       s.level += Math.max(-FONDU * dt, Math.min(FONDU * dt, s.target - s.level));
       const volume = s.level * master;
-      s.audio.volume = Math.max(0, Math.min(1, volume));
+      // Chaque changement de volume d'un <audio> coûte un aller-retour au lecteur de Safari : seulement s'il bouge.
+      const clamped = Math.max(0, Math.min(1, volume));
+      if (Math.abs(s.audio.volume - clamped) > 0.001) s.audio.volume = clamped;
       if (volume > 0.001 && s.audio.paused && !s.pending) {
         s.pending = true;
         const source = s;
