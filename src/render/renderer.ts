@@ -191,7 +191,7 @@ function capitalize(word: string): string {
 
 function heroArt(hero: HeroView): readonly string[] {
   if (hero.dead) return ['death'];
-  return hero.artPose ? [hero.artPose] : [];
+  return [hero.artDetail, hero.artPose].filter((tag): tag is string => !!tag);
 }
 
 const FALLBACK_POSE: Partial<Record<Pose, Pose>> = {
