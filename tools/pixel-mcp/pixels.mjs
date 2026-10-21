@@ -250,15 +250,26 @@ export function nettoyerAlpha(t, seuil, isoles) {
   return r;
 }
 
-export function contour(t, c, interieur, diag) {
-  const r = copie(t);
-  const a = (x, y) => dedans(t, x, y) && t.data[(y * t.width + x) * 4 + 3] > 0;
+/** Contour de `ep` px (passes successives d'un pixel), à l'extérieur du contenu ou sur son bord intérieur. */
+export function contour(t, c, interieur, diag, ep = 1) {
   const voisins = diag ? [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]] : [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  for (let y = 0; y < t.height; y++)
-    for (let x = 0; x < t.width; x++) {
-      if (interieur ? !a(x, y) : a(x, y)) continue;
-      if (voisins.some(([dx, dy]) => (interieur ? !a(x + dx, y + dy) : a(x + dx, y + dy)))) poser(r, x, y, c);
-    }
+  // masque de départ : le contenu d'origine, qui grandit (ou rétrécit) d'un pixel à chaque passe
+  let plein = new Uint8Array(t.width * t.height);
+  for (let i = 0; i < plein.length; i++) plein[i] = t.data[i * 4 + 3] > 0 ? 1 : 0;
+  const r = copie(t);
+  for (let pass = 0; pass < ep; pass++) {
+    const a = (x, y) => dedans(t, x, y) && plein[y * t.width + x] === 1;
+    const suivant = Uint8Array.from(plein);
+    for (let y = 0; y < t.height; y++)
+      for (let x = 0; x < t.width; x++) {
+        if (interieur ? !a(x, y) : a(x, y)) continue;
+        if (voisins.some(([dx, dy]) => (interieur ? !a(x + dx, y + dy) : a(x + dx, y + dy)))) {
+          poser(r, x, y, c);
+          suivant[y * t.width + x] = interieur ? 0 : 1;
+        }
+      }
+    plein = suivant;
+  }
   return r;
 }
 

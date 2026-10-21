@@ -184,10 +184,21 @@ outil('nettoyer_alpha', 'Supprime la semi-transparence (seuil) et les pixels iso
   return resume(nom, r);
 });
 
-outil('contour', 'Ajoute un contour d\'un pixel autour du contenu (extérieur), ou assombrit le bord intérieur.', {
-  nom: nomT, couleur: z.string().default('#141016'), interieur: z.boolean().default(false), diagonales: z.boolean().default(false),
-}, ({ nom, couleur, interieur, diagonales }) => {
-  const r = px.contour(toile(nom), px.couleur(couleur), interieur, diagonales);
+outil('contour', "Contour noir du style du jeu : 2 px autour du contenu par défaut (extérieur), ou bord intérieur assombri. Agrandit la toile si le contour déborde.", {
+  nom: nomT, couleur: z.string().default('#000000'), epaisseur: z.number().int().min(1).max(8).default(2),
+  interieur: z.boolean().default(false), diagonales: z.boolean().default(true),
+}, ({ nom, couleur, epaisseur, interieur, diagonales }) => {
+  let t = toile(nom);
+  if (!interieur) {
+    // place pour le contour : on agrandit la toile si le contenu touche un bord
+    const b = px.stats(t).bbox;
+    if (b && (b[0] < epaisseur || b[1] < epaisseur || b[2] > t.width - epaisseur || b[3] > t.height - epaisseur)) {
+      const g = px.creer(t.width + 2 * epaisseur, t.height + 2 * epaisseur);
+      px.coller(g, t, epaisseur, epaisseur);
+      t = g;
+    }
+  }
+  const r = px.contour(t, px.couleur(couleur), interieur, diagonales, epaisseur);
   remplacer(nom, r);
   return resume(nom, r);
 });

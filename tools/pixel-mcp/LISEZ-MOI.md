@@ -20,6 +20,6 @@ Déclaré dans `.mcp.json` à la racine : ouvrir Claude Code dans le dépôt, ac
   (plus proche voisin seulement).
 - **Palette commune** : `extraire_palette` (coupe médiane sur plusieurs images), `definir_palette`
   (hex ou PNG), `appliquer_palette` (tramage en option), `exporter_palette`, `ajuster_couleurs`.
-- **Nettoyage** : `detourer` (fond magenta/vert), `nettoyer_alpha`, `contour`, `recadrer`, `miroir`.
+- **Nettoyage** : `detourer` (fond magenta/vert), `nettoyer_alpha`, `contour` (noir, 2 px par défaut : le style du jeu ; `epaisseur` réglable), `recadrer`, `miroir`.
 - **Assemblage / dessin** : `coller` (avec pavage pour un morceau de carte), `pixel`, `rectangle`,
   `ligne`, `lire_pixel`.
