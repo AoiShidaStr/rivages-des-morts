@@ -713,9 +713,11 @@ Les compétences et passifs se débloquent en montant de niveau, dans un arbre d
 
 Le ton est épique mais coloré, dans l'esprit de Waven : des enjeux mythologiques, sans noirceur écrasante.
 
-- **Rendu** : 2D peinte, caméra fixe isométrique : sols et décors peints, personnages chibi animés en planches dessinées par Nano Banana 2 (voir [Charte 2D](Charte%202D.md)).
-- **Personnages** : une planche d'animation par race et par classe ; l'arme de la classe se voit sur le personnage.
-- **Îles** : chaque au-delà a sa palette propre (brume et rouge pour le Yomi, or et sable pour la Duat, etc.).
+- **Base artistique (depuis le 22/10/2026)** : la carte v3 de l'île du Yomi fait référence pour tout le graphisme. Pixel art isométrique dans l'esprit des packs *Forgotten Memories* et *Resurrected RPG* (immunitys) : palette limitée et commune, pixels nets (affichage Scale2x, jamais de lissage), contours colorés plus sombres que la matière (pas de contour noir), lumière peinte venue d'en haut à gauche, ombres douces sans dégradé lisse.
+- **Lumière** : chaque image a sa normal map (calculée depuis la géométrie, pas devinée) et ses hauteurs. Un shader éclaire la scène selon l'heure (aube, midi, soir, nuit), les lumières ponctuelles (lanternes, forge, lave, portail) et projette des **ombres dynamiques** (soleil ou lune, et lumières proches). La lumière avance par paliers tramés pour rester « pixel art ». Brume de Yomi au ras de l'eau. Démo et fichiers : `ile-fm-v3/eclairage/`.
+- **Décor** : chaque biome a sa couleur d'arbres (cerisiers au village et au Grand Rocher, érables rouges à la cascade, cèdres sombres vers le donjon, pins au volcan) ; rizières en terrasses, falaises en rochers, bâtiments japonais dessinés dans la palette commune.
+- **Personnages** : même palette, même densité de pixels que la carte et même lumière (normal map par planche). Proportions chibi conservées (environ 3 têtes, 5 pour les créatures imposantes). Une planche par race et par classe, 4 lignes × 8 images : déplacement, attaque, attaque spéciale, mort ; l'attente vient de la première image du déplacement, le touché et l'étourdi se font en code. Les yeux regardent toujours dans le sens du corps. Planche de référence : **Hanyō Guerrier**. L'arme de la classe se voit sur le personnage.
+- **Îles** : chaque au-delà a sa palette propre (brume et rouge pour le Yomi, or et sable pour la Duat, etc.), dérivée de la palette commune.
 
 Les prompts de génération par IA de chaque asset sont dans l'onglet Prompts visuels.
 
