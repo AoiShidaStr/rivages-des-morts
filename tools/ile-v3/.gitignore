@@ -1,0 +1,7 @@
+# Tout ce que les scripts produisent : seuls les scripts, lumieres.json et jeu/rocher.png sont gardés.
+export/
+packs/
+__pycache__/
+*.log
+/*.png
+/*.webp

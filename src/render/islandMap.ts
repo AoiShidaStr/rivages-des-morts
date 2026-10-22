@@ -1,9 +1,23 @@
-import { Color3, DynamicTexture, MeshBuilder, StandardMaterial, Texture, type Mesh, type Scene } from '@babylonjs/core';
-import { insidePolygon, toScreen, toWorld, type IslandData, type Polygon } from '../game/island';
+import {
+  Color3,
+  Constants,
+  DynamicTexture,
+  MeshBuilder,
+  StandardMaterial,
+  Texture,
+  type BaseTexture,
+  type Material,
+  type Mesh,
+  type Scene,
+  type ShaderMaterial,
+} from '@babylonjs/core';
+import { insidePolygon, toScreen, toWorld, type IslandData, type Polygon, type ScreenPoint } from '../game/island';
 import type { Vec2 } from '../game/math';
 import type { DecorSpot } from './decorSprites';
 import { decorSolids, islandDecor, MapImage, WalkField } from './islandDecor';
+import { IslandLighting, type LightingView } from './islandLighting';
 import { Grid, PaintedWater } from './paintedGround';
+import { spriteMaterial } from './renderer';
 import { isPixelArt } from './textureBudget';
 
 /**
@@ -11,6 +25,9 @@ import { isPixelArt } from './textureBudget';
  * et alignée sur l'écran. Elle est étirée en profondeur (÷ sin 35,26°) pour qu'à l'écran on la retrouve telle quelle.
  * Au-delà de l'image, une mer unie de la couleur de ses bords ; dessus, les reflets animés de l'eau, les ombres des
  * décors et les décors peints, posés par le code selon ce qui est peint (eau, herbe) et les zones de marche.
+ *
+ * La carte en pixel art (île v3, avec son relief) est éclairée par islandLighting.ts : l'heure du jour, les ombres
+ * portées, les lumières, l'eau et la brume y sont calculées, et ses décors sont ceux d'island.json.
  */
 
 const SPRITES = `${import.meta.env.BASE_URL}sprites/`;
@@ -28,8 +45,8 @@ function screenPlane(scene: Scene, name: string, width: number, height: number, 
 export class IslandMap {
   private constructor(
     private readonly meshes: Mesh[],
-    private readonly materials: StandardMaterial[],
-    private readonly textures: Texture[],
+    private readonly materials: Material[],
+    private readonly textures: BaseTexture[],
     private readonly water: PaintedWater | null,
     /** Tabliers des ponts, découpés dans la carte : montrés devant le héros qui passe dessous. */
     private readonly bridges: Mesh[],
@@ -39,10 +56,15 @@ export class IslandMap {
     readonly decor: DecorSpot[],
     /** Collisions des décors posés dans les zones de marche, pour l'île (Island.addSolids). */
     readonly solids: { pos: Vec2; r: number }[],
+    /** Éclairage de la carte en pixel art (sans lui : la carte telle que peinte). */
+    private readonly lighting: IslandLighting | null = null,
+    /** La mer unie au-delà de la carte, et sa couleur à midi : elle suit l'heure du jour. */
+    private readonly sea: { material: StandardMaterial; color: Color3 } | null = null,
   ) {}
 
   /** `rich` : eau animée, ombres et décors ; sans lui (graphismes allégés), la carte seule. */
   static async build(scene: Scene, data: IslandData, rich: boolean): Promise<IslandMap> {
+    if (data.map.relief) return IslandMap.buildLit(scene, data, rich);
     const url = `${SPRITES}${data.map.image}`;
     const map = await MapImage.load(data.map.sample ? `${SPRITES}${data.map.sample}` : url, data.map.width);
     const { width, height } = map;
@@ -110,8 +132,88 @@ export class IslandMap {
     return new IslandMap(meshes, materials, textures, waterLayer(scene, data, map), bridges, falls, decor, solids);
   }
 
-  update(dt: number): void {
+  /**
+   * Carte en pixel art, avec son relief : éclairée (`rich`), sinon telle que peinte. Ses décors (arbres, maisons) n'y
+   * sont pas peints : ils sont posés même en graphismes allégés, et leurs collisions avec.
+   */
+  private static async buildLit(scene: Scene, data: IslandData, rich: boolean): Promise<IslandMap> {
+    const url = `${SPRITES}${data.map.image}`;
+    const map = await MapImage.load(data.map.sample ? `${SPRITES}${data.map.sample}` : url, data.map.width);
+    const { width, height } = map;
+    const seaColor = Color3.FromInts(...map.sea());
+    scene.clearColor = seaColor.toColor4(1);
+    const sea = new StandardMaterial('islandSea', scene);
+    sea.disableLighting = true;
+    sea.specularColor = Color3.Black();
+    sea.diffuseColor = Color3.Black();
+    sea.emissiveColor = seaColor.clone();
+    const seaMesh = screenPlane(scene, 'islandSea', width * 4, height * 4, -0.02);
+    seaMesh.material = sea;
+    const ground = screenPlane(scene, 'islandMap', width, height, 0);
+    const meshes = [seaMesh, ground];
+    const materials: Material[] = [sea];
+    const textures: BaseTexture[] = [];
+    let lighting: IslandLighting | null = null;
+    if (rich) {
+      try {
+        lighting = await IslandLighting.load(scene, data.map, width, height);
+      } catch (error) {
+        console.warn("Éclairage de l'île indisponible : la carte reste telle que peinte.", error);
+      }
+    }
+    if (lighting) {
+      ground.material = lighting.ground();
+    } else {
+      const texture = new Texture(url, scene, true, true, Texture.NEAREST_SAMPLINGMODE);
+      texture.wrapU = Texture.CLAMP_ADDRESSMODE;
+      texture.wrapV = Texture.CLAMP_ADDRESSMODE;
+      const flat = new StandardMaterial('islandMap', scene);
+      flat.disableLighting = true;
+      flat.specularColor = Color3.Black();
+      flat.diffuseTexture = texture;
+      flat.emissiveColor = Color3.White();
+      ground.material = flat;
+      materials.push(flat);
+      textures.push(texture);
+    }
+    const items = data.decor ?? [];
+    const decor = items.map((d): DecorSpot => ({ file: `decor/${d.sprite}.webp`, ...toWorld(d), height: d.height, flip: !!d.flip, below: d.below }));
+    const solids = decorSolids(items, new WalkField(data, width, height));
+    return new IslandMap(meshes, materials, textures, null, [], [], decor, solids, lighting, { material: sea, color: seaColor });
+  }
+
+  /**
+   * `hero` : où se tient le héros, pour sa torche la nuit ; `lit` : les lanternes de pierre allumées (identifiants des
+   * objets), les seules à éclairer ; `view` : ce que montre la caméra.
+   */
+  update(dt: number, hero: ScreenPoint | null = null, lit: ReadonlySet<string> = new Set(), view: LightingView | null = null): void {
     this.water?.update(dt);
+    if (!this.lighting) return;
+    this.lighting.update(dt, hero, (lamp) => lit.has(lamp), view);
+    if (this.sea) {
+      const tint = this.lighting.flat;
+      this.sea.material.emissiveColor.set(this.sea.color.r * tint.r, this.sea.color.g * tint.g, this.sea.color.b * tint.b);
+      this.sea.material.getScene().clearColor.set(this.sea.material.emissiveColor.r, this.sea.material.emissiveColor.g, this.sea.material.emissiveColor.b, 1);
+    }
+  }
+
+  /** Matériau d'un personnage ou d'un objet debout sur l'île, éclairé comme la carte (null : carte sans éclairage). */
+  litSprite(name: string, texture: BaseTexture): ShaderMaterial | null {
+    return this.lighting?.sprite(name, texture, false) ?? null;
+  }
+
+  /**
+   * Matériaux des décors de la carte en pixel art, éclairés comme le relief qu'ils recouvrent (undefined : carte
+   * peinte, sprites ordinaires). Ils se dessinent par-dessus le sol, même sous la ligne du pied (le devant d'une maison).
+   */
+  decorMaterials(): ((name: string, texture: BaseTexture) => ShaderMaterial) | undefined {
+    const { sea, lighting } = this;
+    if (!sea) return undefined;
+    return (name, texture) => {
+      const material = lighting ? lighting.sprite(name, texture, true) : spriteMaterial(sea.material.getScene(), name, texture);
+      material.depthFunction = Constants.ALWAYS;
+      return material;
+    };
   }
 
   /** Le héros passe sous un pont : son tablier se dessine devant lui. */
@@ -129,6 +231,7 @@ export class IslandMap {
     for (const material of this.materials) material.dispose();
     for (const texture of this.textures) texture.dispose();
     this.water?.dispose();
+    this.lighting?.dispose();
   }
 }
 

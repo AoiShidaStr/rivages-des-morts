@@ -263,6 +263,7 @@ export function decorSolids(decor: readonly DecorItem[], field: WalkField): { po
 
 /** Rayon d'obstacle d'un décor, à sa taille (0 : il se traverse). */
 export function solidRadius(d: DecorItem): number {
+  if (d.solid !== undefined) return d.solid;
   const name = decorName(d.sprite);
   return SOLID[name] ? SOLID[name] * (d.height / (HEIGHTS[name] ?? d.height)) : 0;
 }

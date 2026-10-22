@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pixel-rivages": {
+      "command": "node",
+      "args": ["tools/pixel-mcp/serveur.mjs", "--dossier", "tools/pixel-mcp/sortie"]
+    }
+  }
+}

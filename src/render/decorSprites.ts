@@ -1,4 +1,4 @@
-import { Matrix, Mesh, MeshBuilder, type Scene, type ShaderMaterial, type Texture } from '@babylonjs/core';
+import { Matrix, Mesh, MeshBuilder, type BaseTexture, type Scene, type ShaderMaterial, type Texture } from '@babylonjs/core';
 import { dot, type Vec2 } from '../game/math';
 import { PITCH, spriteMaterial, YAW } from './renderer';
 import { loadFittedTexture } from './textureBudget';
@@ -11,6 +11,8 @@ export interface DecorSpot {
   z: number;
   height: number;
   flip: boolean;
+  /** Hauteur de l'image sous le pied, en unités du monde (par défaut, la petite marge de 2 %). */
+  below?: number;
 }
 
 /** Ordre de dessin des images debout, comme dans les deux rendus : le plus loin d'abord. */
@@ -34,7 +36,14 @@ export class DecorSprites {
     private readonly textures: Texture[],
   ) {}
 
-  static async build(scene: Scene, spots: readonly DecorSpot[], forward: Vec2, low: ReadonlySet<string>): Promise<DecorSprites> {
+  /** `makeMaterial` : le matériau d'une image (l'île éclairée, islandLighting.ts), au lieu du sprite ordinaire. */
+  static async build(
+    scene: Scene,
+    spots: readonly DecorSpot[],
+    forward: Vec2,
+    low: ReadonlySet<string>,
+    makeMaterial: (name: string, texture: BaseTexture) => ShaderMaterial = (name, texture) => spriteMaterial(scene, name, texture),
+  ): Promise<DecorSprites> {
     // Chaque image à la taille de son plus grand exemplaire à l'écran (textureBudget.ts).
     const tallest = new Map<string, number>();
     for (const s of spots) tallest.set(s.file, Math.max(s.height, tallest.get(s.file) ?? 0));
@@ -52,7 +61,7 @@ export class DecorSprites {
     const materialFor = (file: string, texture: Texture) => {
       let material = materials.get(file);
       if (!material) {
-        material = spriteMaterial(scene, `decor-${file}`, texture);
+        material = makeMaterial(`decor-${file}`, texture);
         material.checkReadyOnlyOnce = true;
         materials.set(file, material);
       }
@@ -62,7 +71,7 @@ export class DecorSprites {
       const { width, height } = texture.getSize();
       const mesh = MeshBuilder.CreatePlane(name, { width: spot.height * (width / height), height: spot.height }, scene);
       // Les images gardent une petite marge sous le pied du décor.
-      mesh.bakeTransformIntoVertices(Matrix.Translation(0, spot.height / 2 - spot.height * 0.02, 0));
+      mesh.bakeTransformIntoVertices(Matrix.Translation(0, spot.height / 2 - (spot.below ?? spot.height * 0.02), 0));
       if (spot.flip) mesh.bakeTransformIntoVertices(Matrix.Scaling(-1, 1, 1));
       // Tournée face à la caméra une fois pour toutes : la caméra ne tourne jamais. Un billboard figé au chargement
       // prendrait l'orientation de la caméra avant sa mise en place, et les décors paraîtraient écrasés.

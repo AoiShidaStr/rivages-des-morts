@@ -5,3 +5,4 @@ dist-server/
 public/sprites/sprites/
 donnees/
 .env
+tools/pixel-mcp/sortie/
