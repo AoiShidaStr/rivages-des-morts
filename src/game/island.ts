@@ -52,6 +52,31 @@ export interface IslandMap {
   width: number;
   /** La même en petit (npm run sols) : le code y lit l'eau et l'herbe sans décoder la grande. */
   sample?: string;
+  /**
+   * Relief de la carte en pixel art (tools/ile-v3), pour l'éclairer (src/render/islandLighting.ts) : normales et
+   * hauteurs. Avec lui, l'image est la carte sans ses décors (ils sont dans `decor`) et sans ombres peintes.
+   */
+  relief?: string;
+  /** Lumière colorée de la lave et du portail, étalée, en petit. */
+  halo?: string;
+  /** Hauteur du sol seul, en petit : où se tiennent le héros et les PNJ. */
+  height?: string;
+  /** Lumières ponctuelles : lanternes, forge, maison de thé, portail, Grand Rocher, lave. */
+  lights?: MapLight[];
+}
+
+/** Une lumière de la carte, en coordonnées du monde : u, v au sol (v - √2·h dans l'image), h sa hauteur. */
+export interface MapLight {
+  u: number;
+  v: number;
+  h: number;
+  couleur: [number, number, number];
+  rayon: number;
+  force: number;
+  /** `flamme` : la nuit seulement, vacille ; `pouls` : bat lentement ; `lave` : toujours, frémit. */
+  genre: 'flamme' | 'pouls' | 'lave';
+  /** Lanterne de pierre (identifiant de l'objet) : elle n'éclaire qu'une fois allumée par le joueur. */
+  lamp?: string;
 }
 
 /** Repères peints sur la carte, pour poser les décors (src/render/islandMap.ts). */
@@ -74,6 +99,10 @@ export interface DecorItem extends ScreenPoint {
   height: number;
   /** Retourné de gauche à droite. */
   flip?: boolean;
+  /** Rayon d'obstacle, en unités du monde (sinon, celui de son nom : islandDecor.ts, SOLID). */
+  solid?: number;
+  /** Ce qui dépasse de l'image sous le pied (le devant d'une maison), en unités du monde ; par défaut 2 % de sa hauteur. */
+  below?: number;
 }
 
 export interface IslandData {

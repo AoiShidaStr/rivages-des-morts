@@ -14,7 +14,7 @@ import {
   type BaseTexture,
   type ShaderMaterial,
 } from '@babylonjs/core';
-import { toWorld, type Island } from '../game/island';
+import { toScreen, toWorld, type Island } from '../game/island';
 import type { Visitor } from '../net/presence';
 import { dot, normalize, type Vec2 } from '../game/math';
 import { drawProp } from './pixelArt';
@@ -151,7 +151,7 @@ export class IslandRenderer {
       if ((entry.anim && !entry.still) || entry.motion) this.animatedProps.push(view);
     }
     // Les décors restent tant que l'île existe (toute la partie).
-    if (this.map?.decor.length) await DecorSprites.build(this.scene, this.map.decor, this.forward, LOW_DECOR);
+    if (this.map?.decor.length) await DecorSprites.build(this.scene, this.map.decor, this.forward, LOW_DECOR, this.map.decorMaterials());
     const hero = this.sprites.has(this.wantedHero) ? this.wantedHero : 'heros';
     this.player = this.billboard('player', this.required(hero), island.player.pos, 0.4, hero);
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
@@ -269,10 +269,13 @@ export class IslandRenderer {
 
   sync(island: Island, targetId: string | null, markers: ReadonlyMap<string, string>, dt: number, showPlayer = true): void {
     this.time += dt;
-    this.map?.update(dt);
+    const visible = island.interactables();
+    // Les lanternes de pierre allumées (leur image a changé) éclairent la nuit ; les autres restent éteintes.
+    const lit = new Set(visible.filter((it) => it.sprite && it.sprite !== it.def.sprite).map((it) => it.def.id));
+    const view = { target: toScreen({ x: this.cameraTarget.x, z: this.cameraTarget.z }), halfWidth: this.camera.orthoRight ?? VIEW_HALF_HEIGHT };
+    this.map?.update(dt, toScreen(island.player.pos), lit, view);
     this.map?.showBridges(island.underBridge());
     this.map?.showFalls(island.behindFall());
-    const visible = island.interactables();
     const seen = new Set<string>();
     for (const it of visible) {
       if (!it.sprite) continue;
@@ -411,7 +414,7 @@ export class IslandRenderer {
     mesh.isPickable = false;
     mesh.position.set(pos.x, 0, pos.z);
     mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(pos, this.forward) * 100);
-    const material = spriteMaterial(this.scene, name, entry.texture);
+    const material = this.map?.litSprite(name, entry.texture) ?? spriteMaterial(this.scene, name, entry.texture);
     mesh.material = material;
     const size = Math.max(0.8, radius * 2.8);
     const shadow = this.createGroundDecal(`${name}-shadow`, this.shadowTexture, size, Color3.Black(), 0.35).mesh;
