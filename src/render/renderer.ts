@@ -27,7 +27,7 @@ import { REVIVE_TIME } from '../game/world';
 import { LOW_GRAPHICS, shakeEnabled } from './flags';
 import { isHeroVariant } from './heroes';
 import { imageUrl } from './imageUrl';
-import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
+import { baseTag, frameAt, loadSheet, showFrame, withFacing, type SheetAnimation } from './sheets';
 import { isPixelArt, loadFittedTexture } from './textureBudget';
 import {
   drawArrow,
@@ -145,6 +145,8 @@ interface EntityView {
   /** Sens dans lequel l'entité regarde à l'écran, et celui du sujet sur son image. */
   faceRight: boolean;
   imageFacesRight: boolean;
+  /** Tourné vers le haut de l'écran : les planches à deux directions jouent leur version de dos (tags « -dos »). */
+  faceBack: boolean;
   flash: number;
   sx: number;
   sy: number;
@@ -917,6 +919,8 @@ export class Renderer {
     const side = dot(s.facing, this.right);
     if (Math.abs(side) > 0.2) view.faceRight = side > 0;
     view.material.setFloat('flipX', view.faceRight === view.imageFacesRight ? 0 : 1);
+    // De dos seulement quand il monte franchement vers le haut de l'écran : de profil, on le voit de face.
+    view.faceBack = dot(s.facing, this.forward) > (view.faceBack ? 0.1 : 0.3);
 
     // Une planche animée joue l'animation de la posture ; sinon, une seule image que l'on anime
     // par l'écrasement, le tremblement et la teinte.
@@ -992,7 +996,7 @@ export class Renderer {
       alpha *= 0.3;
     }
     // À terre : grisé et couché, sauf si la planche dessine la chute (animation « death »).
-    if (s.downed && view.animTag !== 'death') {
+    if (s.downed && baseTag(view.animTag) !== 'death') {
       tint = HIDDEN_TINT;
       alpha *= 0.6;
       sx *= 1.25;
@@ -1062,6 +1066,7 @@ export class Renderer {
       isPlayer: id === PLAYER_ID,
       faceRight: entry.facesRight,
       imageFacesRight: entry.facesRight,
+      faceBack: false,
       flash: 0,
       sx: 1,
       sy: 1,
@@ -1076,13 +1081,12 @@ export class Renderer {
   private playSheet(view: EntityView, anim: SheetAnimation, pose: Pose, dt: number, art: readonly string[] = []): void {
     // Une animation dessinée propre (mort, compétence…) d'abord ; une posture sans animation retombe sur la plus
     // proche, puis sur l'attente.
-    const tagName = [...art, pose, FALLBACK_POSE[pose], 'idle'].find((name) => name && anim.tags.has(name)) ?? '';
-    if (tagName !== view.animTag) {
-      view.animTag = tagName;
-      view.animTime = 0;
-    } else {
-      view.animTime += dt;
-    }
+    const base = [...art, pose, FALLBACK_POSE[pose], 'idle'].find((name) => name && anim.tags.has(name)) ?? '';
+    const tagName = withFacing(anim, base, view.faceBack);
+    // Se retourner garde le temps de l'animation : une attaque commencée de face continue de dos.
+    if (base !== baseTag(view.animTag)) view.animTime = 0;
+    else view.animTime += dt;
+    view.animTag = tagName;
     showFrame(view.material, anim, frameAt(anim, tagName, view.animTime));
   }
 
@@ -1102,11 +1106,12 @@ export class Renderer {
       view.dying += dt;
       // Planche en pixel art qui dessine la chute (ligne « mort ») : elle se joue en entier, puis l'image s'efface.
       const anim = this.sprites.get(view.spriteName)?.anim;
-      const fall = anim?.tags.get('death');
+      const tag = anim ? withFacing(anim, 'death', view.faceBack) : 'death';
+      const fall = anim?.tags.get(tag);
       if (anim && fall) {
         const length = anim.frames.slice(fall.from, fall.to + 1).reduce((sum, f) => sum + f.duration, 0);
         const played = view.dying * DEATH_SPEED;
-        showFrame(view.material, anim, frameAt(anim, 'death', played));
+        showFrame(view.material, anim, frameAt(anim, tag, played));
         const fade = Math.min(1, Math.max(0, (played - length) / DEATH_TIME));
         view.material.setFloat('alpha', DEATH_ALPHA * (1 - fade));
         view.material.setFloat('flash', Math.max(0, 1 - view.dying / 0.12));

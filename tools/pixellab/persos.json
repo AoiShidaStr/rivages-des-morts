@@ -1,0 +1,241 @@
+{
+  "reglages": {
+    "size": 53,
+    "view": "low top-down",
+    "outline": "selective outline",
+    "shading": "medium shading",
+    "detail": "medium detail",
+    "directions": [
+      "south-east",
+      "north-east"
+    ],
+    "ordre": [
+      "deplacement",
+      "attaque",
+      "speciale",
+      "mort"
+    ],
+    "note": "size 53 : le corps fait environ 62 px de haut, la taille d'un pixel de la carte v3 (héros de 1,75 unité, 35,2 px par unité). Toile de 76 px : les modèles coûtent 1 génération par direction, et une animation libre de 6 images aussi. La race passe en tête de la description (sinon PixelLab l'oublie : peau, cornes).",
+    "proportions": "realistic_male",
+    "text_guidance_scale": 10,
+    "note_arme": "Les modèles de marche font disparaître l'arme : `arme` (par perso et direction) donne où la reprendre sur la vue et où chercher la main ; arme.py la recolle à chaque image (zones à relever après la création, comme les cornes)."
+  },
+  "animations": {
+    "commun": {
+      "deplacement": {
+        "modele": "walking-8-frames"
+      },
+      "mort": {
+        "images": 6,
+        "action": "is hit hard, staggers and falls backward onto the ground, ends lying still on the back; same face, skin and clothes in every frame"
+      }
+    },
+    "guerrier": {
+      "attaque": {
+        "images": 6,
+        "action": "two-handed katana slash: raises the katana, then one fast diagonal slash down and forward, ends low with the front knee bent; the katana stays in both hands in every frame"
+      },
+      "speciale": {
+        "images": 6,
+        "action": "jumps up with the katana raised overhead in both hands and slams it down into the ground in front, then stands back up; the katana stays in the hands"
+      }
+    },
+    "lame": {
+      "attaque": {
+        "modele": "cross-punch",
+        "action": "quick forward slash with the short blade held in the right hand, then back to guard"
+      },
+      "speciale": {
+        "images": 6,
+        "action": "spins around once low to the ground with the blade arm extended, a whirling slash, then back to a crouching guard; the blade stays in the right hand"
+      }
+    },
+    "paladin": {
+      "attaque": {
+        "images": 6,
+        "action": "short sword slash from behind the round shield, the shield stays on the left arm, then back to guard"
+      },
+      "speciale": {
+        "modele": "throw-object",
+        "action": "throws the round shield forward like a spinning disc with the left arm, the sword stays in the right hand"
+      }
+    },
+    "rodeur": {
+      "attaque": {
+        "images": 6,
+        "action": "raises the bow, draws the string back to the cheek and releases an arrow forward, then lowers the bow; the bow stays in the left hand"
+      },
+      "speciale": {
+        "images": 6,
+        "action": "kneels on one knee, draws the bow string all the way back and releases a powerful shot, then stands up; the bow stays in the left hand"
+      }
+    },
+    "sorcier": {
+      "attaque": {
+        "modele": "throw-object",
+        "action": "flicks a paper talisman forward from the right hand"
+      },
+      "speciale": {
+        "modele": "fireball",
+        "action": "raises both hands then thrusts them forward, casting a spell"
+      }
+    }
+  },
+  "races": {
+    "hanyo": "half-oni man with ash grey-blue skin and two short pointed ivory-white horns sticking up out of the hair above the forehead",
+    "einherjar": "undead Norse viking warrior with pale grey scarred skin, long braided hair and a braided beard",
+    "oushebti": "living Egyptian statuette whose whole body is blue-green glazed faience with thin cracks, painted kohl-lined eyes",
+    "demi-dieu": "Greek demigod with a thin golden ring floating above the head like a halo"
+  },
+  "persos": [
+    {
+      "id": "hanyo-guerrier",
+      "race": "hanyo",
+      "classe": "guerrier",
+      "description": "ronin warrior: black hair in a topknot, dark red kimono, dark grey hakama, straw sandals, a plain katana of normal length held in the right hand",
+      "arme": {
+        "south-east": {
+          "main_vue": [
+            40,
+            48,
+            40,
+            48
+          ],
+          "main": [
+            38,
+            50,
+            38,
+            52
+          ],
+          "arme": [
+            45,
+            57,
+            43,
+            52
+          ],
+          "sombre": 45
+        }
+      }
+    },
+    {
+      "id": "hanyo-lame",
+      "race": "hanyo",
+      "classe": "lame",
+      "description": "shinobi assassin: short black hair, dark charcoal fitted clothes, a dark scarf, cloth wraps on forearms and shins, split-toe tabi, one short straight tanto blade in the right hand"
+    },
+    {
+      "id": "hanyo-paladin",
+      "race": "hanyo",
+      "classe": "paladin",
+      "description": "sohei temple guardian: white head cowl, dark blue monk robe with plain armor plates, sandals, a round wooden shield with an iron rim on the left arm, a short straight sword in the right hand"
+    },
+    {
+      "id": "hanyo-rodeur",
+      "race": "hanyo",
+      "classe": "rodeur",
+      "description": "archer: red hachimaki headband, indigo kimono with the sleeves tied back by a red cord, slate grey hakama, a quiver on the back, a simple Japanese bow in the left hand"
+    },
+    {
+      "id": "hanyo-sorcier",
+      "race": "hanyo",
+      "classe": "sorcier",
+      "description": "onmyoji sorcerer: tall black eboshi hat, loose white and pale grey robes with wide sleeves, paper talismans with red ink held between the fingers of the right hand"
+    },
+    {
+      "id": "einherjar-guerrier",
+      "race": "einherjar",
+      "classe": "guerrier",
+      "description": "viking berserker: mail shirt with iron shoulder plates, wolf-fur mantle, studded leather belt, fur-trimmed boots, a plain long sword of normal length held in the right hand"
+    },
+    {
+      "id": "einherjar-lame",
+      "race": "einherjar",
+      "classe": "lame",
+      "description": "raider skirmisher: fitted dark leather jerkin, hooded wolf-grey cloak, cloth face scarf, leather bracers, one short single-edged seax knife in the right hand"
+    },
+    {
+      "id": "einherjar-paladin",
+      "race": "einherjar",
+      "classe": "paladin",
+      "description": "shield guardian: long pale linen tunic with gold bands, mail coif, fur-trimmed cape, a round wooden shield with an iron rim on the left arm, a straight sword in the right hand"
+    },
+    {
+      "id": "einherjar-rodeur",
+      "race": "einherjar",
+      "classe": "rodeur",
+      "description": "hunter: fur-lined hooded jerkin, leather trousers, fur boots, a wolf pelt over the shoulders, a quiver on the back, a simple wooden longbow in the left hand"
+    },
+    {
+      "id": "einherjar-sorcier",
+      "race": "einherjar",
+      "classe": "sorcier",
+      "description": "fire seer: long dark wool robe with ember-red rune embroidery, fur-trimmed hooded cloak, small rune stones on cords at the belt, carved bone rune talismans held in the right hand"
+    },
+    {
+      "id": "oushebti-guerrier",
+      "race": "oushebti",
+      "classe": "guerrier",
+      "description": "warrior: striped nemes headdress, gilded scale cuirass, striped shendyt kilt, broad usekh collar, bronze bracers, a long straight bronze sword held in the right hand"
+    },
+    {
+      "id": "oushebti-lame",
+      "race": "oushebti",
+      "classe": "lame",
+      "description": "assassin: dark linen wraps, a striped head cloth, a narrow belt, one curved bronze dagger in the right hand"
+    },
+    {
+      "id": "oushebti-paladin",
+      "race": "oushebti",
+      "classe": "paladin",
+      "description": "temple guardian: white linen robe with gold trim, striped nemes headdress, a round bronze shield on the left arm, a straight bronze sword in the right hand"
+    },
+    {
+      "id": "oushebti-rodeur",
+      "race": "oushebti",
+      "classe": "rodeur",
+      "description": "hunter: short linen kilt, leather chest strap, a quiver on the back, a simple recurved bow in the left hand"
+    },
+    {
+      "id": "oushebti-sorcier",
+      "race": "oushebti",
+      "classe": "sorcier",
+      "description": "priest sorcerer: long white linen priest robe, gold usekh collar, a shaved painted head, papyrus talismans with red hieroglyphs held in the right hand"
+    },
+    {
+      "id": "demi-dieu-guerrier",
+      "race": "demi-dieu",
+      "classe": "guerrier",
+      "description": "Spartan demigod warrior in black and gold: black Corinthian helmet with a tall black horsehair crest, black muscle cuirass with gold trim, leather strip skirt, a curved Greek kopis sword in the right hand"
+    },
+    {
+      "id": "demi-dieu-lame",
+      "race": "demi-dieu",
+      "classe": "lame",
+      "description": "demigoddess assassin: very long straight silver-white hair, a long black dress slit up one side, sheer black sleeves, one curved silver sickle blade (harpe) in the right hand",
+      "proportions": "realistic_female",
+      "race_texte": "Greek demigoddess, a woman, with a thin golden ring floating above the head like a halo"
+    },
+    {
+      "id": "demi-dieu-paladin",
+      "race": "demi-dieu",
+      "classe": "paladin",
+      "description": "Greek hoplite demigod: bronze crested helmet, white linen cuirass with bronze plates, red cloak, a round bronze shield with a Medusa head on the left arm, a short straight sword in the right hand"
+    },
+    {
+      "id": "demi-dieu-rodeur",
+      "race": "demi-dieu",
+      "classe": "rodeur",
+      "description": "demigoddess huntress: long wavy silver-white hair, a thin gold circlet, a short pale green chiton, sandals, a quiver on the back, a golden bow in the left hand",
+      "proportions": "realistic_female",
+      "race_texte": "Greek demigoddess, a woman, with a thin golden ring floating above the head like a halo"
+    },
+    {
+      "id": "demi-dieu-sorcier",
+      "race": "demi-dieu",
+      "classe": "sorcier",
+      "description": "demigoddess of the hearth: a big bun of black curly hair, gold earrings, a long white draped chiton, a tall bronze staff topped with a small brazier bowl in the right hand",
+      "proportions": "realistic_female",
+      "race_texte": "Greek demigoddess, a woman, with a thin golden ring floating above the head like a halo"
+    }
+  ]
+}

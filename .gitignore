@@ -6,3 +6,6 @@ public/sprites/sprites/
 donnees/
 .env
 tools/pixel-mcp/sortie/
+
+# PixelLab : images brutes (re-téléchargeables avec routine.py telecharger)
+tools/pixellab/sorties/

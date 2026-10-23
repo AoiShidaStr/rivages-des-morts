@@ -1,0 +1,170 @@
+{
+  "hanyo-guerrier-v1": {
+    "pixellab": "a7a51c1b-a9df-4278-9270-277eb5493d52",
+    "taille": [
+      92,
+      92
+    ],
+    "creation": "fait",
+    "animations": {
+      "attaque": {
+        "south-east": {
+          "groupe": "e71985e2-ebe8-420e-b889-6fbcf72ccce4",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/a7a51c1b-a9df-4278-9270-277eb5493d52/animations/31161059-2039-406a-b89f-42ede9d449ce/south-east/{i}.png?t=1792707662371",
+          "images": 9,
+          "statut": "fait"
+        }
+      },
+      "deplacement": {
+        "north-east": {
+          "groupe": "29155346-7b0b-4b5b-b056-c1b3ac51cf19",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/a7a51c1b-a9df-4278-9270-277eb5493d52/animations/6570ed2e-c52a-43f8-8b70-9491df1be26a/north-east/{i}.png?t=1792707260256",
+          "images": 8,
+          "statut": "fait"
+        },
+        "south-east": {
+          "groupe": "29155346-7b0b-4b5b-b056-c1b3ac51cf19",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/a7a51c1b-a9df-4278-9270-277eb5493d52/animations/dbabd61d-9980-4693-bdd8-8d920157f53f/south-east/{i}.png?t=1792707046010",
+          "images": 8,
+          "statut": "fait"
+        }
+      }
+    },
+    "depense": 5,
+    "note": "premier essai du 22/10 (toile 92 px, corps 75 px, sans cornes)"
+  },
+  "hanyo-guerrier-v2": {
+    "pixellab": "1ec9f627-10b0-438f-81c8-2e91947e4442",
+    "taille": [
+      76,
+      76
+    ],
+    "creation": "a-refaire",
+    "animations": {},
+    "cout_creation": 1,
+    "depense": 1,
+    "note": "essai 2 : bonne taille (60 px) mais peau claire, pas de cornes, yeux bleus"
+  },
+  "hanyo-guerrier-v3": {
+    "pixellab": "c9f00d1b-c60f-40e3-968e-6c753594b377",
+    "taille": [
+      76,
+      76
+    ],
+    "creation": "a-refaire",
+    "animations": {},
+    "cout_creation": 1,
+    "depense": 1,
+    "note": "essai 3 : bonne taille (62 px), peau gris-bleu, yeux rouges, katana en main, mais pas de cornes"
+  },
+  "hanyo-guerrier-v4": {
+    "pixellab": "eb6b9e74-6553-4753-9995-814166354e62",
+    "taille": [
+      76,
+      76
+    ],
+    "creation": "fait",
+    "animations": {},
+    "cout_creation": 1,
+    "depense": 1,
+    "note": "essai 4 : pas de cornes non plus ; non retenu"
+  },
+  "hanyo-guerrier": {
+    "pixellab": "ad66b626-17b3-4d60-9525-e0b5bb57593d",
+    "taille": [
+      76,
+      76
+    ],
+    "creation": "fait",
+    "animations": {
+      "deplacement": {
+        "south-east": {
+          "groupe": "372e0ead-f6ba-4b0a-96d2-41cadb4035e6",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/f7bec5f4-8878-487d-a80c-48654bf5864c/south-east/{i}.png?t=1792715568576",
+          "images": 8,
+          "statut": "valide",
+          "methode": "walking-8-frames + arme.py (katana recollé)",
+          "cout": 1,
+          "note": "groupe du modèle supprimé sur PixelLab pour un essai ; images gardées dans sorties/ et dans /mnt/project-files/pixellab-animations/"
+        },
+        "north-east": {
+          "groupe": "67816285-b9b8-485e-8887-c918df62a088",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/3494e006-2e27-4df9-8e2e-9127e2cc23fd/north-east/{i}.png?t=1792713004635",
+          "images": 8,
+          "statut": "valide",
+          "methode": "walking-8-frames",
+          "cout": 1,
+          "note": "de dos, le katana est caché par le corps, comme sur la vue"
+        }
+      },
+      "attaque": {
+        "south-east": {
+          "groupe": "4858820d-3917-4c24-a8ca-7d20562feb30",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/c455af50-c3c6-4e9a-8e10-472cc098c2b3/south-east/{i}.png?t=1792713289971",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "9c287778-eed0-48cb-8862-34f21255862c",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/03866fc6-9f68-47c8-bc18-714d0c02bfad/north-east/{i}.png?t=1792713818845",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        }
+      },
+      "speciale": {
+        "south-east": {
+          "groupe": "ca6b9877-9dff-4aae-b40d-66715f17e94f",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/74a1e45b-f1c6-451c-b58f-6937b2e1905d/south-east/{i}.png?t=1792714014066",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "dced6dc2-987a-4cca-bb86-eac94c98bf79",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/d3f12da2-a6c4-41cb-b248-b39c30df7d1d/north-east/{i}.png?t=1792714287137",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        }
+      },
+      "mort": {
+        "south-east": {
+          "groupe": "37ea56bd-fff3-498c-9f6f-8c408a0506e8",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/e7cde335-8ae4-4e83-bf79-85530b06611e/south-east/{i}.png?t=1792716063233",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 0
+        },
+        "north-east": {
+          "groupe": "bf0d5548-3d6a-4aaa-b080-81755b0e9ac9",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/711c187f-49d1-42db-85ee-f42d9e2f3566/ad66b626-17b3-4d60-9525-e0b5bb57593d/animations/297f95a5-dabf-4560-8096-a4f07de385d0/north-east/{i}.png?t=1792721899247",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        }
+      }
+    },
+    "depense": 16,
+    "note": "essai 3 retenu (62 px, peau gris-bleu) ; cornes ajoutées à la main (cornes.py) puis réimporté",
+    "anciens": [
+      "c9f00d1b-c60f-40e3-968e-6c753594b377"
+    ],
+    "retouche": "tools/pixellab/sorties/hanyo-guerrier-cornes",
+    "cout_import": 1,
+    "essais": [
+      "marche libre 4 images (katana gardé, pas courts)",
+      "marche libre 6 images (le corps tourne peu à peu)",
+      "marche libre bouclée (ne bouge plus)",
+      "modèle de marche assoupli (katana qui clignote)",
+      "mort au modèle (visage blanchi)"
+    ]
+  }
+}

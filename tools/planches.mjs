@@ -51,6 +51,10 @@ const pixelNames = new Set(pixelHeroes.map((p) => p.name));
 const heroes = [...pixelHeroes, ...(await heroPlanches(sourceDir)).filter((p) => !configured.has(p.name) && !pixelNames.has(p.name))];
 for (const entry of [...config.planches.filter((p) => !pixelNames.has(p.name)), ...heroes]) {
   if (only.length > 0 && !only.includes(entry.name)) continue;
+  if (await fromPixelLab(entry.name)) {
+    console.log(`${entry.name.padEnd(26)} planche PixelLab (tools/pixellab), gardée`);
+    continue;
+  }
   const planche = entry.rows ? await expandRows(entry) : entry;
   const frames = [];
   const tags = [];
@@ -80,6 +84,12 @@ for (const entry of [...config.planches.filter((p) => !pixelNames.has(p.name)), 
   }
   if (missing && frames.length === 0) continue;
   await writeSheet(planche, frames, tags);
+}
+
+/** La planche en place vient-elle de PixelLab (tools/pixellab/routine.py) ? Elle ne doit pas être écrasée. */
+async function fromPixelLab(name) {
+  const json = await readFile(path.join(outDir, `${name}.json`), 'utf8').catch(() => null);
+  return json !== null && JSON.parse(json).meta?.app === 'tools/pixellab/routine.py';
 }
 
 /** Découpe une image une seule fois, même quand plusieurs animations y puisent (planches complètes). */
