@@ -304,11 +304,37 @@
           "statut": "fait",
           "methode": "throw-object",
           "cout": 1
+        },
+        "north-east": {
+          "groupe": "de6274de-9759-4dcc-8913-f18d97202754",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/095b0cad-e98b-43a1-ae3e-675c112441b7/animations/699b4291-e639-4b11-b621-698c595df503/north-east/{i}.png?t=1792726043772",
+          "images": 7,
+          "statut": "fait",
+          "methode": "throw-object",
+          "cout": 1
+        }
+      },
+      "mort": {
+        "south-east": {
+          "groupe": "36a23c01-aad6-4743-80a4-2666134a0126",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/095b0cad-e98b-43a1-ae3e-675c112441b7/animations/3d8eeddb-feef-4f65-8817-2457c4d25063/south-east/{i}.png?t=1792726245557",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "1eec5160-8332-4228-918e-5eef1cfad898",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/095b0cad-e98b-43a1-ae3e-675c112441b7/animations/31a100a2-4ea1-4984-b2de-1ff2375fb93f/north-east/{i}.png?t=1792726486445",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
         }
       }
     },
     "cout_creation": 0,
-    "depense": 5,
+    "depense": 8,
     "compte": 2
   }
 }
