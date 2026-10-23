@@ -2025,6 +2025,15 @@
     }
   },
   "forge": {
+    "durabilite": {
+      "about": "Durabilité (0.24.0) : chaque pièce portée s'use à la fin d'une descente (victoire ou défaite, défaite plus cher ; le duel et le billot n'usent rien). Une pièce à 0 est CASSÉE : elle reste dans le sac mais ne compte plus (ni bonus, ni effets, ni gravure, ni forge pour une arme) jusqu'à ce que Tetsu la répare. Rien ne se perd à la casse. Réparation : par point manquant, `reparation` oboles selon la rareté, × (1 + parNiveau × (niveau de forge − 1)). Les reliques ne s'usent pas. `alerte` : sous cette part, l'objet prévient.",
+      "slots": ["arme", "casque", "plastron", "jambieres", "bottes", "amulette"],
+      "max": { "commune": 60, "peu commune": 70, "rare": 80, "épique": 90, "légendaire": 100 },
+      "usure": { "victoire": 3, "defaite": 6 },
+      "alerte": 0.25,
+      "reparation": { "commune": 1, "peu commune": 1.5, "rare": 2, "épique": 3, "légendaire": 4 },
+      "parNiveau": 0.04
+    },
     "eveil": {
       "about": "L'Éveil des Tablettes (GDD) : un Éclat des Tablettes éveille une relique et renforce son effet. Tant que les pouvoirs d'éveil décrits par relique ne sont pas écrits, l'éveil charge le héros : +20 PV et +4 % de dégâts par relique éveillée (champ `bonus`, réglable ici fiche par fiche plus tard). Un éveil par relique, un max de `max` éveils dessus.",
       "oboles": 600,

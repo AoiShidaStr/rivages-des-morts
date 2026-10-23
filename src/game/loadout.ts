@@ -3,6 +3,7 @@
 import type { Kit, PlayerConfig, SubclassActiveConfig } from './config';
 import { isUpgradable, reachedPaliers, scaledBonus, weaponPower, type EveilRules, type Palier, type UpgradeRules } from './forge';
 import { gravureEffects, type GravureData } from './gravure';
+import { isBroken, type DurabiliteRules } from './durabilite';
 import type { Hero, ProgressState, Slot } from './progress';
 
 export type BonusKind = 'maxHp' | 'damage' | 'speed' | 'dodge' | 'armor' | 'oboles';
@@ -161,6 +162,8 @@ export interface LoadoutData {
   gravures?: GravureData;
   /** L'Éveil des Tablettes : sans lui, une relique éveillée ne charge rien. */
   eveil?: EveilRules;
+  /** La durabilité : avec elle, une pièce cassée ne compte plus. Sans elle (le duel), rien ne casse. */
+  durabilite?: DurabiliteRules;
 }
 
 export interface Loadout {
@@ -315,6 +318,8 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
   for (const id of Object.values(state.equipped)) {
     const item = id ? data.items[id] : undefined;
     if (!id || !item || equipBlock(item, state.hero, data.skills)) continue;
+    // Une pièce cassée reste portée, mais ne compte plus : ni bonus, ni effets, ni gravure, ni palier de forge.
+    if (isBroken(data.durabilite, item, state.usure?.[id])) continue;
     const upgradable = isUpgradable(rules, item);
     const lvl = itemLevel(state, id);
     const scaled = (b: Bonus | undefined) => (upgradable ? scaledBonus(rules, b, lvl) : (b ?? {}));
@@ -347,7 +352,9 @@ export function buildLoadout(base: PlayerConfig, state: ProgressState, data: Loa
 
   // Puissance : le niveau du héros et celui de son arme multiplient chacun ses dégâts (moitié héros, moitié équipement) ;
   // les dégâts en % des pièces s'y ajoutent. Les soins suivent la puissance sans les pièces.
-  const weaponId = state.equipped.arme;
+  const equippedWeapon = state.equipped.arme;
+  // Une arme cassée ne porte plus sa forge : le héros frappe comme avec une arme jamais améliorée.
+  const weaponId = equippedWeapon && !isBroken(data.durabilite, data.items[equippedWeapon], state.usure?.[equippedWeapon]) ? equippedWeapon : undefined;
   const growth = { ...data.skills.levels, ...cls.growth };
   const power = (weaponId ? weaponPower(classUpgrade(rules, cls), itemLevel(state, weaponId)) : 1) * (1 + growth.damagePerLevel * (level - 1));
   const damage = power * (1 + bonus.damage);

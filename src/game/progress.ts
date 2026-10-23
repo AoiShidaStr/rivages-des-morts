@@ -41,6 +41,11 @@ export interface ProgressState {
    * relance. Une arme jamais gravée n'y figure pas ; une gravure se pose sur un type d'arme, jamais sur une copie.
    */
   gravures: Record<string, Gravure>;
+  /**
+   * L'usure de chaque pièce possédée (src/game/durabilite.ts) : les points de durabilité perdus. Absente : neuve.
+   * Une pièce dont l'usure atteint son maximum est cassée, et ne compte plus jusqu'à sa réparation chez Tetsu.
+   */
+  usure: Record<string, number>;
   /** Par donjon (rizieres, palais…) : plus haut niveau ouvert, et plus haut niveau vaincu. */
   dungeons: Record<string, DungeonRecord>;
   materials: Record<string, number>;
@@ -69,6 +74,8 @@ export interface StockEntry {
   /** Niveau de forge de l'exemplaire. */
   level: number;
   gravure?: Gravure;
+  /** Usure de l'exemplaire (durabilité perdue) ; absente : neuf. */
+  usure?: number;
   /** Sceau du Yomi pas encore brisé : la gravure existe, mais on ne la connaît qu'en l'ouvrant. */
   sceau?: boolean;
 }
@@ -211,6 +218,7 @@ function fresh(): ProgressState {
     equipped: { arme: STARTING_WEAPON },
     itemLevels: { [STARTING_WEAPON]: 1 },
     gravures: {},
+    usure: {},
     eveils: {},
     dungeons: {},
     materials: {},
@@ -486,6 +494,13 @@ export class Progress {
     this.state.materials[id] = Math.max(0, this.material(id) + amount);
   }
 
+  /** Retire la pièce d'un emplacement (jamais l'arme : on ne se retrouve pas sans arme). */
+  unequip(slot: Slot): void {
+    if (slot === 'arme' || !this.state.equipped[slot]) return;
+    delete this.state.equipped[slot];
+    this.save();
+  }
+
   /** Équipe ou retire un objet ; on ne peut pas se retrouver sans arme. */
   equip(item: string, slot: Slot): void {
     if (this.state.equipped[slot] !== item) this.state.equipped[slot] = item;
@@ -575,8 +590,8 @@ function levelUpToast(level: number, point: boolean): Action {
  * Anciennes sauvegardes : un seul niveau d'arme, puis des niveaux d'arme seulement, pas de niveau de donjon,
  * pas de héros (c'était toujours un Guerrier Einherjar).
  */
-type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures' | 'builds' | 'duelBuild'> &
-  Partial<Pick<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures' | 'builds' | 'duelBuild'>> & {
+type SavedState = Omit<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures' | 'usure' | 'builds' | 'duelBuild'> &
+  Partial<Pick<ProgressState, 'itemLevels' | 'eveils' | 'stock' | 'dungeons' | 'hero' | 'gravures' | 'usure' | 'builds' | 'duelBuild'>> & {
     weaponLevel?: number;
     weaponLevels?: Record<string, number>;
     /** Avant le Palais d'Izanami, un seul donjon : les Rizières noyées. */
@@ -621,6 +636,9 @@ function migrate(saved: SavedState, catalog: Catalog): ProgressState {
   // Une gravure survit à tout sauf à la disparition de son arme (`{ ...undefined }` vaut {} sur une vieille sauvegarde).
   state.gravures = { ...state.gravures };
   for (const id of Object.keys(state.gravures)) if (!catalog.hasItem(id)) delete state.gravures[id];
+  // 0.24.0 : la durabilité. Une vieille sauvegarde n'a rien d'usé.
+  state.usure = { ...state.usure };
+  for (const id of Object.keys(state.usure)) if (!catalog.hasItem(id) || !(state.usure[id] > 0)) delete state.usure[id];
   // 0.11.0 : les objets retirés du jeu (Kanabō d'oni, Arc de soie…) quittent l'inventaire, sans compensation.
   state.items = state.items.filter((id) => catalog.hasItem(id));
   for (const id of Object.keys(state.itemLevels)) if (!catalog.hasItem(id)) delete state.itemLevels[id];
