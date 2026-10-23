@@ -1,0 +1,17 @@
+{
+  "name": "Mont Fujikasane : la clairière du gardien",
+  "arenaHalfSize": 9,
+  "stumpRadius": 0.9,
+  "waves": [
+    {
+      "label": "Le gardien errant",
+      "hint": "Le veilleur ne pardonne rien : esquive ses coups, passe dans son dos, et garde tes soins pour la fin.",
+      "spawns": [{ "kind": "gardien", "count": 1, "positions": [{ "x": 3.5, "z": 3.5 }] }],
+      "stumps": [
+        { "x": -5, "z": 4.5 },
+        { "x": 5.5, "z": -4 },
+        { "x": -1.5, "z": -6 }
+      ]
+    }
+  ]
+}

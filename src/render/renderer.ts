@@ -22,6 +22,8 @@ import {
 import type { DungeonStyle } from '../content';
 import { angleOf, dot, normalize, type Vec2 } from '../game/math';
 import type { GameEvent, MarkKind, Pose } from '../game/types';
+import arenesJson from '../data/arenes.json';
+import type { ArenaKind } from './arenaPainted';
 import type { EnemyView, HeroView, PeachView, ProjectileView, StumpView, WorldView } from '../game/view';
 import { REVIVE_TIME } from '../game/world';
 import { LOW_GRAPHICS, shakeEnabled } from './flags';
@@ -208,6 +210,12 @@ export const YAW = Math.PI / 4;
 export const CAMERA_DISTANCE = 40;
 const VIEW_HALF_HEIGHT = 6;
 const GROUND_SIZE = 44;
+
+/** L'arène en pixel art de ce décor (tools/ile-v3/arenes.py, src/data/arenes.json), s'il en a une. */
+function pixelArena(kind: string | undefined): { obstacle: string; tint: [number, number, number] } | null {
+  const data = kind ? (arenesJson as Record<string, unknown>)[kind] : null;
+  return data && typeof data === 'object' ? (data as { obstacle: string; tint: [number, number, number] }) : null;
+}
 const PADDY_SIZE = 3;
 const DEATH_TIME = 0.35;
 /** Chute dessinée d'un yokai : jouée deux fois plus vite que la planche, et presque transparente pour ne pas cacher le combat. */
@@ -328,6 +336,7 @@ const ENEMY_SPRITES: Record<string, readonly string[]> = {
   ikazuchi: ['ikazuchi'],
   ikusa: ['ikusa'],
   izanami: ['izanami', 'izanamiRevelee'],
+  gardien: ['gardien'],
 };
 const ENEMY_SHEETS = new Set(Object.values(ENEMY_SPRITES).flat());
 
@@ -1506,11 +1515,15 @@ export class Renderer {
     if (stumps === this.stumpViews.stumps) return;
     for (const mesh of this.stumpViews.meshes) mesh.dispose();
     const meshes: { dispose(): void }[] = [];
-    const def = this.manifest.souche;
-    const entry = this.sprites.get('souche');
+    // Les arènes en pixel art ont leurs propres obstacles (des rochers), les autres des souches.
+    const pixel = pixelArena(this.shownStyle?.arena);
+    const name = pixel?.obstacle ?? 'souche';
+    const def = this.manifest[name];
+    const entry = this.sprites.get(name);
     stumps.forEach((stump, i) => {
       if (!def || !entry) return;
       const { sprite, material } = this.createSprite(`stump-${i}`, entry);
+      if (pixel) material.setColor3('tint', new Color3(...pixel.tint));
       sprite.position.set(stump.pos.x, 0, stump.pos.z);
       sprite.alphaIndex = SPRITE_ORDER - Math.round(dot(stump.pos, this.forward) * 100);
       const size = stump.radius * 2.8;
@@ -2694,11 +2707,15 @@ export class Renderer {
     this.arena?.dispose();
     this.arena = null;
     this.groundMesh?.setEnabled(true);
-    if (LOW_GRAPHICS || !style.arena) return;
+    if (!style.arena) return;
     const kind = style.arena;
-    // Chargée à la demande : l'arène peinte n'est pas utile si le style n'en fournit pas.
-    import('./arenaPainted')
-      .then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind, this.arenaHalfSize, style.decor, this.forward))
+    // Arène en pixel art (tools/ile-v3/arenes.py) : une image et ses décors, même en graphismes allégés (sans décors).
+    const pixel = pixelArena(kind);
+    if (!pixel && LOW_GRAPHICS) return;
+    // Chargée à la demande : l'arène n'est pas utile si le style n'en fournit pas.
+    (pixel
+      ? import('./arenaPixel').then(({ ArenaPixel }) => ArenaPixel.build(this.scene, kind, this.forward, !LOW_GRAPHICS))
+      : import('./arenaPainted').then(({ ArenaPainted }) => ArenaPainted.build(this.scene, kind as ArenaKind, this.arenaHalfSize, style.decor, this.forward)))
       .then((arena) => {
         if (request !== this.arenaRequest) return arena.dispose();
         this.arena = arena;

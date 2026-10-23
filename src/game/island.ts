@@ -1,3 +1,4 @@
+import { islandClock } from './clock';
 import { add, distance, length, normalize, scale, sub, vec, type Vec2 } from './math';
 import type { Condition, Progress } from './progress';
 
@@ -230,6 +231,7 @@ export class Island {
 
   /** Déplace le héros ; renvoie la zone dans laquelle il vient d'entrer, s'il y en a une. */
   update(dt: number, move: Vec2): Area | null {
+    islandClock.advance(dt);
     const player = this.player;
     player.moving = length(move) > 0.05;
     if (player.moving) {

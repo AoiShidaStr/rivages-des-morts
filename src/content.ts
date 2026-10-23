@@ -4,6 +4,7 @@ import gravuresJson from './data/gravures.json';
 import difficultyJson from './data/difficulty.json';
 import rizieresJson from './data/dungeon.json';
 import palaisJson from './data/dungeon-palais.json';
+import fujikasaneJson from './data/dungeon-fujikasane.json';
 import dungeonsJson from './data/dungeons.json';
 import entrainementJson from './data/entrainement.json';
 import pvpJson from './data/pvp.json';
@@ -98,7 +99,7 @@ export interface DungeonStyle {
   sky: string;
   decor: { sprite: string; x: number; z: number }[];
   /** Arène peinte autour du combat (src/render/arenaPainted.ts). */
-  arena?: ArenaKind;
+  arena?: ArenaKind | 'fujikasane';
 }
 
 /** Ce qui change d'un donjon à l'autre dans la configuration du combat. */
@@ -124,6 +125,8 @@ export interface DungeonDef {
   /** Force des yokai et du boss au niveau 1, si elle diffère de celle de difficulty.json. */
   strength?: EnemyStrength;
   style: DungeonStyle;
+  /** Niveau imposé, sans choix à l'entrée (le gardien errant : un seul combat, toujours aussi dur). */
+  fixedLevel?: number;
   arena: ArenaConfig;
 }
 
@@ -141,7 +144,7 @@ function dungeonFrom(id: string, meta: Omit<DungeonDef, 'id' | 'arena'>, arena: 
   return { id, ...meta, arena: { ...ARENA_DEFAULTS, ...arena } };
 }
 
-function dungeon(id: 'rizieres' | 'palais', arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>): DungeonDef {
+function dungeon(id: 'rizieres' | 'palais' | 'fujikasane', arena: Partial<ArenaConfig> & Pick<ArenaConfig, 'arenaHalfSize' | 'waves'>): DungeonDef {
   const meta = dungeonsJson[id] as unknown as Omit<DungeonDef, 'id' | 'arena'>;
   return dungeonFrom(id, meta, arena);
 }
@@ -202,6 +205,7 @@ export const content = {
   dungeons: {
     rizieres: dungeon('rizieres', rizieresJson as unknown as ArenaConfig),
     palais: dungeon('palais', palaisJson as unknown as ArenaConfig),
+    fujikasane: dungeon('fujikasane', fujikasaneJson as unknown as ArenaConfig),
   } as Record<string, DungeonDef>,
   /** Le billot de Tetsu : on y frappe un mannequin immobile pour éprouver une classe ou un équipement. */
   entrainement: dungeonFrom('entrainement', entrainement.meta, entrainement.arena),

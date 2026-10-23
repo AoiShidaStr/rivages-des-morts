@@ -29,16 +29,8 @@
     "style": {
       "arena": "rizieres",
       "ground": [1, 1, 1],
-      "sky": "#c3cbcf",
-      "decor": [
-        { "sprite": "torii", "x": 12, "z": 12 },
-        { "sprite": "jizo", "x": -5, "z": 10.6 },
-        { "sprite": "jizo", "x": -3, "z": 10.6 },
-        { "sprite": "jizo", "x": -1, "z": 10.6 },
-        { "sprite": "jizo", "x": 1, "z": 10.6 },
-        { "sprite": "jizo", "x": 3, "z": 10.6 },
-        { "sprite": "jizo", "x": 5, "z": 10.6 }
-      ]
+      "sky": "#b9c2c6",
+      "decor": []
     }
   },
   "palais": {
@@ -68,6 +60,64 @@
         { "sprite": "lanterneAllumee", "x": 11, "z": -4 },
         { "sprite": "torii", "x": -12, "z": -12 }
       ]
+    }
+  },
+  "fujikasane": {
+    "name": "Mont Fujikasane",
+    "region": "La clairière du gardien, après minuit",
+    "boss": "Le gardien errant",
+    "bossLabel": "le gardien errant",
+    "fixedLevel": 80,
+    "victory": {
+      "title": "Le veilleur s'est assis",
+      "text": "Le gardien errant pose sa lanterne dans l'herbe. Pour la première fois depuis l'effondrement, il ne compte plus personne."
+    },
+    "onVictory": [
+      {
+        "set": "gardien_vaincu"
+      }
+    ],
+    "firstVictory": {
+      "if": [
+        {
+          "notFlag": "gardien_vaincu"
+        }
+      ],
+      "then": [
+        {
+          "xp": 400
+        },
+        {
+          "oboles": 2000
+        },
+        {
+          "toast": "Le butin du gardien errant reste à définir."
+        }
+      ]
+    },
+    "lootAbout": "Butin du boss final du Yomi : à définir avec Meven (firstVictory et onVictory ci-dessus, ou une table de drops dans items.json, drops.gardien).",
+    "shop": "fin-palais",
+    "exit": { "u": 35.3, "v": 27.2 },
+    "strength": {
+      "about": "Boss final du Yomi : un seul combat, au niveau imposé (fixedLevel), plus fort encore que la base des boss.",
+      "base": {
+        "hp": 1.2,
+        "damage": 1.2
+      },
+      "bossBase": {
+        "hp": 1.3,
+        "damage": 1.25
+      }
+    },
+    "style": {
+      "arena": "fujikasane",
+      "ground": [
+        0.55,
+        0.6,
+        0.5
+      ],
+      "sky": "#0c1018",
+      "decor": []
     }
   }
 }

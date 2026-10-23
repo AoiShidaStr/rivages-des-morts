@@ -16,8 +16,8 @@ STEP = 2.2           # hauteur d'un niveau (unités du monde) : deux tuiles de p
 EXT = 84             # demi-étendue de la grille en x et z (unités du plan)
 
 (EAU, SABLE, HERBE, TERRE, DALLE, BOIS, VOLCAN, LAVE, RIZ, DIGUE, SPIRALE, PIERRE, MARCHE,
- FLEURS, CENDRE, LYS) = range(16)
-NOMS = 'eau sable herbe terre dalle bois volcan lave riz digue spirale pierre marche fleurs cendre lys'.split()
+ FLEURS, CENDRE, LYS, FORET) = range(17)
+NOMS = 'eau sable herbe terre dalle bois volcan lave riz digue spirale pierre marche fleurs cendre lys foret'.split()
 L1, L2 = 2.2, 4.4     # niveaux du sol (unités du monde) : l'île, les plateaux
 HCASC = 8.8           # plateau de la cascade
 
@@ -214,7 +214,7 @@ def construire(seed=7):
     plateau(tache(p, -16, 46, 15, 13, 0.2, 4, seed=22), L2, CENDRE)       # pied du volcan
     plateau(tache(p, 1, 47, 9.5, 9, 0.22, 3, seed=23), L2)                # Grand Rocher
     plateau(tache(p, -28, 1, 5, 8, 0.3, 2.5, seed=24), L2)                # butte ouest du village
-    plateau(tache(p, 27, -24, 5, 7, 0.3, 2.5, seed=25), L2, FLEURS)       # butte de la prairie
+    plateau(tache(p, 29.5, -19, 3.5, 5, 0.3, 2.5, seed=25), L2, FLEURS)   # butte de la prairie
     casc = plateau(tache(p, 24, 50, 12, 10, 0.15, 3, seed=26), HCASC)    # plateau de la cascade
     # cendres autour du volcan
     cend = tache(p, -16, 45, 18, 16, 0.3, 3, seed=27) & ile & np.isin(p.mat, (HERBE, LYS))
@@ -252,31 +252,34 @@ def construire(seed=7):
     p.zones['chute'] = (bord, cz)
     p.zones['vasque'] = (vu, vv)
 
-    # ======================= rizières en terrasses (versant est) ==============
-    # un versant qui monte vers la cascade ; les terrasses suivent ses courbes de niveau
-    zr = tache(p, 21, 13, 12.5, 16, 0.25, 4, seed=30) & ile & (p.niv == L1) & ~lit & (p.mat != FLEURS)
-    pente = np.clip((V - (-3)) / 30.0, 0, 1) + 0.12 * np.clip((U - 10) / 20, 0, 1)
-    hcont = L1 + 3.4 * pente + 0.55 * bruit_plan(U.shape, 6.0, seed + 31)
-    pas_t = 0.45
-    k = np.floor((hcont - L1) / pas_t)
-    k = np.clip(k, 0, None)
-    terr = zr & (k >= 0)
-    hk = L1 + 0.25 + k * pas_t
-    p.niv[terr] = hk[terr]
-    p.mat[terr] = RIZ
-    p.terrasse = np.where(terr, k, -1).astype(np.int16)
-    # diguettes : le bord avant de chaque terrasse (au-dessus d'une plus basse) et des murets transverses
-    bas = np.zeros_like(terr)
-    for dx, dz in ((-1, 0), (0, -1), (-1, -1)):
-        voisin = np.roll(np.roll(p.terrasse, -dx, 0), -dz, 1)
-        bas |= terr & (voisin < p.terrasse)
-    for r in range(2):                              # diguette de 3 cellules de large
-        bas |= terr & (np.roll(bas, 1, 0) | np.roll(bas, 1, 1)) & (np.roll(p.terrasse, -1, 0) <= p.terrasse)
-    trans = terr & (np.abs(((U + 2.2 * bc) / 5.5) % 1 - 0.5) > 0.47)
-    dig = bas | trans | (terr & ~ndi_erode(terr, 2))
-    p.niv[dig] = p.niv[dig] + 0.12
-    p.mat[dig] = DIGUE
-    p.zones['rizieres'] = zr
+    # ======================= Mont Fujikasane (versant est) ====================
+    # Une grande forêt de cèdres sur une colline : le sous-bois sombre tout autour, puis un sommet (niveau 2) que l'on
+    # gagne par un escalier de pierre, et au sommet une clairière où erre le gardien (on ne l'affronte que la nuit).
+    foret = tache(p, 21, 13, 12.5, 16, 0.25, 4, seed=30) & ile & (p.niv == L1) & ~lit & (p.mat != FLEURS)
+    p.mat[foret] = FORET
+    sommet = tache(p, 23, 15, 7.0, 8.0, 0.2, 3, seed=35) & foret
+    p.niv[sommet] = L2
+    clairiere = tache(p, 23.5, 15.5, 4.4, 3.9, 0.15, 1.5, seed=36) & sommet
+    p.mat[clairiere] = HERBE
+    p.terrasse = np.full(p.mat.shape, -1, np.int16)
+    p.zones['foret'] = foret
+    p.zones['fujikasane'] = (23.5, 15.5)
+
+    # ======================= parc de la grande prairie =========================
+    # Un jardin public carré, aligné sur le monde (ses bords filent à ±30° comme les falaises) : allées de terre le long
+    # des barrières et en croix, une petite place dallée au centre, quatre pelouses avec leur parterre de fleurs.
+    pk_u, pk_v, pk_a = 14.0, -31.0, 6.6        # centre et demi-côté (unités du plan)
+    pcx, pcz = uv2xz(pk_u, pk_v)
+    parc = p.rect(pk_u, pk_v, pk_a, pk_a) & ile & (p.niv == L1)
+    p.mat[parc] = HERBE
+    dx, dz = p.X - pcx, p.Z - pcz
+    allee = parc & ((np.maximum(np.abs(dx), np.abs(dz)) > pk_a - 1.25) | (np.abs(dx) < 0.85) | (np.abs(dz) < 0.85))
+    p.mat[allee] = TERRE
+    parterre = parc & ~allee & (np.abs(np.abs(dx) - pk_a / 2) < 1.0) & (np.abs(np.abs(dz) - pk_a / 2) < 1.0)
+    p.mat[parterre] = FLEURS
+    place_parc = parc & (np.hypot(dx, dz) < 1.9)
+    p.mat[place_parc] = DALLE
+    p.zones['parc'] = (pk_u, pk_v, pk_a)
 
     # ======================= jardin du Grand Rocher ===========================
     jar = p.ovale(1, 47, 6.2, 5.0) & (p.niv == L2)
@@ -298,6 +301,7 @@ def construire(seed=7):
     escalier(p, -20.0, -37.0, 'x', 3.4)      # plage → village
     escalier(p, -21.0, 17.0, 'z', 3.0)       # vers le donjon
     escalier(p, -4.0, 36.0, 'x', 3.0)        # vers le Grand Rocher
+    escalier(p, 15.5, 8.0, 'x', 2.6)         # vers le sommet du Mont Fujikasane
 
     # ======================= pont et ponton ==================================
     pont(p, 2.5, 20.0, 'z', 2.9, L1 + 0.12, rampe=True)
@@ -309,14 +313,16 @@ def construire(seed=7):
     p.chemins += [
         ([(-18, -37), (-15, -24), (-14, -10), (-14, 3)], 3.6, T),       # ponton → place
         ([(-14, 3), (-8, 13), pw], 3.4, T),                            # place → pont
-        ([pe, (9, 15), (12, 6), (11, -8), (12, -18), (15, -28)], 3.2, T),  # pont → prairie (pied des rizières)
+        ([pe, (9, 15), (12, 6), (11, -8), (12, -18), (9.4, -25.9)], 3.2, T),  # pont → parc (au pied du Mont Fujikasane)
+        ([(12, 6), (15.2, 7.7)], 2.6, T),                              # → escalier du Mont Fujikasane
+        ([(18.6, 11.0), (21.0, 13.6), (23.5, 15.5)], 2.4, T),           # sommet : vers la clairière du gardien
         ([pe, (8, 24), (11, 31)], 3.0, T),                             # pont → cascade (rive est)
         ([(-14, 3), (-17, 11), (-20, 16)], 3.0, T),                    # place → donjon
         ([(-14, 3), (-24, 9), (-31, 14)], 2.8, T),                     # place → Jizō
         ([pw, (-3, 28), (-4, 35)], 3.0, T),                            # pont → Grand Rocher
     ]
     for pts, larg, matiere in p.chemins:
-        m = p.bande(pts, larg + 0.9 * bc) & np.isin(p.mat, (HERBE, FLEURS, CENDRE, LYS))
+        m = p.bande(pts, larg + 0.9 * bc) & np.isin(p.mat, (HERBE, FLEURS, CENDRE, LYS, FORET))
         p.mat[m] = matiere
     # clairière de terre autour de la place du village
     cl = tache(p, -14, 3, 7.0, 7.0, 0.25, 2, seed=34) & np.isin(p.mat, (HERBE, LYS)) & (p.niv == L1)

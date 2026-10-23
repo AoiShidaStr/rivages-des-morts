@@ -6,7 +6,7 @@ from plan import *
 
 COUL = {EAU: '#3c6175', SABLE: '#dbc9b4', HERBE: '#808449', TERRE: '#98734c', DALLE: '#c0af83', VOLCAN: '#53383a',
         LAVE: '#f79617', RIZ: '#7fb7bd', DIGUE: '#5e6431', SPIRALE: '#e8dcc8', PIERRE: '#725b53', MARCHE: '#a78c61',
-        FLEURS: '#b29f53', CENDRE: '#6c4c3f', LYS: '#a04625', BOIS: '#865e51'}
+        FLEURS: '#b29f53', CENDRE: '#6c4c3f', LYS: '#a04625', BOIS: '#865e51', FORET: '#3f4a2c'}
 
 
 def voir(p, sortie, W=700):
@@ -19,7 +19,7 @@ def voir(p, sortie, W=700):
     J = np.clip(((Z + EXT) / CELL).astype(int), 0, p.n - 1)
     m = p.mat[I, J]
     h = p.niv[I, J]
-    lut = np.array([[int(COUL[k][i:i + 2], 16) for i in (1, 3, 5)] for k in range(16)], np.float32)
+    lut = np.array([[int(COUL[k][i:i + 2], 16) for i in (1, 3, 5)] for k in range(17)], np.float32)
     img = lut[m] * (0.6 + 0.4 * np.clip(h / 12, 0, 1))[..., None]
     # bords de niveaux
     e = np.zeros_like(h, bool)

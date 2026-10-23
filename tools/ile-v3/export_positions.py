@@ -124,8 +124,17 @@ A_LA_MAIN = {
     'toro-1': ('jeu', *lant[0]), 'toro-2': ('jeu', *lant[1]), 'toro-3': ('jeu', *lant[2]), 'toro-4': ('jeu', *lant[3]),
     'jizo-1': ('jeu', *jizo[0]), 'jizo-2': ('jeu', *jizo[1]), 'jizo-3': ('jeu', *jizo[2]),
     'jizo-4': ('jeu', *jizo[3]), 'jizo-5': ('jeu', *jizo[4]), 'jizo-6': ('jeu', *jizo[5]),
-    'portail': pres('torii_noir_z', 0.0, -0.6), 'rocher': pres('rocher', 0.0, -1.6),
-    'moine': pres('torii', 1.8, -1.6),
+    'portail': pres('torii_noir_z', 0.0, -0.6),
+    # le moine veille sur le jardin, à gauche du Grand Rocher, face à l'allée qui monte du torii
+    'moine': pres('rocher', -4.6, -2.4),
+    # la faille du Yomi sans fond s'ouvre dans la paroi, au pied de la cascade : on se tient juste devant
+    'faille-cascade': pres('faille', 0.0, -0.9),
+    # le gardien errant, au milieu de la clairière au sommet du Mont Fujikasane
+    'gardien-errant': ('plage', plan['zones']['fujikasane']),
+    # la grande prairie devenue parc : ses deux âmes s'assoient près des bancs, au milieu, à la vue de tous
+    'nanashi': pres('banc', 1.4, -0.9, 0), 'dogu': pres('banc_z', -1.4, -0.9, 1),
+    # les kappa au bord de la rivière, pas sur les chemins ; la plaque votive au pied de l'escalier du Mont
+    'kawataro': ('plage', (5.2, 3.5)), 'vieux-kappa': ('plage', (5.0, 25.0)), 'ema': ('plage', (13.6, 4.0)),
 }
 
 
@@ -164,12 +173,20 @@ for it in ile['interactables']:
         (u1, v1), (u2, v2) = jizo[-2], jizo[-1]
         k_ = 1 if i == 'jizo-faux' else 2.6
         x, y = poser(*jeu2px(u2 + (u2 - u1) * k_, v2 + (v2 - v1) * k_), 0.45)
+    elif i == 'rocher':
+        # l'interaction du Grand Rocher : à son pied, sur la pierre même (on la touche en s'approchant)
+        u, v = deco['rocher'][0]
+        x, y = jeu2px(u, v - 0.3)
+        it['reach'] = 4.2
     elif i.startswith('jizo-') or i.startswith('toro-'):
         x, y = finale(A_LA_MAIN[i], 0, 0, 0.0)
     else:
         x, y = finale(A_LA_MAIN.get(i), it['u'], it['v'])
     sortie[i] = (x, y)
     it['u'], it['v'] = px2uv(x, y)
+    if i == 'gardien-errant':
+        # après minuit, on peut l'affronter (dialogues.json, gardien)
+        it['verbIf'] = [{'if': [{'hours': [0, 5]}], 'verb': 'Affronter'}]
 
 x, y = sur_ponton(0.42)
 ile['spawn'] = dict(zip('uv', px2uv(*poser(x, y, 0.45))))
@@ -177,8 +194,12 @@ x, y = sur_ponton(0.34)
 ile['dungeonExit'] = dict(zip('uv', px2uv(*poser(x, y, 0.45))))
 
 ZONES = {'ponton': ((-19.5, -42), 11), 'donjon': ((-25, 29), 9), 'village': ((-14, 3), 15), 'rocher': ((1, 45), 12),
-         'cascade': ((15, 39), 10), 'rizieres': ((20, 12), 15), 'prairie': ((15, -29), 19)}
+         'cascade': ((15, 39), 10), 'fujikasane': ((21, 13), 15), 'prairie': ((14, -31), 13)}
 for ar in ile['areas']:
+    if ar['id'] == 'rizieres':                 # les rizières ouvertes sont devenues la forêt du Mont Fujikasane
+        ar['id'], ar['name'] = 'fujikasane', 'Mont Fujikasane'
+    if ar['id'] == 'prairie':
+        ar['name'] = 'Le parc de la prairie'
     (u, v), r = ZONES[ar['id']]
     ar['u'], ar['v'] = px2uv(*plan_px(u, v))
     ar['r'] = r
