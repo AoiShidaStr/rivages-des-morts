@@ -3,8 +3,8 @@
 import type { Hero } from '../game/progress';
 import type { SpriteDef, SpriteManifest } from './renderer';
 
-/** L'Einherjar guerrier garde sa planche peinte d'origine (sprite « heros ») : c'est lui qu'elle représente. */
-const ORIGINAL = { race: 'einherjar', class: 'guerrier' };
+/** Le héros de départ : seul le Hanyō est jouable. */
+const ORIGINAL = { race: 'hanyo', class: 'guerrier' };
 /**
  * Classes qui portent encore les planches d'une autre : le Sorcier garde l'onmyōji de l'Invocateur, en attendant
  * les siennes, sauf pour les races qui ont déjà leur planche complète (`OWN`).
@@ -16,7 +16,8 @@ const OWN: Record<string, readonly string[]> = { sorcier: ['hanyo', 'demi-dieu']
  * Races dont seules quelques classes ont des planches jugées assez bonnes : les autres sont grisées à la création
  * (et chez le moine), en attendant de nouvelles planches. Un héros déjà créé garde sa race et sa classe.
  */
-const PLAYABLE: Record<string, readonly string[]> = { einherjar: ['guerrier'], oushebti: ['guerrier'] };
+/** Seuls les Hanyō sont jouables : les autres races sont retirées de la création (aucune classe). */
+const PLAYABLE: Record<string, readonly string[]> = { einherjar: [], oushebti: [], 'demi-dieu': [] };
 
 /** La combinaison race et classe peut-elle être choisie à la création ? */
 export function heroAvailable(race: string, cls: string): boolean {
@@ -28,7 +29,7 @@ export function heroSprite(hero: Hero): string {
   const race = hero.race || ORIGINAL.race;
   const own = OWN[hero.class]?.includes(race);
   const cls = (!own && BORROWED[hero.class]) || hero.class || ORIGINAL.class;
-  return race === ORIGINAL.race && cls === ORIGINAL.class ? 'heros' : `heros-${race}-${cls}`;
+  return `heros-${race}-${cls}`;
 }
 
 /**

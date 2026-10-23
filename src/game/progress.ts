@@ -198,7 +198,7 @@ export const SUBCLASS_LEVEL = 25;
 /** L'arme de départ du Guerrier. */
 export const STARTING_WEAPON = 'nodachi';
 /** Le héros des parties commencées avant le choix de la race et de la classe. */
-export const DEFAULT_HERO: Hero = { race: 'einherjar', class: 'guerrier' };
+export const DEFAULT_HERO: Hero = { race: 'hanyo', class: 'guerrier' };
 
 function fresh(): ProgressState {
   return {
