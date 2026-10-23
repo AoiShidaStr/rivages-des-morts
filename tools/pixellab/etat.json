@@ -398,9 +398,19 @@
           "methode": "v3",
           "cout": 1
         }
+      },
+      "mort": {
+        "south-east": {
+          "groupe": "62f7568e-d8b5-4d27-9386-f0c435bc41f6",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/324ad718-e7a1-4143-b1f2-4594628e10b3/animations/870f4c2a-86fb-4ec8-a102-a83692c30c98/south-east/{i}.png?t=1792727945849",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        }
       }
     },
     "cout_creation": 1,
-    "depense": 7
+    "depense": 8
   }
 }
