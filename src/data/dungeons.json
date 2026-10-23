@@ -51,15 +51,8 @@
     "style": {
       "arena": "palais",
       "ground": [0.46, 0.38, 0.55],
-      "sky": "#2e2733",
-      "decor": [
-        { "sprite": "rocher", "x": 12.5, "z": 12.5 },
-        { "sprite": "lanterneAllumee", "x": -10.5, "z": 10.5 },
-        { "sprite": "lanterneAllumee", "x": 10.5, "z": -10.5 },
-        { "sprite": "lanterneAllumee", "x": -4, "z": 11 },
-        { "sprite": "lanterneAllumee", "x": 11, "z": -4 },
-        { "sprite": "torii", "x": -12, "z": -12 }
-      ]
+      "sky": "#0a0710",
+      "decor": []
     }
   },
   "fujikasane": {

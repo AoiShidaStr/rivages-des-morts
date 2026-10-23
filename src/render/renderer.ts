@@ -212,7 +212,9 @@ const VIEW_HALF_HEIGHT = 6;
 const GROUND_SIZE = 44;
 
 /** L'arène en pixel art de ce décor (tools/ile-v3/arenes.py, src/data/arenes.json), s'il en a une. */
-function pixelArena(kind: string | undefined): { obstacle: string; tint: [number, number, number] } | null {
+function pixelArena(
+  kind: string | undefined,
+): { obstacle: string; tint: [number, number, number]; peach?: { ripe: string; bare: string } } | null {
   const data = kind ? (arenesJson as Record<string, unknown>)[kind] : null;
   return data && typeof data === 'object' ? (data as { obstacle: string; tint: [number, number, number] }) : null;
 }
@@ -539,7 +541,7 @@ export class Renderer {
   private groundMaterial: StandardMaterial | null = null;
   private groundMesh: Mesh | null = null;
   /** Arène peinte, et le numéro de la dernière demande (un changement d'arène annule la précédente). */
-  private arena: { update(dt: number): void; dispose(): void } | null = null;
+  private arena: { update(dt: number): void; dispose(): void; flash?(): void } | null = null;
   private arenaRequest = 0;
   private readonly threads: { pull: Mesh; pullMaterial: StandardMaterial; drag: Mesh };
   private guardPulse = 0;
@@ -1541,8 +1543,10 @@ export class Renderer {
       for (const mesh of this.peachViews.meshes) mesh.dispose();
       const meshes: { dispose(): void }[] = [];
       const views: { ripe: Mesh; bare: Mesh }[] = [];
-      const ripeEntry = this.sprites.get('pecher');
-      const bareEntry = this.sprites.get('pecherNu');
+      // Les arènes en pixel art ont leurs pêchers en pixel art (le Palais d'Izanami).
+      const pixel = pixelArena(this.shownStyle?.arena)?.peach;
+      const ripeEntry = this.sprites.get(pixel?.ripe ?? 'pecher');
+      const bareEntry = this.sprites.get(pixel?.bare ?? 'pecherNu');
       trees.forEach((tree, i) => {
         if (!ripeEntry || !bareEntry) return;
         const order = SPRITE_ORDER - Math.round(dot(tree.pos, this.forward) * 100);
@@ -1845,6 +1849,8 @@ export class Renderer {
         this.addFx(this.ringFx(event.pos, event.radius * 2.8, SHADOW_STRIKE, 0.6));
         this.text(event.pos, 3, 'Colère d’Izanami !', 'hurt', 1.3);
         this.addShake(0.8);
+        // Les taiko du palais s'allument d'éclairs blancs (arenaPixel.ts).
+        this.arena?.flash?.();
         break;
       case 'telegraph': {
         this.endTracked(this.telegraphs, event.id);

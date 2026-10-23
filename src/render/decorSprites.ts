@@ -146,6 +146,11 @@ export class DecorSprites {
     return new DecorSprites(meshes, [...materials.values()], [...textures.values()]);
   }
 
+  /** Montre ou cache tous ces décors (les taiko allumés du Palais d'Izanami, arenaPixel.ts). */
+  setVisible(visible: boolean): void {
+    for (const mesh of this.meshes) mesh.isVisible = visible;
+  }
+
   dispose(): void {
     for (const mesh of this.meshes) mesh.dispose();
     for (const material of this.materials) material.dispose();

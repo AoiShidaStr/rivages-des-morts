@@ -13,6 +13,10 @@ import { spriteMaterial } from './renderer';
  * - Yomi sans fond : une salle souterraine noyée, l'eau sur les dalles, la paroi de la caverne au fond, des rochers.
  * - Rizières noyées (la Jorōgumo) : rizières inondées et diguettes, terrasses et saules dans la brume.
  * - Mont Fujikasane (le gardien errant) : la clairière du sommet, la nuit, la forêt tout autour.
+ * - Palais d'Izanami : au fond le palais pourri (laque noire, tatamis moisis, l'irori au feu violet), devant la roche
+ *   de la pente de Yomotsu Hirasaka, l'eau noire autour ; huit taiko qui s'allument pendant sa colère (`flash`).
+ * La limite du carré de combat est partout un rebord plus haut (margelle, levée, bordure, seuil) : on voit où l'on
+ * bute.
  */
 
 interface PixelArenaData {
@@ -27,8 +31,14 @@ interface PixelArenaData {
   obstacle: string;
   /** Teinte des décors debout et des obstacles, la même que celle du sol (la nuit, la caverne). */
   tint: [number, number, number];
-  decor: { sprite: string; u: number; v: number; height: number; below: number; flip?: boolean }[];
+  decor: { sprite: string; u: number; v: number; height: number; below: number; flip?: boolean; lit?: string }[];
+  /** Les pêchers de la dernière vague, en pixel art (sprites.json), à la place des pêchers peints. */
+  peach?: { ripe: string; bare: string };
 }
+
+/** Durée de l'éclair des taiko, et ses battements : allumé, éteint, allumé… (secondes depuis le début). */
+const FLASH_TIME = 1.2;
+const FLASH_BEATS = [0, 0.22, 0.36, 0.56, 0.7, 1.2];
 
 const ARENAS = arenesJson as unknown as Record<string, PixelArenaData | string>;
 
@@ -43,7 +53,13 @@ export class ArenaPixel {
     private readonly material: StandardMaterial,
     private readonly texture: Texture,
     private readonly decor: DecorSprites | null,
-  ) {}
+    private readonly drums: DecorSprites | null,
+    private readonly drumsLit: DecorSprites | null,
+  ) {
+    drumsLit?.setVisible(false);
+  }
+
+  private flashTime = -1;
 
   /** `rich` : les décors debout ; sans lui (graphismes allégés), le sol seul. */
   static async build(scene: Scene, kind: string, forward: Vec2, rich: boolean): Promise<ArenaPixel> {
@@ -69,28 +85,51 @@ export class ArenaPixel {
     material.emissiveColor = Color3.White();
     mesh.material = material;
     scene.clearColor = Color4.FromHexString(`${data.background}ff`);
-    const spots = data.decor.map((d): DecorSpot => ({
-      file: `decor/${d.sprite}.webp`,
+    const spot = (d: PixelArenaData['decor'][number], sprite = d.sprite): DecorSpot => ({
+      file: `decor/${sprite}.webp`,
       ...toWorld(d),
       height: d.height,
       flip: !!d.flip,
       below: d.below,
-    }));
+    });
     const tint = new Color3(...data.tint);
-    const decor = rich
-      ? await DecorSprites.build(scene, spots, forward, new Set(), (name, tex) => {
-          const m = spriteMaterial(scene, name, tex);
-          m.setColor3('tint', tint);
-          return m;
-        })
-      : null;
-    return new ArenaPixel(mesh, material, texture, decor);
+    const build = (spots: DecorSpot[], tinted: boolean) =>
+      rich && spots.length
+        ? DecorSprites.build(scene, spots, forward, new Set(), (name, tex) => {
+            const m = spriteMaterial(scene, name, tex);
+            if (tinted) m.setColor3('tint', tint);
+            return m;
+          })
+        : Promise.resolve(null);
+    // Les décors qui s'allument (les taiko) à part, avec leur image allumée, elle sans la teinte du lieu.
+    const lit = data.decor.filter((d) => d.lit);
+    const [decor, drums, drumsLit] = await Promise.all([
+      build(data.decor.filter((d) => !d.lit).map((d) => spot(d)), true),
+      build(lit.map((d) => spot(d)), true),
+      build(lit.map((d) => spot(d, d.lit)), false),
+    ]);
+    return new ArenaPixel(mesh, material, texture, decor, drums, drumsLit);
   }
 
-  update(_dt: number): void {}
+  /** La colère d'Izanami : les taiko s'allument d'éclairs blancs, par battements. */
+  flash(): void {
+    if (this.drumsLit) this.flashTime = 0;
+  }
+
+  update(dt: number): void {
+    if (this.flashTime < 0) return;
+    this.flashTime += dt;
+    const beat = FLASH_BEATS.findIndex((t) => this.flashTime < t);
+    const on = beat > 0 && beat % 2 === 1;
+    if (this.flashTime >= FLASH_TIME) this.flashTime = -1;
+    this.drumsLit?.setVisible(on && this.flashTime >= 0);
+    this.drums?.setVisible(!(on && this.flashTime >= 0));
+  }
 
   dispose(): void {
     this.decor?.dispose();
+    this.drums?.dispose();
+    this.drumsLit?.dispose();
     this.mesh.dispose();
     this.material.dispose();
     this.texture.dispose();

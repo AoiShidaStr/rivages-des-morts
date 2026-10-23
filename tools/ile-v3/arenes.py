@@ -11,7 +11,7 @@ que la caméra du combat peut montrer.
 
 Le jeu pose l'image sur le sol (src/render/arenaPixel.ts) : pied de l'arène, au niveau `sol` du plan, à y = 0.
 
-Lancer : PACKS=… python3 arenes.py ../.. [yomi rizieres fujikasane]"""
+Lancer : PACKS=… python3 arenes.py ../.. [yomi rizieres fujikasane palais]"""
 import json
 import math
 import sys
@@ -23,6 +23,8 @@ from PIL import Image
 
 import decor
 import decorer
+import fm
+import izanami
 import rendu
 from export_jeu import sprite_jeu
 from plan import (DALLE, DIGUE, EAU, FORET, HERBE, PIERRE, RIZ, TERRE, VOLCAN, CELL, Plan, bruit_plan, tache, uv2xz,
@@ -64,7 +66,7 @@ def plan_yomi():
     d = carre(p)
     p.mat[:] = VOLCAN
     p.niv[:] = 0.4
-    sol = d + 0.15 * b <= A + 0.9
+    sol = d <= A                                      # la limite de l'arène : la margelle, droite, une marche plus haut
     p.mat[sol] = EAU
     p.niv[sol] = 0.0
     marge = ~sol & (d + 0.15 * b <= A + 1.9)
@@ -96,8 +98,9 @@ def plan_rizieres():
     fz = np.abs(((p.Z + A) / pas) % 1 - 0.5) * pas
     dig = champ & ((fx > pas / 2 - 0.16) | (fz > pas / 2 - 0.16))
     p.mat[dig] = DIGUE
-    bord = (d > A + 0.1) & (d <= A + 0.9)            # la limite de l'arène : un sentier de terre battue
+    bord = (d > A) & (d <= A + 0.8)                  # la limite de l'arène : une levée de terre battue, plus haute
     p.mat[bord] = TERRE
+    p.niv[bord] = 0.3
     # au fond, les terrasses (chacune un peu plus haute), puis le talus
     fond = np.maximum(p.X, p.Z) + 0.5 * b
     for k, r in enumerate([A + 2.6, A + 5.0, A + 7.4]):
@@ -127,6 +130,9 @@ def plan_fujikasane():
     # le sentier arrive par le devant (coin -x -z), et s'efface au milieu de la clairière
     sentier = p.bande([(0, -16), (0.3, -9), (-0.4, -4), (0, -1)], 1.6 + 0.6 * b)
     p.mat[sentier] = TERRE
+    bord = (carre(p) > A) & (carre(p) <= A + 0.45)    # la limite de l'arène : une bordure de pierres, plus haute
+    p.mat[bord] = PIERRE
+    p.niv[bord] = 0.3
     fond = np.maximum(p.X, p.Z) + 0.8 * b
     haut = (fond > A + 7.0) & (r > A * 1.3)
     p.niv[haut] = 2.2
@@ -136,6 +142,28 @@ def plan_fujikasane():
     for k, (u, v, rr) in enumerate([(-6.5, 3.0, 0.9), (6.8, 1.5, 0.8), (2.5, 7.5, 0.7)]):
         p.mat[tache(p, u, v, rr, rr * 0.8, 0.3, 0.8, seed=90 + k)] = PIERRE
     p.zones['sol'] = 0.0
+    return p
+
+
+def plan_palais():
+    """Le Palais d'Izanami (doc de design validé par Meven) : une île de plancher et de roche posée sur l'eau noire,
+    sans murs. Au fond (le côté de la mort), le plancher de laque noire du palais pourri, plus profond, pour l'irori
+    et les stores ; devant (le côté de la fuite), la roche nue de la pente de Yomotsu Hirasaka ; entre les deux, un
+    bord déchiqueté. Le carré de combat reste plat."""
+    p = vide(74)
+    b = bruit_plan(p.U.shape, 2.5, 11)
+    d = carre(p)
+    p.mat[:] = EAU
+    p.niv[:] = 0.0
+    fond = (p.X + p.Z + 1.4 * b) > 0
+    avant = ~fond & (d + 0.25 * b <= A + 2.3)
+    arriere = fond & (d + 0.2 * b <= A + 4.9)
+    p.mat[avant] = PIERRE
+    p.mat[arriere] = DALLE
+    p.niv[avant | arriere] = 0.5
+    seuil = (d > A) & (d <= A + 0.45)                 # la limite de l'arène : un seuil plus haut, laque rouge ou roche
+    p.niv[seuil] = 0.85
+    p.zones['sol'] = 0.5
     return p
 
 
@@ -224,6 +252,43 @@ def decors_fujikasane(p, rng):
     return obj
 
 
+PECHES = [(-5.5, 2.5), (5.5, 2.5), (0.0, -6.0)]          # les pêchers de la dernière vague (dungeon-palais.json), monde
+
+
+def decors_palais(p, rng):
+    obj = []
+    h0 = p.zones['sol']
+    sur = lambda x, z: (*xz2uv(x, z), h0)
+    # le fond : l'irori au coin, les stores déchirés et les piliers brisés le long des deux bords
+    obj.append(('irori', *sur(A + 2.4, A + 2.4)))
+    for z in (-2.6, 2.0):
+        obj.append(('sudare_z', *sur(A + 4.1, z)))
+    for x in (-2.6, 2.0):
+        obj.append(('sudare_x', *sur(x, A + 4.1)))
+    for x, z in [(A + 4.1, A + 4.1), (A + 4.1, -5.4), (-5.4, A + 4.1), (A + 3.6, 4.6), (4.6, A + 3.6)]:
+        obj.append(('pilier_brise', *sur(x, z)))
+    # huit taiko de bronze tout autour, deux par côté
+    for k in (-1, 1):
+        for x, z in [(A + 1.15, 3.3 * k), (3.3 * k, A + 1.15), (-A - 1.15, 3.3 * k), (3.3 * k, -A - 1.15)]:
+            obj.append(('taiko', *sur(x, z)))
+    # os, bols renversés et offrandes sur le plancher, hors du carré
+    pris = [(o[1], o[2]) for o in obj]
+    garde = lambda u, v, h, m: m == DALLE and all(math.hypot(u - a, v - b) > 1.4 for a, b in pris) and dans_cadre(u, v)
+    for u, v in autour(p, rng, 9, A + 0.8, A + 4.2, 1.6, garde):
+        obj.append((rng.choice(['os', 'os_b', 'bol', 'bol']), u, v, h0))
+    # devant, au bord de la roche : la vigne sauvage et les pousses de bambou jetées par Izanagi dans sa fuite
+    devant = lambda u, v, h, m: m == PIERRE and all(math.hypot(u - a, v - b) > 1.3 for a, b in pris) and dans_cadre(u, v)
+    for u, v in autour(p, rng, 12, A + 0.8, A + 2.0, 1.5, devant):
+        obj.append((rng.choice(['raisins', 'raisins_b', 'takenoko', 'takenoko_b']), u, v, h0))
+    # le dos du Chibiki-iwa (le Grand Rocher), dans l'eau au-delà du bord bas : le héros arrive de là
+    u, v = xz2uv(-A - 5.0, -A - 2.4)
+    obj.append(('rocher', u, v, 0.0, True))
+    # lueurs seules (pas de sprite) : les pêchers, seule lumière chaude
+    for x, z in PECHES:
+        obj.append(('_peche', *xz2uv(x / S, z / S), h0))
+    return obj
+
+
 def pack(fichier, morceaux, sombre=False):
     """Un décor fait de morceaux d'une planche des packs, (x, y, largeur, hauteur, dx, dy), le premier au fond ;
     `sombre` : ramené à la roche sombre du volcan (la caverne du Yomi)."""
@@ -279,6 +344,127 @@ def fondu(img, fond, cx, cy, bords):
     return (img * (1 - t) + np.array(fond, np.float32) * t).astype(np.uint8)
 
 
+def _hache(*a):
+    """Un nombre pseudo-aléatoire stable dans [0, 1) par case entière."""
+    h = np.zeros_like(a[0], dtype=np.int64)
+    for k, x in enumerate(a):
+        h = h * 73856093 + (x.astype(np.int64) + 1000) * (19349663 + 83492791 * k)
+    return ((h ^ (h >> 13)) % 10007) / 10007.0
+
+
+def roche(X, Z, pas=1.3):
+    """La roche nue de la pente de Yomotsu Hirasaka : des plaques irrégulières (cellules de Voronoï), chacune de son
+    ton, éclairées d'un bord, séparées de fentes noires, piquées de gravier."""
+    gx, gz = np.floor(X / pas), np.floor(Z / pas)
+    d1 = np.full(X.shape, 9.0)
+    d2 = np.full(X.shape, 9.0)
+    ide = np.zeros(X.shape)
+    pente = np.zeros(X.shape)
+    for di in (-1, 0, 1):
+        for dj in (-1, 0, 1):
+            ci, cj = gx + di, gz + dj
+            px = (ci + 0.15 + 0.7 * _hache(ci, cj, np.zeros_like(ci))) * pas
+            pz = (cj + 0.15 + 0.7 * _hache(ci, cj, np.ones_like(ci))) * pas
+            d = np.hypot(X - px, Z - pz)
+            plus_pres = d < d1
+            d2 = np.where(plus_pres, d1, np.minimum(d2, d))
+            ide = np.where(plus_pres, _hache(ci, cj), ide)
+            pente = np.where(plus_pres, ((X - px) + (Z - pz)) / pas, pente)
+            d1 = np.minimum(d1, d)
+    tons = fm.pal('#4d4753', '#53383a', '#5f4848', '#433a48', '#4a3f4f')
+    col = tons[(ide * len(tons)).astype(int) % len(tons)].copy()
+    bord = d2 - d1 < 0.16
+    col[bord & (pente > 0.1)] = fm.hx('#6b5a63')                        # le bord éclairé de chaque plaque
+    col[bord & (pente < -0.1)] = fm.hx('#3a2f3e')
+    tache_ = _hache(np.floor(X * 4), np.floor(Z * 4)) > 0.8
+    col[tache_ & ~bord] = fm.hx('#433a48')
+    grav = _hache(np.floor(X * 14), np.floor(Z * 14))
+    col[grav > 0.97] = fm.hx('#725b53')
+    col[grav < 0.02] = fm.hx('#2c2133')
+    col[d2 - d1 < 0.05] = fm.hx('#1e1724')                              # les fentes
+    col[(d2 - d1 >= 0.05) & (d2 - d1 < 0.08)] = fm.hx('#2c2133')
+    return col
+
+
+def peindre_palais(bout, g):
+    """Le plancher du palais pourri, peint par-dessus les dalles du rendu : lames de laque noire (un reflet violet,
+    des éclats de laque rouge), tatamis moisis et troués posés dessus ; devant, les racines des pêchers qui fendent
+    la roche."""
+    dessus = ~g['face']
+    x, z = g['xs'], g['zs']
+    sel = dessus & (g['mat'] == DALLE)
+    X, Z = x[sel], z[sel]
+    # les lames : le long de x, 0,3 de large, joints décalés
+    lame = 0.3
+    j = np.floor(Z / lame)
+    fz = Z / lame - j
+    k = np.floor((X + _hache(j) * 2.4) / 2.4)
+    fx = (X + _hache(j) * 2.4) / 2.4 - k
+    tons = fm.pal('#2a2030', '#261c2c', '#30253a', '#231a29')
+    col = tons[(_hache(j, k) * 4).astype(int)]
+    col[(fz > 0.12) & (fz < 0.2)] = fm.hx('#3d3147')                     # le reflet de la laque
+    col[fz < 0.08] = fm.hx('#141018')
+    col[fx < 0.015] = fm.hx('#141018')
+    ecl = (_hache(np.floor(X * 16), np.floor(Z * 16)) > 0.994)
+    col[ecl] = fm.hx('#8c3329')                                         # éclats de laque rouge
+    # les tatamis : des cases de 1,2 en deux nattes de 0,6 × 1,2, orientées en damier ; certaines manquent
+    ci, cj = np.floor(X / 1.2), np.floor(Z / 1.2)
+    lx, lz = X / 1.2 - ci, Z / 1.2 - cj
+    o = ((ci + cj) % 2 == 0)
+    moitie = np.where(o, lx < 0.5, lz < 0.5)
+    travers = np.where(o, (lx % 0.5) * 2, (lz % 0.5) * 2)             # 0..1 en travers de la natte
+    long_ = np.where(o, lz, lx)                                       # 0..1 le long
+    # les nattes qui restent, par plaques (les pièces du palais), jamais toutes
+    piece = _hache(np.floor(X / 3.6 + 0.3), np.floor(Z / 3.6 + 0.7)) > 0.35
+    present = piece & (_hache(ci, cj, moitie.astype(int)) > 0.4) & (np.maximum(np.abs(X), np.abs(Z)) < A + 3.6)
+    tat = fm.hx('#6a5e3e')
+    tcol = np.tile(tat, (len(X), 1))
+    tcol[(travers * 16) % 1 < 0.35] = fm.hx('#5a5036')
+    moisi = (_hache(np.floor(X * 3.3), np.floor(Z * 3.3)) + 0.5 * _hache(np.floor(X * 7), np.floor(Z * 7))) > 1.05
+    tcol[moisi] = fm.hx('#4a5233')
+    tcol[moisi & ((travers * 16) % 1 < 0.35)] = fm.hx('#3c452c')
+    tcol[(travers < 0.07) | (travers > 0.93)] = fm.hx('#2a2420')        # le liseré (heri)
+    tcol[(long_ < 0.02) | (long_ > 0.98)] = fm.hx('#3a3024')
+    trou = _hache(np.floor(X * 2.2), np.floor(Z * 2.2)) > 0.9
+    garde = present & ~trou
+    col[garde] = tcol[garde]
+    # le seuil de laque rouge, au bord du carré de combat : sa limite
+    seuil = (np.maximum(np.abs(X), np.abs(Z)) > A) & (np.maximum(np.abs(X), np.abs(Z)) <= A + 0.45)
+    long_s = np.where(np.abs(X) > np.abs(Z), Z, X)
+    rouge = np.tile(fm.hx('#7a3434'), (len(X), 1))
+    rouge[(np.maximum(np.abs(X), np.abs(Z)) - A) < 0.1] = fm.hx('#a04a3e')
+    rouge[(long_s / 2.4) % 1 < 0.02] = fm.hx('#2c2133')
+    col[seuil] = rouge[seuil]
+    bout[sel] = col
+    # devant, la roche nue de la pente : de grandes plaques fendues, sombres
+    sel = dessus & (g['mat'] == PIERRE)
+    X, Z = x[sel], z[sel]
+    col = roche(X, Z)
+    seuil = (np.maximum(np.abs(X), np.abs(Z)) > A) & (np.maximum(np.abs(X), np.abs(Z)) <= A + 0.45)
+    long_s = np.where(np.abs(X) > np.abs(Z), Z, X)
+    pale = np.tile(fm.hx('#8f7a79'), (len(X), 1))                       # le seuil de roche claire, taillée
+    pale[(np.maximum(np.abs(X), np.abs(Z)) - A) < 0.1] = fm.hx('#a89497')
+    pale[(long_s / 0.9) % 1 < 0.05] = fm.hx('#2c2133')
+    col[seuil] = pale[seuil]
+    bout[sel] = col
+    # les racines des pêchers fendent la roche et le plancher
+    for px, pz in PECHES:
+        cx, cz = px / S, pz / S
+        m = dessus & np.isin(g['mat'], (DALLE, PIERRE)) & (np.hypot(x - cx, z - cz) < 2.0)
+        dx, dz = x[m] - cx, z[m] - cz
+        r = np.hypot(dx, dz)
+        th = np.arctan2(dz, dx)
+        f = np.abs(np.sin(5 * th + 1.8 * r + 0.6 * np.sin(7 * r)))
+        racine = (f < 0.09 * (2.0 - r)) & (r > 0.25)
+        fente = (np.abs(f - 0.09 * (2.0 - r) - 0.02) < 0.02) & (r > 0.25)
+        c_ = bout[m]
+        c_[fente] = fm.hx('#1e1724')
+        c_[racine] = fm.hx('#53383a')
+        c_[racine & (f < 0.04 * (2.0 - r))] = fm.hx('#6b4a47')
+        bout[m] = c_
+    return bout
+
+
 ARENES = {
     'yomi': dict(plan=plan_yomi, decors=decors_yomi, fond='#07090e', obstacle='roc_obstacle',
                  teinte=((0.62, 0.7, 0.86), (0, 2, 8)), eau=((0.34, 0.52, 0.58), (4, 10, 14)), gue=PIERRE, bords=0.55),
@@ -286,18 +472,26 @@ ARENES = {
                      teinte=((0.9, 0.95, 0.97), (12, 14, 16)), bords=0.55),
     'fujikasane': dict(plan=plan_fujikasane, decors=decors_fujikasane, fond='#0c1018', obstacle='roc_mousse',
                        teinte=((0.5, 0.6, 0.86), (0, 3, 12)), bords=0.5),
+    'palais': dict(plan=plan_palais, decors=decors_palais, fond='#0a0710', obstacle='roc_obstacle',
+                   teinte=((0.66, 0.58, 0.8), (2, 0, 8)), eau=None, bords=0.5,
+                   eau_rampe=fm.pal('#06050a', '#0a0812', '#0e0b18', '#14101f', '#1d1630', '#2e2348', '#4a3a6e'),
+                   peindre=peindre_palais, peche=('pecher_v3', 'pecher_nu_v3')),
 }
+
+# décors qui s'allument d'un coup (les taiko pendant la colère d'Izanami) : leur image allumée
+ALLUMES = {'taiko': 'taiko_allume'}
 
 
 # halo des flammes sur le sol : couleur, rayon (monde), force, hauteur de la flamme (monde)
-LUEURS = {'lanterne': ((255, 160, 80), 3.4, 0.65, 1.0), 'torii_noir': ((255, 50, 40), 5.0, 0.55, 1.8)}
+LUEURS = {'lanterne': ((255, 160, 80), 3.4, 0.65, 1.0), 'torii_noir': ((255, 50, 40), 5.0, 0.55, 1.8),
+          'irori': ((160, 110, 255), 4.2, 0.85, 0.6), '_peche': ((255, 150, 135), 2.8, 0.7, 1.4)}
 
 
 def lueurs(img, obj, x0, y0):
     H, W = img.shape[:2]
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     f = img.astype(np.float32)
-    for nom, u, v, h in obj:
+    for nom, u, v, h, *_ in obj:
         if nom not in LUEURS:
             continue
         coul, r, force, _ = LUEURS[nom]
@@ -320,11 +514,19 @@ def faire(nom, sp, meta, apercu=None):
     x0, x1 = int(cx - DEMI_U * PX), int(cx + DEMI_U * PX)
     y0, y1 = int(cy - ARRIERE_V * PV - HAUT * K), int(cy + AVANT_V * PV)
     bout = img[y0:y1, x0:x1].copy()
+    if 'peindre' in cfg:
+        bout = cfg['peindre'](bout, {k: geo[k][y0:y1, x0:x1] for k in ('face', 'mat', 'xs', 'zs')})
     mult, ajout = cfg['teinte']
     bout = teinte(bout, mult, ajout)
     if 'eau' in cfg:                                     # l'eau prend la couleur du lieu (noire et froide sous terre)
         eau = ((geo['mat'] == EAU) & ~geo['face'])[y0:y1, x0:x1]
-        bout[eau] = teinte(bout[eau], *cfg['eau'])
+        if 'eau_rampe' in cfg:                           # ou toute une rampe : l'eau noire aux reflets violets
+            lum = bout[eau].astype(np.float32) @ np.array([0.3, 0.55, 0.15], np.float32)
+            r = cfg['eau_rampe']
+            k = np.clip((lum - lum.min()) / max(1.0, lum.max() - lum.min()) * len(r), 0, len(r) - 1).astype(int)
+            bout[eau] = r[k]
+        else:
+            bout[eau] = teinte(bout[eau], *cfg['eau'])
     if 'gue' in cfg:                                     # de l'eau peu profonde : le fond se voit au travers
         q = cfg['plan']()
         q.mat[q.mat == EAU] = cfg['gue']
@@ -343,21 +545,34 @@ def faire(nom, sp, meta, apercu=None):
         """Pixel de l'image gardée → (u, v) du jeu, l'origine au pied de l'arène."""
         return round(float((x - (cx - x0)) / PX), 3), round(float(((cy - y0) - y) / PV), 3)
 
-    items = []
-    for dnom, u, v, h in sorted(obj, key=lambda o: -o[2]):
+    def exporter(dnom):
         t, (ax, ay), _ = sp[dnom]
         image, sous = sprite_jeu(t, int(ax), int(ay))
         fichier = JEU / 'public/sprites/decor/v3' / f'{dnom}.webp'
-        if not fichier.exists() or dnom in rochers_noms:
+        if not fichier.exists() or dnom in rochers_noms or dnom in propres:
             Image.fromarray(image).save(fichier, 'WEBP', lossless=True, quality=100, method=6)
+        return image, sous
+
+    debout = [o for o in obj if not o[0].startswith('_')]
+    items = []
+    for dnom, u, v, h, *flip in sorted(debout, key=lambda o: -o[2]):
+        image, sous = exporter(dnom)
         x, y = plan2px(u, v, h)
         gu, gv = jeu(x - x0, y - y0)
-        items.append({'sprite': f'v3/{dnom}', 'u': gu, 'v': gv, 'height': round(image.shape[0] / PX, 3),
-                      'below': round((sous + 0.5) / PX, 3)})
+        item = {'sprite': f'v3/{dnom}', 'u': gu, 'v': gv, 'height': round(image.shape[0] / PX, 3),
+                'below': round((sous + 0.5) / PX, 3)}
+        if flip and flip[0]:
+            item['flip'] = True
+        if dnom in ALLUMES:
+            exporter(ALLUMES[dnom])
+            item['lit'] = f'v3/{ALLUMES[dnom]}'
+        items.append(item)
     if apercu:
         vue = bout.copy()
-        for dnom, u, v, h in sorted(obj, key=lambda o: -o[2]):
+        for dnom, u, v, h, *flip in sorted(debout, key=lambda o: -o[2]):
             t, (ax, ay), _ = sp[dnom]
+            if flip and flip[0]:
+                t, ax = t[:, ::-1], t.shape[1] - 1 - ax
             x, y = plan2px(u, v, h)
             X0, Y0 = int(x - x0 - ax), int(y - y0 - ay)
             hh, ww = t.shape[:2]
@@ -374,6 +589,10 @@ def faire(nom, sp, meta, apercu=None):
                  'center': {'u': cu, 'v': cv}, 'background': cfg['fond'], 'obstacle': f'roc-{nom}',
                  'tint': [round(c, 3) for c in mult],
                  'decor': items}
+    if 'peche' in cfg:                                   # les pêchers de la dernière vague, en pixel art
+        for k in cfg['peche']:
+            exporter(k)
+        meta[nom]['peach'] = {'ripe': 'pecher-palais', 'bare': 'pecherNu-palais'}
     print(nom, Ww, 'x', Hh, len(items), 'décors', flush=True)
     return bout, (cx - x0, cy - y0), items
 
@@ -383,6 +602,8 @@ if __name__ == '__main__':
     sp = decorer.sprites()
     sp.update(rochers())
     rochers_noms = set(rochers())
+    propres = izanami.sprites()                          # les décors du Palais d'Izanami (izanami.py)
+    sp.update(propres)
     for k in ('roc_obstacle', 'souche_fm', 'roc_mousse'):
         t, (ax, ay), _ = sp[k]
         image, _ = sprite_jeu(t, int(ax), int(ay))

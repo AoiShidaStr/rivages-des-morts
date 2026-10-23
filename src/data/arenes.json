@@ -10,6 +10,11 @@
   },
   "background": "#07090e",
   "obstacle": "roc-yomi",
+  "tint": [
+   0.62,
+   0.7,
+   0.86
+  ],
   "decor": [
    {
     "sprite": "v3/torii_noir",
@@ -158,11 +163,6 @@
     "height": 0.653,
     "below": 0.071
    }
-  ],
-  "tint": [
-   0.62,
-   0.7,
-   0.86
   ]
  },
  "rizieres": {
@@ -175,6 +175,11 @@
   },
   "background": "#b9c2c6",
   "obstacle": "roc-rizieres",
+  "tint": [
+   0.9,
+   0.95,
+   0.97
+  ],
   "decor": [
    {
     "sprite": "v3/saule",
@@ -547,11 +552,6 @@
     "height": 0.653,
     "below": 0.014
    }
-  ],
-  "tint": [
-   0.9,
-   0.95,
-   0.97
   ]
  },
  "fujikasane": {
@@ -564,6 +564,11 @@
   },
   "background": "#0c1018",
   "obstacle": "roc-fujikasane",
+  "tint": [
+   0.5,
+   0.6,
+   0.86
+  ],
   "decor": [
    {
     "sprite": "v3/sugi",
@@ -1440,11 +1445,317 @@
     "height": 0.852,
     "below": 0.014
    }
-  ],
-  "tint": [
-   0.5,
-   0.6,
-   0.86
   ]
+ },
+ "palais": {
+  "image": "arenes/palais.webp",
+  "width": 60.0,
+  "height": 64.755,
+  "center": {
+   "u": 0.0,
+   "v": 6.379
+  },
+  "background": "#0a0710",
+  "obstacle": "roc-palais",
+  "tint": [
+   0.66,
+   0.58,
+   0.8
+  ],
+  "decor": [
+   {
+    "sprite": "v3/pilier_brise",
+    "u": 0.0,
+    "v": 21.425,
+    "height": 1.619,
+    "below": 0.128
+   },
+   {
+    "sprite": "v3/irori",
+    "u": 0.0,
+    "v": 17.819,
+    "height": 3.153,
+    "below": 0.639
+   },
+   {
+    "sprite": "v3/os_b",
+    "u": -1.512,
+    "v": 15.632,
+    "height": 0.426,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/pilier_brise",
+    "u": 5.303,
+    "v": 15.061,
+    "height": 1.619,
+    "below": 0.128
+   },
+   {
+    "sprite": "v3/pilier_brise",
+    "u": -5.303,
+    "v": 15.061,
+    "height": 1.619,
+    "below": 0.128
+   },
+   {
+    "sprite": "v3/bol",
+    "u": 3.096,
+    "v": 13.854,
+    "height": 0.369,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/sudare_z",
+    "u": 8.591,
+    "v": 12.834,
+    "height": 3.523,
+    "below": 0.639
+   },
+   {
+    "sprite": "v3/sudare_x",
+    "u": -8.591,
+    "v": 12.834,
+    "height": 3.523,
+    "below": 0.639
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": 4.084,
+    "v": 11.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": -4.084,
+    "v": 11.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/os",
+    "u": 10.305,
+    "v": 9.539,
+    "height": 0.426,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sudare_z",
+    "u": 13.47,
+    "v": 7.955,
+    "height": 3.523,
+    "below": 0.639
+   },
+   {
+    "sprite": "v3/sudare_x",
+    "u": -13.47,
+    "v": 7.955,
+    "height": 3.523,
+    "below": 0.639
+   },
+   {
+    "sprite": "v3/os",
+    "u": 11.468,
+    "v": 7.035,
+    "height": 0.426,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/os",
+    "u": -13.756,
+    "v": 5.843,
+    "height": 0.426,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/pilier_brise",
+    "u": 16.44,
+    "v": 4.985,
+    "height": 1.619,
+    "below": 0.128
+   },
+   {
+    "sprite": "v3/pilier_brise",
+    "u": -16.44,
+    "v": 4.985,
+    "height": 1.619,
+    "below": 0.128
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": 11.084,
+    "v": 4.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": -11.084,
+    "v": 4.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/os_b",
+    "u": 13.404,
+    "v": 1.89,
+    "height": 0.426,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/bol",
+    "u": 16.346,
+    "v": 1.872,
+    "height": 0.369,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/os",
+    "u": -19.072,
+    "v": 1.51,
+    "height": 0.426,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/bol",
+    "u": -14.71,
+    "v": 0.722,
+    "height": 0.369,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/takenoko",
+    "u": -14.813,
+    "v": -0.394,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/takenoko_b",
+    "u": 13.706,
+    "v": -1.789,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": -11.084,
+    "v": -4.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": 11.084,
+    "v": -4.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/raisins",
+    "u": 9.453,
+    "v": -5.667,
+    "height": 1.278,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/takenoko_b",
+    "u": -9.406,
+    "v": -5.811,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/takenoko",
+    "u": 8.521,
+    "v": -8.026,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/raisins_b",
+    "u": -8.603,
+    "v": -8.326,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/takenoko",
+    "u": 6.228,
+    "v": -9.07,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/raisins",
+    "u": -6.309,
+    "v": -9.657,
+    "height": 1.278,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": -4.084,
+    "v": -11.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/taiko",
+    "u": 4.084,
+    "v": -11.084,
+    "height": 1.875,
+    "below": 0.099,
+    "lit": "v3/taiko_allume"
+   },
+   {
+    "sprite": "v3/raisins",
+    "u": -2.874,
+    "v": -12.785,
+    "height": 1.278,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/raisins",
+    "u": 2.058,
+    "v": -13.101,
+    "height": 1.278,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/raisins_b",
+    "u": -1.029,
+    "v": -14.212,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/takenoko_b",
+    "u": 0.522,
+    "v": -16.265,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/rocher",
+    "u": -2.758,
+    "v": -21.284,
+    "height": 4.119,
+    "below": 0.185,
+    "flip": true
+   }
+  ],
+  "peach": {
+   "ripe": "pecher-palais",
+   "bare": "pecherNu-palais"
+  }
  }
 }
