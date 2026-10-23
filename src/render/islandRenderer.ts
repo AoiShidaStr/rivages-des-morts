@@ -23,6 +23,7 @@ import { loadFittedTexture } from './textureBudget';
 import { LOW_GRAPHICS } from './flags';
 import { isHeroVariant } from './heroes';
 import { DecorSprites } from './decorSprites';
+import type { ShadowCaster } from './spriteShadows';
 import { LOW_DECOR } from './islandDecor';
 import { IslandMap } from './islandMap';
 import { baseTag, frameAt, loadSheet, showFrame, withFacing, type SheetAnimation } from './sheets';
@@ -54,7 +55,9 @@ interface Billboard {
   sprite: string;
   mesh: Mesh;
   material: ShaderMaterial;
-  shadow: Mesh;
+  /** Une tache sombre sous les pieds (carte sans éclairage), ou les ombres portées de son image. */
+  shadow: Mesh | null;
+  shadows: ShadowCaster | null;
   entry: SpriteEntry;
   phase: number;
   faceRight: boolean;
@@ -153,7 +156,9 @@ export class IslandRenderer {
       if ((entry.anim && !entry.still) || entry.motion) this.animatedProps.push(view);
     }
     // Les décors restent tant que l'île existe (toute la partie).
-    if (this.map?.decor.length) await DecorSprites.build(this.scene, this.map.decor, this.forward, LOW_DECOR, this.map.decorMaterials());
+    if (this.map?.decor.length) {
+      await DecorSprites.build(this.scene, this.map.decor, this.forward, LOW_DECOR, this.map.decorMaterials(), this.map.shadows);
+    }
     const hero = this.sprites.has(this.wantedHero) ? this.wantedHero : 'heros';
     this.player = this.billboard('player', this.required(hero), island.player.pos, 0.4, hero);
     const ring = this.createGroundDecal('highlight', this.canvasTexture('islandRing', drawRing(), true), 1.6, new Color3(1, 0.85, 0.55), 0.75);
@@ -234,7 +239,7 @@ export class IslandRenderer {
       }
       const { view, label } = shown;
       view.mesh.position.set(visitor.pos.x, 0, visitor.pos.z);
-      view.shadow.position.set(visitor.pos.x, 0.01, visitor.pos.z);
+      view.shadow?.position.set(visitor.pos.x, 0.01, visitor.pos.z);
       view.mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(visitor.pos, this.forward) * 100);
       this.face(view, visitor.facing);
       if (view.entry.anim) this.play(view, visitor.moving ? 'move' : 'idle', dt);
@@ -315,9 +320,9 @@ export class IslandRenderer {
     if (this.player) {
       const p = island.player;
       this.player.mesh.position.set(p.pos.x, 0, p.pos.z);
-      this.player.shadow.position.set(p.pos.x, 0.01, p.pos.z);
+      this.player.shadow?.position.set(p.pos.x, 0.01, p.pos.z);
       this.player.mesh.isVisible = showPlayer;
-      this.player.shadow.isVisible = showPlayer;
+      if (this.player.shadow) this.player.shadow.isVisible = showPlayer;
       this.face(this.player, p.facing);
       if (this.player.entry.anim) {
         this.play(this.player, p.moving ? 'move' : 'idle', dt);
@@ -418,11 +423,16 @@ export class IslandRenderer {
     mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(pos, this.forward) * 100);
     const material = this.map?.litSprite(name, entry.texture) ?? spriteMaterial(this.scene, name, entry.texture);
     mesh.material = material;
-    const size = Math.max(0.8, radius * 2.8);
-    const shadow = this.createGroundDecal(`${name}-shadow`, this.shadowTexture, size, Color3.Black(), 0.35).mesh;
-    shadow.position.set(pos.x, 0.01, pos.z);
+    const shadows = this.map?.shadows?.add(mesh, entry.texture, true, false) ?? null;
+    let shadow: Mesh | null = null;
+    if (!shadows) {
+      const size = Math.max(0.8, radius * 2.8);
+      shadow = this.createGroundDecal(`${name}-shadow`, this.shadowTexture, size, Color3.Black(), 0.35).mesh;
+      shadow.position.set(pos.x, 0.01, pos.z);
+    }
     const phase = Math.random() * 10;
-    const view = { sprite, mesh, material, shadow, entry, phase, faceRight: entry.facesRight, faceBack: false, animTag: '', animTime: 0 };
+    const view = { sprite, mesh, material, shadow, shadows, entry, phase, faceRight: entry.facesRight, faceBack: false, animTag: '', animTime: 0 };
+    shadows?.setFlip(view.faceRight !== entry.facesRight);
     // Les décors animés identiques (lanternes) ne battent pas tous en même temps. Un décor fixe garde sa première image.
     if (entry.anim) this.play(view, 'idle', entry.still ? 0 : phase);
     return view;
@@ -447,20 +457,24 @@ export class IslandRenderer {
     if (base !== baseTag(view.animTag)) view.animTime = 0;
     view.animTag = name;
     view.animTime += dt;
-    showFrame(view.material, anim, frameAt(anim, name, view.animTime));
+    const frame = frameAt(anim, name, view.animTime);
+    showFrame(view.material, anim, frame);
+    view.shadows?.setFrame(anim.frames[frame].rect);
   }
 
   private disposeBillboard(view: Billboard): void {
     view.mesh.dispose();
     view.material.dispose();
-    view.shadow.material?.dispose();
-    view.shadow.dispose();
+    view.shadows?.dispose();
+    view.shadow?.material?.dispose();
+    view.shadow?.dispose();
   }
 
   private face(view: Billboard, dir: Vec2): void {
     const side = dot(dir, this.right);
     if (Math.abs(side) > 0.2) view.faceRight = side > 0;
     view.material.setFloat('flipX', view.faceRight === view.entry.facesRight ? 0 : 1);
+    view.shadows?.setFlip(view.faceRight !== view.entry.facesRight);
     // De dos seulement quand il monte franchement vers le haut de l'écran : de profil, on le voit de face.
     view.faceBack = dot(dir, this.forward) > (view.faceBack ? 0.1 : 0.3);
   }
