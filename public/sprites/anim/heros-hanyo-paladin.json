@@ -649,6 +649,7 @@
     "direction": "forward",
     "repeat": "1"
    }
-  ]
+  ],
+  "normal": "heros-hanyo-paladin-normal.webp"
  }
 }

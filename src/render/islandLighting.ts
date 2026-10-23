@@ -337,6 +337,8 @@ uniform float alpha;
 uniform float flipX;
 uniform vec4 frameRect;
 uniform float uDecor;
+uniform sampler2D uNormale;  // normal map du personnage (x droite, y haut, z caméra)
+uniform float uAvecNormale;
 void main(void) {
   vec2 uv = frameRect.xy + vec2(mix(vUV.x, 1.0 - vUV.x, flipX), vUV.y) * frameRect.zw;
   vec4 color = texture2D(textureSampler, uv);
@@ -368,6 +370,12 @@ void main(void) {
     h = sol + vMonde.y * 1.5;
     P = vec3(u, vPied - 1.41421 * sol, h);
     n = normalize(vec3(0.0, -0.6, 0.8));
+    if (uAvecNormale > 0.5) {
+      // normale de l'image : droite = u, haut de l'image et vers la caméra dans le plan vertical de la vue
+      vec3 t = texture2D(uNormale, uv).xyz * 2.0 - 1.0;
+      t.x *= 1.0 - 2.0 * flipX;
+      n = normalize(t.x * vec3(1.0, 0.0, 0.0) + t.y * vec3(0.0, 0.5774, 0.8165) + t.z * vec3(0.0, -0.8165, 0.5774));
+    }
     // à l'ombre si le sol sous ses pieds l'est
     ombreEn = floor(pied * uN);
   }
@@ -590,15 +598,15 @@ export class IslandLighting {
    * Un sprite éclairé, avec les mêmes réglages que spriteMaterial (renderer.ts). `decor` : un décor de la carte, dont le
    * relief est dans celui de la carte ; sinon, un personnage ou un objet debout sur le sol.
    */
-  sprite(name: string, texture: BaseTexture, decor: boolean): ShaderMaterial {
+  sprite(name: string, texture: BaseTexture, decor: boolean, normal?: BaseTexture): ShaderMaterial {
     const material = new ShaderMaterial(
       name,
       this.scene,
       { vertex: 'islandSprite', fragment: 'islandSprite' },
       {
         attributes: ['position', 'uv'],
-        uniforms: ['world', 'worldViewProjection', 'tint', 'flash', 'flashColor', 'alpha', 'flipX', 'frameRect', 'uDecor', ...LIGHT_UNIFORMS],
-        samplers: ['textureSampler', 'uHauteur', ...LIGHT_SAMPLERS],
+        uniforms: ['world', 'worldViewProjection', 'tint', 'flash', 'flashColor', 'alpha', 'flipX', 'frameRect', 'uDecor', 'uAvecNormale', ...LIGHT_UNIFORMS],
+        samplers: ['textureSampler', 'uHauteur', 'uNormale', ...LIGHT_SAMPLERS],
         needAlphaBlending: true,
       },
     );
@@ -611,6 +619,8 @@ export class IslandLighting {
     material.setFloat('flipX', 0);
     material.setVector4('frameRect', new Vector4(0, 0, 1, 1));
     material.setFloat('uDecor', decor ? 1 : 0);
+    material.setTexture('uNormale', normal ?? texture);
+    material.setFloat('uAvecNormale', normal ? 1 : 0);
     material.backFaceCulling = false;
     // Triés entre eux (alphaIndex), dessinés par-dessus le sol même sous la ligne du pied.
     material.depthFunction = Constants.ALWAYS;

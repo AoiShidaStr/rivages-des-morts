@@ -427,6 +427,9 @@ def planche(pid, dossier=None):
             'smooth': False, 'bodyHeight': int(ys[-1] - ys[0] + 1), 'anchor': {'x': case // 2, 'y': int(ys[-1] + 1)},
             'frameTags': tags}
     (dossier / f'{nom}.json').write_text(json.dumps({'frames': frames, 'meta': meta}, ensure_ascii=False, indent=1) + '\n')
+    # normal map pour l'éclairage de l'île
+    import normales
+    normales.planche(dossier / f'{nom}.json')
     print('  ', dossier / f'{nom}.webp', out.size, 'corps', meta['bodyHeight'], 'px')
 
 

@@ -204,8 +204,8 @@ export class IslandMap {
   }
 
   /** Matériau d'un personnage ou d'un objet debout sur l'île, éclairé comme la carte (null : carte sans éclairage). */
-  litSprite(name: string, texture: BaseTexture): ShaderMaterial | null {
-    return this.lighting?.sprite(name, texture, false) ?? null;
+  litSprite(name: string, texture: BaseTexture, normal?: BaseTexture): ShaderMaterial | null {
+    return this.lighting?.sprite(name, texture, false, normal) ?? null;
   }
 
   /**
