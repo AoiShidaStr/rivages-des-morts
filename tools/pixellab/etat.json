@@ -407,6 +407,14 @@
           "statut": "fait",
           "methode": "v3",
           "cout": 1
+        },
+        "north-east": {
+          "groupe": "435f0129-6f9b-41c4-a1a7-7b4c8bf3baaa",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/324ad718-e7a1-4143-b1f2-4594628e10b3/animations/eedc493e-f1bd-4dd3-8793-ef723714f107/north-east/{i}.png?t=1792728137132",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 0
         }
       }
     },
