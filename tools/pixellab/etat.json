@@ -420,5 +420,90 @@
     },
     "cout_creation": 1,
     "depense": 8
+  },
+  "hanyo-sorcier": {
+    "pixellab": "8923f265-7bf2-4208-9a01-e6cdba749f16",
+    "taille": [
+      76,
+      76
+    ],
+    "creation": "fait",
+    "animations": {
+      "deplacement": {
+        "south-east": {
+          "groupe": "0a39b6f4-e7b1-4500-af11-0065aba6b477",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/17e91375-16c7-402c-9352-dd9f47810375/south-east/{i}.png?t=1792728270878",
+          "images": 8,
+          "statut": "fait",
+          "methode": "walking-8-frames",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "5e66f05c-f8d3-443f-92ad-5c6387c5d08f",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/b3b32ec8-28ef-43b5-93e3-0445a0e57094/north-east/{i}.png?t=1792728426183",
+          "images": 8,
+          "statut": "fait",
+          "methode": "walking-8-frames",
+          "cout": 1
+        }
+      },
+      "attaque": {
+        "south-east": {
+          "groupe": "07d8ae9f-bc45-4b93-b673-1c0162c219b8",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/630d9974-c517-40b0-a615-9a3927cac1fe/south-east/{i}.png?t=1792728575103",
+          "images": 7,
+          "statut": "fait",
+          "methode": "throw-object",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "7517d094-f042-4e85-9d53-5361e7b4e6d3",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/d3995ea4-1595-4ad5-a9b1-a07dbc098a59/north-east/{i}.png?t=1792728690516",
+          "images": 7,
+          "statut": "fait",
+          "methode": "throw-object",
+          "cout": 1
+        }
+      },
+      "speciale": {
+        "south-east": {
+          "groupe": "7d294fc9-2b0f-432f-9104-08046f9dba71",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/aa1a3dde-2336-40fb-9808-c234af0a33b0/south-east/{i}.png?t=1792728867513",
+          "images": 6,
+          "statut": "fait",
+          "methode": "fireball",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "3badd5b8-5330-4420-b2cc-9ea013338c8d",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/33427291-6cd1-4101-be95-8f56e4140d59/north-east/{i}.png?t=1792729047133",
+          "images": 6,
+          "statut": "fait",
+          "methode": "fireball",
+          "cout": 1
+        }
+      },
+      "mort": {
+        "south-east": {
+          "groupe": "1e4febe4-91af-4b49-b3df-209eb0f5f4be",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/dc2572dc-d10d-4b96-b2b1-67993dd121f7/south-east/{i}.png?t=1792729266016",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "c895452f-c68d-4973-8040-c0499c3132aa",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/6782ba38-7391-4e7a-93f2-b70b6fce60cf/8923f265-7bf2-4208-9a01-e6cdba749f16/animations/98e68555-ed86-4edc-8218-da3458d1150d/north-east/{i}.png?t=1792729406167",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 0
+        }
+      }
+    },
+    "cout_creation": 1,
+    "depense": 8,
+    "compte": 3
   }
 }
