@@ -66,6 +66,19 @@ export async function loadSheet(scene: Scene, jsonPath: string, bodyHeight: numb
   return { texture, aspect: first.w / first.h, height, below, anim: { frames, tags } };
 }
 
+/** Les planches à deux directions (PixelLab) ont une version de dos de chaque animation, suivie de « -dos ». */
+const BACK = '-dos';
+
+/** Le tag à jouer : sa version de dos quand le personnage tourne le dos à la caméra et que la planche l'a. */
+export function withFacing(anim: SheetAnimation, tag: string, back: boolean): string {
+  return back && anim.tags.has(tag + BACK) ? tag + BACK : tag;
+}
+
+/** Le tag sans sa direction : `move-dos` → `move`. */
+export function baseTag(tag: string): string {
+  return tag.endsWith(BACK) ? tag.slice(0, -BACK.length) : tag;
+}
+
 /** Image de l'animation `tag` à jouer `time` secondes après son début (la dernière si elle ne boucle pas). */
 export function frameAt(anim: SheetAnimation, tagName: string, time: number): number {
   const tag = anim.tags.get(tagName);

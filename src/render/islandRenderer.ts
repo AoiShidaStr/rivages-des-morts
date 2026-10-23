@@ -25,7 +25,7 @@ import { isHeroVariant } from './heroes';
 import { DecorSprites } from './decorSprites';
 import { LOW_DECOR } from './islandDecor';
 import { IslandMap } from './islandMap';
-import { frameAt, loadSheet, showFrame, type SheetAnimation } from './sheets';
+import { baseTag, frameAt, loadSheet, showFrame, withFacing, type SheetAnimation } from './sheets';
 import { drawRadial, drawRing } from './textures';
 
 /** L'île est grande : la caméra la montre d'un peu plus haut qu'au combat, le héros y paraît plus petit. */
@@ -58,6 +58,8 @@ interface Billboard {
   entry: SpriteEntry;
   phase: number;
   faceRight: boolean;
+  /** Tourné vers le haut de l'écran : version de dos des planches à deux directions. */
+  faceBack: boolean;
   animTag: string;
   animTime: number;
 }
@@ -420,7 +422,7 @@ export class IslandRenderer {
     const shadow = this.createGroundDecal(`${name}-shadow`, this.shadowTexture, size, Color3.Black(), 0.35).mesh;
     shadow.position.set(pos.x, 0.01, pos.z);
     const phase = Math.random() * 10;
-    const view = { sprite, mesh, material, shadow, entry, phase, faceRight: entry.facesRight, animTag: '', animTime: 0 };
+    const view = { sprite, mesh, material, shadow, entry, phase, faceRight: entry.facesRight, faceBack: false, animTag: '', animTime: 0 };
     // Les décors animés identiques (lanternes) ne battent pas tous en même temps. Un décor fixe garde sa première image.
     if (entry.anim) this.play(view, 'idle', entry.still ? 0 : phase);
     return view;
@@ -440,11 +442,10 @@ export class IslandRenderer {
   private play(view: Billboard, tag: string, dt: number): void {
     const anim = view.entry.anim;
     if (!anim || (view.entry.still && view.animTag)) return;
-    const name = anim.tags.has(tag) ? tag : 'idle';
-    if (name !== view.animTag) {
-      view.animTag = name;
-      view.animTime = 0;
-    }
+    const base = anim.tags.has(tag) ? tag : 'idle';
+    const name = withFacing(anim, base, view.faceBack);
+    if (base !== baseTag(view.animTag)) view.animTime = 0;
+    view.animTag = name;
     view.animTime += dt;
     showFrame(view.material, anim, frameAt(anim, name, view.animTime));
   }
@@ -460,6 +461,8 @@ export class IslandRenderer {
     const side = dot(dir, this.right);
     if (Math.abs(side) > 0.2) view.faceRight = side > 0;
     view.material.setFloat('flipX', view.faceRight === view.entry.facesRight ? 0 : 1);
+    // De dos seulement quand il monte franchement vers le haut de l'écran : de profil, on le voit de face.
+    view.faceBack = dot(dir, this.forward) > (view.faceBack ? 0.1 : 0.3);
   }
 
   private createGroundDecal(name: string, texture: BaseTexture, size: number, color: Color3, alpha: number): { mesh: Mesh; material: ShaderMaterial } {
