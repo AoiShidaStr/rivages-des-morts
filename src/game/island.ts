@@ -209,10 +209,45 @@ export class Island {
     this.staticSolids.push(...solids);
   }
 
+  /**
+   * Pose le héros sur ce point de l'île, ou sur l'endroit libre le plus proche : un point de retour resté hors des
+   * zones de marche (la carte a changé depuis) l'enfermerait dans un mur invisible.
+   */
   placeAt(point: ScreenPoint): void {
-    this.player.pos = toWorld(point);
-    this.player.low = inRiver(this.data, point) && !onWalk(this.data, point);
-    this.area = this.areaAt(point);
+    const at = this.freeSpotNear(point);
+    this.player.pos = toWorld(at);
+    this.player.low = inRiver(this.data, at) && !onWalk(this.data, at);
+    this.area = this.areaAt(at);
+  }
+
+  /** Le point libre (le corps tient sur une zone de marche ou dans le lit, hors des obstacles) le plus proche. */
+  private freeSpotNear(point: ScreenPoint): ScreenPoint {
+    const data = this.data;
+    const solids = [
+      ...this.staticSolids,
+      ...data.interactables.filter((it) => it.solid).map((it) => ({ pos: toWorld(it), r: it.solid ?? 0 })),
+    ];
+    // Un peu de marge autour du corps : on doit pouvoir repartir dans plusieurs directions.
+    const reach = BODY_RADIUS + 0.4;
+    const free = (s: ScreenPoint) => {
+      const p = toWorld(s);
+      const level = onWalk(data, s) ? onWalk : inRiver(data, s) ? inRiver : null;
+      return (
+        !!level &&
+        RIM.every((d) => level(data, toScreen(add(p, scale(d, reach))))) &&
+        solids.every((solid) => distance(p, solid.pos) >= solid.r + BODY_RADIUS)
+      );
+    };
+    if (free(point)) return point;
+    for (let r = 0.25; r <= 12; r += 0.25) {
+      const steps = Math.ceil((2 * Math.PI * r) / 0.25);
+      for (let i = 0; i < steps; i++) {
+        const a = (i / steps) * 2 * Math.PI;
+        const s = { u: point.u + Math.cos(a) * r, v: point.v + Math.sin(a) * r };
+        if (free(s)) return s;
+      }
+    }
+    return point;
   }
 
   /** PNJ et objets présents selon l'avancée (l'ema n'apparaît que pendant la quête, par exemple). */

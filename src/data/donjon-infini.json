@@ -42,7 +42,7 @@
     "title": "Tu remontes du Yomi sans fond",
     "text": "La cascade se referme derrière toi. Ce que tu as arraché aux profondeurs est à toi."
   },
-  "exit": { "u": 27.7, "v": 60.6 },
+  "exit": { "u": 28.6, "v": 58.8 },
   "style": {
     "arena": "yomi",
     "ground": [0.35, 0.22, 0.24],
