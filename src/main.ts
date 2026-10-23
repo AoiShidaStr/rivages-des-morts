@@ -58,7 +58,8 @@ async function start(): Promise<void> {
   // Sans anticrénelage (MSAA) : sur des images peintes, il ne lisse presque rien, et il coûtait plus de la moitié du
   // temps de la carte graphique sur une puce Intel.
   // La densité de l'écran est gérée par la résolution adaptative (render/resolution.ts), pas par Babylon.
-  const engine = new Engine(canvas, false, { stencil: false }, false);
+  // Le stencil : une ombre portée par lumière au plus sur l'île (render/spriteShadows.ts).
+  const engine = new Engine(canvas, false, { stencil: true }, false);
   // Avec le serveur du jeu, les personnages peuvent vivre sur un compte : on les recopie avant de charger le dernier joué.
   const network = chooseNetwork(params);
   const notices: string[] = [];

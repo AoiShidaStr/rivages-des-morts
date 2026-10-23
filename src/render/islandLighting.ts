@@ -12,6 +12,7 @@ import {
   type Scene,
 } from '@babylonjs/core';
 import type { IslandMap as MapData, MapLight, ScreenPoint } from '../game/island';
+import { SpriteShadows, type ShadowLight } from './spriteShadows';
 
 /**
  * Éclairage de l'île v3 (pixel art) : l'heure du jour, les ombres des falaises, des arbres et des maisons qui tournent
@@ -32,8 +33,11 @@ const MAX_LIGHTS = 16;
 const HOURS_PER_SECOND = 1 / 60;
 const NIGHT_SPEED = 2;
 const START_HOUR = 9;
-/** Paliers de lumière tramés, comme dans un jeu en pixel art (0 : continu). */
-const STEPS = 6;
+/**
+ * Paliers de lumière (0 : continu). Ils étaient tramés (Bayer 4 × 4) : là où la lumière tombait entre deux paliers,
+ * c'est-à-dire presque partout hors de midi, la trame faisait une grille de points sur toute la carte.
+ */
+const STEPS = 0;
 /**
  * Les ombres du soleil coûtent cher (une quarantaine de lectures du relief par pixel) : elles sont calculées une fois
  * par texel, dans des bandes de la carte autour de la caméra, et recalculées quand le soleil a tourné ou que la
@@ -156,19 +160,16 @@ float bruit(vec2 p) {
   f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hasard(i), hasard(i + vec2(1.0, 0.0)), f.x), mix(hasard(i + vec2(0.0, 1.0)), hasard(i + vec2(1.0, 1.0)), f.x), f.y);
 }
-float bayer2(vec2 a) { a = floor(a); return fract(a.x * 0.5 + a.y * a.y * 0.75); }
-float bayer4(vec2 a) { return bayer2(a * 0.5) * 0.25 + bayer2(a); }
 
 // Ombres portées : la carte vue de 3/4 cache tout ce qui est derrière une surface plus haute sur la même ligne de vue ;
 // un rayon vers la lumière est dans l'ombre dès que la hauteur peinte là où il se trouve à l'écran le dépasse. Renvoie
-// de combien. Le relief y voit des colonnes pleines jusqu'au sol : juste pour le terrain, pas pour un arbre ou une
-// maison (relief A = 207 : un décor), qui n'est qu'une coque, sinon leurs ombres s'allongent en grandes traînées.
+// de combien. Le relief y voit des colonnes pleines jusqu'au sol : juste pour le terrain. Les arbres et les maisons
+// (relief A = 207 : un décor) n'y comptent pas : leur ombre est une copie de leur image (spriteShadows.ts).
 float cache(vec3 R) {
   vec2 t = vec2(R.x / uMonde.x + 0.5, 0.5 - (R.y + 1.41421 * R.z) / uMonde.y);
   if (t.x < 0.0 || t.x > 1.0 || t.y < 0.0 || t.y > 1.0) return 0.0;
   vec4 r = texel(uRelief, floor(t * uN));
-  float d = r.b * 12.0 - R.z;
-  return abs(r.a - 0.8118) < 0.03 && d > 2.5 ? 0.0 : d;
+  return abs(r.a - 0.8118) < 0.03 ? 0.0 : r.b * 12.0 - R.z;
 }
 // Vers une lumière proche : on s'arrête un peu avant elle, sinon la lanterne qui la porte la cacherait.
 float ombreProche(vec3 P, vec3 L, float dist) {
@@ -204,7 +205,7 @@ ${BAND_UNIFORMS.map((n, i) => `  if (dansBande(${n}, t)) return texture2D(uOmbre
   return ombre(P, uSoleil, 14.0 + 22.0 * (1.0 - uSoleil.z));
 }
 
-// La lumière reçue en P, de normale n ; base : le texel de la carte (tramage des paliers, halo) ; t : celui où lire
+// La lumière reçue en P, de normale n ; base : le texel de la carte (halo) ; t : celui où lire
 // l'ombre du soleil (le sol sous les pieds, pour un personnage).
 vec3 eclairer(vec3 P, vec3 n, vec2 base, vec2 t, out vec3 reflet) {
   float temps = uReglages.x;
@@ -236,20 +237,19 @@ vec3 eclairer(vec3 P, vec3 n, vec2 base, vec2 t, out vec3 reflet) {
 
   if (uReglages2.x > 0.0) {
     float m = max(max(lumiere.r, lumiere.g), lumiere.b);
-    float q = floor(m * uReglages2.x + 0.5 + (bayer4(base) - 0.5) * 0.7) / uReglages2.x;
+    float q = floor(m * uReglages2.x + 0.5) / uReglages2.x;
     lumiere *= max(q, 0.0) / max(m, 0.001);
   }
   return lumiere;
 }
 
-// Brume de Yomi : plus épaisse au ras de l'eau, en nappes qui dérivent, tramée.
+// Brume de Yomi : plus épaisse au ras de l'eau, en nappes qui dérivent.
 vec3 brume(vec3 col, vec3 P, float h, vec2 base) {
   if (uReglages.y <= 0.0) return col;
   float temps = uReglages.x;
   float nb = bruit(P.xy * 0.045 + vec2(temps * 0.025, temps * 0.01)) * 0.65 + bruit(P.xy * 0.11 - vec2(temps * 0.04, 0.0)) * 0.35;
   float bas = clamp(1.0 - h / 7.0, 0.0, 1.0);
   float fq = smoothstep(0.42, 0.85, nb) * (0.35 + 0.65 * bas) * uReglages.y;
-  fq = floor(fq * 5.0 + bayer4(base)) / 5.0;
   return mix(col, uBrumeCoul, clamp(fq, 0.0, 0.8));
 }
 `;
@@ -482,6 +482,9 @@ export class IslandLighting {
   private time = 0;
   /** Lumière d'une surface plate et dégagée, à l'heure qu'il est : la mer au-delà de la carte. */
   readonly flat = new Color3(1, 1, 1);
+  /** Les ombres portées des objets debout (null : `?ombres=0`). */
+  readonly shadows: SpriteShadows | null;
+  private readonly shadowLights: ShadowLight[] = [];
 
   private constructor(
     private readonly scene: Scene,
@@ -501,6 +504,7 @@ export class IslandLighting {
     this.fixed = hour !== null;
     this.hour = hour ?? START_HOUR;
     this.bands = Array.from({ length: BANDS }, (_, i) => this.band(i));
+    this.shadows = shadowsWanted() ? new SpriteShadows(scene, (s) => this.heightAt(s)) : null;
   }
 
   private band(index: number): ShadowBand {
@@ -715,6 +719,20 @@ export class IslandLighting {
     }
     this.settings2.z = n;
 
+    if (this.shadows) {
+      // Ce qu'une ombre retire au sol : la lumière qu'elle cache, rapportée à celle qui reste (ambiante, soleil).
+      const lum = (c: Rgb) => c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11;
+      const sunLight = lum(m.color) * Math.max(m.sun[2], 0);
+      const ambient = lum(m.ambient);
+      const sunAlpha = (0.8 * sunLight) / (sunLight + ambient) * (1 - 0.35 * m.night);
+      this.shadowLights.length = n;
+      for (let i = 0; i < n; i++) {
+        const l = wanted[i];
+        this.shadowLights[i] = { u: l.u, v: l.v, h: l.h, r: l.r, power: l.force * lum(l.color) };
+      }
+      this.shadows.update(m.sun, sunAlpha, this.shadowLights, ambient + sunLight);
+    }
+
     // Une surface plate au soleil, sans ombre : la mer au-delà de la carte.
     const lref = 0.45 + 0.55 * REF[2];
     const sunUp = Math.max(m.sun[2], 0);
@@ -727,6 +745,7 @@ export class IslandLighting {
   }
 
   dispose(): void {
+    this.shadows?.dispose();
     for (const material of [...this.materials]) material.dispose();
     for (const band of this.bands) band.texture.dispose();
     for (const texture of [this.sol, this.relief, this.halo, this.heightTexture]) texture.dispose();
