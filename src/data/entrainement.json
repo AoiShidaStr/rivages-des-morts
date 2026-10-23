@@ -12,7 +12,7 @@
     "onVictory": [],
     "firstVictory": { "if": [], "then": [] },
     "shop": "",
-    "exit": { "u": -2.4, "v": 9.6 },
+    "exit": { "u": -17, "v": -0.5 },
     "style": {
       "ground": [0.88, 0.84, 0.74],
       "sky": "#b6bcbf",

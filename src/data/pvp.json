@@ -21,7 +21,7 @@
     "onVictory": [],
     "firstVictory": { "if": [], "then": [] },
     "shop": "",
-    "exit": { "u": -2.4, "v": 9.6 },
+    "exit": { "u": -17, "v": -0.5 },
     "style": {
       "arena": "palais",
       "ground": [0.5, 0.4, 0.5],
