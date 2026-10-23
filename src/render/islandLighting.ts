@@ -11,6 +11,7 @@ import {
   type BaseTexture,
   type Scene,
 } from '@babylonjs/core';
+import { islandClock } from '../game/clock';
 import type { IslandMap as MapData, MapLight, ScreenPoint } from '../game/island';
 
 /**
@@ -28,10 +29,6 @@ import type { IslandMap as MapData, MapLight, ScreenPoint } from '../game/island
 
 const SPRITES = `${import.meta.env.BASE_URL}sprites/`;
 const MAX_LIGHTS = 16;
-/** Une heure de jeu par minute le jour, deux fois plus vite la nuit. */
-const HOURS_PER_SECOND = 1 / 60;
-const NIGHT_SPEED = 2;
-const START_HOUR = 9;
 /** Paliers de lumière tramés, comme dans un jeu en pixel art (0 : continu). */
 const STEPS = 6;
 /**
@@ -101,13 +98,6 @@ function moment(hour: number): Key {
 /** `?ombres=0` dans l'adresse : sans ombres portées (essais de vitesse). */
 function shadowsWanted(): boolean {
   return new URLSearchParams(location.search).get('ombres') !== '0';
-}
-
-/** `?heure=21` dans l'adresse : l'heure reste fixe (essais, captures). */
-function fixedHour(): number | null {
-  const value = new URLSearchParams(location.search).get('heure');
-  const hour = value === null ? NaN : Number.parseFloat(value.replace(',', '.'));
-  return Number.isFinite(hour) ? ((hour % 24) + 24) % 24 : null;
 }
 
 // --- Shaders -----------------------------------------------------------------------
@@ -466,8 +456,6 @@ export interface LightingView {
 export class IslandLighting {
   private readonly materials = new Set<ShaderMaterial>();
   private readonly bands: ShadowBand[];
-  private hour: number;
-  private readonly fixed: boolean;
   // Valeurs partagées par tous les matériaux : on les change sur place, une fois par image.
   private readonly sun = new Vector3();
   private readonly sunColor = new Vector3();
@@ -497,9 +485,6 @@ export class IslandLighting {
     registerShaders();
     this.world = new Vector2(width, height);
     this.texels = relief.getSize().width;
-    const hour = fixedHour();
-    this.fixed = hour !== null;
-    this.hour = hour ?? START_HOUR;
     this.bands = Array.from({ length: BANDS }, (_, i) => this.band(i));
   }
 
@@ -662,16 +647,13 @@ export class IslandLighting {
   }
 
   /**
-   * Avance l'heure et place les lumières. `hero` : où se tient le héros (sa torche, la nuit) ; `lit` : les lanternes que
+   * Suit l'heure et place les lumières. `hero` : où se tient le héros (sa torche, la nuit) ; `lit` : les lanternes que
    * le joueur a allumées (les autres restent éteintes) ; `view` : ce que montre la caméra (les ombres à calculer).
    */
   update(dt: number, hero: ScreenPoint | null, lit: (lamp: string) => boolean, view: LightingView | null): void {
     this.time += dt;
-    if (!this.fixed) {
-      const night = this.hour >= 20 || this.hour < 5;
-      this.hour = (this.hour + dt * HOURS_PER_SECOND * (night ? NIGHT_SPEED : 1)) % 24;
-    }
-    const m = moment(this.hour);
+    // L'heure avance avec l'île (src/game/clock.ts) : la lumière ne fait que la suivre.
+    const m = moment(islandClock.hour);
     const t = this.time;
     this.sun.set(...m.sun);
     this.sunColor.set(...m.color);

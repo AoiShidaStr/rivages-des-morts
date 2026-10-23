@@ -520,6 +520,91 @@ def grand_rocher(seed=4):
     return img, pied
 
 
+def _uni(coul):
+    return lambda s, t: np.tile(np.array(coul, np.uint8), (len(s), 1))
+
+
+def _poutre(T, x0, x1, z, h0, ep, dessus, face, bout=None):
+    """Pièce de bois le long de x, de section ep × ep : sa face tournée vers -z et son dessus."""
+    T.plan((x0, z - ep / 2, h0), (x1 - x0, 0, 0), (0, 0, ep), _uni(face))
+    T.plan((x0, z - ep / 2, h0 + ep), (x1 - x0, 0, 0), (0, ep, 0), _uni(dessus))
+    if bout is not None:
+        T.plan((x0, z - ep / 2, h0), (0, ep, 0), (0, 0, ep), _uni(bout))
+
+
+def _poteau(T, x, z, h0, h1, d, clair, sombre, dessus):
+    T.plan((x - d, z + d, h0), (0, -2 * d, 0), (0, 0, h1 - h0), _uni(clair))
+    T.plan((x - d, z - d, h0), (2 * d, 0, 0), (0, 0, h1 - h0), _uni(sombre))
+    T.plan((x - d, z - d, h1), (2 * d, 0, 0), (0, 2 * d, 0), _uni(dessus))
+
+
+def barriere(L=1.2):
+    """Petite barrière de jardin en bois (le long de x) : trois piquets, deux lisses, comme les clôtures basses des
+    parcs japonais. Mise bout à bout, elle borde le parc de la grande prairie."""
+    T = Toile(110, 80, 55, 55)
+    clair, mi, sombre, noir = c('#a57660'), c('#865e51'), c('#6b4a47'), c('#432b30')
+    for k in range(3):
+        x = -L / 2 + 0.06 + k * (L - 0.12) / 2
+        _poteau(T, x, 0, 0, 0.78, 0.05, mi, sombre, clair)
+        T.plan((x - 0.05, -0.05, 0.78), (0.1, 0, 0), (0, 0.1, 0.04), _uni(noir))
+    _poutre(T, -L / 2, L / 2, -0.06, 0.28, 0.06, clair, mi, sombre)
+    _poutre(T, -L / 2, L / 2, -0.06, 0.58, 0.06, clair, mi, sombre)
+    return T.rogner()
+
+
+def banc():
+    """Banc de parc (le long de x) : trois planches d'assise, dossier de deux lattes, pieds de pierre."""
+    T = Toile(120, 100, 60, 70)
+    clair, mi, sombre, noir = c('#a57660'), c('#865e51'), c('#6b4a47'), c('#53383a')
+    pierre, p_s, p_c = c('#a28e97'), c('#725b53'), c('#baa8a6')
+    L, P = 1.55, 0.44
+    for x in (-L / 2 + 0.16, L / 2 - 0.16):                   # pieds de pierre
+        T.plan((x - 0.09, P / 2, 0), (0, -P, 0), (0, 0, 0.36), _uni(pierre))
+        T.plan((x - 0.09, -P / 2, 0), (0.18, 0, 0), (0, 0, 0.36), _uni(p_s))
+        T.plan((x - 0.09, -P / 2, 0.36), (0.18, 0, 0), (0, P, 0), _uni(p_c))
+    for x in (-L / 2 + 0.16, L / 2 - 0.16):                   # montants du dossier
+        _poteau(T, x, P / 2 - 0.05, 0.36, 0.9, 0.035, mi, sombre, clair)
+    _poutre(T, -L / 2, L / 2, P / 2 - 0.06, 0.62, 0.07, clair, mi, sombre)
+    _poutre(T, -L / 2, L / 2, P / 2 - 0.06, 0.8, 0.07, clair, mi, sombre)
+    for k in range(3):                                         # assise
+        z = -P / 2 + 0.07 + k * (P - 0.14) / 2
+        _poutre(T, -L / 2, L / 2, z, 0.36, 0.12, clair if k != 1 else mi, sombre, noir)
+    return T.rogner()
+
+
+def faille():
+    """La faille derrière la cascade : une fente sombre dans la paroi, bordée de roche mouillée et de mousse, d'où
+    monte un souffle froid (deux traits de brume bleutée)."""
+    w, h = 80, 112
+    img = np.zeros((h, w, 4), np.uint8)
+    yy, xx = np.mgrid[0:h, 0:w]
+    rng = np.random.default_rng(3)
+    bord = (np.sin(yy / 9.0) * 2.5 + np.sin(yy / 3.7) * 0.8).astype(np.float32)
+    demi = np.clip(26 * np.sqrt(np.clip(yy / (h - 1), 0, 1)) * (1 - 0.15 * (yy / h)), 2, None)
+    dedans = np.abs(xx - w / 2 - bord) < demi
+    rebord = np.abs(xx - w / 2 - bord) < demi + 5
+    roche = rebord & ~dedans
+    img[roche, :3] = fm.hx('#725b53')
+    img[roche & (xx < w / 2 + bord), :3] = fm.hx('#8f7a79')
+    img[roche & (yy % 9 < 2), :3] = fm.hx('#53383a')
+    img[roche & (yy < 18) & ((xx + yy) % 5 == 0), :3] = fm.hx('#5e6431')
+    img[dedans, :3] = fm.hx('#1e1724')
+    img[dedans & (np.abs(xx - w / 2 - bord) > demi - 4), :3] = fm.hx('#2c2133')
+    img[dedans & (yy > h - 14), :3] = fm.hx('#2f2c3f')
+    img[rebord, 3] = 255
+    for k, (x0, y0) in enumerate([(w // 2 - 6, h - 30), (w // 2 + 5, h - 52)]):
+        for t in range(14):
+            x, y = x0 + int(3 * np.sin(t / 2.0 + k)), y0 - t * 2
+            if 0 <= y < h and 0 <= x < w and dedans[y, x]:
+                img[y, x, :3] = fm.hx('#5f5a6b')
+    img[h - 3:, :, :] = 0
+    img[h - 3:, :, :3] = 0
+    m = rebord.copy()
+    m[h - 3:] = False
+    img[..., 3] = np.where(m, 255, 0)
+    return img, (w // 2, h - 4)
+
+
 def tout():
     """Tous les sprites de décor : nom → (RGBA, pied, ombre ou None)."""
     out = {k: v for k, v in arbres().items()}
@@ -528,10 +613,15 @@ def tout():
     out['maison_b'] = (*maison_the(4.0, 2.8, 1.8, False), None)
     GEOMETRIE['maison_b'] = DERNIER
     for nom, f in [('maison_the', maison_the), ('forge', forge), ('lanterne', lanterne), ('jizo', jizo),
-                   ('rocher', grand_rocher)]:
+                   ('rocher', grand_rocher), ('barriere', barriere), ('banc', banc)]:
         im, pied = f()
         GEOMETRIE[nom] = DERNIER
         out[nom] = (im, pied, ombre_ellipse(int(im.shape[1] * 0.9), max(8, int(im.shape[1] * 0.3))) if nom in ('rocher',) else None)
+    out['faille'] = (*faille(), None)
+    GEOMETRIE['faille'] = None
+    for k in ('barriere', 'banc'):
+        im, pied, _ = out[k]
+        out[k + '_z'] = (im[:, ::-1].copy(), (im.shape[1] - 1 - pied[0], pied[1]), None)   # le long de z
     im, pied = torii()
     out['torii'] = (im, pied, None)
     GEOMETRIE['torii'] = DERNIER

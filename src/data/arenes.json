@@ -1,0 +1,1450 @@
+{
+ "about": "Arènes des donjons en pixel art (tools/ile-v3/arenes.py) : sol en une image, son centre dans le repère du jeu (u, v, l'arène autour de l'origine), décors debout posés par le jeu, couleur du fond au-delà de l'image, sprite des obstacles, teinte des décors debout (la même que celle du sol).",
+ "yomi": {
+  "image": "arenes/yomi.webp",
+  "width": 60.0,
+  "height": 64.755,
+  "center": {
+   "u": 0.0,
+   "v": 6.397
+  },
+  "background": "#07090e",
+  "obstacle": "roc-yomi",
+  "decor": [
+   {
+    "sprite": "v3/torii_noir",
+    "u": 0.0,
+    "v": 16.688,
+    "height": 5.994,
+    "below": 0.838
+   },
+   {
+    "sprite": "v3/roc_amas",
+    "u": 5.389,
+    "v": 10.985,
+    "height": 1.108,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_aiguille",
+    "u": -10.507,
+    "v": 7.488,
+    "height": 1.989,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/lanterne",
+    "u": 13.046,
+    "v": 3.005,
+    "height": 1.705,
+    "below": 0.27
+   },
+   {
+    "sprite": "v3/lanterne",
+    "u": -13.046,
+    "v": 3.005,
+    "height": 1.705,
+    "below": 0.27
+   },
+   {
+    "sprite": "v3/roc_amas",
+    "u": -28.474,
+    "v": 2.961,
+    "height": 1.108,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_aiguille",
+    "u": 28.992,
+    "v": 2.384,
+    "height": 1.989,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_aiguille",
+    "u": -17.904,
+    "v": 1.138,
+    "height": 1.989,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_amas",
+    "u": 28.14,
+    "v": -3.804,
+    "height": 1.108,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_amas",
+    "u": -16.175,
+    "v": -6.862,
+    "height": 1.108,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_amas",
+    "u": -27.545,
+    "v": -7.054,
+    "height": 1.108,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": 7.837,
+    "v": -9.094,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": 17.899,
+    "v": -10.177,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": -14.521,
+    "v": -12.279,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": 25.682,
+    "v": -14.754,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": -23.986,
+    "v": -14.897,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": 17.082,
+    "v": -15.198,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": -8.385,
+    "v": -15.584,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": -1.008,
+    "v": -15.61,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": 4.712,
+    "v": -20.609,
+    "height": 0.653,
+    "below": 0.071
+   },
+   {
+    "sprite": "v3/roc_petit",
+    "u": -8.29,
+    "v": -20.956,
+    "height": 0.653,
+    "below": 0.071
+   }
+  ],
+  "tint": [
+   0.62,
+   0.7,
+   0.86
+  ]
+ },
+ "rizieres": {
+  "image": "arenes/rizieres.webp",
+  "width": 60.0,
+  "height": 64.755,
+  "center": {
+   "u": 0.0,
+   "v": 6.397
+  },
+  "background": "#b9c2c6",
+  "obstacle": "roc-rizieres",
+  "decor": [
+   {
+    "sprite": "v3/saule",
+    "u": -24.273,
+    "v": 35.072,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": 17.375,
+    "v": 35.051,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -7.096,
+    "v": 34.609,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -19.833,
+    "v": 34.39,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 28.179,
+    "v": 34.308,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 7.147,
+    "v": 34.01,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 13.176,
+    "v": 33.277,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -11.406,
+    "v": 32.89,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -27.034,
+    "v": 32.614,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -15.68,
+    "v": 32.366,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 26.414,
+    "v": 31.136,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": 22.477,
+    "v": 30.934,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": -22.73,
+    "v": 30.576,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 9.526,
+    "v": 30.072,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": -25.567,
+    "v": 28.099,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": 15.633,
+    "v": 27.282,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -13.922,
+    "v": 26.723,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 23.916,
+    "v": 25.932,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -19.246,
+    "v": 25.383,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 20.841,
+    "v": 23.969,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -27.951,
+    "v": 23.727,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/torii",
+    "u": 0.0,
+    "v": 16.971,
+    "height": 5.256,
+    "below": 0.753
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -24.762,
+    "v": 21.753,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 26.498,
+    "v": 21.577,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": 17.905,
+    "v": 21.48,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 21.919,
+    "v": 19.746,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -21.179,
+    "v": 17.492,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 22.554,
+    "v": 16.205,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/jizo",
+    "u": -3.946,
+    "v": 11.052,
+    "height": 1.023,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -27.852,
+    "v": 15.786,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -23.849,
+    "v": 15.008,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 26.515,
+    "v": 14.773,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/jizo",
+    "u": -5.356,
+    "v": 9.641,
+    "height": 1.023,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/jizo",
+    "u": -6.767,
+    "v": 8.231,
+    "height": 1.023,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/jizo",
+    "u": -8.178,
+    "v": 6.82,
+    "height": 1.023,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/jizo",
+    "u": -9.588,
+    "v": 5.409,
+    "height": 1.023,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/jizo",
+    "u": -10.999,
+    "v": 3.999,
+    "height": 1.023,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -24.757,
+    "v": -3.601,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": 27.532,
+    "v": -3.984,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": -28.661,
+    "v": -4.405,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/saule",
+    "u": 23.249,
+    "v": -5.991,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/tsutsuji2",
+    "u": 5.56,
+    "v": -11.65,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": -13.397,
+    "v": -11.882,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 26.575,
+    "v": -11.962,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/tsutsuji2",
+    "u": 9.52,
+    "v": -13.518,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/tsutsuji2",
+    "u": -19.841,
+    "v": -15.454,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 16.578,
+    "v": -15.866,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson2",
+    "u": 17.788,
+    "v": -17.977,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 12.14,
+    "v": -19.419,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/tsutsuji2",
+    "u": -12.156,
+    "v": -20.774,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/tsutsuji2",
+    "u": -0.098,
+    "v": -20.92,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 14.684,
+    "v": -21.306,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/tsutsuji2",
+    "u": 12.135,
+    "v": -23.189,
+    "height": 0.653,
+    "below": 0.014
+   }
+  ],
+  "tint": [
+   0.9,
+   0.95,
+   0.97
+  ]
+ },
+ "fujikasane": {
+  "image": "arenes/fujikasane.webp",
+  "width": 60.0,
+  "height": 64.755,
+  "center": {
+   "u": 0.0,
+   "v": 6.397
+  },
+  "background": "#0c1018",
+  "obstacle": "roc-fujikasane",
+  "decor": [
+   {
+    "sprite": "v3/sugi",
+    "u": -22.182,
+    "v": 35.77,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -1.229,
+    "v": 32.604,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 26.321,
+    "v": 35.454,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 22.569,
+    "v": 35.357,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": -7.921,
+    "v": 35.253,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 13.511,
+    "v": 34.898,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -26.694,
+    "v": 34.695,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 19.796,
+    "v": 34.481,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 0.752,
+    "v": 30.029,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": 15.157,
+    "v": 32.988,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 11.855,
+    "v": 32.973,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 26.449,
+    "v": 32.919,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 7.773,
+    "v": 29.78,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -9.913,
+    "v": 32.21,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 21.41,
+    "v": 32.068,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -24.16,
+    "v": 31.644,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -13.516,
+    "v": 31.363,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 28.219,
+    "v": 30.524,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 1.61,
+    "v": 23.974,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -8.451,
+    "v": 27.044,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -4.033,
+    "v": 26.491,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 4.244,
+    "v": 23.239,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 14.156,
+    "v": 29.11,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 24.33,
+    "v": 28.704,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": -16.997,
+    "v": 28.624,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": -21.256,
+    "v": 27.88,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -14.568,
+    "v": 24.273,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -11.862,
+    "v": 24.261,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 15.864,
+    "v": 27.139,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": -27.304,
+    "v": 26.818,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -6.859,
+    "v": 23.626,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 19.755,
+    "v": 26.601,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -9.859,
+    "v": 22.837,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 9.899,
+    "v": 22.445,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -16.335,
+    "v": 22.086,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -19.167,
+    "v": 25.004,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": 23.074,
+    "v": 24.897,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 26.244,
+    "v": 24.628,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -16.499,
+    "v": 19.462,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -28.149,
+    "v": 22.5,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -5.524,
+    "v": 16.087,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": 12.987,
+    "v": 19.192,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 4.791,
+    "v": 16.024,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": -10.87,
+    "v": 15.832,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 15.828,
+    "v": 18.769,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse",
+    "u": -2.778,
+    "v": 15.589,
+    "height": 0.881,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 22.94,
+    "v": 21.769,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": 1.301,
+    "v": 14.681,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 10.69,
+    "v": 14.635,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 19.111,
+    "v": 17.743,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 7.582,
+    "v": 14.465,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -22.988,
+    "v": 20.633,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": -19.391,
+    "v": 17.304,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -21.326,
+    "v": 15.765,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": 27.314,
+    "v": 18.673,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": -28.294,
+    "v": 18.468,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 23.481,
+    "v": 15.06,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 13.561,
+    "v": 11.845,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 7.679,
+    "v": 11.814,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": -9.957,
+    "v": 11.811,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 16.759,
+    "v": 14.904,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -25.386,
+    "v": 14.518,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": -15.289,
+    "v": 10.364,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/matsu",
+    "u": -11.021,
+    "v": 9.202,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 16.049,
+    "v": 9.03,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": -18.216,
+    "v": 8.832,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 23.187,
+    "v": 11.723,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/momiji",
+    "u": -14.095,
+    "v": 8.321,
+    "height": 3.551,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": -23.821,
+    "v": 11.124,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -28.072,
+    "v": 13.541,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 11.709,
+    "v": 7.176,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 25.039,
+    "v": 9.725,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 18.497,
+    "v": 6.465,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -20.377,
+    "v": 6.209,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse_seul",
+    "u": -8.6,
+    "v": 6.026,
+    "height": 0.852,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/sugi",
+    "u": 13.999,
+    "v": 5.814,
+    "height": 2.614,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -17.57,
+    "v": 5.204,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse_seul",
+    "u": 11.67,
+    "v": 4.734,
+    "height": 0.852,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 15.58,
+    "v": 3.849,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -25.199,
+    "v": 6.389,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -22.405,
+    "v": 3.23,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -13.035,
+    "v": 3.193,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -16.513,
+    "v": 2.191,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 26.894,
+    "v": 5.202,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": -20.275,
+    "v": 1.492,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/lanterne",
+    "u": -15.061,
+    "v": 1.061,
+    "height": 1.705,
+    "below": 0.27
+   },
+   {
+    "sprite": "v3/lanterne",
+    "u": 15.061,
+    "v": 1.061,
+    "height": 1.705,
+    "below": 0.27
+   },
+   {
+    "sprite": "v3/kusunoki",
+    "u": 23.262,
+    "v": 0.97,
+    "height": 4.716,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 15.906,
+    "v": -0.122,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse_seul",
+    "u": 15.122,
+    "v": -0.443,
+    "height": 0.852,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -24.305,
+    "v": -0.731,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -28.347,
+    "v": -3.065,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 19.299,
+    "v": -3.401,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 27.152,
+    "v": -3.479,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": -20.958,
+    "v": -4.9,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/sugi_haut",
+    "u": 13.838,
+    "v": -5.211,
+    "height": 5.369,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": 15.794,
+    "v": -5.587,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": -22.139,
+    "v": -6.089,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson2",
+    "u": -9.993,
+    "v": -6.795,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse_seul",
+    "u": -10.899,
+    "v": -6.91,
+    "height": 0.852,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": -26.909,
+    "v": -8.45,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": -18.394,
+    "v": -9.127,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 16.259,
+    "v": -9.659,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": -28.955,
+    "v": -10.098,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 18.525,
+    "v": -10.368,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": -25.346,
+    "v": -10.449,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson2",
+    "u": 21.253,
+    "v": -11.187,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 25.716,
+    "v": -11.219,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse",
+    "u": -3.418,
+    "v": -12.613,
+    "height": 0.881,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": 27.923,
+    "v": -13.164,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": -20.559,
+    "v": -13.391,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": -5.558,
+    "v": -13.635,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": 6.779,
+    "v": -14.207,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": -3.178,
+    "v": -14.309,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": -18.869,
+    "v": -15.59,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson1",
+    "u": 3.256,
+    "v": -16.651,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson2",
+    "u": -7.493,
+    "v": -17.325,
+    "height": 0.653,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": -21.589,
+    "v": -17.884,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": 12.406,
+    "v": -18.203,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/roc_mousse_seul",
+    "u": 1.044,
+    "v": -18.774,
+    "height": 0.852,
+    "below": 0.043
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": 4.94,
+    "v": -18.87,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": 12.173,
+    "v": -20.372,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": -19.934,
+    "v": -21.686,
+    "height": 0.852,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/buisson0",
+    "u": -17.138,
+    "v": -21.701,
+    "height": 1.08,
+    "below": 0.014
+   },
+   {
+    "sprite": "v3/azalee1",
+    "u": 20.122,
+    "v": -22.122,
+    "height": 0.852,
+    "below": 0.014
+   }
+  ],
+  "tint": [
+   0.5,
+   0.6,
+   0.86
+  ]
+ }
+}

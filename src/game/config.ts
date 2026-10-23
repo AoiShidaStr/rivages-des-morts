@@ -833,6 +833,31 @@ export interface IkazuchiConfig extends EnemyBaseConfig {
  * Son regard : la regarder (viser vers elle) la renforce, jusqu'à la colère.
  * Sa faiblesse cachée : les pêches d'Izanagi, qu'on fait tomber des pêchers de l'arène.
  */
+/**
+ * Le gardien errant, veilleur du Mont Fujikasane, boss final du Yomi (on ne l'affronte que la nuit, après minuit) :
+ * fauche, bondit, puis allume les feux de veille et, à la fin, charge à travers la clairière.
+ */
+export interface GardienConfig extends EnemyBaseConfig {
+  /** Seuils de PV (fraction du maximum) : les feux de veille s'allument, puis le mont s'éveille. */
+  firesAt: number;
+  wakeAt: number;
+  /** Secondes de la transformation entre deux phases (il ne frappe pas, on ne le touche pas). */
+  transformTime: number;
+  speed: number;
+  /** Phase 3 : vitesse et rapidité des gestes multipliées. */
+  wakeSpeed: number;
+  sweep: MeleeConfig;
+  /** Le pas du veilleur : il bondit sur le héros, un cercle annonce où il retombe. */
+  leap: HazardConfig & { interval: number; range: number };
+  /** Les feux de veille (phase 2 et 3) : des flammes tombent autour du héros. */
+  fires: HazardConfig & { interval: number; count: number };
+  /** Feux follets appelés en phase 2 et 3. */
+  wispInterval: number;
+  maxWisps: number;
+  /** La charge (phase 3) : annoncée par une ligne, puis il traverse la clairière. */
+  charge: { range: number; cooldown: number; telegraph: number; speed: number; distance: number; damage: number; knockback: number; recover: number };
+}
+
 export interface IzanamiConfig extends EnemyBaseConfig {
   /** Seuils de PV (fraction du maximum) : elle se révèle, puis se lance à la poursuite du héros. */
   revealAt: number;
@@ -985,6 +1010,7 @@ export interface EnemyConfigs {
   ikazuchi: IkazuchiConfig;
   ikusa: OublieConfig;
   izanami: IzanamiConfig;
+  gardien: GardienConfig;
   /** Mannequin d'entraînement : immobile, sans attaque, il encaisse les coups tant qu'on veut. */
   mannequin: EnemyBaseConfig;
 }

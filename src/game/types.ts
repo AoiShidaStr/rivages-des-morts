@@ -14,6 +14,8 @@ export type EnemyKind =
   | 'ikazuchi'
   | 'ikusa'
   | 'izanami'
+  // Mont Fujikasane : le gardien errant, boss final du Yomi
+  | 'gardien'
   // Terrain d'entraînement de Tetsu : immobile, sans attaque.
   | 'mannequin'
   // Duel (PVP) : le double d'un héros adverse, que les coups de l'autre héros visent (src/game/enemies.ts, Rival).

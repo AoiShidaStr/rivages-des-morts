@@ -1,6 +1,7 @@
 import { random } from './rng';
 import type {
   EnemyBaseConfig,
+  GardienConfig,
   HitodamaConfig,
   IkazuchiConfig,
   IzanamiConfig,
@@ -1934,6 +1935,281 @@ export class Izanami extends Enemy {
     world.emit({ type: 'chargeEnd', id: this.id });
     this.lungeCooldown = this.cfg.pursuit.lungeCooldown;
     this.state = { kind: 'recover', t: this.cfg.pursuit.recover };
+  }
+}
+
+type GardienState =
+  | { kind: 'walk' }
+  | { kind: 'sweep'; t: number; dir: Vec2 }
+  | { kind: 'sweepRecover'; t: number }
+  | { kind: 'crouch'; t: number; from: Vec2; to: Vec2 }
+  | { kind: 'leap'; t: number; from: Vec2; to: Vec2 }
+  | { kind: 'transform'; t: number }
+  | { kind: 'telegraph'; t: number; dir: Vec2 }
+  | { kind: 'charge'; dir: Vec2; traveled: number }
+  | { kind: 'recover'; t: number }
+  | { kind: 'stunned'; t: number };
+
+const GARDIEN_PHASES = [
+  { label: 'Le veilleur', hint: 'Sa faux balaie large devant lui : passe dans son dos. Quand un cercle apparaît sous tes pieds, il va retomber dessus.' },
+  { label: 'Les feux de veille', hint: 'Il allume les feux de ceux qu’il a comptés. Sors des cercles, abats les feux follets avant qu’ils ne t’encerclent.' },
+  { label: 'L’éveil du mont', hint: 'Le Mont Fujikasane s’éveille avec lui : il charge à travers la clairière. Écarte-toi de la ligne, puis frappe.' },
+];
+
+/**
+ * Le gardien errant, boss final du Yomi, au sommet du Mont Fujikasane (la nuit seulement, après minuit). En trois
+ * phases, chacune plus dure :
+ * 1. le veilleur : un grand fauchage devant lui, et le pas du veilleur (il bondit, un cercle annonce où il retombe) ;
+ * 2. les feux de veille : des flammes tombent autour du héros, et des feux follets viennent l'encercler ;
+ * 3. l'éveil du mont : plus vif, il charge en ligne droite à travers la clairière.
+ * Il ne saute pas de phase (hpFloor) et ne craint ni les pêches ni le regard : c'est un combat d'esquive.
+ */
+export class Gardien extends Enemy {
+  readonly kind = 'gardien' as const;
+  phase = 1;
+  private state: GardienState = { kind: 'walk' };
+  private sweepCooldown = 1;
+  private leapTimer: number;
+  private fireTimer = 2;
+  private wispTimer = 4;
+  private chargeCooldown = 2;
+
+  constructor(
+    id: number,
+    pos: Vec2,
+    private readonly cfg: GardienConfig,
+  ) {
+    super(id, pos, cfg);
+    this.leapTimer = cfg.leap.interval * 0.6;
+  }
+
+  get boss(): boolean {
+    return true;
+  }
+
+  get solid(): boolean {
+    return this.state.kind !== 'leap' && this.state.kind !== 'charge';
+  }
+
+  get targetable(): boolean {
+    return super.targetable && this.state.kind !== 'transform' && this.state.kind !== 'leap';
+  }
+
+  get altitude(): number {
+    if (this.state.kind !== 'leap') return 0;
+    const k = this.state.t / this.cfg.leap.warning;
+    return 2.4 * Math.sin(Math.PI * Math.min(1, k));
+  }
+
+  get pose(): Pose {
+    const state = this.state;
+    switch (state.kind) {
+      case 'walk':
+        return 'move';
+      case 'sweep':
+      case 'crouch':
+      case 'telegraph':
+        return 'windup';
+      case 'sweepRecover':
+        return state.t > this.sweepCfg.recover - 0.15 ? 'strike' : 'idle';
+      case 'transform':
+        return 'channel';
+      case 'leap':
+        return 'airborne';
+      case 'charge':
+        return 'dash';
+      case 'stunned':
+        return 'stunned';
+      case 'recover':
+        return 'idle';
+    }
+  }
+
+  /** Plus vif une fois le mont éveillé. */
+  private get haste(): number {
+    return this.phase === 3 ? this.cfg.wakeSpeed : 1;
+  }
+
+  private get sweepCfg(): MeleeConfig {
+    const sweep = this.cfg.sweep;
+    return this.phase === 3 ? { ...sweep, windup: sweep.windup / this.haste, cooldown: sweep.cooldown / this.haste } : sweep;
+  }
+
+  stun(duration: number, reason: StunReason, world: World): void {
+    const s = this.state.kind;
+    if (s === 'transform' || s === 'leap' || s === 'stunned') return;
+    if (s === 'telegraph' || s === 'charge') world.emit({ type: 'chargeEnd', id: this.id });
+    if (s === 'crouch') world.emit({ type: 'land', id: this.id, pos: { ...this.pos }, radius: 0 });
+    // Un boss final se remet très vite : la parade ne lui vole qu'un instant.
+    this.state = { kind: 'stunned', t: reason === 'smash' ? duration / 3 : duration * 0.4 };
+    world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason });
+  }
+
+  protected get hpFloor(): number {
+    if (this.phase === 1) return this.maxHp * this.cfg.firesAt * 0.98;
+    if (this.phase === 2) return this.maxHp * this.cfg.wakeAt * 0.98;
+    return 0;
+  }
+
+  protected limitHeal(amount: number): number {
+    return amount * 0.25;
+  }
+
+  protected think(dt: number, world: World): void {
+    const h = this.haste;
+    this.sweepCooldown = Math.max(0, this.sweepCooldown - dt * h);
+    this.chargeCooldown = Math.max(0, this.chargeCooldown - dt * h);
+    if (this.checkPhase(world)) return;
+    if (this.phase >= 2 && this.state.kind !== 'transform') this.vigil(dt, world);
+
+    const state = this.state;
+    switch (state.kind) {
+      case 'walk':
+        this.walk(dt, world);
+        break;
+      case 'sweep':
+        state.t += dt;
+        this.facing = state.dir;
+        if (state.t < this.sweepCfg.windup) break;
+        world.emit({ type: 'enemySwing', pos: { ...this.pos }, dir: state.dir, range: this.sweepCfg.range });
+        this.strikeArc(state.dir, this.sweepCfg.range, this.sweepCfg.arcDeg, this.sweepCfg.damage, this.sweepCfg.knockback, world);
+        this.state = { kind: 'sweepRecover', t: this.sweepCfg.recover / h };
+        this.sweepCooldown = this.sweepCfg.cooldown;
+        break;
+      case 'crouch':
+        state.t += dt * h;
+        if (state.t >= 0.35) this.state = { kind: 'leap', t: 0, from: state.from, to: state.to };
+        break;
+      case 'leap': {
+        state.t += dt * h;
+        const k = Math.min(1, state.t / this.cfg.leap.warning);
+        this.pos = lerp(state.from, state.to, k);
+        if (k < 1) break;
+        world.emit({ type: 'land', id: this.id, pos: { ...this.pos }, radius: this.cfg.leap.radius });
+        world.emit({ type: 'smash', pos: { ...this.pos }, radius: this.cfg.leap.radius });
+        this.strikeAround(this.pos, this.cfg.leap.radius, this.cfg.leap.damage, this.cfg.leap.knockback, world, true);
+        this.state = { kind: 'recover', t: 0.55 / h };
+        break;
+      }
+      case 'transform':
+        state.t += dt;
+        if (state.t >= this.cfg.transformTime) this.state = { kind: 'walk' };
+        break;
+      case 'telegraph':
+        state.t += dt * h;
+        this.facing = state.dir;
+        if (state.t >= this.cfg.charge.telegraph) this.state = { kind: 'charge', dir: state.dir, traveled: 0 };
+        break;
+      case 'charge':
+        this.charge(state, dt, world);
+        break;
+      case 'sweepRecover':
+      case 'recover':
+      case 'stunned':
+        state.t -= dt;
+        if (state.t <= 0) this.state = { kind: 'walk' };
+        break;
+    }
+  }
+
+  private checkPhase(world: World): boolean {
+    const s = this.state.kind;
+    if (s === 'transform' || s === 'leap' || this.phase >= 3) return false;
+    const threshold = this.phase === 1 ? this.cfg.firesAt : this.cfg.wakeAt;
+    if (this.hp > this.maxHp * threshold) return false;
+    if (s === 'telegraph' || s === 'charge') world.emit({ type: 'chargeEnd', id: this.id });
+    if (s === 'crouch') world.emit({ type: 'land', id: this.id, pos: { ...this.pos }, radius: 0 });
+    this.phase++;
+    this.state = { kind: 'transform', t: 0 };
+    world.emit({ type: 'shockwave', pos: { ...this.pos }, radius: 3.5 });
+    const { label, hint } = GARDIEN_PHASES[this.phase - 1];
+    world.emit({ type: 'bossPhase', phase: this.phase, label, hint });
+    return true;
+  }
+
+  private walk(dt: number, world: World): void {
+    const cfg = this.cfg;
+    const foe = this.foe(world);
+    const toFoe = sub(foe.pos, this.pos);
+    const dist = length(toFoe);
+    const toward = normalize(toFoe, this.facing);
+    this.facing = toward;
+    // Le mont éveillé : il charge de loin.
+    if (this.phase === 3 && this.chargeCooldown <= 0 && dist <= cfg.charge.range && dist > this.sweepCfg.range + 1.5) {
+      this.state = { kind: 'telegraph', t: 0, dir: toward };
+      world.emit({ type: 'telegraph', id: this.id, from: { ...this.pos }, dir: toward, length: cfg.charge.distance, width: this.radius * 2.4, duration: cfg.charge.telegraph / this.haste });
+      return;
+    }
+    // Le pas du veilleur : de loin, il bondit et retombe là où se tient le héros.
+    this.leapTimer -= dt * this.haste;
+    if (this.leapTimer <= 0 && dist > this.sweepCfg.range && dist <= cfg.leap.range) {
+      this.leapTimer = cfg.leap.interval * (0.85 + random() * 0.3);
+      const to = { ...foe.pos };
+      world.emit({ type: 'jump', id: this.id, target: to, radius: cfg.leap.radius, duration: (0.35 + cfg.leap.warning) / this.haste });
+      this.state = { kind: 'crouch', t: 0, from: { ...this.pos }, to };
+      return;
+    }
+    const reach = this.sweepCfg.range + foe.radius;
+    if (dist <= reach * 0.95 && this.sweepCooldown <= 0) {
+      this.state = { kind: 'sweep', t: 0, dir: toward };
+      return;
+    }
+    if (dist > reach * 0.7) this.pos = add(this.pos, scale(toward, cfg.speed * this.haste * dt));
+  }
+
+  /** Phases 2 et 3 : les feux de veille tombent autour du héros, et les feux follets viennent l'encercler. */
+  private vigil(dt: number, world: World): void {
+    const cfg = this.cfg;
+    this.fireTimer -= dt * this.haste;
+    if (this.fireTimer <= 0) {
+      this.fireTimer = cfg.fires.interval;
+      const target = world.player.pos;
+      for (let i = 0; i < cfg.fires.count; i++) {
+        const at = i === 0 ? target : add(target, scale(fromAngle((i / cfg.fires.count) * Math.PI * 2 + random()), 1.8 + random() * 2.2));
+        world.dropHazard(at, cfg.fires, false);
+      }
+    }
+    this.wispTimer -= dt;
+    if (this.wispTimer <= 0) {
+      this.wispTimer = cfg.wispInterval;
+      const alive = world.enemies.filter((e) => e.kind === 'hitodama' && !e.dead).length;
+      for (let i = 0; i < Math.min(2, cfg.maxWisps - alive); i++) world.spawn('hitodama', world.edgePoint());
+    }
+  }
+
+  private charge(state: Extract<GardienState, { kind: 'charge' }>, dt: number, world: World): void {
+    const cfg = this.cfg.charge;
+    const step = cfg.speed * dt;
+    this.pos = add(this.pos, scale(state.dir, step));
+    state.traveled += step;
+    const foe = this.bump(world);
+    if (foe) {
+      if (foe.isGuarding(this.pos)) {
+        foe.guard(world, this, this.power(cfg.damage, world), true);
+        foe.knockback = scale(state.dir, 7);
+        this.endCharge(world);
+        return;
+      }
+      if (this.hitFoe(foe, cfg.damage, state.dir, cfg.knockback, world)) {
+        this.endCharge(world);
+        return;
+      }
+    }
+    if (world.insideStump(this.pos, this.radius)) {
+      // Lancé contre un rocher de la clairière : il s'y heurte, sonné un instant.
+      world.emit({ type: 'chargeEnd', id: this.id });
+      this.chargeCooldown = cfg.cooldown;
+      this.state = { kind: 'stunned', t: 1.1 };
+      world.emit({ type: 'stun', id: this.id, pos: { ...this.pos }, reason: 'wall' });
+      return;
+    }
+    if (world.clampToArena(this.pos, this.radius) || state.traveled >= cfg.distance) this.endCharge(world);
+  }
+
+  private endCharge(world: World): void {
+    world.emit({ type: 'chargeEnd', id: this.id });
+    this.chargeCooldown = this.cfg.charge.cooldown;
+    this.state = { kind: 'recover', t: this.cfg.charge.recover };
   }
 }
 

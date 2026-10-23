@@ -51,7 +51,8 @@ const dungeonName = (id: string) => (id === ENDLESS ? content.endless.name : (co
  * sans fond une fois la faille de la cascade trouvée, au niveau voulu.
  */
 export function openDungeons(progress: Progress): string[] {
-  const dungeons = Object.keys(content.dungeons).filter((id) => id !== 'palais' || progress.check([{ flag: 'sceau_ouvert' }]));
+  // Le gardien errant ne se combat que seul, la nuit, sur le Mont Fujikasane : pas en coop.
+  const dungeons = Object.keys(content.dungeons).filter((id) => id !== 'fujikasane' && (id !== 'palais' || progress.check([{ flag: 'sceau_ouvert' }])));
   const endless = progress.check([{ flag: ENDLESS_FOUND }, { level: content.endless.unlockLevel }]);
   return endless ? [...dungeons, ENDLESS] : dungeons;
 }

@@ -22,10 +22,18 @@ python3 rendu.py 4224              # la carte sans décors : ile-4224.png (aper�
 python3 decorer.py                 # aperçu avec les décors : ile-decors-4224.png
 python3 eclairage.py               # textures de la démo d'éclairage, et lumieres.json (lanternes, forge, lave…)
 python3 geo_cache.py               # rend la carte une fois et garde sa géométrie : export/geo.npz, export/plan.pkl
-git show a2e3371:src/data/island.json > export/island-origine.json   # l'île d'avant la v3 : positions de départ
+git show 4c2cba1^:src/data/island.json > export/island-origine.json   # l'île d'avant la v3 : positions de départ
 python3 export_jeu.py ../.. textures donnees    # public/sprites/ile/v3 et public/sprites/decor/v3
 python3 export_positions.py ../..               # src/data/island.json (+ export/positions.png pour vérifier)
+python3 arenes.py ../.. [yomi rizieres fujikasane]   # arènes des donjons : public/sprites/arenes, src/data/arenes.json
 ```
+
+`arenes.py` dessine les arènes des donjons avec le même rendu que l'île : un petit plan autour du carré de combat
+(±6 unités du plan, l'arenaHalfSize 9 du jeu), rendu à la même échelle, recadré sur ce que la caméra du combat peut
+montrer, teinté (la nuit du Mont Fujikasane, la caverne du Yomi, la brume des rizières) et fondu dans la couleur du
+fond. Les arbres, rochers, torii et lanternes sont des décors debout posés par le jeu (src/render/arenaPixel.ts) ;
+devant l'arène, rien de haut, qui cacherait le combat. Les rochers et la souche (les obstacles) viennent des packs.
+Aperçus avec les décors : /tmp/claude-0/arene-*.png.
 
 `export_jeu.py` :
 

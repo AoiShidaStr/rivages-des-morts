@@ -12,7 +12,7 @@ import decor
 import fmifier
 from echelle import scale2x
 from plan import (construire, uv2xz, xz2uv, CELL, EXT, L1, L2, HERBE, FLEURS, TERRE, DALLE, MARCHE, SPIRALE,
-                  PIERRE, DIGUE, RIZ, EAU, LAVE, SABLE, CENDRE, LYS, VOLCAN)
+                  PIERRE, DIGUE, RIZ, EAU, LAVE, SABLE, CENDRE, LYS, VOLCAN, FORET)
 from vues import frame, px, G, SO, KA
 
 GROS = {'shidarezakura', 'kusunoki', 'saule'}
@@ -66,6 +66,15 @@ class Sol:
             u0, v0 = b['bouts'][0]
             u1, v1 = b['bouts'][1]
             dur |= p.bande([(u0, v0), (u1, v1)], 4.0)
+        if 'parc' in p.zones:                          # le parc : rien au hasard dedans, tout y est posé à la main
+            pu, pv, pa = p.zones['parc']
+            pcx, pcz = uv2xz(pu, pv)
+            dur |= (np.abs(p.X - pcx) <= pa + 0.7) & (np.abs(p.Z - pcz) <= pa + 0.7)
+        if 'fujikasane' in p.zones:                    # la clairière du gardien
+            fu, fv = p.zones['fujikasane']
+            dur |= np.hypot(p.U - fu, (p.V - fv) * 1.1) < 5.0
+            # et devant elle (côté caméra), pas d'arbre : ils cacheraient le gardien et le héros
+            dur |= (np.abs(p.U - fu) < 4.6) & (p.V > fv - 8.0) & (p.V < fv)
         self.mauvais = chemin | dur
         self.d_mauvais = ndi.distance_transform_edt(~self.mauvais) * CELL
         self.d_eau = ndi.distance_transform_edt(p.mat != EAU) * CELL
@@ -123,6 +132,10 @@ def espece(u, v, mat, d_eau, choix, rng):
     def parmi(*l):
         return l[int(choix * len(l))]
     r = rng.random()
+    if mat == FORET:                                               # Mont Fujikasane : vieille forêt de cèdres
+        if r < 0.5:
+            return 'sugi_haut'
+        return 'kusunoki' if r < 0.62 else ('momiji' if r < 0.7 else parmi('sugi', 'sugi_haut', 'sugi', 'matsu'))
     if mat == CENDRE or np.hypot(u + 16, (v - 46) / 1.2) < 15:    # pentes du volcan : pins tordus, clairsemés
         return 'matsu' if r < 0.35 else None
     if v > 35 and -12 < u < 12:                                    # autour du Grand Rocher : cerisiers
@@ -185,6 +198,34 @@ def placer_tout(p, seed=5):
         else:
             continue
         break
+    # --- la faille du Yomi sans fond, dans la paroi au pied de la cascade, juste à droite du rideau d'eau
+    bx, bz = p.zones['chute']
+    fu, fv = xz2uv(bx - 0.15, bz - 3.0)
+    obj.append(('faille', fu, fv, L1))
+    p.zones['faille'] = (fu, fv)
+    # --- parc de la grande prairie : barrières sur le pourtour (une porte au milieu de chaque côté), bancs le long
+    # des allées en croix, un cerisier au bout de chaque pelouse
+    pu, pv, pa = p.zones['parc']
+    pcx, pcz = uv2xz(pu, pv)
+
+    def parc(nom, dx, dz, r):
+        u, v = xz2uv(pcx + dx, pcz + dz)
+        obj.append((nom, u, v, sol.h(u, v)))
+        sol.pris.append((u, v, r))
+        return u, v
+    lg = 0.8                                           # une barrière : 1,2 unité du monde
+    bout = pa - 0.15
+    k = np.arange(-bout + lg / 2, bout, lg)
+    for t in k:
+        if abs(t) < 1.2:
+            continue
+        for s_ in (-1, 1):
+            parc('barriere', t, s_ * bout, 0.3)
+            parc('barriere_z', s_ * bout, t, 0.3)
+    p.zones['bancs'] = [parc(nom, dx, dz, 0.6) for nom, dx, dz in
+                        [('banc', 3.3, 1.45), ('banc', -3.3, -1.45), ('banc_z', -1.45, 3.3), ('banc_z', 1.45, -3.3)]]
+    for nom, (dx, dz) in zip(['sakura', 'sakura_rond', 'momiji', 'sakura'], [(1, 1), (1, -1), (-1, -1), (-1, 1)]):
+        parc(nom, dx * (pa - 1.9), dz * (pa - 1.9), 0.95)
     # --- arbres en bosquets
     rng = np.random.default_rng(seed)
     g = ndi.gaussian_filter(rng.standard_normal(p.mat.shape), 3.5 / CELL)
@@ -192,16 +233,17 @@ def placer_tout(p, seed=5):
     gs = ndi.gaussian_filter(rng.standard_normal(p.mat.shape), 3.0 / CELL)
     gs = np.clip(0.5 + 0.5 * gs / (2 * gs.std() + 1e-9), 0, 0.999)        # choix de l'essence par bosquet
     seul = rng.random(p.mat.shape) < 0.005
-    herbe = np.isin(p.mat, (HERBE, FLEURS, LYS, CENDRE))
+    herbe = np.isin(p.mat, (HERBE, FLEURS, LYS, CENDRE, FORET))
     ok_arbre = sol.ok(0.9, 0.6) & herbe
-    cand = np.argwhere(ok_arbre & ((g > 0.35) | seul))
+    foret = p.mat == FORET                              # la forêt du Mont Fujikasane : serrée partout
+    cand = np.argwhere(ok_arbre & ((g > 0.35) | seul | (foret & (g > -1.2))))
     rng.shuffle(cand)
     for i, j in cand:
         u, v = float(p.U[i, j]), float(p.V[i, j])
         e = espece(u, v, p.mat[i, j], sol.d_eau[i, j], gs[i, j], rng)
         if e is None:
             continue
-        r = 1.7 if e in GROS else 0.95
+        r = 1.7 if e in GROS else (0.85 if foret[i, j] else 0.95)
         if e in GROS and not (sol.ok(1.5, 0.6)[i, j]):
             e, r = ('sakura' if v > 35 else 'kaki'), 0.95
         if not sol.libre(u, v, r, ecart=0.95):

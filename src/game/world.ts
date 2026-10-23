@@ -1,7 +1,7 @@
 import { random } from './rng';
 import type { DuelConfig, GameConfig, HazardConfig, PlayerConfig, SubclassActiveConfig, WaveConfig } from './config';
 import type { CurseId } from './difficulty';
-import { Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Rival, Shikome, type Enemy } from './enemies';
+import { Gardien, Hitodama, Ikazuchi, Izanami, Jorogumo, Kappa, KasaObake, Kodama, Mannequin, Oublie, Rival, Shikome, type Enemy } from './enemies';
 import {
   add,
   angleOf,
@@ -42,7 +42,7 @@ const REVIVE_RANGE = 1.6;
 /** Part des PV rendue au héros relevé par un allié. */
 const REVIVE_HP = 0.3;
 /** Les boss ne sont jamais doublés en coop. */
-const BOSS_KINDS = new Set<EnemyKind>(['jorogumo', 'izanami']);
+const BOSS_KINDS = new Set<EnemyKind>(['jorogumo', 'izanami', 'gardien']);
 /** Salve d'une voie (Rôdeur : la Volée perçante) : vitesse d'un trait, en m/s, et écart en degrés entre deux traits. */
 const SALVE_SPEED = 24;
 const SALVE_SPREAD = 9;
@@ -2496,6 +2496,8 @@ export class World {
         return new Oublie(id, pos, cfg.ikusa, 'ikusa');
       case 'izanami':
         return new Izanami(id, pos, cfg.izanami);
+      case 'gardien':
+        return new Gardien(id, pos, cfg.gardien);
       case 'mannequin':
         return new Mannequin(id, pos, cfg.mannequin, patrol);
       case 'rival':

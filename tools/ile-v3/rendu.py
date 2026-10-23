@@ -310,7 +310,7 @@ def rendre(N, plan=None, seed=7, verbeux=True, geo=None):
     t_ = T['terre'].copy()
     t_[np.all(t_ == fm.hx('#5f4848'), -1)] = fm.hx('#825e48')    # cailloux les plus sombres adoucis
     T['terre'] = t_
-    herbeux_m = (mat == HERBE) | (mat == FLEURS) | (mat == DIGUE) | (mat == LYS)
+    herbeux_m = (mat == HERBE) | (mat == FLEURS) | (mat == DIGUE) | (mat == LYS) | (mat == FORET)
     fleur = a_couleur('#dbc9b4', '#f79617', '#c3a79c', '#fb6b1d', '#9c807e', '#e83b3b')
 
     # ---------- herbe : fond du pack, touffes semées, taches claires et sombres --
@@ -327,6 +327,11 @@ def rendre(N, plan=None, seed=7, verbeux=True, geo=None):
     img[s2] = tuile(h_sombre, N, 101, 57)[s2]
     s2 = sel & (nh > 2.3)
     img[s2] = tuile(h_tres, N, 13, 211)[s2]
+    # sous-bois du Mont Fujikasane : l'herbe sombre du pack, très sombre par taches (l'ombre des cèdres)
+    sel = dessus & (mat == FORET)
+    img[sel] = tuile(h_sombre, N, 7, 19)[sel]
+    s2 = sel & (nh > 0.2)
+    img[s2] = tuile(h_tres, N, 59, 3)[s2]
     sel = dessus & (mat == FLEURS)
     img[sel] = tuile(T['herbe1'], N)[sel]
     s2 = sel & (nh > 1.2)
