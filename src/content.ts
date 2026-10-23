@@ -19,6 +19,7 @@ import sousClassesJson from './data/sous-classes.json';
 import type { DuelConfig, GameConfig } from './game/config';
 import type { DuelItemRules } from './game/pvp';
 import type { ConfigEffect } from './game/loadout';
+import type { DurabiliteRules } from './game/durabilite';
 import type { DifficultyData, EnemyStrength } from './game/difficulty';
 import type { ArenaSource, EndlessData } from './game/infini';
 import type { EveilRules, UpgradeRules } from './game/forge';
@@ -194,6 +195,8 @@ export const content = {
   upgrade: itemsJson.forge.upgrade as unknown as UpgradeRules,
   /** L'Éveil des Tablettes : le prix d'un éveil de relique et son bonus de charge (src/data/items.json, forge.eveil). */
   eveil: itemsJson.forge.eveil as unknown as EveilRules,
+  /** La durabilité : l'usure des pièces portées et leur réparation chez Tetsu (src/data/items.json, forge.durabilite). */
+  durabilite: itemsJson.forge.durabilite as unknown as DurabiliteRules,
   difficulty: difficultyJson as unknown as DifficultyData,
   skills: skillsJson as unknown as SkillsDef,
   /** Les voies (sous-classes) de chaque classe : le second axe, ouvert au niveau 25. */

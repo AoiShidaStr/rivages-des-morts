@@ -75,6 +75,7 @@ export function give(progress: Progress, lot: Lot): void {
   for (const id of gone) {
     delete state.itemLevels[id];
     delete state.gravures[id];
+    delete state.usure[id];
   }
   for (const [id, count] of Object.entries(lot.materials)) progress.gainMaterial(id, -count);
   progress.gainOboles(-lot.oboles);

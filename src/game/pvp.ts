@@ -84,7 +84,8 @@ function duelData(data: LoadoutData, cls: string, base: Timing): LoadoutData {
     const weapon = data.skills.classes[cls]?.weapon;
     const reference = weapon ? data.items[weapon] : undefined;
     const items = Object.fromEntries(Object.entries(data.items).filter(([, def]) => allowedInDuel(def)).map(([id, def]) => [id, duelItem(def, reference, base)]));
-    out = { ...data, items };
+    // Le duel ignore la durabilité : une pièce cassée y compte comme neuve, pour que les duels restent égaux.
+    out = { ...data, items, durabilite: undefined };
     byClass.set(cls, out);
   }
   return out;

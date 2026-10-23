@@ -64,7 +64,8 @@ import { openMarket, openPlayerShop, openTrade } from './ui/trade';
 import { describeLot, give, receive } from './game/trade';
 import { openEndlessEntry } from './ui/infini';
 import { logRun, markSeen } from './game/journal';
-import { stockItem } from './game/reserve';
+import { landSeal, stockItem } from './game/reserve';
+import { wearEquipped } from './game/durabilite';
 import { SFX_DES_EVENTS, Sfx, type SfxId } from './audio/sfx';
 import sfxData from './data/sfx.json';
 import { Ambiance } from './audio/ambiance';
@@ -608,6 +609,11 @@ export class App {
     // Pendant la promenade, les planches des yokai se chargent : la prochaine descente n'attendra pas.
     this.d.dungeonRenderer.prefetch([this.loadout().config.kit]);
     this.busy = false;
+    // `?forge` (tests, captures) : la forge de Tetsu s'ouvre dès l'arrivée sur l'île.
+    if (new URLSearchParams(location.search).has('forge')) {
+      openForge(this.panels, this.ui);
+      return;
+    }
     // À l'arrivée, Charon accueille la nouvelle âme.
     if (newGame || this.d.progress.quest('passeur') === 'none') {
       const charon = island.interactables().find((it) => it.def.id === 'charon');
@@ -1689,7 +1695,7 @@ export class App {
       xp: Math.round(this.run.xp),
       materials: [
         ...this.run.items.map((id) => lootLine(id, `Objet : ${content.items[id]?.name ?? id}`)),
-        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure scellée, dans ta réserve`)),
+        ...this.run.seals.map((seal) => lootLine(seal.item, `${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure gagnée, posée sur l'arme (ou sur un exemplaire si elle est déjà gravée)`)),
         ...this.duplicateLines(),
         ...Object.entries(this.run.materials).map(([id, n]) => lootLine(id, `${n} × ${content.materials[id]}`)),
       ],
@@ -1706,9 +1712,23 @@ export class App {
     // Les doublons et les sceaux vont dans la réserve. Le sceau ne compte qu'avec le reste : tomber avant de remonter
     // le rend au Yomi, comme le butin en jeu.
     for (const item of this.run.duplicates) stockItem(progress, item);
-    if (victory) for (const seal of this.run.seals) stockItem(progress, seal.item, 1, seal.gravure, true);
+    if (victory) for (const seal of this.run.seals) this.screens.toast(landSeal(progress, seal.item, seal.gravure), 'loot', seal.item);
     progress.state.chests += chests;
+    this.wearGear(victory);
     return progress.gainXp(xp);
+  }
+
+  /**
+   * La durabilité (src/game/durabilite.ts) : chaque pièce portée s'use à la fin d'une descente, plus fort à la défaite.
+   * Une pièce qui casse, ou qui passe sous le seuil d'alerte, se dit tout de suite.
+   */
+  private wearGear(victory: boolean): void {
+    const { progress } = this.d;
+    const notes = wearEquipped(content.durabilite, content.items, Object.values(progress.state.equipped), progress.state.usure, victory);
+    for (const note of notes) {
+      const name = content.items[note.item]?.name ?? note.item;
+      this.screens.toast(note.broken ? `${name} est cassé : il ne compte plus. Tetsu le répare à la forge.` : `${name} s'use : pense à le faire réparer chez Tetsu.`, 'quest', note.item);
+    }
   }
 
   private finishDungeon(outcome: Outcome): void {
@@ -1860,6 +1880,9 @@ export class App {
       session.choose(ENDLESS, 1);
       session.backToLobby();
     }
+    // Le butin est perdu, mais l'équipement s'use quand même.
+    this.wearGear(false);
+    progress.save();
     const best = progress.state.flags[ENDLESS_RECORD] ?? 0;
     this.screens.showResult(
       false,

@@ -26,9 +26,9 @@ export function meltItem(progress: Progress, item: string): string {
 }
 
 /** Range un exemplaire dans la réserve ; pleine, elle le fond à la place. */
-export function stockItem(progress: Progress, item: string, level = 1, gravure?: Gravure, sceau = false): StockNote {
+export function stockItem(progress: Progress, item: string, level = 1, gravure?: Gravure, sceau = false, usure = 0): StockNote {
   const name = content.items[item]?.name ?? item;
-  const entry = { item, level, ...(gravure ? { gravure } : {}), ...(sceau ? { sceau: true } : {}) };
+  const entry = { item, level, ...(gravure ? { gravure } : {}), ...(sceau ? { sceau: true } : {}), ...(usure > 0 ? { usure } : {}) };
   if (progress.addStock(entry)) return { text: `${name} : rangé dans la réserve.`, melted: false };
   return { text: `${name} : réserve pleine, fondu par Tetsu (${meltItem(progress, item)}).`, melted: true };
 }
@@ -76,10 +76,56 @@ export function takeOut(progress: Progress, uid: string): boolean {
   const state = progress.state;
   progress.acquire(entry.item, content.items[entry.item]?.slot as Slot | undefined);
   state.itemLevels[entry.item] = entry.level;
+  if (entry.usure) state.usure[entry.item] = entry.usure;
+  else delete state.usure[entry.item];
   if (entry.gravure) {
     state.gravures[entry.item] = entry.gravure;
     state.flags[`gravure_${entry.item}`] = Math.max(1, progress.gravureRolls(entry.item));
   }
   progress.save();
   return true;
+}
+
+/**
+ * Échange un exemplaire de la réserve avec l'objet possédé du même type : le niveau de forge, la gravure et l'usure
+ * passent de l'un à l'autre. C'est ce qui rend les doublons utiles : garder un katana neuf à côté du katana usé, ou
+ * un exemplaire au niveau bas pour la vente. Sans l'objet possédé, l'exemplaire est simplement sorti de la réserve.
+ */
+export function swapStock(progress: Progress, uid: string): boolean {
+  const entry = progress.state.stock.find((e) => e.uid === uid);
+  if (!entry || entry.sceau) return false;
+  if (!progress.has(entry.item)) return takeOut(progress, uid);
+  const state = progress.state;
+  const id = entry.item;
+  const mine = { level: state.itemLevels[id] ?? 1, gravure: state.gravures[id], usure: state.usure[id] ?? 0 };
+  state.itemLevels[id] = entry.level;
+  if (entry.gravure) {
+    state.gravures[id] = entry.gravure;
+    state.flags[`gravure_${id}`] = Math.max(1, progress.gravureRolls(id));
+  } else delete state.gravures[id];
+  if (entry.usure) state.usure[id] = entry.usure;
+  else delete state.usure[id];
+  entry.level = mine.level;
+  if (mine.gravure) entry.gravure = mine.gravure;
+  else delete entry.gravure;
+  if (mine.usure > 0) entry.usure = mine.usure;
+  else delete entry.usure;
+  progress.save();
+  return true;
+}
+
+/**
+ * Où tombe la gravure d'un sceau du Yomi (0.24.0) : directement sur l'arme possédée si elle n'est pas encore gravée,
+ * sinon sur un exemplaire de cette arme, rangé gravé (et lisible tout de suite) dans l'inventaire. Renvoie le texte.
+ */
+export function landSeal(progress: Progress, item: string, gravure: Gravure): string {
+  const name = content.items[item]?.name ?? item;
+  const rank = content.gravures.ranks.find((r) => r.id === gravure.rank)?.name ?? 'gravure';
+  if (progress.has(item) && !progress.state.gravures[item]) {
+    progress.state.gravures[item] = gravure;
+    progress.state.flags[`gravure_${item}`] = Math.max(1, progress.gravureRolls(item));
+    return `Gravure ${rank} posée sur ton arme : ${name}.`;
+  }
+  const note = stockItem(progress, item, 1, gravure);
+  return note.melted ? note.text : `${name} gravé (${rank}) : un exemplaire t'attend dans l'inventaire.`;
 }

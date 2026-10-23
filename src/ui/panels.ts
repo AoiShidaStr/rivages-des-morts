@@ -23,12 +23,16 @@ import {
 import { gravureCost, gravureLineDef, gravureLineText, gravureNeedsSeal, gravureRank, gravureSealText, rankOdds, rollGravure, type Gravure, type GravureData } from '../game/gravure';
 import type { EndlessModifierSeed } from '../game/infini';
 import { salvage, type RolledOffer } from '../game/loot';
-import { breakSeal, meltStock, poseGravure, takeOut } from '../game/reserve';
+import { breakSeal, meltStock, poseGravure, swapStock } from '../game/reserve';
+import { durability, hasDurability, isWorn as isWornOut, maxDurability, repairCost } from '../game/durabilite';
 import { applyBuild, BUILD_COUNT, DUEL_SLOTS, extraSlots, fitsHero, missingItems, saveBuild, saveDuelBuild, snapshot, type Build } from '../game/builds';
 import { markSeen, readJournal, seenItems } from '../game/journal';
-import { STOCK_MAX, SUBCLASS_LEVEL, type Progress, type Slot } from '../game/progress';
+import { STOCK_MAX, SUBCLASS_LEVEL, type Progress, type Slot, type StockEntry } from '../game/progress';
 import { keyName, withKeys } from '../keys';
 import { h, icon, obole, type Child } from './dom';
+import { bindTip, dragSource, dropTarget, durabilityBar, itemCell, neighbour, openMenu, type CellModel, type MenuItem } from './grille';
+import { heroImage } from '../render/heroes';
+import { isPixelArt } from '../render/textureBudget';
 import { sonUi } from '../audio/sfx';
 import { livePanel } from './social';
 import type { SocialClient } from '../net/social';
@@ -151,11 +155,6 @@ function itemTags(def: ItemDef): string[] {
   return [...(def.tags ?? []), ...(def.spec ? [SPEC_NAMES[def.spec]] : []), ...(def.races?.length ? [raceNames(content.skills, def)] : [])];
 }
 
-/** « (niv. 12) » pour une pièce que la forge peut améliorer. */
-function levelTag(progress: Progress, id: string): string {
-  return isUpgradable(content.upgrade, content.items[id]) ? ` (niv. ${itemLevel(progress.state, id)})` : '';
-}
-
 /** Fiche d'objet : son icône à gauche, le texte à droite. */
 function itemBlock(id: string, ...children: Child[]): HTMLElement {
   return h('div', { class: 'item' }, icon(id, 'large'), h('div', { class: 'item-body' }, ...children));
@@ -251,8 +250,8 @@ function bySlot(ids: string[]): [Slot, string[]][] {
 /** Ce que le joueur a choisi dans les fenêtres, gardé d'une ouverture à l'autre. */
 const memory = {
   forgeTab: 'upgrade' as 'upgrade' | 'craft' | 'gravure' | 'eveil',
-  /** La forge montre d'abord les pièces portées (`worn`), sinon un rayon. */
-  forgeScope: 'worn' as Shelf,
+  /** La forge montre d'abord les pièces portées (`worn`), sinon tout, ou un emplacement. */
+  forgeFilter: 'worn' as 'worn' | 'tout' | Slot,
   /** Rayon de l'onglet Fabriquer. */
   craftShelf: MINE,
   /** Rayon de l'inventaire : à l'ouverture, ce que le héros peut porter. */
@@ -261,6 +260,13 @@ const memory = {
   /** L'arme choisie dans l'onglet Gravure. */
   gravureItem: null as string | null,
   inventorySlot: 'arme' as Slot,
+  /** Inventaire en grille : le filtre d'emplacement, le tri, la recherche et la case choisie au clavier. */
+  invFilter: 'tout' as 'tout' | Slot,
+  invSort: 'emplacement' as 'emplacement' | 'rarete' | 'niveau' | 'nom',
+  invSearch: '',
+  /** Ce que montre le sac : tout, les gravées, les doublons (la réserve) ou les pièces cassées. */
+  invView: 'tout' as 'tout' | 'gravees' | 'doublons' | 'usees',
+  invSelected: null as string | null,
   /** Sections repliables ouvertes ou fermées par le joueur. */
   folds: new Map<string, boolean>(),
 };
@@ -517,130 +523,201 @@ function growthRows(ctx: UiContext, def: ItemDef, level: number): HTMLElement[] 
   });
 }
 
-/** Fiche de la pièce choisie : où elle en est, ce que donne le niveau suivant, ses paliers et le prix. */
-function forgeDetail(ctx: UiContext, id: string, cap: number, rerender: () => void): HTMLElement {
+/** Répare une pièce possédée chez Tetsu : la durabilité revient au maximum. Faux si la bourse ne suit pas. */
+function repairItem(ctx: UiContext, id: string, quiet = false): boolean {
   const { progress } = ctx;
-  const rules = content.upgrade;
   const def = content.items[id];
-  const level = itemLevel(progress.state, id);
-  const worn = progress.state.equipped[def.slot as Slot] === id;
-  const gravure = def.slot === 'arme' ? progress.gravure(id) : undefined;
-  const gravureName = gravure ? gravureRank(content.gravures, gravure)?.name : undefined;
-  const maxed = level >= rules.maxLevel;
-  const capped = !maxed && level >= cap;
-  const one = planUpgrade(progress, def, level, cap, 1);
-  const all = planUpgrade(progress, def, level, cap, Infinity);
-  const price = maxed || capped ? null : upgradeCost(rules, def, level);
-  const priceNode = price ? cost(progress, price.oboles, price.materials) : null;
-  const growth = maxed || capped ? [] : growthRows(ctx, def, level);
+  const usure = progress.state.usure[id] ?? 0;
+  if (!def || !usure) return false;
+  const price = repairCost(content.durabilite, def, usure, itemLevel(progress.state, id));
+  if (progress.state.oboles < price) return false;
+  progress.gainOboles(-price);
+  delete progress.state.usure[id];
+  progress.save();
+  if (!quiet) {
+    sonUi('forge');
+    ctx.toast(`${def.name} réparé (${price} oboles)`, 'loot', id);
+  }
+  return true;
+}
 
-  const buttons = h(
+/** Le prix de la réparation d'une pièce possédée (0 : neuve). */
+function repairPrice(progress: Progress, id: string): number {
+  const def = content.items[id];
+  return def ? repairCost(content.durabilite, def, progress.state.usure[id] ?? 0, itemLevel(progress.state, id)) : 0;
+}
+
+/**
+ * L'onglet Améliorer, façon Wakfu : le sac à gauche (cases), l'enclume au milieu (la pièce posée, son niveau, sa
+ * durabilité), et à droite ce que donne le niveau suivant et son prix, avec +1, +5 et « au max ».
+ */
+function forgeUpgradeBody(ctx: UiContext, cap: number, upgradable: string[], rerender: () => void): HTMLElement {
+  const { progress } = ctx;
+  const { state } = progress;
+  const rules = content.upgrade;
+  const worn = upgradable.filter((id) => state.equipped[content.items[id].slot as Slot] === id);
+  const filter = memory.forgeFilter;
+  const shown = filter === 'worn' ? worn : filter === 'tout' ? upgradable : upgradable.filter((id) => content.items[id].slot === filter);
+  if (!memory.forgeItem || !upgradable.includes(memory.forgeItem)) memory.forgeItem = worn.find((id) => content.items[id].slot === 'arme') ?? shown[0] ?? upgradable[0] ?? null;
+  const selected = memory.forgeItem;
+  const ready = (id: string) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id);
+
+  const put = (id: string) => {
+    memory.forgeItem = id;
+    sonUi('equiper-arme');
+    rerender();
+  };
+  const cells = shown.map((id) => {
+    const e = ownEntry(progress, id);
+    return itemCell({ ...entryModel(progress, e, id === selected), ready: ready(id), blocked: false }, {
+      select: () => put(id),
+      activate: () => put(id),
+      tooltip: () => itemTip(ctx, e, 'Clic ou glisser sur l’enclume : la poser', null),
+    });
+  });
+  const filters: { id: typeof filter; label: string; count: number }[] = [
+    { id: 'worn', label: 'Portés', count: worn.length },
+    { id: 'tout', label: 'Tout', count: upgradable.length },
+    ...(Object.entries(content.slots) as [Slot, string][])
+      .map(([slot, label]) => ({ id: slot, label, count: upgradable.filter((id) => content.items[id].slot === slot).length }))
+      .filter((f) => f.count),
+  ];
+  const bag = h(
     'div',
-    { class: 'forge-buttons' },
+    { class: 'forge-bag' },
     h(
-      'button',
-      {
-        class: 'btn primary',
-        disabled: one.to === level,
-        // Grisé faute d'oboles ou de matériaux (pas au plafond) : Tetsu le fait savoir.
-        'data-refus': one.to === level && !maxed && level < cap ? 'forge-pauvre' : undefined,
-        onclick: () => {
-          applyUpgrade(ctx, id, one);
-          rerender();
-        },
-      },
-      maxed ? 'Niveau maximum' : capped ? 'Plafond atteint' : `Améliorer → niv. ${level + 1}`,
-    ),
-    all.to > level + 1
-      ? h(
+      'div',
+      { class: 'inv-filters small' },
+      ...filters.map((f) =>
+        h(
           'button',
           {
-            class: 'btn',
-            title: 'Améliorer tant que tu peux payer, jusqu’à ton niveau',
+            class: `inv-filter${filter === f.id ? ' active' : ''}`,
             onclick: () => {
-              applyUpgrade(ctx, id, all);
+              memory.forgeFilter = f.id;
               rerender();
             },
           },
-          `Au max → niv. ${all.to}`,
-        )
-      : null,
-  );
-
-  return h(
-    'div',
-    { class: 'forge-detail' },
-    itemBlock(
-      id,
-      h(
-        'div',
-        { class: 'item-head' },
-        h('strong', { title: def.description }, def.name),
-        h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
-        worn ? h('span', { class: 'badge inline' }, 'Porté') : null,
-      ),
-      h('div', { class: 'item-meta' }, [content.slots[def.slot as Slot], def.summary].filter(Boolean).join(' · ')),
-    ),
-    h('div', { class: 'detail-level' }, h('span', {}, `Niveau ${level}`), h('small', {}, ` / ${rules.maxLevel}${cap < rules.maxLevel ? ` · plafond ${cap} (ton niveau)` : ''}`)),
-    levelTrack(def, level, cap),
-    maxed ? h('p', { class: 'note' }, 'Cette pièce est au niveau maximum.') : null,
-    capped ? h('p', { class: 'note danger' }, `Tetsu ne dépasse pas ton niveau (${cap}) : gagne de l’expérience au donjon pour continuer.`) : null,
-    gravureName ? h('p', { class: 'note' }, `Gravure ${gravureName} · voir l’onglet Graver.`) : null,
-    growth.length ? h('h3', {}, 'Au niveau suivant') : null,
-    growth.length ? h('dl', { class: 'stats compare' }, ...growth) : null,
-    def.slot === 'arme' && growth.length ? h('p', { class: 'note' }, 'Les compétences de ta classe et la foudre suivent les dégâts de l’arme.') : null,
-    !growth.length && !maxed && !capped ? h('p', { class: 'note' }, 'Pas de bonus qui monte : la forge lui apporte ses paliers.') : null,
-    h('h3', {}, 'Paliers'),
-    h(
-      'ul',
-      { class: 'paliers' },
-      ...paliersOf(rules, def).map((p) =>
-        h(
-          'li',
-          { class: p.level <= level ? 'reached' : '' },
-          h('b', {}, `Niv. ${p.level}`),
-          h('span', {}, h('strong', {}, p.name), ` · ${p.summary}`),
+          f.label,
+          h('span', { class: 'tab-count' }, String(f.count)),
         ),
       ),
     ),
-    priceNode ? h('h3', {}, 'Prix du niveau suivant') : null,
-    priceNode ? h('div', { class: 'detail-cost' }, priceNode.node) : null,
-    all.to > level + 1
+    cells.length ? h('div', { class: 'inv-grid', 'data-scroll': 'forge-grid' }, ...cells) : h('p', { class: 'note' }, 'Aucune pièce ici.'),
+  );
+
+  if (!selected) return h('div', { class: 'forge-v2' }, bag, h('p', { class: 'note' }, 'Aucune pièce à améliorer pour le moment.'));
+
+  const def = content.items[selected];
+  const level = itemLevel(state, selected);
+  const wear = wearOf(def, state.usure[selected]);
+  const maxed = level >= rules.maxLevel;
+  const capped = !maxed && level >= cap;
+  const one = planUpgrade(progress, def, level, cap, 1);
+  const five = planUpgrade(progress, def, level, cap, 5);
+  const all = planUpgrade(progress, def, level, cap, Infinity);
+  const price = maxed || capped ? null : upgradeCost(rules, def, level);
+  const growth = maxed || capped ? [] : growthRows(ctx, def, level);
+  const gravure = def.slot === 'arme' ? progress.gravure(selected) : undefined;
+  const repair = repairPrice(progress, selected);
+
+  // L'enclume : on y pose une pièce (clic ou glisser depuis le sac).
+  const slotBox = h('div', { class: `anvil-slot rar-${def.rarity.replace(/\s/g, '-')}${wear.broken ? ' broken' : ''}` }, icon(selected, 'large'));
+  dropTarget(slotBox, (key) => key.startsWith('own:') && upgradable.includes(key.slice(4)), (key) => put(key.slice(4)));
+  const anvil = h(
+    'div',
+    { class: 'anvil' },
+    slotBox,
+    h('strong', { class: 'anvil-name', title: def.description }, def.name),
+    h(
+      'div',
+      { class: 'anvil-meta' },
+      h('span', { class: `rarity r-${def.rarity.replace(/\s/g, '-')}` }, def.rarity),
+      ` ${content.slots[def.slot as Slot]}`,
+      state.equipped[def.slot as Slot] === selected ? h('span', { class: 'badge inline' }, 'Porté') : null,
+    ),
+    h('div', { class: 'anvil-level' }, h('b', {}, `Niv. ${level}`), h('small', {}, ` / ${rules.maxLevel}`)),
+    levelTrack(def, level, cap),
+    cap < rules.maxLevel ? h('small', { class: 'note' }, `Plafond : ton niveau (${cap})`) : null,
+    wear.value !== null
       ? h(
-          'p',
-          { class: 'note' },
-          `Au max : niv. ${level} → ${all.to} pour `,
-          obole(fr(all.oboles, 0)),
-          ...Object.entries(all.materials).map(([m, n]) => ` · ${n} × ${content.materials[m] ?? m}`),
+          'div',
+          { class: `anvil-dura${wear.broken ? ' broken' : wear.worn ? ' low' : ''}` },
+          h('span', {}, wear.broken ? 'Cassé : ne compte plus' : `Durabilité ${wear.left} / ${wear.max}`),
+          durabilityBar(wear.value, wear.worn),
+          repair
+            ? h(
+                'button',
+                {
+                  class: `btn small${wear.broken ? ' primary' : ''}`,
+                  disabled: state.oboles < repair,
+                  onclick: () => {
+                    repairItem(ctx, selected);
+                    rerender();
+                  },
+                },
+                'Réparer · ',
+                obole(repair),
+              )
+            : h('small', { class: 'note' }, 'Intacte : rien à réparer.'),
         )
       : null,
-    buttons,
+    gravure ? h('p', { class: 'note' }, `Gravure ${gravureRank(content.gravures, gravure)?.name ?? ''} · onglet Graver.`) : null,
+    h('p', { class: 'note anvil-lore' }, def.summary ?? effectText(def, level)),
   );
-}
 
-/** Une ligne de la liste de gauche : nom, niveau, et un repère si une amélioration est payable. */
-function forgePick(ctx: UiContext, id: string, cap: number, selected: boolean, showSlot: boolean, rerender: () => void): HTMLElement {
-  const { progress } = ctx;
-  const def = content.items[id];
-  const level = itemLevel(progress.state, id);
-  const maxed = level >= content.upgrade.maxLevel;
-  const ready = planUpgrade(progress, def, level, cap, 1).to > level;
-  const worn = progress.state.equipped[def.slot as Slot] === id;
-  return h(
-    'button',
-    {
-      class: `pick${selected ? ' selected' : ''}`,
-      title: ready ? 'Amélioration possible' : maxed ? 'Niveau maximum' : level >= cap ? 'Plafond : ton niveau' : 'Pas assez d’oboles ou de matériaux',
-      onclick: () => {
-        memory.forgeItem = id;
-        rerender();
+  // Ce que donne le niveau suivant, et son prix en cases de matériaux (en rouge ce qui manque).
+  const costCells = price
+    ? h(
+        'div',
+        { class: 'cost-cells' },
+        h('span', { class: `cost-cell${state.oboles >= price.oboles ? '' : ' missing'}`, title: 'Oboles' }, h('span', { class: 'obole-big' }, obole('')), h('b', {}, fr(price.oboles, 0)), h('small', {}, fr(state.oboles, 0))),
+        ...Object.entries(price.materials).map(([m, n]) =>
+          h('span', { class: `cost-cell${progress.material(m) >= n ? '' : ' missing'}`, title: content.materials[m] ?? m }, icon(m, 'medium'), h('b', {}, `× ${n}`), h('small', {}, String(progress.material(m)))),
+        ),
+      )
+    : null;
+  const upgradeBtn = (plan: UpgradePlan, label: string, primary = false) =>
+    h(
+      'button',
+      {
+        class: `btn${primary ? ' primary' : ''}`,
+        disabled: plan.to === level,
+        'data-refus': plan.to === level && !maxed && !capped ? 'forge-pauvre' : undefined,
+        title: plan.to > level ? `Niv. ${level} → ${plan.to} pour ${fr(plan.oboles, 0)} oboles${Object.entries(plan.materials).map(([m, n]) => ` · ${n} × ${content.materials[m] ?? m}`).join('')}` : 'Pas assez d’oboles ou de matériaux',
+        onclick: () => {
+          applyUpgrade(ctx, selected, plan);
+          rerender();
+        },
       },
-    },
-    showSlot ? h('span', { class: 'pick-slot' }, content.slots[def.slot as Slot]) : null,
-    h('span', { class: 'pick-name' }, icon(id, 'small'), def.name, worn && !showSlot ? h('i', { class: 'worn-dot', title: 'Porté' }) : null),
-    h('span', { class: 'pick-level' }, maxed ? 'max' : `niv. ${level}`),
-    h('span', { class: `pick-state${ready ? ' ready' : ''}` }, ready ? '▲' : ''),
+      label,
+    );
+  const next = h(
+    'div',
+    { class: 'forge-next' },
+    h('h3', {}, maxed ? 'Niveau maximum' : capped ? 'Plafond atteint' : h('span', {}, `Niv. ${level} `, h('span', { class: 'arrow' }, '→'), ` Niv. ${level + 1}`)),
+    capped ? h('p', { class: 'note danger' }, `Tetsu ne dépasse pas ton niveau (${cap}) : gagne de l’expérience au donjon pour continuer.`) : null,
+    growth.length ? h('dl', { class: 'stats compare' }, ...growth) : null,
+    !growth.length && !maxed && !capped ? h('p', { class: 'note' }, 'Pas de bonus qui monte : la forge lui apporte ses paliers.') : null,
+    def.slot === 'arme' && growth.length ? h('p', { class: 'note' }, 'Les compétences de ta classe et la foudre suivent les dégâts de l’arme.') : null,
+    h(
+      'ul',
+      { class: 'paliers' },
+      ...paliersOf(rules, def).map((p) => h('li', { class: p.level <= level ? 'reached' : '' }, h('b', {}, `Niv. ${p.level}`), h('span', {}, h('strong', {}, p.name), ` · ${p.summary}`))),
+    ),
+    costCells ? h('h3', {}, 'Prix') : null,
+    costCells,
+    maxed || capped
+      ? null
+      : h(
+          'div',
+          { class: 'forge-buttons' },
+          upgradeBtn(one, `Améliorer +1`, true),
+          five.to > level + 1 ? upgradeBtn(five, `+${five.to - level} → niv. ${five.to}`) : null,
+          all.to > five.to ? upgradeBtn(all, `Max → niv. ${all.to}`) : null,
+        ),
   );
+  return h('div', { class: 'forge-v2' }, bag, anvil, next);
 }
 
 // --- Gravure (riven) ----------------------------------------------------------
@@ -854,7 +931,7 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
     const upgradable = state.items
       .filter((id) => isUpgradable(rules, content.items[id]))
       .sort((a, b) => slotOrder.indexOf(content.items[a].slot as Slot) - slotOrder.indexOf(content.items[b].slot as Slot));
-    const worn = upgradable.filter((id) => state.equipped[content.items[id].slot as Slot] === id);
+    const repairAll = state.items.reduce((sum, id) => sum + repairPrice(progress, id), 0);
     const readyCount = upgradable.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
     const gravable = state.items.filter((id) => content.items[id]?.slot === 'arme' && gravurePrice(progress, id).ok).length;
     // À la première soie, l'onglet « Graver » se souligne jusqu'à ce que le joueur l'ouvre une fois.
@@ -893,55 +970,22 @@ export function openForge(host: PanelHost, ctx: UiContext): void {
           render();
         },
       ),
-      h('span', { class: 'note' }, `Jusqu’à ton niveau : ${cap} / ${rules.maxLevel}`),
+      h(
+        'div',
+        { class: 'forge-top-right' },
+        repairAll ? h('button', { class: 'btn small', disabled: state.oboles < repairAll, title: 'Répare toutes les pièces usées de ton sac', onclick: () => {
+          for (const id of state.items) repairItem(ctx, id, true);
+          sonUi('forge');
+          ctx.toast('Tetsu a tout remis à neuf', 'loot');
+          render();
+        } }, 'Tout réparer · ', obole(repairAll)) : null,
+        h('span', { class: 'note' }, `Jusqu’à ton niveau : ${cap} / ${rules.maxLevel}`),
+      ),
     );
 
     let body: HTMLElement;
     if (memory.forgeTab === 'upgrade') {
-      // « Portés », puis les rayons : Ma classe, chaque autre classe, Universels, Raciaux.
-      const shown = memory.forgeScope === 'worn' ? worn : upgradable.filter((id) => onShelf(progress, content.items[id], memory.forgeScope));
-      if (!memory.forgeItem || !shown.includes(memory.forgeItem)) memory.forgeItem = shown.find((id) => content.items[id].slot === 'arme') ?? shown[0] ?? null;
-      const selected = memory.forgeItem;
-      const scope = shelfTabs(
-        progress,
-        upgradable,
-        memory.forgeScope,
-        (s) => {
-          memory.forgeScope = s;
-          render();
-        },
-        [{ id: 'worn', label: 'Portés', count: worn.length }],
-      );
-      scope.classList.add('small');
-
-      let list: (HTMLElement | null)[];
-      if (memory.forgeScope === 'worn') {
-        list = worn.map((id) => forgePick(ctx, id, cap, id === selected, true, render));
-      } else {
-        // Un groupe repliable par emplacement ; celui de la pièce choisie est ouvert.
-        list = bySlot(shown).map(([slot, ids]) => {
-          const ready = ids.filter((id) => planUpgrade(progress, content.items[id], itemLevel(state, id), cap, 1).to > itemLevel(state, id)).length;
-          const holdsSelection = selected !== null && ids.includes(selected);
-          return fold(
-            `forge-${slot}`,
-            holdsSelection,
-            content.slots[slot],
-            h('span', {}, `${ids.length} pièce${ids.length > 1 ? 's' : ''}`, ready ? h('span', { class: 'ready-count', title: 'Améliorations payables' }, `▲ ${ready}`) : null),
-            h('div', { class: 'pick-group' }, ...ids.map((id) => forgePick(ctx, id, cap, id === selected, false, render))),
-          );
-        });
-      }
-      body = h(
-        'div',
-        { class: 'forge' },
-        h(
-          'div',
-          { class: 'forge-side' },
-          scope,
-          h('div', { class: 'pick-list', 'data-scroll': 'forge-list' }, ...(list.length ? list : [h('p', { class: 'note' }, 'Aucune pièce dans ce rayon.')])),
-        ),
-        selected ? forgeDetail(ctx, selected, cap, render) : h('p', { class: 'note' }, 'Aucune pièce à améliorer pour le moment.'),
-      );
+      body = forgeUpgradeBody(ctx, cap, upgradable, render);
     } else if (memory.forgeTab === 'eveil') {
       body = eveilBody(ctx, render);
     } else if (memory.forgeTab === 'gravure') {
@@ -1065,101 +1109,427 @@ function equipDelta(ctx: UiContext, loadout: Loadout, id: string, slot: Slot): {
   return statDelta(ctx, loadout, buildLoadout(ctx.basePlayer, { ...state, equipped: { ...state.equipped, [slot]: id } }, content, ctx.progress.level));
 }
 
+const RARITY_ORDER = ['commune', 'peu commune', 'rare', 'épique', 'légendaire'];
+type InvFilter = 'tout' | Slot;
+type InvSort = 'emplacement' | 'rarete' | 'niveau' | 'nom';
+const SORT_NAMES: Record<InvSort, string> = { emplacement: 'Emplacement', rarete: 'Rareté', niveau: 'Niveau', nom: 'Nom' };
+
+/** Durabilité d'une pièce, prête à afficher : null si elle ne s'use pas. */
+function wearOf(def: ItemDef, usure = 0): { value: number | null; worn: boolean; left: number; max: number; broken: boolean } {
+  const rules = content.durabilite;
+  if (!hasDurability(rules, def)) return { value: null, worn: false, left: 0, max: 0, broken: false };
+  const max = maxDurability(rules, def);
+  const left = durability(rules, def, usure);
+  return { value: left / max, worn: isWornOut(rules, def, usure), left, max, broken: left <= 0 };
+}
+
+/** Une pièce dans l'inventaire : l'objet possédé, ou un exemplaire de la réserve. */
+interface InvEntry {
+  key: string;
+  item: string;
+  def: ItemDef;
+  level: number;
+  usure: number;
+  gravure?: Gravure;
+  stock?: StockEntry;
+}
+
+function ownEntry(progress: Progress, id: string): InvEntry {
+  const { state } = progress;
+  return { key: `own:${id}`, item: id, def: content.items[id], level: itemLevel(state, id), usure: state.usure[id] ?? 0, gravure: state.gravures[id] };
+}
+
+function stockEntry(entry: StockEntry): InvEntry {
+  return { key: `stock:${entry.uid}`, item: entry.item, def: content.items[entry.item], level: entry.level, usure: entry.usure ?? 0, gravure: entry.sceau ? undefined : entry.gravure, stock: entry };
+}
+
+/** L'initiale de la classe d'un objet (G, S, L, P, R), « Ra » pour un objet de race ; rien pour un universel. */
+function classTagOf(def: ItemDef): CellModel['classTag'] {
+  const classes = itemClasses(def);
+  if (classes.length === 1) {
+    const name = content.skills.classes[classes[0]]?.name ?? classes[0];
+    return { id: classes[0], label: name.charAt(0).toUpperCase(), name: `Pour la classe ${name}` };
+  }
+  if (def.races?.length) return { id: 'race', label: 'Ra', name: `Réservé : ${raceNames(content.skills, def)}` };
+  return undefined;
+}
+
+function entryModel(progress: Progress, e: InvEntry, selected: boolean): CellModel {
+  const wear = wearOf(e.def, e.usure);
+  return {
+    classTag: classTagOf(e.def),
+    key: e.key,
+    item: e.item,
+    rarity: e.def.rarity,
+    level: isUpgradable(content.upgrade, e.def) ? e.level : null,
+    durability: wear.value,
+    worn: wear.worn,
+    equipped: !e.stock && progress.state.equipped[e.def.slot as Slot] === e.item,
+    copy: Boolean(e.stock),
+    sealed: Boolean(e.stock?.sceau),
+    engraved: Boolean(e.gravure),
+    blocked: blockText(progress, e.def) !== null,
+    selected,
+  };
+}
+
+/** L'infobulle d'une pièce : tout ce qu'il faut pour décider sans ouvrir de fiche. */
+function itemTip(ctx: UiContext, e: InvEntry, hint: string | null, delta: { text: string; good: boolean }[] | null): HTMLElement {
+  const { def } = e;
+  const wear = wearOf(def, e.usure);
+  const blocked = blockText(ctx.progress, def);
+  const upgradable = isUpgradable(content.upgrade, def);
+  return h(
+    'div',
+    { class: `tip-body ${`rar-${def.rarity.replace(/\s/g, '-')}`}` },
+    h('div', { class: 'tip-head' }, icon(e.item, 'medium'), h('div', {}, h('strong', {}, def.name), h('small', {}, [content.slots[def.slot as Slot], def.rarity, upgradable ? `niv. ${e.level}` : null].filter(Boolean).join(' · ')))),
+    e.stock ? h('p', { class: 'tip-note' }, e.stock.sceau ? 'Exemplaire de la réserve · gravure scellée' : 'Exemplaire de la réserve (doublon)') : null,
+    wear.value !== null
+      ? h('div', { class: `tip-dura${wear.broken ? ' broken' : wear.worn ? ' low' : ''}` }, h('span', {}, wear.broken ? 'Cassé : ne compte plus' : `Durabilité ${wear.left} / ${wear.max}`), durabilityBar(wear.value, wear.worn))
+      : null,
+    h('p', {}, effectText(def, e.level)),
+    itemTags(def).length ? h('p', { class: 'tags' }, itemTags(def).join(' · ')) : null,
+    e.gravure ? gravureList(e.gravure) : null,
+    blocked ? h('p', { class: 'tip-note danger' }, blocked) : null,
+    delta?.length ? h('div', { class: 'deltas' }, ...delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text))) : null,
+    def.description ? h('p', { class: 'tip-lore' }, def.description) : null,
+    hint ? h('p', { class: 'tip-hint' }, hint) : null,
+  );
+}
+
 export function openInventory(host: PanelHost, ctx: UiContext): void {
+  /** Les raccourcis ne vivent que tant que la grille est à l'écran. */
+  const onKey = (e: KeyboardEvent) => {
+    const grid = host.root.querySelector<HTMLElement>('.inv-grid');
+    if (!host.open || !grid) {
+      document.removeEventListener('keydown', onKey);
+      return;
+    }
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+    const digit = /^(Digit|Numpad)([0-8])$/.exec(e.code);
+    if (digit) {
+      const filters: InvFilter[] = ['tout', ...(Object.keys(content.slots) as Slot[])];
+      memory.invFilter = filters[Number(digit[2]) === 0 ? 0 : Math.min(filters.length - 1, Number(digit[2]) - 1)];
+      render();
+    } else if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
+      memory.invSelected = neighbour(grid, memory.invSelected, e.key);
+      render();
+      host.root.querySelector<HTMLElement>(`.inv-grid .cell.selected`)?.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && memory.invSelected) {
+      e.preventDefault();
+      activate(memory.invSelected);
+    } else if (e.key === '/' || (e.key === 'f' && (e.ctrlKey || e.metaKey))) {
+      e.preventDefault();
+      host.root.querySelector<HTMLInputElement>('.inv-search')?.focus();
+    }
+  };
+  document.addEventListener('keydown', onKey);
+
+  const find = (key: string): InvEntry | null => {
+    const { progress } = ctx;
+    if (key.startsWith('own:')) {
+      const id = key.slice(4);
+      return progress.has(id) && content.items[id] ? ownEntry(progress, id) : null;
+    }
+    if (key.startsWith('stock:')) {
+      const entry = progress.state.stock.find((s) => s.uid === key.slice(6));
+      return entry && content.items[entry.item] ? stockEntry(entry) : null;
+    }
+    return null;
+  };
+
+  /** L'action principale d'une case : équiper (l'exemplaire de la réserve s'échange avec le sien), ou briser un sceau. */
+  const activate = (key: string): void => {
+    const { progress } = ctx;
+    const e = find(key);
+    if (!e) return;
+    const slot = e.def.slot as Slot;
+    if (e.stock?.sceau) {
+      const opened = breakSeal(progress, e.stock.uid);
+      if (opened?.gravure) ctx.toast(`${e.def.name} · ${gravureRank(content.gravures, opened.gravure)?.name ?? 'gravure'}`, 'loot', e.item);
+      render();
+      return;
+    }
+    const blocked = blockText(progress, e.def);
+    if (blocked) {
+      ctx.toast(`${e.def.name} : ${blocked}`);
+      return;
+    }
+    if (e.stock) {
+      if (!swapStock(progress, e.stock.uid)) return;
+      ctx.toast(`${e.def.name} : exemplaire échangé avec le tien`, 'loot', e.item);
+    }
+    if (progress.state.equipped[slot] !== e.item || e.stock) {
+      memory.inventorySlot = slot;
+      if (progress.state.equipped[slot] !== e.item) progress.equip(e.item, slot);
+      else progress.save();
+      sonEquiper(slot);
+    }
+    memory.invSelected = null;
+    render();
+  };
+
+  const unequip = (slot: Slot): void => {
+    if (slot === 'arme') {
+      ctx.toast('Une arme se change, elle ne se retire pas.');
+      return;
+    }
+    ctx.progress.unequip(slot);
+    render();
+  };
+
+  const menuFor = (e: InvEntry): MenuItem[] => {
+    const { progress } = ctx;
+    const out: MenuItem[] = [];
+    const owned = progress.has(e.item);
+    const worn = !e.stock && progress.state.equipped[e.def.slot as Slot] === e.item;
+    if (e.stock?.sceau) out.push({ label: 'Briser le sceau', run: () => activate(e.key) });
+    else if (!worn) out.push({ label: e.stock && owned ? 'Équiper cet exemplaire' : 'Équiper', run: () => activate(e.key), disabled: blockText(progress, e.def) !== null });
+    if (worn && e.def.slot !== 'arme') out.push({ label: 'Retirer', run: () => unequip(e.def.slot as Slot) });
+    if (e.stock && !e.stock.sceau && owned) {
+      out.push({ label: 'Échanger avec le mien (sans équiper)', run: () => { if (swapStock(progress, e.stock!.uid)) ctx.toast(`${e.def.name} : exemplaires échangés`, 'loot', e.item); render(); } });
+      if (e.gravure && e.def.slot === 'arme') out.push({ label: progress.gravure(e.item) ? 'Échanger les gravures' : 'Poser la gravure sur mon arme', run: () => { if (poseGravure(progress, e.stock!.uid)) ctx.toast(`Gravure posée sur ${e.def.name}`, 'loot', e.item); render(); } });
+    }
+    if (e.stock) {
+      const s = salvage(content.duplicates, content.upgrade, e.def);
+      out.push({ label: `Fondre (+${s.oboles} oboles${s.material ? `, ${s.count} ${content.materials[s.material] ?? s.material}` : ''})`, danger: true, run: () => { const text = meltStock(progress, e.stock!.uid); if (text) ctx.toast(text, 'loot', e.item); render(); } });
+    } else if (!worn) {
+      out.push({ label: 'Ranger dans la réserve', run: () => { stashOwned(e.item); } });
+    }
+    return out;
+  };
+
+  /** Range l'objet possédé dans la réserve, avec son niveau, sa gravure et son usure (un objet porté ne se range pas). */
+  const stashOwned = (id: string): void => {
+    const { progress } = ctx;
+    const { state } = progress;
+    const def = content.items[id];
+    if (!def || Object.values(state.equipped).includes(id)) return;
+    if (!progress.addStock({ item: id, level: itemLevel(state, id), ...(state.gravures[id] ? { gravure: state.gravures[id] } : {}), ...(state.usure[id] ? { usure: state.usure[id] } : {}) })) {
+      ctx.toast('La réserve est pleine.');
+      return;
+    }
+    state.items = state.items.filter((i) => i !== id);
+    delete state.itemLevels[id];
+    delete state.gravures[id];
+    delete state.usure[id];
+    progress.save();
+    ctx.toast(`${def.name} : rangé dans la réserve`, 'loot', id);
+    render();
+  };
+
   const render = () => {
     const { progress } = ctx;
     const { state } = progress;
     const loadout = ctx.loadout();
     const cfg = loadout.config;
     const slots = Object.entries(content.slots) as [Slot, string][];
-    const owned = state.items.filter((id) => content.items[id]?.slot);
-    const ofSlot = (slot: Slot) => owned.filter((id) => content.items[id].slot === slot);
-    const current = memory.inventorySlot;
-
-    // À gauche, ce qui est porté : un clic sur un emplacement n'affiche que ses objets à droite.
-    const slotButtons = slots.map(([slot, label]) => {
-      const id = state.equipped[slot];
-      const count = ofSlot(slot).filter((item) => onShelf(progress, content.items[item], memory.inventoryShelf)).length;
-      return h(
-        'button',
-        {
-          class: `slot${id ? '' : ' empty'}${slot === current ? ' selected' : ''}`,
-          onclick: () => {
-            // Un emplacement porté ouvre sa section à droite, et la fait défiler jusqu'à elle.
-            memory.inventorySlot = slot;
-            memory.folds.set(`inv-${memory.inventoryShelf}-${slot}`, true);
-            render();
-            host.root.querySelector(`.inventory-shelf [data-slot="${slot}"]`)?.scrollIntoView({ block: 'nearest' });
-          },
-        },
-        h('span', { class: 'slot-label' }, label),
-        h('span', { class: 'slot-item' }, id ? icon(id, 'small') : null, id ? content.items[id].name + levelTag(progress, id) : '—'),
-        h('span', { class: 'slot-count', title: `${count} objet${count > 1 ? 's' : ''} de ce rayon pour cet emplacement` }, String(count)),
-      );
-    });
-
     const cls = heroClass(content.skills, state.hero);
-    const shelf = memory.inventoryShelf;
-    const shelved = owned.filter((id) => onShelf(progress, content.items[id], shelf));
-    const choice = (id: string): HTMLElement => {
-      const def = content.items[id];
-      const slot = def.slot as Slot;
-      const equipped = state.equipped[slot] === id;
-      // Une arme d'une autre classe, une pièce réservée à une autre race, se gardent mais ne se portent pas.
-      const blocked = blockText(progress, def);
-      if (blocked) {
-        return h(
-          'button',
-          { class: 'owned', disabled: true, title: def.description },
-          icon(id, 'medium'),
-          h(
-            'span',
-            { class: 'owned-text' },
-            h('strong', {}, def.name + levelTag(progress, id)),
-            h('small', {}, effectText(def, itemLevel(state, id))),
-            h('small', { class: 'tags' }, blocked),
-          ),
-        );
-      }
-      const delta = equipped ? [] : equipDelta(ctx, loadout, id, slot);
-      return h(
-        'button',
+
+    // --- La poupée : les emplacements portés autour du héros. Glisser une case sur un emplacement l'équipe ;
+    // tirer un emplacement vers le sac le retire.
+    const slotCell = (slot: Slot, label: string): HTMLElement => {
+      const id = state.equipped[slot];
+      const def = id ? content.items[id] : undefined;
+      const e = id && def ? ownEntry(progress, id) : null;
+      const wear = def ? wearOf(def, e?.usure) : null;
+      const el = h(
+        'div',
         {
-          class: `owned${equipped ? ' equipped' : ''}`,
-          title: def.description,
+          class: `doll-slot slot-${slot}${def ? ` rar-${def.rarity.replace(/\s/g, '-')}` : ' empty'}${wear?.broken ? ' broken' : ''}${e?.gravure ? ' engraved' : ''}${memory.invFilter === slot ? ' selected' : ''}`,
+          tabindex: '-1',
+          'data-slot': slot,
           onclick: () => {
-            memory.inventorySlot = slot;
-            progress.equip(id, slot);
-            sonEquiper(slot);
+            memory.invFilter = memory.invFilter === slot ? 'tout' : slot;
             render();
           },
+          ondblclick: () => unequip(slot),
+          oncontextmenu: (ev: Event) => {
+            ev.preventDefault();
+            if (e) {
+              const me = ev as MouseEvent;
+              openMenu(el, me.clientX, me.clientY, menuFor(e));
+            }
+          },
         },
-        icon(id, 'medium'),
-        h(
-          'span',
-          { class: 'owned-text' },
-          h('strong', {}, def.name + levelTag(progress, id)),
-          h('small', {}, effectText(def, itemLevel(state, id))),
-          itemTags(def).length ? h('small', { class: 'tags' }, itemTags(def).join(' · ')) : null,
-          equipped
-            ? null
-            : h('span', { class: 'deltas' }, ...(delta.length ? delta.map((d) => h('span', { class: `delta ${d.good ? 'up' : 'down'}` }, d.text)) : [h('span', { class: 'delta' }, 'Mêmes caractéristiques')])),
-        ),
-        equipped ? h('span', { class: 'badge' }, 'Équipé') : null,
+        def ? icon(id!, 'medium') : h('span', { class: 'doll-empty' }, label),
+        e && isUpgradable(content.upgrade, def!) ? h('span', { class: 'cell-level' }, String(e.level)) : null,
+        e?.gravure ? h('span', { class: 'cell-mark', title: 'Gravée' }, '刻') : null,
+        wear ? durabilityBar(wear.value, wear.worn) : null,
+        h('span', { class: 'doll-label' }, label),
       );
+      if (e) {
+        bindTip(el, () => itemTip(ctx, e, slot === 'arme' ? 'Glisse une autre arme ici pour la changer · clic : filtrer le sac' : 'Double-clic ou glisser vers le sac : retirer · clic : filtrer le sac', null));
+        if (slot !== 'arme') dragSource(el, `slot:${slot}`);
+      } else {
+        bindTip(el, () => h('div', { class: 'tip-body' }, h('strong', {}, label), h('p', { class: 'tip-hint' }, 'Glisse une pièce ici pour l’équiper · clic : filtrer le sac')));
+      }
+      dropTarget(
+        el,
+        (key) => !key.startsWith('slot:') && find(key)?.def.slot === slot,
+        (key) => activate(key),
+      );
+      return el;
     };
-    // Le rayon choisi, une section par emplacement ; celle de l'emplacement choisi à gauche est ouverte.
-    const sections = bySlot(shelved).map(([slot, ids]) => {
-      const section = fold(
-        `inv-${shelf}-${slot}`,
-        slot === current,
-        content.slots[slot],
-        `${ids.length} objet${ids.length > 1 ? 's' : ''}`,
-        h('div', { class: 'owned-list' }, ...ids.map(choice)),
-      );
-      section.dataset.slot = slot;
-      if (slot === current) section.classList.add('current');
-      return section;
+    const portrait = h(
+      'div',
+      { class: 'doll-hero' },
+      h('img', { class: `doll-portrait${isPixelArt(`sprites/${heroImage(state.hero)}`) ? ' pixel-art' : ''}`, src: `${import.meta.env.BASE_URL}sprites/${heroImage(state.hero)}`, alt: '', draggable: 'false' }),
+      h('div', { class: 'doll-stats' }, h('span', {}, h('b', {}, String(Math.round(cfg.maxHp))), ' PV'), h('span', {}, h('b', {}, String(Math.round(cfg.attack.damage))), ' dégâts'), h('span', {}, `Niv. ${loadout.level}`)),
+    );
+    const bySlotEl = Object.fromEntries(slots.map(([slot, label]) => [slot, slotCell(slot, label)])) as Record<Slot, HTMLElement>;
+    const doll = h(
+      'div',
+      { class: 'doll' },
+      h('div', { class: 'doll-col' }, bySlotEl.casque, bySlotEl.plastron, bySlotEl.jambieres, bySlotEl.bottes),
+      portrait,
+      h('div', { class: 'doll-col' }, bySlotEl.arme, bySlotEl.amulette, bySlotEl.relique),
+    );
+    const broken = Object.values(state.equipped).filter((id) => id && content.items[id] && wearOf(content.items[id], state.usure[id]).broken);
+
+    // --- Le sac : les objets possédés non portés et les exemplaires de la réserve, en cases.
+    const filter = memory.invFilter;
+    const search = memory.invSearch.trim().toLowerCase();
+    const entries: InvEntry[] = [
+      ...state.items.filter((id) => content.items[id]?.slot && state.equipped[content.items[id].slot as Slot] !== id).map((id) => ownEntry(progress, id)),
+      ...state.stock.filter((s) => content.items[s.item]?.slot).map(stockEntry),
+    ];
+    const shelfOk = (e: InvEntry) => memory.inventoryShelf === 'tout' || onShelf(progress, e.def, memory.inventoryShelf);
+    const viewOk = (e: InvEntry) =>
+      memory.invView === 'tout' ||
+      (memory.invView === 'gravees' && Boolean(e.gravure || e.stock?.sceau)) ||
+      (memory.invView === 'doublons' && Boolean(e.stock)) ||
+      (memory.invView === 'usees' && (wearOf(e.def, e.usure).worn || wearOf(e.def, e.usure).broken));
+    const shown = entries
+      .filter((e) => (filter === 'tout' || e.def.slot === filter) && shelfOk(e) && viewOk(e))
+      .filter((e) => !search || e.def.name.toLowerCase().includes(search) || effectText(e.def, e.level).toLowerCase().includes(search) || itemTags(e.def).some((t) => t.toLowerCase().includes(search)));
+    const slotOrder = Object.keys(content.slots);
+    const rarity = (e: InvEntry) => RARITY_ORDER.indexOf(e.def.rarity);
+    const byName = (a: InvEntry, b: InvEntry) => a.def.name.localeCompare(b.def.name, 'fr');
+    const sorters: Record<InvSort, (a: InvEntry, b: InvEntry) => number> = {
+      emplacement: (a, b) => slotOrder.indexOf(a.def.slot!) - slotOrder.indexOf(b.def.slot!) || rarity(b) - rarity(a) || byName(a, b) || b.level - a.level,
+      rarete: (a, b) => rarity(b) - rarity(a) || byName(a, b) || b.level - a.level,
+      niveau: (a, b) => b.level - a.level || rarity(b) - rarity(a) || byName(a, b),
+      nom: (a, b) => byName(a, b) || b.level - a.level,
+    };
+    shown.sort(sorters[memory.invSort]);
+    if (memory.invSelected && !shown.some((e) => e.key === memory.invSelected)) memory.invSelected = null;
+
+    const cells = shown.map((e) =>
+      itemCell(entryModel(progress, e, e.key === memory.invSelected), {
+        select: () => {
+          memory.invSelected = e.key;
+          for (const el of host.root.querySelectorAll('.inv-grid .cell.selected')) el.classList.remove('selected');
+          host.root.querySelector(`.inv-grid .cell[data-key="${CSS.escape(e.key)}"]`)?.classList.add('selected');
+        },
+        activate: () => activate(e.key),
+        menu: () => menuFor(e),
+        tooltip: () => {
+          const slot = e.def.slot as Slot;
+          const blocked = blockText(progress, e.def) !== null;
+          const delta = blocked || e.stock?.sceau ? null : equipDelta(ctx, loadout, e.item, slot);
+          const hint = e.stock?.sceau
+            ? 'Double-clic : briser le sceau · clic droit : actions'
+            : blocked
+              ? 'Clic droit : actions'
+              : e.stock && progress.has(e.item)
+                ? 'Double-clic : porter cet exemplaire (il s’échange avec le tien) · clic droit : actions'
+                : 'Double-clic ou glisser sur l’emplacement : équiper · clic droit : actions';
+          return itemTip(ctx, e, hint, e.stock && progress.has(e.item) ? null : delta);
+        },
+      }),
+    );
+    const grid = h('div', { class: 'inv-grid', 'data-scroll': 'inv-grid' }, ...cells);
+    // Tirer un emplacement porté vers le sac le retire.
+    dropTarget(grid, (key) => key.startsWith('slot:'), (key) => unequip(key.slice(5) as Slot));
+
+    const filters: { id: InvFilter; label: string }[] = [{ id: 'tout', label: 'Tout' }, ...slots.map(([slot, label]) => ({ id: slot, label }))];
+    const filterBar = h(
+      'div',
+      { class: 'inv-filters', role: 'tablist' },
+      ...filters.map((f, i) =>
+        h(
+          'button',
+          {
+            class: `inv-filter${filter === f.id ? ' active' : ''}`,
+            title: `${f.label} (touche ${i + 1})`,
+            onclick: () => {
+              memory.invFilter = f.id;
+              render();
+            },
+          },
+          h('kbd', {}, String(i + 1)),
+          f.label,
+          h('span', { class: 'tab-count' }, String(entries.filter((e) => (f.id === 'tout' || e.def.slot === f.id) && shelfOk(e)).length)),
+        ),
+      ),
+    );
+    const own = state.hero.class;
+    const shelfSelect = h(
+      'select',
+      {
+        class: 'inv-select',
+        title: 'Rayon',
+        onchange: (ev: Event) => {
+          memory.inventoryShelf = (ev.target as HTMLSelectElement).value;
+          render();
+        },
+      },
+      ...[
+        { id: MINE, label: `Ma classe · ${content.skills.classes[own]?.name ?? own}` },
+        { id: 'tout', label: 'Tous les objets' },
+        ...Object.entries(content.skills.classes).filter(([id]) => id !== own).map(([id, c]) => ({ id, label: c.name })),
+        { id: UNIVERSAL, label: 'Universels' },
+        { id: RACIAL, label: 'Raciaux' },
+      ].map((o) => h('option', { value: o.id, selected: o.id === memory.inventoryShelf }, o.label)),
+    );
+    const sortSelect = h(
+      'select',
+      {
+        class: 'inv-select',
+        title: 'Trier par',
+        onchange: (ev: Event) => {
+          memory.invSort = (ev.target as HTMLSelectElement).value as InvSort;
+          render();
+        },
+      },
+      ...(Object.keys(SORT_NAMES) as InvSort[]).map((id) => h('option', { value: id, selected: id === memory.invSort }, `Tri : ${SORT_NAMES[id]}`)),
+    );
+    const views = { tout: 'Tout voir', gravees: 'Gravées', doublons: 'Doublons (réserve)', usees: 'Usées ou cassées' } as const;
+    const viewSelect = h(
+      'select',
+      {
+        class: 'inv-select',
+        title: 'Afficher',
+        onchange: (ev: Event) => {
+          memory.invView = (ev.target as HTMLSelectElement).value as typeof memory.invView;
+          render();
+        },
+      },
+      ...(Object.keys(views) as (keyof typeof views)[]).map((id) =>
+        h('option', { value: id, selected: id === memory.invView }, `${views[id]} (${entries.filter((e) => (id === 'tout' ? true : id === 'gravees' ? e.gravure || e.stock?.sceau : id === 'doublons' ? e.stock : wearOf(e.def, e.usure).worn || wearOf(e.def, e.usure).broken)).length})`),
+      ),
+    );
+    const searchBox = h('input', {
+      class: 'inv-search',
+      type: 'search',
+      placeholder: 'Chercher (/)',
+      value: memory.invSearch,
+      // Taper dans la recherche ne doit pas fermer la fenêtre (I, B, J, K) ni déplacer la sélection.
+      onkeydown: (ev: Event) => {
+        ev.stopPropagation();
+        if ((ev as KeyboardEvent).key === 'Escape' || (ev as KeyboardEvent).key === 'Enter') (ev.target as HTMLInputElement).blur();
+      },
+      onkeyup: (ev: Event) => ev.stopPropagation(),
+      oninput: (ev: Event) => {
+        memory.invSearch = (ev.target as HTMLInputElement).value;
+        const caret = (ev.target as HTMLInputElement).selectionStart;
+        render();
+        const box = host.root.querySelector<HTMLInputElement>('.inv-search');
+        box?.focus();
+        if (box && caret !== null) box.setSelectionRange(caret, caret);
+      },
     });
 
     const tiers = cls.tag.tiers;
@@ -1168,24 +1538,18 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
       { class: 'tag-tiers' },
       ...tiers.map((t, i) => h('div', { class: `tier${i <= loadout.tier ? ' active' : ''}` }, h('b', {}, `(${t.count})`), ` ${t.description}`)),
     );
-
     // Ce que l'équipement apporte (la moitié de la puissance du héros, GDD) : le même héros sans objet a son arme de
     // départ jamais forgée. Dégâts : forge de l'arme et dégâts des pièces ; PV : PV et armure.
     const bare = buildLoadout(ctx.basePlayer, { ...state, equipped: { arme: cls.weapon }, itemLevels: {} }, content, progress.level).config;
     const weapon = state.equipped.arme;
-    const gearDamage = (weapon ? weaponPower(classUpgrade(content.upgrade, cls), itemLevel(state, weapon)) : 1) * (1 + loadout.bonus.damage);
+    const weaponOk = weapon && !wearOf(content.items[weapon], state.usure[weapon]).broken;
+    const gearDamage = (weaponOk ? weaponPower(classUpgrade(content.upgrade, cls), itemLevel(state, weapon)) : 1) * (1 + loadout.bonus.damage);
     const effective = (c: PlayerConfig) => c.maxHp / (c.damageTakenFactor ?? 1);
     const stats = h(
       'dl',
       { class: 'stats' },
-      h('dt', {}, 'Niveau'),
-      h('dd', {}, String(loadout.level)),
       h('dt', {}, 'Équipement'),
       h('dd', {}, `dégâts ×${fr(gearDamage, 1)} · PV effectifs ×${fr(effective(cfg) / effective(bare), 1)}`),
-      h('dt', {}, 'PV max'),
-      h('dd', {}, String(Math.round(cfg.maxHp))),
-      h('dt', {}, 'Dégâts par coup'),
-      h('dd', {}, String(Math.round(cfg.attack.damage))),
       h('dt', {}, 'Vitesse'),
       h('dd', {}, `${Math.round((cfg.moveSpeed / ctx.basePlayer.moveSpeed) * 100)} %`),
       h('dt', {}, 'Esquive'),
@@ -1205,10 +1569,10 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
           ]
         : []),
     );
-
     const materials = Object.entries(content.materials).filter(([id]) => progress.material(id) > 0);
     const questItems = state.items.filter((id) => !content.items[id]?.slot);
     const top = tiers[tiers.length - 1].count;
+    const copies = state.stock.length;
 
     host.show(
       'Équipement',
@@ -1217,20 +1581,14 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
         'div',
         { class: 'inventory-page' },
         gearTabs(host, ctx, 'equipement'),
-          h(
+        h(
           'div',
-          { class: 'inventory' },
+          { class: 'inventory inv-v2' },
           h(
             'div',
-            { class: 'col' },
-            h('h3', {}, 'Porté'),
-            h('div', { class: 'slots' }, ...slotButtons),
-            h(
-              'div',
-              { class: 'inv-links' },
-              h('button', { class: 'btn small', onclick: () => openReserve(host, ctx) }, `Réserve (${progress.state.stock.length})`),
-              h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets'),
-            ),
+            { class: 'col inv-left' },
+            doll,
+            broken.length ? h('p', { class: 'note danger' }, `${broken.length > 1 ? 'Des pièces portées sont cassées' : 'Une pièce portée est cassée'} : elle${broken.length > 1 ? 's' : ''} ne compte${broken.length > 1 ? 'nt' : ''} plus. Tetsu répare à la forge.`) : null,
             fold('inv-stats', true, 'Caractéristiques', `${Math.round(cfg.maxHp)} PV · ${Math.round(cfg.attack.damage)} dégâts`, stats),
             fold('inv-tags', false, 'Tags de classe', `${cls.tag.name} ${loadout.tagCount} / ${top}`, tagLine),
             fold(
@@ -1239,7 +1597,7 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
               'Matériaux',
               materials.length ? String(materials.reduce((sum, [id]) => sum + progress.material(id), 0)) : 'aucun',
               materials.length
-                ? h('div', { class: 'chips' }, ...materials.map(([id, name]) => h('span', { class: 'chip' }, icon(id, 'small'), name, h('b', {}, `× ${progress.material(id)}`))))
+                ? h('div', { class: 'mat-grid' }, ...materials.map(([id, name]) => h('span', { class: 'mat-cell', title: name }, icon(id, 'medium'), h('b', {}, String(progress.material(id))))))
                 : h('p', { class: 'note' }, 'Les ennemis des Rizières noyées en laissent tomber.'),
             ),
             questItems.length
@@ -1251,18 +1609,27 @@ export function openInventory(host: PanelHost, ctx: UiContext): void {
                   h('div', { class: 'chips' }, ...questItems.map((id) => h('span', { class: 'chip', title: content.items[id]?.description ?? '' }, icon(id, 'small'), content.items[id]?.name ?? id))),
                 )
               : null,
+            h('div', { class: 'inv-links' }, h('button', { class: 'btn small', onclick: () => openCodex(host, ctx) }, 'Codex des objets')),
           ),
           h(
             'div',
-            { class: 'col inventory-shelf' },
-            shelfTabs(progress, owned, shelf, (s) => {
-              memory.inventoryShelf = s;
-              render();
-            }),
-            sections.length
-              ? h('div', { class: 'shelf-sections', 'data-scroll': `inventory-${shelf}` }, ...sections)
-              : h('p', { class: 'note' }, 'Aucun objet dans ce rayon. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.'),
-            sections.length ? h('p', { class: 'note' }, 'Clique sur un objet pour l’équiper ; clique sur l’objet porté pour le retirer. Une arme se change, elle ne se retire pas.') : null,
+            { class: 'col inv-bag' },
+            h('div', { class: 'inv-toolbar' }, searchBox, viewSelect, shelfSelect, sortSelect),
+            filterBar,
+            cells.length ? grid : h('div', { class: 'inv-grid empty' }, h('p', { class: 'note' }, search ? 'Rien ne correspond à ta recherche.' : 'Aucun objet ici. Tetsu en forge, le tanuki en vend, et les yokai en laissent tomber.')),
+            h(
+              'div',
+              { class: 'inv-legend' },
+              ...RARITY_ORDER.map((r) => h('span', { class: `legend-rar rar-${r.replace(/\s/g, '-')}` }, h('i'), r)),
+              h('span', { class: 'legend-engraved' }, h('i'), 'gravée'),
+              h('span', {}, h('b', { class: 'legend-copy' }, '×'), ` doublon · réserve ${copies} / ${STOCK_MAX}`),
+              ...Object.entries(content.skills.classes).map(([id, c]) => h('span', {}, h('b', { class: `cell-class cls-${id} legend` }, c.name.charAt(0)), ` ${c.name}`)),
+            ),
+            h(
+              'p',
+              { class: 'note inv-help' },
+              'Double-clic ou glisser sur un emplacement : équiper · clic droit : actions · tirer une pièce portée vers le sac : la retirer · 1-8 : filtres · flèches + Entrée · / : chercher. Les cases marquées × sont des doublons de la réserve.',
+            ),
           ),
         ),
       ),
@@ -2177,90 +2544,3 @@ function gravureList(gravure: Gravure): HTMLElement {
   );
 }
 
-/**
- * La réserve : chaque exemplaire en plus d'un objet possédé (doublons, sceaux du Yomi, achats), avec son niveau et sa
- * gravure. On y brise un sceau, on pose une gravure sur son arme (l'ancienne prend sa place), on fond, ou on sort
- * l'exemplaire vers l'équipement quand on n'a plus l'objet. La vente passe par les échanges (menu social).
- */
-export function openReserve(host: PanelHost, ctx: UiContext): void {
-  const render = () => {
-    const { progress } = ctx;
-    const stock = progress.state.stock;
-    const data = content.gravures;
-    const rows = [...stock]
-      .sort((a, b) => (content.items[a.item]?.name ?? a.item).localeCompare(content.items[b.item]?.name ?? b.item) || b.level - a.level)
-      .map((entry) => {
-        const def = content.items[entry.item];
-        if (!def) return null;
-        const owned = progress.has(entry.item);
-        const rank = entry.gravure && !entry.sceau ? gravureRank(data, entry.gravure) : undefined;
-        const current = owned && def.slot === 'arme' ? progress.gravure(entry.item) : undefined;
-        const s = salvage(content.duplicates, content.upgrade, def);
-        const gain = [`${s.oboles} oboles`, s.material ? `${s.count} ${content.materials[s.material] ?? s.material}` : null].filter(Boolean).join(', ');
-        const act = (label: string, run: () => void, title?: string) =>
-          h('button', { class: 'btn small', title, onclick: () => { run(); render(); } }, label);
-        return h(
-          'div',
-          { class: 'row recipe reserve-row' },
-          itemBlock(
-            entry.item,
-            h(
-              'div',
-              { class: 'item-head' },
-              h('strong', { title: def.description }, def.name),
-              h('span', { class: 'tag' }, `niv. ${entry.level}`),
-              entry.sceau ? h('span', { class: 'tag' }, 'Gravure scellée') : rank ? h('span', { class: 'tag' }, rank.name) : null,
-            ),
-            h('div', { class: 'item-meta' }, `${content.slots[def.slot as Slot] ?? 'Objet'} · ${owned ? 'tu possèdes déjà cet objet' : 'tu ne possèdes plus cet objet'}`),
-            entry.gravure && !entry.sceau ? gravureList(entry.gravure) : null,
-            current && entry.gravure && !entry.sceau ? h('div', { class: 'note' }, `Sur ton arme : ${gravureRank(data, current)?.name ?? 'gravure'}`) : null,
-          ),
-          h(
-            'div',
-            { class: 'reserve-actions' },
-            entry.sceau
-              ? act('Briser le sceau', () => {
-                  const opened = breakSeal(progress, entry.uid);
-                  if (opened?.gravure) ctx.toast(`${def.name} · ${gravureRank(data, opened.gravure)?.name ?? 'gravure'}`, 'loot', entry.item);
-                })
-              : null,
-            !entry.sceau && entry.gravure && owned && def.slot === 'arme'
-              ? act(
-                  current ? 'Échanger avec mon arme' : 'Poser sur mon arme',
-                  () => {
-                    if (poseGravure(progress, entry.uid)) ctx.toast(`Gravure posée sur ${def.name}`, 'loot', entry.item);
-                  },
-                  current ? 'La gravure de ton arme passe sur cet exemplaire : une seule gravure active à la fois.' : undefined,
-                )
-              : null,
-            !owned && !entry.sceau
-              ? act('Ranger dans l’équipement', () => {
-                  if (takeOut(progress, entry.uid)) ctx.toast(`${def.name} rejoint ton équipement`, 'loot', entry.item);
-                })
-              : null,
-            act(
-              'Fondre',
-              () => {
-                const text = meltStock(progress, entry.uid);
-                if (text) ctx.toast(text, 'loot', entry.item);
-              },
-              `Tetsu le fond : ${gain}`,
-            ),
-          ),
-        );
-      })
-      .filter(Boolean) as HTMLElement[];
-    host.show(
-      'Réserve',
-      `${stock.length} / ${STOCK_MAX} exemplaires`,
-      h(
-        'div',
-        { class: 'list' },
-        h('p', { class: 'note' }, 'Les doublons, les sceaux du Yomi et les objets reçus en double attendent ici. Brise un sceau pour découvrir sa gravure ; pose-la sur ton arme ou revends l’exemplaire (menu social : échange, hôtel des ventes, boutique).'),
-        ...(rows.length ? rows : [h('p', { class: 'note' }, 'Ta réserve est vide.')]),
-      ),
-      { wide: true },
-    );
-  };
-  render();
-}
