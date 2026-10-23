@@ -27,7 +27,10 @@ export class CreationScreen {
     // Les races où toutes les classes sont jouables d'abord, le Hanyō en tête (sélectionné par défaut, et le premier à
     // recevoir ses planches chibi) : le premier écran du jeu montre ce qui existe, pas ce qui manque.
     const rank = (race: string) => (race === FIRST_RACE ? 0 : classIds.every((cls) => heroAvailable(race, cls)) ? 1 : 2);
-    const raceIds = Object.keys(skills.races).sort((a, b) => rank(a) - rank(b));
+    // Seules les races jouables (et celle du héros en cours, pour le moine) : le Hanyō.
+    const raceIds = Object.keys(skills.races)
+      .filter((id) => classIds.some((cls) => heroAvailable(id, cls)) || current?.race === id)
+      .sort((a, b) => rank(a) - rank(b));
     const hero: Hero = current ? { ...current } : { race: raceIds[0], class: classIds[0] };
     const isCurrent = (race: string, cls: string) => current !== undefined && current.race === race && current.class === cls;
 

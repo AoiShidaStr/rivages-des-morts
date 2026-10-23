@@ -246,6 +246,15 @@
           "methode": "v3",
           "cout": 1
         }
+      },
+      "idle": {
+        "south-east": {
+          "groupe": "24508ca6-8565-4f75-8cf4-fbb932b7be78",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/bf6664ad-7ddf-459b-ae20-458e7f6912bb/south-east/{i}.png?t=1792756904566",
+          "images": 4,
+          "statut": "fait",
+          "methode": "breathing-idle"
+        }
       }
     },
     "cout_creation": 1,
@@ -276,6 +285,13 @@
           "statut": "fait",
           "methode": "walking-8-frames",
           "cout": 1
+        },
+        "east": {
+          "groupe": "760da85c-2390-4e5b-9783-100caad05356",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/095b0cad-e98b-43a1-ae3e-675c112441b7/animations/52dbb3eb-ee28-45e0-bec1-eb6acf46d428/east/{i}.png?t=1792757072897",
+          "images": 8,
+          "statut": "fait",
+          "methode": "walking-8-frames"
         }
       },
       "attaque": {

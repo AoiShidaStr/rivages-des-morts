@@ -28,6 +28,10 @@
       "mort": {
         "images": 6,
         "action": "is hit hard, staggers and falls backward onto the ground, ends lying still on the back; same face, skin and clothes in every frame"
+      },
+      "idle": {
+        "modele": "breathing-idle",
+        "action": "standing still, breathing gently"
       }
     },
     "guerrier": {
