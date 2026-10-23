@@ -2077,6 +2077,7 @@ const YOKAI_NOMS: Record<string, string> = {
   ikazuchi: 'Ikazuchi',
   ikusa: 'Ikusa',
   izanami: 'Izanami',
+  gardien: 'Le gardien errant',
   mannequin: 'Mannequin de Tetsu',
 };
 

@@ -38,7 +38,7 @@
         "if": [{ "notFlag": "gardien_rencontre" }],
         "marker": "!",
         "lines": [
-          ["narrateur", "Entre les tiges de riz, une silhouette se tient sans bouger : trop grande pour un kodama, trop calme pour un yokai."],
+          ["narrateur", "Au milieu de la clairière, sous les cèdres du Mont Fujikasane, une silhouette se tient sans bouger : trop grande pour un kodama, trop calme pour un yokai."],
           ["gardien", "Tu as des yeux qui voient. La rizière est aux morts, l'île aux vivants : entre les deux, je marche depuis l'effondrement."],
           ["heros", "Tu gardes quelque chose ?"],
           ["gardien", "Un souvenir. J'attends qu'on vienne le porter. Ce peigne a chevauché de longues chevelures avant d'attendre ici. Prends-le, et prends cet éclat des Tablettes : un jour, le forgeron s'en servira pour éveiller une relique."],
@@ -48,11 +48,33 @@
         "then": [{ "give": "peigne-izanagi" }, { "oboles": 180 }, { "material": ["eclat-tablettes", 1] }, { "set": "gardien_rencontre" }]
       },
       {
+        "if": [{ "hours": [0, 5] }, { "notFlag": "gardien_vaincu" }],
+        "marker": "!",
+        "lines": [
+          ["narrateur", "Minuit est passé. Sous les cèdres, la lanterne du gardien brûle d'une flamme bleue, et son ombre est plus grande que lui."],
+          ["gardien", "La nuit, je compte ceux qui montent. Personne n'est jamais redescendu de ce compte."],
+          ["gardien", "Tu veux voir ce que garde un veilleur ? Alors tiens-toi droit. Je ne frapperai pas deux fois la même âme."]
+        ],
+        "choices": [
+          { "text": "Affronter le gardien errant", "then": [{ "enterDungeon": "fujikasane" }] },
+          { "text": "Redescendre du mont" }
+        ]
+      },
+      {
+        "if": [{ "hours": [0, 5] }, { "flag": "gardien_vaincu" }],
+        "lines": [["gardien", "Tu m'as fait asseoir une fois. Reviens si tu veux recommencer : la nuit est longue, et le compte aussi."]],
+        "choices": [
+          { "text": "Affronter de nouveau le gardien errant", "then": [{ "enterDungeon": "fujikasane" }] },
+          { "text": "Le laisser à sa veille" }
+        ]
+      },
+      {
         "lines": [],
         "pool": [
           { "lines": [["gardien", "On m'appelait le veilleur, du temps où la rizière nourrissait les vivants. On laissait une offrande au carré d'eau, et je la comptais."]] },
           { "lines": [["gardien", "Le peigne que tu portes s'est allumé, un jour, dans un lieu où il n'y avait plus de jour. Sers-t'en pour voir ce que tu regardes."]] },
           { "lines": [["gardien", "Je ne suis pas un kodama. Les kodama font du bruit quand on les compte. Les veilleurs, non."]] },
+          { "lines": [["gardien", "Le jour, je marche. Après minuit, je compte. Reviens à cette heure-là, si tu tiens à être compté."]] },
           { "if": [{ "flag": "izanami_vaincue" }], "lines": [["gardien", "Elle a cédé, dit-on. Alors je peux m'asseoir. Ça m'étonne encore."]] },
           { "if": [{ "flag": "puits_repose" }], "lines": [["gardien", "Tu es remonté du puits avec une âme entière. Ce que tu as porté pour elle, tu le porteras longtemps."]] }
         ]

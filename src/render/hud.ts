@@ -66,7 +66,7 @@ interface SkillView {
 }
 
 /** Nom affiché sur la barre de chaque boss. */
-const BOSS_TITLES: Record<string, string> = { jorogumo: 'Jorōgumo', izanami: 'Izanami' };
+const BOSS_TITLES: Record<string, string> = { jorogumo: 'Jorōgumo', izanami: 'Izanami', gardien: 'Le gardien errant' };
 
 /** Interface de combat en HTML par-dessus le canvas : barres, compétences, annonces de vague et du boss. */
 export class Hud {
