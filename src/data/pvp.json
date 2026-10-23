@@ -25,17 +25,8 @@
     "style": {
       "arena": "palais",
       "ground": [0.5, 0.4, 0.5],
-      "sky": "#2b2430",
-      "decor": [
-        { "sprite": "torii", "x": -12, "z": 0 },
-        { "sprite": "torii", "x": 12, "z": 0 },
-        { "sprite": "lanterneAllumee", "x": -10.5, "z": 10.5 },
-        { "sprite": "lanterneAllumee", "x": 10.5, "z": -10.5 },
-        { "sprite": "lanterneAllumee", "x": 10.5, "z": 10.5 },
-        { "sprite": "lanterneAllumee", "x": -10.5, "z": -10.5 },
-        { "sprite": "jizo", "x": 0, "z": 11 },
-        { "sprite": "jizo", "x": 0, "z": -11 }
-      ]
+      "sky": "#0a0710",
+      "decor": []
     }
   },
   "arena": {

@@ -25,7 +25,7 @@ python3 geo_cache.py               # rend la carte une fois et garde sa géomét
 git show 4c2cba1^:src/data/island.json > export/island-origine.json   # l'île d'avant la v3 : positions de départ
 python3 export_jeu.py ../.. textures donnees    # public/sprites/ile/v3 et public/sprites/decor/v3
 python3 export_positions.py ../..               # src/data/island.json (+ export/positions.png pour vérifier)
-python3 arenes.py ../.. [yomi rizieres fujikasane]   # arènes des donjons : public/sprites/arenes, src/data/arenes.json
+python3 arenes.py ../.. [yomi rizieres fujikasane palais]   # arènes des donjons : public/sprites/arenes, src/data/arenes.json
 ```
 
 `arenes.py` dessine les arènes des donjons avec le même rendu que l'île : un petit plan autour du carré de combat
@@ -33,7 +33,11 @@ python3 arenes.py ../.. [yomi rizieres fujikasane]   # arènes des donjons : pub
 montrer, teinté (la nuit du Mont Fujikasane, la caverne du Yomi, la brume des rizières) et fondu dans la couleur du
 fond. Les arbres, rochers, torii et lanternes sont des décors debout posés par le jeu (src/render/arenaPixel.ts) ;
 devant l'arène, rien de haut, qui cacherait le combat. Les rochers et la souche (les obstacles) viennent des packs.
-Aperçus avec les décors : /tmp/claude-0/arene-*.png.
+La limite du carré de combat est partout un rebord plus haut, droit, posé exactement à ±6 (margelle, levée de
+terre, bordure de pierres, seuil de laque) : le joueur voit où il bute. Le Palais d'Izanami a ses propres décors,
+dessinés dans `izanami.py` (taiko et taiko allumés, irori, stores, os, vignes, pousses de bambou, pêchers en fruit et
+nus) ; son plancher de laque, ses tatamis et sa roche sont peints par-dessus le rendu (`peindre_palais`).
+Aperçus avec les décors : /tmp/claude-0/arene-*.png ; planche des décors du palais : `python3 izanami.py`.
 
 `export_jeu.py` :
 

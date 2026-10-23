@@ -654,7 +654,7 @@ def rendre(N, plan=None, seed=7, verbeux=True, geo=None):
             blk[ok] = t[ok]
     log('riz')
     if geo is not None:
-        geo.update(face=face, ori=ori, dep=dep, hsrc=hsrc, mat=mat, casc=casc, pont_h=pont_h, K=K, N=N, plan=p)
+        geo.update(face=face, ori=ori, dep=dep, hsrc=hsrc, mat=mat, casc=casc, pont_h=pont_h, K=K, N=N, plan=p, xs=xs, zs=zs)
     return img
 
 
