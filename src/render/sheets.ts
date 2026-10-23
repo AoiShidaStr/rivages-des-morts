@@ -22,6 +22,8 @@ export interface AsepriteSheet {
     smooth?: boolean;
     bodyHeight?: number;
     anchor?: { x: number; y: number };
+    /** Normal map de la planche (mêmes cases), tools/pixellab/normales.py. */
+    normal?: string;
   };
 }
 
@@ -33,6 +35,8 @@ export interface LoadedSheet {
   /** Hauteur de la case sous les pieds, dans le monde : le sprite descend d'autant. */
   below: number;
   anim: SheetAnimation;
+  /** Normal map, pour l'éclairage de l'île. */
+  normal?: Texture;
 }
 
 /**
@@ -63,7 +67,8 @@ export async function loadSheet(scene: Scene, jsonPath: string, bodyHeight: numb
   const { anchor } = sheet.meta;
   const height = bodyPx ? (bodyHeight * first.h) / bodyPx : (cellHeight ?? bodyHeight);
   const below = bodyPx && anchor ? (height * (first.h - anchor.y)) / first.h : 0;
-  return { texture, aspect: first.w / first.h, height, below, anim: { frames, tags } };
+  const normal = sheet.meta.normal ? await loadTexture(scene, `${base}${dir}${sheet.meta.normal}`, true).catch(() => undefined) : undefined;
+  return { texture, aspect: first.w / first.h, height, below, anim: { frames, tags }, normal };
 }
 
 /** Les planches à deux directions (PixelLab) ont une version de dos de chaque animation, suivie de « -dos ». */

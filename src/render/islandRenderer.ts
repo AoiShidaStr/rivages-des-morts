@@ -38,6 +38,8 @@ const NAME_HEIGHT_MARGIN = 0.25;
 
 interface SpriteEntry {
   texture: BaseTexture;
+  /** Normal map (planches PixelLab) : le personnage prend la lumière en volume. */
+  normal?: BaseTexture;
   aspect: number;
   /** Hauteur de l'image dans le monde (une case entière pour une planche). */
   height: number;
@@ -421,7 +423,7 @@ export class IslandRenderer {
     mesh.isPickable = false;
     mesh.position.set(pos.x, 0, pos.z);
     mesh.alphaIndex = SPRITE_ORDER - Math.round(dot(pos, this.forward) * 100);
-    const material = this.map?.litSprite(name, entry.texture) ?? spriteMaterial(this.scene, name, entry.texture);
+    const material = this.map?.litSprite(name, entry.texture, entry.normal) ?? spriteMaterial(this.scene, name, entry.texture);
     mesh.material = material;
     const shadows = this.map?.shadows?.add(mesh, entry.texture, true, false) ?? null;
     let shadow: Mesh | null = null;
