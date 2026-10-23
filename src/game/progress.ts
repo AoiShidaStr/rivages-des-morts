@@ -1,6 +1,7 @@
 // Progression conservée entre les sessions : oboles, objets, matériaux, quêtes et drapeaux.
 // Les dialogues et les quêtes (src/data) la lisent avec des conditions et la modifient avec des effets.
 // Chaque personnage a son emplacement de sauvegarde (saves.ts) ; `Progress` tient celui qu'on joue.
+import { islandClock } from './clock';
 import { BUILD_COUNT, readBuild, type Build } from './builds';
 import type { Gravure } from './gravure';
 import { LocalSaveStore, newSlotId, type SaveStore } from './saves';
@@ -104,6 +105,8 @@ export interface Condition {
   dungeon?: [string, number];
   /** Une pièce d'équipement forgée au moins à ce niveau. */
   forged?: number;
+  /** L'heure de l'île dans [début, fin[ (src/game/clock.ts) ; [0, 5] : après minuit, avant l'aube. */
+  hours?: [number, number];
 }
 
 export interface Effect {
@@ -506,6 +509,7 @@ export class Progress {
     if (c.subclass !== undefined && this.state.hero.subclass !== c.subclass) return false;
     if (c.dungeon !== undefined && this.record(c.dungeon[0]) < c.dungeon[1]) return false;
     if (c.forged !== undefined && this.forgeMax < c.forged) return false;
+    if (c.hours !== undefined && !islandClock.between(c.hours[0], c.hours[1])) return false;
     return true;
   }
 

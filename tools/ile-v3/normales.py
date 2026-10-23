@@ -13,7 +13,7 @@ Sorties (même taille que la carte) :
 import numpy as np
 import cv2
 
-from plan import EAU, LAVE, RIZ, DIGUE, MARCHE, HERBE, FLEURS, LYS, TERRE, DALLE, SABLE, PIERRE, SPIRALE, VOLCAN, CENDRE
+from plan import EAU, LAVE, RIZ, DIGUE, MARCHE, HERBE, FLEURS, LYS, TERRE, DALLE, SABLE, PIERRE, SPIRALE, VOLCAN, CENDRE, FORET
 
 R2 = np.sqrt(0.5)
 DROITE = np.array([1.0, 0.0, 0.0], np.float32)             # droite de l'écran, dans l'espace tangent
@@ -22,7 +22,7 @@ VERS_OEIL = np.array([0.0, -0.81650, 0.57735], np.float32)   # vers le spectateu
 HMAX = 12.0
 
 # force du relief tiré de la clarté, par matière (dessus) ; les parois ont la leur
-FORCE = {HERBE: 1.2, FLEURS: 1.2, LYS: 1.2, DIGUE: 1.0, TERRE: 1.6, DALLE: 2.6, PIERRE: 2.6, SPIRALE: 1.4,
+FORCE = {FORET: 1.2, HERBE: 1.2, FLEURS: 1.2, LYS: 1.2, DIGUE: 1.0, TERRE: 1.6, DALLE: 2.6, PIERRE: 2.6, SPIRALE: 1.4,
          SABLE: 1.0, VOLCAN: 1.8, CENDRE: 1.6, MARCHE: 1.5, RIZ: 0.6, EAU: 0.3, LAVE: 1.0}
 FORCE_PAROI = 3.2
 

@@ -175,6 +175,12 @@ const randInt = ([min, max]: [number, number]) => min + Math.floor(Math.random()
  * Chef d'orchestre : écran titre, exploration de l'île, dialogues, donjon, résultats.
  * La logique du combat (World) et celle de l'île (Island) ne se connaissent pas : tout passe par ici.
  */
+/** `?lieu=35,27` (tests, captures) : le héros arrive sur l'île en ce point (u, v) au lieu du ponton de Charon. */
+function devPlace(): { u: number; v: number } | null {
+  const [u, v] = (new URLSearchParams(location.search).get('lieu') ?? '').split(',').map(Number);
+  return Number.isFinite(u) && Number.isFinite(v) ? { u, v } : null;
+}
+
 export class App {
   private mode: Mode = 'title';
   private world: World | null = null;
@@ -594,7 +600,7 @@ export class App {
     await this.screens.transition('Yomotsu Hirasaka', 'Île du Yomi', () => {
       this.screens.hideTitle();
       this.creation.hide();
-      island.placeAt(content.island.spawn);
+      island.placeAt(devPlace() ?? content.island.spawn);
       this.setHero();
       islandRenderer.focus(island.player.pos, 0, true);
       this.setMode('island');
@@ -774,7 +780,10 @@ export class App {
             openEndlessEntry(this.panels, this.ui, () => void this.descendEndless(0));
             break;
           }
-          openDungeonEntry(this.panels, this.ui, content.dungeons[id], (level) => void this.descend(id, level));
+          // Le gardien errant : un seul combat, à un niveau imposé (la nuit sur le Mont Fujikasane, après minuit).
+          const fixed = content.dungeons[id]?.fixedLevel;
+          if (fixed) void this.descend(id, fixed);
+          else openDungeonEntry(this.panels, this.ui, content.dungeons[id], (level) => void this.descend(id, level));
           break;
         }
       }
@@ -1056,7 +1065,10 @@ export class App {
    * la même pour tous les blocs (elle n'est construite qu'une fois).
    */
   private endlessDungeon(bloc: number): DungeonDef {
-    return { ...content.dungeons[arenaOf(content.endless, bloc)], style: content.endless.style };
+    const source = content.dungeons[arenaOf(content.endless, bloc)];
+    // Les rochers de la caverne noyée, quel que soit le donjon dont le bloc reprend les vagues.
+    const layouts = content.endless.layouts ?? source.arena.layouts;
+    return { ...source, arena: { ...source.arena, layouts }, style: content.endless.style };
   }
 
   /** « Paliers 6 à 10 · niveau 60 », sous le nom du donjon infini. */

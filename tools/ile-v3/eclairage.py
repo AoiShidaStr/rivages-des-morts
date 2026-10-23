@@ -84,17 +84,18 @@ def decorer_geo(sp):
     if _GEO:
         return _GEO.items()
     for nom, (t, pied, _) in sp.items():
-        connu = decor.GEOMETRIE.get('torii_noir' if nom == 'torii_noir_z' else nom)
+        miroir = nom.endswith('_z')
+        connu = decor.GEOMETRIE.get(nom[:-2] if miroir else nom)
         if nom == 'rocher':
             connu = None
         n_c, h_c = (None, None) if connu is None else connu
-        if nom == 'torii_noir_z' and n_c is not None:
+        if miroir and n_c is not None:
             n_c = n_c[:, ::-1].copy()
             n_c[..., 0] *= -1                             # le miroir échange u et -u
             h_c = h_c[:, ::-1].copy()
         if n_c is not None and n_c.shape[:2] != t.shape[:2]:
             n_c, h_c = None, None
-        arbre = not nom.startswith(('maison', 'forge', 'torii', 'lanterne', 'jizo'))
+        arbre = not nom.startswith(('maison', 'forge', 'torii', 'lanterne', 'jizo', 'barriere', 'banc', 'faille'))
         _GEO[nom] = NM.sprite_normales(t, n_c, h_c, pied, bombe=6.0 if arbre else 3.0, detail=2.6 if arbre else 1.4)
     return _GEO.items()
 

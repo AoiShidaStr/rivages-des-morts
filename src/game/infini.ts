@@ -44,8 +44,10 @@ export interface EndlessData {
   };
   victory: { title: string; text: string };
   defeat: string;
-  /** Point de retour sur l'île, devant la cascade. */
+  /** Point de retour sur l'île, devant la faille de la cascade. */
   exit: { u: number; v: number };
+  /** Variantes de salle (les rochers de la caverne), à la place de celles du donjon dont le bloc reprend les vagues. */
+  layouts?: { x: number; z: number }[][];
 }
 
 /** Ce qu'il faut savoir d'un donjon normal pour en tirer un bloc : ses vagues, et sa force au niveau 1. */
