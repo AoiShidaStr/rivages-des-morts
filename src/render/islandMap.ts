@@ -16,6 +16,7 @@ import type { Vec2 } from '../game/math';
 import type { DecorSpot } from './decorSprites';
 import { decorSolids, islandDecor, MapImage, WalkField } from './islandDecor';
 import { IslandLighting, type LightingView } from './islandLighting';
+import type { SpriteShadows } from './spriteShadows';
 import { Grid, PaintedWater } from './paintedGround';
 import { spriteMaterial } from './renderer';
 import { isPixelArt } from './textureBudget';
@@ -195,6 +196,11 @@ export class IslandMap {
       this.sea.material.emissiveColor.set(this.sea.color.r * tint.r, this.sea.color.g * tint.g, this.sea.color.b * tint.b);
       this.sea.material.getScene().clearColor.set(this.sea.material.emissiveColor.r, this.sea.material.emissiveColor.g, this.sea.material.emissiveColor.b, 1);
     }
+  }
+
+  /** Les ombres portées des objets debout (null : carte sans éclairage). */
+  get shadows(): SpriteShadows | null {
+    return this.lighting?.shadows ?? null;
   }
 
   /** Matériau d'un personnage ou d'un objet debout sur l'île, éclairé comme la carte (null : carte sans éclairage). */

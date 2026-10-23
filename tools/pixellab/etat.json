@@ -166,5 +166,90 @@
       "modèle de marche assoupli (katana qui clignote)",
       "mort au modèle (visage blanchi)"
     ]
+  },
+  "hanyo-lame": {
+    "pixellab": "8bc22077-6eed-4f8d-a503-06c617d5e7c6",
+    "taille": [
+      76,
+      76
+    ],
+    "creation": "fait",
+    "animations": {
+      "deplacement": {
+        "south-east": {
+          "groupe": "6eb86870-1481-40f1-b8a2-8953dec5ff9d",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/dccb100e-44f4-4134-ae72-314fa5af696b/south-east/{i}.png?t=1792722729773",
+          "images": 8,
+          "statut": "fait",
+          "methode": "walking-8-frames",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "3e0c3fa0-47d9-45a0-8b94-08d9864b00a4",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/11590c82-47a7-4ed4-b86b-7010bb34dd6c/north-east/{i}.png?t=1792722845999",
+          "images": 8,
+          "statut": "fait",
+          "methode": "walking-8-frames",
+          "cout": 1
+        }
+      },
+      "attaque": {
+        "south-east": {
+          "groupe": "c84d18db-e0c0-4e30-92ea-8a268886050d",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/be974ac4-53fa-4e2c-b4e2-cac32849e62e/south-east/{i}.png?t=1792722967955",
+          "images": 6,
+          "statut": "fait",
+          "methode": "cross-punch",
+          "cout": 0
+        },
+        "north-east": {
+          "groupe": "55ab4506-390b-43e7-9a42-7185fac705c0",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/79250291-adea-4da8-b97c-2908c66b46ea/north-east/{i}.png?t=1792723119928",
+          "images": 6,
+          "statut": "fait",
+          "methode": "cross-punch",
+          "cout": 1
+        }
+      },
+      "speciale": {
+        "south-east": {
+          "groupe": "18ee021c-38da-4d06-bb74-3b1bbd5b107a",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/56057d19-4753-44bf-8d72-1048c592588f/south-east/{i}.png?t=1792723382828",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "8c7fe8eb-30a7-4f93-840d-a5ea3545f506",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/745ed627-6d27-4a9a-9ad4-71bec71cfb18/north-east/{i}.png?t=1792723549509",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        }
+      },
+      "mort": {
+        "south-east": {
+          "groupe": "1a7ab6c1-b697-446f-b677-38c37694ec10",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/eadd166e-6027-4d2e-858c-149c43ca91dd/south-east/{i}.png?t=1792723759944",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        },
+        "north-east": {
+          "groupe": "391fd60f-1059-4b0e-b76f-64b68831fa57",
+          "url": "https://backblaze.pixellab.ai/file/pixellab-characters/442bd501-2ba6-4e2d-a8d6-7a0fe728b4b2/8bc22077-6eed-4f8d-a503-06c617d5e7c6/animations/73ee329c-7d78-4747-8e38-77bf6ed9c840/north-east/{i}.png?t=1792724021064",
+          "images": 6,
+          "statut": "fait",
+          "methode": "v3",
+          "cout": 1
+        }
+      }
+    },
+    "cout_creation": 1,
+    "depense": 7,
+    "compte": 2
   }
 }
