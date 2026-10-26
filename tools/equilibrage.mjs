@@ -9,8 +9,8 @@
 //   npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30            sans objet, contre un donjon plus bas
 //   npm run equilibrage -- --mode kits --niveaux 10,30,50                        les 3 styles de chaque classe
 //   npm run equilibrage -- --mode infini --niveaux 50 --stuff complet            le Yomi sans fond, bloc après bloc
-//   npm run equilibrage -- --donjon infini --palier 31 --sans-boss               les 4 salles tirées d'un bloc, sans les reines
-//   npm run equilibrage -- --donjon infini --palier 31 --sans-boss --salles fixes  les mêmes, avec les salles fixes d'avant 0.25.0
+//   npm run equilibrage -- --donjon infini --palier 6 --sans-boss               les 4 salles tirées d'un bloc, sans les reines
+//   npm run equilibrage -- --donjon infini --palier 6 --sans-boss --salles fixes  les mêmes, avec les salles fixes d'avant 0.25.0
 //
 // Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau (`--stuff complet` : le meilleur
 // équipement de sa classe, arme épique et relique comprises ; `--stuff survie`, `dps` ou `boss` : un des trois

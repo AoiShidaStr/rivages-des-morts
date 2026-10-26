@@ -65,9 +65,11 @@ export interface GravureCostDef {
  * désigne l'arme, d'abord parmi celles jamais gravées, sinon parmi tout le sac ; on le brise dans la réserve.
  */
 export interface GravureSealDef {
-  /** Premier palier du sceau ; avec `every`, il revient tous les `every` paliers (30, 40, 50…). */
+  /** Premier palier du sceau ; avec `every`, il revient tous les `every` paliers (10, 20, 30…). */
   palier: number;
   every?: number;
+  /** Chaque retour du sceau en donne `growth` fois plus : 1 au palier 10, 2 au 20, 4 au 30… (absent : 1). */
+  growth?: number;
   name: string;
   /** Le texte montré au joueur, avec `{palier}` remplacé par le palier du sceau. */
   summary: string;
@@ -129,6 +131,13 @@ export const sealPaliers = (sceau: GravureSealDef): string =>
 /** Vrai si le bloc qui finit au palier `palier` laisse un sceau. */
 export const isSealPalier = (sceau: GravureSealDef, palier: number): boolean =>
   sceau.every ? palier >= sceau.palier && (palier - sceau.palier) % sceau.every === 0 : palier === sceau.palier;
+
+/** Nombre de sceaux laissés par le bloc qui finit au palier `palier` : 0 hors des paliers du sceau. */
+export function sealCount(sceau: GravureSealDef, palier: number): number {
+  if (!isSealPalier(sceau, palier)) return 0;
+  const rank = sceau.every ? (palier - sceau.palier) / sceau.every : 0;
+  return Math.round((sceau.growth ?? 1) ** rank);
+}
 
 /** Le texte du sceau, paliers compris (« elle s'arrache aux paliers 30, 40, 50… du Yomi sans fond »). */
 export const gravureSealText = (sceau: GravureSealDef): string => sceau.summary.replace('{palier}', sealPaliers(sceau));

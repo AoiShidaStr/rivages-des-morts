@@ -1,6 +1,6 @@
-// Le Yomi sans fond (donjon infini) : on entre directement au palier 30, face à Izanami et la Jorōgumo ensemble ; puis
-// des blocs de 5 paliers, quatre salles tirées au hasard parmi les yokai des donjons et les deux reines au bout. La
-// difficulté monte en ligne droite d'un palier à l'autre (0.25.0). Les règles chiffrées sont dans
+// Le Yomi sans fond (donjon infini) : des blocs de 5 paliers, quatre salles tirées au hasard parmi les yokai des
+// donjons et Izanami et la Jorōgumo ensemble au bout. Le palier 1 a la force de l'ancien palier 30 ; la difficulté monte
+// d'une même marche tous les 10 paliers, avec les sceaux du Yomi (0.25.1). Les règles chiffrées sont dans
 // src/data/donjon-infini.json ; ici, ce qu'on en tire pour un palier.
 import type { WaveConfig } from './config';
 import { difficultyFor, type CurseId, type Difficulty, type DifficultyData, type EnemyStrength } from './difficulty';
@@ -34,8 +34,10 @@ export interface EndlessData {
   arenas: string[];
   wavesPerBloc: number;
   doubleBossFrom: number;
-  /** Premier palier de la descente : le bloc 0 n'est que ce palier, le combat des deux reines (0.25.0 : 30). */
+  /** Premier palier de la descente (1). */
   startPalier?: number;
+  /** Palier à partir duquel la marée plafonne plus bas (0,15 au lieu de 0,3). */
+  tideFrom?: number;
   modifiers: EndlessModifier[];
   /** Ancienne montée par paliers (l'Abîme qui se répète) ; remplacée par `progression` depuis la 0.25.0. */
   beyond?: Omit<EndlessModifier, 'from'>;
@@ -59,17 +61,18 @@ export interface EndlessData {
 }
 
 /**
- * La montée en ligne droite : à chaque palier au-delà de `from`, les yokai gagnent `hpPerPalier` de PV et
- * `damagePerPalier` de dégâts (de leur force au palier `from`, sans intérêts composés), une bête de plus par vague tous
- * les `spawnsEvery` paliers, et certaines malédictions montent d'un cran fixe par palier jusqu'à leur plafond.
+ * La montée par marches égales : tous les `every` paliers (au moment où tombent les sceaux), les yokai gagnent
+ * `hpPerStep` de PV et `damagePerStep` de dégâts (de leur force de départ, sans intérêts composés : la courbe est une
+ * droite en escalier), `spawnsPerStep` bêtes de plus par vague, et certaines malédictions montent d'un cran fixe
+ * jusqu'à leur plafond.
  */
 export interface EndlessProgression {
-  from: number;
-  hpPerPalier: number;
-  damagePerPalier: number;
-  spawnsEvery: number;
+  every: number;
+  hpPerStep: number;
+  damagePerStep: number;
+  spawnsPerStep: number;
   spawnsMax: number;
-  curses?: Partial<Record<CurseId, { perPalier: number; max: number }>>;
+  curses?: Partial<Record<CurseId, { perStep: number; max: number }>>;
 }
 
 /** Un yokai que les salles tirées peuvent amener : son poids dans le budget, combien au plus, et son rôle. */
@@ -102,16 +105,19 @@ export interface ArenaSource {
   strength?: EnemyStrength;
 }
 
-/** Premier palier de la descente (30 depuis la 0.25.0). */
+/** Premier palier de la descente (1). */
 export const startPalier = (data: EndlessData): number => data.startPalier ?? 1;
 
-/** Numéro du bloc : 0 pour le palier d'entrée (le combat des deux reines), 1 pour les 5 suivants (31 à 35), etc. */
-export const blocOf = (data: EndlessData, palier: number): number => Math.max(0, Math.ceil((palier - startPalier(data)) / data.palierStep));
-/** Premier et dernier palier d'un bloc : le bloc 0 n'a que le palier d'entrée. */
-export const firstPalier = (data: EndlessData, bloc: number): number => (bloc <= 0 ? startPalier(data) : startPalier(data) + (bloc - 1) * data.palierStep + 1);
-export const lastPalier = (data: EndlessData, bloc: number): number => startPalier(data) + Math.max(0, bloc) * data.palierStep;
+/** Numéro du bloc (0 pour les paliers 1 à 5), et premier et dernier palier d'un bloc. */
+export const blocOf = (data: EndlessData, palier: number): number => Math.max(0, Math.floor((palier - startPalier(data)) / data.palierStep));
+export const firstPalier = (data: EndlessData, bloc: number): number => startPalier(data) + Math.max(0, bloc) * data.palierStep;
+export const lastPalier = (data: EndlessData, bloc: number): number => firstPalier(data, bloc) + data.palierStep - 1;
 
-/** Niveau des yokai au palier `palier` : 50 + 10 tous les 5 paliers, plafonné à 100 (atteint au 25, donc partout depuis l'entrée au 30). */
+/** Marche de difficulté d'un palier : 0 pour les paliers 1 à 10, 1 pour 11 à 20… (une marche par sceau gagné). */
+export const stepOf = (data: EndlessData, palier: number): number =>
+  data.progression ? Math.max(0, Math.floor((palier - startPalier(data)) / data.progression.every)) : 0;
+
+/** Niveau des yokai au palier `palier` : baseLevel + levelStep tous les 5 paliers, plafonné à maxLevel (100 partout depuis la 0.25.1). */
 export const levelAt = (data: EndlessData, palier: number): number =>
   Math.min(data.maxLevel, data.baseLevel + data.levelStep * Math.floor(palier / data.palierStep));
 
@@ -119,7 +125,7 @@ export const levelAt = (data: EndlessData, palier: number): number =>
 export const arenaOf = (data: EndlessData, bloc: number): string => data.arenas[bloc % data.arenas.length];
 
 /** Vrai pour un palier de boss (le dernier de chaque bloc). */
-export const isBossPalier = (data: EndlessData, palier: number): boolean => palier >= startPalier(data) && (palier - startPalier(data)) % data.palierStep === 0;
+export const isBossPalier = (data: EndlessData, palier: number): boolean => palier >= startPalier(data) && (palier - startPalier(data) + 1) % data.palierStep === 0;
 
 /** Modificateurs actifs au palier `palier` : ceux de la liste déjà atteints, puis l'Abîme qui se répète. */
 export function modifiersAt(data: EndlessData, palier: number): EndlessModifier[] {
@@ -138,15 +144,15 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
   let hp = 1;
   let damage = 1;
   let extraSpawns = 0;
-  // La montée en ligne droite : la même marche à chaque palier, sans paliers de rupture.
+  // La montée par marches égales : une marche tous les 10 paliers, en même temps que les sceaux.
   const prog = data.progression;
   if (prog) {
-    const n = Math.max(0, palier - prog.from);
-    hp *= 1 + prog.hpPerPalier * n;
-    damage *= 1 + prog.damagePerPalier * n;
-    extraSpawns += Math.min(prog.spawnsMax, Math.floor(n / prog.spawnsEvery));
-    for (const [id, c] of Object.entries(prog.curses ?? {}) as [CurseId, { perPalier: number; max: number }][]) {
-      const value = Math.min(c.max, (curses[id] ?? 0) + c.perPalier * n);
+    const n = stepOf(data, palier);
+    hp *= 1 + prog.hpPerStep * n;
+    damage *= 1 + prog.damagePerStep * n;
+    extraSpawns += Math.min(prog.spawnsMax, prog.spawnsPerStep * n);
+    for (const [id, c] of Object.entries(prog.curses ?? {}) as [CurseId, { perStep: number; max: number }][]) {
+      const value = Math.min(c.max, (curses[id] ?? 0) + c.perStep * n);
       if (value > 0) curses[id] = Math.max(curses[id] ?? 0, Number(value.toFixed(3)));
     }
   }
@@ -171,13 +177,12 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
     soloExtra: Math.max(0, extraSpawns),
     // 0.17.0 : au palier 40+, le plafond de la marée tombe de +30 % à +15 % — la marée punit les classes à soin
     // (Sorcier, Paladin) plus que les autres, et le palier 50 doit rester atteignable en solo.
-    tideMax: palier >= 40 ? 0.15 : undefined,
+    tideMax: palier >= (data.tideFrom ?? 40) ? 0.15 : undefined,
   };
 }
 
 /**
- * Les vagues d'un bloc : le bloc 0 n'est que le combat d'entrée (les deux reines) ; les suivants ont une salle tirée
- * par palier (`roomWave`), puis le boss au dernier. À partir de `doubleBossFrom`, la Jorōgumo et Izanami ensemble,
+ * Les vagues d'un bloc : une salle tirée par palier (`roomWave`), puis le boss au dernier. À partir de `doubleBossFrom`, la Jorōgumo et Izanami ensemble,
  * avec les souches de l'une et les pêchers de l'autre. Chaque vague porte la difficulté de son palier. Sans `salles`,
  * on retombe sur l'ancienne règle : des salles fixes de l'arène du bloc.
  */
@@ -192,7 +197,7 @@ export function blocWaves(
 ): WaveConfig[] {
   const arena = arenas[arenaOf(data, bloc)];
   // Les salles tirées mêlent les yokai des deux donjons : elles prennent la force commune (celle du Palais), pas la
-  // force plus douce des Rizières — c'est aussi celle du combat du palier 30 d'avant la 0.25.0.
+  // force plus douce des Rizières — c'est aussi celle de l'ancien palier 30, dont le palier 1 reprend la force.
   const strength = data.salles ? undefined : arena.strength;
   const first = firstPalier(data, bloc);
   const last = lastPalier(data, bloc);

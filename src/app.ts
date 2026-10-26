@@ -5,7 +5,7 @@ import { ENDLESS, ENDLESS_RECORD, content, endlessArenas, portraitUrl, type Dung
 import liens from './data/liens.json';
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
-import { rollSeal, type Gravure } from './game/gravure';
+import { rollSeal, sealCount, type Gravure } from './game/gravure';
 import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, isBoss, lastPalier, levelAt, pacteDraft, rollEndlessItem, startPalier, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
 import { toScreen, toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
@@ -1834,8 +1834,11 @@ export class App {
         this.run.materials[eclat.material] = (this.run.materials[eclat.material] ?? 0) + eclat.count;
         this.screens.toast(`Palier ${last} : ${eclat.count} × ${content.materials[eclat.material] ?? eclat.material}`, 'loot');
       }
-      const seal = this.drawSeal(last);
-      if (seal) {
+      // 1 sceau au palier 10, 2 au 20, 4 au 30… : chacun tire son arme et sa gravure.
+      const seals = sealCount(content.gravures.sceau, last);
+      for (let i = 0; i < seals; i++) {
+        const seal = this.drawSeal(last);
+        if (!seal) break;
         this.run.seals.push(seal);
         this.screens.toast(`${content.gravures.sceau.name} : ${content.items[seal.item]?.name ?? seal.item} · gravure scellée`, 'loot', seal.item);
       }

@@ -237,9 +237,9 @@ export function openLobby(
       const endless = lobby.dungeon === ENDLESS;
       const unlocked = endless ? 1 : clampLevel(content.difficulty, progress.dungeon(lobby.dungeon).unlocked);
       const set = (level: number) => session.choose(lobby.dungeon, Math.max(1, Math.min(unlocked, level)));
-      // Le Yomi sans fond commence toujours au palier d’entrée (30) : pas de niveau à choisir.
+      // Le Yomi sans fond commence toujours au palier 1 : pas de niveau à choisir.
       const picker = endless
-        ? [h('p', { class: 'note' }, `Depuis le palier ${startPalier(content.endless)}, face aux deux reines (niveau ${levelAt(content.endless, startPalier(content.endless))}). À la fin de chaque bloc de ${content.endless.palierStep} paliers, l’hôte choisit d’encaisser ou de continuer ; si l’équipe tombe, chacun perd le butin en jeu.`)]
+        ? [h('p', { class: 'note' }, `Depuis le palier ${startPalier(content.endless)} (niveau ${levelAt(content.endless, startPalier(content.endless))}), les deux reines tous les ${content.endless.palierStep} paliers. À la fin de chaque bloc de ${content.endless.palierStep} paliers, l’hôte choisit d’encaisser ou de continuer ; si l’équipe tombe, chacun perd le butin en jeu.`)]
         : [
             h(
               'div',
