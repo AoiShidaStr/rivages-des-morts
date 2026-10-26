@@ -6,7 +6,7 @@ import liens from './data/liens.json';
 import type { GameConfig } from './game/config';
 import { clampLevel, dungeonDifficultyFor, rewardsFor, unlockAfter } from './game/difficulty';
 import { rollSeal, type Gravure } from './game/gravure';
-import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, isBoss, levelAt, pacteDraft, rollEndlessItem, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
+import { arenaOf, blocOf, blocWaves, firstPalier, globalRecord, isBoss, lastPalier, levelAt, pacteDraft, rollEndlessItem, startPalier, submitGlobalRecord, type EndlessModifierSeed } from './game/infini';
 import { toScreen, toWorld, type Interactable, type Island, type ScreenPoint } from './game/island';
 import { Bot } from './game/bot';
 import type { PlayerConfig } from './game/config';
@@ -614,6 +614,11 @@ export class App {
       openForge(this.panels, this.ui);
       return;
     }
+    // `?yomi` (tests, captures) : l'entrée du Yomi sans fond s'ouvre dès l'arrivée sur l'île.
+    if (new URLSearchParams(location.search).has('yomi')) {
+      openEndlessEntry(this.panels, this.ui, () => void this.descendEndless(0));
+      return;
+    }
     // À l'arrivée, Charon accueille la nouvelle âme.
     if (newGame || this.d.progress.quest('passeur') === 'none') {
       const charon = island.interactables().find((it) => it.def.id === 'charon');
@@ -1040,14 +1045,15 @@ export class App {
     this.busy = false;
   }
 
-  /** Le Yomi sans fond : un bloc de 5 paliers ; `bloc` > 0 quand on continue, le butin en jeu restant le même. */
+  /** Le Yomi sans fond : le palier d'entrée (bloc 0), puis des blocs de 5 paliers ; `bloc` > 0 quand on continue, le butin en jeu restant le même. */
   private async descendEndless(bloc: number): Promise<void> {
     if (this.busy) return;
     this.busy = true;
     const data = content.endless;
     const keep = bloc > 0 && this.endless !== null;
     if (!keep) this.pactesEncours = [];
-    const cleared = keep && this.endless ? this.endless.cleared : 0;
+    // Rien de franchi encore : le palier d'avant l'entrée (29), pour que « tombé au palier » et le record partent de là.
+    const cleared = keep && this.endless ? this.endless.cleared : startPalier(data) - 1;
     const player = this.loadout().config;
     const allies = this.botAllies();
     const dungeon = this.endlessDungeon(bloc);
@@ -1077,11 +1083,13 @@ export class App {
     return { ...source, arena: { ...source.arena, layouts }, style: content.endless.style };
   }
 
-  /** « Paliers 6 à 10 · niveau 60 », sous le nom du donjon infini. */
+  /** « Paliers 31 à 35 · niveau 100 » (ou « Palier 30 » pour l'entrée), sous le nom du donjon infini. */
   private endlessSubtitle(bloc: number, heroes: number): string {
     const data = content.endless;
     const first = firstPalier(data, bloc);
-    return `Paliers ${first} à ${first + data.palierStep - 1} · niveau ${levelAt(data, first)}${heroes > 1 ? ` · ${heroes} héros` : ''}`;
+    const last = lastPalier(data, bloc);
+    const paliers = first === last ? `Palier ${first}` : `Paliers ${first} à ${last}`;
+    return `${paliers} · niveau ${levelAt(data, first)}${heroes > 1 ? ` · ${heroes} héros` : ''}`;
   }
 
   private async enterDungeon(id: string, startWave: number, withTransition: boolean, level: number): Promise<void> {
@@ -1465,7 +1473,8 @@ export class App {
     const bloc = endless ? blocOf(data, start.level) : 0;
     const keep = endless && bloc > 0 && this.endless !== null;
     if (endless && !keep) this.pactesEncours = [];
-    const cleared = keep && this.endless ? this.endless.cleared : 0;
+    // Rien de franchi encore : le palier d'avant l'entrée (29), pour que « tombé au palier » et le record partent de là.
+    const cleared = keep && this.endless ? this.endless.cleared : startPalier(data) - 1;
     const dungeon = duel ? content.pvp.arena : endless ? this.endlessDungeon(bloc) : (content.dungeons[start.dungeon] ?? content.dungeons.rizieres);
     const level = duel ? content.pvp.level : endless ? levelAt(data, start.level) : clampLevel(content.difficulty, start.level);
     const configs = start.heroes.map((hero) => hero.config);
@@ -1813,7 +1822,7 @@ export class App {
     this.outcome = null;
     this.setMode('result');
     const session = this.coop;
-    const last = firstPalier(data, endless.bloc) + data.palierStep - 1;
+    const last = lastPalier(data, endless.bloc);
     logRun({ hero: heroLabel(content.skills, progress.state.hero), level: progress.level, dungeon: 'infini', dungeonLevel: last, victory: outcome === 'victory', waves: this.run.waves, players: this.world?.players.length ?? 1 });
 
     if (outcome === 'victory') {
@@ -1833,7 +1842,7 @@ export class App {
       endless.awaiting = true;
       const next = endless.bloc + 1;
       const nextFirst = firstPalier(data, next);
-      const nextLast = nextFirst + data.palierStep - 1;
+      const nextLast = lastPalier(data, next);
       const guest = session !== null && !session.isHost;
       const options: MenuOption[] = guest
         ? [
@@ -1875,9 +1884,9 @@ export class App {
     this.endless = null;
     this.exitAt = data.exit;
     // En coop, le salon retient le dernier bloc lancé : on le ramène au début, pour qu'une
-    // relance reprenne au palier 1 au lieu de refiler le bloc perdu à l'équipe (palier 45 au lieu de 1).
+    // relance reprenne au palier d'entrée au lieu de refiler le bloc perdu à l'équipe (palier 45 au lieu de 30).
     if (session?.isHost) {
-      session.choose(ENDLESS, 1);
+      session.choose(ENDLESS, startPalier(data));
       session.backToLobby();
     }
     // Le butin est perdu, mais l'équipement s'use quand même.

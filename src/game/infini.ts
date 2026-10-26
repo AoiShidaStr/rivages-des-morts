@@ -1,5 +1,7 @@
-// Le Yomi sans fond (donjon infini) : des blocs de 5 paliers, Rizières puis Palais en alternance, un boss au bout de
-// chaque bloc. Les règles chiffrées sont dans src/data/donjon-infini.json ; ici, ce qu'on en tire pour un palier.
+// Le Yomi sans fond (donjon infini) : on entre directement au palier 30, face à Izanami et la Jorōgumo ensemble ; puis
+// des blocs de 5 paliers, quatre salles tirées au hasard parmi les yokai des donjons et les deux reines au bout. La
+// difficulté monte en ligne droite d'un palier à l'autre (0.25.0). Les règles chiffrées sont dans
+// src/data/donjon-infini.json ; ici, ce qu'on en tire pour un palier.
 import type { WaveConfig } from './config';
 import { difficultyFor, type CurseId, type Difficulty, type DifficultyData, type EnemyStrength } from './difficulty';
 import { equipBlock, type ItemDef, type SkillsDef } from './loadout';
@@ -32,8 +34,14 @@ export interface EndlessData {
   arenas: string[];
   wavesPerBloc: number;
   doubleBossFrom: number;
+  /** Premier palier de la descente : le bloc 0 n'est que ce palier, le combat des deux reines (0.25.0 : 30). */
+  startPalier?: number;
   modifiers: EndlessModifier[];
-  beyond: Omit<EndlessModifier, 'from'>;
+  /** Ancienne montée par paliers (l'Abîme qui se répète) ; remplacée par `progression` depuis la 0.25.0. */
+  beyond?: Omit<EndlessModifier, 'from'>;
+  progression?: EndlessProgression;
+  /** Les salles tirées au hasard (0.25.0) : à la place des salles fixes des donjons. */
+  salles?: EndlessRooms;
   /** Les pactes du Yomi : à chaque bloc à partir de `from` (premier palier du bloc), l'hôte en scelle un parmi un tirage. */
   pactes?: { from: number; options: EndlessModifierSeed[] };
   rewards: {
@@ -50,6 +58,43 @@ export interface EndlessData {
   layouts?: { x: number; z: number }[][];
 }
 
+/**
+ * La montée en ligne droite : à chaque palier au-delà de `from`, les yokai gagnent `hpPerPalier` de PV et
+ * `damagePerPalier` de dégâts (de leur force au palier `from`, sans intérêts composés), une bête de plus par vague tous
+ * les `spawnsEvery` paliers, et certaines malédictions montent d'un cran fixe par palier jusqu'à leur plafond.
+ */
+export interface EndlessProgression {
+  from: number;
+  hpPerPalier: number;
+  damagePerPalier: number;
+  spawnsEvery: number;
+  spawnsMax: number;
+  curses?: Partial<Record<CurseId, { perPalier: number; max: number }>>;
+}
+
+/** Un yokai que les salles tirées peuvent amener : son poids dans le budget, combien au plus, et son rôle. */
+export interface EndlessRoomYokai {
+  cost: number;
+  max: number;
+  /** Un rôle n'est tiré qu'une fois par salle (`roles`) : jamais deux sortes de lourds, ni deux soigneurs. */
+  role: string;
+  name: string;
+}
+
+/**
+ * Les salles tirées : un budget par salle du bloc (la 1re plus légère que la 4e), un peu de hasard autour, deux ou
+ * trois sortes de yokai par salle, et pas plus d'une sorte par rôle limité. C'est ce qui les garde équilibrées :
+ * le budget est calé sur le poids des anciennes salles fixes du Palais.
+ */
+export interface EndlessRooms {
+  budget: number[];
+  jitter: number;
+  maxEnemies: number;
+  kinds: { min: number; max: number };
+  roles: Record<string, number>;
+  yokai: Record<string, EndlessRoomYokai>;
+}
+
 /** Ce qu'il faut savoir d'un donjon normal pour en tirer un bloc : ses vagues, et sa force au niveau 1. */
 export interface ArenaSource {
   id: string;
@@ -57,11 +102,16 @@ export interface ArenaSource {
   strength?: EnemyStrength;
 }
 
-/** Numéro du bloc (0 pour les paliers 1 à 5) et premier palier d'un bloc. */
-export const blocOf = (data: EndlessData, palier: number): number => Math.floor((Math.max(1, palier) - 1) / data.palierStep);
-export const firstPalier = (data: EndlessData, bloc: number): number => bloc * data.palierStep + 1;
+/** Premier palier de la descente (30 depuis la 0.25.0). */
+export const startPalier = (data: EndlessData): number => data.startPalier ?? 1;
 
-/** Niveau des yokai au palier `palier` : 50 au départ, +10 tous les 5 paliers (le 25 est au niveau 100). */
+/** Numéro du bloc : 0 pour le palier d'entrée (le combat des deux reines), 1 pour les 5 suivants (31 à 35), etc. */
+export const blocOf = (data: EndlessData, palier: number): number => Math.max(0, Math.ceil((palier - startPalier(data)) / data.palierStep));
+/** Premier et dernier palier d'un bloc : le bloc 0 n'a que le palier d'entrée. */
+export const firstPalier = (data: EndlessData, bloc: number): number => (bloc <= 0 ? startPalier(data) : startPalier(data) + (bloc - 1) * data.palierStep + 1);
+export const lastPalier = (data: EndlessData, bloc: number): number => startPalier(data) + Math.max(0, bloc) * data.palierStep;
+
+/** Niveau des yokai au palier `palier` : 50 + 10 tous les 5 paliers, plafonné à 100 (atteint au 25, donc partout depuis l'entrée au 30). */
 export const levelAt = (data: EndlessData, palier: number): number =>
   Math.min(data.maxLevel, data.baseLevel + data.levelStep * Math.floor(palier / data.palierStep));
 
@@ -69,13 +119,15 @@ export const levelAt = (data: EndlessData, palier: number): number =>
 export const arenaOf = (data: EndlessData, bloc: number): string => data.arenas[bloc % data.arenas.length];
 
 /** Vrai pour un palier de boss (le dernier de chaque bloc). */
-export const isBossPalier = (data: EndlessData, palier: number): boolean => palier % data.palierStep === 0;
+export const isBossPalier = (data: EndlessData, palier: number): boolean => palier >= startPalier(data) && (palier - startPalier(data)) % data.palierStep === 0;
 
 /** Modificateurs actifs au palier `palier` : ceux de la liste déjà atteints, puis l'Abîme qui se répète. */
 export function modifiersAt(data: EndlessData, palier: number): EndlessModifier[] {
   const active = data.modifiers.filter((m) => m.from <= palier);
   const last = data.modifiers.reduce((max, m) => Math.max(max, m.from), 0);
-  for (let from = last + data.palierStep; from <= palier; from += data.palierStep) active.push({ ...data.beyond, name: `${data.beyond.name} ${(from - last) / data.palierStep}`, from });
+  if (!data.beyond) return active;
+  const beyond = data.beyond;
+  for (let from = last + data.palierStep; from <= palier; from += data.palierStep) active.push({ ...beyond, name: `${beyond.name} ${(from - last) / data.palierStep}`, from });
   return active;
 }
 
@@ -86,6 +138,18 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
   let hp = 1;
   let damage = 1;
   let extraSpawns = 0;
+  // La montée en ligne droite : la même marche à chaque palier, sans paliers de rupture.
+  const prog = data.progression;
+  if (prog) {
+    const n = Math.max(0, palier - prog.from);
+    hp *= 1 + prog.hpPerPalier * n;
+    damage *= 1 + prog.damagePerPalier * n;
+    extraSpawns += Math.min(prog.spawnsMax, Math.floor(n / prog.spawnsEvery));
+    for (const [id, c] of Object.entries(prog.curses ?? {}) as [CurseId, { perPalier: number; max: number }][]) {
+      const value = Math.min(c.max, (curses[id] ?? 0) + c.perPalier * n);
+      if (value > 0) curses[id] = Math.max(curses[id] ?? 0, Number(value.toFixed(3)));
+    }
+  }
   const modifiers = modifiersAt(data, palier);
   for (const m of [...modifiers, ...pactes]) {
     // Les paliers montent les malédictions (on garde la plus forte) ; un pacte, lui, les fixe : le Pacte du créneau
@@ -112,9 +176,10 @@ export function difficultyAt(data: EndlessData, difficulty: DifficultyData, pali
 }
 
 /**
- * Les vagues d'un bloc : `wavesPerBloc` vagues tirées parmi celles de l'arène (sans la première, qui apprend les
- * bases, ni le boss), puis le boss. À partir de `doubleBossFrom`, la Jorōgumo et Izanami ensemble, avec les souches
- * de l'une et les pêchers de l'autre. Chaque vague porte la difficulté de son palier.
+ * Les vagues d'un bloc : le bloc 0 n'est que le combat d'entrée (les deux reines) ; les suivants ont une salle tirée
+ * par palier (`roomWave`), puis le boss au dernier. À partir de `doubleBossFrom`, la Jorōgumo et Izanami ensemble,
+ * avec les souches de l'une et les pêchers de l'autre. Chaque vague porte la difficulté de son palier. Sans `salles`,
+ * on retombe sur l'ancienne règle : des salles fixes de l'arène du bloc.
  */
 export function blocWaves(
   data: EndlessData,
@@ -126,15 +191,66 @@ export function blocWaves(
   pactes: EndlessModifierSeed[] = [],
 ): WaveConfig[] {
   const arena = arenas[arenaOf(data, bloc)];
-  const bossWave = arena.waves[arena.waves.length - 1];
-  const pool = arena.waves.slice(1, -1).map((wave, i) => ({ wave, i, roll: random() }));
-  const picked = pool.sort((a, b) => a.roll - b.roll).slice(0, data.wavesPerBloc).sort((a, b) => a.i - b.i).map((p) => p.wave);
+  // Les salles tirées mêlent les yokai des deux donjons : elles prennent la force commune (celle du Palais), pas la
+  // force plus douce des Rizières — c'est aussi celle du combat du palier 30 d'avant la 0.25.0.
+  const strength = data.salles ? undefined : arena.strength;
   const first = firstPalier(data, bloc);
-  const waves = picked.map((wave, i) => palierWave(data, difficulty, wave, first + i, heroes, arena.strength, pactes));
-  const last = first + data.palierStep - 1;
+  const last = lastPalier(data, bloc);
+  const count = last - first;
+  let rooms: WaveConfig[];
+  if (data.salles) rooms = Array.from({ length: count }, (_, i) => roomWave(data.salles!, i, random));
+  else {
+    const pool = arena.waves.slice(1, -1).map((wave, i) => ({ wave, i, roll: random() }));
+    rooms = pool.sort((a, b) => a.roll - b.roll).slice(0, count).sort((a, b) => a.i - b.i).map((p) => p.wave);
+  }
+  const waves = rooms.map((wave, i) => palierWave(data, difficulty, wave, first + i, heroes, strength, pactes));
+  const bossWave = arena.waves[arena.waves.length - 1];
   const boss = last >= data.doubleBossFrom ? doubleBoss(arenas) : bossWave;
-  waves.push(palierWave(data, difficulty, boss, last, heroes, arena.strength, pactes));
+  waves.push(palierWave(data, difficulty, boss, last, heroes, strength, pactes));
   return waves;
+}
+
+/**
+ * Une salle tirée au hasard : deux ou trois sortes de yokai (au plus une par rôle limité : un lourd, un soigneur, un
+ * tireur), au moins un de chaque, puis on remplit le budget de la salle (`budget[index]`, à ±`jitter` près) en tirant
+ * dans ces sortes tant qu'il en reste qui rentrent. Le budget pèse les yokai (un feu follet 1, un kappa renforcé 7) :
+ * deux salles du même rang se valent sans se ressembler.
+ */
+export function roomWave(salles: EndlessRooms, index: number, random: () => number = Math.random): WaveConfig {
+  const base = salles.budget[Math.min(index, salles.budget.length - 1)];
+  let budget = base * (1 + salles.jitter * (2 * random() - 1));
+  const want = salles.kinds.min + Math.floor(random() * (salles.kinds.max - salles.kinds.min + 1));
+  const roles: Record<string, number> = {};
+  const kinds: string[] = [];
+  for (const { id } of Object.keys(salles.yokai).map((id) => ({ id, roll: random() })).sort((a, b) => a.roll - b.roll)) {
+    if (kinds.length >= want) break;
+    const y = salles.yokai[id];
+    if ((roles[y.role] ?? 0) >= (salles.roles[y.role] ?? Infinity)) continue;
+    roles[y.role] = (roles[y.role] ?? 0) + 1;
+    kinds.push(id);
+  }
+  const counts: Record<string, number> = {};
+  let total = 0;
+  const add = (id: string) => {
+    counts[id] = (counts[id] ?? 0) + 1;
+    budget -= salles.yokai[id].cost;
+    total++;
+  };
+  // Un de chaque sorte d'abord, les plus lourds en premier pour qu'ils rentrent.
+  for (const id of [...kinds].sort((a, b) => salles.yokai[b].cost - salles.yokai[a].cost)) if (salles.yokai[id].cost <= budget + 0.5) add(id);
+  for (;;) {
+    if (total >= salles.maxEnemies) break;
+    const fits = kinds.filter((id) => (counts[id] ?? 0) < salles.yokai[id].max && salles.yokai[id].cost <= budget + 0.5);
+    if (!fits.length) break;
+    add(fits[Math.floor(random() * fits.length)]);
+  }
+  const present = kinds.filter((id) => counts[id]);
+  const names = present.map((id) => salles.yokai[id].name);
+  const label = names.length > 1 ? `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}` : (names[0] ?? 'Le vide');
+  return {
+    label: label.charAt(0).toUpperCase() + label.slice(1),
+    spawns: present.map((id) => ({ kind: id as EnemyKind, count: counts[id] })),
+  };
 }
 
 function palierWave(data: EndlessData, difficulty: DifficultyData, wave: WaveConfig, palier: number, heroes: number, strength?: EnemyStrength, pactes: EndlessModifierSeed[] = []): WaveConfig {

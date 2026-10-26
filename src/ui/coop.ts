@@ -2,6 +2,7 @@
 // salon où l'on attend ses amis avant de descendre ensemble.
 import { ENDLESS, ENDLESS_FOUND, content } from '../content';
 import { clampLevel } from '../game/difficulty';
+import { levelAt, startPalier } from '../game/infini';
 import { heroLabel } from '../game/loadout';
 import type { Progress } from '../game/progress';
 import { MAX_PLAYERS, type Announce, type Lobby, type Member } from '../net/protocol';
@@ -236,9 +237,9 @@ export function openLobby(
       const endless = lobby.dungeon === ENDLESS;
       const unlocked = endless ? 1 : clampLevel(content.difficulty, progress.dungeon(lobby.dungeon).unlocked);
       const set = (level: number) => session.choose(lobby.dungeon, Math.max(1, Math.min(unlocked, level)));
-      // Le Yomi sans fond commence toujours au palier 1 : pas de niveau à choisir.
+      // Le Yomi sans fond commence toujours au palier d’entrée (30) : pas de niveau à choisir.
       const picker = endless
-        ? [h('p', { class: 'note' }, `Depuis le palier 1 (niveau ${content.endless.baseLevel}). À la fin de chaque bloc de ${content.endless.palierStep} paliers, l’hôte choisit d’encaisser ou de continuer ; si l’équipe tombe, chacun perd le butin en jeu.`)]
+        ? [h('p', { class: 'note' }, `Depuis le palier ${startPalier(content.endless)}, face aux deux reines (niveau ${levelAt(content.endless, startPalier(content.endless))}). À la fin de chaque bloc de ${content.endless.palierStep} paliers, l’hôte choisit d’encaisser ou de continuer ; si l’équipe tombe, chacun perd le butin en jeu.`)]
         : [
             h(
               'div',
@@ -260,7 +261,7 @@ export function openLobby(
               'button',
               {
                 class: `btn small${id === lobby.dungeon ? ' primary' : ''}`,
-                onclick: () => session.choose(id, id === ENDLESS ? 1 : Math.min(lobby.level, progress.dungeon(id).unlocked)),
+                onclick: () => session.choose(id, id === ENDLESS ? startPalier(content.endless) : Math.min(lobby.level, progress.dungeon(id).unlocked)),
               },
               dungeonName(id),
             ),

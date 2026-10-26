@@ -9,6 +9,8 @@
 //   npm run equilibrage -- --niveaux 50 --stuff nu --niveau-donjon 30            sans objet, contre un donjon plus bas
 //   npm run equilibrage -- --mode kits --niveaux 10,30,50                        les 3 styles de chaque classe
 //   npm run equilibrage -- --mode infini --niveaux 50 --stuff complet            le Yomi sans fond, bloc après bloc
+//   npm run equilibrage -- --donjon infini --palier 31 --sans-boss               les 4 salles tirées d'un bloc, sans les reines
+//   npm run equilibrage -- --donjon infini --palier 31 --sans-boss --salles fixes  les mêmes, avec les salles fixes d'avant 0.25.0
 //
 // Au niveau 5 et plus, le héros porte un équipement typique forgé à son niveau (`--stuff complet` : le meilleur
 // équipement de sa classe, arme épique et relique comprises ; `--stuff survie`, `dps` ou `boss` : un des trois
@@ -110,6 +112,10 @@ const ALLIES = option('allies', '').split(',').filter(Boolean);
 const DUNGEON = option('donjon', 'rizieres');
 // Donjon infini (`--donjon infini`) : le bloc qui contient ce palier (le héros garde le niveau de `--niveaux`).
 const PALIER = Number(option('palier', '1'));
+/** `--sans-boss` : le bloc sans son dernier palier (les reines), pour mesurer les salles seules. */
+const SANS_BOSS = process.argv.includes('--sans-boss');
+/** `--salles fixes` : les salles fixes des donjons (avant 0.25.0) au lieu des salles tirées, pour comparer. */
+const SALLES = option('salles', 'tirees');
 /** Cibles de l'équilibrage (GDD) : écart de victoires entre classes et entre races, pire combinaison. */
 const TARGETS = { classSpread: 0.15, raceSpread: 0.1, worst: 0.5, palierSpread: 5, worstPalier: 40 };
 
@@ -130,6 +136,7 @@ async function worker() {
     load('/src/game/infini.ts'),
   ]);
   if (SUPPLEMENT !== null) content.difficulty.enemy.dungeons = { hp: SUPPLEMENT, damage: SUPPLEMENT };
+  if (SALLES === 'fixes') delete content.endless.salles;
   const endless = DUNGEON === 'infini';
   const bloc = infini.blocOf(content.endless, PALIER);
   const dungeon = endless ? content.dungeons[infini.arenaOf(content.endless, bloc)] : (content.dungeons[DUNGEON] ?? content.dungeons.rizieres);
@@ -206,7 +213,8 @@ async function worker() {
     const allies = allyClasses.map((cls) => heroConfig(cls, 'einherjar', undefined, job.level, false, job.stuff));
     const out = [];
     for (let r = 0; r < runs; r++) {
-      const waves = endless ? infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, PLAYERS) : null;
+      const bloc_ = endless ? infini.blocWaves(content.endless, content.difficulty, bloc, endlessArenas, PLAYERS) : null;
+      const waves = bloc_ && SANS_BOSS && bloc_.length > 1 ? bloc_.slice(0, -1) : bloc_;
       const difficulty = waves ? waves[0].difficulty : dungeonDifficultyFor(content.difficulty, DUNGEON_LEVEL || job.level, PLAYERS, dungeon.strength);
       const world = new World({ ...base, ...(waves ? { waves } : {}), player: cfg, allies, difficulty }, 0);
       const bots = world.players.map((hero) => new Bot(world, hero, false, HUMAN));
@@ -249,7 +257,7 @@ async function worker() {
   const endlesRun = (job, runs) => {
     const out = [];
     for (let r = 0; r < runs; r++) {
-      let cleared = 0;
+      let cleared = infini.startPalier(content.endless) - 1;
       let blocs = 0;
       let taken = 0;
       let healed = 0;
@@ -279,7 +287,7 @@ async function worker() {
           fell = infini.firstPalier(content.endless, bloc);
           break;
         }
-        cleared = infini.firstPalier(content.endless, bloc) + content.endless.palierStep - 1;
+        cleared = infini.lastPalier(content.endless, bloc);
         hpLeft = Math.max(0, world.players[0].hp) / cfg.maxHp;
       }
       out.push({ cleared, blocs, t, taken, healed, dealt, hpLeft, fell, level: job.level });
