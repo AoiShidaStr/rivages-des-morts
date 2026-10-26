@@ -65,7 +65,9 @@ export interface GravureCostDef {
  * désigne l'arme, d'abord parmi celles jamais gravées, sinon parmi tout le sac ; on le brise dans la réserve.
  */
 export interface GravureSealDef {
+  /** Premier palier du sceau ; avec `every`, il revient tous les `every` paliers (30, 40, 50…). */
   palier: number;
+  every?: number;
   name: string;
   /** Le texte montré au joueur, avec `{palier}` remplacé par le palier du sceau. */
   summary: string;
@@ -120,8 +122,16 @@ export function rollSealTarget(weapons: readonly string[], rolls: (item: string)
   return free.length > 0 ? free[Math.floor(random() * free.length)] : null;
 }
 
-/** Le texte du sceau, palier compris (« elle s'arrache au palier 50 du Yomi sans fond »). */
-export const gravureSealText = (sceau: GravureSealDef): string => sceau.summary.replace('{palier}', String(sceau.palier));
+/** Les paliers du sceau, pour le texte : « 30, 40, 50… », ou le seul palier quand il ne revient pas. */
+export const sealPaliers = (sceau: GravureSealDef): string =>
+  sceau.every ? `${[0, 1, 2].map((i) => sceau.palier + i * sceau.every!).join(', ')}…` : String(sceau.palier);
+
+/** Vrai si le bloc qui finit au palier `palier` laisse un sceau. */
+export const isSealPalier = (sceau: GravureSealDef, palier: number): boolean =>
+  sceau.every ? palier >= sceau.palier && (palier - sceau.palier) % sceau.every === 0 : palier === sceau.palier;
+
+/** Le texte du sceau, paliers compris (« elle s'arrache aux paliers 30, 40, 50… du Yomi sans fond »). */
+export const gravureSealText = (sceau: GravureSealDef): string => sceau.summary.replace('{palier}', sealPaliers(sceau));
 
 /**
  * Le sceau gagné en finissant le bloc qui se termine au palier `palier` : il désigne une arme du sac (jamais gravée
@@ -137,7 +147,7 @@ export function rollSeal(
   rolls: (item: string) => number,
   random: () => number = Math.random,
 ): { item: string; gravure: Gravure } | null {
-  if (palier !== data.sceau.palier) return null;
+  if (!isSealPalier(data.sceau, palier)) return null;
   // 0.19.0 : le sceau se farme. Il vise d'abord une arme jamais gravée ; quand toutes le sont, n'importe quelle arme
   // du sac — l'exemplaire scellé part dans la réserve, à ouvrir, poser ou revendre.
   const weapons = owned.filter((id) => items[id]?.slot === 'arme');

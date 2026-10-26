@@ -1,5 +1,5 @@
 {
-  "about": "Le Yomi sans fond (donjon infini, 0.4.0) : caché derrière la cascade, ouvert au niveau 50. On le descend par blocs de 5 paliers dans son arène à lui (style : la dalle de braise du Yomi, chargée une fois pour toute la descente), avec les vagues des Rizières puis du Palais, en alternance : 4 vagues tirées parmi celles du donjon, puis son boss au 5e palier. À partir de doubleBossFrom, la Jorōgumo et Izanami attendent ensemble. Niveau des yokai : baseLevel, +levelStep tous les palierStep paliers (palier 25 : niveau 100), plafonné à maxLevel. Au-delà du plafond, un modificateur s'ajoute tous les 5 paliers (modifiers, puis beyond qui se répète). À la fin de chaque bloc, on encaisse le butin et on remonte, ou on continue : mourir fait tout perdre. Récompense : à partir du palier itemsFrom, un objet tiré selon la rareté du palier atteint, à chaque fin de bloc.",
+  "about": "Le Yomi sans fond (donjon infini, 0.4.0, refondu en 0.25.0) : caché derrière la cascade, ouvert au niveau 50. On entre directement au palier startPalier (30) : le premier combat est celui des deux reines, Izanami et la Jorōgumo ensemble (l'ancien palier 30). Ensuite, des blocs de palierStep (5) paliers : une salle tirée au hasard par palier (salles : un mélange des yokai des Rizières et du Palais, pesé par un budget), puis les deux reines au dernier palier du bloc (35, 40…). Niveau des yokai : baseLevel, +levelStep tous les palierStep paliers, plafonné à maxLevel (100 dès le palier 25, donc partout). La difficulté monte ensuite en ligne droite (progression) : la même marche de PV, de dégâts et de malédictions à chaque palier. modifiers : ce qui tient dès l'entrée (trois élites par vague, comme l'ancien palier 30). À la fin de chaque bloc, on encaisse le butin et on remonte, ou on continue : mourir fait tout perdre. Récompense : un objet tiré selon la rareté du palier atteint, à chaque fin de bloc ; le sceau du Yomi (gravures.json) aux paliers 30, 40, 50…",
   "name": "Le Yomi sans fond",
   "region": "Derrière la cascade",
   "unlockLevel": 50,
@@ -7,17 +7,41 @@
   "levelStep": 10,
   "palierStep": 5,
   "maxLevel": 100,
+  "startPalier": 30,
   "arenas": ["rizieres", "palais"],
   "wavesPerBloc": 4,
+  "salles": {
+    "about": "0.25.0 : les salles ne sont plus les salles fixes des donjons, elles se tirent au hasard parmi les yokai des Rizières et du Palais. Chaque salle a un budget (budget[i] pour la i-e salle du bloc, à ±jitter près) qu'on remplit avec deux ou trois sortes de yokai (kinds), au plus une sorte par rôle limité (roles : un lourd, un soigneur, un tireur), chacune sous son plafond (max) et pas plus de maxEnemies bêtes. Le coût d'un yokai dit ce qu'il pèse dans le combat (PV, dégâts, gêne) ; les budgets sont calés sur les anciennes salles du Palais (de 9 pour « Les dieux du tonnerre » à 30 pour « La tempête », 17 en moyenne). Les élites, la Marée et la coop s'ajoutent par-dessus, comme avant.",
+    "budget": [14, 17, 20, 23],
+    "jitter": 0.12,
+    "maxEnemies": 12,
+    "kinds": { "min": 2, "max": 3 },
+    "roles": { "lourd": 1, "soin": 1, "distance": 1 },
+    "yokai": {
+      "hitodama": { "cost": 1, "max": 6, "role": "nuee", "name": "feux follets" },
+      "kasaObake": { "cost": 2, "max": 4, "role": "nuee", "name": "kasa-obake" },
+      "shikome": { "cost": 2, "max": 5, "role": "melee", "name": "shikome" },
+      "oublie": { "cost": 2, "max": 4, "role": "melee", "name": "oubliés" },
+      "kodama": { "cost": 2.5, "max": 1, "role": "soin", "name": "kodama" },
+      "ikazuchi": { "cost": 2.5, "max": 3, "role": "distance", "name": "ikazuchi" },
+      "kappa": { "cost": 4, "max": 2, "role": "lourd", "name": "kappa" },
+      "ikusa": { "cost": 4, "max": 2, "role": "lourd", "name": "ikusa" },
+      "kappaRenforce": { "cost": 7, "max": 1, "role": "lourd", "name": "kappa renforcé" }
+    }
+  },
   "doubleBossFrom": 30,
   "modifiers": [
-    { "from": 30, "name": "Âmes d'élite III", "description": "Trois élites par vague.", "curses": { "elites": 3 } },
-    { "from": 35, "name": "Marée des morts", "description": "Deux yokai de plus à chaque vague.", "extraSpawns": 2 },
-    { "from": 40, "name": "Hâte des morts IV", "description": "Les yokai agissent 40 % plus vite.", "curses": { "hate": 0.4 } },
-    { "from": 45, "name": "Rancune des noyés II", "description": "Sous 30 % de leurs PV, les yokai font 70 % de dégâts en plus.", "curses": { "rancune": 0.7 } },
-    { "from": 50, "name": "Chair du Yomi", "description": "Les yokai ont 15 % de PV et 10 % de dégâts en plus.", "hp": 1.15, "damage": 1.1 }
+    { "from": 30, "name": "Âmes d'élite III", "description": "Trois élites par vague.", "curses": { "elites": 3 } }
   ],
-  "beyond": { "name": "Abîme", "description": "Encore 10 % de PV et 8 % de dégâts en plus pour les yokai.", "hp": 1.1, "damage": 1.08 },
+  "progression": {
+    "about": "0.25.0 : la difficulté monte en ligne droite à partir de `from`, la même marche à chaque palier (fini les sauts de l'ancienne liste : Marée au 35, Hâte IV au 40, Rancune II au 45, Chair du Yomi au 50, puis l'Abîme tous les 5 paliers). PV et dégâts : +hpPerPalier et +damagePerPalier par palier, sur la force du palier 30 (pas d'intérêts composés : +12 % de PV au palier 40, +24 % au 50, +48 % au 70). Une bête de plus par vague tous les spawnsEvery paliers (au plus spawnsMax). Malédictions : la valeur du niveau 100 (Hâte 0,3 ; Rancune 0,4), +perPalier par palier jusqu'à max — on retrouve au palier 50 la Hâte IV et la Rancune II de l'ancienne liste.",
+    "from": 30,
+    "hpPerPalier": 0.012,
+    "damagePerPalier": 0.01,
+    "spawnsEvery": 8,
+    "spawnsMax": 4,
+    "curses": { "hate": { "perPalier": 0.005, "max": 0.4 }, "rancune": { "perPalier": 0.015, "max": 0.7 } }
+  },
   "pactes": {
     "about": "À chaque bloc à partir de `from` (premier palier du bloc >= 51), on tire deux ou trois pactes ; l'hôte en scelle un, qui tient pour toute la descente et s'ajoute aux précédents. Chiffres cumulables avec les modificateurs ci-dessus.",
     "from": 51,
